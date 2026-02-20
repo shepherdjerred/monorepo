@@ -12,7 +12,10 @@ import {
   handleUpcomingBirthdays,
   handleBirthdaysByMonth,
 } from "./birthday-actions.ts";
-import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 
 const logger = loggers.tools.child("birthdays");
 

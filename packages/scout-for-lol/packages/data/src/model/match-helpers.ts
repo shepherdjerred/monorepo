@@ -79,7 +79,9 @@ export function extractRunes(participant: RawParticipant): Rune[] {
 export function participantToChampion(participant: RawParticipant): Champion {
   return {
     riotIdGameName:
-      participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdGameName.length > 0
+      participant.riotIdGameName !== undefined &&
+      participant.riotIdGameName.length > 0 &&
+      participant.riotIdGameName.length > 0
         ? participant.riotIdGameName
         : "Unknown",
     championName: participant.championName,

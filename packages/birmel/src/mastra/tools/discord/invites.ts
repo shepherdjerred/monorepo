@@ -19,7 +19,10 @@ type InviteInput = {
 
 async function handleListInvites(client: Client, guildId: string | undefined) {
   if (guildId == null || guildId.length === 0) {
-    return { success: false, message: "guildId is required for listing invites" };
+    return {
+      success: false,
+      message: "guildId is required for listing invites",
+    };
   }
   const guild = await client.guilds.fetch(guildId);
   const invites = await guild.invites.fetch();
@@ -41,11 +44,17 @@ async function handleListInvites(client: Client, guildId: string | undefined) {
 
 async function handleCreateInvite(client: Client, ctx: InviteInput) {
   if (ctx.channelId == null || ctx.channelId.length === 0) {
-    return { success: false, message: "channelId is required for creating an invite" };
+    return {
+      success: false,
+      message: "channelId is required for creating an invite",
+    };
   }
   const channel = await client.channels.fetch(ctx.channelId);
   if (!channel || !("createInvite" in channel)) {
-    return { success: false, message: "Cannot create invite for this channel type" };
+    return {
+      success: false,
+      message: "Cannot create invite for this channel type",
+    };
   }
   const invite = await channel.createInvite({
     ...(ctx.maxAge !== undefined && { maxAge: ctx.maxAge }),
@@ -62,7 +71,10 @@ async function handleCreateInvite(client: Client, ctx: InviteInput) {
 
 async function handleDeleteInvite(client: Client, ctx: InviteInput) {
   if (ctx.inviteCode == null || ctx.inviteCode.length === 0) {
-    return { success: false, message: "inviteCode is required for deleting an invite" };
+    return {
+      success: false,
+      message: "inviteCode is required for deleting an invite",
+    };
   }
   const invite = await client.fetchInvite(ctx.inviteCode);
   await invite.delete(ctx.reason);
@@ -71,7 +83,10 @@ async function handleDeleteInvite(client: Client, ctx: InviteInput) {
 
 async function handleGetVanity(client: Client, guildId: string | undefined) {
   if (guildId == null || guildId.length === 0) {
-    return { success: false, message: "guildId is required for getting vanity URL" };
+    return {
+      success: false,
+      message: "guildId is required for getting vanity URL",
+    };
   }
   const guild = await client.guilds.fetch(guildId);
   const vanity = await guild.fetchVanityData();

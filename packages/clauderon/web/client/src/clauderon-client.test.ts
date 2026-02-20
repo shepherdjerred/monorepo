@@ -95,9 +95,7 @@ describe("ClauderonClient - listSessions and getSession", () => {
   });
 
   test("throws NetworkError on fetch failure", async () => {
-    const mockFetch = mock(() =>
-      Promise.reject(new Error("Network failure")),
-    );
+    const mockFetch = mock(() => Promise.reject(new Error("Network failure")));
 
     const client = new ClauderonClient({
       baseUrl: "http://localhost:3030",
@@ -233,10 +231,7 @@ describe("ClauderonClient - createSession and session actions", () => {
   test("deletes session successfully", async () => {
     const mockFetch = createMockFetch(
       new Map([
-        [
-          "DELETE http://localhost:3030/api/sessions/session1",
-          { status: 204 },
-        ],
+        ["DELETE http://localhost:3030/api/sessions/session1", { status: 204 }],
       ]),
     );
 

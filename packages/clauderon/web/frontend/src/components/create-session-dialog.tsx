@@ -62,23 +62,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   });
 
   // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
-  ;
-
   // Fetch storage classes when Kubernetes backend is selected
-  ;
-
   // Reset model when agent changes
-  ;
-
   // Fetch feature flags on mount
-  ;
-
   // Reset backend if Kubernetes is disabled
-  ;
-
   // Sync repositories array with multi-repo toggle
-  ;
-
   const availableModels = useMemo(
     () => getModelsForAgent(formData.agent),
     [formData.agent],
@@ -186,7 +174,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       toast.success("Session created successfully");
       onClose();
     } catch (error_) {
-      const errorMsg = error_ instanceof Error ? error_.message : String(error_);
+      const errorMsg =
+        error_ instanceof Error ? error_.message : String(error_);
       setError(errorMsg);
       toast.error(`Failed to create session: ${errorMsg}`);
     } finally {
@@ -195,8 +184,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
   };
 
   // Handle ESC key
-  ;
-
   return (
     <>
       {/* Backdrop */}
@@ -284,21 +271,20 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                 Mount multiple git repositories in the same session. Only
                 supported with Docker backend.
               </p>
-              {multiRepoEnabled &&
-                formData.backend !== BackendType.Docker && (
-                  <div
-                    className="p-3 border-2 text-sm font-mono ml-6"
-                    style={{
-                      backgroundColor: "hsl(45, 75%, 95%)",
-                      borderColor: "hsl(45, 75%, 50%)",
-                      color: "hsl(45, 75%, 30%)",
-                    }}
-                  >
-                    <strong>Warning:</strong> Multi-repository mode requires
-                    Docker backend. Please select Docker above or disable
-                    multi-repository mode.
-                  </div>
-                )}
+              {multiRepoEnabled && formData.backend !== BackendType.Docker && (
+                <div
+                  className="p-3 border-2 text-sm font-mono ml-6"
+                  style={{
+                    backgroundColor: "hsl(45, 75%, 95%)",
+                    borderColor: "hsl(45, 75%, 50%)",
+                    color: "hsl(45, 75%, 30%)",
+                  }}
+                >
+                  <strong>Warning:</strong> Multi-repository mode requires
+                  Docker backend. Please select Docker above or disable
+                  multi-repository mode.
+                </div>
+              )}
             </div>
 
             {/* Repositories Section */}

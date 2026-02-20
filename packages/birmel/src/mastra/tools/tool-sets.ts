@@ -150,7 +150,9 @@ export function getAgentDescription(agentType: AgentType): string {
  * Convert a tool array to a record for Mastra Agent.
  * Uses unknown type to avoid strict type checking issues with different tool schemas.
  */
-export function toolsToRecord(tools: { id: string }[]): Record<string, unknown> {
+export function toolsToRecord(
+  tools: { id: string }[],
+): Record<string, unknown> {
   const entries: [string, unknown][] = tools.map((tool) => [tool.id, tool]);
   return Object.fromEntries(entries);
 }

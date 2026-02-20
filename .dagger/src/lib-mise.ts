@@ -1,8 +1,4 @@
-import {
-  dag,
-  type Container,
-  type Platform,
-} from "@dagger.io/dagger";
+import { dag, type Container, type Platform } from "@dagger.io/dagger";
 import { getSystemContainer } from "./lib-system.ts";
 import versions from "./lib-versions.ts";
 
@@ -81,4 +77,3 @@ export function getMiseRuntimeContainer(
 ): Container {
   return withMiseTools(getSystemContainer(platform), toolVersions);
 }
-

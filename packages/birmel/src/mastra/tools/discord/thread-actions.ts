@@ -5,12 +5,19 @@ const logger = loggers.tools.child("discord.threads");
 
 type AutoArchiveDuration = 60 | 1440 | 4320 | 10_080;
 
-function parseAutoArchiveDuration(value: string | null | undefined): AutoArchiveDuration {
+function parseAutoArchiveDuration(
+  value: string | null | undefined,
+): AutoArchiveDuration {
   if (value == null || value.length === 0) {
     return 1440;
   }
   const parsed = Number.parseInt(value);
-  if (parsed === 60 || parsed === 1440 || parsed === 4320 || parsed === 10_080) {
+  if (
+    parsed === 60 ||
+    parsed === 1440 ||
+    parsed === 4320 ||
+    parsed === 10_080
+  ) {
     return parsed;
   }
   return 1440;
@@ -91,7 +98,14 @@ type CreateStandaloneOptions = {
 export async function handleCreateStandalone(
   options: CreateStandaloneOptions,
 ): Promise<ThreadResult> {
-  const { client, channelId, name, autoArchiveDurationStr, type, messageContent } = options;
+  const {
+    client,
+    channelId,
+    name,
+    autoArchiveDurationStr,
+    type,
+    messageContent,
+  } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -111,7 +125,8 @@ export async function handleCreateStandalone(
   const thread = await channel.threads.create({
     name,
     autoArchiveDuration,
-    type: type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread,
+    type:
+      type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread,
     ...(messageContent != null &&
       messageContent.length > 0 && { message: { content: messageContent } }),
   });
@@ -135,7 +150,8 @@ type ModifyThreadOptions = {
 export async function handleModifyThread(
   options: ModifyThreadOptions,
 ): Promise<ThreadResult> {
-  const { client, threadId, name, archived, locked, autoArchiveDuration } = options;
+  const { client, threadId, name, archived, locked, autoArchiveDuration } =
+    options;
   if (threadId == null || threadId.length === 0) {
     return { success: false, message: "threadId is required for modify" };
   }

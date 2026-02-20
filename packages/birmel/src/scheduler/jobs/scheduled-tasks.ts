@@ -55,7 +55,11 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
 
     // Execute the tool using its execute method
     const toolObj: unknown = tool;
-    if (toolObj == null || typeof toolObj !== "object" || !("execute" in toolObj)) {
+    if (
+      toolObj == null ||
+      typeof toolObj !== "object" ||
+      !("execute" in toolObj)
+    ) {
       logger.error("Tool has no execute method", { toolId: task.toolId });
       await markTaskExecuted(task);
       return;
@@ -66,11 +70,17 @@ async function executeScheduledTask(task: ScheduledTask): Promise<void> {
       await markTaskExecuted(task);
       return;
     }
-    const executeResult: unknown = await Reflect.apply(executeProp, undefined, [toolInput, {
-      runId: `scheduled-task-${String(task.id)}`,
-      agentId: "birmel",
-    }]);
-    const result = executeResult != null && typeof executeResult === "object" ? executeResult : {};
+    const executeResult: unknown = await Reflect.apply(executeProp, undefined, [
+      toolInput,
+      {
+        runId: `scheduled-task-${String(task.id)}`,
+        agentId: "birmel",
+      },
+    ]);
+    const result =
+      executeResult != null && typeof executeResult === "object"
+        ? executeResult
+        : {};
 
     const success = "success" in result ? Boolean(result.success) : true;
     logger.info("Scheduled task executed successfully", {

@@ -54,7 +54,9 @@ function CollapsibleSection({
             {title}
           </span>
         </div>
-        {badge !== undefined && badge.length > 0 && <span className="text-xs text-surface-500">{badge}</span>}
+        {badge !== undefined && badge.length > 0 && (
+          <span className="text-xs text-surface-500">{badge}</span>
+        )}
       </button>
       {isOpen && <div className="p-2">{children}</div>}
     </div>
@@ -280,7 +282,8 @@ function ImageSettingsCard({
 }) {
   const hasSettings =
     (intermediate?.selectedImagePrompts?.length ?? 0) > 0 ||
-    (intermediate?.selectedArtStyle !== undefined && intermediate.selectedArtStyle.length > 0);
+    (intermediate?.selectedArtStyle !== undefined &&
+      intermediate.selectedArtStyle.length > 0);
 
   if (!hasSettings) {
     return null;
@@ -292,14 +295,15 @@ function ImageSettingsCard({
         <CardTitle>Image Generation Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-xs text-surface-800">
-        {intermediate?.selectedArtStyle !== undefined && intermediate.selectedArtStyle.length > 0 && (
-          <div>
-            <p className="text-surface-600 mb-1">Art style:</p>
-            <p className="text-surface-700 bg-surface-50 rounded-md p-2">
-              {intermediate.selectedArtStyle}
-            </p>
-          </div>
-        )}
+        {intermediate?.selectedArtStyle !== undefined &&
+          intermediate.selectedArtStyle.length > 0 && (
+            <div>
+              <p className="text-surface-600 mb-1">Art style:</p>
+              <p className="text-surface-700 bg-surface-50 rounded-md p-2">
+                {intermediate.selectedArtStyle}
+              </p>
+            </div>
+          )}
         {intermediate?.selectedImagePrompts &&
           intermediate.selectedImagePrompts.length > 0 && (
             <div>

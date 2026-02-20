@@ -8,10 +8,7 @@ import {
   Loader2,
   TrendingUp,
 } from "lucide-react";
-import type {
-  SystemStatus,
-  ProxyStatus,
-} from "@clauderon/client";
+import type { SystemStatus, ProxyStatus } from "@clauderon/client";
 import { useSessionContext } from "@/contexts/session-context.tsx";
 import { UsageProgressBar } from "./usage-progress-bar.tsx";
 import { CredentialCard } from "./credential-card.tsx";
@@ -48,8 +45,6 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       setIsLoading(false);
     }
   }, [client]);
-
-  ;
 
   const handleCredentialChange = (serviceId: string, value: string) => {
     const newInputs = new Map(credentialInputs);
@@ -94,7 +89,10 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
       await fetchStatus();
     } catch (error_) {
       const errorMap = new Map(saveErrors);
-      errorMap.set(serviceId, error_ instanceof Error ? error_.message : String(error_));
+      errorMap.set(
+        serviceId,
+        error_ instanceof Error ? error_.message : String(error_),
+      );
       setSaveErrors(errorMap);
       // Refresh to show actual state even on error
       await fetchStatus();
@@ -173,13 +171,19 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                       <CredentialCard
                         key={cred.service_id}
                         cred={cred}
-                        credentialInput={credentialInputs.get(cred.service_id) ?? ""}
-                        showCredential={showCredentials.get(cred.service_id) === true}
+                        credentialInput={
+                          credentialInputs.get(cred.service_id) ?? ""
+                        }
+                        showCredential={
+                          showCredentials.get(cred.service_id) === true
+                        }
                         savingCredential={savingCredential === cred.service_id}
                         saveError={saveErrors.get(cred.service_id)}
                         onCredentialChange={handleCredentialChange}
                         onToggleShow={toggleShowCredential}
-                        onSave={(id) => { void handleSaveCredential(id); }}
+                        onSave={(id) => {
+                          void handleSaveCredential(id);
+                        }}
                       />
                     ))}
                   </div>

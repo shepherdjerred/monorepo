@@ -28,8 +28,6 @@ export function ConfirmDialog({
   };
 
   // Handle ESC key
-  ;
-
   if (!open) {
     return null;
   }

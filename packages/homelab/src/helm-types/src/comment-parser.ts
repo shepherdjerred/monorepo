@@ -6,8 +6,7 @@ function isExampleLine(line: string): boolean {
     /^-{3,}/.test(line) ||
     /^BEGIN .*(?:KEY|CERTIFICATE)/.test(line) ||
     /^END .*(?:KEY|CERTIFICATE)/.test(line) ||
-    (line.startsWith("-") &&
-      (line.includes(":") || /^-\s+\|/.test(line))) ||
+    (line.startsWith("-") && (line.includes(":") || /^-\s+\|/.test(line))) ||
     /^\w+:$/.test(line) ||
     /^[\w-]+:\s*$/.test(line) ||
     /^[\w.-]+:\s*\|/.test(line) || // YAML multiline indicator (e.g., "policy.csv: |")
@@ -122,7 +121,7 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
     if (keyMatch) {
       const indent = keyMatch[1]?.length ?? 0;
       const key = keyMatch[2];
-      if ((key == null || key === "")) {
+      if (key == null || key === "") {
         continue;
       }
 

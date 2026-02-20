@@ -467,5 +467,4 @@ export function addBufferAndAdvancedPanels(
       .fillOpacity(10)
       .gridPos({ x: 12, y: 65, w: 12, h: 8 }),
   );
-
 }

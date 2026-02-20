@@ -123,46 +123,80 @@ export class ClauderonClient {
   }
 
   async getSessionHealth(id: string): Promise<SessionHealthReport> {
-    return this.request<SessionHealthReport>("GET", `/api/sessions/${encodeURIComponent(id)}/health`);
+    return this.request<SessionHealthReport>(
+      "GET",
+      `/api/sessions/${encodeURIComponent(id)}/health`,
+    );
   }
 
   /**
    * Start a stopped session (container/pod)
    */
   async startSession(id: string): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/start`);
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/start`,
+    );
   }
 
   /**
    * Wake a hibernated session (sprites)
    */
   async wakeSession(id: string): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/wake`);
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/wake`,
+    );
   }
 
   async recreateSession(id: string): Promise<RecreateResult> {
-    return this.request<RecreateResult>("POST", `/api/sessions/${encodeURIComponent(id)}/recreate`);
+    return this.request<RecreateResult>(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/recreate`,
+    );
   }
 
   async cleanupSession(id: string): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/cleanup`);
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/cleanup`,
+    );
   }
 
   async getRecentRepos(): Promise<RecentRepoDto[]> {
-    const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
+    const response = await this.request<{ repos: RecentRepoDto[] }>(
+      "GET",
+      "/api/recent-repos",
+    );
     return response.repos;
   }
 
   async browseDirectory(path: string): Promise<BrowseDirectoryResponse> {
-    return this.request<BrowseDirectoryResponse>("POST", "/api/browse-directory", { path });
+    return this.request<BrowseDirectoryResponse>(
+      "POST",
+      "/api/browse-directory",
+      { path },
+    );
   }
 
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, { access_mode: mode });
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/access-mode`,
+      { access_mode: mode },
+    );
   }
 
-  async updateSessionMetadata(id: string, title?: string, description?: string): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, { title, description });
+  async updateSessionMetadata(
+    id: string,
+    title?: string,
+    description?: string,
+  ): Promise<void> {
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/metadata`,
+      { title, description },
+    );
   }
 
   async regenerateMetadata(id: string): Promise<Session> {
@@ -173,9 +207,17 @@ export class ClauderonClient {
     return response.session;
   }
 
-  async mergePr(id: string, method: MergeMethod, deleteBranch: boolean): Promise<void> {
+  async mergePr(
+    id: string,
+    method: MergeMethod,
+    deleteBranch: boolean,
+  ): Promise<void> {
     const request: MergePrRequest = { method, delete_branch: deleteBranch };
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/merge-pr`, request);
+    await this.requestVoid(
+      "POST",
+      `/api/sessions/${encodeURIComponent(id)}/merge-pr`,
+      request,
+    );
   }
 
   async getSystemStatus(): Promise<SystemStatus> {

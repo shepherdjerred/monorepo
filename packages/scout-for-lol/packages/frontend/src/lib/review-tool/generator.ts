@@ -285,9 +285,9 @@ export async function generateMatchReview(
     const lane =
       match.queueType === "arena"
         ? undefined
-        : (player && "lane" in player
+        : player && "lane" in player
           ? player.lane
-          : undefined);
+          : undefined;
     const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
 
     // Initialize OpenAI client
@@ -298,7 +298,10 @@ export async function generateMatchReview(
 
     // Initialize Gemini client if API key provided
     let geminiClient: GoogleGenerativeAI | undefined;
-    if (config.api.geminiApiKey !== undefined && config.api.geminiApiKey.length > 0) {
+    if (
+      config.api.geminiApiKey !== undefined &&
+      config.api.geminiApiKey.length > 0
+    ) {
       geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey);
     }
 

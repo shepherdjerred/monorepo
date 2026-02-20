@@ -10,7 +10,10 @@ export async function getAllCandidates(): Promise<string[]> {
     .map((f) => f.replace("_style.json", ""));
 }
 
-export async function selectRandomCandidates(min = 3, max = 5): Promise<string[]> {
+export async function selectRandomCandidates(
+  min = 3,
+  max = 5,
+): Promise<string[]> {
   const allCandidates = await getAllCandidates();
   const count = Math.floor(Math.random() * (max - min + 1)) + min;
 

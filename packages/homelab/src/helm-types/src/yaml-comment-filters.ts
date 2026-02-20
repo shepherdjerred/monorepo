@@ -18,7 +18,7 @@ function isPartOfYAMLBlock(line: string, trimmed: string): boolean {
 function isSectionHeaderForCommentedBlock(
   nextLine: string | undefined,
 ): boolean {
-  if ((nextLine == null || nextLine === "")) {
+  if (nextLine == null || nextLine === "") {
     return false;
   }
   const nextTrimmed = nextLine.trim();

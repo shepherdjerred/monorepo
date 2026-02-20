@@ -4,13 +4,15 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
 import type { GitHubAuth } from "@prisma/client";
 
-const TokenResponseSchema = z.object({
-  access_token: z.string().optional(),
-  refresh_token: z.string().optional(),
-  expires_in: z.number().optional(),
-  error: z.string().optional(),
-  error_description: z.string().optional(),
-}).loose();
+const TokenResponseSchema = z
+  .object({
+    access_token: z.string().optional(),
+    refresh_token: z.string().optional(),
+    expires_in: z.number().optional(),
+    error: z.string().optional(),
+    error_description: z.string().optional(),
+  })
+  .loose();
 
 const logger = loggers.editor.child("github-oauth");
 
@@ -83,7 +85,11 @@ export async function exchangeCodeForToken(
     throw new Error(data.error_description ?? data.error);
   }
 
-  return buildTokenResult(data.access_token ?? "", data.refresh_token, data.expires_in);
+  return buildTokenResult(
+    data.access_token ?? "",
+    data.refresh_token,
+    data.expires_in,
+  );
 }
 
 function buildTokenResult(
@@ -91,7 +97,11 @@ function buildTokenResult(
   refreshToken: string | undefined,
   expiresIn: number | undefined,
 ): { accessToken: string; refreshToken?: string; expiresAt?: Date } {
-  const result: { accessToken: string; refreshToken?: string; expiresAt?: Date } = { accessToken };
+  const result: {
+    accessToken: string;
+    refreshToken?: string;
+    expiresAt?: Date;
+  } = { accessToken };
   if (refreshToken != null && refreshToken.length > 0) {
     result.refreshToken = refreshToken;
   }

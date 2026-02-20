@@ -19,7 +19,8 @@ type ScheduleAnnouncementOptions = {
 export async function scheduleAnnouncement(
   options: ScheduleAnnouncementOptions,
 ): Promise<number> {
-  const { guildId, channelId, message, scheduledAt, createdBy, repeat } = options;
+  const { guildId, channelId, message, scheduledAt, createdBy, repeat } =
+    options;
   const result = await prisma.scheduledAnnouncement.create({
     data: {
       guildId,
@@ -141,7 +142,11 @@ async function sendAnnouncement(
       }
 
       const repeatValue = announcement.repeat;
-      if (repeatValue === "daily" || repeatValue === "weekly" || repeatValue === "monthly") {
+      if (
+        repeatValue === "daily" ||
+        repeatValue === "weekly" ||
+        repeatValue === "monthly"
+      ) {
         await scheduleAnnouncement({
           guildId: announcement.guildId,
           channelId: announcement.channelId,

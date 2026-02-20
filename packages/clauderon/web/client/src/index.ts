@@ -9,7 +9,10 @@ export type * from "@clauderon/shared";
 
 // Export main client
 export { ClauderonClient } from "./clauderon-client.ts";
-export type { ClauderonClientConfig, StorageClassInfo } from "./client-types.ts";
+export type {
+  ClauderonClientConfig,
+  StorageClassInfo,
+} from "./client-types.ts";
 
 // Export WebSocket clients
 export {

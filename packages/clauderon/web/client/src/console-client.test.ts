@@ -24,14 +24,17 @@ class MockWebSocket {
   url: string;
 
   private readonly sentMessages: string[] = [];
-  private readonly eventListeners = new Map<string, ((...args: any[]) => void)[]>();
+  private readonly eventListeners = new Map<
+    string,
+    ((...args: any[]) => void)[]
+  >();
 
   constructor(url: string) {
     this.url = url;
     // Simulate async connection
     setTimeout(() => {
       this.readyState = MockWebSocket.OPEN;
-      this.dispatchEvent('open');
+      this.dispatchEvent("open");
     }, 0);
   }
 
@@ -44,7 +47,10 @@ class MockWebSocket {
   removeEventListener(type: string, listener: (...args: any[]) => void): void {
     const listeners = this.eventListeners.get(type);
     if (listeners) {
-      this.eventListeners.set(type, listeners.filter((l) => l !== listener));
+      this.eventListeners.set(
+        type,
+        listeners.filter((l) => l !== listener),
+      );
     }
   }
 
@@ -61,7 +67,7 @@ class MockWebSocket {
 
   close(): void {
     this.readyState = MockWebSocket.CLOSED;
-    this.dispatchEvent('close');
+    this.dispatchEvent("close");
   }
 
   getSentMessages(): string[] {
@@ -71,11 +77,11 @@ class MockWebSocket {
   // Test helpers to simulate server messages
   simulateMessage(data: string): void {
     const event: any = { data };
-    this.dispatchEvent('message', event);
+    this.dispatchEvent("message", event);
   }
 
   simulateError(event: unknown): void {
-    this.dispatchEvent('error', event);
+    this.dispatchEvent("error", event);
   }
 }
 

@@ -8,7 +8,7 @@
  * - Bottom-up batch renaming with Babel
  */
 
-import type { DeminifyCache} from "./cache.ts";
+import type { DeminifyCache } from "./cache.ts";
 import { shouldCache, hashSource } from "./cache.ts";
 import { getFunctionContext } from "./call-graph.ts";
 import type { BatchDeminifyClient, BatchStatus } from "./batch-client.ts";
@@ -48,7 +48,11 @@ function toCommonStatus(status: OpenAIBatchStatus): BatchStatus {
 }
 
 /** Format batch progress for terminal display */
-function formatBatchProgress(completed: number, total: number, failed: number): string {
+function formatBatchProgress(
+  completed: number,
+  total: number,
+  failed: number,
+): string {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return `\r  Progress: ${String(completed)}/${String(total)} (${String(pct)}%) | Errors: ${String(failed)}     `;
 }
@@ -174,7 +178,8 @@ export class BatchModeProcessor {
     options: DeminifyFileOptions;
     stats: DeminifyStats;
   }): Promise<string> {
-    const { source, graph, functionsToProcess, fileContext, options, stats } = opts;
+    const { source, graph, functionsToProcess, fileContext, options, stats } =
+      opts;
     // Check that we have a batch client for the provider
     const isOpenAI = this.config.provider === "openai";
     if (isOpenAI && !this.openAIBatchClient) {
@@ -299,7 +304,13 @@ export class BatchModeProcessor {
         onStatusUpdate: (status: OpenAIBatchStatus) => {
           options.onBatchStatus?.(toCommonStatus(status));
           if (!options.onBatchStatus) {
-            process.stdout.write(formatBatchProgress(status.completed, status.total, status.failed));
+            process.stdout.write(
+              formatBatchProgress(
+                status.completed,
+                status.total,
+                status.failed,
+              ),
+            );
           }
         },
       });
@@ -311,7 +322,13 @@ export class BatchModeProcessor {
         onStatusUpdate: (status) => {
           options.onBatchStatus?.(status);
           if (!options.onBatchStatus) {
-            process.stdout.write(formatBatchProgress(status.succeeded, status.total, status.errored));
+            process.stdout.write(
+              formatBatchProgress(
+                status.succeeded,
+                status.total,
+                status.errored,
+              ),
+            );
           }
         },
       });
@@ -380,13 +397,17 @@ export class BatchModeProcessor {
     ) {
       return;
     }
-    console.log(`Batch still processing: ${String(status.completed)}/${String(status.total)} complete`);
+    console.log(
+      `Batch still processing: ${String(status.completed)}/${String(status.total)} complete`,
+    );
     console.log("Waiting for completion...\n");
     await this.openAIBatchClient.waitForCompletion(batchId, {
       onStatusUpdate: (s: OpenAIBatchStatus) => {
         options.onBatchStatus?.(toCommonStatus(s));
         if (!options.onBatchStatus) {
-          process.stdout.write(formatBatchProgress(s.completed, s.total, s.failed));
+          process.stdout.write(
+            formatBatchProgress(s.completed, s.total, s.failed),
+          );
         }
       },
     });
@@ -404,13 +425,17 @@ export class BatchModeProcessor {
     if (status.status !== "in_progress") {
       return;
     }
-    console.log(`Batch still processing: ${String(status.succeeded)}/${String(status.total)} complete`);
+    console.log(
+      `Batch still processing: ${String(status.succeeded)}/${String(status.total)} complete`,
+    );
     console.log("Waiting for completion...\n");
     await this.batchClient.waitForCompletion(batchId, {
       onStatusUpdate: (s) => {
         options.onBatchStatus?.(s);
         if (!options.onBatchStatus) {
-          process.stdout.write(formatBatchProgress(s.succeeded, s.total, s.errored));
+          process.stdout.write(
+            formatBatchProgress(s.succeeded, s.total, s.errored),
+          );
         }
       },
     });
@@ -426,13 +451,24 @@ export class BatchModeProcessor {
     options: DeminifyFileOptions;
     stats: DeminifyStats;
   }): Promise<string> {
-    const { source, graph, functionsToProcess, fileContext, batchId, options, stats } = opts;
+    const {
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      batchId,
+      options,
+      stats,
+    } = opts;
     const isOpenAI = this.config.provider === "openai";
 
     // Rebuild contexts
     const contexts = new Map<string, DeminifyContext>();
     for (const func of functionsToProcess) {
-      contexts.set(func.id, getFunctionContext(graph, func.id, new Map(), fileContext));
+      contexts.set(
+        func.id,
+        getFunctionContext(graph, func.id, new Map(), fileContext),
+      );
     }
 
     // Wait for batch to complete if still processing

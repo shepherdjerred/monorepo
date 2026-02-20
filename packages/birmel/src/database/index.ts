@@ -5,7 +5,10 @@ const PRISMA_KEY = "__birmel_prisma__";
 
 function getGlobalPrisma(): PrismaClient | undefined {
   if (PRISMA_KEY in globalThis) {
-    const value: unknown = Object.getOwnPropertyDescriptor(globalThis, PRISMA_KEY)?.value;
+    const value: unknown = Object.getOwnPropertyDescriptor(
+      globalThis,
+      PRISMA_KEY,
+    )?.value;
     if (value instanceof PrismaClient) {
       return value;
     }

@@ -109,9 +109,7 @@ type BuildChartOptions = {
   version: string;
 };
 
-export function buildChart(
-  options: BuildChartOptions,
-): Directory {
+export function buildChart(options: BuildChartOptions): Directory {
   const { chartDir, chartName, cdk8sManifests, repoRoot, version } = options;
   const container = getHelmContainerForChart({
     chartDir,

@@ -173,9 +173,7 @@ export class OpenAIBatchClient {
   }
 
   /** Check if a batch is still in a processing state */
-  private isBatchProcessing(
-    status: string,
-  ): boolean {
+  private isBatchProcessing(status: string): boolean {
     return (
       status === "validating" ||
       status === "in_progress" ||
@@ -186,7 +184,14 @@ export class OpenAIBatchClient {
   /** Build an OpenAIBatchStatus from a batch retrieve response */
   private toBatchStatus(
     batchId: string,
-    batch: { status: OpenAIBatchStatus["status"]; request_counts?: { total: number; completed: number; failed: number } | null },
+    batch: {
+      status: OpenAIBatchStatus["status"];
+      request_counts?: {
+        total: number;
+        completed: number;
+        failed: number;
+      } | null;
+    },
   ): OpenAIBatchStatus {
     return {
       batchId,
@@ -266,14 +271,18 @@ export class OpenAIBatchClient {
       raw = JSON.parse(line);
     } catch (error) {
       if (this.config.verbose) {
-        console.error(`Failed to parse batch response line: ${getErrorMessage(error)}`);
+        console.error(
+          `Failed to parse batch response line: ${getErrorMessage(error)}`,
+        );
       }
       return;
     }
     const parsed = BatchResponseSchema.safeParse(raw);
     if (!parsed.success) {
       if (this.config.verbose) {
-        console.error(`Invalid batch response structure: ${parsed.error.message}`);
+        console.error(
+          `Invalid batch response structure: ${parsed.error.message}`,
+        );
       }
       return;
     }
@@ -313,7 +322,9 @@ export class OpenAIBatchClient {
       }
     } catch (error) {
       if (this.config.verbose) {
-        console.error(`Failed to parse result for ${funcId}: ${getErrorMessage(error)}`);
+        console.error(
+          `Failed to parse result for ${funcId}: ${getErrorMessage(error)}`,
+        );
       }
     }
   }

@@ -93,7 +93,11 @@ export class Monorepo {
       return "✓ Compliance check";
     });
     const tier0Mobile = withTiming("Mobile CI", () => this.mobileCi(source));
-    const tier0BirmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
+    const tier0BirmelImage = buildBirmelImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
     const tier0Birmel = withTiming("Birmel validation", () =>
       this.birmelValidation(source, version ?? "dev", gitSha ?? "dev"),
     );
@@ -106,16 +110,39 @@ export class Monorepo {
 
     // Guard: suppress unhandled rejection warnings if critical path throws
     // before we get to collect tier 0 results
-    const allTier0 = [tier0Compliance, tier0Mobile, tier0Birmel, tier0Packages, tier0Quality];
+    const allTier0 = [
+      tier0Compliance,
+      tier0Mobile,
+      tier0Birmel,
+      tier0Packages,
+      tier0Quality,
+    ];
     void Promise.allSettled(allTier0);
 
     // ========================================================================
     // TIER 1: Critical path — bun install + TypeShare in parallel
     // ========================================================================
     const typeSharePromise = withTiming("TypeShare generation", async () => {
-      const rc = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey)
-        .withExec(["cargo", "install", "typeshare-cli", "--locked", "--root", "/root/.cargo-tools"])
-        .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
+      const rc = getRustContainer(
+        source,
+        undefined,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+      )
+        .withExec([
+          "cargo",
+          "install",
+          "typeshare-cli",
+          "--locked",
+          "--root",
+          "/root/.cargo-tools",
+        ])
+        .withExec([
+          "typeshare",
+          ".",
+          "--lang=typescript",
+          "--output-file=web/shared/src/generated/index.ts",
+        ]);
       await rc.sync();
       return rc;
     });
@@ -125,7 +152,10 @@ export class Monorepo {
       return setupPrisma(c);
     });
 
-    const [rustContainer, prismaResult] = await Promise.all([typeSharePromise, bunSetupPromise]);
+    const [rustContainer, prismaResult] = await Promise.all([
+      typeSharePromise,
+      bunSetupPromise,
+    ]);
     let container = prismaResult.container;
     outputs.push("✓ Install");
     outputs.push(...prismaResult.outputs);
@@ -144,7 +174,12 @@ export class Monorepo {
     // ========================================================================
     const [clauderonResult, buildResult] = await Promise.allSettled([
       withTiming("Clauderon Rust CI", () =>
-        this.clauderonCi(source, webResult.frontendDist, s3AccessKeyId, s3SecretAccessKey),
+        this.clauderonCi(
+          source,
+          webResult.frontendDist,
+          s3AccessKeyId,
+          s3SecretAccessKey,
+        ),
       ),
       withTiming("Monorepo build", async () => {
         // Build webring first — sjer.red depends on webring's dist/
@@ -154,7 +189,9 @@ export class Monorepo {
         const webringBuilt = container
           .withWorkdir("/workspace/packages/webring")
           .withExec(["bun", "run", "build"]);
-        const webringDist = webringBuilt.directory("/workspace/packages/webring/dist");
+        const webringDist = webringBuilt.directory(
+          "/workspace/packages/webring/dist",
+        );
 
         const c = container
           .withMountedDirectory("/workspace/packages/webring/dist", webringDist)
@@ -202,7 +239,10 @@ export class Monorepo {
     if (knipResult.status === "fulfilled") {
       outputs.push("✓ Knip");
     } else {
-      const msg = knipResult.reason instanceof Error ? knipResult.reason.message : String(knipResult.reason);
+      const msg =
+        knipResult.reason instanceof Error
+          ? knipResult.reason.message
+          : String(knipResult.reason);
       outputs.push(`::warning title=Knip::${msg.slice(0, 200)}`);
       outputs.push(`⚠ Knip (non-blocking): ${msg}`);
     }
@@ -211,7 +251,9 @@ export class Monorepo {
     if (tier0Result.status === "fulfilled") {
       outputs.push(...tier0Result.value.outputs);
       if (tier0Result.value.errors.length > 0) {
-        throw new Error(`Tier 0 failures:\n${tier0Result.value.errors.join("\n")}`);
+        throw new Error(
+          `Tier 0 failures:\n${tier0Result.value.errors.join("\n")}`,
+        );
       }
     } else {
       const reason: unknown = tier0Result.reason;
@@ -222,12 +264,25 @@ export class Monorepo {
     if (isRelease && githubToken !== undefined && npmToken !== undefined) {
       outputs.push("\n--- Release Workflow ---");
       const releaseOptions: ReleasePhaseOptions = {
-        source, container, githubToken, npmToken,
-        version, gitSha, registryUsername, registryPassword,
-        s3AccessKeyId, s3SecretAccessKey, argocdToken,
-        chartMuseumUsername, chartMuseumPassword,
-        cloudflareApiToken, cloudflareAccountId,
-        hassBaseUrl, hassToken, tofuGithubToken, commitBackToken,
+        source,
+        container,
+        githubToken,
+        npmToken,
+        version,
+        gitSha,
+        registryUsername,
+        registryPassword,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+        argocdToken,
+        chartMuseumUsername,
+        chartMuseumPassword,
+        cloudflareApiToken,
+        cloudflareAccountId,
+        hassBaseUrl,
+        hassToken,
+        tofuGithubToken,
+        commitBackToken,
         birmelImage: tier0BirmelImage,
         releasePleaseRunFn: runReleasePleaseCommand,
         getReleasePleaseContainerFn: getReleasePleaseContainer,
@@ -243,8 +298,12 @@ export class Monorepo {
 
       if (releaseResult.errors.length > 0) {
         outputs.push(`\n--- Release Phase Failed ---`);
-        outputs.push(`${String(releaseResult.errors.length)} error(s) occurred during release:`);
-        releaseResult.errors.forEach((err, i) => outputs.push(`  ${String(i + 1)}. ${err}`));
+        outputs.push(
+          `${String(releaseResult.errors.length)} error(s) occurred during release:`,
+        );
+        releaseResult.errors.forEach((err, i) =>
+          outputs.push(`  ${String(i + 1)}. ${err}`),
+        );
         throw new Error(
           `Release phase failed with ${String(releaseResult.errors.length)} error(s):\n${releaseResult.errors.join("\n")}`,
         );
@@ -255,7 +314,11 @@ export class Monorepo {
   }
 
   @func()
-  async packageValidation(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+  async packageValidation(
+    source: Directory,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+  ): Promise<string> {
     const result = await runPackageValidation(source, hassBaseUrl, hassToken);
     const outputs = [...result.outputs];
     if (result.errors.length > 0) {
@@ -269,19 +332,58 @@ export class Monorepo {
   @func()
   async qualityChecks(source: Directory): Promise<string> {
     const results = await runNamedParallel<string>([
-      { name: "Quality ratchet", operation: async () => { await qualityRatchet(source).sync(); return "✓ Quality ratchet"; } },
-      { name: "Shellcheck", operation: async () => { await shellcheckStep(source).sync(); return "✓ Shellcheck"; } },
-      { name: "Actionlint", operation: async () => { await actionlintStep(source).sync(); return "✓ Actionlint"; } },
-      { name: "Trivy", operation: async () => { await trivyScan(source).sync(); return "✓ Trivy"; } },
-      { name: "Semgrep", operation: async () => { await semgrepScan(source).sync(); return "✓ Semgrep"; } },
-      { name: "Dagger ESLint", operation: async () => { await daggerLintCheck(source).sync(); return "✓ Dagger ESLint"; } },
+      {
+        name: "Quality ratchet",
+        operation: async () => {
+          await qualityRatchet(source).sync();
+          return "✓ Quality ratchet";
+        },
+      },
+      {
+        name: "Shellcheck",
+        operation: async () => {
+          await shellcheckStep(source).sync();
+          return "✓ Shellcheck";
+        },
+      },
+      {
+        name: "Actionlint",
+        operation: async () => {
+          await actionlintStep(source).sync();
+          return "✓ Actionlint";
+        },
+      },
+      {
+        name: "Trivy",
+        operation: async () => {
+          await trivyScan(source).sync();
+          return "✓ Trivy";
+        },
+      },
+      {
+        name: "Semgrep",
+        operation: async () => {
+          await semgrepScan(source).sync();
+          return "✓ Semgrep";
+        },
+      },
+      {
+        name: "Dagger ESLint",
+        operation: async () => {
+          await daggerLintCheck(source).sync();
+          return "✓ Dagger ESLint";
+        },
+      },
     ]);
     const outputs: string[] = [];
     for (const result of results) {
       if (result.success) {
         outputs.push(String(result.value));
       } else {
-        const msg = result.error instanceof Error ? result.error.message : String(result.error);
+        const msg =
+          result.error instanceof Error
+            ? result.error.message
+            : String(result.error);
         const truncated = msg.slice(0, 200);
         outputs.push(`::warning title=${result.name}::${truncated}`);
         outputs.push(`⚠ ${result.name} (non-blocking): ${msg}`);
@@ -291,7 +393,11 @@ export class Monorepo {
   }
 
   @func()
-  async birmelValidation(source: Directory, version: string, gitSha: string): Promise<string> {
+  async birmelValidation(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
     const outputs: string[] = [];
     const [ciResult, image] = await Promise.all([
       checkBirmel(source),
@@ -313,20 +419,29 @@ export class Monorepo {
   }
 
   @func()
-  async birmelSmokeTest(source: Directory, version: string, gitSha: string): Promise<string> {
+  async birmelSmokeTest(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
     const image = buildBirmelImage(source, version, gitSha);
     return smokeTestBirmelImageWithContainer(image);
   }
 
   @func()
   async birmelPublish(
-    source: Directory, version: string, gitSha: string,
-    registryUsername: string, registryPassword: Secret,
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
   ): Promise<string> {
     const image = buildBirmelImage(source, version, gitSha);
     const { publishBirmelImageWithContainer } = await import("./birmel.ts");
     const refs = await publishBirmelImageWithContainer({
-      image, version, gitSha,
+      image,
+      version,
+      gitSha,
       registryAuth: { username: registryUsername, password: registryPassword },
     });
     return `Published:\n${refs.join("\n")}`;
@@ -334,8 +449,11 @@ export class Monorepo {
 
   @func()
   async birmelRelease(
-    source: Directory, version: string, gitSha: string,
-    registryUsername: string, registryPassword: Secret,
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
     outputs.push(await this.birmelCi(source));
@@ -343,7 +461,9 @@ export class Monorepo {
     outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
     const { publishBirmelImageWithContainer } = await import("./birmel.ts");
     const refs = await publishBirmelImageWithContainer({
-      image: birmelImage, version, gitSha,
+      image: birmelImage,
+      version,
+      gitSha,
       registryAuth: { username: registryUsername, password: registryPassword },
     });
     outputs.push(`Published:\n${refs.join("\n")}`);
@@ -357,24 +477,42 @@ export class Monorepo {
 
   @func()
   async clauderonCi(
-    source: Directory, frontendDist?: Directory,
-    s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
+    source: Directory,
+    frontendDist?: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
-    return runClauderonCi(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
+    return runClauderonCi(
+      source,
+      frontendDist,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
   }
 
   @func()
-  multiplexerBuild(source: Directory, s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret): Directory {
+  multiplexerBuild(
+    source: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
+  ): Directory {
     return buildMultiplexerBinaries(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
   async multiplexerRelease(
-    source: Directory, version: string, githubToken: Secret,
-    s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
+    source: Directory,
+    version: string,
+    githubToken: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     return releaseMultiplexer({
-      source, version, githubToken, s3AccessKeyId, s3SecretAccessKey,
+      source,
+      version,
+      githubToken,
+      s3AccessKeyId,
+      s3SecretAccessKey,
       clauderonCiFn: (s, fd, k, sk) => this.clauderonCi(s, fd, k, sk),
     });
   }
@@ -390,7 +528,11 @@ export class Monorepo {
   }
 
   @func()
-  async muxSiteDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
+  async muxSiteDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
     return deployMuxSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
@@ -405,47 +547,86 @@ export class Monorepo {
   }
 
   @func()
-  async resumeDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
+  async resumeDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
     return deployResumeSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
   async codeReview(
-    source: Directory, githubToken: Secret, claudeOauthToken: Secret,
-    prNumber: number, baseBranch: string, headSha: string,
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    baseBranch: string,
+    headSha: string,
   ): Promise<string> {
-    return reviewPr({ source, githubToken, claudeOauthToken, prNumber, baseBranch, headSha });
+    return reviewPr({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      baseBranch,
+      headSha,
+    });
   }
 
   @func()
   async codeReviewInteractive(
-    source: Directory, githubToken: Secret, claudeOauthToken: Secret,
-    prNumber: number, commentBody: Secret,
-    commentPath?: string, commentLine?: number, commentDiffHunk?: string,
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    commentBody: Secret,
+    commentPath?: string,
+    commentLine?: number,
+    commentDiffHunk?: string,
   ): Promise<string> {
     const bodyText = await commentBody.plaintext();
     return handleInteractive({
-      source, githubToken, claudeOauthToken, prNumber,
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
       commentBody: bodyText,
-      eventContext: commentPath === undefined
-        ? undefined
-        : { path: commentPath, line: commentLine, diffHunk: commentDiffHunk },
+      eventContext:
+        commentPath === undefined
+          ? undefined
+          : { path: commentPath, line: commentLine, diffHunk: commentDiffHunk },
     });
   }
 
   @func()
   async homelabCi(
-    source: Directory, argocdToken: Secret, ghcrUsername: string, ghcrPassword: Secret,
-    chartVersion: string, chartMuseumUsername: string, chartMuseumPassword: Secret,
-    cloudflareApiToken: Secret, cloudflareAccountId: Secret,
-    awsAccessKeyId: Secret, awsSecretAccessKey: Secret,
-    hassBaseUrl?: Secret, hassToken?: Secret, tofuGithubToken?: Secret,
+    source: Directory,
+    argocdToken: Secret,
+    ghcrUsername: string,
+    ghcrPassword: Secret,
+    chartVersion: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    cloudflareApiToken: Secret,
+    cloudflareAccountId: Secret,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+    tofuGithubToken?: Secret,
   ): Promise<string> {
     return ciHomelab(source, HomelabStage.Prod, {
-      argocdToken, ghcrUsername, ghcrPassword, chartVersion,
-      chartMuseumUsername, chartMuseumPassword,
-      cloudflareApiToken, cloudflareAccountId,
-      awsAccessKeyId, awsSecretAccessKey,
+      argocdToken,
+      ghcrUsername,
+      ghcrPassword,
+      chartVersion,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      cloudflareApiToken,
+      cloudflareAccountId,
+      awsAccessKeyId,
+      awsSecretAccessKey,
       ...(hassBaseUrl === undefined ? {} : { hassBaseUrl }),
       ...(hassToken === undefined ? {} : { hassToken }),
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
@@ -453,7 +634,11 @@ export class Monorepo {
   }
 
   @func()
-  async homelabCheckAll(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+  async homelabCheckAll(
+    source: Directory,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+  ): Promise<string> {
     return checkHomelab(source, hassBaseUrl, hassToken);
   }
 
@@ -479,8 +664,16 @@ export class Monorepo {
 
   @func()
   async updateReadmes(
-    source: Directory, githubToken: Secret, openaiApiKey: Secret, baseBranch = "main",
+    source: Directory,
+    githubToken: Secret,
+    openaiApiKey: Secret,
+    baseBranch = "main",
   ): Promise<string> {
-    return await updateReadmesFn({ source, githubToken, openaiApiKey, baseBranch });
+    return await updateReadmesFn({
+      source,
+      githubToken,
+      openaiApiKey,
+      baseBranch,
+    });
   }
 }

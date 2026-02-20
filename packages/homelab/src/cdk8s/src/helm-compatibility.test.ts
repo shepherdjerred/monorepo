@@ -44,7 +44,9 @@ async function synthesizeApp(): Promise<string> {
 /**
  * Parse all K8s resources from synthesized YAML content
  */
-function parseResources(yamlContent: string): { file: string; resource: K8sResource }[] {
+function parseResources(
+  yamlContent: string,
+): { file: string; resource: K8sResource }[] {
   const resources: { file: string; resource: K8sResource }[] = [];
   const documents = yamlContent
     .split(/^---$/m)

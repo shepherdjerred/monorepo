@@ -13,7 +13,10 @@ import {
   describeCron,
 } from "@shepherdjerred/birmel/scheduler/utils/cron.ts";
 
-const CronResultSchema = z.object({ type: z.literal("cron"), value: z.string() });
+const CronResultSchema = z.object({
+  type: z.literal("cron"),
+  value: z.string(),
+});
 const DateResultSchema = z.object({ type: z.literal("date"), value: z.date() });
 
 const logger = loggers.automation;
@@ -82,12 +85,20 @@ async function resolveSchedule(
 
   const cronResult = CronResultSchema.safeParse(parsed);
   if (cronResult.success) {
-    return await resolveCronSchedule(cronResult.data.value, guildId, maxRecurringTasks);
+    return await resolveCronSchedule(
+      cronResult.data.value,
+      guildId,
+      maxRecurringTasks,
+    );
   }
 
   const dateResult = DateResultSchema.safeParse(parsed);
   if (dateResult.success) {
-    return { scheduledAt: dateResult.data.value, cronPattern: null, isRecurring: false };
+    return {
+      scheduledAt: dateResult.data.value,
+      cronPattern: null,
+      isRecurring: false,
+    };
   }
 
   return { success: false, message: `Could not parse time: "${when}"` };
@@ -106,14 +117,30 @@ export async function handleSchedule(options: {
   description: string | undefined;
   channelId: string | undefined;
 }): Promise<TimerResult> {
-  const { guildId, config, userId, when, toolId, toolInput, name, description, channelId } = options;
+  const {
+    guildId,
+    config,
+    userId,
+    when,
+    toolId,
+    toolInput,
+    name,
+    description,
+    channelId,
+  } = options;
 
   if (
-    userId == null || userId.length === 0 ||
-    when == null || when.length === 0 ||
-    toolId == null || toolId.length === 0
+    userId == null ||
+    userId.length === 0 ||
+    when == null ||
+    when.length === 0 ||
+    toolId == null ||
+    toolId.length === 0
   ) {
-    return { success: false, message: "userId, when, and toolId are required for schedule" };
+    return {
+      success: false,
+      message: "userId, when, and toolId are required for schedule",
+    };
   }
 
   const existingTasks = await prisma.scheduledTask.count({
@@ -127,7 +154,11 @@ export async function handleSchedule(options: {
     };
   }
 
-  const resolved = await resolveSchedule(when, guildId, config.scheduler.maxRecurringTasks);
+  const resolved = await resolveSchedule(
+    when,
+    guildId,
+    config.scheduler.maxRecurringTasks,
+  );
   if ("success" in resolved) {
     return resolved;
   }
@@ -153,7 +184,9 @@ export async function handleSchedule(options: {
   logger.info("Scheduled task created", { taskId: task.id, guildId, toolId });
 
   const whenDesc =
-    schedule.isRecurring && schedule.cronPattern != null && schedule.cronPattern.length > 0
+    schedule.isRecurring &&
+    schedule.cronPattern != null &&
+    schedule.cronPattern.length > 0
       ? `Recurring: ${describeCron(schedule.cronPattern)}`
       : formatScheduleTime(schedule.scheduledAt);
 
@@ -164,7 +197,9 @@ export async function handleSchedule(options: {
       taskId: task.id,
       scheduledAt: schedule.scheduledAt.toISOString(),
       isRecurring: schedule.isRecurring,
-      ...(schedule.cronPattern != null && { cronPattern: schedule.cronPattern }),
+      ...(schedule.cronPattern != null && {
+        cronPattern: schedule.cronPattern,
+      }),
     },
   };
 }

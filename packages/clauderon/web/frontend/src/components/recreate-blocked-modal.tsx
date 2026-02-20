@@ -17,8 +17,6 @@ export function RecreateBlockedModal({
   healthReport,
 }: RecreateBlockedModalProps) {
   // Handle ESC key
-  ;
-
   if (!open) {
     return null;
   }

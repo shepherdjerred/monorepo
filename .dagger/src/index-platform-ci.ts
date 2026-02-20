@@ -16,7 +16,10 @@ export async function runMobileCi(source: Directory): Promise<string> {
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source.directory("packages/clauderon/mobile"))
-    .withDirectory("/workspace/src/types/generated", source.directory("packages/clauderon/web/shared/src/generated"))
+    .withDirectory(
+      "/workspace/src/types/generated",
+      source.directory("packages/clauderon/web/shared/src/generated"),
+    )
     .withFile("/tsconfig.base.json", source.file("tsconfig.base.json"))
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
@@ -57,14 +60,19 @@ export async function runMobileCi(source: Directory): Promise<string> {
     if (result.success) {
       outputs.push(String(result.value));
     } else {
-      const msg = result.error instanceof Error ? result.error.message : String(result.error);
+      const msg =
+        result.error instanceof Error
+          ? result.error.message
+          : String(result.error);
       outputs.push(`✗ Mobile ${result.name} failed: ${msg}`);
       errors.push(`Mobile ${result.name}: ${msg}`);
     }
   }
 
   if (errors.length > 0) {
-    throw new Error(`Mobile CI failed:\n${errors.join("\n")}\n\n${outputs.join("\n")}`);
+    throw new Error(
+      `Mobile CI failed:\n${errors.join("\n")}\n\n${outputs.join("\n")}`,
+    );
   }
 
   return outputs.join("\n");
@@ -72,17 +80,31 @@ export async function runMobileCi(source: Directory): Promise<string> {
 
 /** Run Clauderon CI: fmt check, clippy, test, build. */
 export async function runClauderonCi(
-  source: Directory, frontendDist?: Directory,
-  s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
+  source: Directory,
+  frontendDist?: Directory,
+  s3AccessKeyId?: Secret,
+  s3SecretAccessKey?: Secret,
 ): Promise<string> {
   const outputs: string[] = [];
-  const base = getRustContainer(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
+  const base = getRustContainer(
+    source,
+    frontendDist,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+  );
 
   // Phase 1: Read-only checks in parallel (no target dir writes for fmt/deny)
   const [fmtResult, denyResult] = await Promise.allSettled([
     base.withExec(["cargo", "fmt", "--check"]).sync(),
     base
-      .withExec(["cargo", "install", "cargo-deny", "--locked", "--root", "/root/.cargo-tools"])
+      .withExec([
+        "cargo",
+        "install",
+        "cargo-deny",
+        "--locked",
+        "--root",
+        "/root/.cargo-tools",
+      ])
       .withExec(["cargo", "deny", "check", "advisories", "bans", "sources"])
       .sync(),
   ]);
@@ -97,14 +119,25 @@ export async function runClauderonCi(
   if (denyResult.status === "fulfilled") {
     outputs.push("✓ cargo deny passed");
   } else {
-    const msg = denyResult.reason instanceof Error ? denyResult.reason.message : String(denyResult.reason);
+    const msg =
+      denyResult.reason instanceof Error
+        ? denyResult.reason.message
+        : String(denyResult.reason);
     outputs.push(`⚠ cargo deny (non-blocking): ${msg}`);
   }
 
   // Phase 2: Pipeline clippy → test → release build (sequential, reuses compilation artifacts)
   // Single DAG with one sync at end — let Dagger build the full pipeline
   const pipeline = base
-    .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+    .withExec([
+      "cargo",
+      "clippy",
+      "--all-targets",
+      "--all-features",
+      "--",
+      "-D",
+      "warnings",
+    ])
     .withExec(["cargo", "test"])
     .withExec(["cargo", "build", "--release"]);
   await pipeline.sync();
@@ -115,7 +148,14 @@ export async function runClauderonCi(
   // Phase 3: Coverage (non-blocking, independent)
   try {
     await base
-      .withExec(["cargo", "install", "cargo-llvm-cov", "--locked", "--root", "/root/.cargo-tools"])
+      .withExec([
+        "cargo",
+        "install",
+        "cargo-llvm-cov",
+        "--locked",
+        "--root",
+        "/root/.cargo-tools",
+      ])
       .withExec(["cargo", "llvm-cov", "--fail-under-lines", "40"])
       .sync();
     outputs.push("✓ Coverage threshold met");

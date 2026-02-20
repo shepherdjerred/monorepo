@@ -8,11 +8,7 @@ export default [
     projectService: {
       allowDefaultProject: ["eslint.config.ts"],
     },
-    ignores: [
-      "vite.config.ts",
-      "dist/**/*",
-      "public/**/*",
-    ],
+    ignores: ["vite.config.ts", "dist/**/*", "public/**/*"],
   }),
   {
     rules: {

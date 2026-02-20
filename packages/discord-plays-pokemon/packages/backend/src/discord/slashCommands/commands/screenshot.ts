@@ -1,5 +1,4 @@
-import type {
-  CommandInteraction} from "discord.js";
+import type { CommandInteraction } from "discord.js";
 import {
   SlashCommandBuilder,
   AttachmentBuilder,
@@ -19,7 +18,9 @@ export const screenshotCommand = new SlashCommandBuilder()
   .setDescription("Take a screenshot and upload it to the chat");
 
 export function makeScreenshot(driver: WebDriver) {
-  return async function handleScreenshotCommand(interaction: CommandInteraction) {
+  return async function handleScreenshotCommand(
+    interaction: CommandInteraction,
+  ) {
     const screenshotData = await driver.takeScreenshot();
     const buffer = Buffer.from(screenshotData, "base64");
     const date = new Date();

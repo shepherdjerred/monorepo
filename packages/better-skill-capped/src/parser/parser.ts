@@ -60,16 +60,18 @@ export class Parser {
       const title = rawTitleToDisplayTitle(video.title);
       const videoUrl = getVideoUrl({ uuid: video.uuid });
 
-      return [{
-        role,
-        title,
-        description: video.desc,
-        releaseDate,
-        durationInSeconds: video.durSec,
-        uuid: video.uuid,
-        imageUrl,
-        skillCappedUrl: videoUrl,
-      }];
+      return [
+        {
+          role,
+          title,
+          description: video.desc,
+          releaseDate,
+          durationInSeconds: video.durSec,
+          uuid: video.uuid,
+          imageUrl,
+          skillCappedUrl: videoUrl,
+        },
+      ];
     });
   }
 
@@ -211,10 +213,7 @@ export class Parser {
 
   parseCommentaries(dumpCommentary: ManifestCommentary[]): Commentary[] {
     return dumpCommentary
-      .filter(
-        (commentary) =>
-          commentary.title !== undefined,
-      )
+      .filter((commentary) => commentary.title !== undefined)
       .map((commentary): Commentary => {
         const releaseDate = this.parseDate(commentary.rDate);
         const role = roleFromString(commentary.role);

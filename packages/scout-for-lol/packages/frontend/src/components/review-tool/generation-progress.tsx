@@ -38,9 +38,9 @@ export function PipelinePillProgress({
             className={`h-2 flex-1 rounded-full transition-all duration-300 ${
               status === "complete"
                 ? "bg-green-500"
-                : (status === "active"
+                : status === "active"
                   ? "bg-yellow-500 animate-pulse"
-                  : "bg-surface-200")
+                  : "bg-surface-200"
             }`}
           />
         );

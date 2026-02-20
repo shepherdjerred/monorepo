@@ -8,7 +8,8 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
 
 const envBackendUrl: unknown = import.meta.env["PUBLIC_BACKEND_URL"];
-const BACKEND_URL: string = typeof envBackendUrl === "string" ? envBackendUrl : "http://localhost:3000";
+const BACKEND_URL: string =
+  typeof envBackendUrl === "string" ? envBackendUrl : "http://localhost:3000";
 
 /**
  * Create a tRPC client with optional auth token

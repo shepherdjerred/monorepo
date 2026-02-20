@@ -6,6 +6,7 @@ import {
 } from "./lib-monorepo-workspace.ts";
 import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 const PLAYWRIGHT_VERSION = versions.playwright;
 
@@ -99,9 +100,12 @@ function installWorkspaceDeps(
  * @returns Container ready for birmel operations
  */
 export function getBirmelPrepared(workspaceSource: Directory): Container {
+  const builtEslintConfig = getBuiltEslintConfig(workspaceSource);
   return installWorkspaceDeps(workspaceSource, true)
-    .withWorkdir("/workspace/packages/eslint-config")
-    .withExec(["bun", "run", "build"])
+    .withDirectory(
+      "/workspace/packages/eslint-config/dist",
+      builtEslintConfig.directory("dist"),
+    )
     .withWorkdir("/workspace/packages/birmel");
 }
 
@@ -169,7 +173,10 @@ export function buildBirmelImage(
       "org.opencontainers.image.description",
       "AI-powered Discord server management bot",
     )
-    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    );
 }
 
 /**

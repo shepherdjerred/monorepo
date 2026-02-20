@@ -67,7 +67,9 @@ async function parseVersionsFile(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]?.trim();
-    if (!line) {continue;}
+    if (!line) {
+      continue;
+    }
 
     // Match single-line property definitions: "property": "value" or property: "value" (including empty strings)
     const quotedRegex = /^"(.+?)":\s*"(.*?)",?$/;
@@ -97,7 +99,9 @@ async function parseVersionsFile(
       // Look for the value on the next few lines
       for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
         const valueLine = lines[j]?.trim();
-        if (!valueLine) {continue;}
+        if (!valueLine) {
+          continue;
+        }
         const valueRegex = /^"(.*?)",?$/;
         const valueMatch = valueRegex.exec(valueLine);
         if (valueMatch?.[1] !== undefined) {
@@ -106,7 +110,9 @@ async function parseVersionsFile(
         }
       }
 
-      if (!value) {continue;} // Skip if we couldn't find the value
+      if (!value) {
+        continue;
+      } // Skip if we couldn't find the value
     } else {
       continue; // Skip lines that don't match any property format
     }
@@ -120,7 +126,9 @@ async function parseVersionsFile(
 
     for (let j = propertyLine - 1; j >= Math.max(0, propertyLine - 3); j--) {
       const prevLine = lines[j]?.trim();
-      if (!prevLine) {continue;}
+      if (!prevLine) {
+        continue;
+      }
       if (prevLine.includes("// renovate:")) {
         renovateComment = prevLine;
         hasRenovateComment = true;

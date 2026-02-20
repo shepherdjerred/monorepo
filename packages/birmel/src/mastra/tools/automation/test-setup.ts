@@ -18,10 +18,7 @@ Bun.env["BROWSER_ENABLED"] ??= "true";
 Bun.env["BROWSER_HEADLESS"] ??= "true";
 
 // If no database path is set (local dev), use a local file database
-if (
-  Bun.env["DATABASE_PATH"] == null ||
-  Bun.env["DATABASE_PATH"].length === 0
-) {
+if (Bun.env["DATABASE_PATH"] == null || Bun.env["DATABASE_PATH"].length === 0) {
   const dataDir = path.join(process.cwd(), "data");
   await mkdir(dataDir, { recursive: true });
   const testDbPath = path.join(dataDir, "test-automation.db");

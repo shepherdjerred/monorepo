@@ -10,7 +10,6 @@ type ConsoleProps = {
   onSwitchToChat?: () => void;
 };
 
-
 export function Console({
   sessionId,
   sessionName,
@@ -25,8 +24,6 @@ export function Console({
   const [errorKey] = useState<number>(0);
 
   // Set Sentry context for this session
-  ;
-
   // Dismiss error function
   const dismissError = () => {
     setError(null);
@@ -38,17 +35,9 @@ export function Console({
   void client; // Used by terminal input handler when hooks are re-enabled
 
   // Update ref whenever client or connection state changes
-  ;
-
   // Initialize terminal
-  ;
-
   // Handle WebSocket data
-  ;
-
   // Handle connection status changes
-  ;
-
   return (
     <>
       <div className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm" />

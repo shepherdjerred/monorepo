@@ -35,7 +35,10 @@ export function Stat({
       }}
     >
       <span
-        style={{ fontWeight: 700, color: highlight === true ? palette.gold[1] : "" }}
+        style={{
+          fontWeight: 700,
+          color: highlight === true ? palette.gold[1] : "",
+        }}
       >
         {mainValue}
       </span>

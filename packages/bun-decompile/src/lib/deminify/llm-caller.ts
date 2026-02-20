@@ -334,7 +334,10 @@ export function parseResponse(content: string): RenameMappings {
     }
     return parsed;
   } catch {
-    console.error("Failed to parse LLM response as JSON:", content.slice(0, 200));
+    console.error(
+      "Failed to parse LLM response as JSON:",
+      content.slice(0, 200),
+    );
     return {};
   }
 }

@@ -189,8 +189,16 @@ function removeFromOldParent(
 
 /** Extract a single function from an AST node */
 function extractFunction(opts: ExtractFunctionOpts): ExtractedFunction {
-  const { node, originalNode, source, index, type, ancestors, nodeToFunction, overrideName } =
-    opts;
+  const {
+    node,
+    originalNode,
+    source,
+    index,
+    type,
+    ancestors,
+    nodeToFunction,
+    overrideName,
+  } = opts;
   const name = overrideName ?? getFunctionName(node, ancestors);
   const id = generateFunctionId(node, source, index, name);
 
@@ -332,7 +340,9 @@ function extractParameterInfo(param: unknown): ParameterInfo {
   const pattern = parsed.data;
 
   if (pattern.type === "RestElement") {
-    const argIdent = pattern.argument ? asIdentifierNode(pattern.argument) : undefined;
+    const argIdent = pattern.argument
+      ? asIdentifierNode(pattern.argument)
+      : undefined;
     return { name: argIdent?.name ?? "", hasDefault: false, isRest: true };
   }
 

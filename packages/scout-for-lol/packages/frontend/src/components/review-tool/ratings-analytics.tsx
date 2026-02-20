@@ -76,7 +76,11 @@ export function RatingsAnalytics() {
     const personalityMap = new Map<string, { total: number; sum: number }>();
     for (const entry of ratedEntries) {
       const personality = entry.configSnapshot.personality;
-      if (personality !== undefined && personality.length > 0 && entry.rating !== undefined) {
+      if (
+        personality !== undefined &&
+        personality.length > 0 &&
+        entry.rating !== undefined
+      ) {
         const existing = personalityMap.get(personality);
         if (existing) {
           existing.total += 1;

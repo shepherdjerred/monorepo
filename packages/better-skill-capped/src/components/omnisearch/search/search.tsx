@@ -31,10 +31,9 @@ type SearchState = {
   filters: Filters;
 };
 
-export default class Search<T extends OmniSearchable> extends React.PureComponent<
-  SearchProps<T>,
-  SearchState
-> {
+export default class Search<
+  T extends OmniSearchable,
+> extends React.PureComponent<SearchProps<T>, SearchState> {
   constructor(props: SearchProps<T>) {
     super(props);
 

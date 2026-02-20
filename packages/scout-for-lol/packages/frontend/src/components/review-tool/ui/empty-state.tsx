@@ -20,7 +20,9 @@ export function EmptyState({
     <div className="empty-state animate-fade-in">
       {Boolean(icon) && <div className="empty-state-icon">{icon}</div>}
       <h3 className="empty-state-title">{title}</h3>
-      {description !== undefined && description.length > 0 && <p className="empty-state-description">{description}</p>}
+      {description !== undefined && description.length > 0 && (
+        <p className="empty-state-description">{description}</p>
+      )}
       {Boolean(action) && <div className="mt-6">{action}</div>}
     </div>
   );

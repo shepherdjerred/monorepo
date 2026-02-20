@@ -120,9 +120,7 @@ function main() {
   logger.info("Save completed");
 
   logger.info(`✅ Transformed ${transformCount.toString()} properties`);
-  logger.info(
-    `✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`,
-  );
+  logger.info(`✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`);
   logger.info("🎉 Prisma types successfully branded!");
 }
 
@@ -336,8 +334,12 @@ function transformSimpleObjectType(
       prop,
       modelName,
       (fullText, brandedType, propName) => {
-        const simpleNumberPattern = new RegExp(String.raw`${propName}\??:\s*number\b`);
-        const simpleStringPattern = new RegExp(String.raw`${propName}\??:\s*string\b`);
+        const simpleNumberPattern = new RegExp(
+          String.raw`${propName}\??:\s*number\b`,
+        );
+        const simpleStringPattern = new RegExp(
+          String.raw`${propName}\??:\s*string\b`,
+        );
 
         const numberMatch = simpleNumberPattern.exec(fullText);
         const stringMatch = simpleStringPattern.exec(fullText);

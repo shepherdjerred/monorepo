@@ -118,11 +118,17 @@ async function handleRemoveTimeout(
   reason: string | undefined,
 ): Promise<ModerationResult> {
   if (memberId == null || memberId.length === 0) {
-    return { success: false, message: "memberId is required for remove-timeout" };
+    return {
+      success: false,
+      message: "memberId is required for remove-timeout",
+    };
   }
   const member = await guild.members.fetch(memberId);
   await member.timeout(null, reason);
-  return { success: true, message: `Removed timeout from ${member.user.username}` };
+  return {
+    success: true,
+    message: `Removed timeout from ${member.user.username}`,
+  };
 }
 
 async function handleListBans(
@@ -153,16 +159,29 @@ type ModerationInput = {
   days?: number | undefined;
 };
 
-async function dispatchModerationAction(guild: Guild, ctx: ModerationInput): Promise<ModerationResult> {
+async function dispatchModerationAction(
+  guild: Guild,
+  ctx: ModerationInput,
+): Promise<ModerationResult> {
   switch (ctx.action) {
     case "kick":
       return await handleKick(guild, ctx.memberId, ctx.reason);
     case "ban":
-      return await handleBan(guild, ctx.memberId, ctx.reason, ctx.deleteMessageSeconds);
+      return await handleBan(
+        guild,
+        ctx.memberId,
+        ctx.reason,
+        ctx.deleteMessageSeconds,
+      );
     case "unban":
       return await handleUnban(guild, ctx.memberId, ctx.reason);
     case "timeout":
-      return await handleTimeout(guild, ctx.memberId, ctx.durationMinutes, ctx.reason);
+      return await handleTimeout(
+        guild,
+        ctx.memberId,
+        ctx.durationMinutes,
+        ctx.reason,
+      );
     case "remove-timeout":
       return await handleRemoveTimeout(guild, ctx.memberId, ctx.reason);
     case "list-bans":

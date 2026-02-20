@@ -315,16 +315,17 @@ function ContextDisplay({ metadata }: { metadata: GenerationMetadata }) {
         Context
       </h3>
       <div className="space-y-2 text-sm">
-        {metadata.selectedPersonality !== undefined && metadata.selectedPersonality.length > 0 && (
-          <div className="flex justify-between">
-            <span className="text-surface-600 dark:text-surface-400">
-              Personality:
-            </span>
-            <span className="font-mono text-surface-900 dark:text-surface-100">
-              {metadata.selectedPersonality}
-            </span>
-          </div>
-        )}
+        {metadata.selectedPersonality !== undefined &&
+          metadata.selectedPersonality.length > 0 && (
+            <div className="flex justify-between">
+              <span className="text-surface-600 dark:text-surface-400">
+                Personality:
+              </span>
+              <span className="font-mono text-surface-900 dark:text-surface-100">
+                {metadata.selectedPersonality}
+              </span>
+            </div>
+          )}
       </div>
     </div>
   );
@@ -422,9 +423,11 @@ export function ResultMetadata({
             Cost
           </h3>
           <div className="space-y-2 text-sm">
-            {pipelineCosts === null ? (cost === null ? null : (
-              <LegacyCostDisplay cost={cost} />
-            )) : (
+            {pipelineCosts === null ? (
+              cost === null ? null : (
+                <LegacyCostDisplay cost={cost} />
+              )
+            ) : (
               <PipelineCostDisplay costs={pipelineCosts} />
             )}
           </div>

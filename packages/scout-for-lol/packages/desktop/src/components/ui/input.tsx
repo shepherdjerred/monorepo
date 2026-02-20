@@ -38,7 +38,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="space-y-2.5">
-        {label !== undefined && label.length > 0 && <Label htmlFor={inputId}>{label}</Label>}
+        {label !== undefined && label.length > 0 && (
+          <Label htmlFor={inputId}>{label}</Label>
+        )}
         <div className="relative">
           {Boolean(icon) && (
             <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -63,11 +65,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {((helperText !== undefined && helperText.length > 0) || (error !== undefined && error.length > 0)) && (
+        {((helperText !== undefined && helperText.length > 0) ||
+          (error !== undefined && error.length > 0)) && (
           <p
             className={cn(
               "text-xs",
-              error !== undefined && error.length > 0 ? "text-discord-red" : "text-gray-500",
+              error !== undefined && error.length > 0
+                ? "text-discord-red"
+                : "text-gray-500",
             )}
           >
             {error ?? helperText}
@@ -92,7 +97,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <div className="space-y-2.5">
-        {label !== undefined && label.length > 0 && <Label htmlFor={selectId}>{label}</Label>}
+        {label !== undefined && label.length > 0 && (
+          <Label htmlFor={selectId}>{label}</Label>
+        )}
         <select
           ref={ref}
           id={selectId}
@@ -108,7 +115,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         >
           {children}
         </select>
-        {helperText !== undefined && helperText.length > 0 && <p className="text-xs text-gray-500">{helperText}</p>}
+        {helperText !== undefined && helperText.length > 0 && (
+          <p className="text-xs text-gray-500">{helperText}</p>
+        )}
       </div>
     );
   },

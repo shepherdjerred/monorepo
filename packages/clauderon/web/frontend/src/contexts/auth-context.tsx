@@ -45,8 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [client]);
 
-  ;
-
   const currentUser = authStatus?.current_user ?? null;
 
   return (

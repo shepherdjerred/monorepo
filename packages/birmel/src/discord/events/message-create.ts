@@ -220,5 +220,3 @@ export function setupMessageCreateHandler(client: Client): void {
     })();
   });
 }
-
-

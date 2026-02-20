@@ -3,7 +3,10 @@ import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
-import { hasValidAuth, deleteAuth } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import {
+  hasValidAuth,
+  deleteAuth,
+} from "@shepherdjerred/birmel/editor/github-oauth.ts";
 import { getGitHubConfig } from "@shepherdjerred/birmel/editor/config.ts";
 
 export const connectGitHubTool = createTool({

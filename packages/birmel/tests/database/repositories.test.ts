@@ -253,14 +253,7 @@ describe("music_history repository", () => {
     const result = testDb.run(
       `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url, track_duration)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        "guild1",
-        "channel1",
-        "user1",
-        "Test Song",
-        "https://example.com",
-        180,
-      ],
+      ["guild1", "channel1", "user1", "Test Song", "https://example.com", 180],
     );
 
     expect(result.lastInsertRowid).toBeGreaterThan(0);
@@ -319,24 +312,12 @@ describe("music_history repository", () => {
     testDb.run(
       `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
        VALUES (?, ?, ?, ?, ?)`,
-      [
-        "guild1",
-        "channel1",
-        "user1",
-        "Popular Song",
-        "https://example.com/1",
-      ],
+      ["guild1", "channel1", "user1", "Popular Song", "https://example.com/1"],
     );
     testDb.run(
       `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
        VALUES (?, ?, ?, ?, ?)`,
-      [
-        "guild1",
-        "channel1",
-        "user2",
-        "Popular Song",
-        "https://example.com/1",
-      ],
+      ["guild1", "channel1", "user2", "Popular Song", "https://example.com/1"],
     );
     testDb.run(
       `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)

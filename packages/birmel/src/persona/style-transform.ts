@@ -48,7 +48,9 @@ async function loadStyleCard(persona: string): Promise<StyleCard | null> {
   }
 }
 
-export async function buildStyleContext(persona: string): Promise<StyleContext | null> {
+export async function buildStyleContext(
+  persona: string,
+): Promise<StyleContext | null> {
   const config = getConfig();
 
   if (!config.persona.enabled) {

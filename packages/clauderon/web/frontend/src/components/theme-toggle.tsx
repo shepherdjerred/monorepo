@@ -6,11 +6,7 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   // Load theme from localStorage or system preference after mount (SSR-safe)
-  ;
-
   // Apply theme to document
-  ;
-
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };

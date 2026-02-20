@@ -1,4 +1,7 @@
-import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -26,19 +29,27 @@ type SchedulingInput = {
 
 async function handleScheduleMessage(ctx: SchedulingInput) {
   if (
-    ctx.channelId == null || ctx.channelId.length === 0 ||
-    ctx.message == null || ctx.message.length === 0 ||
-    ctx.scheduledAt == null || ctx.scheduledAt.length === 0 ||
-    ctx.createdBy == null || ctx.createdBy.length === 0
+    ctx.channelId == null ||
+    ctx.channelId.length === 0 ||
+    ctx.message == null ||
+    ctx.message.length === 0 ||
+    ctx.scheduledAt == null ||
+    ctx.scheduledAt.length === 0 ||
+    ctx.createdBy == null ||
+    ctx.createdBy.length === 0
   ) {
     return {
       success: false,
-      message: "channelId, message, scheduledAt, and createdBy are required for schedule",
+      message:
+        "channelId, message, scheduledAt, and createdBy are required for schedule",
     };
   }
   const scheduledDate = new Date(ctx.scheduledAt);
   if (Number.isNaN(scheduledDate.getTime())) {
-    return { success: false, message: "Invalid date format. Please provide an ISO timestamp" };
+    return {
+      success: false,
+      message: "Invalid date format. Please provide an ISO timestamp",
+    };
   }
   if (scheduledDate <= new Date()) {
     return { success: false, message: "Scheduled time must be in the future" };
@@ -52,7 +63,8 @@ async function handleScheduleMessage(ctx: SchedulingInput) {
     createdBy: ctx.createdBy,
     repeat,
   });
-  const repeatText = repeat != null && repeat.length > 0 ? ` (repeating ${repeat})` : "";
+  const repeatText =
+    repeat != null && repeat.length > 0 ? ` (repeating ${repeat})` : "";
   logger.info("Message scheduled", { scheduleId, guildId: ctx.guildId });
   return {
     success: true,
@@ -69,7 +81,10 @@ async function handleListScheduled(guildId: string) {
     message: p.message,
     scheduledAt: p.scheduledAt.toISOString(),
   }));
-  logger.info("Scheduled messages listed", { guildId, count: schedules.length });
+  logger.info("Scheduled messages listed", {
+    guildId,
+    count: schedules.length,
+  });
   return {
     success: true,
     message: `Found ${schedules.length.toString()} pending scheduled messages`,
@@ -77,7 +92,10 @@ async function handleListScheduled(guildId: string) {
   };
 }
 
-async function handleCancelScheduled(scheduleId: number | undefined, guildId: string) {
+async function handleCancelScheduled(
+  scheduleId: number | undefined,
+  guildId: string,
+) {
   if (scheduleId === undefined) {
     return { success: false, message: "scheduleId is required for cancel" };
   }

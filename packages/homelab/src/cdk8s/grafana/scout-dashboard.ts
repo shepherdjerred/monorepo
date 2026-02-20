@@ -66,7 +66,9 @@ export function createScoutDashboard() {
       .title(options.title)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(options.query).legendFormat(options.legend),
+        new prometheus.DataqueryBuilder()
+          .expr(options.query)
+          .legendFormat(options.legend),
       )
       .unit(options.unit ?? "short")
       .colorMode(common.BigValueColorMode.Value)

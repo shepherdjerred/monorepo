@@ -1,4 +1,4 @@
-import type { CommandInput} from "./command-input.ts";
+import type { CommandInput } from "./command-input.ts";
 import { parseCommandInput } from "./command-input.ts";
 
 export type Chord = CommandInput[];

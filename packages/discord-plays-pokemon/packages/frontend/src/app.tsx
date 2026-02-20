@@ -14,7 +14,8 @@ import type {
   LoginRequest,
   Player,
   ScreenshotRequest,
-  Status} from "@discord-plays-pokemon/common";
+  Status,
+} from "@discord-plays-pokemon/common";
 
 export function App() {
   const [player, _setPlayer] = useState<Player>();

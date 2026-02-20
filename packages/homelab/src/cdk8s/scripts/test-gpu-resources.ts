@@ -53,7 +53,7 @@ async function testGpuResources() {
       );
 
       for (const match of matches) {
-        if ((match[1] == null || match[1] === "")) {
+        if (match[1] == null || match[1] === "") {
           throw new Error(`No match found for ${match.toString()}`);
         }
         const value = match[1].trim();

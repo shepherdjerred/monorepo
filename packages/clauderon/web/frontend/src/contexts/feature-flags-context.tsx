@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { FeatureFlags } from "@clauderon/shared";
 
 type FeatureFlagsContextValue = {
@@ -20,8 +15,6 @@ export function FeatureFlagsProvider({ children }: { children: ReactNode }) {
   const [flags] = useState<FeatureFlags | null>(null);
   const [isLoading] = useState(true);
   const [error] = useState<Error | null>(null);
-
-  ;
 
   return (
     <FeatureFlagsContext.Provider value={{ flags, isLoading, error }}>

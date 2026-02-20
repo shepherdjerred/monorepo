@@ -22,6 +22,10 @@ export const allTools: Record<string, unknown> = {
   ...toolsToRecord([manageMemoryTool]),
   ...toolsToRecord(sqliteTools),
   ...toolsToRecord(electionTools),
-  ...toolsToRecord([executeShellCommandTool, manageTaskTool, browserAutomationTool]),
+  ...toolsToRecord([
+    executeShellCommandTool,
+    manageTaskTool,
+    browserAutomationTool,
+  ]),
   ...toolsToRecord([manageBirthdayTool]),
 };

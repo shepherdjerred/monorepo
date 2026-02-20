@@ -162,8 +162,13 @@ function normalizeEntry(entry: WorkspaceEntry): NormalizedEntry {
 export function installMonorepoWorkspaceDeps(
   config: InstallWorkspaceDepsConfig,
 ): Container {
-  const { baseContainer, source, useMounts, workspaces, rootConfigFiles = [] } =
-    config;
+  const {
+    baseContainer,
+    source,
+    useMounts,
+    workspaces,
+    rootConfigFiles = [],
+  } = config;
 
   const addFile = useMounts
     ? (c: Container, path: string) =>
@@ -184,7 +189,10 @@ export function installMonorepoWorkspaceDeps(
   // Always copy (not mount) bun.lock so bun install can update it for workspace subsets.
   // Mounted files are read-only in Dagger, and bun install needs to write the lockfile
   // when the workspace subset differs from the full monorepo lockfile.
-  container = container.withFile("/workspace/bun.lock", source.file("bun.lock"));
+  container = container.withFile(
+    "/workspace/bun.lock",
+    source.file("bun.lock"),
+  );
 
   for (const entry of workspaces) {
     const { path, subPackages, extraFiles, fullDirPhase1 } =
@@ -225,7 +233,9 @@ export function installMonorepoWorkspaceDeps(
   for (const entry of workspaces) {
     const { path, fullDirPhase1, depsOnly } = normalizeEntry(entry);
     // Skip workspaces that are deps-only or fully mounted in PHASE 1
-    if (depsOnly || fullDirPhase1) {continue;}
+    if (depsOnly || fullDirPhase1) {
+      continue;
+    }
     container = addDir(container, path);
   }
 

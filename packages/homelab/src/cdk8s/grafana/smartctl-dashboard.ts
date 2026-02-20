@@ -4,7 +4,11 @@ import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
-import { addErrorTrackingPanels, addLifecyclePanels, addSectorHealthPanels } from "./smartctl-panels.ts";
+import {
+  addErrorTrackingPanels,
+  addLifecyclePanels,
+  addSectorHealthPanels,
+} from "./smartctl-panels.ts";
 
 // Helper function to build filter expression
 // Note: instance label may not always be present on textfile collector metrics

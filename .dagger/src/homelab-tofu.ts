@@ -39,7 +39,15 @@ type PlanDirOptions = {
 export async function planDir(
   options: PlanDirOptions,
 ): Promise<{ dir: string; hasDrift: boolean; output: string }> {
-  const { source, dir, cloudflareApiToken, cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey, githubToken } = options;
+  const {
+    source,
+    dir,
+    cloudflareApiToken,
+    cloudflareAccountId,
+    awsAccessKeyId,
+    awsSecretAccessKey,
+    githubToken,
+  } = options;
   let container = getTofuContainer()
     .withMountedDirectory("/workspace", source.directory(`src/tofu/${dir}`))
     .withWorkdir("/workspace")
@@ -88,10 +96,15 @@ type PlanAllOptions = {
   githubToken?: Secret | undefined;
 };
 
-export async function planAll(
-  options: PlanAllOptions,
-): Promise<string> {
-  const { source, cloudflareApiToken, cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey, githubToken } = options;
+export async function planAll(options: PlanAllOptions): Promise<string> {
+  const {
+    source,
+    cloudflareApiToken,
+    cloudflareAccountId,
+    awsAccessKeyId,
+    awsSecretAccessKey,
+    githubToken,
+  } = options;
   const results = await Promise.allSettled(
     TOFU_DIRS.map((dir) =>
       planDir({

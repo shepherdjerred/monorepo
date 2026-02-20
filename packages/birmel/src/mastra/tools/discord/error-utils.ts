@@ -20,9 +20,7 @@ export type DiscordAPIErrorLike = z.infer<typeof DiscordAPIErrorSchema>;
 /**
  * Check if an error looks like a DiscordAPIError based on its properties.
  */
-export function isDiscordAPIError(
-  error: unknown,
-): boolean {
+export function isDiscordAPIError(error: unknown): boolean {
   return DiscordAPIErrorSchema.safeParse(error).success;
 }
 

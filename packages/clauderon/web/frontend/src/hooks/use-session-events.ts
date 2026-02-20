@@ -7,7 +7,5 @@ import type { EventsClient, SessionEvent } from "@clauderon/client";
 export function useSessionEvents(_onEvent: (event: SessionEvent) => void) {
   const clientRef = useRef<EventsClient | null>(null);
 
-  ;
-
   return clientRef.current;
 }

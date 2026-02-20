@@ -64,7 +64,7 @@ export default function App() {
   }, []);
 
   // Load config on mount
-   
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -75,7 +75,10 @@ export default function App() {
         if (config.backendUrl !== null && config.backendUrl.length > 0) {
           setBackendUrl(config.backendUrl);
         }
-        if (config.apiToken !== null && config.apiToken.length > 0 || config.backendUrl !== null && config.backendUrl.length > 0) {
+        if (
+          (config.apiToken !== null && config.apiToken.length > 0) ||
+          (config.backendUrl !== null && config.backendUrl.length > 0)
+        ) {
           addLog("info", "Loaded saved backend configuration");
         }
 
@@ -99,7 +102,7 @@ export default function App() {
   }, []);
 
   // Load status on mount and setup polling
-   
+
   useEffect(() => {
     void loadStatus();
     const interval = setInterval(() => {
@@ -111,7 +114,7 @@ export default function App() {
   }, [loadStatus]);
 
   // Listen for backend logs
-   
+
   useEffect(() => {
     const unlisten = listen<string>("backend-log", (event) => {
       addLog("info", event.payload);
@@ -236,7 +239,10 @@ export default function App() {
             `To enable: League Client → Settings → Game → Enable Live Client Data API`,
           );
           addLog("error", `Then restart League Client and reconnect.`);
-          if (diagnostics.error_message !== null && diagnostics.error_message.length > 0) {
+          if (
+            diagnostics.error_message !== null &&
+            diagnostics.error_message.length > 0
+          ) {
             addLog("error", `Error: ${diagnostics.error_message}`);
           }
         }
@@ -347,7 +353,9 @@ export default function App() {
                 {error}
               </Alert>
             )}
-            {loading !== null && loading.length > 0 && <Alert variant="loading">{loading}</Alert>}
+            {loading !== null && loading.length > 0 && (
+              <Alert variant="loading">{loading}</Alert>
+            )}
           </div>
         )}
 

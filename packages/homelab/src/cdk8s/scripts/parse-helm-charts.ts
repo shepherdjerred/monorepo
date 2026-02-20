@@ -25,7 +25,12 @@ export async function parseChartInfoFromVersions(
     const nextLine = lines[i + 1];
 
     // Look for renovate comments that indicate Helm charts
-    if (line == null || !line.includes("renovate: datasource=helm") || nextLine == null || nextLine === "") {
+    if (
+      line == null ||
+      !line.includes("renovate: datasource=helm") ||
+      nextLine == null ||
+      nextLine === ""
+    ) {
       continue;
     }
 
@@ -37,7 +42,12 @@ export async function parseChartInfoFromVersions(
 
     const repoUrl = repoUrlMatch[1];
     const versionKey = versionKeyMatch[1];
-    if ((repoUrl == null || repoUrl === "") || (versionKey == null || versionKey === "")) {
+    if (
+      repoUrl == null ||
+      repoUrl === "" ||
+      versionKey == null ||
+      versionKey === ""
+    ) {
       continue;
     }
 
@@ -48,7 +58,7 @@ export async function parseChartInfoFromVersions(
     }
 
     const version = versionMatch[1];
-    if ((version == null || version === "")) {
+    if (version == null || version === "") {
       continue;
     }
 

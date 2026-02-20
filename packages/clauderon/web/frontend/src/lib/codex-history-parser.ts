@@ -92,7 +92,10 @@ function handleMessagePayload(
   // Extract text content from content blocks
   const textParts: string[] = [];
   for (const c of content) {
-    if ((c.type === "input_text" || c.type === "output_text") && c.text != null) {
+    if (
+      (c.type === "input_text" || c.type === "output_text") &&
+      c.text != null
+    ) {
       textParts.push(c.text);
     }
   }
@@ -174,7 +177,11 @@ function handleFunctionCallOutput(
   }
 }
 
-function handleReasoning(payload: unknown, timestamp: string, messages: Message[]): void {
+function handleReasoning(
+  payload: unknown,
+  timestamp: string,
+  messages: Message[],
+): void {
   const result = ReasoningPayloadSchema.safeParse(payload);
   if (!result.success) {
     return;
@@ -237,7 +244,12 @@ export function parseCodexHistoryLines(lines: string[]): Message[] {
         break;
       }
       case "function_call": {
-        handleFunctionCall(entry.payload, entry.timestamp, messages, functionCallMap);
+        handleFunctionCall(
+          entry.payload,
+          entry.timestamp,
+          messages,
+          functionCallMap,
+        );
         break;
       }
       case "function_call_output": {

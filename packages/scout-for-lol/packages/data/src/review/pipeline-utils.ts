@@ -81,7 +81,11 @@ function buildErrorDetails(
   if (refusal !== undefined && refusal !== null && refusal.length > 0) {
     details.push(`refusal: ${refusal}`);
   }
-  if (finishReason !== undefined && finishReason !== null && finishReason.length > 0) {
+  if (
+    finishReason !== undefined &&
+    finishReason !== null &&
+    finishReason.length > 0
+  ) {
     details.push(`finish_reason: ${finishReason}`);
   }
   return details;
@@ -128,7 +132,11 @@ export async function callOpenAI(params: {
   const durationMs = Date.now() - startTime;
 
   const content = response.choices[0]?.message.content;
-  if (content === undefined || content === null || content.trim().length === 0) {
+  if (
+    content === undefined ||
+    content === null ||
+    content.trim().length === 0
+  ) {
     const refusal = response.choices[0]?.message.refusal;
     const finishReason = response.choices[0]?.finish_reason;
     const details = buildErrorDetails(refusal, finishReason);

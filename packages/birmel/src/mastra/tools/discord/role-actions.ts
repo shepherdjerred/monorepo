@@ -97,7 +97,10 @@ export async function handleCreateRole(
       message: `Server has too many roles (${String(existingRoles.size)}/250). Delete some roles before creating new ones.`,
     };
   }
-  const colorNum = color === undefined ? undefined : Number.parseInt(color.replace("#", ""), 16);
+  const colorNum =
+    color === undefined
+      ? undefined
+      : Number.parseInt(color.replace("#", ""), 16);
   const role = await guild.roles.create({
     name,
     ...(colorNum !== undefined && { color: colorNum }),
@@ -142,7 +145,10 @@ export async function handleModifyRole(
   if (!hasChanges) {
     return { success: false, message: "No changes specified" };
   }
-  const editColorNum = color === undefined ? undefined : Number.parseInt(color.replace("#", ""), 16);
+  const editColorNum =
+    color === undefined
+      ? undefined
+      : Number.parseInt(color.replace("#", ""), 16);
   await role.edit({
     ...(name !== undefined && { name }),
     ...(editColorNum !== undefined && { color: editColorNum }),

@@ -45,7 +45,9 @@ export function parseCommentsWithRegex(
       // Match patterns like "key: value" or "key:" but NOT prose-like text
       // This includes quoted values like: key: "value"
       const looksLikeYAMLKeyLocal =
-        /^[\w.-]+:\s*(?:\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|[[{])/.test(commentText);
+        /^[\w.-]+:\s*(?:\||$|[\w.-]+$|"[^"]*"$|'[^']*'$|[[{])/.test(
+          commentText,
+        );
 
       if (looksLikeYAMLKeyLocal) {
         // This is a commented-out YAML key, which means the pending comments

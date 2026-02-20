@@ -169,9 +169,7 @@ if (getConfig().stream.dynamic_streaming) {
           await joinVoiceChat(streamDriver);
           await shareScreen(streamDriver);
           const handles = await streamDriver.getAllWindowHandles();
-          await streamDriver
-            .switchTo()
-            .window(handles[1]);
+          await streamDriver.switchTo().window(handles[1]);
         } catch (error) {
           logger.error(error);
         }

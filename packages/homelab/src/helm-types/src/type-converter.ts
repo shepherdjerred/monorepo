@@ -259,14 +259,15 @@ export function convertToTypeScriptInterface(options: {
   }
 
   // Check if this interface should allow arbitrary properties
-  const allowArbitraryProps = options.chartName != null && options.chartName !== ""
-    ? shouldAllowArbitraryProps(
-        keyPrefix,
-        options.chartName,
-        keyPrefix.split(".").pop() ?? "",
-        options.yamlComments?.get(keyPrefix),
-      )
-    : false;
+  const allowArbitraryProps =
+    options.chartName != null && options.chartName !== ""
+      ? shouldAllowArbitraryProps(
+          keyPrefix,
+          options.chartName,
+          keyPrefix.split(".").pop() ?? "",
+          options.yamlComments?.get(keyPrefix),
+        )
+      : false;
 
   return {
     name: options.interfaceName,
@@ -278,16 +279,32 @@ export function convertToTypeScriptInterface(options: {
 /**
  * Convert a value to a TypeProperty using JSON schema information
  */
-function convertWithSchema(ctx: PropertyConversionContext & { schema: JSONSchemaProperty }): TypeProperty {
-  const { value, nestedTypeName, schema, propertyName, yamlComment, yamlComments, fullKey, chartName } = ctx;
+function convertWithSchema(
+  ctx: PropertyConversionContext & { schema: JSONSchemaProperty },
+): TypeProperty {
+  const {
+    value,
+    nestedTypeName,
+    schema,
+    propertyName,
+    yamlComment,
+    yamlComments,
+    fullKey,
+    chartName,
+  } = ctx;
 
   // Infer the type from the actual value for comparison
   const inferredType = inferTypeFromValue(value);
   const schemaType = jsonSchemaToTypeScript(schema);
 
   // Warn about type mismatches
-  if (inferredType != null && inferredType !== "" && !typesAreCompatible(inferredType, schemaType)) {
-    const propName = propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
+  if (
+    inferredType != null &&
+    inferredType !== "" &&
+    !typesAreCompatible(inferredType, schemaType)
+  ) {
+    const propName =
+      propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
     console.warn(
       `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
     );
@@ -307,7 +324,13 @@ function convertWithSchema(ctx: PropertyConversionContext & { schema: JSONSchema
       keyPrefix: fullKey,
       chartName,
     });
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description,
+      default: defaultValue,
+    };
   }
 
   // Handle object types without explicit properties
@@ -320,16 +343,30 @@ function convertWithSchema(ctx: PropertyConversionContext & { schema: JSONSchema
       keyPrefix: fullKey,
       chartName,
     });
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description,
+      default: defaultValue,
+    };
   }
 
-  return { type: schemaType, optional: true, description, default: defaultValue };
+  return {
+    type: schemaType,
+    optional: true,
+    description,
+    default: defaultValue,
+  };
 }
 
 /**
  * Infer array element type from sampled elements
  */
-function inferArrayType(ctx: PropertyConversionContext, arrayValue: unknown[]): TypeProperty {
+function inferArrayType(
+  ctx: PropertyConversionContext,
+  arrayValue: unknown[],
+): TypeProperty {
   const { nestedTypeName } = ctx;
 
   if (arrayValue.length === 0) {
@@ -342,7 +379,10 @@ function inferArrayType(ctx: PropertyConversionContext, arrayValue: unknown[]): 
   const sampleSize = Math.min(arrayValue.length, 3);
 
   for (let i = 0; i < sampleSize; i++) {
-    const elementType = convertValueToProperty({ value: arrayValue[i], nestedTypeName });
+    const elementType = convertValueToProperty({
+      value: arrayValue[i],
+      nestedTypeName,
+    });
     elementTypes.add(elementType.type);
     elementTypeProps.push(elementType);
   }
@@ -354,7 +394,10 @@ function inferArrayType(ctx: PropertyConversionContext, arrayValue: unknown[]): 
 
   // If mixed types, use union type for common cases
   const types = [...elementTypes].toSorted();
-  if (types.length <= 3 && types.every((t) => ["string", "number", "boolean"].includes(t))) {
+  if (
+    types.length <= 3 &&
+    types.every((t) => ["string", "number", "boolean"].includes(t))
+  ) {
     return { type: `(${types.join(" | ")})[]`, optional: true };
   }
 
@@ -364,7 +407,11 @@ function inferArrayType(ctx: PropertyConversionContext, arrayValue: unknown[]): 
 /**
  * Build TypeProperty for a uniform-type array
  */
-function inferUniformArrayType(ctx: PropertyConversionContext, elementTypes: Set<string>, elementTypeProps: TypeProperty[]): TypeProperty {
+function inferUniformArrayType(
+  ctx: PropertyConversionContext,
+  elementTypes: Set<string>,
+  elementTypeProps: TypeProperty[],
+): TypeProperty {
   const { nestedTypeName, chartName, fullKey, propertyName, yamlComment } = ctx;
   const elementType = [...elementTypes][0];
   const elementProp = elementTypeProps[0];
@@ -376,21 +423,39 @@ function inferUniformArrayType(ctx: PropertyConversionContext, elementTypes: Set
     const arrayElementTypeName = `${nestedTypeName}Element`;
     const allowArbitraryProps =
       chartName != null && chartName !== "" && fullKey != null && fullKey !== ""
-        ? shouldAllowArbitraryProps(fullKey, chartName, propertyName ?? "", yamlComment)
+        ? shouldAllowArbitraryProps(
+            fullKey,
+            chartName,
+            propertyName ?? "",
+            yamlComment,
+          )
         : false;
     const arrayElementInterface: TypeScriptInterface = {
       name: arrayElementTypeName,
       properties: elementProp.nested.properties,
       allowArbitraryProps,
     };
-    return { type: `${arrayElementTypeName}[]`, optional: true, nested: arrayElementInterface };
+    return {
+      type: `${arrayElementTypeName}[]`,
+      optional: true,
+      nested: arrayElementInterface,
+    };
   }
 
   return { type: `${elementType}[]`, optional: true };
 }
 
 function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
-  const { value, nestedTypeName, schema, propertyName, yamlComment, yamlComments, fullKey, chartName } = opts;
+  const {
+    value,
+    nestedTypeName,
+    schema,
+    propertyName,
+    yamlComment,
+    yamlComments,
+    fullKey,
+    chartName,
+  } = opts;
 
   // If we have a JSON schema for this property, prefer it over inference
   if (schema) {
@@ -398,7 +463,10 @@ function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
   }
 
   // Check for null/undefined first
-  if (NullSchema.safeParse(value).success || UndefinedSchema.safeParse(value).success) {
+  if (
+    NullSchema.safeParse(value).success ||
+    UndefinedSchema.safeParse(value).success
+  ) {
     return { type: "unknown", optional: true };
   }
 
@@ -419,11 +487,21 @@ function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
       chartName,
     });
 
-    if (propertyName != null && propertyName !== "" && isK8sResourceSpec(propertyName)) {
+    if (
+      propertyName != null &&
+      propertyName !== "" &&
+      isK8sResourceSpec(propertyName)
+    ) {
       augmentK8sResourceSpec(nestedInterface);
     }
 
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description: yamlComment, default: value };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   // Infer primitive type from runtime value

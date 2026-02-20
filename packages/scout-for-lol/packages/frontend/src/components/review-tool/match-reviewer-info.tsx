@@ -29,9 +29,9 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
       const outcomeClass =
         placement === 1
           ? "text-victory-600"
-          : (placement === 8
+          : placement === 8
             ? "text-defeat-600"
-            : "text-surface-500");
+            : "text-surface-500";
       return { alias, champion, outcomeText, outcomeClass };
     }
     return {
@@ -48,9 +48,9 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
     const outcomeClass =
       outcome === "Victory"
         ? "text-victory-600"
-        : (outcome === "Defeat"
+        : outcome === "Defeat"
           ? "text-defeat-600"
-          : "text-surface-500");
+          : "text-surface-500";
     return { alias, champion, outcomeText: outcome, outcomeClass };
   }
 
@@ -81,7 +81,7 @@ function SelectedMatchDisplay(props: { match: CompletedMatch | ArenaMatch }) {
             <>
               <span className="text-surface-300">•</span>
               <span className="capitalize">
-                {match.queueType.replaceAll('_', " ")}
+                {match.queueType.replaceAll("_", " ")}
               </span>
             </>
           )}

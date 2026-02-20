@@ -31,9 +31,7 @@ export function ImageAttachmentInput({
               key={i}
               className="flex items-center justify-between p-2 border-2 rounded bg-white"
             >
-              <span className="text-sm truncate font-mono">
-                {file.name}
-              </span>
+              <span className="text-sm truncate font-mono">{file.name}</span>
               <button
                 type="button"
                 onClick={() => {

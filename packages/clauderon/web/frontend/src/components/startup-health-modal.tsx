@@ -62,8 +62,6 @@ export function StartupHealthModal({
   onViewSessions,
 }: StartupHealthModalProps) {
   // Handle ESC key
-  ;
-
   if (!open || unhealthySessions.length === 0) {
     return null;
   }

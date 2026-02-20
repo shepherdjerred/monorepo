@@ -140,7 +140,16 @@ export type BuildCctoolsOptions = {
  * Build cctools for a specific architecture
  */
 export function buildCctools(opts: BuildCctoolsOptions): Directory {
-  const { container, architecture, kernelVersion, targetSdkVersion, cores, xar, libtapi, libdispatch } = opts;
+  const {
+    container,
+    architecture,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+    xar,
+    libtapi,
+    libdispatch,
+  } = opts;
   const triple =
     architecture === "aarch64"
       ? `arm-apple-darwin${kernelVersion}`
@@ -217,7 +226,8 @@ export type BuildWrapperOptions = {
  * Build wrapper for clang
  */
 export function buildClangWrappers(opts: BuildWrapperOptions): Directory {
-  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = opts;
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } =
+    opts;
   const wrapperContainer = container
     .withExec([
       "git",
@@ -239,7 +249,10 @@ export function buildClangWrappers(opts: BuildWrapperOptions): Directory {
     .withExec(["make", "wrapper", "-j" + cores.toString()]);
 
   const compilers = ["clang", "clang++"];
-  let finalContainer = wrapperContainer.withEnvVariable("TARGET_DIR", "/osxcross");
+  let finalContainer = wrapperContainer.withEnvVariable(
+    "TARGET_DIR",
+    "/osxcross",
+  );
 
   for (const compiler of compilers) {
     finalContainer = finalContainer
@@ -254,7 +267,8 @@ export function buildClangWrappers(opts: BuildWrapperOptions): Directory {
  * Build wrapper for GCC
  */
 export function buildGccWrappers(opts: BuildWrapperOptions): Directory {
-  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = opts;
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } =
+    opts;
   const wrapperContainer = container
     .withExec([
       "git",
@@ -276,7 +290,10 @@ export function buildGccWrappers(opts: BuildWrapperOptions): Directory {
     .withExec(["make", "wrapper", "-j" + cores.toString()]);
 
   const compilers = ["gcc", "g++", "gfortran"];
-  let finalContainer = wrapperContainer.withEnvVariable("TARGET_DIR", "/osxcross");
+  let finalContainer = wrapperContainer.withEnvVariable(
+    "TARGET_DIR",
+    "/osxcross",
+  );
 
   for (const compiler of compilers) {
     finalContainer = finalContainer
@@ -307,7 +324,10 @@ export function getSdk(container: Container, version: string): Directory {
 /**
  * Build Zig compiler
  */
-export function buildZig(container: Container, targetArch = "x86_64"): Directory {
+export function buildZig(
+  container: Container,
+  targetArch = "x86_64",
+): Directory {
   let archSuffix: string;
   if (targetArch === "aarch64" || targetArch === "arm64") {
     archSuffix = "aarch64";
@@ -351,7 +371,20 @@ export type BuildGccOptions = {
  * Build GCC compiler for cross-compilation
  */
 export function buildGcc(opts: BuildGccOptions): Directory {
-  const { container, architecture, sdkVersion, kernelVersion, targetSdkVersion, cores, clangWrappers, cctools, sdk, xar, libtapi, libdispatch } = opts;
+  const {
+    container,
+    architecture,
+    sdkVersion,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+    clangWrappers,
+    cctools,
+    sdk,
+    xar,
+    libtapi,
+    libdispatch,
+  } = opts;
   const triple = `${architecture}-apple-darwin${kernelVersion}`;
 
   const gccContainer = container

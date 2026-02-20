@@ -1,7 +1,10 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { IntOrString, KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createPlausiblePostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/plausible-db.ts";
 import { createClickHouseDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/analytics/clickhouse.ts";
 import { createPlausibleDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/analytics/plausible.ts";

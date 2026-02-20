@@ -3,6 +3,7 @@ import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 const BUN_VERSION = versions.bun;
 
@@ -38,13 +39,14 @@ export async function checkBetterSkillCapped(
       .withDirectory("/workspace/packages/better-skill-capped", mainSource)
       .withDirectory(
         "/workspace/packages/eslint-config",
-        source.directory("packages/eslint-config"),
+        getBuiltEslintConfig(source),
       )
-      .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
+      .withFile(
+        "/workspace/tsconfig.base.json",
+        source.file("tsconfig.base.json"),
+      )
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
-      .withWorkdir("/workspace/packages/eslint-config")
-      .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace/packages/better-skill-capped")
       .withExec(["bun", "run", "lint"])
       .sync(),
@@ -80,7 +82,14 @@ type DeployBetterSkillCappedOptions = {
 export async function deployBetterSkillCapped(
   options: DeployBetterSkillCappedOptions,
 ): Promise<string> {
-  const { source, version, s3AccessKeyId, s3SecretAccessKey, ghcrUsername, ghcrPassword } = options;
+  const {
+    source,
+    version,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+    ghcrUsername,
+    ghcrPassword,
+  } = options;
   const pkgSource = source.directory("packages/better-skill-capped");
   const mainSource = pkgSource.withoutDirectory("fetcher");
   const fetcherSource = pkgSource.directory("fetcher");
@@ -109,7 +118,10 @@ export async function deployBetterSkillCapped(
     .withDirectory("/workspace", fetcherSource)
     .withExec(["bun", "install"])
     .withEntrypoint(["bun", "run", "src/index.ts"])
-    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    );
 
   const fetcherImage = "ghcr.io/shepherdjerred/better-skill-capped-fetcher";
   await publishToGhcrMultiple({

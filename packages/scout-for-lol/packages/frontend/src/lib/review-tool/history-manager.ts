@@ -243,7 +243,10 @@ export async function saveCompletedEntry(
     timestamp: new Date(),
     result, // Keep images! IndexedDB can handle them
     configSnapshot,
-    status: result.error !== undefined && result.error.length > 0 ? "error" : "complete",
+    status:
+      result.error !== undefined && result.error.length > 0
+        ? "error"
+        : "complete",
   };
 
   try {

@@ -2,6 +2,7 @@ import type { Secret, Directory, Container } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { getReleasePleaseContainer as getLibReleasePleaseContainer } from "./lib-release-please.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 const BUN_VERSION = versions.bun;
 const RELEASE_PLEASE_VERSION = versions["release-please"];
@@ -75,8 +76,14 @@ export function getRustContainer(
     )
     .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
     .withMountedCache("/workspace/target", dag.cacheVolume("clauderon-target"))
-    .withMountedCache("/root/.cargo-tools/bin", dag.cacheVolume("cargo-tools-bin"))
-    .withEnvVariable("PATH", "/root/.cargo-tools/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+    .withMountedCache(
+      "/root/.cargo-tools/bin",
+      dag.cacheVolume("cargo-tools-bin"),
+    )
+    .withEnvVariable(
+      "PATH",
+      "/root/.cargo-tools/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    )
     .withMountedDirectory("/workspace", source.directory("packages/clauderon"))
     .withExec(["rustup", "component", "add", "rustfmt", "clippy"]);
 
@@ -249,19 +256,14 @@ export async function runReleasePleaseCommand(
   command: string,
 ): Promise<{ output: string; success: boolean }> {
   const result = await container
-    .withExec([
-      "sh",
-      "-c",
-      `${command} 2>&1; echo "EXIT_CODE:$?"`,
-    ])
+    .withExec(["sh", "-c", `${command} 2>&1; echo "EXIT_CODE:$?"`])
     .stdout();
 
   const lines = result.trim().split("\n");
   const lastLine = lines.at(-1) ?? "";
   const exitCodeMatch = /EXIT_CODE:(\d+)/.exec(lastLine);
-  const exitCode = exitCodeMatch === null
-    ? 1
-    : Number.parseInt(exitCodeMatch[1] ?? "1", 10);
+  const exitCode =
+    exitCodeMatch === null ? 1 : Number.parseInt(exitCodeMatch[1] ?? "1", 10);
   const output = lines.slice(0, -1).join("\n");
 
   return {
@@ -367,16 +369,16 @@ export function daggerLintCheck(source: Directory): Container {
     .container()
     .from(`oven/bun:${BUN_VERSION}`)
     .withMountedDirectory("/workspace/.dagger", source.directory(".dagger"))
-    .withMountedDirectory(
+    .withDirectory(
       "/workspace/packages/eslint-config",
-      source.directory("packages/eslint-config"),
+      getBuiltEslintConfig(source),
     )
-    .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
+    .withFile(
+      "/workspace/tsconfig.base.json",
+      source.file("tsconfig.base.json"),
+    )
     .withWorkdir("/workspace/.dagger")
     .withExec(["bun", "install"])
-    .withWorkdir("/workspace/packages/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/.dagger")
     .withExec(["bunx", "eslint", "src"]);
 }
@@ -448,4 +450,3 @@ export function semgrepScan(source: Directory): Container {
     .withWorkdir("/src")
     .withExec(["semgrep", "scan", "--config=auto", "--error"]);
 }
-

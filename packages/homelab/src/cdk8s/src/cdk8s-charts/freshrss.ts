@@ -1,6 +1,9 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeNetworkPolicy,
+  IntOrString,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createFreshRssDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss.ts";
 
 export function createFreshRssChart(app: App) {

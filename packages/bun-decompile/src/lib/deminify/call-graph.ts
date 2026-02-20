@@ -144,9 +144,7 @@ function extractImportsExports(source: string): {
       }
       imports.push({
         source: importNode.source.value,
-        specifiers: importNode.specifiers.map((s) =>
-          getImportSpecifierName(s),
-        ),
+        specifiers: importNode.specifiers.map((s) => getImportSpecifierName(s)),
         start: node.start,
         end: node.end,
       });
@@ -383,9 +381,7 @@ function buildKnownNames(
     for (const [orig, suggested] of Object.entries(result.parameterNames)) {
       knownNames.set(orig, suggested);
     }
-    for (const [orig, suggested] of Object.entries(
-      result.localVariableNames,
-    )) {
+    for (const [orig, suggested] of Object.entries(result.localVariableNames)) {
       knownNames.set(orig, suggested);
     }
   }

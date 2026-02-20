@@ -102,12 +102,16 @@ async function main() {
     const allowedTotal = Object.values(allowed).reduce((a, b) => a + b, 0);
     const currentTotal = [...current.values()].reduce((a, b) => a + b, 0);
 
-    summaryLines.push(`  ${rule.key}: ${String(currentTotal)} / ${String(allowedTotal)} allowed`);
+    summaryLines.push(
+      `  ${rule.key}: ${String(currentTotal)} / ${String(allowedTotal)} allowed`,
+    );
 
     // Check for suppressions in files not in the allowlist
     for (const [file, count] of current) {
       if (!(file in allowed)) {
-        console.error(`FAIL: ${rule.key} found in unallowed file: ${file} (${String(count)} occurrences)`);
+        console.error(
+          `FAIL: ${rule.key} found in unallowed file: ${file} (${String(count)} occurrences)`,
+        );
         failed = true;
       } else if (count > allowed[file]) {
         console.error(
@@ -121,7 +125,9 @@ async function main() {
     for (const [file, allowedCount] of Object.entries(allowed)) {
       const actualCount = current.get(file) ?? 0;
       if (actualCount === 0) {
-        console.log(`NOTE: ${file} has 0 ${rule.key} suppressions but ${String(allowedCount)} allowed — consider removing from allowlist`);
+        console.log(
+          `NOTE: ${file} has 0 ${rule.key} suppressions but ${String(allowedCount)} allowed — consider removing from allowlist`,
+        );
       } else if (actualCount < allowedCount) {
         console.log(
           `NOTE: ${file} has ${String(actualCount)} ${rule.key} suppressions but ${String(allowedCount)} allowed — consider tightening`,

@@ -17,10 +17,21 @@ export default [
       ],
     },
     ignores: [
-      "**/generated/**/*", "**/dist/**/*", "**/build/**/*",
-      "**/.cache/**/*", "**/node_modules/**/*", "**/.astro/**/*",
-      "**/*.md", "**/*.mdx", "**/*.mjs", "**/*.js", "**/*.cjs",
-      "tests/", "postcss.config.js", "tailwind.config.js", "vite.config.ts",
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/.astro/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      "tests/",
+      "postcss.config.js",
+      "tailwind.config.js",
+      "vite.config.ts",
     ],
   }),
   {
@@ -36,7 +47,14 @@ export default [
       "@typescript-eslint/restrict-plus-operands": "off",
       // TypeShare types cascade to nullable coalescing and boolean expression checks
       "@typescript-eslint/prefer-nullish-coalescing": "off",
-      "@typescript-eslint/strict-boolean-expressions": ["error", { allowNullableString: true, allowNullableBoolean: true, allowAny: true }],
+      "@typescript-eslint/strict-boolean-expressions": [
+        "error",
+        {
+          allowNullableString: true,
+          allowNullableBoolean: true,
+          allowAny: true,
+        },
+      ],
       // Regex for ANSI escape codes in terminal output parsing
       "no-control-regex": "off",
     },

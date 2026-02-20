@@ -126,9 +126,8 @@ export function parseLLMResponse(
 
   // Try to infer name from the de-minified code if not provided
   if (suggestedName === "anonymousFunction") {
-    const funcNameMatch = /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(
-      deminifiedSource,
-    );
+    const funcNameMatch =
+      /(?:function|const|let|var)\s+([a-zA-Z_$][\w$]*)/.exec(deminifiedSource);
     if (funcNameMatch?.[1] != null && funcNameMatch[1].length > 0) {
       suggestedName = funcNameMatch[1];
     }

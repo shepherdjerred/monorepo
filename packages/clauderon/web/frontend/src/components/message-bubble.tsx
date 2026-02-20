@@ -1,4 +1,8 @@
-import type { Message, ToolUse, CodeBlock as CodeBlockType } from "@/lib/claude-parser.ts";
+import type {
+  Message,
+  ToolUse,
+  CodeBlock as CodeBlockType,
+} from "@/lib/claude-parser.ts";
 import { User, Bot, Terminal, FileText, Edit, Search } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils.ts";
 import ReactMarkdown from "react-markdown";
@@ -12,9 +16,15 @@ type MessageBubbleProps = {
 };
 
 function hasDisplayableContent(message: Message): boolean {
-  if (message.content.trim()) { return true; }
-  if (message.toolUses != null && message.toolUses.length > 0) { return true; }
-  if (message.codeBlocks != null && message.codeBlocks.length > 0) { return true; }
+  if (message.content.trim()) {
+    return true;
+  }
+  if (message.toolUses != null && message.toolUses.length > 0) {
+    return true;
+  }
+  if (message.codeBlocks != null && message.codeBlocks.length > 0) {
+    return true;
+  }
   return false;
 }
 
@@ -62,7 +72,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div
       className={`flex gap-4 p-4 border-b-2 ${
-        isUser ? "bg-primary/5" : (isSystem ? "bg-secondary/50" : "bg-card")
+        isUser ? "bg-primary/5" : isSystem ? "bg-secondary/50" : "bg-card"
       }`}
     >
       {/* Square Avatar (brutalist) */}
@@ -79,7 +89,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
           <span className="font-bold font-mono uppercase text-sm tracking-wide">
-            {isUser ? "You" : (isSystem ? "System" : "Claude Code")}
+            {isUser ? "You" : isSystem ? "System" : "Claude Code"}
           </span>
           <span className="text-xs font-mono text-muted-foreground">
             {formatRelativeTime(message.timestamp.toISOString())}
