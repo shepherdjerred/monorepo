@@ -16,7 +16,9 @@ export function Notifications({
           title={notification.title}
           message={notification.message}
           level={notification.level}
-          onClose={() => { onClose(notification.id); }}
+          onClose={() => {
+            onClose(notification.id);
+          }}
         />
       </div>
     );

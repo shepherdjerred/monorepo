@@ -23,7 +23,9 @@ function createStatPanel(ds: Datasource, options: StatPanelOptions) {
     .description(options.description)
     .datasource(ds)
     .withTarget(
-      new prometheus.DataqueryBuilder().expr(options.expr).legendFormat(options.legend),
+      new prometheus.DataqueryBuilder()
+        .expr(options.expr)
+        .legendFormat(options.legend),
     )
     .gridPos(options.gridPos);
 

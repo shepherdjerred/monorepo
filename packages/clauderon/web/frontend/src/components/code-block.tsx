@@ -9,8 +9,6 @@ type CodeBlockProps = {
 export function CodeBlock({ language, filePath }: CodeBlockProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading] = useState(true);
-  ;
-
   return (
     <div className="border-4 border-primary overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 bg-primary text-primary-foreground">

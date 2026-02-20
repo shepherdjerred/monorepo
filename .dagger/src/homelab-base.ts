@@ -8,6 +8,7 @@ import type { Container, Directory } from "@dagger.io/dagger";
 import { dag, type Platform } from "@dagger.io/dagger";
 import { getSystemContainer } from "./lib-system.ts";
 import { getMiseRuntimeContainer } from "./lib-mise.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 /**
  * Add eslint-config to a container for lint operations.
@@ -25,21 +26,24 @@ export function withEslintConfig(
   monoRepoSource: Directory,
   restoreWorkdir: string,
 ): Container {
-  return container
-    .withDirectory("/eslint-config", monoRepoSource.directory("packages/eslint-config"))
-    .withFile("/tsconfig.base.json", monoRepoSource.file("tsconfig.base.json"))
-    .withWorkdir("/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
-    // Fix: ESLint's jiti/CJS resolver fails to resolve relative paths that
-    // traverse to the filesystem root (../eslint-config from /workspace/).
-    // Patch the import to use an absolute path instead.
-    .withExec([
-      "sed", "-i",
-      `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
-      "/workspace/eslint.config.ts",
-    ])
-    .withWorkdir(restoreWorkdir);
+  return (
+    container
+      .withDirectory("/eslint-config", getBuiltEslintConfig(monoRepoSource))
+      .withFile(
+        "/tsconfig.base.json",
+        monoRepoSource.file("tsconfig.base.json"),
+      )
+      // Fix: ESLint's jiti/CJS resolver fails to resolve relative paths that
+      // traverse to the filesystem root (../eslint-config from /workspace/).
+      // Patch the import to use an absolute path instead.
+      .withExec([
+        "sed",
+        "-i",
+        `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
+        "/workspace/eslint.config.ts",
+      ])
+      .withWorkdir(restoreWorkdir)
+  );
 }
 
 /**

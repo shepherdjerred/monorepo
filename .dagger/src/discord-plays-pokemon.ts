@@ -4,6 +4,7 @@ import { syncToS3 } from "./lib-s3.ts";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 import { logWithTimestamp, withTiming } from "./lib-timing.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 const BUN_VERSION = versions.bun;
 
@@ -50,15 +51,12 @@ function installCommonDeps(workspaceSource: Directory): Container {
 
 function lintCommon(
   workspaceSource: Directory,
-  eslintConfigSource: Directory,
+  builtEslintConfig: Directory,
   tsconfigBase: File,
 ): Container {
   return installCommonDeps(workspaceSource)
-    .withDirectory("/eslint-config", eslintConfigSource)
+    .withDirectory("/eslint-config", builtEslintConfig)
     .withFile("/tsconfig.base.json", tsconfigBase)
-    .withWorkdir("/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/common")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -106,15 +104,12 @@ function installBackendDeps(workspaceSource: Directory): Container {
 
 function lintBackend(
   workspaceSource: Directory,
-  eslintConfigSource: Directory,
+  builtEslintConfig: Directory,
   tsconfigBase: File,
 ): Container {
   return installBackendDeps(workspaceSource)
-    .withDirectory("/eslint-config", eslintConfigSource)
+    .withDirectory("/eslint-config", builtEslintConfig)
     .withFile("/tsconfig.base.json", tsconfigBase)
-    .withWorkdir("/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -164,15 +159,12 @@ function installFrontendDeps(workspaceSource: Directory): Container {
 
 function lintFrontend(
   workspaceSource: Directory,
-  eslintConfigSource: Directory,
+  builtEslintConfig: Directory,
   tsconfigBase: File,
 ): Container {
   return installFrontendDeps(workspaceSource)
-    .withDirectory("/eslint-config", eslintConfigSource)
+    .withDirectory("/eslint-config", builtEslintConfig)
     .withFile("/tsconfig.base.json", tsconfigBase)
-    .withWorkdir("/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/frontend")
     .withExec(["bun", "run", "lint:check"]);
 }
@@ -229,7 +221,11 @@ function buildDockerImage(
       "kde-config-screenlocker",
       "unzip",
     ])
-    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`,
+    ])
     .withEnvVariable(
       "PATH",
       `/root/.bun/bin:/home/ubuntu/.bun/bin:${standardPath}`,
@@ -282,7 +278,10 @@ function buildDockerImage(
     )
     .withLabel("org.opencontainers.image.version", version)
     .withLabel("org.opencontainers.image.revision", gitSha)
-    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    );
 }
 
 /**
@@ -312,7 +311,7 @@ export async function checkDiscordPlaysPokemon(
   source: Directory,
 ): Promise<string> {
   const pkgSource = source.directory("packages/discord-plays-pokemon");
-  const eslintConfig = source.directory("packages/eslint-config");
+  const eslintConfig = getBuiltEslintConfig(source);
   const tsconfigBase = source.file("tsconfig.base.json");
 
   await Promise.all([
@@ -392,7 +391,15 @@ type DeployDiscordPlaysPokemonOptions = {
 export async function deployDiscordPlaysPokemon(
   options: DeployDiscordPlaysPokemonOptions,
 ): Promise<string> {
-  const { source, version, gitSha, ghcrUsername, ghcrPassword, s3AccessKeyId, s3SecretAccessKey } = options;
+  const {
+    source,
+    version,
+    gitSha,
+    ghcrUsername,
+    ghcrPassword,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+  } = options;
   const pkgSource = source.directory("packages/discord-plays-pokemon");
   const outputs: string[] = [];
 

@@ -23,8 +23,16 @@ import { buildAndPushDnsAuditImage } from "./homelab-dns-audit.ts";
 import { buildAndPushCaddyS3ProxyImage } from "./homelab-caddy-s3proxy.ts";
 import { HELM_CHARTS } from "./homelab-helm.ts";
 import { Stage } from "./lib-types.ts";
-import type { StepResult, HelmBuildResult, HomelabSecrets } from "./homelab-index.ts";
-import { homelabTestHelm, homelabTestRenovateRegex, homelabHelmBuild } from "./homelab-index.ts";
+import type {
+  StepResult,
+  HelmBuildResult,
+  HomelabSecrets,
+} from "./homelab-index.ts";
+import {
+  homelabTestHelm,
+  homelabTestRenovateRegex,
+  homelabHelmBuild,
+} from "./homelab-index.ts";
 import { planAll } from "./homelab-tofu.ts";
 import versions from "./lib-versions.ts";
 
@@ -114,14 +122,22 @@ export async function runValidationPhase(
   const haContainerPromise = versionOnly
     ? undefined
     : (async () => {
-        const container = await prepareHaContainer(updatedSource, hassBaseUrl, hassToken);
+        const container = await prepareHaContainer(
+          updatedSource,
+          hassBaseUrl,
+          hassToken,
+        );
         return monoRepoSource
           ? withEslintConfig(container, monoRepoSource, "/workspace/src/ha")
           : container;
       })();
   const baseCdk8sContainer = prepareCdk8sContainer(updatedSource);
   const cdk8sContainer = monoRepoSource
-    ? withEslintConfig(baseCdk8sContainer, monoRepoSource, "/workspace/src/cdk8s")
+    ? withEslintConfig(
+        baseCdk8sContainer,
+        monoRepoSource,
+        "/workspace/src/cdk8s",
+      )
     : baseCdk8sContainer;
 
   const [
@@ -140,28 +156,50 @@ export async function runValidationPhase(
   ] = await Promise.all([
     runStep("Renovate Test", () => homelabTestRenovateRegex(updatedSource)),
     versionOnly
-      ? Promise.resolve({ status: "skipped" as const, message: "Helm Test: SKIPPED (version-only)" })
+      ? Promise.resolve({
+          status: "skipped" as const,
+          message: "Helm Test: SKIPPED (version-only)",
+        })
       : runStep("Helm Test", () => homelabTestHelm(updatedSource)),
     versionOnly
-      ? Promise.resolve({ status: "skipped" as const, message: "CDK8s Test: SKIPPED (version-only)" })
+      ? Promise.resolve({
+          status: "skipped" as const,
+          message: "CDK8s Test: SKIPPED (version-only)",
+        })
       : runStep("CDK8s Test", () => testCdk8sWithContainer(cdk8sContainer)),
     versionOnly
-      ? Promise.resolve({ status: "skipped" as const, message: "Caddyfile Validate: SKIPPED (version-only)" })
-      : runStep("Caddyfile Validate", () => validateCaddyfileWithContainer(cdk8sContainer)),
+      ? Promise.resolve({
+          status: "skipped" as const,
+          message: "Caddyfile Validate: SKIPPED (version-only)",
+        })
+      : runStep("Caddyfile Validate", () =>
+          validateCaddyfileWithContainer(cdk8sContainer),
+        ),
     versionOnly
-      ? Promise.resolve({ status: "skipped" as const, message: "CDK8s Lint: SKIPPED (version-only)" })
+      ? Promise.resolve({
+          status: "skipped" as const,
+          message: "CDK8s Lint: SKIPPED (version-only)",
+        })
       : runStep("CDK8s Lint", () => lintCdk8sWithContainer(cdk8sContainer)),
-    runContainerStep("HA Lint", haContainerPromise, versionOnly, (c) => lintHaWithContainer(c)),
-    runStep("CDK8s TypeCheck", () => typeCheckCdk8sWithContainer(cdk8sContainer)),
-    runContainerStep("HA TypeCheck", haContainerPromise, versionOnly, (c) => typeCheckHaWithContainer(c)),
-    runStep("Tofu Plan", () => planAll({
-      source: updatedSource,
-      cloudflareApiToken,
-      cloudflareAccountId,
-      awsAccessKeyId,
-      awsSecretAccessKey,
-      githubToken: tofuGithubToken,
-    })),
+    runContainerStep("HA Lint", haContainerPromise, versionOnly, (c) =>
+      lintHaWithContainer(c),
+    ),
+    runStep("CDK8s TypeCheck", () =>
+      typeCheckCdk8sWithContainer(cdk8sContainer),
+    ),
+    runContainerStep("HA TypeCheck", haContainerPromise, versionOnly, (c) =>
+      typeCheckHaWithContainer(c),
+    ),
+    runStep("Tofu Plan", () =>
+      planAll({
+        source: updatedSource,
+        cloudflareApiToken,
+        cloudflareAccountId,
+        awsAccessKeyId,
+        awsSecretAccessKey,
+        githubToken: tofuGithubToken,
+      }),
+    ),
     runStep("CDK8s Build", () => {
       buildK8sManifestsWithContainer(cdk8sContainer);
       return Promise.resolve("");
@@ -172,10 +210,20 @@ export async function runValidationPhase(
     }),
     ((): Promise<HelmBuildResult> => {
       try {
-        const dist = homelabHelmBuild(updatedSource, chartVersion || "dev-snapshot");
-        return Promise.resolve({ status: "passed", message: "Helm Build: PASSED", dist });
+        const dist = homelabHelmBuild(
+          updatedSource,
+          chartVersion || "dev-snapshot",
+        );
+        return Promise.resolve({
+          status: "passed",
+          message: "Helm Build: PASSED",
+          dist,
+        });
       } catch (error: unknown) {
-        return Promise.resolve({ status: "failed", message: `Helm Build: FAILED\n${formatDaggerError(error)}` });
+        return Promise.resolve({
+          status: "failed",
+          message: `Helm Build: FAILED\n${formatDaggerError(error)}`,
+        });
       }
     })(),
   ]);
@@ -232,7 +280,8 @@ type HelmPublishOptions = {
 export async function homelabHelmPublishBuilt(
   options: HelmPublishOptions,
 ): Promise<StepResult> {
-  const { builtDist, version, repo, chartMuseumUsername, chartMuseumPassword } = options;
+  const { builtDist, version, repo, chartMuseumUsername, chartMuseumPassword } =
+    options;
   try {
     const results: string[] = [];
     for (const chartName of HELM_CHARTS) {
@@ -297,47 +346,113 @@ export async function runPublishPhase(
       dnsAuditPublishResult: SKIP_RESULT,
       caddyS3ProxyPublishResult: SKIP_RESULT,
       helmPublishResult: SKIP_RESULT,
-      syncResult: { status: "skipped", message: "[SKIPPED] Not prod or chart publish failed" },
+      syncResult: {
+        status: "skipped",
+        message: "[SKIPPED] Not prod or chart publish failed",
+      },
     };
   }
 
-  const { argocdToken, ghcrUsername, ghcrPassword, chartVersion, chartRepo = "https://chartmuseum.tailnet-1a49.ts.net", chartMuseumUsername, chartMuseumPassword } = secrets;
+  const {
+    argocdToken,
+    ghcrUsername,
+    ghcrPassword,
+    chartVersion,
+    chartRepo = "https://chartmuseum.tailnet-1a49.ts.net",
+    chartMuseumUsername,
+    chartMuseumPassword,
+  } = secrets;
 
-  const [haResults, depSummaryResults, dnsAuditResults, caddyS3ProxyResult, helmResult] =
-    await Promise.all([
-      Promise.all([
-        buildAndPushHaImage({ source: updatedSource, imageName: `ghcr.io/shepherdjerred/homelab:${chartVersion}`, ghcrUsername, ghcrPassword, dryRun: false }),
-        buildAndPushHaImage({ source: updatedSource, imageName: `ghcr.io/shepherdjerred/homelab:latest`, ghcrUsername, ghcrPassword, dryRun: false }),
-      ]),
-      Promise.all([
-        buildAndPushDependencySummaryImage({ source: updatedSource, imageName: `ghcr.io/shepherdjerred/dependency-summary:${chartVersion}`, ghcrUsername, ghcrPassword, dryRun: false }),
-        buildAndPushDependencySummaryImage({ source: updatedSource, imageName: `ghcr.io/shepherdjerred/dependency-summary:latest`, ghcrUsername, ghcrPassword, dryRun: false }),
-      ]),
-      Promise.all([
-        buildAndPushDnsAuditImage(`ghcr.io/shepherdjerred/dns-audit:${chartVersion}`, ghcrUsername, ghcrPassword, false),
-        buildAndPushDnsAuditImage(`ghcr.io/shepherdjerred/dns-audit:latest`, ghcrUsername, ghcrPassword, false),
-      ]),
-      (async (): Promise<StepResult> => {
-        const [versioned, latest] = await Promise.all([
-          buildAndPushCaddyS3ProxyImage(`ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`, ghcrUsername, ghcrPassword, false),
-          buildAndPushCaddyS3ProxyImage(`ghcr.io/shepherdjerred/caddy-s3proxy:latest`, ghcrUsername, ghcrPassword, false),
-        ]);
-        return combinePublishResults([versioned, latest]);
-      })(),
-      helmBuildResult.dist
-        ? homelabHelmPublishBuilt({
-            builtDist: helmBuildResult.dist,
-            version: `1.0.0-${chartVersion}`,
-            repo: chartRepo,
-            chartMuseumUsername,
-            chartMuseumPassword,
-          })
-        : Promise.resolve({ status: "skipped" as const, message: "[SKIPPED] No dist available" }),
-    ]);
+  const [
+    haResults,
+    depSummaryResults,
+    dnsAuditResults,
+    caddyS3ProxyResult,
+    helmResult,
+  ] = await Promise.all([
+    Promise.all([
+      buildAndPushHaImage({
+        source: updatedSource,
+        imageName: `ghcr.io/shepherdjerred/homelab:${chartVersion}`,
+        ghcrUsername,
+        ghcrPassword,
+        dryRun: false,
+      }),
+      buildAndPushHaImage({
+        source: updatedSource,
+        imageName: `ghcr.io/shepherdjerred/homelab:latest`,
+        ghcrUsername,
+        ghcrPassword,
+        dryRun: false,
+      }),
+    ]),
+    Promise.all([
+      buildAndPushDependencySummaryImage({
+        source: updatedSource,
+        imageName: `ghcr.io/shepherdjerred/dependency-summary:${chartVersion}`,
+        ghcrUsername,
+        ghcrPassword,
+        dryRun: false,
+      }),
+      buildAndPushDependencySummaryImage({
+        source: updatedSource,
+        imageName: `ghcr.io/shepherdjerred/dependency-summary:latest`,
+        ghcrUsername,
+        ghcrPassword,
+        dryRun: false,
+      }),
+    ]),
+    Promise.all([
+      buildAndPushDnsAuditImage(
+        `ghcr.io/shepherdjerred/dns-audit:${chartVersion}`,
+        ghcrUsername,
+        ghcrPassword,
+        false,
+      ),
+      buildAndPushDnsAuditImage(
+        `ghcr.io/shepherdjerred/dns-audit:latest`,
+        ghcrUsername,
+        ghcrPassword,
+        false,
+      ),
+    ]),
+    (async (): Promise<StepResult> => {
+      const [versioned, latest] = await Promise.all([
+        buildAndPushCaddyS3ProxyImage(
+          `ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`,
+          ghcrUsername,
+          ghcrPassword,
+          false,
+        ),
+        buildAndPushCaddyS3ProxyImage(
+          `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
+          ghcrUsername,
+          ghcrPassword,
+          false,
+        ),
+      ]);
+      return combinePublishResults([versioned, latest]);
+    })(),
+    helmBuildResult.dist
+      ? homelabHelmPublishBuilt({
+          builtDist: helmBuildResult.dist,
+          version: `1.0.0-${chartVersion}`,
+          repo: chartRepo,
+          chartMuseumUsername,
+          chartMuseumPassword,
+        })
+      : Promise.resolve({
+          status: "skipped" as const,
+          message: "[SKIPPED] No dist available",
+        }),
+  ]);
 
   const helmPublishResult = helmResult;
 
-  let syncResult: StepResult = { status: "skipped", message: "[SKIPPED] Not prod or chart publish failed" };
+  let syncResult: StepResult = {
+    status: "skipped",
+    message: "[SKIPPED] Not prod or chart publish failed",
+  };
   if (helmPublishResult.status === "passed") {
     syncResult = await argocdSync(argocdToken);
   }
@@ -396,13 +511,15 @@ export function checkForFailures(
     validation.helmBuildResult,
   ].some((r) => r.status === "failed");
 
-  const publishFailed = env === Stage.Prod && [
-    publish.haPublishResult,
-    publish.depSummaryPublishResult,
-    publish.dnsAuditPublishResult,
-    publish.caddyS3ProxyPublishResult,
-    publish.helmPublishResult,
-  ].some((r) => r.status === "failed");
+  const publishFailed =
+    env === Stage.Prod &&
+    [
+      publish.haPublishResult,
+      publish.depSummaryPublishResult,
+      publish.dnsAuditPublishResult,
+      publish.caddyS3ProxyPublishResult,
+      publish.helmPublishResult,
+    ].some((r) => r.status === "failed");
 
   if (validationFailed || publishFailed) {
     throw new Error(summary);

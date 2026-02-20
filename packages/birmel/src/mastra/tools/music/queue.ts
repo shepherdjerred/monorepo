@@ -8,9 +8,13 @@ function handleGetQueue(queue: GuildQueue | undefined) {
   if (queue == null) {
     return { success: false, message: "No active queue" };
   }
-  const currentTrack = queue.currentTrack == null
-    ? null
-    : { title: queue.currentTrack.title, duration: queue.currentTrack.duration };
+  const currentTrack =
+    queue.currentTrack == null
+      ? null
+      : {
+          title: queue.currentTrack.title,
+          duration: queue.currentTrack.duration,
+        };
   const tracks = queue.tracks.toArray().map((t, i) => ({
     position: i + 1,
     title: t.title,
@@ -19,7 +23,11 @@ function handleGetQueue(queue: GuildQueue | undefined) {
   return {
     success: true,
     message: `Queue has ${String(tracks.length)} tracks`,
-    data: { currentTrack, tracks: tracks.slice(0, 10), totalTracks: tracks.length },
+    data: {
+      currentTrack,
+      tracks: tracks.slice(0, 10),
+      totalTracks: tracks.length,
+    },
   };
 }
 
@@ -32,7 +40,10 @@ async function handleAddTrack(
     return { success: false, message: "query is required for add" };
   }
   if (queue == null) {
-    return { success: false, message: "No active queue. Use play to start first." };
+    return {
+      success: false,
+      message: "No active queue. Use play to start first.",
+    };
   }
   const result = await player.search(query);
   if (!result.hasTracks()) {
@@ -46,11 +57,18 @@ async function handleAddTrack(
   return {
     success: true,
     message: `Added to queue: ${track.title}`,
-    data: { title: track.title, duration: track.duration, position: queue.tracks.size },
+    data: {
+      title: track.title,
+      duration: track.duration,
+      position: queue.tracks.size,
+    },
   };
 }
 
-function handleRemoveTrack(queue: GuildQueue | undefined, position: number | undefined) {
+function handleRemoveTrack(
+  queue: GuildQueue | undefined,
+  position: number | undefined,
+) {
   if (position === undefined) {
     return { success: false, message: "position is required for remove" };
   }
@@ -69,7 +87,11 @@ function handleRemoveTrack(queue: GuildQueue | undefined, position: number | und
 async function dispatchQueueAction(
   player: Player,
   queue: GuildQueue | undefined,
-  ctx: { action: string; query?: string | undefined; position?: number | undefined },
+  ctx: {
+    action: string;
+    query?: string | undefined;
+    position?: number | undefined;
+  },
 ) {
   switch (ctx.action) {
     case "get":

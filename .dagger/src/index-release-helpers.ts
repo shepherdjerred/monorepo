@@ -1,7 +1,5 @@
 import type { Secret, Container } from "@dagger.io/dagger";
-import {
-  publishBirmelImageWithContainer,
-} from "./birmel.ts";
+import { publishBirmelImageWithContainer } from "./birmel.ts";
 import { deployWebringDocs } from "./webring.ts";
 import { deployStarlightKarmaBot } from "./starlight-karma-bot.ts";
 import { deployBetterSkillCapped } from "./better-skill-capped.ts";
@@ -26,10 +24,9 @@ export async function runReleasePleasePr(
   options: ReleasePhaseOptions,
 ): Promise<string[]> {
   const outputs: string[] = [];
-  const prContainer = options.getReleasePleaseContainerFn().withSecretVariable(
-    "GITHUB_TOKEN",
-    options.githubToken,
-  );
+  const prContainer = options
+    .getReleasePleaseContainerFn()
+    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
 
   const prResult = await options.releasePleaseRunFn(
     prContainer,
@@ -43,12 +40,16 @@ export async function runReleasePleasePr(
 
 export async function runReleasePleaseGithubRelease(
   options: ReleasePhaseOptions,
-): Promise<{ outputs: string[]; releaseCreated: boolean; success: boolean; releaseOutput: string }> {
+): Promise<{
+  outputs: string[];
+  releaseCreated: boolean;
+  success: boolean;
+  releaseOutput: string;
+}> {
   const outputs: string[] = [];
-  const releaseContainer = options.getReleasePleaseContainerFn().withSecretVariable(
-    "GITHUB_TOKEN",
-    options.githubToken,
-  );
+  const releaseContainer = options
+    .getReleasePleaseContainerFn()
+    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
 
   const result = await options.releasePleaseRunFn(
     releaseContainer,
@@ -64,7 +65,12 @@ export async function runReleasePleaseGithubRelease(
       result.output.includes("Created release") ||
       result.output.includes("created release"));
 
-  return { outputs, releaseCreated, success: result.success, releaseOutput: result.output };
+  return {
+    outputs,
+    releaseCreated,
+    success: result.success,
+    releaseOutput: result.output,
+  };
 }
 
 export async function publishNpmPackages(
@@ -82,31 +88,33 @@ export async function publishNpmPackages(
     },
   ];
 
-  const results = await runNamedParallel(npmPackages.map(pkg => ({
-    name: pkg.name,
-    operation: async () => {
-      await container
-        .withWorkdir(`/workspace/${pkg.path}`)
-        .withSecretVariable("NPM_TOKEN", npmToken)
-        .withExec([
-          "sh",
-          "-c",
-          'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc',
-        ])
-        .withExec([
-          "bun",
-          "publish",
-          "--access",
-          "public",
-          "--tag",
-          "latest",
-          "--registry",
-          "https://registry.npmjs.org",
-        ])
-        .stdout();
-      return `Published ${pkg.name}`;
-    },
-  })));
+  const results = await runNamedParallel(
+    npmPackages.map((pkg) => ({
+      name: pkg.name,
+      operation: async () => {
+        await container
+          .withWorkdir(`/workspace/${pkg.path}`)
+          .withSecretVariable("NPM_TOKEN", npmToken)
+          .withExec([
+            "sh",
+            "-c",
+            'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc',
+          ])
+          .withExec([
+            "bun",
+            "publish",
+            "--access",
+            "public",
+            "--tag",
+            "latest",
+            "--registry",
+            "https://registry.npmjs.org",
+          ])
+          .stdout();
+        return `Published ${pkg.name}`;
+      },
+    })),
+  );
 
   const outputs: string[] = [];
   const errors: string[] = [];
@@ -114,7 +122,10 @@ export async function publishNpmPackages(
     if (result.success) {
       outputs.push(String(result.value));
     } else {
-      const msg = result.error instanceof Error ? result.error.message : String(result.error);
+      const msg =
+        result.error instanceof Error
+          ? result.error.message
+          : String(result.error);
       outputs.push(`✗ Failed to publish ${result.name}: ${msg}`);
       errors.push(`Failed to publish ${result.name}: ${msg}`);
     }
@@ -139,11 +150,15 @@ async function withDeployRetry(
       return await fn();
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      const isGraphqlError = msg.includes("unknown error while requesting data via graphql");
+      const isGraphqlError = msg.includes(
+        "unknown error while requesting data via graphql",
+      );
       if (!isGraphqlError || attempt === maxRetries) {
         throw error;
       }
-      console.log(`⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`);
+      console.log(
+        `⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`,
+      );
     }
   }
   throw new Error("unreachable");
@@ -151,21 +166,44 @@ async function withDeployRetry(
 
 export async function runAppDeployments(
   options: ReleasePhaseOptions,
-): Promise<{ outputs: string[]; errors: string[]; appVersions: Record<string, string> }> {
-  const { source, version, gitSha, registryUsername, registryPassword, s3AccessKeyId, s3SecretAccessKey, birmelImage } = options;
+): Promise<{
+  outputs: string[];
+  errors: string[];
+  appVersions: Record<string, string>;
+}> {
+  const {
+    source,
+    version,
+    gitSha,
+    registryUsername,
+    registryPassword,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+    birmelImage,
+  } = options;
 
   const s3Tasks: DeployTask[] = [];
   const ghcrTasks: DeployTask[] = [];
 
   // Birmel publish (GHCR)
-  if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
+  if (
+    version !== undefined &&
+    gitSha !== undefined &&
+    registryUsername !== undefined &&
+    registryPassword !== undefined
+  ) {
     ghcrTasks.push({
       name: "Birmel publish",
       versionKey: "shepherdjerred/birmel",
       deploy: async () => {
         const refs = await publishBirmelImageWithContainer({
-          image: birmelImage, version, gitSha,
-          registryAuth: { username: registryUsername, password: registryPassword },
+          image: birmelImage,
+          version,
+          gitSha,
+          registryAuth: {
+            username: registryUsername,
+            password: registryPassword,
+          },
         });
         return `Published:\n${refs.join("\n")}`;
       },
@@ -175,22 +213,46 @@ export async function runAppDeployments(
   // Docs/resume/S3 deployments (lightweight)
   if (s3AccessKeyId !== undefined && s3SecretAccessKey !== undefined) {
     s3Tasks.push(
-      { name: "Clauderon docs", deploy: () => options.muxSiteDeployFn(source, s3AccessKeyId, s3SecretAccessKey) },
-      { name: "Resume", deploy: () => options.resumeDeployFn(source, s3AccessKeyId, s3SecretAccessKey) },
-      { name: "sjer.red", deploy: () => deploySjerRed(source, s3AccessKeyId, s3SecretAccessKey) },
-      { name: "Webring docs", deploy: () => deployWebringDocs(source, s3AccessKeyId, s3SecretAccessKey) },
+      {
+        name: "Clauderon docs",
+        deploy: () =>
+          options.muxSiteDeployFn(source, s3AccessKeyId, s3SecretAccessKey),
+      },
+      {
+        name: "Resume",
+        deploy: () =>
+          options.resumeDeployFn(source, s3AccessKeyId, s3SecretAccessKey),
+      },
+      {
+        name: "sjer.red",
+        deploy: () => deploySjerRed(source, s3AccessKeyId, s3SecretAccessKey),
+      },
+      {
+        name: "Webring docs",
+        deploy: () =>
+          deployWebringDocs(source, s3AccessKeyId, s3SecretAccessKey),
+      },
     );
   }
 
   // GHCR container publish deployments (heavy — overwhelm Dagger engine in parallel)
-  if (version !== undefined && gitSha !== undefined && registryUsername !== undefined && registryPassword !== undefined) {
+  if (
+    version !== undefined &&
+    gitSha !== undefined &&
+    registryUsername !== undefined &&
+    registryPassword !== undefined
+  ) {
     ghcrTasks.push({
       name: "Starlight Karma Bot",
       versionKey: "shepherdjerred/starlight-karma-bot/beta",
-      deploy: () => deployStarlightKarmaBot({
-        source, version, gitSha,
-        ghcrUsername: registryUsername, ghcrPassword: registryPassword,
-      }),
+      deploy: () =>
+        deployStarlightKarmaBot({
+          source,
+          version,
+          gitSha,
+          ghcrUsername: registryUsername,
+          ghcrPassword: registryPassword,
+        }),
     });
 
     if (s3AccessKeyId !== undefined && s3SecretAccessKey !== undefined) {
@@ -198,28 +260,44 @@ export async function runAppDeployments(
         {
           name: "Better Skill Capped",
           versionKey: "shepherdjerred/better-skill-capped-fetcher",
-          deploy: () => deployBetterSkillCapped({
-            source, version, s3AccessKeyId, s3SecretAccessKey,
-            ghcrUsername: registryUsername, ghcrPassword: registryPassword,
-          }),
+          deploy: () =>
+            deployBetterSkillCapped({
+              source,
+              version,
+              s3AccessKeyId,
+              s3SecretAccessKey,
+              ghcrUsername: registryUsername,
+              ghcrPassword: registryPassword,
+            }),
         },
         {
           name: "Discord Plays Pokemon",
           versionKey: "shepherdjerred/discord-plays-pokemon",
-          deploy: () => deployDiscordPlaysPokemon({
-            source, version, gitSha,
-            ghcrUsername: registryUsername, ghcrPassword: registryPassword,
-            s3AccessKeyId, s3SecretAccessKey,
-          }),
+          deploy: () =>
+            deployDiscordPlaysPokemon({
+              source,
+              version,
+              gitSha,
+              ghcrUsername: registryUsername,
+              ghcrPassword: registryPassword,
+              s3AccessKeyId,
+              s3SecretAccessKey,
+            }),
         },
         {
           name: "Scout for LoL",
           versionKey: "shepherdjerred/scout-for-lol/beta",
-          deploy: () => deployScoutForLol({
-            source, version, gitSha,
-            ghcrUsername: registryUsername, ghcrPassword: registryPassword,
-            ghToken: options.githubToken, s3AccessKeyId, s3SecretAccessKey,
-          }),
+          deploy: () =>
+            deployScoutForLol({
+              source,
+              version,
+              gitSha,
+              ghcrUsername: registryUsername,
+              ghcrPassword: registryPassword,
+              ghToken: options.githubToken,
+              s3AccessKeyId,
+              s3SecretAccessKey,
+            }),
         },
       );
     }
@@ -229,10 +307,20 @@ export async function runAppDeployments(
   const errors: string[] = [];
   const appVersions: Record<string, string> = {};
 
-  function collectTaskResults(results: { name: string; success: boolean; value?: unknown; error?: unknown }[], tasks: DeployTask[]): void {
+  function collectTaskResults(
+    results: {
+      name: string;
+      success: boolean;
+      value?: unknown;
+      error?: unknown;
+    }[],
+    tasks: DeployTask[],
+  ): void {
     for (const result of results) {
-      const task = tasks.find(t => t.name === result.name);
-      if (task === undefined) { continue; }
+      const task = tasks.find((t) => t.name === result.name);
+      if (task === undefined) {
+        continue;
+      }
       if (result.success) {
         outputs.push(`✓ ${task.name}: ${String(result.value)}`);
         if (task.versionKey !== undefined && version !== undefined) {
@@ -249,10 +337,12 @@ export async function runAppDeployments(
 
   // Phase 1: S3 deployments in parallel (lightweight, no engine pressure)
   if (s3Tasks.length > 0) {
-    const s3Results = await runNamedParallel(s3Tasks.map(t => ({
-      name: t.name,
-      operation: () => withDeployRetry(t.name, t.deploy),
-    })));
+    const s3Results = await runNamedParallel(
+      s3Tasks.map((t) => ({
+        name: t.name,
+        operation: () => withDeployRetry(t.name, t.deploy),
+      })),
+    );
     collectTaskResults(s3Results, s3Tasks);
   }
 
@@ -281,7 +371,22 @@ export async function runHomelabRelease(
 ): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
   const errors: string[] = [];
-  const { source, argocdToken, chartMuseumUsername, chartMuseumPassword, cloudflareApiToken, cloudflareAccountId, registryPassword, registryUsername, s3AccessKeyId, s3SecretAccessKey, hassBaseUrl, hassToken, tofuGithubToken, version } = options;
+  const {
+    source,
+    argocdToken,
+    chartMuseumUsername,
+    chartMuseumPassword,
+    cloudflareApiToken,
+    cloudflareAccountId,
+    registryPassword,
+    registryUsername,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+    hassBaseUrl,
+    hassToken,
+    tofuGithubToken,
+    version,
+  } = options;
 
   if (
     argocdToken === undefined ||
@@ -377,10 +482,18 @@ export async function runClauderonRelease(
   outputs.push(`Detected clauderon release: v${clauderonVersion}`);
 
   try {
-    const binaries = options.multiplexerBuildFn(source, s3AccessKeyId, s3SecretAccessKey);
+    const binaries = options.multiplexerBuildFn(
+      source,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
 
-    const linuxTargets = options.clauderonTargets.filter((t) => t.os === "linux");
-    const filenames = linuxTargets.map(({ os, arch }) => `clauderon-${os}-${arch}`);
+    const linuxTargets = options.clauderonTargets.filter(
+      (t) => t.os === "linux",
+    );
+    const filenames = linuxTargets.map(
+      ({ os, arch }) => `clauderon-${os}-${arch}`,
+    );
 
     for (const filename of filenames) {
       outputs.push(`Built ${filename}`);

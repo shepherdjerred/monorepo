@@ -51,9 +51,9 @@ export function PlanView({ message }: PlanViewProps) {
               const childText =
                 typeof children === "string"
                   ? children
-                  : (Array.isArray(children)
+                  : Array.isArray(children)
                     ? children.join("")
-                    : "");
+                    : "";
               if (childText.includes("[ ]") || childText.includes("[x]")) {
                 const isChecked = childText.includes("[x]");
                 return (

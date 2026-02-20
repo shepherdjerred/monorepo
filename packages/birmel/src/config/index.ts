@@ -49,8 +49,7 @@ function loadCoreConfig() {
     },
     mastra: {
       memoryDbPath:
-        Bun.env["MASTRA_MEMORY_DB_PATH"] ??
-        "file:/app/data/mastra-memory.db",
+        Bun.env["MASTRA_MEMORY_DB_PATH"] ?? "file:/app/data/mastra-memory.db",
       telemetryDbPath:
         Bun.env["MASTRA_TELEMETRY_DB_PATH"] ??
         "file:/app/data/mastra-telemetry.db",
@@ -88,10 +87,7 @@ function loadFeatureConfig() {
       environment: Bun.env["SENTRY_ENVIRONMENT"] ?? "development",
       release: Bun.env["SENTRY_RELEASE"] ?? Bun.env["GIT_SHA"],
       sampleRate: parseNumber(Bun.env["SENTRY_SAMPLE_RATE"], 1),
-      tracesSampleRate: parseNumber(
-        Bun.env["SENTRY_TRACES_SAMPLE_RATE"],
-        0.1,
-      ),
+      tracesSampleRate: parseNumber(Bun.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
     },
     persona: {
       enabled: parseBoolean(Bun.env["PERSONA_ENABLED"], true),
@@ -169,21 +165,20 @@ function loadEditorConfig() {
     allowedRepos: parseJSON(
       Bun.env["EDITOR_ALLOWED_REPOS"],
       [],
-      z.array(z.object({
-        name: z.string(),
-        repo: z.string(),
-        allowedPaths: z.array(z.string()).optional(),
-        branch: z.string().optional(),
-      })),
+      z.array(
+        z.object({
+          name: z.string(),
+          repo: z.string(),
+          allowedPaths: z.array(z.string()).optional(),
+          branch: z.string().optional(),
+        }),
+      ),
     ),
     maxSessionDurationMs: parseNumber(
       Bun.env["EDITOR_MAX_SESSION_DURATION_MS"],
       1_800_000,
     ),
-    maxSessionsPerUser: parseNumber(
-      Bun.env["EDITOR_MAX_SESSIONS_PER_USER"],
-      1,
-    ),
+    maxSessionsPerUser: parseNumber(Bun.env["EDITOR_MAX_SESSIONS_PER_USER"], 1),
     oauthPort: parseNumber(Bun.env["EDITOR_OAUTH_PORT"], 4112),
     oauthHost: Bun.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
     github: loadGithubConfig(),
@@ -207,4 +202,3 @@ export function getConfig(): Config {
 export function resetConfig(): void {
   cachedConfig = null;
 }
-

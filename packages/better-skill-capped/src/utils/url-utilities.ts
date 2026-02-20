@@ -4,8 +4,8 @@ const BROWSE_URL = BASE_URL + "browse";
 export function rawTitleToUrlTitle(rawTitle: string): string {
   return rawTitle
     .toLowerCase()
-    .replaceAll(' ', "-")
-    .replaceAll('$', "")
+    .replaceAll(" ", "-")
+    .replaceAll("$", "")
     .replaceAll(/[!:.'%,[\]]/g, "");
 }
 
@@ -13,7 +13,10 @@ export function getVideoUrl(video: { uuid: string }): string {
   return BROWSE_URL + "/video/" + video.uuid;
 }
 
-export function getCourseVideoUrl(video: { uuid: string }, course: { uuid: string }): string {
+export function getCourseVideoUrl(
+  video: { uuid: string },
+  course: { uuid: string },
+): string {
   return BROWSE_URL + "/course/" + video.uuid + "/" + course.uuid;
 }
 

@@ -5,10 +5,14 @@ import { addErrorLinks, assertPathExists } from "#src/util.ts";
 import { z } from "zod";
 import { logger } from "#src/logger.ts";
 
-const ZodErrorArraySchema = z.array(z.object({
-  code: z.string(),
-  message: z.string(),
-}).passthrough());
+const ZodErrorArraySchema = z.array(
+  z
+    .object({
+      code: z.string(),
+      message: z.string(),
+    })
+    .passthrough(),
+);
 
 export function getConfig(file = "config.toml") {
   const configPath = path.resolve(file);

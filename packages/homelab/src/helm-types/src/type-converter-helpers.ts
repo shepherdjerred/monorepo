@@ -39,36 +39,75 @@ export function mergeDescriptions(
 /**
  * Infer a primitive TypeProperty from a runtime value (no schema)
  */
-export function inferPrimitiveType(value: unknown, yamlComment?: string): TypeProperty {
+export function inferPrimitiveType(
+  value: unknown,
+  yamlComment?: string,
+): TypeProperty {
   if (ActualBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   if (ActualNumberSchema.safeParse(value).success) {
-    return { type: "number", optional: true, description: yamlComment, default: value };
+    return {
+      type: "number",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   if (StringBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   const stringCheckForNumber = StringSchema.safeParse(value);
   if (stringCheckForNumber.success) {
     const trimmed = stringCheckForNumber.data.trim();
-    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
-      return { type: "number", optional: true, description: yamlComment, default: value };
+    if (
+      trimmed !== "" &&
+      !Number.isNaN(Number(trimmed)) &&
+      Number.isFinite(Number(trimmed))
+    ) {
+      return {
+        type: "number",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
   }
 
   const stringCheckForPlain = StringSchema.safeParse(value);
   if (stringCheckForPlain.success) {
     if (stringCheckForPlain.data === "default") {
-      return { type: "string | number | boolean", optional: true, description: yamlComment, default: value };
+      return {
+        type: "string | number | boolean",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
-    return { type: "string", optional: true, description: yamlComment, default: value };
+    return {
+      type: "string",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
-  console.warn(`Unrecognized value type for: ${String(value)}, using 'unknown'`);
+  console.warn(
+    `Unrecognized value type for: ${String(value)}, using 'unknown'`,
+  );
   return { type: "unknown", optional: true, description: yamlComment };
 }
 

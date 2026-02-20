@@ -1,4 +1,7 @@
-import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
@@ -14,7 +17,13 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
-import { isEditorEnabled, getRepoConfig, isRepoAllowed, isGitHubConfigured, getGitHubConfig } from "@shepherdjerred/birmel/editor/config.ts";
+import {
+  isEditorEnabled,
+  getRepoConfig,
+  isRepoAllowed,
+  isGitHubConfigured,
+  getGitHubConfig,
+} from "@shepherdjerred/birmel/editor/config.ts";
 import {
   getOrCreateSession,
   updateSdkSessionId,
@@ -23,16 +32,39 @@ import {
   updateMessageId,
   updateSummary,
 } from "@shepherdjerred/birmel/editor/session-manager.ts";
-import { executeEdit, checkClaudePrerequisites } from "@shepherdjerred/birmel/editor/claude-client.ts";
-import { formatDiffForDiscord, formatChangeSummary, formatChangedFilesList } from "@shepherdjerred/birmel/editor/diff-formatter.ts";
+import {
+  executeEdit,
+  checkClaudePrerequisites,
+} from "@shepherdjerred/birmel/editor/claude-client.ts";
+import {
+  formatDiffForDiscord,
+  formatChangeSummary,
+  formatChangedFilesList,
+} from "@shepherdjerred/birmel/editor/diff-formatter.ts";
 import { generateBranchName } from "@shepherdjerred/birmel/editor/github-pr.ts";
-import { hasValidAuth, getAuth } from "@shepherdjerred/birmel/editor/github-oauth.ts";
+import {
+  hasValidAuth,
+  getAuth,
+} from "@shepherdjerred/birmel/editor/github-oauth.ts";
 import { cloneRepo } from "@shepherdjerred/birmel/editor/repo-clone.ts";
 
 const logger = loggers.tools.child("editor.edit-repo");
 
-type EditResult = { success: boolean; message: string; data?: { sessionId: string; summary: string; changedFiles: string[]; diffPreview: string } };
-type RequestContext = { userId: string; guildId: string; sourceChannelId: string };
+type EditResult = {
+  success: boolean;
+  message: string;
+  data?: {
+    sessionId: string;
+    summary: string;
+    changedFiles: string[];
+    diffPreview: string;
+  };
+};
+type RequestContext = {
+  userId: string;
+  guildId: string;
+  sourceChannelId: string;
+};
 
 async function validateEditPreflight(
   repoName: string,
@@ -43,28 +75,48 @@ async function validateEditPreflight(
   }
   const claudeCheck = await checkClaudePrerequisites();
   if (!claudeCheck.installed) {
-    return { success: false, message: "Claude Code CLI is not installed. Run `claude install` first." };
+    return {
+      success: false,
+      message: "Claude Code CLI is not installed. Run `claude install` first.",
+    };
   }
   if (!claudeCheck.hasApiKey) {
-    return { success: false, message: "ANTHROPIC_API_KEY is not set. Set the environment variable or run `claude login`." };
+    return {
+      success: false,
+      message:
+        "ANTHROPIC_API_KEY is not set. Set the environment variable or run `claude login`.",
+    };
   }
   if (reqCtx == null) {
     return { success: false, message: "Could not determine request context." };
   }
   if (!isGitHubConfigured()) {
-    return { success: false, message: "GitHub OAuth is not configured. Contact the bot administrator." };
+    return {
+      success: false,
+      message: "GitHub OAuth is not configured. Contact the bot administrator.",
+    };
   }
   const hasAuth = await hasValidAuth(reqCtx.userId);
   if (!hasAuth) {
     const config = getGitHubConfig();
-    const authUrl = config?.callbackUrl.replace("/callback", `?user=${reqCtx.userId}`) ?? "";
-    return { success: false, message: `You need to connect your GitHub account before editing. Click here to authenticate: ${authUrl}` };
+    const authUrl =
+      config?.callbackUrl.replace("/callback", `?user=${reqCtx.userId}`) ?? "";
+    return {
+      success: false,
+      message: `You need to connect your GitHub account before editing. Click here to authenticate: ${authUrl}`,
+    };
   }
   if (!isRepoAllowed(repoName)) {
-    return { success: false, message: `Repository '${repoName}' is not in the allowed list. Use list-repos to see available repositories.` };
+    return {
+      success: false,
+      message: `Repository '${repoName}' is not in the allowed list. Use list-repos to see available repositories.`,
+    };
   }
   if (getRepoConfig(repoName) == null) {
-    return { success: false, message: `Repository '${repoName}' configuration not found.` };
+    return {
+      success: false,
+      message: `Repository '${repoName}' configuration not found.`,
+    };
   }
   return null;
 }
@@ -73,14 +125,26 @@ async function ensureWorkingDirectory(
   session: Awaited<ReturnType<typeof getOrCreateSession>>,
   reqCtx: RequestContext,
   repoConfig: { repo: string; branch: string; allowedPaths?: string[] },
-): Promise<{ session: Awaited<ReturnType<typeof getOrCreateSession>>; workingDirectory: string } | EditResult> {
+): Promise<
+  | {
+      session: Awaited<ReturnType<typeof getOrCreateSession>>;
+      workingDirectory: string;
+    }
+  | EditResult
+> {
   let workingDirectory = session.clonedRepoPath;
   if (workingDirectory == null || workingDirectory.length === 0) {
     const auth = await getAuth(reqCtx.userId);
     if (auth == null) {
-      return { success: false, message: "GitHub authentication required to clone repository." };
+      return {
+        success: false,
+        message: "GitHub authentication required to clone repository.",
+      };
     }
-    logger.info("Cloning repository for first edit", { repo: repoConfig.repo, sessionId: session.id });
+    logger.info("Cloning repository for first edit", {
+      repo: repoConfig.repo,
+      sessionId: session.id,
+    });
     workingDirectory = await cloneRepo({
       repo: repoConfig.repo,
       branch: repoConfig.branch,
@@ -101,13 +165,22 @@ async function sendApprovalMessage(opts: {
   diffPreview: string;
   filesList: string;
 }): Promise<void> {
-  const { session, reqCtx, repoName, result, changeSummary, diffPreview, filesList } = opts;
+  const {
+    session,
+    reqCtx,
+    repoName,
+    result,
+    changeSummary,
+    diffPreview,
+    filesList,
+  } = opts;
   const client = getDiscordClient();
   const channel = await client.channels.fetch(reqCtx.sourceChannelId);
   if (channel == null || !("send" in channel)) {
     return;
   }
-  const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = await getDiscordComponents();
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
+    await getDiscordComponents();
   const embed = new EmbedBuilder()
     .setTitle("File Changes Ready for Review")
     .setDescription(result.summary)
@@ -120,11 +193,23 @@ async function sendApprovalMessage(opts: {
     .setColor(5_793_266)
     .setFooter({ text: `Session: ${session.id.slice(0, 8)}` });
   const buttons = new ActionRowBuilder<ButtonBuilderType>().addComponents(
-    new ButtonBuilder().setCustomId(`editor:approve:${session.id}`).setLabel("Approve & Create PR").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`editor:continue:${session.id}`).setLabel("Continue Editing").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId(`editor:reject:${session.id}`).setLabel("Reject").setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId(`editor:approve:${session.id}`)
+      .setLabel("Approve & Create PR")
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`editor:continue:${session.id}`)
+      .setLabel("Continue Editing")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`editor:reject:${session.id}`)
+      .setLabel("Reject")
+      .setStyle(ButtonStyle.Danger),
   );
-  const message = await channel.send({ embeds: [embed], components: [buttons] });
+  const message = await channel.send({
+    embeds: [embed],
+    components: [buttons],
+  });
   await updateMessageId(session.id, message.id);
 }
 
@@ -136,7 +221,11 @@ async function executeEditWorkflow(opts: {
 }): Promise<EditResult> {
   const { repoName, instruction, reqCtx, repoConfig } = opts;
 
-  logger.info("Starting edit session", { repoName, userId: reqCtx.userId, channelId: reqCtx.sourceChannelId });
+  logger.info("Starting edit session", {
+    repoName,
+    userId: reqCtx.userId,
+    channelId: reqCtx.sourceChannelId,
+  });
 
   let session = await getOrCreateSession({
     userId: reqCtx.userId,
@@ -155,7 +244,10 @@ async function executeEditWorkflow(opts: {
   const result = await executeEdit({
     prompt: instruction,
     workingDirectory,
-    ...(session.sdkSessionId != null && session.sdkSessionId.length > 0 && { resumeSessionId: session.sdkSessionId }),
+    ...(session.sdkSessionId != null &&
+      session.sdkSessionId.length > 0 && {
+        resumeSessionId: session.sdkSessionId,
+      }),
     allowedPaths: repoConfig.allowedPaths,
   });
 
@@ -168,18 +260,36 @@ async function executeEditWorkflow(opts: {
     return {
       success: true,
       message: result.summary || "No changes were made.",
-      data: { sessionId: session.id, summary: result.summary, changedFiles: [], diffPreview: "No changes made." },
+      data: {
+        sessionId: session.id,
+        summary: result.summary,
+        changedFiles: [],
+        diffPreview: "No changes made.",
+      },
     };
   }
 
   const branchName = generateBranchName(result.summary);
-  await storePendingChanges(session.id, result.changes, branchName, repoConfig.branch);
+  await storePendingChanges(
+    session.id,
+    result.changes,
+    branchName,
+    repoConfig.branch,
+  );
 
   const diffPreview = formatDiffForDiscord(result.changes);
   const changeSummary = formatChangeSummary(result.changes);
   const filesList = formatChangedFilesList(result.changes);
 
-  await sendApprovalMessage({ session, reqCtx, repoName, result, changeSummary, diffPreview, filesList });
+  await sendApprovalMessage({
+    session,
+    reqCtx,
+    repoName,
+    result,
+    changeSummary,
+    diffPreview,
+    filesList,
+  });
 
   return {
     success: true,
@@ -230,12 +340,18 @@ export const editRepoTool = createTool({
 
         // reqCtx is guaranteed non-null after preflight validation
         if (reqCtx == null) {
-          return { success: false, message: "Could not determine request context." };
+          return {
+            success: false,
+            message: "Could not determine request context.",
+          };
         }
 
         const repoConfig = getRepoConfig(repoName);
         if (repoConfig == null) {
-          return { success: false, message: `Repository '${repoName}' configuration not found.` };
+          return {
+            success: false,
+            message: `Repository '${repoName}' configuration not found.`,
+          };
         }
 
         return await executeEditWorkflow({

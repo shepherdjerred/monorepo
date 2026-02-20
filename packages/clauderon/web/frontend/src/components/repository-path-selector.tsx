@@ -51,8 +51,6 @@ export function RepositoryPathSelector({
   const [showBrowser, setShowBrowser] = useState(false);
 
   // Fetch recent repos on mount
-  ;
-
   // Format display with subdirectory
   const formatRepoDisplay = (repo: RecentRepoDto): string => {
     const repoName = extractRepoName(repo.repo_path);

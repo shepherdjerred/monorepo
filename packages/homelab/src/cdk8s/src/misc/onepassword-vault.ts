@@ -24,7 +24,11 @@ const PG_PROTOCOL = "postgres";
  * @param database The database name
  * @param options Optional query string parameters
  */
-export function buildPostgresUrlExpr(host: string, database: string, options?: string): string {
+export function buildPostgresUrlExpr(
+  host: string,
+  database: string,
+  options?: string,
+): string {
   const user = "$USER";
   const pass = "$PASS";
   const base = `${PG_PROTOCOL}://${user}:${pass}@${host}/${database}`;
@@ -40,7 +44,12 @@ export function buildPostgresUrlExpr(host: string, database: string, options?: s
  * @param options Optional query string parameters
  * @returns Shell script content
  */
-export function buildDbUrlScript(host: string, database: string, outputPath: string, options?: string): string {
+export function buildDbUrlScript(
+  host: string,
+  database: string,
+  outputPath: string,
+  options?: string,
+): string {
   const url = buildPostgresUrlExpr(host, database, options);
   return `
 USER=$(cat /pg-secret/username)

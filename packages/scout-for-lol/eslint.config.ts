@@ -44,12 +44,33 @@ export default [
         "error",
         {
           paths: [
-            { name: "fs", message: "Use Bun.file() / Bun.write() instead of Node fs." },
-            { name: "node:fs", message: "Use Bun.file() / Bun.write() instead of Node fs." },
-            { name: "fs/promises", message: "Use Bun.file() / Bun.write() instead of Node fs/promises." },
-            { name: "child_process", message: "Use Bun.spawn() / Bun.$ instead of Node child_process." },
-            { name: "crypto", message: "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto." },
-            { name: "path", message: "Use Bun.pathToFileURL or import from 'node:path' if needed." },
+            {
+              name: "fs",
+              message: "Use Bun.file() / Bun.write() instead of Node fs.",
+            },
+            {
+              name: "node:fs",
+              message: "Use Bun.file() / Bun.write() instead of Node fs.",
+            },
+            {
+              name: "fs/promises",
+              message:
+                "Use Bun.file() / Bun.write() instead of Node fs/promises.",
+            },
+            {
+              name: "child_process",
+              message: "Use Bun.spawn() / Bun.$ instead of Node child_process.",
+            },
+            {
+              name: "crypto",
+              message:
+                "Use Bun.CryptoHasher or Web Crypto API instead of Node crypto.",
+            },
+            {
+              name: "path",
+              message:
+                "Use Bun.pathToFileURL or import from 'node:path' if needed.",
+            },
           ],
           patterns: [
             {
@@ -90,7 +111,13 @@ export default [
   { files: [".dagger/src/index.ts"], rules: { "max-params": "off" } },
   // Scripts and frontend — console output is expected
   {
-    files: ["scripts/**/*.ts", "**/scripts/**/*.ts", "packages/frontend/**/*.ts", "packages/frontend/**/*.tsx", "packages/report/**/*.ts"],
+    files: [
+      "scripts/**/*.ts",
+      "**/scripts/**/*.ts",
+      "packages/frontend/**/*.ts",
+      "packages/frontend/**/*.tsx",
+      "packages/report/**/*.ts",
+    ],
     rules: { "no-console": "off" },
   },
   // Library index files re-export intentionally
@@ -115,7 +142,12 @@ export default [
   },
   // Test fixtures contain long hash-like strings (PUUIDs, match IDs)
   {
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts", "**/example/**/*.ts"],
+    files: [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.integration.test.ts",
+      "**/example/**/*.ts",
+    ],
     rules: { "no-secrets/no-secrets": "off" },
   },
   // Vite config runs in Node context, not Bun

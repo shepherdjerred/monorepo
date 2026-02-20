@@ -1,10 +1,6 @@
 import type { Secret } from "@dagger.io/dagger";
 import { z } from "zod";
-import {
-  postReview,
-  postComment,
-  type ReviewVerdict,
-} from "./lib-claude.ts";
+import { postReview, postComment, type ReviewVerdict } from "./lib-claude.ts";
 
 export const REPO = "shepherdjerred/monorepo";
 
@@ -134,7 +130,11 @@ export type InteractiveEventContext = {
 /**
  * Post an error comment on a PR, swallowing any notification failures.
  */
-export async function postErrorComment(githubToken: Secret, prNumber: number, detail: string): Promise<void> {
+export async function postErrorComment(
+  githubToken: Secret,
+  prNumber: number,
+  detail: string,
+): Promise<void> {
   try {
     await postComment({
       githubToken,
@@ -154,7 +154,11 @@ export async function postErrorComment(githubToken: Secret, prNumber: number, de
  * Parse and validate the structured verdict from Claude's output.
  * Returns the verdict or an error message string.
  */
-export async function parseVerdict(stdout: string, githubToken: Secret, prNumber: number): Promise<ReviewVerdict> {
+export async function parseVerdict(
+  stdout: string,
+  githubToken: Secret,
+  prNumber: number,
+): Promise<ReviewVerdict> {
   try {
     const jsonMatch = /\{[\s\S]*"should_approve"[\s\S]*\}/.exec(stdout);
     if (!jsonMatch) {
@@ -178,10 +182,14 @@ export async function parseVerdict(stdout: string, githubToken: Secret, prNumber
     } catch (notifyError) {
       console.error(
         "Failed to post error comment:",
-        notifyError instanceof Error ? notifyError.message : String(notifyError),
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
       );
     }
-    throw new Error(`Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`);
+    throw new Error(
+      `Review output parsing failed for PR #${String(prNumber)}: ${errorMessage}`,
+    );
   }
 }
 
@@ -217,7 +225,12 @@ export async function postApproval(
         body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Approve (confidence: ${String(verdict.confidence)}%)\n\n${verdict.reasoning}`,
       });
     } catch (notifyError) {
-      console.error("Failed to post fallback comment:", notifyError instanceof Error ? notifyError.message : String(notifyError));
+      console.error(
+        "Failed to post fallback comment:",
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
+      );
     }
     return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
   }
@@ -362,13 +375,15 @@ export async function postChangesRequested(
   options: PostChangesRequestedOptions,
 ): Promise<string> {
   const { githubToken, prNumber, verdict, analysis, inlineNote } = options;
-  const header = analysis.isRereview && analysis.previousWasApproved
-    ? "⚠️ **Approval revoked - Changes requested**"
-    : "❌ **Changes requested**";
+  const header =
+    analysis.isRereview && analysis.previousWasApproved
+      ? "⚠️ **Approval revoked - Changes requested**"
+      : "❌ **Changes requested**";
 
-  const context = analysis.isRereview && analysis.previousWasApproved
-    ? "This PR was previously approved, but new changes introduce issues that need to be addressed."
-    : "Issues found that need to be addressed before approval.";
+  const context =
+    analysis.isRereview && analysis.previousWasApproved
+      ? "This PR was previously approved, but new changes introduce issues that need to be addressed."
+      : "Issues found that need to be addressed before approval.";
 
   try {
     await postReview({
@@ -388,7 +403,12 @@ export async function postChangesRequested(
         body: `🤖 **Claude Code Review - Posting Error**\n\nFailed to submit review: ${msg.slice(0, 500)}\n\n**Verdict**: Changes Requested\n\n**Issues found:**\n- Critical: ${String(verdict.issue_count.critical)}\n- Major: ${String(verdict.issue_count.major)}\n- Minor: ${String(verdict.issue_count.minor)}\n\n${verdict.reasoning}`,
       });
     } catch (notifyError) {
-      console.error("Failed to post fallback comment:", notifyError instanceof Error ? notifyError.message : String(notifyError));
+      console.error(
+        "Failed to post fallback comment:",
+        notifyError instanceof Error
+          ? notifyError.message
+          : String(notifyError),
+      );
     }
     return `Review posting failed for PR #${String(prNumber)}: ${msg}`;
   }

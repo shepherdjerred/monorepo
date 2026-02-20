@@ -66,7 +66,9 @@ export async function cleanupClone(clonePath: string): Promise<void> {
     await rm(clonePath, { recursive: true, force: true });
     logger.info("Cleaned up cloned repository", { path: clonePath });
   } catch (error) {
-    logger.error("Failed to cleanup cloned repository", error, { path: clonePath });
+    logger.error("Failed to cleanup cloned repository", error, {
+      path: clonePath,
+    });
   }
 }
 

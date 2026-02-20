@@ -23,7 +23,6 @@ function getMainPlayer() {
       league: {
         leagueAccount: {
           puuid: LeaguePuuidSchema.parse(
-             
             "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
           ),
           region: "AMERICA_NORTH" as const,

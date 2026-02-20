@@ -217,7 +217,7 @@ export function HistoryPanel({
                             GENERATING...
                           </span>
                         </div>
-                      ) : (hasError ? (
+                      ) : hasError ? (
                         <span className="text-defeat-600 text-xs font-semibold">
                           ERROR
                         </span>
@@ -225,21 +225,23 @@ export function HistoryPanel({
                         <span className="text-brand-600 text-xs font-semibold">
                           SUCCESS
                         </span>
-                      ))}
+                      )}
                       <span className="text-xs text-surface-500">
                         {formatTimestamp(entry.timestamp)}
                       </span>
                     </div>
                     <div className="text-xs text-surface-700 space-y-0.5">
-                      {entry.configSnapshot.personality !== undefined && entry.configSnapshot.personality.length > 0 && (
-                        <div className="truncate">
-                          🎭 {entry.configSnapshot.personality}
-                        </div>
-                      )}
+                      {entry.configSnapshot.personality !== undefined &&
+                        entry.configSnapshot.personality.length > 0 && (
+                          <div className="truncate">
+                            🎭 {entry.configSnapshot.personality}
+                          </div>
+                        )}
                       {!isPending && !hasError && (
                         <div className="flex items-center gap-2 text-surface-500">
                           <span>{entry.result.text.length} chars</span>
-                          {entry.result.image !== undefined && entry.result.image.length > 0 && <span>🖼️</span>}
+                          {entry.result.image !== undefined &&
+                            entry.result.image.length > 0 && <span>🖼️</span>}
                         </div>
                       )}
                       {entry.rating && (

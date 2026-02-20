@@ -89,7 +89,11 @@ export function AdvancedContainerSettings({
               value={formData.pull_policy}
               onChange={(e) => {
                 const val = e.target.value;
-                if (val === "always" || val === "if-not-present" || val === "never") {
+                if (
+                  val === "always" ||
+                  val === "if-not-present" ||
+                  val === "never"
+                ) {
                   setFormData({ ...formData, pull_policy: val });
                 }
               }}
@@ -141,7 +145,7 @@ export function AdvancedContainerSettings({
               <div className="text-sm text-muted-foreground">
                 Loading storage classes...
               </div>
-            ) : (storageClasses.length > 0 ? (
+            ) : storageClasses.length > 0 ? (
               <>
                 <select
                   id="storage_class"
@@ -171,7 +175,7 @@ export function AdvancedContainerSettings({
               <div className="text-sm text-muted-foreground">
                 No storage classes available. Check cluster configuration.
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>

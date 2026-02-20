@@ -188,24 +188,26 @@ export function MatchBrowser({
       )}
 
       {/* Empty state - no matches */}
-      {browser.matches.length === 0 && !browser.loading && browser.error === null && (
-        <EmptyState
-          icon={<SearchIcon className="w-12 h-12" />}
-          title="No Matches Found"
-          description="No matches found in the last 7 days. Try refreshing or check your R2 configuration."
-          action={
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                void browser.handleBrowse(true);
-              }}
-            >
-              Refresh Matches
-            </Button>
-          }
-        />
-      )}
+      {browser.matches.length === 0 &&
+        !browser.loading &&
+        browser.error === null && (
+          <EmptyState
+            icon={<SearchIcon className="w-12 h-12" />}
+            title="No Matches Found"
+            description="No matches found in the last 7 days. Try refreshing or check your R2 configuration."
+            action={
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  void browser.handleBrowse(true);
+                }}
+              >
+                Refresh Matches
+              </Button>
+            }
+          />
+        )}
 
       {/* Empty state - filters have no results */}
       {browser.matches.length > 0 &&

@@ -1,4 +1,4 @@
-import type { WebDriver} from "selenium-webdriver";
+import type { WebDriver } from "selenium-webdriver";
 import { By, until } from "selenium-webdriver";
 import { wait } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
@@ -82,7 +82,9 @@ async function navigateToTextChannel(driver: WebDriver) {
     ),
   );
   const delay = 5000;
-  logger.info(`waiting ${String(delay)}ms for text channel to become clickable`);
+  logger.info(
+    `waiting ${String(delay)}ms for text channel to become clickable`,
+  );
   await wait(delay);
   await textChat.click();
   logger.info("navigated to text channel");

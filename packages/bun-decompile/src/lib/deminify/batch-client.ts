@@ -143,7 +143,10 @@ export class BatchDeminifyClient {
 
       if (entry.result.type === "succeeded") {
         try {
-          const result = this.parseSucceededResult(entry.result.message, context);
+          const result = this.parseSucceededResult(
+            entry.result.message,
+            context,
+          );
           if (result) {
             results.set(funcId, result);
           }

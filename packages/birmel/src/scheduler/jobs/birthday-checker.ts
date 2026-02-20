@@ -98,7 +98,10 @@ async function processBirthday(
   await assignBirthdayRole(member, fullGuild, birthday.userId);
 }
 
-async function processGuildBirthdays(guild: OAuth2Guild, guildId: string): Promise<void> {
+async function processGuildBirthdays(
+  guild: OAuth2Guild,
+  guildId: string,
+): Promise<void> {
   try {
     const birthdays = await getBirthdaysToday(guildId);
     if (birthdays.length === 0) {
@@ -110,11 +113,16 @@ async function processGuildBirthdays(guild: OAuth2Guild, guildId: string): Promi
       try {
         await processBirthday(birthday, fullGuild, guildId);
       } catch (error) {
-        logger.error("Failed to process birthday", toError(error), { guildId, userId: birthday.userId });
+        logger.error("Failed to process birthday", toError(error), {
+          guildId,
+          userId: birthday.userId,
+        });
       }
     }
   } catch (error) {
-    logger.error("Failed to check birthdays for guild", toError(error), { guildId });
+    logger.error("Failed to check birthdays for guild", toError(error), {
+      guildId,
+    });
   }
 }
 

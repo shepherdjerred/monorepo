@@ -44,11 +44,8 @@ export function isSimpleYAMLValue(line: string): boolean {
  * Helper: Check if a line is a section header (short line followed by YAML config)
  * Exported for testing purposes
  */
-export function isSectionHeader(
-  line: string,
-  nextLine?: string,
-): boolean {
-  if ((nextLine == null || nextLine === "")) {
+export function isSectionHeader(line: string, nextLine?: string): boolean {
+  if (nextLine == null || nextLine === "") {
     return false;
   }
 
@@ -259,7 +256,12 @@ export function parseBitnamiParams(comment: string): {
     const paramMatch = /^@param\s+([\w.-]+)\s+(\S.*)$/.exec(trimmedLine);
     if (paramMatch) {
       const [, paramKey, description] = paramMatch;
-      if (paramKey != null && paramKey !== "" && description != null && description !== "") {
+      if (
+        paramKey != null &&
+        paramKey !== "" &&
+        description != null &&
+        description !== ""
+      ) {
         params.set(paramKey, description);
       }
     } else if (trimmedLine) {
@@ -360,16 +362,25 @@ export function parseYAMLCommentsWithMetadata(
         for (const [paramKey, description] of params.entries()) {
           comments.set(paramKey, {
             text: description,
-            metadata: { source: "AST", rawComment: comment, debugInfo: `Bitnami @param directive for ${paramKey}` },
+            metadata: {
+              source: "AST",
+              rawComment: comment,
+              debugInfo: `Bitnami @param directive for ${paramKey}`,
+            },
           });
         }
-        const remainingCleaned = remainingLines.length > 0
-          ? cleanYAMLComment(remainingLines.join("\n"))
-          : "";
+        const remainingCleaned =
+          remainingLines.length > 0
+            ? cleanYAMLComment(remainingLines.join("\n"))
+            : "";
         if (remainingCleaned) {
           comments.set(fullKey, {
             text: remainingCleaned,
-            metadata: { source: "AST", rawComment: comment, debugInfo: `AST comment after extracting @param directives` },
+            metadata: {
+              source: "AST",
+              rawComment: comment,
+              debugInfo: `AST comment after extracting @param directives`,
+            },
           });
         }
       } else if (comment) {
@@ -377,7 +388,11 @@ export function parseYAMLCommentsWithMetadata(
         if (cleaned) {
           comments.set(fullKey, {
             text: cleaned,
-            metadata: { source: "AST", rawComment: comment, debugInfo: `Direct AST comment for ${fullKey}` },
+            metadata: {
+              source: "AST",
+              rawComment: comment,
+              debugInfo: `Direct AST comment for ${fullKey}`,
+            },
           });
         }
       }
@@ -400,7 +415,9 @@ export function parseYAMLCommentsWithMetadata(
 
       // Extract the map's own comment (to be inherited by first child if needed)
       let mapComment = inheritedComment;
-      const mapCommentCheck = z.string().safeParse(mapNodeCheck.data.commentBefore);
+      const mapCommentCheck = z
+        .string()
+        .safeParse(mapNodeCheck.data.commentBefore);
       if (mapCommentCheck.success) {
         mapComment = mapCommentCheck.data;
       }
@@ -422,12 +439,18 @@ export function parseYAMLCommentsWithMetadata(
         const fullKey = newPath.join(".");
 
         const comment = collectItemComment(
-          { keyNode: itemCheck.data.key, item, valueNode: itemCheck.data.value },
+          {
+            keyNode: itemCheck.data.key,
+            item,
+            valueNode: itemCheck.data.value,
+          },
           { index: i, mapComment },
         );
         storeComment(comment, fullKey);
 
-        const valueInheritedComment = extractCommentBefore(itemCheck.data.value);
+        const valueInheritedComment = extractCommentBefore(
+          itemCheck.data.value,
+        );
 
         if (itemCheck.data.value != null) {
           visitNode(itemCheck.data.value, newPath, valueInheritedComment);

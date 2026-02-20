@@ -120,17 +120,22 @@ function visitNode(
   }
 
   // Handle dynamic imports: import('...')
-  if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-      const arg = node.arguments[0];
-      if (arg !== undefined && ts.isStringLiteral(arg)) {
-        const resolved = resolveImport(targetFilePath, arg.text);
-        if (resolved !== null) {
-          targetImports.add(resolved);
-        }
+  if (
+    ts.isCallExpression(node) &&
+    node.expression.kind === ts.SyntaxKind.ImportKeyword
+  ) {
+    const arg = node.arguments[0];
+    if (arg !== undefined && ts.isStringLiteral(arg)) {
+      const resolved = resolveImport(targetFilePath, arg.text);
+      if (resolved !== null) {
+        targetImports.add(resolved);
       }
     }
+  }
 
-  ts.forEachChild(node, (child) => { visitNode(child, targetFilePath, targetImports); });
+  ts.forEachChild(node, (child) => {
+    visitNode(child, targetFilePath, targetImports);
+  });
 }
 
 // Build dependency graph using TypeScript's module resolution

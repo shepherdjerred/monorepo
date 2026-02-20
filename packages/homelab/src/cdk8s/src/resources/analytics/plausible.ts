@@ -13,7 +13,10 @@ import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.t
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath, buildDbUrlScript } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  buildDbUrlScript,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Service as ServiceType } from "cdk8s-plus-31";
 
@@ -82,7 +85,11 @@ export function createPlausibleDeployment(
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        buildDbUrlScript("plausible-postgresql:5432", "plausible_db", "/db-url/url"),
+        buildDbUrlScript(
+          "plausible-postgresql:5432",
+          "plausible_db",
+          "/db-url/url",
+        ),
       ],
       securityContext: {
         user: UID,

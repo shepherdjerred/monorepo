@@ -98,8 +98,12 @@ export class FunctionCache {
         hash: data.hash,
         mapping: {
           renames: data.mapping.renames,
-          ...(data.mapping.functionName == null ? {} : { functionName: data.mapping.functionName }),
-          ...(data.mapping.description == null ? {} : { description: data.mapping.description }),
+          ...(data.mapping.functionName == null
+            ? {}
+            : { functionName: data.mapping.functionName }),
+          ...(data.mapping.description == null
+            ? {}
+            : { description: data.mapping.description }),
         },
         timestamp: data.timestamp,
         model: data.model,

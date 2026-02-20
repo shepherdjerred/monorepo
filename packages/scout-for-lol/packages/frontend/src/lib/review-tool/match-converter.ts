@@ -215,7 +215,9 @@ export function extractMatchMetadataFromRawMatch(
   return rawMatch.info.participants.map((participant) => {
     // Build Riot ID (GameName#Tagline)
     const riotId =
-      participant.riotIdGameName !== undefined && participant.riotIdGameName.length > 0 && participant.riotIdTagline
+      participant.riotIdGameName !== undefined &&
+      participant.riotIdGameName.length > 0 &&
+      participant.riotIdTagline
         ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
         : "Unknown";
 
@@ -223,7 +225,10 @@ export function extractMatchMetadataFromRawMatch(
     let outcome: string;
     if (queueType === "arena") {
       const placement = participant.placement;
-      outcome = placement === undefined ? "Unknown" : `${String(placement)}${getOrdinalSuffix(placement)} place`;
+      outcome =
+        placement === undefined
+          ? "Unknown"
+          : `${String(placement)}${getOrdinalSuffix(placement)} place`;
     } else {
       outcome = participant.win ? "Victory" : "Defeat";
     }

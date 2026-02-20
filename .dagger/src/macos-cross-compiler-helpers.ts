@@ -151,7 +151,16 @@ export type BuildCctoolsOptions = {
  * Build cctools for a specific architecture
  */
 export function buildCctools(options: BuildCctoolsOptions): Directory {
-  const { container, architecture, kernelVersion, targetSdkVersion, cores, xar, libtapi, libdispatch } = options;
+  const {
+    container,
+    architecture,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+    xar,
+    libtapi,
+    libdispatch,
+  } = options;
   // autoconf does not recognize aarch64 -- use arm instead
   const triple =
     architecture === "aarch64"
@@ -234,7 +243,8 @@ export type BuildWrappersOptions = {
  * Build wrapper for clang
  */
 export function buildClangWrappers(options: BuildWrappersOptions): Directory {
-  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = options;
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } =
+    options;
   const wrapperContainer = container
     .withExec([
       "git",
@@ -274,7 +284,8 @@ export function buildClangWrappers(options: BuildWrappersOptions): Directory {
  * Build wrapper for GCC
  */
 export function buildGccWrappers(options: BuildWrappersOptions): Directory {
-  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } = options;
+  const { container, sdkVersion, kernelVersion, targetSdkVersion, cores } =
+    options;
   const wrapperContainer = container
     .withExec([
       "git",
@@ -330,7 +341,10 @@ export function getSdk(container: Container, version: string): Directory {
 /**
  * Build Zig compiler
  */
-export function buildZig(container: Container, targetArch = "x86_64"): Directory {
+export function buildZig(
+  container: Container,
+  targetArch = "x86_64",
+): Directory {
   let archSuffix: string;
   if (targetArch === "aarch64" || targetArch === "arm64") {
     archSuffix = "aarch64";
@@ -377,7 +391,20 @@ export type BuildGccOptions = {
  * Build GCC compiler for cross-compilation
  */
 export function buildGcc(options: BuildGccOptions): Directory {
-  const { container, architecture, sdkVersion, kernelVersion, targetSdkVersion, cores, clangWrappers, cctools, sdk, xar, libtapi, libdispatch } = options;
+  const {
+    container,
+    architecture,
+    sdkVersion,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+    clangWrappers,
+    cctools,
+    sdk,
+    xar,
+    libtapi,
+    libdispatch,
+  } = options;
   const triple = `${architecture}-apple-darwin${kernelVersion}`;
 
   const gccContainer = container

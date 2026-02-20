@@ -21,8 +21,6 @@ export function DirectoryBrowserDialog({
   const [error] = useState<string | null>(null);
 
   // Fetch directory contents
-  ;
-
   const handleNavigateToParent = () => {
     if (parentPath != null && parentPath.length > 0) {
       setCurrentPath(parentPath);

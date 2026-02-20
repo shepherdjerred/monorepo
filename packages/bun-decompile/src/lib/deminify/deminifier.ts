@@ -12,7 +12,11 @@
  */
 
 import { DeminifyCache, shouldCache } from "./cache.ts";
-import { buildCallGraph, getFunctionContext, getProcessingOrder } from "./call-graph.ts";
+import {
+  buildCallGraph,
+  getFunctionContext,
+  getProcessingOrder,
+} from "./call-graph.ts";
 import { ClaudeClient } from "./claude-client.ts";
 import { OpenAIClient } from "./openai-client.ts";
 import { BatchDeminifyClient } from "./batch-client.ts";
@@ -32,7 +36,6 @@ import type {
   FileContext,
   ProgressCallback,
 } from "./types.ts";
-
 
 /** Batch status callback */
 export type BatchStatusCallback = (status: BatchStatus) => void;
@@ -188,7 +191,11 @@ export class Deminifier {
     const startTime = Date.now();
     this.stats = this.initStats();
     const confidences: number[] = [];
-    const emitProgress = this.createProgressEmitter(options, confidences, startTime);
+    const emitProgress = this.createProgressEmitter(
+      options,
+      confidences,
+      startTime,
+    );
 
     // Phase 1: Parse and build call graph
     emitProgress({ phase: "parsing", current: 0, total: 1 });
@@ -214,13 +221,26 @@ export class Deminifier {
     }
 
     // Phase 2: Estimate cost and confirm
-    emitProgress({ phase: "analyzing", current: 0, total: functionsToProcess.length });
-    await this.confirmOrSkip(options, this.client.estimateCost(functionsToProcess));
+    emitProgress({
+      phase: "analyzing",
+      current: 0,
+      total: functionsToProcess.length,
+    });
+    await this.confirmOrSkip(
+      options,
+      this.client.estimateCost(functionsToProcess),
+    );
 
     // Delegate to appropriate processing mode
     return this.dispatchProcessing({
-      source, graph, functionsToProcess, fileContext,
-      options, confidences, emitProgress, startTime,
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      options,
+      confidences,
+      emitProgress,
+      startTime,
     });
   }
 
@@ -235,26 +255,50 @@ export class Deminifier {
     emitProgress: (progress: DeminifyProgress) => void;
     startTime: number;
   }): Promise<string> {
-    const { source, graph, functionsToProcess, fileContext, options, confidences, emitProgress, startTime } = opts;
+    const {
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      options,
+      confidences,
+      emitProgress,
+      startTime,
+    } = opts;
 
     if (
       options?.useBatch === true ||
       (options?.resumeBatchId != null && options.resumeBatchId.length > 0)
     ) {
       return this.batchMode.deminifyFileBatch({
-        source, graph, functionsToProcess, fileContext, options, stats: this.stats,
+        source,
+        graph,
+        functionsToProcess,
+        fileContext,
+        options,
+        stats: this.stats,
       });
     }
 
     if (options?.useBatchRenaming ?? true) {
       return this.batchMode.deminifyFileBatchRenaming({
-        source, graph, options, startTime, stats: this.stats, emitProgress,
+        source,
+        graph,
+        options,
+        startTime,
+        stats: this.stats,
+        emitProgress,
       });
     }
 
     // Real-time mode
     const reassembled = await this.processRealTimeMode({
-      source, graph, functionsToProcess, fileContext, confidences, emitProgress,
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      confidences,
+      emitProgress,
     });
 
     const clientStats = this.client.getStats();
@@ -267,7 +311,12 @@ export class Deminifier {
         confidences.reduce((a, b) => a + b, 0) / confidences.length;
     }
 
-    emitProgress({ phase: "reassembling", current: 1, total: 1, currentItem: "Complete" });
+    emitProgress({
+      phase: "reassembling",
+      current: 1,
+      total: 1,
+      currentItem: "Complete",
+    });
     return reassembled;
   }
 
@@ -280,7 +329,14 @@ export class Deminifier {
     confidences: number[];
     emitProgress: (progress: DeminifyProgress) => void;
   }): Promise<string> {
-    const { source, graph, functionsToProcess, fileContext, confidences, emitProgress } = opts;
+    const {
+      source,
+      graph,
+      functionsToProcess,
+      fileContext,
+      confidences,
+      emitProgress,
+    } = opts;
     const processingOrder = getProcessingOrder(graph);
     const results = new Map<string, DeminifyResult>();
 

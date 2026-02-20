@@ -123,7 +123,7 @@ export function Report({ match }: { match: CompletedMatch }) {
             >
               {match.queueType === "clash" ? "CLASH" : "ARAM CLASH"}
             </div>
-          ) : (hasSingleTrackedPlayer && mainPlayer?.rankAfterMatch ? (
+          ) : hasSingleTrackedPlayer && mainPlayer?.rankAfterMatch ? (
             <RankedBadge
               oldRank={mainPlayer.rankBeforeMatch}
               newRank={mainPlayer.rankAfterMatch}
@@ -172,7 +172,7 @@ export function Report({ match }: { match: CompletedMatch }) {
                   ))}
               </div>
             )
-          ))}
+          )}
         </div>
         <div
           style={{

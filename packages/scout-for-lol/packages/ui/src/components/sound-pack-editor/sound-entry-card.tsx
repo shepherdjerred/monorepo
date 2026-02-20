@@ -131,7 +131,7 @@ export function SoundEntryCard({
       entry.source.url.includes("youtu.be"));
 
   // Check cache status on mount and when URL changes
-   
+
   useEffect(() => {
     const checkStatus = async () => {
       if (isYouTube && getCacheStatus && entry.source.type === "url") {

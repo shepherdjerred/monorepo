@@ -119,7 +119,9 @@ export const bunBeaufortFonts: () => Promise<Font[]> = () =>
     baseBeaufortFonts.map(
       async (baseFont): Promise<Font> => ({
         ...baseFont,
-        data: await Bun.file(new URL(baseFont.src, import.meta.url)).arrayBuffer(),
+        data: await Bun.file(
+          new URL(baseFont.src, import.meta.url),
+        ).arrayBuffer(),
       }),
     ),
   );
@@ -129,7 +131,9 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
     baseSpiegelFonts.map(
       async (baseFont): Promise<Font> => ({
         ...baseFont,
-        data: await Bun.file(new URL(baseFont.src, import.meta.url)).arrayBuffer(),
+        data: await Bun.file(
+          new URL(baseFont.src, import.meta.url),
+        ).arrayBuffer(),
       }),
     ),
   );

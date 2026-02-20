@@ -94,7 +94,11 @@ export function createBugsinkDeployment(chart: Chart) {
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        buildDbUrlScript("bugsink-postgresql:5432", "bugsink_db", "/db-url/url"),
+        buildDbUrlScript(
+          "bugsink-postgresql:5432",
+          "bugsink_db",
+          "/db-url/url",
+        ),
       ],
       securityContext: {
         user: UID,

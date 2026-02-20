@@ -55,7 +55,9 @@ export function createHaWorkflowDashboard() {
       .description(options.description)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(options.query).legendFormat(options.legend),
+        new prometheus.DataqueryBuilder()
+          .expr(options.query)
+          .legendFormat(options.legend),
       )
       .unit(options.unit)
       .colorMode(common.BigValueColorMode.Value)
@@ -229,7 +231,8 @@ export function createHaWorkflowDashboard() {
   builder.withPanel(
     createStatPanel({
       title: "Workflows In Progress",
-      description: "Currently executing workflows (may indicate stuck workflows if persistently non-zero)",
+      description:
+        "Currently executing workflows (may indicate stuck workflows if persistently non-zero)",
       query: `sum without(pod, instance, container, endpoint) (ha_workflows_in_progress{${buildFilter()}})`,
       legend: "{{workflow}}",
       gridPos: { x: 12, y: 25, w: 12, h: 8 },

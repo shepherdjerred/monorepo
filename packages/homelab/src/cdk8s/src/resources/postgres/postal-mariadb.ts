@@ -62,8 +62,7 @@ export class PostalMariaDB extends Construct {
         namespace: props.namespace,
       },
       spec: {
-        itemPath:
-          vaultItemPath("zlz4hlpcgk74nhqysgrre5wv4i"),
+        itemPath: vaultItemPath("zlz4hlpcgk74nhqysgrre5wv4i"),
       },
     });
 

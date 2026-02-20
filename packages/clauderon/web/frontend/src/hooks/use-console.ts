@@ -8,8 +8,6 @@ export function useConsole(_sessionId: string | null) {
   const clientRef = useRef<ConsoleClient | null>(null);
   const [isConnected] = useState(false);
 
-  ;
-
   return {
     client: clientRef.current,
     isConnected,

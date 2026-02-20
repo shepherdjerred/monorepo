@@ -3,7 +3,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
-import { KubeRole, KubeRoleBinding } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeRole,
+  KubeRoleBinding,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { repositories } from "./actions-runner-controller.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 

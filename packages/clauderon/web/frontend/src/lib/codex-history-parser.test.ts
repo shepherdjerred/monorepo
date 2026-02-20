@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { isCodexFormat, parseCodexHistoryLines } from "./codex-history-parser.ts";
+import {
+  isCodexFormat,
+  parseCodexHistoryLines,
+} from "./codex-history-parser.ts";
 import { parseHistoryLinesAuto } from "./history-parser.ts";
 
 describe("isCodexFormat", () => {

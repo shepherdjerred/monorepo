@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.*
+packages/birmel/data
+packages/dpp
+target
+.old-*
+archive
+practice
+packages/clauderon/screenshots
+*.log

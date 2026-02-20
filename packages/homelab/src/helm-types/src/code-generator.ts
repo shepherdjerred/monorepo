@@ -72,7 +72,10 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
     const optional = prop.optional ? "?" : "";
 
     // Generate JSDoc comment if we have description or default
-    if (prop.description != null && prop.description !== "" || prop.default !== undefined) {
+    if (
+      (prop.description != null && prop.description !== "") ||
+      prop.default !== undefined
+    ) {
       code += `  /**\n`;
 
       if (prop.description != null && prop.description !== "") {
@@ -90,7 +93,8 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
 
       if (prop.default !== undefined) {
         const defaultStr = formatDefaultValue(prop.default);
-        const hasDescription = prop.description != null && prop.description !== "";
+        const hasDescription =
+          prop.description != null && prop.description !== "";
         if (defaultStr != null && defaultStr !== "" && hasDescription) {
           code += `   *\n`;
         }

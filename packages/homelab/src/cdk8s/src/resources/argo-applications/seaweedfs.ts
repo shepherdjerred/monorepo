@@ -2,7 +2,10 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { IntOrString, KubeService } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  IntOrString,
+  KubeService,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";

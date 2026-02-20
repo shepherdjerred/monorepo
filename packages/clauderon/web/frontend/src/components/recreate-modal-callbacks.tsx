@@ -46,7 +46,12 @@ export function RecreateModalWrapper({
       session={session}
       healthReport={healthReport}
       onStart={() => {
-        void toastAction(startSession(session.id), session.name, "started", "start");
+        void toastAction(
+          startSession(session.id),
+          session.name,
+          "started",
+          "start",
+        );
       }}
       onWake={() => {
         void toastAction(

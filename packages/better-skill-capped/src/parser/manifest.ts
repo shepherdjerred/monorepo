@@ -71,10 +71,12 @@ const ManifestCourseChapterEntrySchema = z.object({
   chapters: z.tuple([
     z.object({
       title: z.string(),
-      vids: z.array(z.object({
-        uuid: z.string(),
-        altTitle: z.string().optional(),
-      })),
+      vids: z.array(
+        z.object({
+          uuid: z.string(),
+          altTitle: z.string().optional(),
+        }),
+      ),
     }),
   ]),
 });
@@ -102,4 +104,6 @@ export type ManifestCommentary = z.infer<typeof ManifestCommentarySchema>;
 export type ManifestStaff = z.infer<typeof ManifestStaffSchema>;
 export type ManifestCourse = z.infer<typeof ManifestCourseSchema>;
 export type ManifestThisWeekData = z.infer<typeof ManifestThisWeekDataSchema>;
-export type ManifestCourseChapters = z.infer<typeof ManifestCourseChaptersSchema>;
+export type ManifestCourseChapters = z.infer<
+  typeof ManifestCourseChaptersSchema
+>;

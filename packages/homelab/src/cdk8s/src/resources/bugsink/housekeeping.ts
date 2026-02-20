@@ -1,5 +1,8 @@
 import type { Chart } from "cdk8s";
-import { KubeCronJob, Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeCronJob,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { buildDbUrlScript } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -48,7 +51,11 @@ export function createBugsinkHousekeepingCronJob(
                   image: `library/busybox:${versions["library/busybox"]}`,
                   command: ["/bin/sh", "-c"],
                   args: [
-                    buildDbUrlScript("bugsink-postgresql:5432", "bugsink_db", "/db-url/url"),
+                    buildDbUrlScript(
+                      "bugsink-postgresql:5432",
+                      "bugsink_db",
+                      "/db-url/url",
+                    ),
                   ],
                   volumeMounts: [
                     {

@@ -153,8 +153,6 @@ export function RecreateConfirmModal({
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   // Handle ESC key
-  ;
-
   if (!open) {
     return null;
   }

@@ -17,7 +17,8 @@ export function handleMessages(
   client.on(Events.MessageCreate, (messageEvent) => {
     void (async () => {
       try {
-        await handleMessage(messageEvent, fn); return;
+        await handleMessage(messageEvent, fn);
+        return;
       } catch (error) {
         logger.info(error);
       }
@@ -43,9 +44,7 @@ async function handleMessage(
     return;
   }
 
-  if (
-    event.member?.voice.channelId !== getConfig().stream.channel_id
-  ) {
+  if (event.member?.voice.channelId !== getConfig().stream.channel_id) {
     await event.reply(
       `You have to be in ${channelMention(getConfig().stream.channel_id)} to play`,
     );

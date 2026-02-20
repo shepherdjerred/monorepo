@@ -44,28 +44,40 @@ function toFilterStatus(value: string): FilterStatus | undefined {
 
 function getConfirmDialogTitle(type: string): string {
   switch (type) {
-    case "archive": return "Archive Session";
-    case "unarchive": return "Unarchive Session";
-    case "refresh": return "Refresh Session";
-    default: return "Delete Session";
+    case "archive":
+      return "Archive Session";
+    case "unarchive":
+      return "Unarchive Session";
+    case "refresh":
+      return "Refresh Session";
+    default:
+      return "Delete Session";
   }
 }
 
 function getConfirmDialogDescription(type: string, name: string): string {
   switch (type) {
-    case "archive": return `Are you sure you want to archive "${name}"?`;
-    case "unarchive": return `Are you sure you want to restore "${name}" from the archive?`;
-    case "refresh": return `This will pull the latest image and recreate the container for "${name}". The session history will be preserved.`;
-    default: return `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+    case "archive":
+      return `Are you sure you want to archive "${name}"?`;
+    case "unarchive":
+      return `Are you sure you want to restore "${name}" from the archive?`;
+    case "refresh":
+      return `This will pull the latest image and recreate the container for "${name}". The session history will be preserved.`;
+    default:
+      return `Are you sure you want to delete "${name}"? This action cannot be undone.`;
   }
 }
 
 function getConfirmDialogLabel(type: string): string {
   switch (type) {
-    case "archive": return "Archive";
-    case "unarchive": return "Unarchive";
-    case "refresh": return "Refresh";
-    default: return "Delete";
+    case "archive":
+      return "Archive";
+    case "unarchive":
+      return "Unarchive";
+    case "refresh":
+      return "Refresh";
+    default:
+      return "Delete";
   }
 }
 
@@ -382,7 +394,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               </Card>
             ))}
           </div>
-        ) : (filteredSessions.length === 0 ? (
+        ) : filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg mb-2 font-semibold">No sessions found</p>
             <p className="text-sm">Create a new session to get started</p>
@@ -414,7 +426,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               );
             })}
           </div>
-        ))}
+        )}
       </main>
 
       {/* Confirmation Dialog */}
@@ -427,7 +439,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             }
           }}
           title={getConfirmDialogTitle(confirmDialog.type)}
-          description={getConfirmDialogDescription(confirmDialog.type, confirmDialog.session.name)}
+          description={getConfirmDialogDescription(
+            confirmDialog.type,
+            confirmDialog.session.name,
+          )}
           confirmLabel={getConfirmDialogLabel(confirmDialog.type)}
           variant={confirmDialog.type === "delete" ? "destructive" : "default"}
           onConfirm={handleConfirm}

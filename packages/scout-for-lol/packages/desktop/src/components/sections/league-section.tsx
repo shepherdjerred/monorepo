@@ -53,9 +53,9 @@ export function LeagueSection({
                 status={
                   isConnecting === true
                     ? "connecting"
-                    : (lcuStatus.connected
+                    : lcuStatus.connected
                       ? "connected"
-                      : "disconnected")
+                      : "disconnected"
                 }
               />
             </div>
@@ -64,24 +64,26 @@ export function LeagueSection({
 
         <CardContent className="space-y-8">
           {/* Summoner Info */}
-          {lcuStatus.connected && lcuStatus.summonerName !== null && lcuStatus.summonerName.length > 0 && (
-            <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-lol-gold/20 to-lol-accent/20 ring-2 ring-lol-gold/30">
-                <User className="h-6 w-6 text-lol-gold" />
+          {lcuStatus.connected &&
+            lcuStatus.summonerName !== null &&
+            lcuStatus.summonerName.length > 0 && (
+              <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-lol-gold/20 to-lol-accent/20 ring-2 ring-lol-gold/30">
+                  <User className="h-6 w-6 text-lol-gold" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400">Logged in as</p>
+                  <p className="text-lg font-semibold text-gray-100">
+                    {lcuStatus.summonerName}
+                  </p>
+                </div>
+                {lcuStatus.inGame && (
+                  <Badge variant="success" dot pulse>
+                    In Game
+                  </Badge>
+                )}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-400">Logged in as</p>
-                <p className="text-lg font-semibold text-gray-100">
-                  {lcuStatus.summonerName}
-                </p>
-              </div>
-              {lcuStatus.inGame && (
-                <Badge variant="success" dot pulse>
-                  In Game
-                </Badge>
-              )}
-            </div>
-          )}
+            )}
 
           {/* Connection Info */}
           {!lcuStatus.connected && (

@@ -124,7 +124,9 @@ describe("bun-decompile", () => {
       await extractToDirectory(result, OUTPUT_DIR);
 
       // Check metadata.json
-      const metadata = await Bun.file(path.join(OUTPUT_DIR, "metadata.json")).json();
+      const metadata = await Bun.file(
+        path.join(OUTPUT_DIR, "metadata.json"),
+      ).json();
       expect(metadata.bunVersion).toMatch(/^\d+\.\d+\.\d+/);
       expect(metadata.hasOriginalSources).toBe(true);
       expect(metadata.originalSourceCount).toBe(2);

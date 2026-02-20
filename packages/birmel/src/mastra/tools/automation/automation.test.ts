@@ -31,7 +31,10 @@ const ToolResultSchema = z.object({
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
-async function executeTool(tool: unknown, input: Record<string, unknown>): Promise<ToolResult> {
+async function executeTool(
+  tool: unknown,
+  input: Record<string, unknown>,
+): Promise<ToolResult> {
   if (tool == null || typeof tool !== "object" || !("execute" in tool)) {
     throw new TypeError("Tool has no execute function");
   }
@@ -43,7 +46,10 @@ async function executeTool(tool: unknown, input: Record<string, unknown>): Promi
   return ToolResultSchema.parse(result);
 }
 
-function getStringField(data: Record<string, unknown> | undefined, field: string): string {
+function getStringField(
+  data: Record<string, unknown> | undefined,
+  field: string,
+): string {
   if (data == null) {
     return "";
   }
@@ -63,7 +69,9 @@ describe("Phase 1: Shell Tool", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(getStringField(result.data, "stdout").trim()).toBe("Hello from Python");
+    expect(getStringField(result.data, "stdout").trim()).toBe(
+      "Hello from Python",
+    );
     expect(result.data?.["exitCode"]).toBe(0);
   });
 
@@ -75,7 +83,9 @@ describe("Phase 1: Shell Tool", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(getStringField(result.data, "stdout").trim()).toBe("Hello from Node");
+    expect(getStringField(result.data, "stdout").trim()).toBe(
+      "Hello from Node",
+    );
     expect(result.data?.["exitCode"]).toBe(0);
   });
 
@@ -269,7 +279,9 @@ describe.skipIf(Bun.env["BROWSER_ENABLED"] === "false")(
       expect(result.data?.["filename"]).toBe("test-e2e-screenshot.png");
       expect(result.data?.["path"]).toBeTruthy();
 
-      const fileExists = await Bun.file(getStringField(result.data, "path")).exists();
+      const fileExists = await Bun.file(
+        getStringField(result.data, "path"),
+      ).exists();
       expect(fileExists).toBe(true);
     });
 

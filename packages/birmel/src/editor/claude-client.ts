@@ -14,22 +14,28 @@ export type ExecuteEditOptions = {
   allowedPaths?: string[] | undefined;
 };
 
-const ClaudeMessageSchema = z.object({
-  type: z.string(),
-  subtype: z.string().optional(),
-  session_id: z.string().optional(),
-  tool_name: z.string().optional(),
-  tool_input: z.object({
-    file_path: z.string().optional(),
-    old_string: z.string().optional(),
-    new_string: z.string().optional(),
+const ClaudeMessageSchema = z
+  .object({
+    type: z.string(),
+    subtype: z.string().optional(),
+    session_id: z.string().optional(),
+    tool_name: z.string().optional(),
+    tool_input: z
+      .object({
+        file_path: z.string().optional(),
+        old_string: z.string().optional(),
+        new_string: z.string().optional(),
+        content: z.string().optional(),
+      })
+      .optional(),
     content: z.string().optional(),
-  }).optional(),
-  content: z.string().optional(),
-  result: z.object({
-    text: z.string().optional(),
-  }).optional(),
-}).loose();
+    result: z
+      .object({
+        text: z.string().optional(),
+      })
+      .optional(),
+  })
+  .loose();
 
 type ClaudeMessage = z.infer<typeof ClaudeMessageSchema>;
 
@@ -100,9 +106,7 @@ export async function executeEdit(
       sdkSessionId = id;
     },
     addChange: (change) => {
-      const existing = changes.findIndex(
-        (c) => c.filePath === change.filePath,
-      );
+      const existing = changes.findIndex((c) => c.filePath === change.filePath);
       if (existing === -1) {
         changes.push(change);
       } else {

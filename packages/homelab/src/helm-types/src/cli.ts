@@ -130,7 +130,14 @@ async function main() {
     }
 
     // Validate required arguments
-    if ((args.name == null || args.name === "") || (args.repo == null || args.repo === "") || (args.version == null || args.version === "")) {
+    if (
+      args.name == null ||
+      args.name === "" ||
+      args.repo == null ||
+      args.repo === "" ||
+      args.version == null ||
+      args.version === ""
+    ) {
       console.error("Error: Missing required arguments");
       console.error("Required: --name, --repo, --version");
       console.error("\nRun with --help for usage information");

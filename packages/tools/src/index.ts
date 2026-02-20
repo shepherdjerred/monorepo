@@ -289,7 +289,9 @@ async function handlePagerDutyIncidentsCommand(args: string[]): Promise<void> {
     if (s === "triggered" || s === "acknowledged" || s === "resolved") {
       return s;
     }
-    throw new Error(`Invalid status: ${s}. Must be triggered, acknowledged, or resolved.`);
+    throw new Error(
+      `Invalid status: ${s}. Must be triggered, acknowledged, or resolved.`,
+    );
   });
   const limit =
     values.limit != null && values.limit.length > 0

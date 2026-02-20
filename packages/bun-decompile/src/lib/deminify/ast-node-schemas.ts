@@ -40,10 +40,7 @@ export const FunctionNodeSchema = z
       "FunctionExpression",
       "ArrowFunctionExpression",
     ]),
-    id: z
-      .object({ name: z.string() })
-      .nullable()
-      .optional(),
+    id: z.object({ name: z.string() }).nullable().optional(),
     params: z.array(lazyNode),
     body: lazyNode,
     async: z.boolean().optional(),
@@ -93,10 +90,7 @@ export const VariableDeclaratorSchema = z
   .object({
     ...baseNode,
     type: z.literal("VariableDeclarator"),
-    id: z
-      .object({ name: z.string().optional() })
-      .loose()
-      .optional(),
+    id: z.object({ name: z.string().optional() }).loose().optional(),
   })
   .loose();
 export type VariableDeclaratorNode = z.infer<typeof VariableDeclaratorSchema>;
@@ -109,7 +103,9 @@ export const AssignmentExpressionSchema = z
     left: lazyNode.optional(),
   })
   .loose();
-export type AssignmentExpressionNode = z.infer<typeof AssignmentExpressionSchema>;
+export type AssignmentExpressionNode = z.infer<
+  typeof AssignmentExpressionSchema
+>;
 
 /** Property node */
 export const PropertySchema = z
@@ -175,7 +171,9 @@ export const ExportNamedDeclarationSchema = z
     ),
   })
   .loose();
-export type ExportNamedDeclarationNode = z.infer<typeof ExportNamedDeclarationSchema>;
+export type ExportNamedDeclarationNode = z.infer<
+  typeof ExportNamedDeclarationSchema
+>;
 
 /** ExportDefaultDeclaration node */
 export const ExportDefaultDeclarationSchema = z
@@ -190,7 +188,9 @@ export const ExportDefaultDeclarationSchema = z
       .loose(),
   })
   .loose();
-export type ExportDefaultDeclarationNode = z.infer<typeof ExportDefaultDeclarationSchema>;
+export type ExportDefaultDeclarationNode = z.infer<
+  typeof ExportDefaultDeclarationSchema
+>;
 
 /**
  * Safe narrowing functions that use Zod safeParse.
@@ -202,7 +202,9 @@ export function asFunctionNode(node: unknown): FunctionNode | undefined {
   return result.success ? result.data : undefined;
 }
 
-export function asCallExpressionNode(node: unknown): CallExpressionNode | undefined {
+export function asCallExpressionNode(
+  node: unknown,
+): CallExpressionNode | undefined {
   const result = CallExpressionSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
@@ -212,22 +214,30 @@ export function asIdentifierNode(node: unknown): IdentifierNode | undefined {
   return result.success ? result.data : undefined;
 }
 
-export function asMemberExpressionNode(node: unknown): MemberExpressionNode | undefined {
+export function asMemberExpressionNode(
+  node: unknown,
+): MemberExpressionNode | undefined {
   const result = MemberExpressionSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
 
-export function asMethodDefinitionNode(node: unknown): MethodDefinitionNode | undefined {
+export function asMethodDefinitionNode(
+  node: unknown,
+): MethodDefinitionNode | undefined {
   const result = MethodDefinitionSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
 
-export function asVariableDeclaratorNode(node: unknown): VariableDeclaratorNode | undefined {
+export function asVariableDeclaratorNode(
+  node: unknown,
+): VariableDeclaratorNode | undefined {
   const result = VariableDeclaratorSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
 
-export function asAssignmentExpressionNode(node: unknown): AssignmentExpressionNode | undefined {
+export function asAssignmentExpressionNode(
+  node: unknown,
+): AssignmentExpressionNode | undefined {
   const result = AssignmentExpressionSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
@@ -237,17 +247,23 @@ export function asPropertyNode(node: unknown): PropertyNode | undefined {
   return result.success ? result.data : undefined;
 }
 
-export function asImportDeclarationNode(node: unknown): ImportDeclarationNode | undefined {
+export function asImportDeclarationNode(
+  node: unknown,
+): ImportDeclarationNode | undefined {
   const result = ImportDeclarationSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
 
-export function asExportNamedDeclarationNode(node: unknown): ExportNamedDeclarationNode | undefined {
+export function asExportNamedDeclarationNode(
+  node: unknown,
+): ExportNamedDeclarationNode | undefined {
   const result = ExportNamedDeclarationSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }
 
-export function asExportDefaultDeclarationNode(node: unknown): ExportDefaultDeclarationNode | undefined {
+export function asExportDefaultDeclarationNode(
+  node: unknown,
+): ExportDefaultDeclarationNode | undefined {
   const result = ExportDefaultDeclarationSchema.safeParse(node);
   return result.success ? result.data : undefined;
 }

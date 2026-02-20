@@ -63,7 +63,11 @@ function getRustTauriContainer(): Container {
 
 function installBunInRustContainer(container: Container): Container {
   return container
-    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`,
+    ])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
@@ -78,7 +82,10 @@ function addDesktopDepFiles(
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/scout-for-lol/patches", workspaceSource.directory("patches"))
+    .withDirectory(
+      "/workspace/packages/scout-for-lol/patches",
+      workspaceSource.directory("patches"),
+    )
     .withFile(
       "/workspace/packages/backend/package.json",
       workspaceSource.file("packages/backend/package.json"),
@@ -198,21 +205,23 @@ export async function checkDesktopParallel(
 ): Promise<void> {
   let baseContainer = installDesktopDeps(workspaceSource);
 
-  // Mount eslint-config for lint (eslint.config.ts imports from ../eslint-config/local.ts)
+  // Mount pre-built eslint-config for lint (dist/ already populated)
   if (eslintConfigSource) {
-    baseContainer = baseContainer
-      .withDirectory("/eslint-config", eslintConfigSource);
+    baseContainer = baseContainer.withDirectory(
+      "/eslint-config",
+      eslintConfigSource,
+    );
     if (tsconfigBase) {
-      baseContainer = baseContainer.withFile("/tsconfig.base.json", tsconfigBase);
+      baseContainer = baseContainer.withFile(
+        "/tsconfig.base.json",
+        tsconfigBase,
+      );
     }
     baseContainer = baseContainer
-      .withWorkdir("/eslint-config")
-      .withExec(["bun", "install"])
-      .withExec(["bun", "run", "build"])
-      .withWorkdir("/workspace")
       // Fix jiti/CJS resolver: rewrite relative import that traverses to filesystem root
       .withExec([
-        "sed", "-i",
+        "sed",
+        "-i",
         `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
         "/workspace/eslint.config.ts",
       ]);
@@ -282,10 +291,9 @@ export function buildDesktopWindowsGnu(
     )
     .withWorkdir("/workspace/packages/desktop");
 
-  container = frontendDist ? container.withDirectory(
-      "/workspace/packages/desktop/dist",
-      frontendDist,
-    ) : container.withExec(["bunx", "vite", "build"]);
+  container = frontendDist
+    ? container.withDirectory("/workspace/packages/desktop/dist", frontendDist)
+    : container.withExec(["bunx", "vite", "build"]);
 
   return container
     .withWorkdir("/workspace/packages/desktop/src-tauri")
@@ -318,7 +326,13 @@ export type PublishDesktopArtifactsOptions = {
 export async function publishDesktopArtifactsWindowsOnly(
   options: PublishDesktopArtifactsOptions,
 ): Promise<string> {
-  const { windowsContainer, version, gitSha, ghToken, repo = "shepherdjerred/scout-for-lol" } = options;
+  const {
+    windowsContainer,
+    version,
+    gitSha,
+    ghToken,
+    repo = "shepherdjerred/scout-for-lol",
+  } = options;
   logWithTimestamp(
     `Publishing Windows desktop artifacts to GitHub Releases for version ${version}`,
   );
@@ -347,7 +361,12 @@ export async function publishDesktopArtifactsWindowsOnly(
   }
 
   // Create or find release
-  const releaseContainer = await ensureRelease(container, version, gitSha, repo);
+  const releaseContainer = await ensureRelease(
+    container,
+    version,
+    gitSha,
+    repo,
+  );
 
   // Upload Windows artifacts
   const uploadContainer = releaseContainer.withExec([

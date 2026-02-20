@@ -44,7 +44,7 @@ export type CommandInput = {
   command: Command;
   quantity: Quantity;
   modifier?: Modifier;
-}
+};
 
 export function parseCommandInput(input: string): CommandInput | undefined {
   let split = input

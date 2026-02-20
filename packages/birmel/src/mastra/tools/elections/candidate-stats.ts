@@ -1,4 +1,9 @@
-import { getErrorMessage, toError, parseJsonStringArray, parseJsonNumberRecord } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  getErrorMessage,
+  toError,
+  parseJsonStringArray,
+  parseJsonNumberRecord,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
@@ -16,7 +21,12 @@ type ElectionProcessResult = {
 };
 
 function processCandidateElection(
-  election: { candidates: string | null; winner: string | null; actualEnd: Date | null; voteCounts: string | null },
+  election: {
+    candidates: string | null;
+    winner: string | null;
+    actualEnd: Date | null;
+    voteCounts: string | null;
+  },
   candidateLower: string,
   currentLastElectionDate: string | undefined,
   currentLastWinDate: string | undefined,
@@ -33,16 +43,26 @@ function processCandidateElection(
   let lastElectionDate = currentLastElectionDate;
   let lastWinDate = currentLastWinDate;
 
-  if ((lastElectionDate == null || lastElectionDate.length === 0) && election.actualEnd != null) {
+  if (
+    (lastElectionDate == null || lastElectionDate.length === 0) &&
+    election.actualEnd != null
+  ) {
     lastElectionDate = election.actualEnd.toISOString();
   }
 
   const won = election.winner?.toLowerCase() === candidateLower;
-  if (won && (lastWinDate == null || lastWinDate.length === 0) && election.actualEnd != null) {
+  if (
+    won &&
+    (lastWinDate == null || lastWinDate.length === 0) &&
+    election.actualEnd != null
+  ) {
     lastWinDate = election.actualEnd.toISOString();
   }
 
-  const votes = getVotesForCandidateFromRecord(election.voteCounts, candidateLower);
+  const votes = getVotesForCandidateFromRecord(
+    election.voteCounts,
+    candidateLower,
+  );
 
   return { won, votes, lastElectionDate, lastWinDate };
 }

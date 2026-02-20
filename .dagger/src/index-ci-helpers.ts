@@ -77,9 +77,7 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
   },
   {
     path: "packages/scout-for-lol",
-    extraFiles: [
-      "packages/scout-for-lol/patches/satori@0.18.3.patch",
-    ],
+    extraFiles: ["packages/scout-for-lol/patches/satori@0.18.3.patch"],
     subPackages: [
       "packages/scout-for-lol/packages/backend",
       "packages/scout-for-lol/packages/data",
@@ -95,15 +93,17 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
  * Install workspace dependencies with optimal layer ordering.
  */
 export function installWorkspaceDeps(source: Directory): Container {
-  return installMonorepoWorkspaceDeps({
-    baseContainer: getBaseBunDebianContainer(),
-    source,
-    useMounts: true,
-    workspaces: CI_WORKSPACES,
-    rootConfigFiles: ["tsconfig.base.json"],
-  })
-    // Mount scripts directory (root package.json scripts reference scripts/run-package-script.ts)
-    .withMountedDirectory("/workspace/scripts", source.directory("scripts"));
+  return (
+    installMonorepoWorkspaceDeps({
+      baseContainer: getBaseBunDebianContainer(),
+      source,
+      useMounts: true,
+      workspaces: CI_WORKSPACES,
+      rootConfigFiles: ["tsconfig.base.json"],
+    })
+      // Mount scripts directory (root package.json scripts reference scripts/run-package-script.ts)
+      .withMountedDirectory("/workspace/scripts", source.directory("scripts"))
+  );
 }
 
 /**
@@ -132,13 +132,7 @@ export async function setupPrisma(
       "file:/workspace/packages/birmel/data/test-ops.db",
     )
     .withExec(["bunx", "prisma", "generate"])
-    .withExec([
-      "bunx",
-      "prisma",
-      "db",
-      "push",
-      "--accept-data-loss",
-    ])
+    .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
     .withWorkdir("/workspace");
 
   // Scout-for-LoL Prisma
@@ -163,7 +157,11 @@ export async function setupPrisma(
 export async function buildClauderonWeb(
   container: Container,
   rustContainer: Container,
-): Promise<{ container: Container; frontendDist: Directory; outputs: string[] }> {
+): Promise<{
+  container: Container;
+  frontendDist: Directory;
+  outputs: string[];
+}> {
   const outputs: string[] = [];
 
   const generatedTypes = rustContainer.directory(
@@ -205,11 +203,15 @@ async function withGraphqlRetry<T>(
       return await fn();
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      const isGraphqlError = msg.includes("unknown error while requesting data via graphql");
+      const isGraphqlError = msg.includes(
+        "unknown error while requesting data via graphql",
+      );
       if (!isGraphqlError || attempt === maxRetries) {
         throw error;
       }
-      console.log(`⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`);
+      console.log(
+        `⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`,
+      );
     }
   }
   throw new Error("unreachable");
@@ -256,7 +258,9 @@ export async function runPackageValidation(
 
   // Run scout-for-lol separately with retry to avoid graphql errors
   try {
-    outputs.push(await withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)));
+    outputs.push(
+      await withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)),
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     outputs.push(`✗ scout-for-lol: ${msg}`);
@@ -288,12 +292,24 @@ export async function collectTier0Results(tier0: {
   const outputs: string[] = [];
   const errors: string[] = [];
 
-  const steps: { name: string; promise: Promise<string>; group: string | undefined }[] = [
+  const steps: {
+    name: string;
+    promise: Promise<string>;
+    group: string | undefined;
+  }[] = [
     { name: "Compliance", promise: tier0.compliance, group: undefined },
-    { name: "Mobile CI", promise: tier0.mobile, group: "Clauderon Mobile Validation" },
+    {
+      name: "Mobile CI",
+      promise: tier0.mobile,
+      group: "Clauderon Mobile Validation",
+    },
     { name: "Birmel", promise: tier0.birmel, group: "Birmel Validation" },
     { name: "Packages", promise: tier0.packages, group: "Package Validation" },
-    { name: "Quality", promise: tier0.quality, group: "Quality & Security Checks" },
+    {
+      name: "Quality",
+      promise: tier0.quality,
+      group: "Quality & Security Checks",
+    },
   ];
 
   for (const step of steps) {
@@ -339,13 +355,33 @@ export type ReleasePhaseOptions = {
   tofuGithubToken?: Secret | undefined;
   commitBackToken?: Secret | undefined;
   birmelImage: Container;
-  releasePleaseRunFn: (container: Container, command: string) => Promise<{ output: string; success: boolean }>;
+  releasePleaseRunFn: (
+    container: Container,
+    command: string,
+  ) => Promise<{ output: string; success: boolean }>;
   getReleasePleaseContainerFn: () => Container;
-  multiplexerBuildFn: (source: Directory, s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret) => Directory;
-  uploadReleaseAssetsFn: (githubToken: Secret, version: string, binariesDir: Directory, filenames: string[]) => Promise<{ outputs: string[]; errors: string[] }>;
+  multiplexerBuildFn: (
+    source: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
+  ) => Directory;
+  uploadReleaseAssetsFn: (
+    githubToken: Secret,
+    version: string,
+    binariesDir: Directory,
+    filenames: string[],
+  ) => Promise<{ outputs: string[]; errors: string[] }>;
   clauderonTargets: readonly { target: string; os: string; arch: string }[];
-  muxSiteDeployFn: (source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret) => Promise<string>;
-  resumeDeployFn: (source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret) => Promise<string>;
+  muxSiteDeployFn: (
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ) => Promise<string>;
+  resumeDeployFn: (
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ) => Promise<string>;
 };
 
 /**
@@ -368,13 +404,18 @@ export async function runReleasePhase(
   // NPM publishing
   if (releaseResult.releaseCreated) {
     outputs.push("\n--- NPM Publishing ---");
-    const npmResult = await publishNpmPackages(options.container, options.npmToken);
+    const npmResult = await publishNpmPackages(
+      options.container,
+      options.npmToken,
+    );
     outputs.push(...npmResult.outputs);
     errors.push(...npmResult.errors);
   } else {
     outputs.push("No releases created - skipping NPM publish");
     if (!releaseResult.success) {
-      outputs.push("(release-please command failed - check output above for details)");
+      outputs.push(
+        "(release-please command failed - check output above for details)",
+      );
     }
   }
 
@@ -384,25 +425,33 @@ export async function runReleasePhase(
   errors.push(...deployResult.errors);
 
   // Homelab release (needs appVersions from deployments)
-  const homelabResult = await runHomelabRelease(options, deployResult.appVersions);
+  const homelabResult = await runHomelabRelease(
+    options,
+    deployResult.appVersions,
+  );
   outputs.push(...homelabResult.outputs);
   errors.push(...homelabResult.errors);
 
   // Clauderon binary release
-  const clauderonResult = await runClauderonRelease(options, releaseResult.releaseOutput);
+  const clauderonResult = await runClauderonRelease(
+    options,
+    releaseResult.releaseOutput,
+  );
   outputs.push(...clauderonResult.outputs);
   errors.push(...clauderonResult.errors);
 
   // Version commit-back — AFTER all deployments, only if no errors
   if (errors.length === 0) {
-    const commitResult = await runVersionCommitBack(options, deployResult.appVersions);
+    const commitResult = await runVersionCommitBack(
+      options,
+      deployResult.appVersions,
+    );
     outputs.push(...commitResult);
   } else {
-    outputs.push("\n--- Skipping version commit-back due to deployment errors ---");
+    outputs.push(
+      "\n--- Skipping version commit-back due to deployment errors ---",
+    );
   }
 
   return { outputs, errors };
 }
-
-
-

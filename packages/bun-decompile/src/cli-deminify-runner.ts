@@ -127,7 +127,15 @@ export async function runDeminification(
  * Process a single module for de-minification.
  */
 async function processModule(opts: ProcessModuleOptions): Promise<void> {
-  const { deminifier, source, fileName, moduleName, isEntryPoint, deminifiedDir, cliOptions } = opts;
+  const {
+    deminifier,
+    source,
+    fileName,
+    moduleName,
+    isEntryPoint,
+    deminifiedDir,
+    cliOptions,
+  } = opts;
 
   // Create progress display
   const progressDisplay = new ProgressDisplay({

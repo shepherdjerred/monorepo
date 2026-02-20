@@ -33,8 +33,12 @@ async function dispatchEventAction(guild: Guild, ctx: EventInput) {
     case "create":
       return await handleCreateEvent(guild, {
         ...(ctx.name !== undefined && { name: ctx.name }),
-        ...(ctx.scheduledStartTime !== undefined && { scheduledStartTime: ctx.scheduledStartTime }),
-        ...(ctx.scheduledEndTime !== undefined && { scheduledEndTime: ctx.scheduledEndTime }),
+        ...(ctx.scheduledStartTime !== undefined && {
+          scheduledStartTime: ctx.scheduledStartTime,
+        }),
+        ...(ctx.scheduledEndTime !== undefined && {
+          scheduledEndTime: ctx.scheduledEndTime,
+        }),
         ...(ctx.description !== undefined && { description: ctx.description }),
         ...(ctx.channelId !== undefined && { channelId: ctx.channelId }),
         ...(ctx.location !== undefined && { location: ctx.location }),
@@ -44,8 +48,12 @@ async function dispatchEventAction(guild: Guild, ctx: EventInput) {
         ...(ctx.eventId !== undefined && { eventId: ctx.eventId }),
         ...(ctx.name !== undefined && { name: ctx.name }),
         ...(ctx.description !== undefined && { description: ctx.description }),
-        ...(ctx.scheduledStartTime !== undefined && { scheduledStartTime: ctx.scheduledStartTime }),
-        ...(ctx.scheduledEndTime !== undefined && { scheduledEndTime: ctx.scheduledEndTime }),
+        ...(ctx.scheduledStartTime !== undefined && {
+          scheduledStartTime: ctx.scheduledStartTime,
+        }),
+        ...(ctx.scheduledEndTime !== undefined && {
+          scheduledEndTime: ctx.scheduledEndTime,
+        }),
         ...(ctx.location !== undefined && { location: ctx.location }),
       });
     case "delete":

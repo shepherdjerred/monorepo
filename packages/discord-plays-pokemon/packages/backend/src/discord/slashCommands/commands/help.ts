@@ -1,5 +1,4 @@
-import type {
-  CommandInteraction} from "discord.js";
+import type { CommandInteraction } from "discord.js";
 import {
   SlashCommandBuilder,
   bold,
@@ -55,9 +54,13 @@ export async function help(interaction: CommandInteraction) {
   const maxCommands = String(config.game.commands.chord.max_commands);
   const maxTotal = String(config.game.commands.chord.max_total);
   const burstQuantity = String(config.game.commands.burst.quantity);
-  const holdDuration = String(config.game.commands.hold.duration_in_milliseconds);
+  const holdDuration = String(
+    config.game.commands.hold.duration_in_milliseconds,
+  );
   const burstTimesTwo = String(config.game.commands.burst.quantity * 2);
-  const holdTimesTwo = String(config.game.commands.hold.duration_in_milliseconds * 2);
+  const holdTimesTwo = String(
+    config.game.commands.hold.duration_in_milliseconds * 2,
+  );
   const lines = [
     bold("Pokébot Help"),
     `The Pokébot is available when ${userMention(

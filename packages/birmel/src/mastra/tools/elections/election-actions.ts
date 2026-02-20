@@ -1,7 +1,10 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.ts";
 import { getAllCandidates } from "@shepherdjerred/birmel/elections/candidates.ts";
-import { parseJsonStringArray, parseJsonNumberRecord } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  parseJsonStringArray,
+  parseJsonNumberRecord,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 
 type ElectionResult = {
   success: boolean;
@@ -53,7 +56,7 @@ export async function handleGetHistory(
     candidates: parseJsonStringArray(e.candidates),
     voteCounts:
       e.voteCounts != null && e.voteCounts.length > 0
-        ? (parseJsonNumberRecord(e.voteCounts))
+        ? parseJsonNumberRecord(e.voteCounts)
         : undefined,
     scheduledStart: e.scheduledStart.toISOString(),
     scheduledEnd: e.scheduledEnd.toISOString(),
@@ -177,7 +180,7 @@ export async function handleGetById(
       winner: election.winner ?? undefined,
       voteCounts:
         election.voteCounts != null && election.voteCounts.length > 0
-          ? (parseJsonNumberRecord(election.voteCounts))
+          ? parseJsonNumberRecord(election.voteCounts)
           : undefined,
       scheduledStart: election.scheduledStart.toISOString(),
       scheduledEnd: election.scheduledEnd.toISOString(),
@@ -195,7 +198,10 @@ type CandidateAccumulator = {
   lastWinDate: string | undefined;
 };
 
-function getVotesForCandidate(voteCounts: string | null, candidateLower: string): number {
+function getVotesForCandidate(
+  voteCounts: string | null,
+  candidateLower: string,
+): number {
   if (voteCounts == null || voteCounts.length === 0) {
     return 0;
   }
@@ -211,20 +217,33 @@ function getVotesForCandidate(voteCounts: string | null, candidateLower: string)
 
 function accumulateCandidateElection(
   acc: CandidateAccumulator,
-  election: { winner: string | null; actualEnd: Date | null; voteCounts: string | null },
+  election: {
+    winner: string | null;
+    actualEnd: Date | null;
+    voteCounts: string | null;
+  },
   candidateLower: string,
 ): void {
   acc.totalElectionsParticipated++;
-  if ((acc.lastElectionDate == null || acc.lastElectionDate.length === 0) && election.actualEnd != null) {
+  if (
+    (acc.lastElectionDate == null || acc.lastElectionDate.length === 0) &&
+    election.actualEnd != null
+  ) {
     acc.lastElectionDate = election.actualEnd.toISOString();
   }
   if (election.winner?.toLowerCase() === candidateLower) {
     acc.wins++;
-    if ((acc.lastWinDate == null || acc.lastWinDate.length === 0) && election.actualEnd != null) {
+    if (
+      (acc.lastWinDate == null || acc.lastWinDate.length === 0) &&
+      election.actualEnd != null
+    ) {
       acc.lastWinDate = election.actualEnd.toISOString();
     }
   }
-  acc.totalVotesReceived += getVotesForCandidate(election.voteCounts, candidateLower);
+  acc.totalVotesReceived += getVotesForCandidate(
+    election.voteCounts,
+    candidateLower,
+  );
 }
 
 export async function handleGetCandidateStats(
@@ -232,10 +251,15 @@ export async function handleGetCandidateStats(
   candidateName: string | undefined,
 ): Promise<ElectionResult> {
   if (
-    guildId == null || guildId.length === 0 ||
-    candidateName == null || candidateName.length === 0
+    guildId == null ||
+    guildId.length === 0 ||
+    candidateName == null ||
+    candidateName.length === 0
   ) {
-    return { success: false, message: "guildId and candidateName are required" };
+    return {
+      success: false,
+      message: "guildId and candidateName are required",
+    };
   }
   const elections = await prisma.electionPoll.findMany({
     where: { guildId, status: "completed" },
@@ -251,7 +275,9 @@ export async function handleGetCandidateStats(
   };
 
   for (const e of elections) {
-    const candidates = parseJsonStringArray(e.candidates).map((c) => c.toLowerCase());
+    const candidates = parseJsonStringArray(e.candidates).map((c) =>
+      c.toLowerCase(),
+    );
     if (candidates.includes(candidateLower)) {
       accumulateCandidateElection(acc, e, candidateLower);
     }
@@ -263,8 +289,14 @@ export async function handleGetCandidateStats(
     data: {
       candidateName,
       ...acc,
-      winRate: acc.totalElectionsParticipated > 0 ? Math.round((acc.wins / acc.totalElectionsParticipated) * 100) : 0,
-      averageVotesPerElection: acc.totalElectionsParticipated > 0 ? Math.round(acc.totalVotesReceived / acc.totalElectionsParticipated) : 0,
+      winRate:
+        acc.totalElectionsParticipated > 0
+          ? Math.round((acc.wins / acc.totalElectionsParticipated) * 100)
+          : 0,
+      averageVotesPerElection:
+        acc.totalElectionsParticipated > 0
+          ? Math.round(acc.totalVotesReceived / acc.totalElectionsParticipated)
+          : 0,
     },
   };
 }

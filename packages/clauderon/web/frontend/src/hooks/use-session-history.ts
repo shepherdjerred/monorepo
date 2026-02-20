@@ -23,8 +23,6 @@ export function useSessionHistory(
   const [error] = useState<string | null>(null);
   const [fileExists] = useState(false);
 
-  ;
-
   return {
     messages,
     isLoading,

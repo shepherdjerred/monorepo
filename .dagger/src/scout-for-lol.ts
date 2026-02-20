@@ -3,6 +3,7 @@ import { syncToS3 } from "./lib-s3.ts";
 import { publishToGhcrMultiple } from "./lib-ghcr.ts";
 import { logWithTimestamp, withTiming } from "./lib-timing.ts";
 import { execOrThrow } from "./lib-errors.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 import {
   generatePrismaClient,
   getPreparedWorkspace,
@@ -24,7 +25,7 @@ import {
  */
 export async function checkScoutForLol(source: Directory): Promise<string> {
   const pkgSource = source.directory("packages/scout-for-lol");
-  const eslintConfigSource = source.directory("packages/eslint-config");
+  const builtEslintConfig = getBuiltEslintConfig(source);
   const tsconfigBase = source.file("tsconfig.base.json");
 
   logWithTimestamp("Starting comprehensive check process for scout-for-lol");
@@ -33,20 +34,14 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
   const prismaGenerated = generatePrismaClient(pkgSource);
 
   // Use embedded workspace for CI checks (simpler DAG, avoids engine issues)
-  // Mount eslint-config at /eslint-config/ (eslint.config.ts imports from ../eslint-config/local.ts)
-  const preparedWorkspace = getPreparedWorkspace(
-    pkgSource,
-    prismaGenerated,
-  )
-    .withDirectory("/eslint-config", eslintConfigSource)
+  // Mount pre-built eslint-config (dist/ already populated, skips tsc build)
+  const preparedWorkspace = getPreparedWorkspace(pkgSource, prismaGenerated)
+    .withDirectory("/eslint-config", builtEslintConfig)
     .withFile("/tsconfig.base.json", tsconfigBase)
-    .withWorkdir("/eslint-config")
-    .withExec(["bun", "install"])
-    .withExec(["bun", "run", "build"])
-    .withWorkdir("/workspace")
     // Fix jiti/CJS resolver: rewrite relative import that traverses to filesystem root
     .withExec([
-      "sed", "-i",
+      "sed",
+      "-i",
       `s|"../eslint-config/local.ts"|"/eslint-config/local.ts"|`,
       "/workspace/eslint.config.ts",
     ]);
@@ -89,7 +84,12 @@ export async function checkScoutForLol(source: Directory): Promise<string> {
         execOrThrow(workspace, ["bunx", "prettier", "--check", "packages/"]),
       ),
       withTiming("desktop check (parallel TS + Rust)", async () => {
-        await checkDesktopParallel(pkgSource, desktopFrontend, eslintConfigSource, tsconfigBase);
+        await checkDesktopParallel(
+          pkgSource,
+          desktopFrontend,
+          builtEslintConfig,
+          tsconfigBase,
+        );
       }),
     ]);
   });
@@ -117,7 +117,16 @@ type DeployScoutForLolOptions = {
 export async function deployScoutForLol(
   options: DeployScoutForLolOptions,
 ): Promise<string> {
-  const { source, version, gitSha, ghcrUsername, ghcrPassword, ghToken, s3AccessKeyId, s3SecretAccessKey } = options;
+  const {
+    source,
+    version,
+    gitSha,
+    ghcrUsername,
+    ghcrPassword,
+    ghToken,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+  } = options;
   const pkgSource = source.directory("packages/scout-for-lol");
   const outputs: string[] = [];
 

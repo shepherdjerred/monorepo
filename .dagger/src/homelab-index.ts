@@ -188,15 +188,26 @@ export async function ciHomelab(
   const source = getHomelabSource(monoRepoSource);
 
   // Update image versions in versions.ts if prod
-  const updatedSource = env === Stage.Prod
-    ? updateVersionsForProd(source, secrets.chartVersion, secrets.appVersions)
-    : source;
+  const updatedSource =
+    env === Stage.Prod
+      ? updateVersionsForProd(source, secrets.chartVersion, secrets.appVersions)
+      : source;
 
   // Run validation steps in parallel
-  const validation = await runValidationPhase(updatedSource, secrets, versionOnly, monoRepoSource);
+  const validation = await runValidationPhase(
+    updatedSource,
+    secrets,
+    versionOnly,
+    monoRepoSource,
+  );
 
   // Run publish steps (prod only)
-  const publish = await runPublishPhase(env, updatedSource, secrets, validation.helmBuildResult);
+  const publish = await runPublishPhase(
+    env,
+    updatedSource,
+    secrets,
+    validation.helmBuildResult,
+  );
 
   // Check for failures and return summary
   return checkForFailures(env, validation, publish);

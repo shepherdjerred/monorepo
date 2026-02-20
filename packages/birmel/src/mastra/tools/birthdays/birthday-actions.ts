@@ -60,7 +60,8 @@ type SetBirthdayOptions = {
 export async function handleSetBirthday(
   options: SetBirthdayOptions,
 ): Promise<BirthdayResult> {
-  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } = options;
+  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } =
+    options;
   if (
     userId == null ||
     userId.length === 0 ||
@@ -130,7 +131,8 @@ type UpdateBirthdayOptions = {
 export async function handleUpdateBirthday(
   options: UpdateBirthdayOptions,
 ): Promise<BirthdayResult> {
-  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } = options;
+  const { guildId, userId, birthMonth, birthDay, birthYear, timezone } =
+    options;
   if (userId == null || userId.length === 0) {
     return { success: false, message: "userId is required for update" };
   }

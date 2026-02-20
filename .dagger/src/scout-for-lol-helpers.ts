@@ -55,7 +55,10 @@ export function installWorkspaceDeps(
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/scout-for-lol/patches", workspaceSource.directory("patches"))
+    .withDirectory(
+      "/workspace/packages/scout-for-lol/patches",
+      workspaceSource.directory("patches"),
+    )
     .withFile(
       "/workspace/packages/backend/package.json",
       workspaceSource.file("packages/backend/package.json"),
@@ -355,7 +358,10 @@ export function buildBackendImage(
     .withLabel("healthcheck.interval", "30s")
     .withLabel("healthcheck.timeout", "10s")
     .withLabel("healthcheck.retries", "3")
-    .withLabel("org.opencontainers.image.source", "https://github.com/shepherdjerred/monorepo");
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    );
 }
 
 export async function smokeTestBackendImageWithContainer(
@@ -437,4 +443,3 @@ export function buildFrontend(
     .withExec(["bun", "run", "build"]);
   return container.directory("/workspace/packages/frontend/dist");
 }
-

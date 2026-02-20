@@ -25,8 +25,6 @@ export function EditSessionDialog({
   });
 
   // Sync form data when session prop changes (e.g., after regeneration via WebSocket)
-  ;
-
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -37,7 +35,10 @@ export function EditSessionDialog({
       toast.success("Session updated successfully");
       onClose();
     } catch (caughtError) {
-      const errorMsg = caughtError instanceof Error ? caughtError.message : String(caughtError);
+      const errorMsg =
+        caughtError instanceof Error
+          ? caughtError.message
+          : String(caughtError);
       setError(errorMsg);
       toast.error(`Failed to update session: ${errorMsg}`);
     } finally {
@@ -58,7 +59,10 @@ export function EditSessionDialog({
         await regenerateMetadata(session.id);
         toast.success("Session metadata regenerated");
       } catch (caughtError: unknown) {
-        const errorMsg = caughtError instanceof Error ? caughtError.message : String(caughtError);
+        const errorMsg =
+          caughtError instanceof Error
+            ? caughtError.message
+            : String(caughtError);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
       }
     };

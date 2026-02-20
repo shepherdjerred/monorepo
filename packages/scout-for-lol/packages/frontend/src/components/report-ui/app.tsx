@@ -67,7 +67,7 @@ export function App() {
   const exampleMatch = getExampleMatch(matchType);
 
   // Update URL when view mode or match type changes - this is a side effect that must happen after render
-   
+
   useEffect(() => {
     const params = new URLSearchParams(globalThis.location.search);
     params.set("view", viewMode);
@@ -101,7 +101,8 @@ export function App() {
       let errorMessage = "Unknown error";
       if (errorZod.success) {
         const errorData = errorZod.data;
-        errorMessage = errorData instanceof Error ? errorData.message : errorData;
+        errorMessage =
+          errorData instanceof Error ? errorData.message : errorData;
       }
       setError(errorMessage);
     } finally {

@@ -16,14 +16,30 @@ import { Key } from "selenium-webdriver";
 export type KeyInput = string;
 
 export function toGameboyAdvanceKeyInput(command: Command): KeyInput {
-  if (isLeft(command)) {return Key.ARROW_LEFT;}
-  if (isRight(command)) {return Key.ARROW_RIGHT;}
-  if (isUp(command)) {return Key.ARROW_UP;}
-  if (isDown(command)) {return Key.ARROW_DOWN;}
-  if (isA(command)) {return "Z";}
-  if (isB(command)) {return "X";}
-  if (isSelect(command)) {return "V";}
-  if (isStart(command)) {return "B";}
+  if (isLeft(command)) {
+    return Key.ARROW_LEFT;
+  }
+  if (isRight(command)) {
+    return Key.ARROW_RIGHT;
+  }
+  if (isUp(command)) {
+    return Key.ARROW_UP;
+  }
+  if (isDown(command)) {
+    return Key.ARROW_DOWN;
+  }
+  if (isA(command)) {
+    return "Z";
+  }
+  if (isB(command)) {
+    return "X";
+  }
+  if (isSelect(command)) {
+    return "V";
+  }
+  if (isStart(command)) {
+    return "B";
+  }
   throw new Error("illegal command");
 }
 
@@ -40,5 +56,7 @@ export function commandToGameboyAdvanceKeyInput(
 export function parseGameboyAdvanceKeyInput(
   input: string,
 ): KeyInput[] | undefined {
-  return parseChord(input)?.flatMap((cmd) => commandToGameboyAdvanceKeyInput(cmd));
+  return parseChord(input)?.flatMap((cmd) =>
+    commandToGameboyAdvanceKeyInput(cmd),
+  );
 }

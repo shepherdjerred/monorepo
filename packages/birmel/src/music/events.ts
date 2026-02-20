@@ -8,12 +8,16 @@ type ChannelMetadata = {
   id?: string | undefined;
 };
 
-const ChannelMetadataSchema = z.object({
-  send: z.any().optional(),
-  id: z.string().optional(),
-}).loose();
+const ChannelMetadataSchema = z
+  .object({
+    send: z.any().optional(),
+    id: z.string().optional(),
+  })
+  .loose();
 
-function wrapSendFunction(value: unknown): ((msg: string) => Promise<unknown>) | undefined {
+function wrapSendFunction(
+  value: unknown,
+): ((msg: string) => Promise<unknown>) | undefined {
   if (typeof value !== "function") {
     return undefined;
   }

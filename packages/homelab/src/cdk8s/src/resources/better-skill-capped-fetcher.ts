@@ -5,7 +5,10 @@ import {
   PersistentVolumeClaim,
   PersistentVolumeMode,
 } from "cdk8s-plus-31";
-import { KubeCronJob, Quantity } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeCronJob,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import {

@@ -2,6 +2,7 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 function getBunContainer(): Container {
   return dag
@@ -18,7 +19,11 @@ function getPlaywrightContainer(): Container {
     .withWorkdir("/workspace")
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", "unzip"])
-    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${versions.bun}"`])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://bun.sh/install | bash -s "bun-v${versions.bun}"`,
+    ])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
@@ -32,34 +37,42 @@ function installDepsWithWebring(
   source: Directory,
   pkgSource: Directory,
 ): Container {
-  return baseContainer
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withExec([
-      "bun",
-      "-e",
-      `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
-    ])
-    // Exclude sjer.red's own bun.lock — it resolves webring from npm.
-    // Without any lockfile, bun generates fresh workspace resolution.
-    .withDirectory("/workspace/packages/sjer.red", pkgSource.withoutFile("bun.lock"))
-    .withDirectory(
-      "/workspace/packages/webring",
-      source.directory("packages/webring"),
-    )
-    .withWorkdir("/workspace")
-    .withExec(["bun", "install"])
-    .withWorkdir("/workspace/packages/webring")
-    .withExec(["bun", "run", "build"])
-    // Ensure workspace symlink resolves to the built package.
-    // bun may place the link at sjer.red/node_modules/webring or root node_modules;
-    // force both so TypeScript always finds the dist/ types.
-    .withExec([
-      "sh",
-      "-c",
-      "mkdir -p /workspace/packages/sjer.red/node_modules && ln -sfn ../../webring /workspace/packages/sjer.red/node_modules/webring && mkdir -p /workspace/node_modules && ln -sfn ../packages/webring /workspace/node_modules/webring",
-    ])
-    .withWorkdir("/workspace/packages/sjer.red");
+  return (
+    baseContainer
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
+      .withFile("/workspace/package.json", source.file("package.json"))
+      .withExec([
+        "bun",
+        "-e",
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+      ])
+      // Exclude sjer.red's own bun.lock — it resolves webring from npm.
+      // Without any lockfile, bun generates fresh workspace resolution.
+      .withDirectory(
+        "/workspace/packages/sjer.red",
+        pkgSource.withoutFile("bun.lock"),
+      )
+      .withDirectory(
+        "/workspace/packages/webring",
+        source.directory("packages/webring"),
+      )
+      .withWorkdir("/workspace")
+      .withExec(["bun", "install"])
+      .withWorkdir("/workspace/packages/webring")
+      .withExec(["bun", "run", "build"])
+      // Ensure workspace symlink resolves to the built package.
+      // bun may place the link at sjer.red/node_modules/webring or root node_modules;
+      // force both so TypeScript always finds the dist/ types.
+      .withExec([
+        "sh",
+        "-c",
+        "mkdir -p /workspace/packages/sjer.red/node_modules && ln -sfn ../../webring /workspace/packages/sjer.red/node_modules/webring && mkdir -p /workspace/node_modules && ln -sfn ../packages/webring /workspace/node_modules/webring",
+      ])
+      .withWorkdir("/workspace/packages/sjer.red")
+  );
 }
 
 /**
@@ -74,27 +87,34 @@ export async function checkSjerRed(source: Directory): Promise<string> {
   await Promise.all([
     // Lint (Bun container with workspace structure for eslint-config)
     getBunContainer()
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
       .withFile("/workspace/package.json", source.file("package.json"))
       .withExec([
         "bun",
         "-e",
         `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/eslint-config', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
       ])
-      .withDirectory("/workspace/packages/sjer.red", ciSource.withoutFile("bun.lock"))
+      .withDirectory(
+        "/workspace/packages/sjer.red",
+        ciSource.withoutFile("bun.lock"),
+      )
       .withDirectory(
         "/workspace/packages/eslint-config",
-        source.directory("packages/eslint-config"),
+        getBuiltEslintConfig(source),
       )
       .withDirectory(
         "/workspace/packages/webring",
         source.directory("packages/webring"),
       )
-      .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
+      .withFile(
+        "/workspace/tsconfig.base.json",
+        source.file("tsconfig.base.json"),
+      )
       .withWorkdir("/workspace")
       .withExec(["bun", "install"])
-      .withWorkdir("/workspace/packages/eslint-config")
-      .withExec(["bun", "run", "build"])
       .withWorkdir("/workspace/packages/webring")
       .withExec(["bun", "run", "build"])
       .withExec([
@@ -115,11 +135,17 @@ export async function checkSjerRed(source: Directory): Promise<string> {
     // Test (Playwright container)
     (async () => {
       // Build first (needed for test)
-      const buildContainer = installDepsWithWebring(getPlaywrightContainer(), source, pkgSource)
+      const buildContainer = installDepsWithWebring(
+        getPlaywrightContainer(),
+        source,
+        pkgSource,
+      )
         .withMountedCache("/webring-cache", dag.cacheVolume("webring-cache"))
         .withEnvVariable("WEBRING_CACHE_DIR", "/webring-cache")
         .withExec(["bun", "run", "build"]);
-      const distDir = buildContainer.directory("/workspace/packages/sjer.red/dist");
+      const distDir = buildContainer.directory(
+        "/workspace/packages/sjer.red/dist",
+      );
 
       // Then run tests with pre-built dist
       await installDepsWithWebring(getPlaywrightContainer(), source, pkgSource)
@@ -150,7 +176,11 @@ export async function deploySjerRed(
 ): Promise<string> {
   const pkgSource = source.directory("packages/sjer.red");
 
-  const buildContainer = installDepsWithWebring(getPlaywrightContainer(), source, pkgSource)
+  const buildContainer = installDepsWithWebring(
+    getPlaywrightContainer(),
+    source,
+    pkgSource,
+  )
     .withMountedCache("/webring-cache", dag.cacheVolume("webring-cache"))
     .withEnvVariable("WEBRING_CACHE_DIR", "/webring-cache")
     .withExec(["bun", "run", "build"]);

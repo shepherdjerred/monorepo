@@ -2,47 +2,54 @@ import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 function getWebringContainer(source: Directory): Container {
-  return dag
-    .container()
-    .from(`oven/bun:${versions["oven/bun"]}`)
-    .withWorkdir("/workspace")
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    // Root workspace files for bun install (strip workspaces to avoid resolving missing members)
-    .withFile("/workspace/package.json", source.file("package.json"))
-    .withFile("/workspace/bun.lock", source.file("bun.lock"))
-    .withExec([
-      "bun",
-      "-e",
-      `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/webring', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
-    ])
-    // Package source
-    .withDirectory(
-      "/workspace/packages/webring",
-      source.directory("packages/webring"),
-      {
-        exclude: [
-          "node_modules",
-          "dist",
-          "build",
-          ".cache",
-          ".dagger",
-          "generated",
-        ],
-      },
-    )
-    // Eslint config (needed for lint — ../eslint-config/local.ts)
-    .withDirectory(
-      "/workspace/packages/eslint-config",
-      source.directory("packages/eslint-config"),
-    )
-    .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
-    .withWorkdir("/workspace")
-    .withExec(["bun", "install"])
-    .withWorkdir("/workspace/packages/eslint-config")
-    .withExec(["bun", "run", "build"])
-    .withWorkdir("/workspace/packages/webring");
+  return (
+    dag
+      .container()
+      .from(`oven/bun:${versions["oven/bun"]}`)
+      .withWorkdir("/workspace")
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume("bun-cache"),
+      )
+      // Root workspace files for bun install (strip workspaces to avoid resolving missing members)
+      .withFile("/workspace/package.json", source.file("package.json"))
+      .withFile("/workspace/bun.lock", source.file("bun.lock"))
+      .withExec([
+        "bun",
+        "-e",
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/webring', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+      ])
+      // Package source
+      .withDirectory(
+        "/workspace/packages/webring",
+        source.directory("packages/webring"),
+        {
+          exclude: [
+            "node_modules",
+            "dist",
+            "build",
+            ".cache",
+            ".dagger",
+            "generated",
+          ],
+        },
+      )
+      // Pre-built eslint config (dist/ already populated, skips tsc build)
+      .withDirectory(
+        "/workspace/packages/eslint-config",
+        getBuiltEslintConfig(source),
+      )
+      .withFile(
+        "/workspace/tsconfig.base.json",
+        source.file("tsconfig.base.json"),
+      )
+      .withWorkdir("/workspace")
+      .withExec(["bun", "install"])
+      .withWorkdir("/workspace/packages/webring")
+  );
 }
 
 /**
@@ -51,16 +58,17 @@ function getWebringContainer(source: Directory): Container {
 export async function checkWebring(source: Directory): Promise<string> {
   const container = getWebringContainer(source);
 
+  // Build container (reused for lint, test, and dist extraction)
+  const builtContainer = container.withExec(["bun", "run", "build"]);
+
   // Lint and build in parallel
   await Promise.all([
     container.withExec(["bun", "run", "lint"]).sync(),
-    container.withExec(["bun", "run", "build"]).sync(),
+    builtContainer.sync(),
   ]);
 
-  // Test after build (needs built dist)
-  const buildDir = container
-    .withExec(["bun", "run", "build"])
-    .directory("dist");
+  // Extract dist from the already-built container (no redundant build)
+  const buildDir = builtContainer.directory("dist");
 
   // Run unit tests
   await container.withExec(["bun", "run", "test", "--", "--run"]).sync();

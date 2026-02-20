@@ -145,7 +145,10 @@ describe("Convert to TypeScript Interface", () => {
       enabled: true,
     };
 
-    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestInterface" });
+    const result = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestInterface",
+    });
 
     expect(result.name).toBe("TestInterface");
     expect(result.properties["name"]?.type).toBe("string");
@@ -160,7 +163,10 @@ describe("Convert to TypeScript Interface", () => {
       },
     };
 
-    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestInterface" });
+    const result = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestInterface",
+    });
 
     expect(result.properties["config"]?.nested).toBeDefined();
     expect(result.properties["config"]?.nested?.name).toBe(
@@ -173,7 +179,10 @@ describe("Convert to TypeScript Interface", () => {
       items: [1, 2, 3],
     };
 
-    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestInterface" });
+    const result = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestInterface",
+    });
 
     expect(result.properties["items"]?.type).toBe("number[]");
   });
@@ -183,7 +192,10 @@ describe("Convert to TypeScript Interface", () => {
       items: [],
     };
 
-    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestInterface" });
+    const result = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestInterface",
+    });
 
     expect(result.properties["items"]?.type).toBe("unknown[]");
   });
@@ -234,7 +246,10 @@ describe("Convert to TypeScript Interface", () => {
       "123key": "value",
     };
 
-    const result = convertToTypeScriptInterface({ values: values, interfaceName: "TestInterface" });
+    const result = convertToTypeScriptInterface({
+      values: values,
+      interfaceName: "TestInterface",
+    });
 
     expect(result.properties['"my-property"']).toBeDefined();
     expect(result.properties['"default"']).toBeDefined();

@@ -4,11 +4,13 @@ import type { WatchStatus } from "#src/model/watch-status";
 
 const IDENTIFIER = "watchStatus";
 
-const StoredWatchStatusSchema: z.ZodType<WatchStatus> = z.looseObject({
-  item: z.looseObject({ uuid: z.string() }),
-  isWatched: z.boolean(),
-  lastUpdate: z.unknown(),
-}).pipe(z.custom<WatchStatus>());
+const StoredWatchStatusSchema: z.ZodType<WatchStatus> = z
+  .looseObject({
+    item: z.looseObject({ uuid: z.string() }),
+    isWatched: z.boolean(),
+    lastUpdate: z.unknown(),
+  })
+  .pipe(z.custom<WatchStatus>());
 
 function parseStoredWatchStatuses(json: string): WatchStatus[] {
   const raw: unknown = JSON.parse(json);

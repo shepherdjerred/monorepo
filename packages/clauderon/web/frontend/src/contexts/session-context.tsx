@@ -71,7 +71,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         setError(null);
         const sessionsList = await client.listSessions();
-        const newSessions = new Map(sessionsList.map((s: Session) => [s.id, s]));
+        const newSessions = new Map(
+          sessionsList.map((s: Session) => [s.id, s]),
+        );
         setSessions(newSessions);
       } catch (error_) {
         setError(error_ instanceof Error ? error_ : new Error(String(error_)));
@@ -88,7 +90,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const health = await client.getHealth();
       const newHealthReports = new Map(
-        health.sessions.map((report: SessionHealthReport) => [report.session_id, report]),
+        health.sessions.map((report: SessionHealthReport) => [
+          report.session_id,
+          report,
+        ]),
       );
       setHealthReports(newHealthReports);
     } catch (error_) {
@@ -258,8 +263,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useSessionEvents(handleEvent);
 
   // Initial load
-  ;
-
   return (
     <SessionContext.Provider
       value={{

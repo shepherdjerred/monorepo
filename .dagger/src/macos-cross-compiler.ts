@@ -64,11 +64,23 @@ function buildImage(options: BuildImageOptions): Container {
   const zig = buildZig(container);
 
   // Set up SDK in container
-  container = setupSdkInContainer({ container, sdkVersion, targetSdkVersion, zig, sdk });
+  container = setupSdkInContainer({
+    container,
+    sdkVersion,
+    targetSdkVersion,
+    zig,
+    sdk,
+  });
 
   // Build for each architecture
   const archList = architectures.split(",").map((arch) => arch.trim());
-  const wrapperOptions = { container, sdkVersion, kernelVersion, targetSdkVersion, cores };
+  const wrapperOptions = {
+    container,
+    sdkVersion,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+  };
 
   for (const architecture of archList) {
     container = buildForArchitecture({
@@ -155,14 +167,31 @@ type BuildForArchitectureOptions = {
   xar: Directory;
   libtapi: Directory;
   libdispatch: Directory;
-  wrapperOptions: { container: Container; sdkVersion: string; kernelVersion: string; targetSdkVersion: string; cores: number };
+  wrapperOptions: {
+    container: Container;
+    sdkVersion: string;
+    kernelVersion: string;
+    targetSdkVersion: string;
+    cores: number;
+  };
 };
 
 /**
  * Build toolchain for a single architecture and add to container.
  */
 function buildForArchitecture(options: BuildForArchitectureOptions): Container {
-  const { container, source, architecture, kernelVersion, targetSdkVersion, cores, xar, libtapi, libdispatch, wrapperOptions } = options;
+  const {
+    container,
+    source,
+    architecture,
+    kernelVersion,
+    targetSdkVersion,
+    cores,
+    xar,
+    libtapi,
+    libdispatch,
+    wrapperOptions,
+  } = options;
 
   const cctools = buildCctools({
     container,
@@ -187,7 +216,9 @@ function buildForArchitecture(options: BuildForArchitectureOptions): Container {
     cores,
     clangWrappers,
     cctools,
-    sdk: container.directory("/osxcross/SDK/MacOSX" + wrapperOptions.sdkVersion + ".sdk"),
+    sdk: container.directory(
+      "/osxcross/SDK/MacOSX" + wrapperOptions.sdkVersion + ".sdk",
+    ),
     xar,
     libtapi,
     libdispatch,
@@ -207,12 +238,7 @@ function buildForArchitecture(options: BuildForArchitectureOptions): Container {
       "+x",
       "/usr/local/bin/zig-cc-" + architecture + "-macos",
     ])
-    .withExec([
-      "rustup",
-      "target",
-      "add",
-      architecture + "-apple-darwin",
-    ]);
+    .withExec(["rustup", "target", "add", architecture + "-apple-darwin"]);
 }
 
 /**
@@ -344,11 +370,7 @@ async function testArchitecture(
 
   await archContainer
     .withExec(["file", "out/hello-clang"])
-    .withExec([
-      "bash",
-      "-c",
-      `file out/hello-clang | grep -q "${archPattern}"`,
-    ])
+    .withExec(["bash", "-c", `file out/hello-clang | grep -q "${archPattern}"`])
     .withExec([
       "bash",
       "-c",
@@ -361,16 +383,8 @@ async function testArchitecture(
       "-c",
       `file out/hello-gfortran | grep -q "${archPattern}"`,
     ])
-    .withExec([
-      "bash",
-      "-c",
-      `file out/hello-zig-c | grep -q "${archPattern}"`,
-    ])
-    .withExec([
-      "bash",
-      "-c",
-      `file out/hello-rust | grep -q "${archPattern}"`,
-    ])
+    .withExec(["bash", "-c", `file out/hello-zig-c | grep -q "${archPattern}"`])
+    .withExec(["bash", "-c", `file out/hello-rust | grep -q "${archPattern}"`])
     .sync();
 }
 

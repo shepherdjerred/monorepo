@@ -1,5 +1,5 @@
 export function rawTitleToDisplayTitle(rawTitle: string): string {
-  const title = rawTitle.replaceAll('$', "").replace(/\{[a-z]*\}/i, "");
+  const title = rawTitle.replaceAll("$", "").replace(/\{[a-z]*\}/i, "");
   return toTitleCase(title);
 }
 

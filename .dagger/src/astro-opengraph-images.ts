@@ -1,6 +1,7 @@
 import type { Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import versions from "./lib-versions.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 /**
  * Check astro-opengraph-images: lint, build, test
@@ -30,21 +31,24 @@ export async function checkAstroOpengraphImages(
         exclude: ["node_modules", "examples", "**/.astro", "**/.dagger"],
       },
     )
-    // Eslint config (needed for lint — ../eslint-config/local.ts)
+    // Pre-built eslint config (dist/ already populated, skips tsc build)
     .withDirectory(
       "/workspace/packages/eslint-config",
-      source.directory("packages/eslint-config"),
+      getBuiltEslintConfig(source),
     )
-    .withFile("/workspace/tsconfig.base.json", source.file("tsconfig.base.json"))
+    .withFile(
+      "/workspace/tsconfig.base.json",
+      source.file("tsconfig.base.json"),
+    )
     .withWorkdir("/workspace")
     .withExec(["bun", "install"])
-    .withWorkdir("/workspace/packages/eslint-config")
-    .withExec(["bun", "run", "build"])
     .withWorkdir("/workspace/packages/astro-opengraph-images");
 
-  // Run lint, build, test sequentially
-  await container.withExec(["bun", "run", "lint"]).sync();
-  await container.withExec(["bun", "run", "build"]).sync();
+  // Lint and build in parallel, then test (needs build output)
+  await Promise.all([
+    container.withExec(["bun", "run", "lint"]).sync(),
+    container.withExec(["bun", "run", "build"]).sync(),
+  ]);
   await container.withExec(["bun", "run", "test"]).sync();
 
   return "✓ astro-opengraph-images CI passed (lint, build, test)";

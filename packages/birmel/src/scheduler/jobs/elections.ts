@@ -13,7 +13,10 @@ import {
   selectRandomCandidates,
   createElectionAnswers,
 } from "@shepherdjerred/birmel/elections/candidates.ts";
-import { determineWinner, generateNickname } from "@shepherdjerred/birmel/elections/winner.ts";
+import {
+  determineWinner,
+  generateNickname,
+} from "@shepherdjerred/birmel/elections/winner.ts";
 import { updateBotNickname } from "@shepherdjerred/birmel/elections/bot-nickname.ts";
 import { updateBotProfile } from "@shepherdjerred/birmel/elections/bot-profile.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -275,14 +278,20 @@ async function announceTie(
   );
 }
 
-async function processElectionResult(
-  election: { id: number; guildId: string; channelId: string; messageId: string | null },
-): Promise<void> {
+async function processElectionResult(election: {
+  id: number;
+  guildId: string;
+  channelId: string;
+  messageId: string | null;
+}): Promise<void> {
   if (election.messageId == null || election.messageId.length === 0) {
     return;
   }
 
-  const pollResults = await getPollResults(election.channelId, election.messageId);
+  const pollResults = await getPollResults(
+    election.channelId,
+    election.messageId,
+  );
   if (!pollResults.success || pollResults.data?.isFinalized !== true) {
     return;
   }

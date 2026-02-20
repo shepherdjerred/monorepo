@@ -1,6 +1,9 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { IntOrString, KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
 import { createPostalDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal.ts";
 

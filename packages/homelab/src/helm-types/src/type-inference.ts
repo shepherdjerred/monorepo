@@ -283,14 +283,29 @@ function mergeDescriptions(
 /**
  * Convert a value to a TypeProperty using JSON schema information
  */
-function convertWithSchema(ctx: InferencePropertyContext & { schema: JSONSchemaProperty }): TypeProperty {
-  const { value, nestedTypeName, schema, propertyName, yamlComment, yamlComments, fullKey } = ctx;
+function convertWithSchema(
+  ctx: InferencePropertyContext & { schema: JSONSchemaProperty },
+): TypeProperty {
+  const {
+    value,
+    nestedTypeName,
+    schema,
+    propertyName,
+    yamlComment,
+    yamlComments,
+    fullKey,
+  } = ctx;
 
   const inferredType = inferTypeFromValue(value);
   const schemaType = jsonSchemaToTypeScript(schema);
 
-  if (inferredType != null && inferredType !== "" && !typesAreCompatible(inferredType, schemaType)) {
-    const propName = propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
+  if (
+    inferredType != null &&
+    inferredType !== "" &&
+    !typesAreCompatible(inferredType, schemaType)
+  ) {
+    const propName =
+      propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
     console.warn(
       `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
     );
@@ -309,7 +324,13 @@ function convertWithSchema(ctx: InferencePropertyContext & { schema: JSONSchemaP
       yamlComments,
       keyPrefix: fullKey,
     });
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description,
+      default: defaultValue,
+    };
   }
 
   // Handle object types without explicit properties
@@ -321,16 +342,30 @@ function convertWithSchema(ctx: InferencePropertyContext & { schema: JSONSchemaP
       yamlComments,
       keyPrefix: fullKey,
     });
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description, default: defaultValue };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description,
+      default: defaultValue,
+    };
   }
 
-  return { type: schemaType, optional: true, description, default: defaultValue };
+  return {
+    type: schemaType,
+    optional: true,
+    description,
+    default: defaultValue,
+  };
 }
 
 /**
  * Infer array element type from sampled elements
  */
-function inferArrayType(nestedTypeName: string, arrayValue: unknown[]): TypeProperty {
+function inferArrayType(
+  nestedTypeName: string,
+  arrayValue: unknown[],
+): TypeProperty {
   if (arrayValue.length === 0) {
     return { type: "unknown[]", optional: true };
   }
@@ -340,17 +375,27 @@ function inferArrayType(nestedTypeName: string, arrayValue: unknown[]): TypeProp
   const sampleSize = Math.min(arrayValue.length, 3);
 
   for (let i = 0; i < sampleSize; i++) {
-    const elementType = convertValueToProperty({ value: arrayValue[i], nestedTypeName });
+    const elementType = convertValueToProperty({
+      value: arrayValue[i],
+      nestedTypeName,
+    });
     elementTypes.add(elementType.type);
     elementTypeProps.push(elementType);
   }
 
   if (elementTypes.size === 1) {
-    return inferUniformArrayType(elementTypes, elementTypeProps, nestedTypeName);
+    return inferUniformArrayType(
+      elementTypes,
+      elementTypeProps,
+      nestedTypeName,
+    );
   }
 
   const types = [...elementTypes].toSorted();
-  if (types.length <= 3 && types.every((t) => ["string", "number", "boolean"].includes(t))) {
+  if (
+    types.length <= 3 &&
+    types.every((t) => ["string", "number", "boolean"].includes(t))
+  ) {
     return { type: `(${types.join(" | ")})[]`, optional: true };
   }
 
@@ -377,7 +422,11 @@ function inferUniformArrayType(
       name: arrayElementTypeName,
       properties: elementProp.nested.properties,
     };
-    return { type: `${arrayElementTypeName}[]`, optional: true, nested: arrayElementInterface };
+    return {
+      type: `${arrayElementTypeName}[]`,
+      optional: true,
+      nested: arrayElementInterface,
+    };
   }
 
   return { type: `${elementType}[]`, optional: true };
@@ -386,47 +435,90 @@ function inferUniformArrayType(
 /**
  * Infer a primitive TypeProperty from a runtime value (no schema)
  */
-function inferPrimitiveType(value: unknown, yamlComment?: string): TypeProperty {
+function inferPrimitiveType(
+  value: unknown,
+  yamlComment?: string,
+): TypeProperty {
   if (ActualBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   if (ActualNumberSchema.safeParse(value).success) {
-    return { type: "number", optional: true, description: yamlComment, default: value };
+    return {
+      type: "number",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   if (StringBooleanSchema.safeParse(value).success) {
-    return { type: "boolean", optional: true, description: yamlComment, default: value };
+    return {
+      type: "boolean",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   const stringCheckForNumber = StringSchema.safeParse(value);
   if (stringCheckForNumber.success) {
     const trimmed = stringCheckForNumber.data.trim();
-    if (trimmed !== "" && !Number.isNaN(Number(trimmed)) && Number.isFinite(Number(trimmed))) {
-      return { type: "number", optional: true, description: yamlComment, default: value };
+    if (
+      trimmed !== "" &&
+      !Number.isNaN(Number(trimmed)) &&
+      Number.isFinite(Number(trimmed))
+    ) {
+      return {
+        type: "number",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
   }
 
   const stringCheckForPlain = StringSchema.safeParse(value);
   if (stringCheckForPlain.success) {
     if (stringCheckForPlain.data === "default") {
-      return { type: "string | number | boolean", optional: true, description: yamlComment, default: value };
+      return {
+        type: "string | number | boolean",
+        optional: true,
+        description: yamlComment,
+        default: value,
+      };
     }
-    return { type: "string", optional: true, description: yamlComment, default: value };
+    return {
+      type: "string",
+      optional: true,
+      description: yamlComment,
+      default: value,
+    };
   }
 
-  console.warn(`Unrecognized value type for: ${String(value)}, using 'unknown'`);
+  console.warn(
+    `Unrecognized value type for: ${String(value)}, using 'unknown'`,
+  );
   return { type: "unknown", optional: true, description: yamlComment };
 }
 
 function convertValueToProperty(opts: InferencePropertyContext): TypeProperty {
-  const { value, nestedTypeName, schema, yamlComment, yamlComments, fullKey } = opts;
+  const { value, nestedTypeName, schema, yamlComment, yamlComments, fullKey } =
+    opts;
 
   if (schema) {
     return convertWithSchema({ ...opts, schema });
   }
 
-  if (NullSchema.safeParse(value).success || UndefinedSchema.safeParse(value).success) {
+  if (
+    NullSchema.safeParse(value).success ||
+    UndefinedSchema.safeParse(value).success
+  ) {
     return { type: "unknown", optional: true };
   }
 
@@ -443,7 +535,13 @@ function convertValueToProperty(opts: InferencePropertyContext): TypeProperty {
       yamlComments,
       keyPrefix: fullKey,
     });
-    return { type: nestedTypeName, optional: true, nested: nestedInterface, description: yamlComment, default: value };
+    return {
+      type: nestedTypeName,
+      optional: true,
+      nested: nestedInterface,
+      description: yamlComment,
+      default: value,
+    };
   }
 
   return inferPrimitiveType(value, yamlComment);

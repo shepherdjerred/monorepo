@@ -1,4 +1,7 @@
-import { getErrorMessage, toError } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import type { Guild } from "discord.js";
@@ -29,7 +32,9 @@ type AutomodInput = {
   reason?: string | undefined;
 };
 
-function validateAutomodInput(ctx: AutomodInput): { success: boolean; message: string } | null {
+function validateAutomodInput(
+  ctx: AutomodInput,
+): { success: boolean; message: string } | null {
   const idError = validateSnowflakes([
     { value: ctx.guildId, fieldName: "guildId" },
     { value: ctx.ruleId, fieldName: "ruleId" },
@@ -43,7 +48,10 @@ function validateAutomodInput(ctx: AutomodInput): { success: boolean; message: s
     return { success: false, message: rolesError };
   }
 
-  const channelsError = validateSnowflakeArray(ctx.exemptChannels, "exemptChannels");
+  const channelsError = validateSnowflakeArray(
+    ctx.exemptChannels,
+    "exemptChannels",
+  );
   if (channelsError != null && channelsError.length > 0) {
     return { success: false, message: channelsError };
   }
@@ -56,7 +64,9 @@ function buildCreateOptions(ctx: AutomodInput): Record<string, unknown> {
     ...(ctx.name !== undefined && { name: ctx.name }),
     ...(ctx.triggerType !== undefined && { triggerType: ctx.triggerType }),
     ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
-    ...(ctx.keywordPresets !== undefined && { keywordPresets: ctx.keywordPresets }),
+    ...(ctx.keywordPresets !== undefined && {
+      keywordPresets: ctx.keywordPresets,
+    }),
     ...(ctx.mentionLimit !== undefined && { mentionLimit: ctx.mentionLimit }),
     ...(ctx.enabled !== undefined && { enabled: ctx.enabled }),
     ...(ctx.reason !== undefined && { reason: ctx.reason }),
@@ -70,7 +80,9 @@ function buildModifyOptions(ctx: AutomodInput): Record<string, unknown> {
     ...(ctx.keywords !== undefined && { keywords: ctx.keywords }),
     ...(ctx.mentionLimit !== undefined && { mentionLimit: ctx.mentionLimit }),
     ...(ctx.exemptRoles !== undefined && { exemptRoles: ctx.exemptRoles }),
-    ...(ctx.exemptChannels !== undefined && { exemptChannels: ctx.exemptChannels }),
+    ...(ctx.exemptChannels !== undefined && {
+      exemptChannels: ctx.exemptChannels,
+    }),
     ...(ctx.reason !== undefined && { reason: ctx.reason }),
   };
 }

@@ -31,7 +31,11 @@ function isExampleMarker(trimmed: string): boolean {
  * Check if an example block should end
  */
 function shouldExitExampleBlock(trimmed: string): boolean {
-  return !trimmed || trimmed.startsWith("For more information") || trimmed.startsWith("Ref:");
+  return (
+    !trimmed ||
+    trimmed.startsWith("For more information") ||
+    trimmed.startsWith("Ref:")
+  );
 }
 
 /**
@@ -52,7 +56,9 @@ function isBlockScalarContent(line: string, trimmed: string): boolean {
   if (trimmed.length === 0) {
     return false;
   }
-  return line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line);
+  return (
+    line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line)
+  );
 }
 
 /**
@@ -63,7 +69,8 @@ function isExcludedCommentedKey(keyValue: string): boolean {
     /^ref:/i.test(keyValue) &&
     (keyValue.includes("http://") || keyValue.includes("https://"));
   const isURL =
-    keyValue.trim().startsWith("http://") || keyValue.trim().startsWith("https://");
+    keyValue.trim().startsWith("http://") ||
+    keyValue.trim().startsWith("https://");
   return isDocReference || isURL;
 }
 
@@ -75,7 +82,8 @@ function isLikelyExample(lines: string[], i: number): boolean {
   const prevTrimmed = prevLine?.trim() ?? "";
   const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
   const prevIsBlank = !prevTrimmed;
-  const prevIsListItem = prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
+  const prevIsListItem =
+    prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
 
   return (
     (!prevIsBlank && !prevIsCommentedKey && prevTrimmed.startsWith("#")) ||
@@ -86,7 +94,11 @@ function isLikelyExample(lines: string[], i: number): boolean {
 /**
  * Update consecutive commented key count based on context
  */
-function updateConsecutiveCount(lines: string[], i: number, current: number): number {
+function updateConsecutiveCount(
+  lines: string[],
+  i: number,
+  current: number,
+): number {
   const prevLine = i > 0 ? lines[i - 1] : "";
   const prevTrimmed = prevLine?.trim() ?? "";
   const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
@@ -117,18 +129,28 @@ function tryUncommentLine(
 
   const [, indent, keyValue] = commentedKeyMatch;
   if (keyValue == null || keyValue === "" || indent == null || indent === "") {
-    return { uncommented: null, newConsecutive: state.consecutiveCommentedKeys };
+    return {
+      uncommented: null,
+      newConsecutive: state.consecutiveCommentedKeys,
+    };
   }
 
   const keyPart = keyValue.split(":")[0]?.trim() ?? "";
   const isValidKey = /^[\w.-]+$/.test(keyPart);
 
   if (!isValidKey || isExcludedCommentedKey(keyValue)) {
-    return { uncommented: null, newConsecutive: state.consecutiveCommentedKeys };
+    return {
+      uncommented: null,
+      newConsecutive: state.consecutiveCommentedKeys,
+    };
   }
 
   const keyIndent = indent.length;
-  const newConsecutive = updateConsecutiveCount(lines, i, state.consecutiveCommentedKeys);
+  const newConsecutive = updateConsecutiveCount(
+    lines,
+    i,
+    state.consecutiveCommentedKeys,
+  );
   const likelyExampleCtx = isLikelyExample(lines, i);
 
   const shouldUncomment =
@@ -187,7 +209,12 @@ export function preprocessYAMLComments(yamlContent: string): string {
       continue;
     }
 
-    const { uncommented, newConsecutive } = tryUncommentLine(line, lines, i, state);
+    const { uncommented, newConsecutive } = tryUncommentLine(
+      line,
+      lines,
+      i,
+      state,
+    );
     state.consecutiveCommentedKeys = newConsecutive;
 
     if (uncommented != null) {

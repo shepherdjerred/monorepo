@@ -6,9 +6,17 @@
  * for different agent formats (Claude Code vs Codex).
  */
 
-import type { Message, MessageRole, ToolUse, CodeBlock } from "./claude-parser.ts";
+import type {
+  Message,
+  MessageRole,
+  ToolUse,
+  CodeBlock,
+} from "./claude-parser.ts";
 import { extractCodeBlocks } from "./claude-parser.ts";
-import { isCodexFormat, parseCodexHistoryLines } from "./codex-history-parser.ts";
+import {
+  isCodexFormat,
+  parseCodexHistoryLines,
+} from "./codex-history-parser.ts";
 import { z } from "zod";
 
 /**
@@ -22,9 +30,7 @@ type HistoryEntry = {
   sessionId?: string;
   message?: {
     role: "user" | "assistant";
-    content:
-      | string
-      | ContentBlock[];
+    content: string | ContentBlock[];
   };
 };
 
@@ -59,10 +65,12 @@ const HistoryEntrySchema = z.object({
   parentUuid: z.union([z.string(), z.null()]),
   timestamp: z.string(),
   sessionId: z.string().optional(),
-  message: z.object({
-    role: z.string(),
-    content: z.union([z.string(), z.array(ContentBlockSchema)]),
-  }).optional(),
+  message: z
+    .object({
+      role: z.string(),
+      content: z.union([z.string(), z.array(ContentBlockSchema)]),
+    })
+    .optional(),
 });
 
 const HISTORY_ENTRY_TYPE_MAP: Record<string, HistoryEntry["type"]> = {
@@ -78,21 +86,39 @@ const CONTENT_BLOCK_TYPE_MAP: Record<string, ContentBlock["type"]> = {
   tool_result: "tool_result",
 };
 
-function toContentBlock(parsed: z.infer<typeof ContentBlockSchema>): ContentBlock {
+function toContentBlock(
+  parsed: z.infer<typeof ContentBlockSchema>,
+): ContentBlock {
   const block: ContentBlock = {
     type: CONTENT_BLOCK_TYPE_MAP[parsed.type] ?? "text",
   };
-  if (parsed.text != null) { block.text = parsed.text; }
-  if (parsed.id != null) { block.id = parsed.id; }
-  if (parsed.name != null) { block.name = parsed.name; }
-  if (parsed.input != null) { block.input = parsed.input; }
-  if (parsed.tool_use_id != null) { block.tool_use_id = parsed.tool_use_id; }
-  if (parsed.content != null) { block.content = parsed.content; }
-  if (parsed.is_error != null) { block.is_error = parsed.is_error; }
+  if (parsed.text != null) {
+    block.text = parsed.text;
+  }
+  if (parsed.id != null) {
+    block.id = parsed.id;
+  }
+  if (parsed.name != null) {
+    block.name = parsed.name;
+  }
+  if (parsed.input != null) {
+    block.input = parsed.input;
+  }
+  if (parsed.tool_use_id != null) {
+    block.tool_use_id = parsed.tool_use_id;
+  }
+  if (parsed.content != null) {
+    block.content = parsed.content;
+  }
+  if (parsed.is_error != null) {
+    block.is_error = parsed.is_error;
+  }
   return block;
 }
 
-function toHistoryEntry(parsed: z.infer<typeof HistoryEntrySchema>): HistoryEntry | null {
+function toHistoryEntry(
+  parsed: z.infer<typeof HistoryEntrySchema>,
+): HistoryEntry | null {
   const entryType = HISTORY_ENTRY_TYPE_MAP[parsed.type];
   if (entryType == null) {
     return null;
@@ -107,11 +133,13 @@ function toHistoryEntry(parsed: z.infer<typeof HistoryEntrySchema>): HistoryEntr
     entry.sessionId = parsed.sessionId;
   }
   if (parsed.message != null) {
-    const role: "user" | "assistant" = parsed.message.role === "user" ? "user" : "assistant";
+    const role: "user" | "assistant" =
+      parsed.message.role === "user" ? "user" : "assistant";
     const rawContent = parsed.message.content;
-    entry.message = typeof rawContent === "string"
-      ? { role, content: rawContent }
-      : { role, content: rawContent.map((b) => toContentBlock(b)) };
+    entry.message =
+      typeof rawContent === "string"
+        ? { role, content: rawContent }
+        : { role, content: rawContent.map((b) => toContentBlock(b)) };
   }
   return entry;
 }
@@ -131,7 +159,11 @@ function extractMessageContent(message: NonNullable<HistoryEntry["message"]>): {
     textContent = message.content;
   } else {
     for (const block of message.content) {
-      if (block.type === "text" && block.text != null && block.text.length > 0) {
+      if (
+        block.type === "text" &&
+        block.text != null &&
+        block.text.length > 0
+      ) {
         textContent += block.text;
       } else if (block.type === "tool_use") {
         toolUses.push({
@@ -172,8 +204,11 @@ export function parseHistoryEntry(line: string): Message | null {
       return null;
     }
 
-    const role: MessageRole = entry.message.role === "user" ? "user" : "assistant";
-    const { textContent, toolUses, codeBlocks } = extractMessageContent(entry.message);
+    const role: MessageRole =
+      entry.message.role === "user" ? "user" : "assistant";
+    const { textContent, toolUses, codeBlocks } = extractMessageContent(
+      entry.message,
+    );
 
     return {
       id: entry.uuid,

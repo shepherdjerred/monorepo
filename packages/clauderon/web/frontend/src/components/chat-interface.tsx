@@ -34,8 +34,6 @@ export function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
-  ;
-
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || !client || !isConnected) {

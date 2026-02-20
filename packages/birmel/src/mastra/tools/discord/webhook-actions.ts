@@ -154,7 +154,8 @@ type ExecuteWebhookOptions = {
 export async function handleExecuteWebhook(
   options: ExecuteWebhookOptions,
 ): Promise<WebhookResult> {
-  const { client, webhookId, webhookToken, content, username, avatarUrl } = options;
+  const { client, webhookId, webhookToken, content, username, avatarUrl } =
+    options;
   if (
     webhookId == null ||
     webhookId.length === 0 ||

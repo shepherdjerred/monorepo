@@ -8,13 +8,15 @@ type WebResult = {
 
 const NewsApiResponseSchema = z.object({
   status: z.string(),
-  articles: z.array(z.object({
-    title: z.string(),
-    description: z.string().nullable(),
-    url: z.string(),
-    source: z.object({ name: z.string() }),
-    publishedAt: z.string(),
-  })),
+  articles: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string().nullable(),
+      url: z.string(),
+      source: z.object({ name: z.string() }),
+      publishedAt: z.string(),
+    }),
+  ),
 });
 
 const VersionsSchema = z.array(z.string());
@@ -119,7 +121,6 @@ export async function handleSearch(
     data: { results },
   };
 }
-
 
 export async function handleNews(
   apiKey: string | undefined,

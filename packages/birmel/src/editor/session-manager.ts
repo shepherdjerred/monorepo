@@ -169,12 +169,14 @@ export async function storePendingChanges(
  * Get pending changes for a session
  */
 const PendingChangesSchema = z.object({
-  changes: z.array(z.object({
-    filePath: z.string(),
-    oldContent: z.string().nullable(),
-    newContent: z.string().nullable(),
-    changeType: z.enum(["create", "modify", "delete"]),
-  })),
+  changes: z.array(
+    z.object({
+      filePath: z.string(),
+      oldContent: z.string().nullable(),
+      newContent: z.string().nullable(),
+      changeType: z.enum(["create", "modify", "delete"]),
+    }),
+  ),
   branchName: z.string(),
   baseBranch: z.string(),
 });

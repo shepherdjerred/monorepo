@@ -76,7 +76,10 @@ async function processGuildMembers(
     try {
       await processMemberActivity(member, guildId, userId, roleTiers);
     } catch (error) {
-      logger.error("Failed to process activity for member", toError(error), { guildId, userId });
+      logger.error("Failed to process activity for member", toError(error), {
+        guildId,
+        userId,
+      });
     }
   }
 }
@@ -91,12 +94,17 @@ async function processGuildActivity(
       return;
     }
     const fullGuild = await guild.fetch();
-    logger.debug("Processing activity roles for guild", { guildId, tierCount: roleTiers.length });
+    logger.debug("Processing activity roles for guild", {
+      guildId,
+      tierCount: roleTiers.length,
+    });
     const members = await fullGuild.members.fetch();
     await processGuildMembers(members, guildId, roleTiers);
     logger.info("Activity aggregation completed for guild", { guildId });
   } catch (error) {
-    logger.error("Failed to aggregate activity for guild", toError(error), { guildId });
+    logger.error("Failed to aggregate activity for guild", toError(error), {
+      guildId,
+    });
   }
 }
 
@@ -114,7 +122,11 @@ export async function aggregateActivityMetrics(): Promise<void> {
       const guilds = await client.guilds.fetch();
 
       for (const [guildId, guild] of guilds) {
-        await processGuildActivity(guild, guildId, config.activityTracking.roleTiers);
+        await processGuildActivity(
+          guild,
+          guildId,
+          config.activityTracking.roleTiers,
+        );
       }
 
       const ninetyDaysAgo = new Date();

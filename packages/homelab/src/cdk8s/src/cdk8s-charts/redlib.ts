@@ -1,7 +1,10 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
-import { KubeNetworkPolicy, IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubeNetworkPolicy,
+  IntOrString,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createRedlibDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/frontends/redlib.ts";
 
 export function createRedlibChart(app: App) {

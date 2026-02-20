@@ -19,7 +19,10 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
-import { PATCHED_SMTP_CLIENT_SERVER, PATCHED_SMTP_SENDER } from "./postal-patches.ts";
+import {
+  PATCHED_SMTP_CLIENT_SERVER,
+  PATCHED_SMTP_SENDER,
+} from "./postal-patches.ts";
 
 export type PostalDeploymentProps = {
   /**

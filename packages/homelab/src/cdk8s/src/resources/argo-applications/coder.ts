@@ -3,7 +3,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import { PodMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath, buildPostgresUrlExpr } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  vaultItemPath,
+  buildPostgresUrlExpr,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
@@ -31,7 +34,13 @@ export function createCoderApp(chart: Chart) {
   createCoderPostgreSQLDatabase(chart);
 
   // Create Tailscale ingress for Coder
-  createIngress(chart, "coder-ingress", { namespace: "coder", service: "coder", port: 80, hosts: ["coder"], funnel: true });
+  createIngress(chart, "coder-ingress", {
+    namespace: "coder",
+    service: "coder",
+    port: 80,
+    hosts: ["coder"],
+    funnel: true,
+  });
 
   createCloudflareTunnelBinding(chart, "coder-cf-tunnel", {
     serviceName: "coder",

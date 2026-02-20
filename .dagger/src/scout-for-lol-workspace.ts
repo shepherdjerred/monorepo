@@ -30,7 +30,7 @@ export function installWorkspaceDeps(
 
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
@@ -46,7 +46,10 @@ export function installWorkspaceDeps(
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/scout-for-lol/patches", workspaceSource.directory("patches"))
+    .withDirectory(
+      "/workspace/packages/scout-for-lol/patches",
+      workspaceSource.directory("patches"),
+    )
     .withFile(
       "/workspace/packages/backend/package.json",
       workspaceSource.file("packages/backend/package.json"),
@@ -162,7 +165,7 @@ export function getMountedWorkspace(
 
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
   container = container.withMountedCache(
     "/workspace/.eslintcache",
@@ -338,7 +341,11 @@ function getRustTauriContainer(): Container {
 
 function installBunInRustContainer(container: Container): Container {
   return container
-    .withExec(["sh", "-c", `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"`,
+    ])
     .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
 }
 
@@ -353,7 +360,7 @@ export function installDesktopDeps(
   container = installBunInRustContainer(container);
   container = container.withMountedCache(
     "/root/.bun/install/cache",
-    dag.cacheVolume("bun-install-cache"),
+    dag.cacheVolume("bun-cache"),
   );
 
   if (target === "windows-gnu") {
@@ -374,7 +381,10 @@ export function installDesktopDeps(
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory("/workspace/packages/scout-for-lol/patches", workspaceSource.directory("patches"))
+    .withDirectory(
+      "/workspace/packages/scout-for-lol/patches",
+      workspaceSource.directory("patches"),
+    )
     .withFile(
       "/workspace/packages/backend/package.json",
       workspaceSource.file("packages/backend/package.json"),

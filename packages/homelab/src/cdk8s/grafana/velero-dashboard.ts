@@ -5,7 +5,10 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import * as text from "@grafana/grafana-foundation-sdk/text";
-import { addBackupCoveragePanels, addBackupOperationsPanels } from "./velero-panels.ts";
+import {
+  addBackupCoveragePanels,
+  addBackupOperationsPanels,
+} from "./velero-panels.ts";
 
 // Helper function to build schedule filter expression
 function buildScheduleFilter() {
@@ -111,7 +114,9 @@ This usually means that Prometheus is not successfully scraping metrics from the
       .description(options.description)
       .datasource(prometheusDatasource)
       .withTarget(
-        new prometheus.DataqueryBuilder().expr(options.expr).legendFormat(options.legend),
+        new prometheus.DataqueryBuilder()
+          .expr(options.expr)
+          .legendFormat(options.legend),
       )
       .gridPos(options.gridPos);
 

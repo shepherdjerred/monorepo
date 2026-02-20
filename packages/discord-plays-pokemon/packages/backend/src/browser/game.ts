@@ -1,12 +1,7 @@
-import type { WebDriver} from "selenium-webdriver";
+import type { WebDriver } from "selenium-webdriver";
 import { By, until } from "selenium-webdriver";
-import type {
-  CommandInput} from "#src/game/command/command-input.ts";
-import {
-  isBurst,
-  isHold,
-  isHoldB,
-} from "#src/game/command/command-input.ts";
+import type { CommandInput } from "#src/game/command/command-input.ts";
+import { isBurst, isHold, isHoldB } from "#src/game/command/command-input.ts";
 import { toGameboyAdvanceKeyInput } from "#src/game/command/keybinds.ts";
 import { wait } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
@@ -14,7 +9,11 @@ import { getConfig } from "#src/config/index.ts";
 
 export async function setupGame(driver: WebDriver) {
   logger.info("navigating to emulator page");
-  await (getConfig().game.emulator_url === "built_in" ? driver.get(`http://localhost:${String(getConfig().web.port)}/emulator.html`) : driver.get(getConfig().game.emulator_url));
+  await (getConfig().game.emulator_url === "built_in"
+    ? driver.get(
+        `http://localhost:${String(getConfig().web.port)}/emulator.html`,
+      )
+    : driver.get(getConfig().game.emulator_url));
   await wait(5000);
 
   // click anywhere to start the game

@@ -13,7 +13,9 @@ export type SessionEvent = WsEvent & Record<never, never>;
  * Returns null if the message is not a valid object with a string `type`.
  * The event payload is typed as `unknown` on the parse boundary.
  */
-function parseEventsMessage(raw: string): { type: string; event: unknown } | null {
+function parseEventsMessage(
+  raw: string,
+): { type: string; event: unknown } | null {
   const parsed = parseJson(raw);
   if (typeof parsed !== "object" || parsed === null) {
     return null;
@@ -22,7 +24,8 @@ function parseEventsMessage(raw: string): { type: string; event: unknown } | nul
   if (typeof type !== "string") {
     return null;
   }
-  const event: unknown = "event" in parsed ? Reflect.get(parsed, "event") : undefined;
+  const event: unknown =
+    "event" in parsed ? Reflect.get(parsed, "event") : undefined;
   return { type, event };
 }
 
@@ -104,11 +107,11 @@ export class EventsClient {
     try {
       this.ws = new WebSocket(this.url);
 
-      this.ws.addEventListener('open', () => {
+      this.ws.addEventListener("open", () => {
         this.emit("connected");
       });
 
-      this.ws.addEventListener('close', () => {
+      this.ws.addEventListener("close", () => {
         this.emit("disconnected");
 
         // Auto-reconnect if not intentionally closed
