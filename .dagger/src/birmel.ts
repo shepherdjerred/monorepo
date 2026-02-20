@@ -257,6 +257,58 @@ type PublishBirmelImageWithContainerOptions = {
  * @param options Publishing options including pre-built image, version, git SHA, and optional registry auth
  * @returns The published image references
  */
+/**
+ * Run birmel CI validation and smoke test in parallel.
+ */
+export async function runBirmelValidation(
+  source: Directory,
+  version: string,
+  gitSha: string,
+): Promise<string> {
+  const outputs: string[] = [];
+  const [ciResult, image] = await Promise.all([
+    checkBirmel(source),
+    Promise.resolve(buildBirmelImage(source, version, gitSha)),
+  ]);
+  outputs.push(ciResult);
+  outputs.push(await smokeTestBirmelImageWithContainer(image));
+  return outputs.join("\n");
+}
+
+type BirmelPublishOptions = {
+  source: Directory;
+  version: string;
+  gitSha: string;
+  registryUsername: string;
+  registryPassword: Secret;
+};
+
+/** Build and publish a birmel Docker image. */
+export async function publishBirmel(options: BirmelPublishOptions): Promise<string> {
+  const { source, version, gitSha, registryUsername, registryPassword } = options;
+  const image = buildBirmelImage(source, version, gitSha);
+  const refs = await publishBirmelImageWithContainer({
+    image, version, gitSha,
+    registryAuth: { username: registryUsername, password: registryPassword },
+  });
+  return `Published:\n${refs.join("\n")}`;
+}
+
+/** Run birmel CI, smoke test, and publish. */
+export async function releaseBirmel(options: BirmelPublishOptions): Promise<string> {
+  const { source, version, gitSha, registryUsername, registryPassword } = options;
+  const outputs: string[] = [];
+  outputs.push(await checkBirmel(source));
+  const birmelImage = buildBirmelImage(source, version, gitSha);
+  outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
+  const refs = await publishBirmelImageWithContainer({
+    image: birmelImage, version, gitSha,
+    registryAuth: { username: registryUsername, password: registryPassword },
+  });
+  outputs.push(`Published:\n${refs.join("\n")}`);
+  return outputs.join("\n\n");
+}
+
 export async function publishBirmelImageWithContainer(
   options: PublishBirmelImageWithContainerOptions,
 ): Promise<string[]> {

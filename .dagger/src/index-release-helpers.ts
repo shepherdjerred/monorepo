@@ -12,65 +12,28 @@ import { commitVersionsBack } from "./lib-homelab.ts";
 import { runNamedParallel } from "./lib-parallel.ts";
 import type { ReleasePhaseOptions } from "./index-ci-helpers.ts";
 
-const PACKAGES = [
-  "bun-decompile",
-  "astro-opengraph-images",
-  "webring",
-] as const;
-
+const PACKAGES = ["bun-decompile", "astro-opengraph-images", "webring"] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
-export async function runReleasePleasePr(
-  options: ReleasePhaseOptions,
-): Promise<string[]> {
-  const outputs: string[] = [];
-  const prContainer = options
-    .getReleasePleaseContainerFn()
-    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
-
-  const prResult = await options.releasePleaseRunFn(
-    prContainer,
-    `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please release-pr --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
-  );
-
-  outputs.push(`Release PR (success=${String(prResult.success)}):`);
-  outputs.push(prResult.output);
-  return outputs;
+function releasePleaseCmd(subcommand: string): string {
+  return `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please ${subcommand} --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`;
 }
 
-export async function runReleasePleaseGithubRelease(
-  options: ReleasePhaseOptions,
-): Promise<{
-  outputs: string[];
-  releaseCreated: boolean;
-  success: boolean;
-  releaseOutput: string;
+export async function runReleasePleasePr(options: ReleasePhaseOptions): Promise<string[]> {
+  const prContainer = options.getReleasePleaseContainerFn().withSecretVariable("GITHUB_TOKEN", options.githubToken);
+  const prResult = await options.releasePleaseRunFn(prContainer, releasePleaseCmd("release-pr"));
+  return [`Release PR (success=${String(prResult.success)}):`, prResult.output];
+}
+
+export async function runReleasePleaseGithubRelease(options: ReleasePhaseOptions): Promise<{
+  outputs: string[]; releaseCreated: boolean; success: boolean; releaseOutput: string;
 }> {
-  const outputs: string[] = [];
-  const releaseContainer = options
-    .getReleasePleaseContainerFn()
-    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
-
-  const result = await options.releasePleaseRunFn(
-    releaseContainer,
-    `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please github-release --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`,
-  );
-
-  outputs.push(`GitHub Release (success=${String(result.success)}):`);
-  outputs.push(result.output);
-
-  const releaseCreated =
-    result.success &&
-    (result.output.includes("github.com") ||
-      result.output.includes("Created release") ||
-      result.output.includes("created release"));
-
-  return {
-    outputs,
-    releaseCreated,
-    success: result.success,
-    releaseOutput: result.output,
-  };
+  const container = options.getReleasePleaseContainerFn().withSecretVariable("GITHUB_TOKEN", options.githubToken);
+  const result = await options.releasePleaseRunFn(container, releasePleaseCmd("github-release"));
+  const outputs = [`GitHub Release (success=${String(result.success)}):`, result.output];
+  const releaseCreated = result.success &&
+    (result.output.includes("github.com") || result.output.includes("Created release") || result.output.includes("created release"));
+  return { outputs, releaseCreated, success: result.success, releaseOutput: result.output };
 }
 
 export async function publishNpmPackages(

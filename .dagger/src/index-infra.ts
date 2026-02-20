@@ -3,6 +3,7 @@ import { dag } from "@dagger.io/dagger";
 import { getReleasePleaseContainer as getLibReleasePleaseContainer } from "./lib-release-please.ts";
 import versions from "./lib-versions.ts";
 import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
+import { runNamedParallel } from "./lib-parallel.ts";
 
 const BUN_VERSION = versions.bun;
 const RELEASE_PLEASE_VERSION = versions["release-please"];
@@ -449,4 +450,32 @@ export function semgrepScan(source: Directory): Container {
     .withMountedDirectory("/src", source)
     .withWorkdir("/src")
     .withExec(["semgrep", "scan", "--config=auto", "--error"]);
+}
+
+/** Create a named check that syncs a container and returns a success message. */
+function syncCheck(name: string, container: Container) {
+  return { name, operation: async () => { await container.sync(); return `✓ ${name}`; } };
+}
+
+/** Run all quality and security checks in parallel. */
+export async function runQualityChecks(source: Directory): Promise<string> {
+  const results = await runNamedParallel<string>([
+    syncCheck("Quality ratchet", qualityRatchet(source)),
+    syncCheck("Shellcheck", shellcheckStep(source)),
+    syncCheck("Actionlint", actionlintStep(source)),
+    syncCheck("Trivy", trivyScan(source)),
+    syncCheck("Semgrep", semgrepScan(source)),
+    syncCheck("Dagger ESLint", daggerLintCheck(source)),
+  ]);
+  const outputs: string[] = [];
+  for (const result of results) {
+    if (result.success) {
+      outputs.push(String(result.value));
+    } else {
+      const msg = result.error instanceof Error ? result.error.message : String(result.error);
+      outputs.push(`::warning title=${result.name}::${msg.slice(0, 200)}`);
+      outputs.push(`⚠ ${result.name} (non-blocking): ${msg}`);
+    }
+  }
+  return outputs.join("\n");
 }

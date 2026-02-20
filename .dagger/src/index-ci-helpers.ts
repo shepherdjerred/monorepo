@@ -24,9 +24,7 @@ import {
   runClauderonRelease,
 } from "./index-release-helpers.ts";
 
-/**
- * All workspace entries for the main CI container.
- */
+/** All workspace entries for the main CI container. */
 export const CI_WORKSPACES: WorkspaceEntry[] = [
   "packages/birmel",
   "packages/bun-decompile",
@@ -89,9 +87,7 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
   },
 ];
 
-/**
- * Install workspace dependencies with optimal layer ordering.
- */
+/** Install workspace dependencies with optimal layer ordering. */
 export function installWorkspaceDeps(source: Directory): Container {
   return (
     installMonorepoWorkspaceDeps({
@@ -106,9 +102,7 @@ export function installWorkspaceDeps(source: Directory): Container {
   );
 }
 
-/**
- * Set up Prisma clients for Birmel and Scout-for-LoL.
- */
+/** Set up Prisma clients for Birmel and Scout-for-LoL. */
 export async function setupPrisma(
   container: Container,
 ): Promise<{ container: Container; outputs: string[] }> {
@@ -151,9 +145,7 @@ export async function setupPrisma(
   return { container: c, outputs };
 }
 
-/**
- * Build clauderon web packages and extract frontend dist.
- */
+/** Build clauderon web packages and extract frontend dist. */
 export async function buildClauderonWeb(
   container: Container,
   rustContainer: Container,
@@ -190,9 +182,7 @@ export async function buildClauderonWeb(
   return { container: c, frontendDist, outputs };
 }
 
-/**
- * Retry a check if it fails with a transient Dagger graphql error.
- */
+/** Retry a check if it fails with a transient Dagger graphql error. */
 async function withGraphqlRetry<T>(
   name: string,
   fn: () => Promise<T>,
@@ -217,9 +207,7 @@ async function withGraphqlRetry<T>(
   throw new Error("unreachable");
 }
 
-/**
- * Run package-specific validation checks in parallel.
- */
+/** Run package-specific validation checks in parallel. */
 export async function runPackageValidation(
   source: Directory,
   hassBaseUrl?: Secret,
@@ -278,10 +266,7 @@ export async function runPackageValidation(
   return { outputs, errors };
 }
 
-/**
- * Collect tier 0 results, wrapping each in try-catch so one failure
- * doesn't prevent collecting others. Returns outputs and errors separately.
- */
+/** Collect tier 0 results. Returns outputs and errors separately. */
 export async function collectTier0Results(tier0: {
   compliance: Promise<string>;
   mobile: Promise<string>;
@@ -331,9 +316,59 @@ export async function collectTier0Results(tier0: {
   return { outputs, errors };
 }
 
-/**
- * Options for the release phase
- */
+/** Handle tier 2 (Clauderon + build) settled results. Throws on failure. */
+export function handleTier2Results(
+  clauderonResult: PromiseSettledResult<string>,
+  buildResult: PromiseSettledResult<Container>,
+  outputs: string[],
+): Container {
+  outputs.push("::group::Clauderon Rust Validation");
+  if (clauderonResult.status === "fulfilled") {
+    outputs.push(clauderonResult.value);
+    outputs.push("::endgroup::");
+  } else {
+    outputs.push("::endgroup::");
+    const reason: unknown = clauderonResult.reason;
+    throw reason instanceof Error ? reason : new Error(String(reason));
+  }
+  if (buildResult.status === "fulfilled") {
+    outputs.push("✓ Build");
+    return buildResult.value;
+  }
+  const reason: unknown = buildResult.reason;
+  throw reason instanceof Error ? reason : new Error(String(reason));
+}
+
+/** Handle tier 3 (knip + tier 0 collection) settled results. */
+export function handleTier3Results(
+  knipResult: PromiseSettledResult<Container>,
+  tier0Result: PromiseSettledResult<{ outputs: string[]; errors: string[] }>,
+  outputs: string[],
+): void {
+  if (knipResult.status === "fulfilled") {
+    outputs.push("✓ Knip");
+  } else {
+    const msg =
+      knipResult.reason instanceof Error
+        ? knipResult.reason.message
+        : String(knipResult.reason);
+    outputs.push(`::warning title=Knip::${msg.slice(0, 200)}`);
+    outputs.push(`⚠ Knip (non-blocking): ${msg}`);
+  }
+  if (tier0Result.status === "fulfilled") {
+    outputs.push(...tier0Result.value.outputs);
+    if (tier0Result.value.errors.length > 0) {
+      throw new Error(
+        `Tier 0 failures:\n${tier0Result.value.errors.join("\n")}`,
+      );
+    }
+  } else {
+    const reason: unknown = tier0Result.reason;
+    throw reason instanceof Error ? reason : new Error(String(reason));
+  }
+}
+
+/** Options for the release phase. */
 export type ReleasePhaseOptions = {
   source: Directory;
   container: Container;
@@ -384,9 +419,7 @@ export type ReleasePhaseOptions = {
   ) => Promise<string>;
 };
 
-/**
- * Run the release phase (main branch only).
- */
+/** Run the release phase (main branch only). */
 export async function runReleasePhase(
   options: ReleasePhaseOptions,
 ): Promise<{ outputs: string[]; errors: string[] }> {
