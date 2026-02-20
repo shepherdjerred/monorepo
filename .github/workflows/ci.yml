@@ -11,6 +11,10 @@ permissions:
   pull-requests: write
   packages: write
 
+concurrency:
+  group: dagger-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dagger-ci:
     runs-on: [monorepo-runner-set]
@@ -141,7 +145,7 @@ jobs:
             )
           fi
 
-          MAX_RETRIES=3
+          MAX_RETRIES=5
           RETRY=0
           until dagger -v call ci "${ARGS[@]}"; do
             RETRY=$((RETRY + 1))
@@ -149,8 +153,9 @@ jobs:
               echo "Dagger CI failed after $MAX_RETRIES attempts"
               exit 1
             fi
-            echo "Dagger CI failed (attempt $RETRY/$MAX_RETRIES), retrying in 10s..."
-            sleep 10
+            DELAY=$((10 + RETRY * 10))
+            echo "Dagger CI failed (attempt $RETRY/$MAX_RETRIES), retrying in ${DELAY}s..."
+            sleep "$DELAY"
           done
 
       - name: Update READMEs via Dagger

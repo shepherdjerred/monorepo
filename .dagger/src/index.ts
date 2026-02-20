@@ -51,7 +51,7 @@ import {
   buildMultiplexerBinaries,
   releaseMultiplexer,
 } from "./index-build-deploy-helpers.ts";
-import { withTiming } from "./lib-timing.ts";
+import { withTiming, withTimingAndRetry } from "./lib-timing.ts";
 import { runNamedParallel } from "./lib-parallel.ts";
 
 @object()
@@ -98,13 +98,13 @@ export class Monorepo {
       version ?? "dev",
       gitSha ?? "dev",
     );
-    const tier0Birmel = withTiming("Birmel validation", () =>
+    const tier0Birmel = withTimingAndRetry("Birmel validation", () =>
       this.birmelValidation(source, version ?? "dev", gitSha ?? "dev"),
     );
-    const tier0Packages = withTiming("Package validation", () =>
+    const tier0Packages = withTimingAndRetry("Package validation", () =>
       this.packageValidation(source, hassBaseUrl, hassToken),
     );
-    const tier0Quality = withTiming("Quality & security checks", () =>
+    const tier0Quality = withTimingAndRetry("Quality & security checks", () =>
       this.qualityChecks(source),
     );
 
@@ -122,30 +122,33 @@ export class Monorepo {
     // ========================================================================
     // TIER 1: Critical path — bun install + TypeShare in parallel
     // ========================================================================
-    const typeSharePromise = withTiming("TypeShare generation", async () => {
-      const rc = getRustContainer(
-        source,
-        undefined,
-        s3AccessKeyId,
-        s3SecretAccessKey,
-      )
-        .withExec([
-          "cargo",
-          "install",
-          "typeshare-cli",
-          "--locked",
-          "--root",
-          "/root/.cargo-tools",
-        ])
-        .withExec([
-          "typeshare",
-          ".",
-          "--lang=typescript",
-          "--output-file=web/shared/src/generated/index.ts",
-        ]);
-      await rc.sync();
-      return rc;
-    });
+    const typeSharePromise = withTimingAndRetry(
+      "TypeShare generation",
+      async () => {
+        const rc = getRustContainer(
+          source,
+          undefined,
+          s3AccessKeyId,
+          s3SecretAccessKey,
+        )
+          .withExec([
+            "cargo",
+            "install",
+            "typeshare-cli",
+            "--locked",
+            "--root",
+            "/root/.cargo-tools",
+          ])
+          .withExec([
+            "typeshare",
+            ".",
+            "--lang=typescript",
+            "--output-file=web/shared/src/generated/index.ts",
+          ]);
+        await rc.sync();
+        return rc;
+      },
+    );
 
     const bunSetupPromise = withTiming("Bun install + Prisma", async () => {
       const c = installWorkspaceDeps(source);
@@ -173,7 +176,7 @@ export class Monorepo {
     // Both need web build output
     // ========================================================================
     const [clauderonResult, buildResult] = await Promise.allSettled([
-      withTiming("Clauderon Rust CI", () =>
+      withTimingAndRetry("Clauderon Rust CI", () =>
         this.clauderonCi(
           source,
           webResult.frontendDist,
@@ -181,7 +184,7 @@ export class Monorepo {
           s3SecretAccessKey,
         ),
       ),
-      withTiming("Monorepo build", async () => {
+      withTimingAndRetry("Monorepo build", async () => {
         // Build webring first — sjer.red depends on webring's dist/
         // and run-package-script.ts builds alphabetically (s before w).
         // Must extract dist/ as a Dagger Directory and mount it separately because
