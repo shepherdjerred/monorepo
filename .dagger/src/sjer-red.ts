@@ -1,8 +1,10 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { syncToS3 } from "./lib-s3.ts";
-import versions from "./lib-versions.ts";
+import versions, { type Versions } from "./lib-versions.ts";
 import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
+
+const PLAYWRIGHT_VERSION: Versions["playwright"] = versions.playwright;
 
 function getBunContainer(): Container {
   return dag
@@ -24,7 +26,12 @@ function getPlaywrightContainer(): Container {
       "-c",
       `curl -fsSL https://bun.sh/install | bash -s "bun-v${versions.bun}"`,
     ])
-    .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true });
+    .withEnvVariable("PATH", "/root/.bun/bin:$PATH", { expand: true })
+    .withMountedCache(
+      "/root/.cache/ms-playwright",
+      dag.cacheVolume(`playwright-browsers-sjerred-${PLAYWRIGHT_VERSION}`),
+    )
+    .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"]);
 }
 
 /**
