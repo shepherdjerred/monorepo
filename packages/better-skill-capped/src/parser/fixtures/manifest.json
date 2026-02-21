@@ -1,0 +1,264 @@
+{
+  "timeStamp": 1771681507372,
+  "patch": {
+    "patchVal": "26.04",
+    "releaseDate": 1740031200000,
+    "patchUrl": "https://na.leagueoflegends.com/en-us/news/game-updates/patch-11-22-notes/"
+  },
+  "config": {
+    "game": "lol",
+    "tcoaching": "true",
+    "": ""
+  },
+  "videos": [
+    {
+      "role": "all",
+      "title": "The New Most Underrated Champion For Solo Queue",
+      "desc": "",
+      "rDate": 1771135200000,
+      "durSec": 436,
+      "uuid": "4lt153z6bl",
+      "tId": 1,
+      "tSS": "",
+      "cSS": ""
+    },
+    {
+      "role": "all",
+      "title": "Why Teleport Is Overrated In Season 16",
+      "desc": "",
+      "rDate": 1770616800000,
+      "durSec": 706,
+      "uuid": "pns2nw4pqg",
+      "tId": 1,
+      "tSS": "",
+      "cSS": ""
+    },
+    {
+      "role": "all",
+      "title": "Why Mages Bot Lane Are The Most Broken Champs In Season 16",
+      "desc": "",
+      "rDate": 1770271200000,
+      "durSec": 233,
+      "uuid": "fc617w6xvd",
+      "tId": 1,
+      "tSS": "",
+      "cSS": ""
+    }
+  ],
+  "commentaries": [
+    {
+      "role": "mid",
+      "rDate": 1585544400000,
+      "durSec": 832,
+      "uuid": "89vr3hw8qk",
+      "tId": 37,
+      "tSS": "",
+      "staff": "Hector",
+      "matchLink": "https://www.leagueofgraphs.com/match/na/3348834418#participant9",
+      "yourChampion": "Kai'Sa",
+      "theirChampion": "Fizz",
+      "k": 6,
+      "d": 1,
+      "a": 4,
+      "gameTime": "27m26s",
+      "carry": "Light",
+      "type": "Smurf",
+      "rune1": "",
+      "rune2": "",
+      "rune3": "",
+      "item1": "",
+      "item2": "",
+      "item3": ""
+    },
+    {
+      "role": "top",
+      "rDate": 1585544400000,
+      "durSec": 1229,
+      "uuid": "wrlky8mjty",
+      "tId": 17,
+      "tSS": "",
+      "staff": "Hector",
+      "matchLink": "https://www.leagueofgraphs.com/match/na/3350989829#participant6",
+      "yourChampion": "Tryndamere",
+      "theirChampion": "Garen",
+      "k": 11,
+      "d": 4,
+      "a": 7,
+      "gameTime": "20m9s",
+      "carry": "Light",
+      "type": "Smurf",
+      "rune1": "",
+      "rune2": "",
+      "rune3": "",
+      "item1": "",
+      "item2": "",
+      "item3": ""
+    }
+  ],
+  "staff": [
+    {
+      "name": "Hector",
+      "summonerName": "HgHector",
+      "profileImage": "https://ik.imagekit.io/skillcapped/Staff-Ariana-Lovato_ePjot92ei.svg",
+      "profileImageWithRank": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/zkp43y89qb.png",
+      "playerPeakRank": 10
+    },
+    {
+      "name": "Pocket Rhino",
+      "summonerName": "Pocket Rhino",
+      "profileImage": "https://ik.imagekit.io/skillcapped/Staff-Pocket-Rhino_-JULg3YDj.svg",
+      "profileImageWithRank": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/0h58z3bj5r.png",
+      "playerPeakRank": 7
+    }
+  ],
+  "courses": [
+    {
+      "title": "Meta Updates {all}",
+      "uuid": "900n94s4k4",
+      "desc": "",
+      "rDate": 1767938400000,
+      "role": "all",
+      "courseImage": "https://d20k8dfo6rtj2t.cloudfront.net/course-headers/htyq0pmzsw.png",
+      "courseImage2": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/l8fzj07snv.png",
+      "courseImage3": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/9wrv9hzqd6.png",
+      "tags": [],
+      "recommended": true,
+      "override": true,
+      "overlay": "none"
+    },
+    {
+      "title": "Chapter 1: Wave Control {support}",
+      "uuid": "5760l2psnt",
+      "desc": "",
+      "rDate": 1718859600000,
+      "role": "support",
+      "courseImage": "https://d20k8dfo6rtj2t.cloudfront.net/course-headers/htyq0pmzsw.png",
+      "courseImage2": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/l8fzj07snv.png",
+      "courseImage3": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/9vf97l3v3v.png",
+      "tags": [
+        "Support",
+        "Support - Laning",
+        "Support - Wave Control"
+      ],
+      "recommended": true,
+      "override": true,
+      "groupingKey": "support-est-old",
+      "marketingString": "Beginner's Guide",
+      "seasonString": "Season 15",
+      "overlay": "none"
+    }
+  ],
+  "thisWeekData": [],
+  "carousel": [
+    {
+      "courseTitle": "Chapter 1: Three Pillars of Jungling {jungle}",
+      "image": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/zt2wx87ch3.png",
+      "page": 1,
+      "size": "3x2",
+      "videoTitle": "What Makes a \"Good\" Jungler?",
+      "url": null
+    },
+    {
+      "courseTitle": "Master MACRO in Minutes {all}",
+      "image": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/js79jyz020.png",
+      "page": 2,
+      "size": "3x2",
+      "videoTitle": "Intro: The Big Picture of League",
+      "url": null
+    }
+  ],
+  "tagInfo": [
+    {
+      "name": "Mid - How to Carry"
+    },
+    {
+      "name": "Mid - Laning"
+    },
+    {
+      "name": "Mid - Trading"
+    }
+  ],
+  "videosToCourses": {
+    "Meta Updates {all}": {
+      "chapters": [
+        {
+          "title": "Course Content",
+          "vids": [
+            {
+              "uuid": "4sghs37h9j"
+            },
+            {
+              "uuid": "4lt153z6bl"
+            },
+            {
+              "uuid": "pns2nw4pqg"
+            },
+            {
+              "uuid": "fc617w6xvd"
+            },
+            {
+              "uuid": "xh6rc35d1c"
+            },
+            {
+              "uuid": "glm62ndhpx"
+            },
+            {
+              "uuid": "svy3vqgscx"
+            },
+            {
+              "uuid": "b52lbwld98"
+            },
+            {
+              "uuid": "c7lgfxd5g5"
+            },
+            {
+              "uuid": "fy2ksjns75"
+            },
+            {
+              "uuid": "2r0c67cv2b"
+            },
+            {
+              "uuid": "q04hrtm0lg"
+            },
+            {
+              "uuid": "7xd743zqr2"
+            }
+          ]
+        }
+      ]
+    },
+    "Chapter 1: Wave Control {support}": {
+      "chapters": [
+        {
+          "title": "Course Content",
+          "vids": [
+            {
+              "uuid": "54q44khlyf",
+              "altTitle": "Why Wave Control is Important for Supports"
+            },
+            {
+              "uuid": "rfv2ryr5fh",
+              "altTitle": "Shoving for Level 2 Advantage"
+            },
+            {
+              "uuid": "x5fp5p7cbf",
+              "altTitle": "Rebounding and Slowpushing"
+            },
+            {
+              "uuid": "j3zf6tcpqn",
+              "altTitle": "Freezing"
+            },
+            {
+              "uuid": "6rvlwtjhcx",
+              "altTitle": "Using Rebounds/Slowpushes to Setup Kills"
+            },
+            {
+              "uuid": "cw8ntj2qz2",
+              "altTitle": "Using Freezes to Setup Kills"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,101 +1,171 @@
 import { z } from "zod";
 
-const ManifestPatchSchema = z.object({
-  patchVal: z.string(),
-  releaseDate: z.number(),
-  patchUrl: z.string(),
-});
+const RoleSchema = z.enum(["all", "mid", "adc", "jungle", "top", "support"]);
 
-const ManifestVideoSchema = z.object({
-  role: z.string(),
-  title: z.string(),
-  desc: z.string(),
-  rDate: z.number(),
-  durSec: z.number(),
-  uuid: z.string(),
-  tId: z.number(),
-  tSS: z.string(),
-  cSS: z.string(),
-});
+const LaneRoleSchema = RoleSchema.exclude(["all"]);
 
-const ManifestCommentarySchema = z.object({
-  role: z.string(),
-  title: z.string().optional(),
-  desc: z.string(),
-  rDate: z.number(),
-  durSec: z.number(),
-  uuid: z.string(),
-  tId: z.number(),
-  tSS: z.string(),
-  staff: z.string(),
-  matchLink: z.string(),
-  yourChampion: z.string(),
-  theirChampion: z.string(),
-  k: z.number(),
-  d: z.number(),
-  a: z.number(),
-  gameTime: z.string(),
-  carry: z.string(),
-  type: z.string(),
-});
+const ManifestPatchSchema = z
+  .object({
+    patchVal: z.string(),
+    releaseDate: z.number().int().positive(),
+    patchUrl: z.url(),
+  })
+  .strict();
 
-const ManifestStaffSchema = z.object({
-  name: z.string(),
-  summonerName: z.string(),
-  profileImage: z.string(),
-  profileImageWithRank: z.string(),
-});
+const ManifestVideoSchema = z
+  .object({
+    role: RoleSchema,
+    title: z.string(),
+    desc: z.string(),
+    rDate: z.number().int().positive(),
+    durSec: z.number().int().positive(),
+    uuid: z.string().min(1),
+    tId: z.number().int().nonnegative(),
+    tSS: z.union([z.literal(""), z.url()]),
+    cSS: z.string(),
+  })
+  .strict();
 
-const ManifestCourseSchema = z.object({
-  title: z.string(),
-  uuid: z.string(),
-  desc: z.string(),
-  rDate: z.number(),
-  role: z.string(),
-  courseImage: z.string(),
-  courseImage2: z.string(),
-});
+const ManifestCommentarySchema = z
+  .object({
+    role: LaneRoleSchema,
+    title: z.string().optional(),
+    desc: z.string().optional(),
+    rDate: z.number().int().positive(),
+    durSec: z.number().int().positive(),
+    uuid: z.string().min(1),
+    tId: z.number().int().nonnegative(),
+    tSS: z.string(),
+    staff: z.string().min(1),
+    matchLink: z.string(),
+    yourChampion: z.string().min(1),
+    theirChampion: z.string().min(1),
+    k: z.coerce.number().int().nonnegative(),
+    d: z.coerce.number().int().nonnegative(),
+    a: z.coerce.number().int().nonnegative(),
+    gameTime: z.string(),
+    carry: z.enum(["Light", "Medium", "Heavy"]),
+    type: z.enum(["Smurf", "High Elo", "Earpiece"]),
+    rune1: z.string(),
+    rune2: z.string(),
+    rune3: z.string(),
+    item1: z.union([z.literal(""), z.number().int().positive()]),
+    item2: z.union([z.literal(""), z.number().int().positive()]),
+    item3: z.union([z.literal(""), z.number().int().positive()]),
+  })
+  .strict();
 
-const ManifestThisWeekDataSchema = z.object({
-  year: z.number(),
-  weekNum: z.number(),
-  release: z.number(),
-  role: z.string(),
-  type: z.string(),
-  vidTitle: z.string(),
-  order: z.number(),
-  courseName: z.string(),
-});
+const ManifestStaffSchema = z
+  .object({
+    name: z.string().min(1),
+    summonerName: z.string().min(1),
+    profileImage: z.url(),
+    profileImageWithRank: z.url(),
+    playerPeakRank: z.union([z.number().int().positive(), z.string()]),
+  })
+  .strict();
 
-const ManifestCourseChapterEntrySchema = z.object({
-  chapters: z.tuple([
-    z.object({
-      title: z.string(),
-      vids: z.array(
-        z.object({
-          uuid: z.string(),
-          altTitle: z.string().optional(),
-        }),
-      ),
-    }),
-  ]),
-});
+const ManifestCourseSchema = z
+  .object({
+    title: z.string().min(1),
+    uuid: z.string().min(1),
+    desc: z.string(),
+    rDate: z.number().int().positive(),
+    role: RoleSchema,
+    courseImage: z.url(),
+    courseImage2: z.url(),
+    courseImage3: z.url(),
+    tags: z.array(z.string()),
+    recommended: z.boolean(),
+    override: z.boolean(),
+    overlay: z.string(),
+    groupingKey: z.string().optional(),
+    marketingString: z.string().optional(),
+    seasonString: z.string().optional(),
+  })
+  .strict();
+
+const ManifestThisWeekDataSchema = z
+  .object({
+    year: z.number().int().positive(),
+    weekNum: z.number().int().positive(),
+    release: z.number().int().positive(),
+    role: RoleSchema,
+    type: z.string(),
+    vidTitle: z.string(),
+    order: z.number().int().nonnegative(),
+    courseName: z.string(),
+  })
+  .strict();
+
+const ManifestConfigSchema = z
+  .object({
+    game: z.literal("lol"),
+    tcoaching: z.string(),
+    "": z.string(),
+  })
+  .strict();
+
+const ManifestCarouselEntrySchema = z
+  .object({
+    courseTitle: z.string().nullable(),
+    image: z.url(),
+    page: z.number().int().positive(),
+    size: z.string(),
+    videoTitle: z.string().nullable(),
+    url: z.url().nullable(),
+  })
+  .strict();
+
+const ManifestTagInfoSchema = z
+  .object({
+    name: z.string().min(1),
+  })
+  .strict();
+
+const ManifestCourseChapterEntrySchema = z
+  .object({
+    chapters: z.tuple([
+      z
+        .object({
+          title: z.string().min(1),
+          vids: z.array(
+            z
+              .object({
+                uuid: z.string().min(1),
+                altTitle: z.string().optional(),
+              })
+              .strict(),
+          ),
+        })
+        .strict(),
+    ]),
+  })
+  .strict();
 
 const ManifestCourseChaptersSchema = z.record(
   z.string(),
   ManifestCourseChapterEntrySchema.optional(),
 );
 
-export const ManifestSchema = z.object({
-  timestamp: z.number(),
-  patch: ManifestPatchSchema,
-  videos: z.array(ManifestVideoSchema),
-  commentaries: z.array(ManifestCommentarySchema),
-  staff: z.array(ManifestStaffSchema),
-  courses: z.array(ManifestCourseSchema),
-  thisWeekData: ManifestThisWeekDataSchema,
-  videosToCourses: ManifestCourseChaptersSchema,
-});
+export const ManifestSchema = z
+  .object({
+    timeStamp: z.number().int().positive(),
+    patch: ManifestPatchSchema,
+    config: ManifestConfigSchema,
+    videos: z.array(ManifestVideoSchema),
+    commentaries: z.array(ManifestCommentarySchema),
+    staff: z.array(ManifestStaffSchema),
+    courses: z.array(ManifestCourseSchema),
+    thisWeekData: z.union([
+      z.array(ManifestThisWeekDataSchema),
+      ManifestThisWeekDataSchema,
+    ]),
+    carousel: z.array(ManifestCarouselEntrySchema),
+    tagInfo: z.array(ManifestTagInfoSchema),
+    videosToCourses: ManifestCourseChaptersSchema,
+  })
+  .strict();
 
 export type Manifest = z.infer<typeof ManifestSchema>;
 export type ManifestPatch = z.infer<typeof ManifestPatchSchema>;
