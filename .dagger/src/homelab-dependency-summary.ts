@@ -32,7 +32,8 @@ function buildDependencySummaryContainer(source: Directory): Container {
       .withFile("package.json", source.file("package.json"))
       .withFile("bun.lock", source.file("bun.lock"))
       // Copy patches directory for bun patch support
-      .withDirectory("patches", source.directory("patches"))
+      // Path must match patchedDependencies in package.json (monorepo-root-relative)
+      .withDirectory("packages/homelab/patches", source.directory("patches"))
       // Copy full workspace directories for bun workspace resolution
       .withDirectory("src/deps-email", depsEmailSource, {
         exclude: ["node_modules"],
