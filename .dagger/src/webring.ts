@@ -20,7 +20,7 @@ function getWebringContainer(source: Directory): Container {
       .withExec([
         "bun",
         "-e",
-        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/webring', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/webring', 'packages/eslint-config']; delete pkg.patchedDependencies; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
       ])
       // Package source
       .withDirectory(
