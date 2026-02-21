@@ -137,7 +137,7 @@ const versions = {
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
   // renovate: datasource=github-releases versioning=semver
-  "kubernetes/kubernetes": "v1.35.0",
+  "kubernetes/kubernetes": "v1.35.1",
   // renovate: datasource=custom.papermc versioning=semver
   paper: "1.21.11",
   // this is empty because we have to perform some string manipulation below
