@@ -65,11 +65,17 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const skipPackages = new Set(
+    (process.env["SKIP_PACKAGES"] ?? "").split(",").filter(Boolean),
+  );
+
   const packageJsonPaths = await getPackageJsonPaths();
   const metas = await Promise.all(
     packageJsonPaths.map((path) => loadPackageMeta(path)),
   );
-  const runnable = metas.filter((meta) => meta.scripts[scriptName]);
+  const runnable = metas
+    .filter((meta) => meta.scripts[scriptName])
+    .filter((meta) => !skipPackages.has(meta.name));
   const skipped = metas.length - runnable.length;
   const failures: Array<{ dir: string; error: unknown }> = [];
 

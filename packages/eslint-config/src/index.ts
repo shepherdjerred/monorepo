@@ -49,6 +49,7 @@ import { reactConfig } from "./configs/react.js";
 import { accessibilityConfig } from "./configs/accessibility.js";
 import { namingConfig } from "./configs/naming.js";
 import { customRulesPlugin } from "./rules/index.js";
+import prettierConfig from "eslint-config-prettier";
 
 export type RecommendedOptions = BaseConfigOptions &
   ImportsConfigOptions & {
@@ -146,35 +147,35 @@ export function recommended(
     },
   };
 
-  if (customRules.reactRules && react) {
+  if (customRules.reactRules === true && react) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-use-effect": "warn",
     };
   }
 
-  if (customRules.noDtoNaming) {
+  if (customRules.noDtoNaming === true) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-dto-naming": "error",
     };
   }
 
-  if (customRules.structuredLogging) {
+  if (customRules.structuredLogging === true) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/prefer-structured-logging": "error",
     };
   }
 
-  if (customRules.noShadcnThemeTokens) {
+  if (customRules.noShadcnThemeTokens === true) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-shadcn-theme-tokens": "error",
     };
   }
 
-  if (customRules.analysisRules) {
+  if (customRules.analysisRules === true) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/knip-unused": "warn",
@@ -243,6 +244,9 @@ export function recommended(
       "import/no-relative-packages": "off",
     },
   });
+
+  // Must be LAST: disables ESLint rules that conflict with prettier formatting
+  configs.push(prettierConfig);
 
   return configs;
 }
