@@ -39,7 +39,7 @@ export async function withTiming<T>(
   }
 }
 
-const GRAPHQL_ERROR_PATTERN = "unknown error while requesting data via graphql";
+const GRAPHQL_ERROR_PATTERN = "error while requesting data via graphql";
 
 /**
  * Execute an async function with timing and automatic retry on transient
