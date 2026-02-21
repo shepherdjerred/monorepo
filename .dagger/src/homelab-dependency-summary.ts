@@ -60,6 +60,10 @@ function buildDependencySummaryContainer(source: Directory): Container {
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Set working directory to the deps-email workspace
       .withWorkdir("/app/src/deps-email")
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
       // Default command to run the dependency summary script
       .withDefaultArgs(["bun", "run", "src/main.ts"])
   );

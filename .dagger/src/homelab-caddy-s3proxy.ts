@@ -27,7 +27,11 @@ function buildCaddyS3ProxyContainer() {
   return dag
     .container()
     .from(`caddy:${caddyVersionOnly}-alpine`)
-    .withFile("/usr/bin/caddy", caddyBinary);
+    .withFile("/usr/bin/caddy", caddyBinary)
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    );
 }
 
 /**

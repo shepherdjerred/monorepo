@@ -10,6 +10,10 @@ function buildDnsAuditContainer() {
     .container()
     .from("python:3.12-slim")
     .withExec(["pip", "install", "--no-cache-dir", "checkdmarc"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
     .withDefaultArgs(["python3"]);
 }
 
