@@ -230,115 +230,114 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
-
 ## 27 learning projects
 
-### [a2ui-poc](https://github.com/shepherdjerred/monorepo/tree/main/practice/a2ui-poc) (2025-12-25)
+### [leetcode](https://github.com/shepherdjerred/monorepo/tree/main/practice/leetcode) (2026-02-21)
 
-This project, named @shepherdjerred/a2ui-poc, is a proof-of-concept backend server built with TypeScript and uses the Hono framework to expose several API endpoints. It integrates with Anthropic's AI models and employs validation with Zod. The backend provides endpoints for health checks, topic exploration (streaming), and user action handling, and is intended to work alongside a separate frontend launched via Bun.
+This Maven-based Java 21 LeetCode practice module collects algorithmic solutions such as balancing shared expenses, generating count-and-say sequences, and composing target-matching arithmetic expressions in `src/main/java/sjer/red`. It leverages Java standard library constructs like `HashMap`, `PriorityQueue`, and recursive depth-first search, with `ExpressionAddOperators.solve` maintaining operand state to enumerate every valid expression that meets a target value.
 
-### [claude-web](https://github.com/shepherdjerred/monorepo/tree/main/practice/claude-web) (2025-12-25)
+### [sicp](https://github.com/shepherdjerred/monorepo/tree/main/practice/sicp) (2026-02-21)
 
-This project is a TypeScript-based web server using the Hono framework, structured to run with Node.js. It utilizes Prisma for database ORM, Dockerode for Docker integration, Zod for schema validation, Jose for handling JWTs or cryptography, and ws for WebSocket support. The application is modularized, with configuration, server, and utility logic separated, and is designed to be containerized and deployed using Docker.
+This monorepo centralizes the author’s active projects, learning experiments, and archived work under a shared Bun toolchain that exposes repository-wide build, test, and typecheck commands. It runs on Bun-managed TypeScript workspaces defined in `package.json:1`, integrating tooling such as Tauri APIs, Lefthook git hooks, and Dagger’s TypeScript SDK for automation. The repository relies on `scripts/run-package-script.ts:1` to traverse every package directory and execute the requested script while honoring the `SKIP_PACKAGES` exclusion list, giving the workspace a consistent orchestration layer.
 
-### [Exercism](https://github.com/shepherdjerred/monorepo/tree/main/practice/Exercism) (2025-03-23)
+### [Exercism](https://github.com/shepherdjerred/monorepo/tree/main/practice/Exercism) (2026-02-21)
 
-Based on the provided file list, the project uses Gleam, a statically typed functional programming language for the Erlang virtual machine (BEAM). The project is likely structured as a Gleam application, leveraging BEAM's concurrency and reliability features, and may interoperate with Erlang or Elixir ecosystems. The use of `.gleam` source files indicates a strong emphasis on type safety and functional programming paradigms.
+*No description available.*
 
-### [diy-react](https://github.com/shepherdjerred/monorepo/tree/main/practice/diy-react) (2024-12-24)
+### [langchain](https://github.com/shepherdjerred/monorepo/tree/main/practice/langchain) (2026-02-21)
 
-I do not have enough information to summarize the project, as the only file provided is "README.md" but its content is not included. Please provide the content of the README.md or additional source files to enable an accurate summary.
+*No description available.*
 
-### [vscode-extension](https://github.com/shepherdjerred/monorepo/tree/main/practice/vscode-extension) (2024-12-24)
+### [posit-academy](https://github.com/shepherdjerred/monorepo/tree/main/practice/posit-academy) (2026-02-21)
 
-This project is a Node.js-based JavaScript/TypeScript application, configured with ESLint for code quality and built using esbuild, as evident from the presence of esbuild.js and associated configuration files. It likely includes VS Code extension quickstart guidance and is set up with a TypeScript configuration (tsconfig.json), but currently has no declared runtime dependencies. The structure is suited for development, linting, and packaging of a library or application.
+This project analyzes the 2020 R Community Survey, recreating milestone exercises that summarize and visualize respondent enjoyability scores, job categories, and related metrics. The codebase uses R Markdown with knitr plus tidyverse packages such as readr, dplyr, tidyr, and ggplot2 to load, transform, and plot the survey data. Extension reporting consolidates the weekly milestones into `extension_4.Rmd`, merging country-level metrics, paginated tables, and multiple visualization variants under a single html_document theme.
 
-### [advent-of-code](https://github.com/shepherdjerred/monorepo/tree/main/practice/advent-of-code) (2024-08-30)
+### [advent-of-code](https://github.com/shepherdjerred/monorepo/tree/main/practice/advent-of-code) (2026-02-21)
 
-This project appears to be a collection of solutions for the Advent of Code programming challenges organized by year, covering 2020 through 2024. Based on the directory structure and naming, each folder likely contains code solving the daily puzzles for its respective year, though the specific programming languages used are not detailed in the filenames provided. The project includes a README.md for documentation and a license file for terms of use.
+This personal monorepo consolidates active projects such as the `clauderon` session manager for AI coding agents, spanning tooling, docs, and archived work (`README.md:1`, `packages/clauderon/Cargo.toml:1`). It uses a Bun-managed TypeScript workspace with shared scripts and Tauri integrations alongside Rust crates that pull in Tokio, Axum, SQLx, Ratatui, WebAuthn, and gRPC support to deliver async services, terminal UIs, and desktop capabilities (`package.json:1`, `packages/clauderon/Cargo.toml:13`). A notable architecture detail is the repository-wide `scripts/run-package-script.ts` runner that orchestrates build, test, lint, and typecheck commands across every package directory to keep the multi-package structure consistent (`scripts/run-package-script.ts:1`).
 
-### [bevy-experiment](https://github.com/shepherdjerred/monorepo/tree/main/practice/bevy-experiment) (2024-08-30)
+### [rust-web-server](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-web-server) (2026-02-21)
 
-This project is a simple 2D game or visualization prototype built in Rust using the Bevy game engine (version 0.4), with integration of the bevy_tiled_prototype plugin for loading Tiled map assets. It demonstrates a basic scene setup with camera and character movement controlled by keyboard input, sprite rendering, and on-screen performance diagnostics. The code leverages Bevy’s ECS (Entity Component System), asset loading, and plugin systems for modular game development.
+This project implements a multithreaded Rust HTTP server that listens on 127.0.0.1:8080 and serves basic requests with hard-coded configuration. It relies on Rust 2018 with only the standard library (for example `std::net::TcpListener` and a custom `ThreadPool`) to parse requests and craft responses. Notably, it uses a manually built thread pool to dispatch incoming TCP connections across worker threads for concurrency.
 
-### [category-theory-for-programmers](https://github.com/shepherdjerred/monorepo/tree/main/practice/category-theory-for-programmers) (2024-08-30)
+### [vscode-extension](https://github.com/shepherdjerred/monorepo/tree/main/practice/vscode-extension) (2026-02-21)
 
-This project appears to be a structured educational resource, with chapters organized as individual files that likely cover sequential topics or lessons. The presence of a README.md and LICENSE file suggests it is intended for open and collaborative use, possibly as an open-source textbook or course material. The technologies used are primarily plain text (or possibly Markdown) for content organization, focusing on accessibility and version control rather than on specific programming frameworks or languages.
+This project is a VS Code extension named test that activates to expose a `test.helloWorld` command which greets the user with an information message (`src/extension.ts`). It is implemented in TypeScript on top of the VS Code extensibility API with build tooling managed through the esbuild-based pipeline configured in `esbuild.js` and `tsconfig.json`. The extension architecture registers the command during activation and disposes it via `context.subscriptions`, ensuring lifecycle cleanup within the VS Code host.
 
-### [dns](https://github.com/shepherdjerred/monorepo/tree/main/practice/dns) (2024-08-30)
+### [fastbook](https://github.com/shepherdjerred/monorepo/tree/main/practice/fastbook) (2026-02-21)
 
-This project is a Rust-based implementation of DNS message structures using the packed_struct crate for bit-level struct packing. It defines strongly-typed representations of DNS message components such as the header and question sections, with explicit control over bitfields and endianness to match DNS protocol specifications. The project is set up for further development of DNS packet parsing and serialization.
+This project is a fork of fastai/fastbook that captures the maintainer’s annotated progression through each fast.ai deep learning lesson in chapter-aligned Jupyter notebooks. It runs the notebooks with Python using fastai, PyTorch, and related tooling defined in `environment.yml` and `requirements.txt`, and can spin up in Google Colab through the badge in `README.md`. The repository organizes reusable helpers in `utils.py` and offers localized guides (`README_es.md`, `README_id.md`, `README_zh.md`) alongside chapter notebooks like `09_tabular.ipynb` and `16_accel_sgd.ipynb`.
 
-### [fastbook](https://github.com/shepherdjerred/monorepo/tree/main/practice/fastbook) (2024-08-30)
+### [ostep-homework](https://github.com/shepherdjerred/monorepo/tree/main/practice/ostep-homework) (2026-02-21)
 
-This project is a collection of Jupyter notebooks and related resources for learning practical deep learning using the fastai library and PyTorch. It covers a range of topics including computer vision (MNIST, pet breeds classification, multicategory tasks), natural language processing, tabular data, collaborative filtering, and neural network architectures (such as ResNet and convolutions). The project includes environment setup files (requirements.txt, environment.yml) and is designed for hands-on learning with fastai, PyTorch, and Jupyter.
+This repository hosts the OSTEP homework suite that reinforces operating systems concepts through chapter-aligned exercises and simulators. The exercises rely on Python scripts such as `cpu-intro/process-run.py` alongside x86 assembly snippets in `threads-locks/*.s` to model CPU scheduling, virtualization, and synchronization scenarios. Each simulator supports repeatable experimentation by letting learners generate unlimited problem instances via random seeds and solve them automatically with the `-c` flag.
 
-### [game](https://github.com/shepherdjerred/monorepo/tree/main/practice/game) (2024-08-30)
+### [dns](https://github.com/shepherdjerred/monorepo/tree/main/practice/dns) (2026-02-21)
 
-This project is a 2D game prototype built with Rust using the Bevy game engine (v0.8.1) and the bevy_rapier2d physics engine for robust 2D physics simulation. The codebase features core gameplay systems such as player movement and input, missile firing, enemy setup, screen boundary constraints, and weapon reloading, all structured using Bevy’s ECS (Entity-Component-System) framework. Rendering and physics debugging are facilitated by Bevy’s default plugins and the Rapier debug render plugin, targeting a fixed timestep for smooth gameplay.
+This Rust project models DNS protocol data structures and currently emits a greeting when run. It uses the Rust 2021 toolchain with the `packed_struct` crate to define bit-precise DNS headers, questions, and related fields. By deriving `PackedStruct` for nested types such as `Message` and `Header`, it enables big-endian serialization of DNS components without manual byte handling.
 
-### [go-wiki](https://github.com/shepherdjerred/monorepo/tree/main/practice/go-wiki) (2024-08-30)
+### [learn-you-a-haskell-exercises](https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises) (2026-02-21)
 
-This project is a web application utilizing modern web technologies including HTML for structure and a `src` directory likely containing JavaScript or TypeScript code for dynamic functionality. The presence of `pages` suggests a framework such as Next.js or a routing system for multi-page support. It is open source, as indicated by the LICENSE file, and includes documentation in the README.md, explaining installation and usage instructions.
+Learn You a Haskell Exercises is a Haskell Stack project that implements the book’s chapter exercises, providing concrete practice functions such as list utilities defined in `practice/learn-you-a-haskell-exercises/src/StartingOut.hs:1`. It builds with Stack against the Stackage LTS 18.0 snapshot and depends on `base` and `random`, with tests discovered by `hspec-discover` as configured in `practice/learn-you-a-haskell-exercises/package.yaml:21`-`38` and `practice/learn-you-a-haskell-exercises/test/Spec.hs:1`. The source tree mirrors the book’s structure—modules like `FunctorsApplicativeFunctorsAndMonoids.hs` and `AFistfulOfMonads.hs` encapsulate chapter-specific solutions for targeted study (`practice/learn-you-a-haskell-exercises/src/FunctorsApplicativeFunctorsAndMonoids.hs:1`, `practice/learn-you-a-haskell-exercises/src/AFistfulOfMonads.hs:1`).
 
-### [hson](https://github.com/shepherdjerred/monorepo/tree/main/practice/hson) (2024-08-30)
+### [jlox](https://github.com/shepherdjerred/monorepo/tree/main/practice/jlox) (2026-02-21)
 
-This project is a Haskell-based application or library, managed using Stack for build and dependency management, and described by both a .cabal and a package.yaml file for package specification. The source code resides in the src directory, with entry points defined in app and accompanying tests under the test directory. The presence of Setup.hs indicates standard Haskell package setup, and the project is distributed under the terms specified in the LICENSE file.
+This project implements the Lox programming language interpreter from Crafting Interpreters, providing both REPL and script execution entry points. It is built in Java with a Maven `pom.xml`, leveraging the `com.shepherdjerred.jlox` package and Java IO/NIO utilities to scan, parse, and evaluate source code. Expression classes in `src/main/java/com/shepherdjerred/jlox/Expr.java` use a visitor pattern consumed by `Interpreter` to centralize evaluation across the AST.
 
-### [jlox](https://github.com/shepherdjerred/monorepo/tree/main/practice/jlox) (2024-08-30)
+### [category-theory-for-programmers](https://github.com/shepherdjerred/monorepo/tree/main/practice/category-theory-for-programmers) (2026-02-21)
 
-This project is a Java-based application managed with Maven, as indicated by the presence of a `pom.xml` file and Maven dependencies. It uses standard Java and likely integrates additional libraries or frameworks as specified in its Maven configuration. The structure adheres to typical Maven project conventions, and the `README.md` file provides instructions and details on building or running the application.
+This monorepo consolidates active projects, experiments, and archived work under a single workspace with shared tooling. It runs on a Bun-managed TypeScript stack with repo-wide `package.json:1`, Lefthook hooks (`lefthook.yml:1`), a Dagger pipeline (`dagger.json:1`), and Tauri API dependencies that automate builds and desktop integrations. A notable capability is the automation script at `scripts/run-package-script.ts:1`, which enumerates packages and executes targeted scripts across the workspace while honoring skip lists for selective execution.
 
-### [langchain](https://github.com/shepherdjerred/monorepo/tree/main/practice/langchain) (2024-08-30)
+### [maze-game](https://github.com/shepherdjerred/monorepo/tree/main/practice/maze-game) (2026-02-21)
 
-There is only a folder named "tutorial" listed, with no individual files provided, so I cannot access any project details or content. Please provide the contents or filenames of the source files within the "tutorial" folder for an accurate summary.
+Maze is a console-based arcade game where you control an @ character with WASD to collect dots while evading ghosts. The codebase is a Java 8 Maven project that uses JLine for terminal rendering and Apache Commons Lang utilities. Its gameplay engine randomly instantiates MapObject subclasses for barriers, ghosts, and the player so each map and ghost configuration differs between runs.
 
-### [learn-you-a-haskell-exercises](https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises) (2024-08-30)
+### [diy-react](https://github.com/shepherdjerred/monorepo/tree/main/practice/diy-react) (2026-02-21)
 
-This project is a Haskell-based set of programming exercises configured with Stack, as indicated by the presence of stack.yaml and related files. It uses the Cabal build system (exercises.cabal and package.yaml) for package management and includes both source code (src) and tests (test) organized in standard Haskell project structure. The project is likely intended for learning or practicing Haskell, as suggested by the README and file organization.
+This personal monorepo aggregates active packages, learning projects, and archived work into one workspace dedicated to ongoing experiments and tooling (`README.md:1`). It standardizes development with a Bun-managed TypeScript toolchain, using commands like `bun install`, `bun run build`, `bun run test`, and `bun run typecheck` to manage dependencies, builds, and quality gates (`README.md:56`). The `scripts/run-package-script.ts` automation enumerates every package beneath `packages/*` to execute requested scripts while honoring skip lists, giving the repo a consistent, centralized way to run tasks across the workspace (`README.md:34`).
 
-### [leetcode](https://github.com/shepherdjerred/monorepo/tree/main/practice/leetcode) (2024-08-30)
+### [rust-grep](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-grep) (2026-02-21)
 
-This project is a Java-based application managed with Maven, as indicated by the presence of the `pom.xml` file. The source code resides in the `src` directory, suggesting standard Java project structure. The `pom.xml` manages project dependencies, build configuration, and potentially enables integration with frameworks or libraries commonly used in the Java ecosystem.
+This project implements a grep-style command-line utility that scans files for lines containing a specified query. It is built in Rust (2018 edition) with only standard library components such as `std::env` and `std::fs`. Command-line parsing constructs a `Config` struct—including CASE_INSENSITIVE environment handling—that routes search operations through dedicated case-sensitive and case-insensitive functions.
 
-### [maze-game](https://github.com/shepherdjerred/monorepo/tree/main/practice/maze-game) (2024-08-30)
+### [rust-guessing-game](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-guessing-game) (2026-02-21)
 
-This project is a Java application managed with Maven, as defined in the pom.xml file. It uses the Spring Boot framework to streamline development and configuration, likely providing RESTful web services or similar backend functionality. The project structure is modular, following standard Maven conventions, and includes open-source licensing as indicated in the LICENSE file.
+This is a Rust command-line guessing game where the player guesses numbers between 0 and 20. It uses the Rust 2018 edition with the `rand` 0.8.3 crate and `std::io` to handle random target generation and user input. A notable detail is its use of `thread_rng().gen_range(0..21)` to cover the full range inclusively before comparing the player's guess to the target.
 
-### [mini-jam-98](https://github.com/shepherdjerred/monorepo/tree/main/practice/mini-jam-98) (2024-08-30)
+### [game](https://github.com/shepherdjerred/monorepo/tree/main/practice/game) (2026-02-21)
 
-This project is a simple 2D game prototype built in Rust using the Bevy game engine (v0.6.0), with support for dynamic linking and random number generation via the rand crate. It implements a component-based ECS architecture with systems for player movement, rendering, health management, and a custom user interface, using Bevy’s scheduling, diagnostics plugins, and texture atlas support. The game initializes a 2D orthographic camera, loads a sprite sheet for the player character, and runs simulation and rendering logic at a fixed timestep.
+This Rust project builds a 2D space shooter where player and enemy ships move and fire missiles inside defined world bounds. It runs on Bevy 0.8.1 with Rapier2D 0.17.0 for ECS-based rendering and physics, including sprite bundle assets and collider components. The architecture schedules gameplay logic on a fixed 1/60-second timestep and tags entities with bounds-tracking components to clamp movement and despawn objects that leave the arena.
 
-### [ostep-homework](https://github.com/shepherdjerred/monorepo/tree/main/practice/ostep-homework) (2024-08-30)
+### [hson](https://github.com/shepherdjerred/monorepo/tree/main/practice/hson) (2026-02-21)
 
-This project is an educational operating system framework focused on teaching core OS concepts, using C as the primary programming language. It covers multithreaded programming (threads, locks, semaphores, lottery scheduling), CPU scheduling, and in-depth file system implementations (including RAID, FFS, LFS, disk management, and file integrity). The project also includes virtual memory components such as paging, small table management, and advanced physical memory policies, along with support for a distributed file system (AFS).
+*No description available.*
 
-### [posit-academy](https://github.com/shepherdjerred/monorepo/tree/main/practice/posit-academy) (2024-08-30)
+### [bevy-experiment](https://github.com/shepherdjerred/monorepo/tree/main/practice/bevy-experiment) (2026-02-21)
 
-This project is an R-based data analysis workflow, structured as a series of milestones (milestone_1.R through milestone_4.R) and an R Markdown extension (extension_4.Rmd). It leverages R for data manipulation, statistical analysis, and reporting, using R scripts for sequential processing steps and R Markdown for documentation and result presentation. The project is organized to guide users through systematic data analysis, from initial processing to advanced extension and reproducible reporting.
+bevy-experiment renders a 2D tile-based scene and controllable sprite using the Bevy game engine. It uses Rust with Bevy 0.4, the bevy_tiled_prototype tiled-map plugin, and Bevy diagnostic plugins for frame-time reporting. Startup systems load the TMX world and sprite assets while runtime systems handle keyboard-driven character motion and zoomable camera control.
 
-### [programming-with-categories](https://github.com/shepherdjerred/monorepo/tree/main/practice/programming-with-categories) (2024-08-30)
+### [programming-with-categories](https://github.com/shepherdjerred/monorepo/tree/main/practice/programming-with-categories) (2026-02-21)
 
-This project appears to be an implementation related to concepts from category theory for programmers, as suggested by the included "cats4progs-DRAFT.pdf" document. The main source file, "main.hs," is written in Haskell, indicating the use of functional programming paradigms and Haskell-specific libraries or features. The project likely demonstrates or explores categorical abstractions, such as functors or monads, using Haskell as the primary language and illustrating theory from the accompanying PDF draft.
+This monorepo gathers personal projects for experimentation and archiving across languages such as TypeScript and Haskell, keeping active and historical work in one workspace. It uses Bun-managed workspaces defined in `package.json`, pulls in desktop-focused dependencies like `@tauri-apps/api`, and includes examples such as `practice/programming-with-categories/main.hs`. A notable capability is the custom Bun runner in `scripts/run-package-script.ts` that crawls each package’s manifest and executes shared build or test scripts across the entire workspace automatically.
 
-### [rust-grep](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-grep) (2024-08-30)
+### [claude-web](https://github.com/shepherdjerred/monorepo/tree/main/practice/claude-web) (2026-02-21)
 
-This project is a command-line utility written in Rust that provides grep-like text searching functionality. It uses Rust's standard library for argument parsing and error handling, and is organized with a modular structure, suggesting functions for configuration parsing and search logic are separated (such as parse_config and run). The tool is built for the 2018 edition of Rust and is intended to be invoked from the terminal, making it a lightweight and portable text search solution.
+This project runs a Claude web service that authenticates via GitHub and brokers agent sessions by streaming Docker container output to browser clients. The backend is written in TypeScript with Bun WebSockets, the Hono framework, Prisma, dockerode, jose, ws, and zod. An AgentProxy class relays NDJSON logs from container streams to WebSocket clients while token helpers XOR-encrypt stored GitHub access tokens with the JWT secret.
 
-### [rust-guessing-game](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-guessing-game) (2024-08-30)
+### [mini-jam-98](https://github.com/shepherdjerred/monorepo/tree/main/practice/mini-jam-98) (2026-02-21)
 
-This project is a simple command-line number guessing game written in Rust. It uses the rand crate to generate a random target number between 0 and 20, and prompts the user via standard input to guess the number. The project is managed by Cargo with Rust 2018 edition settings.
+mini-jam-98 is a Rust game project for the Mini Jam 98 Empty challenge, structured as a Bevy-powered application. It uses the Bevy 0.6.0 engine with dynamic linking and the rand 0.8.4 crate to drive its entity-component systems. The codebase defines granular components for enemies, health, inventory, and multi-directional movement states, enabling a modular ECS architecture for gameplay logic.
 
-### [rust-os](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-os) (2024-08-30)
+### [go-wiki](https://github.com/shepherdjerred/monorepo/tree/main/practice/go-wiki) (2026-02-21)
 
-This project is a minimal operating system kernel written in Rust, targeting the x86_64 architecture and designed to run in a bare metal (no standard library, no OS) environment. It uses the `bootloader` crate for booting, `x86_64` for architecture support, `spin` for synchronization primitives, and `uart_16550` for serial communication, with unit testing supported in QEMU. The code demonstrates low-level system programming in Rust, including custom panic handling, test infrastructure, and output to serial/console with a focus on safety and concurrency primitives usable without the Rust standard library.
+This project implements a file-backed wiki web server that lets users view, edit, and save pages via HTTP routes. It is built in Go using the standard library packages `net/http`, `html/template`, and `regexp`, with templates under `html/` driving the UI. Pages persist as `.txt` files in `pages/`, and requests resolve page titles through regex-matched routes before rendering the appropriate template.
 
-### [rust-web-server](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-web-server) (2024-08-30)
+### [a2ui-poc](https://github.com/shepherdjerred/monorepo/tree/main/practice/a2ui-poc) (2026-02-21)
 
-This project is a basic web server written in Rust, designed for concurrent handling of HTTP requests. It uses Rust's standard library for TCP networking, implements a custom thread pool for managing incoming connections, and modularizes configuration, request handling, and multithreading within separate modules. The server listens on localhost at port 8080 by default and demonstrates core principles of scalable, multi-threaded network programming in Rust.
+The project delivers an AI-powered knowledge exploration agent that emits structured A2UI protocol messages to drive interactive surfaces for user queries. It is built in TypeScript with Bun tooling and depends on `@ai-sdk/anthropic`, `ai`, `hono`, and `zod` for AI integration, routing, and schema handling. The `KnowledgeAgent` streams Anthropic output, strips Markdown fences, and parses newline-delimited JSON to yield UI updates using the A2UI message builders.
 
-### [sicp](https://github.com/shepherdjerred/monorepo/tree/main/practice/sicp) (2024-08-30)
+### [rust-os](https://github.com/shepherdjerred/monorepo/tree/main/practice/rust-os) (2026-02-21)
 
-This project is a web application built with React (JavaScript) located in the `src` directory. It provides users with [the core described feature, if available in README—e.g., "an interactive dashboard for viewing and analyzing datasets"]. The project includes a `README.md` for setup instructions and usage details, and is licensed under the terms specified in the `LICENSE` file.
+This project is a bare-metal operating system written in Rust that targets x86_64 hardware. It relies on the `bootloader`, `x86_64`, `lazy_static`, `spin`, and `uart_16550` crates to configure the kernel runtime, interrupt tables, and serial console. The architecture includes a custom serial-backed test runner and a double-fault handler that uses a dedicated interrupt stack table for resilience.
 
 <!--[[[end]]]-->

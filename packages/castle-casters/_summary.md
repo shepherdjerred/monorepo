@@ -1,0 +1,1 @@
+Castle Casters is a cross-platform Quoridor adaptation with a medieval fantasy theme that runs its main loop through `GameEngine` and an application-wide `EventBus`. It is built in Java 21 using LWJGL (OpenGL 4.1, OpenAL, GLFW, stb), Netty 4, Jenetics, GSON, and Lombok, and it features an alpha-beta search AI implemented with the MiniMaxAlgorithm to choose optimal turns.
