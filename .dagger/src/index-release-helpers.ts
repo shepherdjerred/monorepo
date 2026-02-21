@@ -9,6 +9,17 @@ import { deployScoutForLol } from "./scout-for-lol.ts";
 import { ciHomelab } from "./homelab-index.ts";
 import { Stage as HomelabStage } from "./lib-types.ts";
 import { commitVersionsBack } from "./lib-homelab.ts";
+import { formatVersionWithDigest } from "./lib-ghcr.ts";
+
+function extractVersionFromResult(result: DeployResult, version: string): string {
+  return typeof result === "string"
+    ? version
+    : formatVersionWithDigest(version, result.versionedRef);
+}
+
+function getDisplayMessage(result: DeployResult): string {
+  return typeof result === "string" ? result : result.message;
+}
 import { runNamedParallel } from "./lib-parallel.ts";
 import type { ReleasePhaseOptions } from "./index-ci-helpers.ts";
 
@@ -97,17 +108,19 @@ export async function publishNpmPackages(
   return { outputs, errors };
 }
 
+type DeployResult = string | { message: string; versionedRef: string };
+
 type DeployTask = {
   name: string;
   versionKey?: string;
-  deploy: () => Promise<string>;
+  deploy: () => Promise<DeployResult>;
 };
 
 async function withDeployRetry(
   name: string,
-  fn: () => Promise<string>,
+  fn: () => Promise<DeployResult>,
   maxRetries = 2,
-): Promise<string> {
+): Promise<DeployResult> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
@@ -159,7 +172,7 @@ export async function runAppDeployments(
       name: "Birmel publish",
       versionKey: "shepherdjerred/birmel",
       deploy: async () => {
-        const refs = await publishBirmelImageWithContainer({
+        const result = await publishBirmelImageWithContainer({
           image: birmelImage,
           version,
           gitSha,
@@ -168,7 +181,7 @@ export async function runAppDeployments(
             password: registryPassword,
           },
         });
-        return `Published:\n${refs.join("\n")}`;
+        return { message: `Published:\n${result.refs.join("\n")}`, versionedRef: result.versionedRef };
       },
     });
   }
@@ -314,9 +327,9 @@ export async function runAppDeployments(
   for (const task of ghcrTasks) {
     try {
       const result = await withDeployRetry(task.name, task.deploy);
-      outputs.push(`✓ ${task.name}: ${result}`);
+      outputs.push(`✓ ${task.name}: ${getDisplayMessage(result)}`);
       if (task.versionKey !== undefined && version !== undefined) {
-        appVersions[task.versionKey] = version;
+        appVersions[task.versionKey] = extractVersionFromResult(result, version);
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -331,9 +344,10 @@ export async function runAppDeployments(
 export async function runHomelabRelease(
   options: ReleasePhaseOptions,
   appVersions: Record<string, string>,
-): Promise<{ outputs: string[]; errors: string[] }> {
+): Promise<{ outputs: string[]; errors: string[]; infraVersions: Record<string, string> }> {
   const outputs: string[] = [];
   const errors: string[] = [];
+  let infraVersions: Record<string, string> = {};
   const {
     source,
     argocdToken,
@@ -361,7 +375,7 @@ export async function runHomelabRelease(
     s3AccessKeyId === undefined ||
     s3SecretAccessKey === undefined
   ) {
-    return { outputs, errors };
+    return { outputs, errors, infraVersions };
   }
 
   outputs.push("\n--- Homelab Release ---");
@@ -382,19 +396,22 @@ export async function runHomelabRelease(
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
       appVersions,
     };
-    outputs.push(await ciHomelab(source, HomelabStage.Prod, homelabSecrets));
+    const result = await ciHomelab(source, HomelabStage.Prod, homelabSecrets);
+    outputs.push(result.summary);
+    infraVersions = result.infraVersions;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     outputs.push(`Fail homelab release: ${msg}`);
     errors.push(`homelab release: ${msg}`);
   }
 
-  return { outputs, errors };
+  return { outputs, errors, infraVersions };
 }
 
 export async function runVersionCommitBack(
   options: ReleasePhaseOptions,
   appVersions: Record<string, string>,
+  infraVersions?: Record<string, string>,
 ): Promise<string[]> {
   const outputs: string[] = [];
   const { commitBackToken, version } = options;
@@ -406,10 +423,10 @@ export async function runVersionCommitBack(
   outputs.push("\n--- Version Commit-Back ---");
   try {
     const allVersions: Record<string, string> = {
-      "shepherdjerred/homelab": version,
-      "shepherdjerred/dependency-summary": version,
-      "shepherdjerred/dns-audit": version,
-      "shepherdjerred/caddy-s3proxy": version,
+      "shepherdjerred/homelab": infraVersions?.["shepherdjerred/homelab"] ?? version,
+      "shepherdjerred/dependency-summary": infraVersions?.["shepherdjerred/dependency-summary"] ?? version,
+      "shepherdjerred/dns-audit": infraVersions?.["shepherdjerred/dns-audit"] ?? version,
+      "shepherdjerred/caddy-s3proxy": infraVersions?.["shepherdjerred/caddy-s3proxy"] ?? version,
       ...appVersions,
     };
     const result = await commitVersionsBack({

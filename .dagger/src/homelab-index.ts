@@ -29,6 +29,7 @@ export type StepStatus = "passed" | "failed" | "skipped";
 export type StepResult = {
   status: StepStatus;
   message: string;
+  publishRef?: string;
 };
 
 export type HelmBuildResult = StepResult & {
@@ -184,7 +185,7 @@ export async function ciHomelab(
   env: Stage,
   secrets: HomelabSecrets,
   versionOnly = false,
-): Promise<string> {
+): Promise<{ summary: string; infraVersions: Record<string, string> }> {
   const source = getHomelabSource(monoRepoSource);
 
   // Update image versions in versions.ts if prod
@@ -210,7 +211,10 @@ export async function ciHomelab(
   );
 
   // Check for failures and return summary
-  return checkForFailures(env, validation, publish);
+  return {
+    summary: checkForFailures(env, validation, publish),
+    infraVersions: publish.infraVersions,
+  };
 }
 
 /**

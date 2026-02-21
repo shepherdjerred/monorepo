@@ -45,5 +45,6 @@ export async function buildAndPushDnsAuditImage(
   return {
     status: "passed",
     message: `Dns-audit image published: ${result}`,
+    publishRef: result,
   };
 }

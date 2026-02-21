@@ -81,7 +81,7 @@ type DeployBetterSkillCappedOptions = {
 
 export async function deployBetterSkillCapped(
   options: DeployBetterSkillCappedOptions,
-): Promise<string> {
+): Promise<{ message: string; versionedRef: string }> {
   const {
     source,
     version,
@@ -124,7 +124,7 @@ export async function deployBetterSkillCapped(
     );
 
   const fetcherImage = "ghcr.io/shepherdjerred/better-skill-capped-fetcher";
-  await publishToGhcrMultiple({
+  const refs = await publishToGhcrMultiple({
     container: fetcherContainer,
     imageRefs: [`${fetcherImage}:${version}`, `${fetcherImage}:latest`],
     username: ghcrUsername,
@@ -132,5 +132,5 @@ export async function deployBetterSkillCapped(
   });
   outputs.push("✓ Fetcher published to GHCR");
 
-  return outputs.join("\n");
+  return { message: outputs.join("\n"), versionedRef: refs[0] ?? "" };
 }

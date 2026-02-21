@@ -62,5 +62,6 @@ export async function buildAndPushCaddyS3ProxyImage(
   return {
     status: "passed",
     message: `Image published: ${result}`,
+    publishRef: result,
   };
 }

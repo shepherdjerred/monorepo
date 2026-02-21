@@ -390,7 +390,7 @@ type DeployDiscordPlaysPokemonOptions = {
 
 export async function deployDiscordPlaysPokemon(
   options: DeployDiscordPlaysPokemonOptions,
-): Promise<string> {
+): Promise<{ message: string; versionedRef: string }> {
   const {
     source,
     version,
@@ -439,5 +439,5 @@ export async function deployDiscordPlaysPokemon(
   outputs.push(`Docs deployed to S3\n${syncOutput}`);
 
   logWithTimestamp("Deploy completed for discord-plays-pokemon");
-  return outputs.join("\n");
+  return { message: outputs.join("\n"), versionedRef: refs[0] ?? "" };
 }
