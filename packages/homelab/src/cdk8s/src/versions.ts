@@ -147,7 +147,7 @@ const versions = {
   recyclarr:
     "7.5.2@sha256:2550848d43a453f2c6adf3582f2198ac719f76670691d76de0819053103ef2fb",
   // renovate: datasource=github-releases versioning=semver
-  "siderolabs/talos": "1.12.0",
+  "siderolabs/talos": "1.12.4",
   // renovate: datasource=helm registryUrl=https://opensource.zalando.com/postgres-operator/charts/postgres-operator versioning=semver
   "postgres-operator": "1.15.1",
   // renovate: datasource=helm registryUrl=https://helm.coder.com/v2 versioning=semver
