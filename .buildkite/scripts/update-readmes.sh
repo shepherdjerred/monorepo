@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Install system dependencies
+echo "--- :debian: Installing system dependencies"
+apt-get update -qq && apt-get install -y -qq curl jq > /dev/null
+
 # Install kubectl
 KUBECTL_VERSION="v1.34.1"
 echo "--- :kubectl: Installing kubectl ${KUBECTL_VERSION}"
