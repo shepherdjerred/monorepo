@@ -9,7 +9,7 @@
   "scripts": {
     "start": "vite serve --host",
     "build": "vite build",
-    "test": "true",
+    "test": "bun test",
     "lint": "eslint src --cache",
     "typecheck": "tsc --noEmit"
   },

@@ -226,7 +226,7 @@ export class Parser {
         return {
           role,
           title,
-          description: commentary.desc || "",
+          description: commentary.desc ?? "",
           releaseDate,
           durationInSeconds: commentary.durSec,
           uuid: commentary.uuid,
