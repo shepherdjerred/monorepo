@@ -4,7 +4,7 @@ agents:
 steps:
   - label: ":dagger: CI"
     key: ci
-    image: "oven/bun:latest"
+    image: "oven/bun:debian"
     command: .buildkite/scripts/ci.sh
     timeout_in_minutes: 60
     retry:
@@ -32,7 +32,7 @@ steps:
   - label: ":books: Update READMEs"
     key: update-readmes
     if: build.branch == pipeline.default_branch
-    image: "oven/bun:latest"
+    image: "oven/bun:debian"
     command: .buildkite/scripts/update-readmes.sh
     timeout_in_minutes: 30
     plugins:
