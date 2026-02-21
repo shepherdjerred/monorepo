@@ -1,5 +1,5 @@
 agents:
-  queue: kubernetes
+  queue: default
 
 steps:
   - label: ":dagger: CI"
@@ -15,6 +15,9 @@ steps:
           limit: 2
     plugins:
       - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
@@ -34,6 +37,9 @@ steps:
     timeout_in_minutes: 30
     plugins:
       - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:

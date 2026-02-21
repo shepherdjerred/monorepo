@@ -121,17 +121,19 @@ async function main() {
       }
     }
 
-    // Report if an allowed file no longer has suppressions (can tighten the allowlist)
+    // Fail if an allowed file has fewer suppressions than allowed (ratchet must be tightened)
     for (const [file, allowedCount] of Object.entries(allowed)) {
       const actualCount = current.get(file) ?? 0;
       if (actualCount === 0) {
-        console.log(
-          `NOTE: ${file} has 0 ${rule.key} suppressions but ${String(allowedCount)} allowed — consider removing from allowlist`,
+        console.error(
+          `FAIL: ${file} has 0 ${rule.key} suppressions but ${String(allowedCount)} allowed — remove from allowlist`,
         );
+        failed = true;
       } else if (actualCount < allowedCount) {
-        console.log(
-          `NOTE: ${file} has ${String(actualCount)} ${rule.key} suppressions but ${String(allowedCount)} allowed — consider tightening`,
+        console.error(
+          `FAIL: ${file} has ${String(actualCount)} ${rule.key} suppressions but ${String(allowedCount)} allowed — tighten to ${String(actualCount)}`,
         );
+        failed = true;
       }
     }
   }

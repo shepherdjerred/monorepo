@@ -24,12 +24,15 @@ import type { MatchResult } from "./lib/amazon/matcher.ts";
 import type { ProposedChange, ProposedSplit } from "./lib/classifier/types.ts";
 import {
   displayMerchantChanges,
+  displayUnchangedMerchants,
   displayAmazonChanges,
   displaySummary,
   displaySingleChange,
   displayUsageSummary,
 } from "./lib/display.ts";
 import { log, setLogLevel } from "./lib/logger.ts";
+import { setUserHints } from "./lib/classifier/prompt.ts";
+import path from "node:path";
 
 function getDateRange(): { startDate: string; endDate: string } {
   const endDate = new Date().toISOString().split("T")[0] ?? "";
@@ -40,12 +43,20 @@ function getDateRange(): { startDate: string; endDate: string } {
   return { startDate, endDate };
 }
 
+import type { UnchangedMerchant } from "./lib/display.ts";
+
+type MerchantClassifyResult = {
+  changes: ProposedChange[];
+  unchanged: UnchangedMerchant[];
+};
+
 async function classifyMerchants(
   categories: MonarchCategory[],
   merchantGroups: MerchantGroup[],
   batchSize: number,
-): Promise<ProposedChange[]> {
+): Promise<MerchantClassifyResult> {
   const changes: ProposedChange[] = [];
+  const unchanged: UnchangedMerchant[] = [];
 
   for (let i = 0; i < merchantGroups.length; i += batchSize) {
     const batch = merchantGroups.slice(i, i + batchSize);
@@ -82,7 +93,15 @@ async function classifyMerchants(
         continue;
       }
 
-      if (classification.categoryId === group.currentCategoryId) continue;
+      if (classification.categoryId === group.currentCategoryId) {
+        unchanged.push({
+          merchantName: group.merchantName,
+          category: group.currentCategory,
+          count: group.count,
+          totalAmount: group.totalAmount,
+        });
+        continue;
+      }
 
       for (const txn of group.transactions) {
         changes.push({
@@ -101,7 +120,7 @@ async function classifyMerchants(
     }
   }
 
-  return changes;
+  return { changes, unchanged };
 }
 
 async function classifyAmazon(
@@ -264,12 +283,20 @@ async function main(): Promise<void> {
   initMonarch(config.monarchToken);
   initClaude(config.anthropicApiKey, config.model);
 
+  const hintsPath = path.join(import.meta.dirname, "..", "hints.txt");
+  const hintsFile = Bun.file(hintsPath);
+  if (await hintsFile.exists()) {
+    const hints = await hintsFile.text();
+    setUserHints(hints.trim());
+    log.info("Loaded user hints");
+  }
+
   const { startDate, endDate } = getDateRange();
   log.info(`Fetching transactions from ${startDate} to ${endDate}...`);
 
   const [categories, allTransactions] = await Promise.all([
     fetchCategories(),
-    fetchAllTransactions(startDate, endDate),
+    fetchAllTransactions(startDate, endDate, config.forceFetch),
   ]);
 
   log.info(
@@ -297,12 +324,10 @@ async function main(): Promise<void> {
     `${String(merchantGroups.length)} merchants, ${String(amazonTransactions.length)} Amazon transactions`,
   );
 
-  const merchantChanges = await classifyMerchants(
-    categories,
-    merchantGroups,
-    config.batchSize,
-  );
+  const { changes: merchantChanges, unchanged: unchangedMerchants } =
+    await classifyMerchants(categories, merchantGroups, config.batchSize);
   displayMerchantChanges(merchantChanges);
+  displayUnchangedMerchants(unchangedMerchants);
 
   let amazonChanges: ProposedChange[] = [];
   let matchResult: MatchResult | null = null;
