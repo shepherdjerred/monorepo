@@ -280,8 +280,10 @@ export function complianceCheck(source: Directory): Container {
   return dag
     .container()
     .from("alpine:latest")
-    .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withMountedDirectory("/workspace/packages", source.directory("packages"))
+    .withFile("/workspace/scripts/compliance-check.sh", source.file("scripts/compliance-check.sh"))
     .withExec(["sh", "scripts/compliance-check.sh"]);
 }
 
@@ -356,8 +358,10 @@ echo "Quality ratchet passed"
   return dag
     .container()
     .from("alpine:latest")
-    .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
+    .withMountedDirectory("/workspace/packages", source.directory("packages"))
+    .withMountedDirectory("/workspace/.dagger", source.directory(".dagger"))
+    .withFile("/workspace/.quality-baseline.json", source.file(".quality-baseline.json"))
     .withNewFile("/tmp/ratchet.sh", script)
     .withExec(["sh", "/tmp/ratchet.sh"]);
 }
@@ -385,19 +389,24 @@ export function daggerLintCheck(source: Directory): Container {
 }
 
 /**
- * Run shellcheck on all .sh files under packages/ and scripts/.
+ * Run shellcheck on all .sh files under packages/, scripts/, and .buildkite/.
  */
 export function shellcheckStep(source: Directory): Container {
   // Use actionlint image which includes sh, find, AND shellcheck
   return dag
     .container()
     .from("rhysd/actionlint:latest")
-    .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
+    .withMountedDirectory("/workspace/packages", source.directory("packages"))
+    .withMountedDirectory("/workspace/scripts", source.directory("scripts"))
+    .withMountedDirectory(
+      "/workspace/.buildkite",
+      source.directory(".buildkite"),
+    )
     .withExec([
       "sh",
       "-c",
-      "find /workspace/packages/ /workspace/scripts/ -name '*.sh' -not -path '*/node_modules/*' -print0 | xargs -0 -r shellcheck --severity=warning",
+      "find /workspace/packages/ /workspace/scripts/ /workspace/.buildkite/ -name '*.sh' -not -path '*/node_modules/*' -print0 | xargs -0 -r shellcheck --severity=warning",
     ]);
 }
 
@@ -408,8 +417,8 @@ export function actionlintStep(source: Directory): Container {
   return dag
     .container()
     .from("rhysd/actionlint:latest")
-    .withMountedDirectory("/workspace", source)
     .withWorkdir("/workspace")
+    .withMountedDirectory("/workspace/.github", source.directory(".github"))
     .withExec(["actionlint", "-color"]);
 }
 

@@ -53,6 +53,12 @@ export function createBuildkiteApp(chart: Chart) {
         helm: {
           valuesObject: {
             agentStackSecret: "buildkite-agent-token",
+            config: {
+              "pod-spec-patch": {
+                serviceAccountName: "buildkite-agent-stack-k8s",
+                automountServiceAccountToken: true,
+              },
+            },
           },
         },
       },

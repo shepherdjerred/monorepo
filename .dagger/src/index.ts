@@ -51,7 +51,7 @@ import {
   buildMultiplexerBinaries,
   releaseMultiplexer,
 } from "./index-build-deploy-helpers.ts";
-import { withTiming, withTimingAndRetry } from "./lib-timing.ts";
+import { withTiming } from "./lib-timing.ts";
 
 @object()
 export class Monorepo {
@@ -88,19 +88,19 @@ export class Monorepo {
     });
     const tier0Mobile = withTiming("Mobile CI", () => this.mobileCi(source));
     const tier0BirmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
-    const tier0Birmel = withTimingAndRetry("Birmel validation", () =>
+    const tier0Birmel = withTiming("Birmel validation", () =>
       this.birmelValidation(source, version ?? "dev", gitSha ?? "dev"),
     );
-    const tier0Packages = withTimingAndRetry("Package validation", () =>
+    const tier0Packages = withTiming("Package validation", () =>
       this.packageValidation(source, hassBaseUrl, hassToken),
     );
-    const tier0Quality = withTimingAndRetry("Quality & security checks", () =>
+    const tier0Quality = withTiming("Quality & security checks", () =>
       this.qualityChecks(source),
     );
     void Promise.allSettled([tier0Compliance, tier0Mobile, tier0Birmel, tier0Packages, tier0Quality]);
 
     // === TIER 1: Critical path — bun install + TypeShare in parallel ===
-    const typeSharePromise = withTimingAndRetry("TypeShare generation", async () => {
+    const typeSharePromise = withTiming("TypeShare generation", async () => {
       const rc = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey)
         .withExec(["cargo", "install", "typeshare-cli", "--locked", "--force", "--root", "/root/.cargo-tools"])
         .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
@@ -124,10 +124,10 @@ export class Monorepo {
 
     // === TIER 2: Clauderon Rust CI + monorepo build in parallel ===
     const [clauderonResult, buildResult] = await Promise.allSettled([
-      withTimingAndRetry("Clauderon Rust CI", () =>
+      withTiming("Clauderon Rust CI", () =>
         this.clauderonCi(source, webResult.frontendDist, s3AccessKeyId, s3SecretAccessKey),
       ),
-      withTimingAndRetry("Monorepo build", async () => {
+      withTiming("Monorepo build", async () => {
         const webringBuilt = container.withWorkdir("/workspace/packages/webring").withExec(["bun", "run", "build"]);
         const webringDist = webringBuilt.directory("/workspace/packages/webring/dist");
         const c = container

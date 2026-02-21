@@ -365,17 +365,12 @@ export async function runHomelabRelease(
     version,
   } = options;
 
-  if (
-    argocdToken === undefined ||
-    chartMuseumUsername === undefined ||
-    chartMuseumPassword === undefined ||
-    cloudflareApiToken === undefined ||
-    cloudflareAccountId === undefined ||
-    registryPassword === undefined ||
-    s3AccessKeyId === undefined ||
-    s3SecretAccessKey === undefined
-  ) {
-    return { outputs, errors, infraVersions };
+  const required = { argocdToken, chartMuseumUsername, chartMuseumPassword, cloudflareApiToken, cloudflareAccountId, registryPassword, s3AccessKeyId, s3SecretAccessKey };
+  const missing = Object.entries(required).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length > 0) {
+    const msg = `Homelab release skipped: missing required secrets: ${missing.join(", ")}`;
+    errors.push(msg);
+    return { outputs: [msg], errors, infraVersions };
   }
 
   outputs.push("\n--- Homelab Release ---");
