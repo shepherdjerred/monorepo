@@ -1,6 +1,6 @@
 {
   "name": "@shepherdjerred/helm-types",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Generate TypeScript types from Helm chart values.yaml and values.schema.json",
   "type": "module",
   "main": "dist/index.js",
