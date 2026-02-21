@@ -67,14 +67,14 @@ const versions = {
   // Custom homelab HA image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/homelab":
-    "latest@sha256:8002b51df1f714254daa06035867226eb448c7e05c2ba5e2ce66e035d3e0653c",
+    "latest@sha256:bd9e05a8c1678d198048a578a41fb92115bf22c117d48756f6a8138f25005707",
   // Custom dependency-summary image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/dependency-summary":
-    "latest@sha256:9056bf948b6f4b7e381fd8ce3824e8184114f0fd4bec943d2ab11e786b74c39b",
+    "latest@sha256:2df21e570f67c29787bffa33409b90a3d184b67ce49f2d8a6bcff00a7673455a",
   // Custom better-skill-capped-fetcher image - updated by CI pipeline
   // not managed by renovate
-  "shepherdjerred/better-skill-capped-fetcher": "1.0.109",
+  "shepherdjerred/better-skill-capped-fetcher": "1.0.1791",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
     "2.0.13@sha256:de603dda4513191b47d18bae93decd4683a20b212a3cd9595b2e681bb2ad9d34",
@@ -98,17 +98,17 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://openebs.github.io/openebs versioning=semver
   openebs: "4.4.0",
   // not managed by renovate
-  "shepherdjerred/scout-for-lol/beta": "1.0.267",
+  "shepherdjerred/scout-for-lol/beta": "1.0.1791",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
-  "shepherdjerred/scout-for-lol/prod": "1.0.257",
+  "shepherdjerred/scout-for-lol/prod": "1.0.1791",
   // not managed by renovate
-  "shepherdjerred/starlight-karma-bot/beta": "1.0.29",
+  "shepherdjerred/starlight-karma-bot/beta": "1.0.1791",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
-  "shepherdjerred/starlight-karma-bot/prod": "1.0.13",
+  "shepherdjerred/starlight-karma-bot/prod": "1.0.1791",
   // not managed by renovate
-  "shepherdjerred/birmel": "1.0.1677",
+  "shepherdjerred/birmel": "1.0.1791",
   // not managed by renovate
-  "shepherdjerred/discord-plays-pokemon": "1.0.0",
+  "shepherdjerred/discord-plays-pokemon": "1.0.1791",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.28.0@sha256:5664f42e37e7101c824806d8f73cbc97c8f406ce043bbdb8d39d4ff1e7f2ad11",
@@ -206,7 +206,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "latest@sha256:94a9083245e3e58a43646ab85a949845e46fde3ceb9eb4bbf638ee91e2a6b52f",
+    "latest@sha256:42085ecf94817c6f0c0f1f14d94ded46449d429564865fadb0cebeda73e84eed",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];
