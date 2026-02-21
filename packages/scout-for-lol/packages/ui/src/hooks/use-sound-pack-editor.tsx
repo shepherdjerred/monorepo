@@ -14,7 +14,6 @@ import {
 } from "react";
 import type {
   SoundPack,
-  SoundRule,
   SoundPool,
   SoundEntry,
   EventType,
@@ -22,7 +21,6 @@ import type {
 import {
   createEmptySoundPack,
   createEmptySoundPool,
-  createEmptyRule,
   generateId,
 } from "@scout-for-lol/data";
 import type {
@@ -31,6 +29,7 @@ import type {
   LocalPlayer,
 } from "@scout-for-lol/ui/types/adapter.ts";
 import type { SoundPackEditorContextValue } from "@scout-for-lol/ui/hooks/sound-pack-editor-types.ts";
+import { useRuleOperations } from "@scout-for-lol/ui/hooks/use-sound-pack-editor-rules.ts";
 
 // =============================================================================
 // Context
@@ -297,116 +296,18 @@ export function SoundPackEditorProvider({
   );
 
   // ==========================================================================
-  // Rule operations
+  // Rule operations (extracted to separate hook)
   // ==========================================================================
 
-  const addRule = useCallback((rule?: Partial<SoundRule>) => {
-    const newRule = createEmptyRule(generateId(), rule?.name ?? "New Rule");
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: [...prev.rules, { ...newRule, ...rule }],
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const updateRule = useCallback(
-    (ruleId: string, updates: Partial<SoundRule>) => {
-      setSoundPack((prev) => ({
-        ...prev,
-        rules: prev.rules.map((r) =>
-          r.id === ruleId ? { ...r, ...updates } : r,
-        ),
-      }));
-      setIsDirty(true);
-    },
-    [],
-  );
-
-  const removeRule = useCallback((ruleId: string) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: prev.rules.filter((r) => r.id !== ruleId),
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const reorderRules = useCallback((fromIndex: number, toIndex: number) => {
-    setSoundPack((prev) => {
-      const rules = [...prev.rules];
-      const [removed] = rules.splice(fromIndex, 1);
-      if (removed) {
-        rules.splice(toIndex, 0, removed);
-      }
-      return { ...prev, rules };
-    });
-    setIsDirty(true);
-  }, []);
-
-  // ==========================================================================
-  // Rule sound operations
-  // ==========================================================================
-
-  const addRuleSound = useCallback(
-    (ruleId: string, entry: Omit<SoundEntry, "id">) => {
-      setSoundPack((prev) => ({
-        ...prev,
-        rules: prev.rules.map((r) =>
-          r.id === ruleId
-            ? {
-                ...r,
-                sounds: {
-                  ...r.sounds,
-                  sounds: [...r.sounds.sounds, { ...entry, id: generateId() }],
-                },
-              }
-            : r,
-        ),
-      }));
-      setIsDirty(true);
-    },
-    [],
-  );
-
-  const updateRuleSound = useCallback(
-    (ruleId: string, soundId: string, updates: Partial<SoundEntry>) => {
-      setSoundPack((prev) => ({
-        ...prev,
-        rules: prev.rules.map((r) =>
-          r.id === ruleId
-            ? {
-                ...r,
-                sounds: {
-                  ...r.sounds,
-                  sounds: r.sounds.sounds.map((s) =>
-                    s.id === soundId ? { ...s, ...updates } : s,
-                  ),
-                },
-              }
-            : r,
-        ),
-      }));
-      setIsDirty(true);
-    },
-    [],
-  );
-
-  const removeRuleSound = useCallback((ruleId: string, soundId: string) => {
-    setSoundPack((prev) => ({
-      ...prev,
-      rules: prev.rules.map((r) =>
-        r.id === ruleId
-          ? {
-              ...r,
-              sounds: {
-                ...r.sounds,
-                sounds: r.sounds.sounds.filter((s) => s.id !== soundId),
-              },
-            }
-          : r,
-      ),
-    }));
-    setIsDirty(true);
-  }, []);
+  const {
+    addRule,
+    updateRule,
+    removeRule,
+    reorderRules,
+    addRuleSound,
+    updateRuleSound,
+    removeRuleSound,
+  } = useRuleOperations(setSoundPack, setIsDirty);
 
   // ==========================================================================
   // Preview operations
