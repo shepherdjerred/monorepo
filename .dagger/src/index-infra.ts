@@ -70,7 +70,7 @@ export function getRustContainer(
       dag.cacheVolume(`apt-lib-rust-${RUST_VERSION}`),
     )
     .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "mold", "clang"])
+    .withExec(["apt-get", "install", "-y", "mold", "clang", "git"])
     .withMountedCache(
       "/usr/local/cargo/registry",
       dag.cacheVolume("cargo-registry"),

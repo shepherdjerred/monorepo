@@ -133,6 +133,8 @@ export class Monorepo {
         const c = container
           .withMountedDirectory("/workspace/packages/webring/dist", webringDist)
           .withWorkdir("/workspace")
+          // sjer.red needs Playwright for rehype-mermaid; validated separately in tier 0
+          .withEnvVariable("SKIP_PACKAGES", "sjer.red")
           .withExec(["bun", "run", "build"]);
         await c.sync();
         return c;
