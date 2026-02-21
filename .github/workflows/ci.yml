@@ -44,7 +44,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_ACCOUNT_ID
           HASS_BASE_URL: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/HASS_BASE_URL
           HASS_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/HASS_TOKEN
-          TOFU_GITHUB_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/TOFU_GITHUB_TOKEN
+          TOFU_GITHUB_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOFU_TOKEN
 
       - name: Extract kubectl version
         id: kubectl-version

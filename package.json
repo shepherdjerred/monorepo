@@ -30,5 +30,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.6.0"
+  },
+  "patchedDependencies": {
+    "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch"
   }
 }

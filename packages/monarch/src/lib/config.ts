@@ -10,6 +10,9 @@ export type Config = {
   skipAmazon: boolean;
   amazonYears: number[];
   forceScrape: boolean;
+  sample: number;
+  verbose: boolean;
+  interactive: boolean;
 };
 
 export function getConfig(): Config {
@@ -22,6 +25,9 @@ export function getConfig(): Config {
       "skip-amazon": { type: "boolean", default: false },
       "amazon-years": { type: "string" },
       "force-scrape": { type: "boolean", default: false },
+      sample: { type: "string", default: "0" },
+      verbose: { type: "boolean", default: false },
+      interactive: { type: "boolean", default: false },
     },
     strict: true,
   });
@@ -54,5 +60,8 @@ export function getConfig(): Config {
     skipAmazon: values["skip-amazon"],
     amazonYears,
     forceScrape: values["force-scrape"],
+    sample: Number(values.sample),
+    verbose: values.verbose,
+    interactive: values.interactive,
   };
 }

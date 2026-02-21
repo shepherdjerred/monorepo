@@ -1,5 +1,14 @@
 import type { ProposedChange } from "./classifier/types.ts";
 import type { MatchResult } from "./amazon/matcher.ts";
+import type { UsageSummary } from "./usage.ts";
+
+const NO_COLOR = Bun.env["NO_COLOR"] !== undefined;
+function ansi(code: number, text: string): string {
+  return NO_COLOR ? text : `\u001B[${String(code)}m${text}\u001B[0m`;
+}
+function green(t: string): string { return ansi(32, t); }
+function yellow(t: string): string { return ansi(33, t); }
+function dim(t: string): string { return ansi(90, t); }
 
 export function displayMerchantChanges(changes: ProposedChange[]): void {
   const recategorizes = changes.filter((c) => c.type === "recategorize");
@@ -18,10 +27,11 @@ export function displayMerchantChanges(changes: ProposedChange[]): void {
     console.log("-".repeat(100));
 
     for (const c of recategorizes) {
+      const proposed = green(truncate(c.proposedCategory, 18));
       console.log(
         padRight(truncate(c.merchantName, 28), 30) +
           padRight(truncate(c.currentCategory, 18), 20) +
-          padRight(truncate(c.proposedCategory, 18), 20) +
+          padRight(proposed, 20 + (proposed.length - truncate(c.proposedCategory, 18).length)) +
           padRight(c.confidence, 8) +
           padRight("1", 8) +
           `$${Math.abs(c.amount).toFixed(2)}`,
@@ -33,7 +43,7 @@ export function displayMerchantChanges(changes: ProposedChange[]): void {
     console.log("\n=== Flagged for Review ===\n");
     for (const f of flags) {
       console.log(
-        `  ${f.merchantName} — ${f.reason ?? "ambiguous merchant, needs manual review"}`,
+        `  ${yellow(f.merchantName)} — ${f.reason ?? "ambiguous merchant, needs manual review"}`,
       );
     }
   }
@@ -72,12 +82,12 @@ export function displayAmazonChanges(
       );
       for (const s of c.splits) {
         console.log(
-          `    ├─ ${truncate(s.itemName, 40)} | $${s.amount.toFixed(2)} → ${s.categoryName}`,
+          `    ├─ ${truncate(s.itemName, 40)} | $${s.amount.toFixed(2)} → ${green(s.categoryName)}`,
         );
       }
     } else {
       console.log(
-        `  ${c.transactionDate} | $${Math.abs(c.amount).toFixed(2)} | ${c.merchantName} → ${c.proposedCategory}`,
+        `  ${c.transactionDate} | $${Math.abs(c.amount).toFixed(2)} | ${c.merchantName} → ${green(c.proposedCategory)}`,
       );
     }
   }
@@ -117,6 +127,39 @@ export function displaySummary(
     );
   }
 
+  console.log("");
+}
+
+export function displaySingleChange(change: ProposedChange): void {
+  const date = change.transactionDate;
+  const merchant = change.merchantName;
+  const amount = `$${Math.abs(change.amount).toFixed(2)}`;
+
+  console.log(`\n--- ${date} | ${merchant} | ${amount}`);
+  console.log(`  Current:  ${change.currentCategory}`);
+
+  if (change.type === "split" && change.splits !== undefined) {
+    console.log(`  Proposed: ${green("SPLIT")}`);
+    for (const s of change.splits) {
+      console.log(`    ├─ ${truncate(s.itemName, 40)} | $${s.amount.toFixed(2)} → ${green(s.categoryName)}`);
+    }
+  } else if (change.type === "flag") {
+    console.log(`  Proposed: ${yellow("FLAG")} (${change.reason ?? "ambiguous"})`);
+  } else {
+    console.log(`  Proposed: ${green(change.proposedCategory)} ${dim(`(confidence: ${change.confidence})`)}`);
+  }
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString("en-US");
+}
+
+export function displayUsageSummary(summary: UsageSummary): void {
+  console.log("\n=== API Usage ===\n");
+  console.log(`  Claude API calls:    ${String(summary.calls)}`);
+  console.log(`  Input tokens:        ${formatNumber(summary.inputTokens)}`);
+  console.log(`  Output tokens:       ${formatNumber(summary.outputTokens)}`);
+  console.log(`  Estimated cost:      $${summary.estimatedCost.toFixed(4)}`);
   console.log("");
 }
 

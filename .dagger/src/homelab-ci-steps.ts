@@ -388,7 +388,7 @@ export async function runPublishPhase(
     helmBuildResult.dist
       ? homelabHelmPublishBuilt({
           builtDist: helmBuildResult.dist,
-          version: `1.0.0-${chartVersion}`,
+          version: chartVersion,
           repo: chartRepo,
           chartMuseumUsername,
           chartMuseumPassword,

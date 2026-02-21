@@ -55,7 +55,7 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               "pod-spec-patch": {
-                serviceAccountName: "buildkite-agent-stack-k8s",
+                serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
               },
             },
@@ -87,7 +87,7 @@ export function createBuildkiteApp(chart: Chart) {
     subjects: [
       {
         kind: "ServiceAccount",
-        name: "buildkite-agent-stack-k8s",
+        name: "buildkite-agent-stack-k8s-controller",
         namespace: "buildkite",
       },
     ],
