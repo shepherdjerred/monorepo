@@ -54,7 +54,7 @@ function installDepsWithWebring(
       .withExec([
         "bun",
         "-e",
-        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/webring']; delete pkg.patchedDependencies; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
       ])
       // Exclude sjer.red's own bun.lock — it resolves webring from npm.
       // Without any lockfile, bun generates fresh workspace resolution.
@@ -102,7 +102,7 @@ export async function checkSjerRed(source: Directory): Promise<string> {
       .withExec([
         "bun",
         "-e",
-        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/eslint-config', 'packages/webring']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+        `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/sjer.red', 'packages/eslint-config', 'packages/webring']; delete pkg.patchedDependencies; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
       ])
       .withDirectory(
         "/workspace/packages/sjer.red",

@@ -21,7 +21,7 @@ export async function checkAstroOpengraphImages(
     .withExec([
       "bun",
       "-e",
-      `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/astro-opengraph-images', 'packages/eslint-config']; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
+      `const pkg = JSON.parse(await Bun.file('/workspace/package.json').text()); pkg.workspaces = ['packages/astro-opengraph-images', 'packages/eslint-config']; delete pkg.patchedDependencies; await Bun.write('/workspace/package.json', JSON.stringify(pkg));`,
     ])
     // Package source
     .withDirectory(
