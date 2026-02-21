@@ -1,7 +1,13 @@
 import type { MonarchCategory, MerchantGroup } from "../monarch/types.ts";
 
+let userHints = "";
+
+export function setUserHints(hints: string): void {
+  userHints = hints;
+}
+
 export function buildSystemPrompt(): string {
-  return `You are a personal finance categorization expert. Your job is to classify financial transactions into the correct categories based on the merchant name, bank description, and any additional context provided.
+  const base = `You are a personal finance categorization expert. Your job is to classify financial transactions into the correct categories based on the merchant name, bank description, and any additional context provided.
 
 Rules:
 - Always respond with valid JSON (no markdown fences, no extra text)
@@ -9,6 +15,12 @@ Rules:
 - If a merchant clearly fits one category, classify with high confidence
 - If a merchant sells across many categories (Costco, Walmart, Target, Amazon), mark as ambiguous
 - For Amazon items, classify based on the specific item, not the merchant`;
+
+  if (userHints === "") return base;
+  return `${base}
+
+User-provided context (override your defaults with these):
+${userHints}`;
 }
 
 export function buildCategoryList(categories: MonarchCategory[]): string {

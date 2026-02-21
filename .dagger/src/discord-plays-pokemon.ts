@@ -429,7 +429,7 @@ export async function deployDiscordPlaysPokemon(
     return await syncToS3({
       sourceDir: docsDir,
       bucketName: "dpp-docs",
-      endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      endpointUrl: "https://seaweedfs.sjer.red",
       accessKeyId: s3AccessKeyId,
       secretAccessKey: s3SecretAccessKey,
       region: "us-east-1",

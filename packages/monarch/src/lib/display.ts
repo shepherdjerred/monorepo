@@ -130,6 +130,27 @@ export function displaySummary(
   console.log("");
 }
 
+export type UnchangedMerchant = {
+  merchantName: string;
+  category: string;
+  count: number;
+  totalAmount: number;
+};
+
+export function displayUnchangedMerchants(merchants: UnchangedMerchant[]): void {
+  if (merchants.length === 0) return;
+
+  console.log(`\n=== Already Correct (${String(merchants.length)}) ===\n`);
+  for (const m of merchants) {
+    console.log(
+      "  " + dim(padRight(truncate(m.merchantName, 28), 30)) +
+        dim(padRight(m.category, 20)) +
+        dim(String(m.count) + " txns") + "  " +
+        dim("$" + m.totalAmount.toFixed(2)),
+    );
+  }
+}
+
 export function displaySingleChange(change: ProposedChange): void {
   const date = change.transactionDate;
   const merchant = change.merchantName;

@@ -208,7 +208,7 @@ export async function deployScoutForLol(
     const syncOutput = await syncToS3({
       sourceDir: frontendDist,
       bucketName: "scout-frontend",
-      endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      endpointUrl: "https://seaweedfs.sjer.red",
       accessKeyId: s3AccessKeyId,
       secretAccessKey: s3SecretAccessKey,
       region: "us-east-1",
