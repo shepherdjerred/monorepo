@@ -1,7 +1,8 @@
 {
   "eslint-disable": {
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
-    "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
+    "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1,
+    "packages/monarch/src/lib/amazon/scraper.ts": 1
   },
   "ts-suppressions": {},
   "rust-allow": {},

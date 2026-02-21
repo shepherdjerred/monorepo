@@ -153,6 +153,10 @@ function buildHaContainer(source: Directory): Container {
       .withWorkdir("/app/src/ha")
       // Expose metrics port
       .withExposedPort(9090)
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
       .withDefaultArgs([
         "mise",
         "exec",
