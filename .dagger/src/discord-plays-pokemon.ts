@@ -358,7 +358,7 @@ export async function checkDiscordPlaysPokemon(
         .from("davidanson/markdownlint-cli2")
         .withDirectory("/workspace", pkgSource)
         .withWorkdir("/workspace")
-        .withExec(["markdownlint-cli2", "**/*.md", "#**/emulatorjs/**"])
+        .withExec(["markdownlint-cli2", "**/*.md", "#**/emulatorjs/**", "#_summary.md"])
         .sync();
     }),
   ]);

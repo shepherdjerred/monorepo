@@ -10,8 +10,8 @@
     "astro": "astro",
     "test": "bunx playwright test",
     "test:update": "bunx playwright test --update-snapshots",
-    "lint": "eslint --cache && markdownlint-cli2 '**/*.md' '#node_modules'",
-    "lint:fix": "eslint --cache --fix && markdownlint-cli2 --fix '**/*.md' '#node_modules'",
+    "lint": "eslint --cache && markdownlint-cli2 '**/*.md' '#node_modules' '#_summary.md'",
+    "lint:fix": "eslint --cache --fix && markdownlint-cli2 --fix '**/*.md' '#node_modules' '#_summary.md'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
