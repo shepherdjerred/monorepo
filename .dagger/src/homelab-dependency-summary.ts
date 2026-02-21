@@ -46,7 +46,12 @@ function buildDependencySummaryContainer(source: Directory): Container {
       .withDirectory("src/ha", source.directory("src/ha"), {
         exclude: ["node_modules"],
       })
-      .withFile(".dagger/package.json", source.file(".dagger/package.json"))
+      // Create stub .dagger/package.json since Dagger excludes .dagger directory by default
+      .withExec([
+        "sh",
+        "-c",
+        'mkdir -p .dagger && echo \'{"name":"@homelab/dagger","type":"module","private":true}\' > .dagger/package.json',
+      ])
       // Install dependencies (cached unless dependency files change)
       .withMountedCache(
         "/root/.bun/install/cache",
