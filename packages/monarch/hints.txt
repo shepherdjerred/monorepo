@@ -1,5 +1,46 @@
+# Employer & Income
 - I work at Pinterest. Pinterest Inc transactions are my W-2 payroll income.
 - Charles Schwab manages my Pinterest RSUs. Schwab transactions involving Pinterest stock are investments/RSU income.
-- I pay rent AND utilities through Bilt. Bilt transactions should be split between Rent and Utilities if possible, or categorized as Rent.
 - "Plan Contribution" is a 401K contribution — partially from me, partially employer match from Pinterest.
-- Piedmont is a coffee shop, not medical.
+- "Restricted Stock Lapse" is RSU vesting — categorize as Dividends & Capital Gains.
+
+# Housing & Utilities
+- I pay rent AND utilities through Bilt. Bilt transactions should be categorized as Rent.
+- Seattle City Light is my electric utility — categorize as Gas & Electric.
+
+# Coffee Shops
+- Piedmont is a coffee shop.
+- Starbucks is a coffee shop — always Coffee Shops, never Restaurants & Bars.
+- Victrola, Victrola Roaste, Victrola Roastery, Espresso Vivace, Caffe Vita are all coffee shops.
+- Half and Doughnut Co is a bakery/coffee shop — use Coffee Shops.
+
+# Software & Tech Subscriptions
+- Anthropic, Claude Ai Subscription are AI software subscriptions — categorize as Software.
+- Cursor, Cursor Ai Powered Ide, Cursor Usage Mid Nov are IDE subscriptions — Software.
+- Docker Inc is a software subscription — Software.
+- OpenAI is a software subscription — Software, not Restaurants & Bars.
+- Blitz Pro Monthly is a gaming analytics subscription — Software.
+- Kagi.com is a search engine subscription — Software.
+- St Subscriptions Wa is likely a software subscription.
+- Pagerduty is a software subscription — Software.
+- Google Cloud is a cloud computing service — Software, not Electronics.
+- New York Times is a news subscription — Entertainment & Recreation.
+- Open Source Collective is a charitable donation to open source — Charity, not Electronics.
+- Exercism Birmingham is a coding education platform — Education.
+
+# Shopping Corrections
+- Amazon Pharmacy is a pharmacy — categorize as Medical, not Shopping.
+- Room & Board Web is furniture — Furniture & Housewares, not Garbage.
+- Apotheke Co sells home fragrances/candles — Furniture & Housewares, not Medical.
+- Apple Services are App Store/subscription charges — Software, not Shopping.
+
+# Pets
+- Embrace Pet Insurance and Embrace Pet Wellness are both pet expenses — Pets.
+- Whisker sells automatic litter boxes — Pets.
+- Smallsforsmalls.com is cat food — Pets.
+
+# Auto
+- Audi USA is always Auto Payment (car loan), not Auto Maintenance.
+
+# Finance
+- Venmo Credit Card Cash Back is rewards — Rewards, not Transfer.

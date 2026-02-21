@@ -1,6 +1,6 @@
 {
   "name": "monorepo",
-  "engineVersion": "v0.19.11",
+  "engineVersion": "v0.19.11-patched-ts-sdk",
   "sdk": {
     "source": "typescript"
   },
