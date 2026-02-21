@@ -219,5 +219,6 @@ export async function buildAndPushHaImage(
   return {
     status: "passed",
     message: `Image published: ${result}`,
+    publishRef: result,
   };
 }

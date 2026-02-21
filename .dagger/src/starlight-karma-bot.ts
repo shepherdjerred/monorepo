@@ -43,7 +43,7 @@ type DeployStarlightKarmaBotOptions = {
 
 export async function deployStarlightKarmaBot(
   options: DeployStarlightKarmaBotOptions,
-): Promise<string> {
+): Promise<{ message: string; versionedRef: string }> {
   const { source, version, gitSha, ghcrUsername, ghcrPassword } = options;
   const pkgSource = source.directory("packages/starlight-karma-bot");
   const outputs: string[] = [];
@@ -56,7 +56,7 @@ export async function deployStarlightKarmaBot(
   });
 
   // Push to GHCR
-  await publishToGhcrMultiple({
+  const refs = await publishToGhcrMultiple({
     container: image,
     imageRefs: [
       `ghcr.io/shepherdjerred/starlight-karma-bot:${version}`,
@@ -67,5 +67,5 @@ export async function deployStarlightKarmaBot(
   });
   outputs.push("✓ Published to GHCR");
 
-  return outputs.join("\n");
+  return { message: outputs.join("\n"), versionedRef: refs[0] ?? "" };
 }

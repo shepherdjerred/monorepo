@@ -108,5 +108,6 @@ export async function buildAndPushDependencySummaryImage(
   return {
     status: "passed",
     message: `Dependency-summary image published: ${result}`,
+    publishRef: result,
   };
 }

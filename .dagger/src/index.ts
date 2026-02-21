@@ -327,7 +327,7 @@ export class Monorepo {
     awsSecretAccessKey: Secret, hassBaseUrl?: Secret,
     hassToken?: Secret, tofuGithubToken?: Secret,
   ): Promise<string> {
-    return ciHomelab(source, HomelabStage.Prod, {
+    const result = await ciHomelab(source, HomelabStage.Prod, {
       argocdToken, ghcrUsername, ghcrPassword, chartVersion,
       chartMuseumUsername, chartMuseumPassword, cloudflareApiToken,
       cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey,
@@ -335,6 +335,7 @@ export class Monorepo {
       ...(hassToken === undefined ? {} : { hassToken }),
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
     });
+    return result.summary;
   }
 
   @func()

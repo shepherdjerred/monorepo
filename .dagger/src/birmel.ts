@@ -287,11 +287,11 @@ type BirmelPublishOptions = {
 export async function publishBirmel(options: BirmelPublishOptions): Promise<string> {
   const { source, version, gitSha, registryUsername, registryPassword } = options;
   const image = buildBirmelImage(source, version, gitSha);
-  const refs = await publishBirmelImageWithContainer({
+  const result = await publishBirmelImageWithContainer({
     image, version, gitSha,
     registryAuth: { username: registryUsername, password: registryPassword },
   });
-  return `Published:\n${refs.join("\n")}`;
+  return `Published:\n${result.refs.join("\n")}`;
 }
 
 /** Run birmel CI, smoke test, and publish. */
@@ -301,17 +301,17 @@ export async function releaseBirmel(options: BirmelPublishOptions): Promise<stri
   outputs.push(await checkBirmel(source));
   const birmelImage = buildBirmelImage(source, version, gitSha);
   outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
-  const refs = await publishBirmelImageWithContainer({
+  const publishResult = await publishBirmelImageWithContainer({
     image: birmelImage, version, gitSha,
     registryAuth: { username: registryUsername, password: registryPassword },
   });
-  outputs.push(`Published:\n${refs.join("\n")}`);
+  outputs.push(`Published:\n${publishResult.refs.join("\n")}`);
   return outputs.join("\n\n");
 }
 
 export async function publishBirmelImageWithContainer(
   options: PublishBirmelImageWithContainerOptions,
-): Promise<string[]> {
+): Promise<{ refs: string[]; versionedRef: string }> {
   let image = options.image;
 
   // Set up registry authentication if credentials provided
@@ -331,5 +331,5 @@ export async function publishBirmelImageWithContainer(
   );
   const latestRef = await image.publish("ghcr.io/shepherdjerred/birmel:latest");
 
-  return [versionRef, shaRef, latestRef];
+  return { refs: [versionRef, shaRef, latestRef], versionedRef: versionRef };
 }

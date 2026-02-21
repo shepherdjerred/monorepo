@@ -91,6 +91,31 @@ export async function publishToGhcrMultiple(
  * @param password - GHCR password/token as a secret
  * @returns The authenticated container
  */
+/**
+ * Extracts the `@sha256:...` digest from a Dagger publish ref.
+ * E.g. `ghcr.io/owner/repo:tag@sha256:abc123...` → `sha256:abc123...`
+ */
+export function extractDigestFromRef(publishRef: string): string | undefined {
+  const match = /@(sha256:[a-f0-9]+)/.exec(publishRef);
+  return match?.[1];
+}
+
+/**
+ * Combines a human-readable version with a digest from a publish ref.
+ * E.g. `("1.0.1791", "ghcr.io/.../repo:tag@sha256:abc...")` → `"1.0.1791@sha256:abc..."`
+ * Falls back to plain version if no digest found.
+ */
+export function formatVersionWithDigest(
+  version: string,
+  publishRef: string,
+): string {
+  const digest = extractDigestFromRef(publishRef);
+  if (digest === undefined) {
+    return version;
+  }
+  return `${version}@${digest}`;
+}
+
 export function withGhcrAuth(
   container: Container,
   username: string,

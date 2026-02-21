@@ -478,6 +478,7 @@ export async function runReleasePhase(
     const commitResult = await runVersionCommitBack(
       options,
       deployResult.appVersions,
+      homelabResult.infraVersions,
     );
     outputs.push(...commitResult);
   } else {

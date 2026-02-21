@@ -135,7 +135,7 @@ export function createBirmelDeployment(chart: Chart) {
           key: "sentry-dsn",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
-        SENTRY_RELEASE: EnvValue.fromValue(versions["shepherdjerred/birmel"]),
+        SENTRY_RELEASE: EnvValue.fromValue(versions["shepherdjerred/birmel"].split("@")[0] ?? versions["shepherdjerred/birmel"]),
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),

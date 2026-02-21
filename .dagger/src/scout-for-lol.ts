@@ -116,7 +116,7 @@ type DeployScoutForLolOptions = {
 
 export async function deployScoutForLol(
   options: DeployScoutForLolOptions,
-): Promise<string> {
+): Promise<{ message: string; versionedRef: string }> {
   const {
     source,
     version,
@@ -188,9 +188,9 @@ export async function deployScoutForLol(
   outputs.push("Backend image smoke test passed");
 
   // Publish backend image to GHCR
-  await withTiming("backend GHCR publish", async () => {
-    const backendImageName = "ghcr.io/shepherdjerred/scout-for-lol";
-    await publishToGhcrMultiple({
+  const backendImageName = "ghcr.io/shepherdjerred/scout-for-lol";
+  const refs = await withTiming("backend GHCR publish", async () => {
+    return await publishToGhcrMultiple({
       container: backendImage,
       imageRefs: [
         `${backendImageName}:${version}`,
@@ -230,5 +230,5 @@ export async function deployScoutForLol(
   outputs.push("Desktop artifacts published to GitHub Releases");
 
   logWithTimestamp("Deploy completed successfully for scout-for-lol");
-  return outputs.join("\n");
+  return { message: outputs.join("\n"), versionedRef: refs[0] ?? "" };
 }

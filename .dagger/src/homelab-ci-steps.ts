@@ -25,6 +25,7 @@ import { HELM_CHARTS } from "./homelab-helm.ts";
 import { Stage } from "./lib-types.ts";
 import type { StepResult, HelmBuildResult, HomelabSecrets } from "./homelab-index.ts";
 import { homelabTestHelm, homelabTestRenovateRegex, homelabHelmBuild } from "./homelab-index.ts";
+import { formatVersionWithDigest } from "./lib-ghcr.ts";
 import { planAll } from "./homelab-tofu.ts";
 import versions from "./lib-versions.ts";
 
@@ -216,6 +217,7 @@ type PublishResults = {
   caddyS3ProxyPublishResult: StepResult;
   helmPublishResult: StepResult;
   syncResult: StepResult;
+  infraVersions: Record<string, string>;
 };
 
 type HelmPublishOptions = {
@@ -302,6 +304,7 @@ export async function runPublishPhase(
         status: "skipped",
         message: "[SKIPPED] Not prod or chart publish failed",
       },
+      infraVersions: {},
     };
   }
 
@@ -319,7 +322,7 @@ export async function runPublishPhase(
     haResults,
     depSummaryResults,
     dnsAuditResults,
-    caddyS3ProxyResult,
+    caddyS3ProxyResults,
     helmResult,
   ] = await Promise.all([
     Promise.all([
@@ -368,23 +371,20 @@ export async function runPublishPhase(
         false,
       ),
     ]),
-    (async (): Promise<StepResult> => {
-      const [versioned, latest] = await Promise.all([
-        buildAndPushCaddyS3ProxyImage(
-          `ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-        buildAndPushCaddyS3ProxyImage(
-          `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
-          ghcrUsername,
-          ghcrPassword,
-          false,
-        ),
-      ]);
-      return combinePublishResults([versioned, latest]);
-    })(),
+    Promise.all([
+      buildAndPushCaddyS3ProxyImage(
+        `ghcr.io/shepherdjerred/caddy-s3proxy:${chartVersion}`,
+        ghcrUsername,
+        ghcrPassword,
+        false,
+      ),
+      buildAndPushCaddyS3ProxyImage(
+        `ghcr.io/shepherdjerred/caddy-s3proxy:latest`,
+        ghcrUsername,
+        ghcrPassword,
+        false,
+      ),
+    ]),
     helmBuildResult.dist
       ? homelabHelmPublishBuilt({
           builtDist: helmBuildResult.dist,
@@ -401,6 +401,20 @@ export async function runPublishPhase(
 
   const helmPublishResult = helmResult;
 
+  // Extract digests from versioned-tag results (index [0] of each pair)
+  const infraVersions: Record<string, string> = {};
+  const infraMapping: [string, StepResult][] = [
+    ["shepherdjerred/homelab", haResults[0]],
+    ["shepherdjerred/dependency-summary", depSummaryResults[0]],
+    ["shepherdjerred/dns-audit", dnsAuditResults[0]],
+    ["shepherdjerred/caddy-s3proxy", caddyS3ProxyResults[0]],
+  ];
+  for (const [key, result] of infraMapping) {
+    if (result.status === "passed" && result.publishRef !== undefined) {
+      infraVersions[key] = formatVersionWithDigest(chartVersion, result.publishRef);
+    }
+  }
+
   let syncResult: StepResult = {
     status: "skipped",
     message: "[SKIPPED] Not prod or chart publish failed",
@@ -413,9 +427,10 @@ export async function runPublishPhase(
     haPublishResult: combinePublishResults(haResults),
     depSummaryPublishResult: combinePublishResults(depSummaryResults),
     dnsAuditPublishResult: combinePublishResults(dnsAuditResults),
-    caddyS3ProxyPublishResult: caddyS3ProxyResult,
+    caddyS3ProxyPublishResult: combinePublishResults(caddyS3ProxyResults),
     helmPublishResult,
     syncResult,
+    infraVersions,
   };
 }
 
