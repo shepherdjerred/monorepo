@@ -182,31 +182,6 @@ export async function buildClauderonWeb(
   return { container: c, frontendDist, outputs };
 }
 
-/** Retry a check if it fails with a transient Dagger graphql error. */
-async function withGraphqlRetry<T>(
-  name: string,
-  fn: () => Promise<T>,
-  maxRetries = 2,
-): Promise<T> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      const isGraphqlError = msg.includes(
-        "unknown error while requesting data via graphql",
-      );
-      if (!isGraphqlError || attempt === maxRetries) {
-        throw error;
-      }
-      console.log(
-        `⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`,
-      );
-    }
-  }
-  throw new Error("unreachable");
-}
-
 /** Run package-specific validation checks in parallel. */
 export async function runPackageValidation(
   source: Directory,
@@ -244,11 +219,9 @@ export async function runPackageValidation(
     }
   }
 
-  // Run scout-for-lol separately with retry to avoid graphql errors
+  // Run scout-for-lol separately to avoid graphql errors from engine pressure
   try {
-    outputs.push(
-      await withGraphqlRetry("scout-for-lol", () => checkScoutForLol(source)),
-    );
+    outputs.push(await checkScoutForLol(source));
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     outputs.push(`✗ scout-for-lol: ${msg}`);
@@ -452,32 +425,51 @@ export async function runReleasePhase(
     }
   }
 
-  // App deployments (parallel, returns appVersions from successful deploys)
-  const deployResult = await runAppDeployments(options);
-  outputs.push(...deployResult.outputs);
-  errors.push(...deployResult.errors);
+  // App deployments and Clauderon binary release in parallel
+  // (independent of each other — clauderon needs releaseOutput, deploys need options)
+  const [deploySettled, clauderonSettled] = await Promise.allSettled([
+    runAppDeployments(options),
+    runClauderonRelease(options, releaseResult.releaseOutput),
+  ]);
+
+  // Extract deploy result
+  let deployAppVersions: Record<string, string> = {};
+  if (deploySettled.status === "fulfilled") {
+    outputs.push(...deploySettled.value.outputs);
+    errors.push(...deploySettled.value.errors);
+    deployAppVersions = deploySettled.value.appVersions;
+  } else {
+    const msg =
+      deploySettled.reason instanceof Error
+        ? deploySettled.reason.message
+        : String(deploySettled.reason);
+    outputs.push(`✗ App deployments: ${msg}`);
+    errors.push(`App deployments: ${msg}`);
+  }
+
+  // Extract clauderon result
+  if (clauderonSettled.status === "fulfilled") {
+    outputs.push(...clauderonSettled.value.outputs);
+    errors.push(...clauderonSettled.value.errors);
+  } else {
+    const msg =
+      clauderonSettled.reason instanceof Error
+        ? clauderonSettled.reason.message
+        : String(clauderonSettled.reason);
+    outputs.push(`✗ Clauderon release: ${msg}`);
+    errors.push(`Clauderon release: ${msg}`);
+  }
 
   // Homelab release (needs appVersions from deployments)
-  const homelabResult = await runHomelabRelease(
-    options,
-    deployResult.appVersions,
-  );
+  const homelabResult = await runHomelabRelease(options, deployAppVersions);
   outputs.push(...homelabResult.outputs);
   errors.push(...homelabResult.errors);
-
-  // Clauderon binary release
-  const clauderonResult = await runClauderonRelease(
-    options,
-    releaseResult.releaseOutput,
-  );
-  outputs.push(...clauderonResult.outputs);
-  errors.push(...clauderonResult.errors);
 
   // Version commit-back — AFTER all deployments, only if no errors
   if (errors.length === 0) {
     const commitResult = await runVersionCommitBack(
       options,
-      deployResult.appVersions,
+      deployAppVersions,
       homelabResult.infraVersions,
     );
     outputs.push(...commitResult);

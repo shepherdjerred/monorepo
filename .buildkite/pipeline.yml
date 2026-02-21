@@ -1,0 +1,43 @@
+agents:
+  queue: kubernetes
+
+steps:
+  - label: ":dagger: CI"
+    key: ci
+    image: "oven/bun:latest"
+    command: .buildkite/scripts/ci.sh
+    timeout_in_minutes: 60
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 2
+        - exit_status: 255
+          limit: 2
+    plugins:
+      - kubernetes:
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+
+  - wait: ~
+    if: build.branch == pipeline.default_branch
+
+  - label: ":books: Update READMEs"
+    key: update-readmes
+    if: build.branch == pipeline.default_branch
+    image: "oven/bun:latest"
+    command: .buildkite/scripts/update-readmes.sh
+    timeout_in_minutes: 30
+    plugins:
+      - kubernetes:
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets

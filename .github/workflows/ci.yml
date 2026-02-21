@@ -37,6 +37,14 @@ jobs:
           OPENAI_API_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/OPENAI_API_KEY
           S3_ACCESS_KEY_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_ACCESS_KEY_ID
           S3_SECRET_ACCESS_KEY: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/S3_SECRET_ACCESS_KEY
+          ARGOCD_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/ARGOCD_TOKEN
+          CHARTMUSEUM_USERNAME: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CHARTMUSEUM_USERNAME
+          CHARTMUSEUM_PASSWORD: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CHARTMUSEUM_PASSWORD
+          CLOUDFLARE_API_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_API_TOKEN
+          CLOUDFLARE_ACCOUNT_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_ACCOUNT_ID
+          HASS_BASE_URL: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/HASS_BASE_URL
+          HASS_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/HASS_TOKEN
+          TOFU_GITHUB_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/TOFU_GITHUB_TOKEN
 
       - name: Extract kubectl version
         id: kubectl-version
@@ -142,6 +150,14 @@ jobs:
               --registry-username="${{ github.actor }}"
               --registry-password=env:GITHUB_TOKEN
               --commit-back-token=env:GITHUB_TOKEN
+              --argocd-token=env:ARGOCD_TOKEN
+              --chart-museum-username=env:CHARTMUSEUM_USERNAME
+              --chart-museum-password=env:CHARTMUSEUM_PASSWORD
+              --cloudflare-api-token=env:CLOUDFLARE_API_TOKEN
+              --cloudflare-account-id=env:CLOUDFLARE_ACCOUNT_ID
+              --hass-base-url=env:HASS_BASE_URL
+              --hass-token=env:HASS_TOKEN
+              --tofu-github-token=env:TOFU_GITHUB_TOKEN
             )
           fi
 

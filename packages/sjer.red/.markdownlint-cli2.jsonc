@@ -4,5 +4,5 @@
       "line_length": "disabled",
     },
   },
-  "ignores": ["test-results/**", "playwright-report/**"],
+  "ignores": ["test-results/**", "playwright-report/**", "_summary.md"],
 }

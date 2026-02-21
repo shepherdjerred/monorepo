@@ -69,11 +69,11 @@ const PIPELINE: Node[] = [
   // TIER 0: Fire-and-forget at t=0 (independent of main pipeline)
   // ════════════════════════════════════════════════════════════════════════════
 
-  // Mounts full source → invalidated by ANY change
+  // Mounts root package.json + packages/ + compliance script
   {
     id: "compliance",
     name: "Compliance check",
-    inputs: ["*"],
+    inputs: ["package.json", "packages/", "scripts/compliance-check.sh"],
     dependsOn: [],
     duration: 5,
   },
@@ -88,28 +88,29 @@ const PIPELINE: Node[] = [
     duration: 8,
   },
 
-  // Quality & security checks — all mount full source
+  // Quality & security checks — narrowed inputs where possible
   {
     id: "quality-ratchet",
     name: "Quality ratchet",
-    inputs: ["*"],
+    inputs: ["packages/", ".dagger/", ".quality-baseline.json"],
     dependsOn: [],
     duration: 10,
   },
   {
     id: "shellcheck",
     name: "Shellcheck",
-    inputs: ["*"],
+    inputs: ["packages/", "scripts/"],
     dependsOn: [],
     duration: 5,
   },
   {
     id: "actionlint",
     name: "Actionlint",
-    inputs: ["*"],
+    inputs: [".github/"],
     dependsOn: [],
     duration: 5,
   },
+  // Trivy and Semgrep keep full source (need broad scanning)
   {
     id: "trivy",
     name: "Trivy scan",

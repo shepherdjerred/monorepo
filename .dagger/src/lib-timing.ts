@@ -39,36 +39,6 @@ export async function withTiming<T>(
   }
 }
 
-const GRAPHQL_ERROR_PATTERN = "error while requesting data via graphql";
-
-/**
- * Execute an async function with timing and automatic retry on transient
- * Dagger GraphQL errors (kube-pod:// transport instability).
- */
-export async function withTimingAndRetry<T>(
-  name: string,
-  fn: () => Promise<T>,
-  maxRetries = 2,
-): Promise<T> {
-  return withTiming(name, async () => {
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        const isGraphqlError = msg.includes(GRAPHQL_ERROR_PATTERN);
-        if (!isGraphqlError || attempt === maxRetries) {
-          throw error;
-        }
-        logWithTimestamp(
-          `⟳ ${name}: graphql error on attempt ${String(attempt + 1)}, retrying...`,
-        );
-      }
-    }
-    throw new Error("unreachable");
-  });
-}
-
 /**
  * Format a duration in milliseconds to a human-readable string
  *
