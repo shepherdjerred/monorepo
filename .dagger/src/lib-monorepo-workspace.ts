@@ -219,6 +219,9 @@ export function installMonorepoWorkspaceDeps(
     }
   }
 
+  // Copy patches directory (bun install needs it for patchedDependencies)
+  container = addDir(container, "patches");
+
   // PHASE 2: Install dependencies (cached if lockfile + package.jsons unchanged)
   // Note: can't use --frozen-lockfile here because this container may have a workspace
   // subset (e.g., birmel CI uses fewer packages than the full monorepo). The root bun.lock
