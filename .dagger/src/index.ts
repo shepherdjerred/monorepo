@@ -102,7 +102,7 @@ export class Monorepo {
     // === TIER 1: Critical path — bun install + TypeShare in parallel ===
     const typeSharePromise = withTimingAndRetry("TypeShare generation", async () => {
       const rc = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey)
-        .withExec(["cargo", "install", "typeshare-cli", "--locked", "--root", "/root/.cargo-tools"])
+        .withExec(["cargo", "install", "typeshare-cli", "--locked", "--force", "--root", "/root/.cargo-tools"])
         .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
       await rc.sync();
       return rc;

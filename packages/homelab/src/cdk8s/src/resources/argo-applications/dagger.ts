@@ -89,6 +89,12 @@ export function createDaggerApp(chart: Chart) {
           // TODO: use types for this
           valuesObject: {
             engine: {
+              // Custom engine image with patched TypeScript SDK that surfaces
+              // detailed error context instead of generic "unknown graphql error"
+              image: {
+                ref: "ghcr.io/shepherdjerred/dagger-engine:v0.19.11-patched-ts-sdk",
+                pullPolicy: "Always",
+              },
               // Configure GC to prevent disk from filling up (1TB volume)
               configJson: JSON.stringify({
                 gc: {
