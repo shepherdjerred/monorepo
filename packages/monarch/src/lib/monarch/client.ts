@@ -10,6 +10,7 @@ import type {
   MonarchCategory,
   MerchantGroup,
 } from "./types.ts";
+import { log } from "../logger.ts";
 
 export function initMonarch(token: string): void {
   setToken(token);
@@ -25,9 +26,7 @@ export async function fetchAllTransactions(
   let totalCount = Infinity;
 
   while (offset < totalCount) {
-    console.error(
-      `Fetching transactions ${String(offset + 1)}-${String(offset + pageSize)}...`,
-    );
+    log.progress(offset, totalCount, "transactions fetched");
     const response = await getTransactions({
       limit: pageSize,
       offset,
@@ -43,7 +42,7 @@ export async function fetchAllTransactions(
     if (results.length < pageSize) break;
   }
 
-  console.error(`Fetched ${String(allTransactions.length)} transactions total`);
+  log.info(`Fetched ${String(allTransactions.length)} transactions total`);
   return allTransactions;
 }
 

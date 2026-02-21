@@ -4,6 +4,7 @@ import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
 import type { AmazonOrder, AmazonItem, AmazonCache } from "./types.ts";
+import { log } from "../logger.ts";
 
 const AmazonCacheSchema = z.object({
   scrapedAt: z.string(),
@@ -38,13 +39,11 @@ export async function loadCache(): Promise<AmazonOrder[] | null> {
   const age = Date.now() - new Date(cache.scrapedAt).getTime();
 
   if (age > CACHE_MAX_AGE_MS) {
-    console.error("Amazon cache expired, will re-scrape");
+    log.info("Amazon cache expired, will re-scrape");
     return null;
   }
 
-  console.error(
-    `Loaded ${String(cache.orders.length)} orders from cache`,
-  );
+  log.info(`Loaded ${String(cache.orders.length)} orders from cache`);
   return cache.orders;
 }
 
@@ -54,7 +53,7 @@ async function saveCache(orders: AmazonOrder[]): Promise<void> {
     orders,
   };
   await Bun.write(CACHE_PATH, JSON.stringify(cache, null, 2));
-  console.error(`Saved ${String(orders.length)} orders to cache`);
+  log.info(`Saved ${String(orders.length)} orders to cache`);
 }
 
 export async function scrapeAmazonOrders(
@@ -66,7 +65,7 @@ export async function scrapeAmazonOrders(
     if (cached) return cached;
   }
 
-  console.error("Launching browser for Amazon login...");
+  log.info("Launching browser for Amazon login...");
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -74,22 +73,20 @@ export async function scrapeAmazonOrders(
   try {
     await page.goto("https://www.amazon.com/gp/css/order-history");
 
-    console.error(
+    log.info(
       "Please log in to Amazon in the browser window (including 2FA if needed)...",
     );
 
     await page.waitForURL("**/your-orders/**", { timeout: 300_000 });
-    console.error("Login detected! Starting scrape...");
+    log.info("Login detected! Starting scrape...");
 
     const allOrders: AmazonOrder[] = [];
 
     for (const year of years) {
-      console.error(`Scraping orders for ${String(year)}...`);
+      log.info(`Scraping orders for ${String(year)}...`);
       const yearOrders = await scrapeYear(page, year);
       allOrders.push(...yearOrders);
-      console.error(
-        `  Found ${String(yearOrders.length)} orders for ${String(year)}`,
-      );
+      log.info(`  Found ${String(yearOrders.length)} orders for ${String(year)}`);
     }
 
     await saveCache(allOrders);
@@ -112,7 +109,7 @@ async function scrapeYear(
   let hasMore = true;
 
   while (hasMore) {
-    console.error(`  Page ${String(pageNum)}...`);
+    log.debug(`  Page ${String(pageNum)}...`);
     await page.waitForTimeout(1500);
 
     const orderCards = await page.locator(".order-card, .order").all();
@@ -213,6 +210,7 @@ async function extractOrderFromCard(
             ? total / Math.max(itemElements.length, 1)
             : parsePrice(priceEl);
       } catch {
+        log.debug(`Could not extract item price for "${title.trim()}", estimating from order total`);
         itemPrice = total / Math.max(itemElements.length, 1);
       }
 
@@ -236,7 +234,9 @@ async function extractOrderFromCard(
     }
 
     return { orderId, date, total, items };
-  } catch {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    log.warn(`Failed to extract order from card: ${message}`);
     return null;
   }
 }

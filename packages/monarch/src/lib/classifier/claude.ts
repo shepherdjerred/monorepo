@@ -10,13 +10,23 @@ import {
   buildMerchantBatchPrompt,
   buildAmazonItemPrompt,
 } from "./prompt.ts";
+import { log } from "../logger.ts";
+import type { UsageSummary } from "../usage.ts";
+import { createUsageTracker } from "../usage.ts";
 
 let client: Anthropic | undefined;
 let modelId = "claude-sonnet-4-20250514";
+let tracker: ReturnType<typeof createUsageTracker> | undefined;
 
 export function initClaude(apiKey: string, model?: string): void {
   client = new Anthropic({ apiKey });
   if (model !== undefined) modelId = model;
+  tracker = createUsageTracker(modelId);
+}
+
+export function getUsageSummary(): UsageSummary {
+  if (tracker === undefined) throw new Error("Call initClaude() first");
+  return tracker.getSummary();
 }
 
 function getClient(): Anthropic {
@@ -59,7 +69,12 @@ const AmazonClassificationSchema = z.object({
   needsSplit: z.boolean(),
 });
 
-async function callClaude(userPrompt: string): Promise<string> {
+type ClaudeResponse = {
+  text: string;
+  usage: { inputTokens: number; outputTokens: number };
+};
+
+async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
   const claude = getClient();
   const maxRetries = 3;
 
@@ -76,7 +91,14 @@ async function callClaude(userPrompt: string): Promise<string> {
       if (block?.type !== "text") {
         throw new Error("Unexpected response type");
       }
-      return block.text;
+
+      const usage = {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      };
+      tracker?.record(usage.inputTokens, usage.outputTokens);
+
+      return { text: block.text, usage };
     } catch (error: unknown) {
       const status =
         error instanceof Anthropic.APIError
@@ -84,7 +106,7 @@ async function callClaude(userPrompt: string): Promise<string> {
           : undefined;
       if ((status === 429 || status === 529) && attempt < maxRetries) {
         const delay = 1000 * 2 ** (attempt + 1);
-        console.error(
+        log.warn(
           `Rate limited (${String(status)}), retrying in ${String(delay)}ms (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -102,8 +124,8 @@ export async function classifyMerchantBatch(
   merchants: MerchantGroup[],
 ): Promise<MerchantBatchResponse> {
   const prompt = buildMerchantBatchPrompt(categories, merchants);
-  const response = await callClaude(prompt);
-  return MerchantBatchSchema.parse(parseJsonResponse(response));
+  const { text } = await callClaude(prompt);
+  return MerchantBatchSchema.parse(parseJsonResponse(text));
 }
 
 export async function classifyAmazonItems(
@@ -111,8 +133,8 @@ export async function classifyAmazonItems(
   items: { title: string; price: number }[],
 ): Promise<AmazonClassificationResponse> {
   const prompt = buildAmazonItemPrompt(categories, items);
-  const response = await callClaude(prompt);
-  return AmazonClassificationSchema.parse(parseJsonResponse(response));
+  const { text } = await callClaude(prompt);
+  return AmazonClassificationSchema.parse(parseJsonResponse(text));
 }
 
 export function computeSplits(

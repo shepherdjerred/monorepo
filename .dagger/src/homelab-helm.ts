@@ -98,7 +98,7 @@ function getHelmContainerForChart(
  * @param chartName The name of the chart (must match CDK8s output file name).
  * @param cdk8sManifests The directory containing all CDK8s manifest files.
  * @param repoRoot The repository root directory.
- * @param version The full semver version (e.g. "1.0.0-123").
+ * @param version The full semver version (e.g. "1.0.1234").
  * @returns The packaged chart file (.tgz).
  */
 type BuildChartOptions = {
@@ -128,7 +128,7 @@ export function buildChart(options: BuildChartOptions): Directory {
 /**
  * Build all Helm charts defined in HELM_CHARTS.
  * @param repoRoot The repository root directory.
- * @param version The full semver version (e.g. "1.0.0-123").
+ * @param version The full semver version (e.g. "1.0.1234").
  * @returns A directory containing all packaged charts.
  */
 export function buildAllCharts(
@@ -158,7 +158,7 @@ export function buildAllCharts(
  * Publish a single pre-built Helm chart to a ChartMuseum repo.
  * @param chartName The name of the chart.
  * @param chartDist The directory containing the packaged chart (.tgz file).
- * @param version The full semver version (e.g. "1.0.0-123").
+ * @param version The full semver version (e.g. "1.0.1234").
  * @param repo The ChartMuseum repo URL.
  * @param chartMuseumUsername The ChartMuseum username.
  * @param chartMuseumPassword The ChartMuseum password (secret).
@@ -223,7 +223,7 @@ export async function publishChart(
 /**
  * Publish all Helm charts to ChartMuseum.
  * @param allChartsDist The directory containing all chart subdirectories (from buildAllCharts).
- * @param version The full semver version (e.g. "1.0.0-123").
+ * @param version The full semver version (e.g. "1.0.1234").
  * @param repo The ChartMuseum repo URL.
  * @param chartMuseumUsername The ChartMuseum username.
  * @param chartMuseumPassword The ChartMuseum password (secret).

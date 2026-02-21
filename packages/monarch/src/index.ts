@@ -16,6 +16,7 @@ import {
   classifyMerchantBatch,
   classifyAmazonItems,
   computeSplits,
+  getUsageSummary,
 } from "./lib/classifier/claude.ts";
 import { scrapeAmazonOrders } from "./lib/amazon/scraper.ts";
 import { matchAmazonOrders } from "./lib/amazon/matcher.ts";
@@ -25,7 +26,10 @@ import {
   displayMerchantChanges,
   displayAmazonChanges,
   displaySummary,
+  displaySingleChange,
+  displayUsageSummary,
 } from "./lib/display.ts";
+import { log, setLogLevel } from "./lib/logger.ts";
 
 function getDateRange(): { startDate: string; endDate: string } {
   const endDate = new Date().toISOString().split("T")[0] ?? "";
@@ -45,8 +49,10 @@ async function classifyMerchants(
 
   for (let i = 0; i < merchantGroups.length; i += batchSize) {
     const batch = merchantGroups.slice(i, i + batchSize);
-    console.error(
-      `Classifying merchants ${String(i + 1)}-${String(i + batch.length)} of ${String(merchantGroups.length)}...`,
+    log.progress(
+      i + batch.length,
+      merchantGroups.length,
+      "merchants classified",
     );
 
     const result = await classifyMerchantBatch(categories, batch);
@@ -107,10 +113,10 @@ async function classifyAmazon(
     config.amazonYears,
     config.forceScrape,
   );
-  console.error(`Scraped ${String(orders.length)} Amazon orders`);
+  log.info(`Scraped ${String(orders.length)} Amazon orders`);
 
   const matchResult = matchAmazonOrders(amazonTransactions, orders);
-  console.error(
+  log.info(
     `Matched ${String(matchResult.matched.length)}/${String(amazonTransactions.length)} transactions`,
   );
 
@@ -179,65 +185,115 @@ async function classifyAmazon(
   return { changes, matchResult };
 }
 
-async function applyChanges(changes: ProposedChange[]): Promise<void> {
-  console.error("\nApplying changes...");
+async function promptConfirm(message: string): Promise<boolean> {
+  process.stderr.write(`${message} [y/N] `);
+  const reader = Bun.stdin.stream().getReader();
+  const { value } = await reader.read();
+  reader.releaseLock();
+  const input = value ? new TextDecoder().decode(value).trim().toLowerCase() : "";
+  return input === "y" || input === "yes";
+}
+
+async function promptInteractive(change: ProposedChange): Promise<"apply" | "skip" | "quit"> {
+  displaySingleChange(change);
+  process.stderr.write("\n  [a]pply / [s]kip / [q]uit: ");
+  const reader = Bun.stdin.stream().getReader();
+  const { value } = await reader.read();
+  reader.releaseLock();
+  const input = value ? new TextDecoder().decode(value).trim().toLowerCase() : "s";
+  if (input === "a" || input === "apply") return "apply";
+  if (input === "q" || input === "quit") return "quit";
+  return "skip";
+}
+
+async function applySingleChange(change: ProposedChange): Promise<void> {
+  if (change.type === "recategorize") {
+    log.info(`  Updating ${change.merchantName} → ${change.proposedCategory}`);
+    await applyCategory(change.transactionId, change.proposedCategoryId);
+  } else if (change.type === "flag") {
+    log.info(`  Flagging ${change.merchantName} for review`);
+    await flagForReview(change.transactionId);
+  } else if (change.splits !== undefined) {
+    log.info(`  Splitting ${change.merchantName}`);
+    await applySplits(
+      change.transactionId,
+      change.splits.map((s) => ({
+        amount: s.amount,
+        categoryId: s.categoryId,
+        merchantName: s.itemName,
+      })),
+    );
+  }
+}
+
+async function applyChanges(
+  changes: ProposedChange[],
+  interactive: boolean,
+): Promise<void> {
   let applied = 0;
 
-  for (const change of changes) {
-    if (change.type === "recategorize") {
-      console.error(
-        `  Updating ${change.merchantName} → ${change.proposedCategory}`,
-      );
-      await applyCategory(change.transactionId, change.proposedCategoryId);
+  if (interactive) {
+    for (const change of changes) {
+      const action = await promptInteractive(change);
+      if (action === "quit") {
+        log.info(`Stopped. Applied ${String(applied)} of ${String(changes.length)} changes.`);
+        return;
+      }
+      if (action === "skip") continue;
+      await applySingleChange(change);
       applied++;
-    } else if (change.type === "flag") {
-      console.error(`  Flagging ${change.merchantName} for review`);
-      await flagForReview(change.transactionId);
-      applied++;
-    } else if (change.splits !== undefined) {
-      console.error(`  Splitting ${change.merchantName}`);
-      await applySplits(
-        change.transactionId,
-        change.splits.map((s) => ({
-          amount: s.amount,
-          categoryId: s.categoryId,
-          merchantName: s.itemName,
-        })),
-      );
+    }
+  } else {
+    log.info("Applying changes...");
+    for (const change of changes) {
+      await applySingleChange(change);
       applied++;
     }
   }
 
-  console.error(`\nDone! Applied ${String(applied)} changes.`);
+  log.info(`Done! Applied ${String(applied)} changes.`);
 }
 
 async function main(): Promise<void> {
   const config = getConfig();
 
+  if (config.verbose) {
+    setLogLevel("debug");
+  }
+
   initMonarch(config.monarchToken);
   initClaude(config.anthropicApiKey, config.model);
 
   const { startDate, endDate } = getDateRange();
-  console.error(`Fetching transactions from ${startDate} to ${endDate}...`);
+  log.info(`Fetching transactions from ${startDate} to ${endDate}...`);
 
   const [categories, allTransactions] = await Promise.all([
     fetchCategories(),
     fetchAllTransactions(startDate, endDate),
   ]);
 
-  console.error(
+  log.info(
     `Found ${String(allTransactions.length)} transactions, ${String(categories.length)} categories`,
   );
 
   let transactions = allTransactions;
   if (config.limit > 0) {
     transactions = transactions.slice(0, config.limit);
-    console.error(`Limited to ${String(transactions.length)} transactions`);
+    log.info(`Limited to ${String(transactions.length)} transactions`);
   }
 
-  const { amazonTransactions, merchantGroups } =
+  let { amazonTransactions, merchantGroups } =
     groupByMerchant(transactions);
-  console.error(
+
+  if (config.sample > 0) {
+    merchantGroups = merchantGroups.slice(0, config.sample);
+    amazonTransactions = amazonTransactions.slice(0, Math.ceil(config.sample / 2));
+    log.info(
+      `Sampling ${String(merchantGroups.length)} merchant groups, ${String(amazonTransactions.length)} Amazon transactions`,
+    );
+  }
+
+  log.info(
     `${String(merchantGroups.length)} merchants, ${String(amazonTransactions.length)} Amazon transactions`,
   );
 
@@ -252,7 +308,7 @@ async function main(): Promise<void> {
   let matchResult: MatchResult | null = null;
 
   if (!config.skipAmazon && amazonTransactions.length > 0) {
-    console.error("\n--- Amazon Deep Classification ---");
+    log.info("\n--- Amazon Deep Classification ---");
     const result = await classifyAmazon(
       config,
       categories,
@@ -264,19 +320,28 @@ async function main(): Promise<void> {
   }
 
   displaySummary(merchantChanges, amazonChanges, matchResult);
+  displayUsageSummary(getUsageSummary());
 
   if (config.apply) {
-    await applyChanges([...merchantChanges, ...amazonChanges]);
+    const allChanges = [...merchantChanges, ...amazonChanges];
+    if (!config.interactive) {
+      const confirmed = await promptConfirm(
+        `About to apply ${String(allChanges.length)} changes. Continue?`,
+      );
+      if (!confirmed) {
+        log.info("Aborted.");
+        return;
+      }
+    }
+    await applyChanges(allChanges, config.interactive);
   } else {
-    console.error(
-      "\nDry run complete. Use --apply to apply these changes.",
-    );
+    log.info("Dry run complete. Use --apply to apply these changes.");
   }
 }
 
 try {
   await main();
 } catch (error: unknown) {
-  console.error("Fatal error:", error);
+  log.error(`Fatal error: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }

@@ -226,7 +226,7 @@ export function homelabHelmBuild(
   version: string,
 ): Directory {
   const homelabSource = getHomelabSource(monoRepoSource);
-  return buildAllCharts(homelabSource, `1.0.0-${version}`);
+  return buildAllCharts(homelabSource, version);
 }
 
 /**
