@@ -360,7 +360,7 @@ export class Monorepo {
 
   @func()
   async homelabTestRenovateRegex(source: Directory): Promise<string> {
-    return homelabTestRenovateRegexFn(source);
+    return homelabTestRenovateRegexFn(source.directory("packages/homelab"), source);
   }
 
   @func()
