@@ -136,7 +136,7 @@ export async function runValidationPhase(
     haBuildResult,
     helmBuildResult,
   ] = await Promise.all([
-    runStep("Renovate Test", () => homelabTestRenovateRegex(updatedSource)),
+    runStep("Renovate Test", () => homelabTestRenovateRegex(updatedSource, monoRepoSource)),
     runStepOrSkip("Helm Test", versionOnly, () => homelabTestHelm(updatedSource)),
     runStepOrSkip("CDK8s Test", versionOnly, () => testCdk8sWithContainer(cdk8sContainer)),
     runStepOrSkip("Caddyfile Validate", versionOnly, () => validateCaddyfileWithContainer(cdk8sContainer)),

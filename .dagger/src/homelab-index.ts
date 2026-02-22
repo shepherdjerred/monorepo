@@ -260,18 +260,20 @@ export async function homelabTestHelm(
 
 /**
  * Test Renovate regex patterns in versions.ts files.
- * @param monoRepoSource The monorepo root source directory
+ * @param homelabSource The homelab source directory (packages/homelab)
+ * @param monoRepoSource The monorepo root source directory (for renovate.json)
  */
 export async function homelabTestRenovateRegex(
-  monoRepoSource: Directory,
+  homelabSource: Directory,
+  monoRepoSource?: Directory,
 ): Promise<string> {
-  const homelabSource = getHomelabSource(monoRepoSource);
   const daggerModuleSource = dag.currentModule().source();
   const container = getMiseRuntimeContainer()
     .withWorkdir("/workspace")
     .withFile("package.json", homelabSource.file("package.json"))
     .withFile("bun.lock", homelabSource.file("bun.lock"))
-    .withDirectory("patches", homelabSource.directory("patches"))
+    // Path must match patchedDependencies in package.json (monorepo-root-relative)
+    .withDirectory("packages/homelab/patches", homelabSource.directory("patches"))
     .withDirectory("src/ha", homelabSource.directory("src/ha"), {
       exclude: ["node_modules"],
     })
@@ -293,14 +295,18 @@ export async function homelabTestRenovateRegex(
       dag.cacheVolume("bun-cache-default"),
     )
     .withExec(["bun", "install", "--frozen-lockfile"])
-    .withFile("renovate.json", homelabSource.file("renovate.json"))
+    .withFile("renovate.json", (monoRepoSource ?? homelabSource).file("renovate.json"))
     .withFile(
       "src/cdk8s/src/versions.ts",
       homelabSource.file("src/cdk8s/src/versions.ts"),
     )
     .withFile(
       ".dagger/src/versions.ts",
-      daggerModuleSource.file("src/homelab/versions.ts"),
+      daggerModuleSource.file("src/lib-versions.ts"),
+    )
+    .withFile(
+      ".dagger/src/lib/versions.ts",
+      daggerModuleSource.file("src/lib-versions.ts"),
     )
     .withFile(
       ".dagger/test/test-renovate-regex.ts",
