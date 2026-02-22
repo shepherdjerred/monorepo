@@ -89,15 +89,32 @@ type ClaudeResponse = {
   usage: { inputTokens: number; outputTokens: number };
 };
 
+function jitteredDelay(baseMs: number): number {
+  return baseMs + Math.floor(Math.random() * baseMs * 0.5);
+}
+
+function isApiRetryable(error: unknown): boolean {
+  if (!(error instanceof Anthropic.APIError)) return false;
+  const status = Number(error.status);
+  return status === 429 || status === 529 || status >= 500;
+}
+
+function isParseRetryable(error: unknown): boolean {
+  if (error instanceof SyntaxError) return true;
+  if (error instanceof z.ZodError) return true;
+  const message = error instanceof Error ? error.message : "";
+  return message.includes("Parse error");
+}
+
 async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
   const claude = getClient();
-  const maxRetries = 3;
+  const maxRetries = 5;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await claude.messages.create({
         model: modelId,
-        max_tokens: 4096,
+        max_tokens: 16_384,
         system: buildSystemPrompt(),
         messages: [{ role: "user", content: userPrompt }],
       });
@@ -105,6 +122,12 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
       const block = response.content[0];
       if (block?.type !== "text") {
         throw new Error("Unexpected response type");
+      }
+
+      if (response.stop_reason === "max_tokens") {
+        throw new Error(
+          `Response truncated (${String(response.usage.output_tokens)} output tokens). Consider reducing batch size.`,
+        );
       }
 
       const usage = {
@@ -115,14 +138,11 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
 
       return { text: block.text, usage };
     } catch (error: unknown) {
-      const status =
-        error instanceof Anthropic.APIError
-          ? Number(error.status)
-          : undefined;
-      if ((status === 429 || status === 529) && attempt < maxRetries) {
-        const delay = 1000 * 2 ** (attempt + 1);
+      if (isApiRetryable(error) && attempt < maxRetries) {
+        const status = error instanceof Anthropic.APIError ? String(error.status) : "unknown";
+        const delay = jitteredDelay(1000 * 2 ** attempt);
         log.warn(
-          `Rate limited (${String(status)}), retrying in ${String(delay)}ms (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
+          `API error (${status}), retrying in ${String(Math.round(delay / 1000))}s (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -134,6 +154,31 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
   throw new Error("Exceeded max retries");
 }
 
+async function callClaudeAndParse<T>(
+  prompt: string,
+  schema: z.ZodType<T>,
+): Promise<T> {
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const { text } = await callClaude(prompt);
+      return schema.parse(parseJsonResponse(text));
+    } catch (error: unknown) {
+      if (isParseRetryable(error) && attempt < maxRetries) {
+        const delay = jitteredDelay(2000 * 2 ** attempt);
+        const label = error instanceof Error ? error.message.slice(0, 60) : "Unknown error";
+        log.warn(
+          `Parse failed: ${label}, retrying in ${String(Math.round(delay / 1000))}s (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("Exceeded max retries");
+}
+
 export async function classifyWeek(
   categories: MonarchCategory[],
   window: WeekWindow,
@@ -141,8 +186,7 @@ export async function classifyWeek(
   previousResults: Map<string, string>,
 ): Promise<WeekClassificationResponse> {
   const prompt = buildWeekPrompt(categories, window, resolvedMap, previousResults);
-  const { text } = await callClaude(prompt);
-  return WeekClassificationSchema.parse(parseJsonResponse(text));
+  return callClaudeAndParse(prompt, WeekClassificationSchema);
 }
 
 const VenmoClassificationSchema = z.object({
@@ -162,8 +206,7 @@ export async function classifyVenmoPayments(
   matches: VenmoMatch[],
 ): Promise<VenmoClassificationResponse> {
   const prompt = buildVenmoClassificationPrompt(categories, matches);
-  const { text } = await callClaude(prompt);
-  return VenmoClassificationSchema.parse(parseJsonResponse(text));
+  return callClaudeAndParse(prompt, VenmoClassificationSchema);
 }
 
 export async function classifyAmazonBatch(
@@ -171,8 +214,7 @@ export async function classifyAmazonBatch(
   orders: AmazonOrderInput[],
 ): Promise<AmazonBatchResponse> {
   const prompt = buildAmazonBatchPrompt(categories, orders);
-  const { text } = await callClaude(prompt);
-  return AmazonBatchSchema.parse(parseJsonResponse(text));
+  return callClaudeAndParse(prompt, AmazonBatchSchema);
 }
 
 export function computeSplits(

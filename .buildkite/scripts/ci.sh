@@ -63,15 +63,4 @@ if [[ "${BUILDKITE_BRANCH}" == "main" ]]; then
   )
 fi
 
-MAX_RETRIES=5
-RETRY=0
-until dagger -v call ci "${ARGS[@]}"; do
-  RETRY=$((RETRY + 1))
-  if [ "${RETRY}" -ge "${MAX_RETRIES}" ]; then
-    echo "Dagger CI failed after ${MAX_RETRIES} attempts"
-    exit 1
-  fi
-  DELAY=$((10 + RETRY * 10))
-  echo "Dagger CI failed (attempt ${RETRY}/${MAX_RETRIES}), retrying in ${DELAY}s..."
-  sleep "${DELAY}"
-done
+dagger -v call ci "${ARGS[@]}"

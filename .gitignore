@@ -46,5 +46,8 @@ logs/
 # Test coverage output
 coverage/
 
+# Monarch hardcoded order data (contains personal purchase history)
+packages/monarch/src/lib/costco/costco-orders.json
+
 # Obsidian plugin bundles (may contain embedded secrets)
 obsidian/.obsidian/plugins/*/main.js

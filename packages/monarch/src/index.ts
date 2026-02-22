@@ -9,18 +9,15 @@ import {
 } from "./lib/monarch/client.ts";
 import type { MonarchCategory, MonarchTransaction } from "./lib/monarch/types.ts";
 import { groupByWeek, buildWeekWindows } from "./lib/monarch/weeks.ts";
-import type { WeekGroup } from "./lib/monarch/weeks.ts";
+import type { WeekGroup, WeekWindow } from "./lib/monarch/weeks.ts";
 import { buildResolvedMap } from "./lib/enrichment.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
   initClaude,
   classifyWeek,
-  classifyAmazonBatch,
-  computeSplits,
   getUsageSummary,
 } from "./lib/classifier/claude.ts";
-import { scrapeAmazonOrders } from "./lib/amazon/scraper.ts";
-import { matchAmazonOrders } from "./lib/amazon/matcher.ts";
+import { classifyAmazon } from "./lib/amazon/classify.ts";
 import type { MatchResult } from "./lib/amazon/matcher.ts";
 import { classifyVenmo } from "./lib/venmo/classify.ts";
 import type { VenmoMatchResult } from "./lib/venmo/matcher.ts";
@@ -31,7 +28,8 @@ import { classifyApple } from "./lib/apple/classify.ts";
 import type { AppleMatchResult } from "./lib/apple/matcher.ts";
 import { classifyCostco } from "./lib/costco/classify.ts";
 import type { CostcoMatchResult } from "./lib/costco/matcher.ts";
-import type { ProposedChange, ProposedSplit } from "./lib/classifier/types.ts";
+import type { ProposedChange, WeekClassificationResponse } from "./lib/classifier/types.ts";
+import { getCachedWeek, cacheWeekClassification } from "./lib/classifier/cache.ts";
 import {
   displayWeekChanges,
   displayAmazonChanges,
@@ -55,99 +53,6 @@ function getDateRange(): { startDate: string; endDate: string } {
       .toISOString()
       .split("T")[0] ?? "";
   return { startDate, endDate };
-}
-
-async function classifyAmazon(
-  config: Config,
-  categories: MonarchCategory[],
-  amazonTransactions: MonarchTransaction[],
-): Promise<{ changes: ProposedChange[]; matchResult: MatchResult }> {
-  const orders = await scrapeAmazonOrders(
-    config.amazonYears,
-    config.forceScrape,
-  );
-  log.info(`Scraped ${String(orders.length)} Amazon orders`);
-
-  const matchResult = matchAmazonOrders(amazonTransactions, orders);
-  log.info(
-    `Matched ${String(matchResult.matched.length)}/${String(amazonTransactions.length)} transactions`,
-  );
-
-  const changes: ProposedChange[] = [];
-  const batchSize = 20;
-
-  for (let i = 0; i < matchResult.matched.length; i += batchSize) {
-    const batch = matchResult.matched.slice(i, i + batchSize);
-    log.progress(i + batch.length, matchResult.matched.length, "Amazon orders classified");
-
-    const orderInputs = batch.map((match, idx) => ({
-      orderIndex: idx,
-      items: match.order.items.map((item) => ({
-        title: item.title,
-        price: item.price,
-      })),
-    }));
-
-    const result = await classifyAmazonBatch(categories, orderInputs);
-
-    for (const classification of result.orders) {
-      const match = batch[classification.orderIndex];
-      if (!match) continue;
-
-      if (classification.needsSplit && classification.items.length > 1) {
-        const splitItems = classification.items.map((item) => ({
-          amount: item.price,
-          categoryId: item.categoryId,
-          itemName: item.title,
-          categoryName: item.categoryName,
-        }));
-
-        const proratedSplits = computeSplits(
-          match.transaction.amount,
-          splitItems,
-        );
-
-        const splits: ProposedSplit[] = proratedSplits.map((s) => ({
-          itemName: s.itemName,
-          amount: s.amount,
-          categoryId: s.categoryId,
-          categoryName: s.categoryName,
-        }));
-
-        changes.push({
-          transactionId: match.transaction.id,
-          transactionDate: match.transaction.date,
-          merchantName: match.transaction.merchant.name,
-          amount: match.transaction.amount,
-          currentCategory: match.transaction.category.name,
-          currentCategoryId: match.transaction.category.id,
-          proposedCategory: "SPLIT",
-          proposedCategoryId: "",
-          confidence: "high",
-          type: "split",
-          splits,
-        });
-      } else {
-        const firstItem = classification.items[0];
-        if (!firstItem) continue;
-
-        changes.push({
-          transactionId: match.transaction.id,
-          transactionDate: match.transaction.date,
-          merchantName: `Amazon: ${firstItem.title}`,
-          amount: match.transaction.amount,
-          currentCategory: match.transaction.category.name,
-          currentCategoryId: match.transaction.category.id,
-          proposedCategory: firstItem.categoryName,
-          proposedCategoryId: firstItem.categoryId,
-          confidence: "high",
-          type: "recategorize",
-        });
-      }
-    }
-  }
-
-  return { changes, matchResult };
 }
 
 type DeepClassifyResult = {
@@ -224,7 +129,7 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
   let costcoMatchResult: CostcoMatchResult | null = null;
   if (!config.skipCostco && costcoTransactions.length > 0) {
     log.info("\n--- Costco Deep Classification ---");
-    const result = await classifyCostco(categories, costcoTransactions, config.forceScrape);
+    const result = await classifyCostco(categories, costcoTransactions);
     costcoChanges = result.changes;
     costcoMatchResult = result.matchResult;
     displayCostcoChanges(costcoChanges, costcoMatchResult);
@@ -234,7 +139,7 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
   let matchResult: MatchResult | null = null;
   if (!config.skipAmazon && amazonTransactions.length > 0) {
     log.info("\n--- Amazon Deep Classification ---");
-    const result = await classifyAmazon(config, categories, amazonTransactions);
+    const result = await classifyAmazon(config.amazonYears, config.forceScrape, categories, amazonTransactions);
     amazonChanges = result.changes;
     matchResult = result.matchResult;
     displayAmazonChanges(amazonChanges, matchResult);
@@ -286,46 +191,88 @@ async function classifyByWeek(
   log.info(`\n--- Week-Based Classification (${String(weekGroups.length)} weeks) ---`);
 
   const weekChanges: ProposedChange[] = [];
-  const previousResults = new Map<string, string>();
 
-  for (let i = 0; i < windows.length; i++) {
-    const window = windows[i];
-    if (!window) continue;
+  type WeekTask = {
+    window: WeekWindow;
+    classifiableIds: string[];
+  };
 
+  const cachedTasks: WeekTask[] = [];
+  const uncachedTasks: WeekTask[] = [];
+
+  // Separate cached vs uncached weeks
+  for (const window of windows) {
     const classifiable = window.current.transactions.filter(
       (t) => !resolvedMap.has(t.id),
     );
+    if (classifiable.length === 0) continue;
 
-    if (classifiable.length === 0) {
-      log.debug(`  ${window.current.weekKey}: no transactions to classify, skipping`);
-      continue;
+    const classifiableIds = classifiable.map((t) => t.id);
+    const cached = await getCachedWeek(window.current.weekKey, classifiableIds);
+    if (cached) {
+      for (const classification of cached) {
+        const txn = window.current.transactions.find((t) => t.id === classification.transactionId);
+        if (!txn) continue;
+        if (classification.categoryId === txn.category.id) continue;
+        weekChanges.push({
+          transactionId: classification.transactionId,
+          transactionDate: txn.date,
+          merchantName: txn.merchant.name,
+          amount: txn.amount,
+          currentCategory: txn.category.name,
+          currentCategoryId: txn.category.id,
+          proposedCategory: classification.categoryName,
+          proposedCategoryId: classification.categoryId,
+          confidence: classification.confidence,
+          type: "recategorize",
+        });
+      }
+      cachedTasks.push({ window, classifiableIds });
+    } else {
+      uncachedTasks.push({ window, classifiableIds });
     }
+  }
 
-    log.progress(i + 1, windows.length, `weeks classified (${window.current.weekKey})`);
+  if (cachedTasks.length > 0) {
+    log.info(`${String(cachedTasks.length)} weeks from cache, ${String(uncachedTasks.length)} need classification`);
+  }
 
-    const result = await classifyWeek(categories, window, resolvedMap, previousResults);
+  // Classify uncached weeks in parallel
+  const weekConcurrency = 3;
+  let weekCompleted = 0;
+  const emptyPreviousResults = new Map<string, string>();
 
-    for (const classification of result.transactions) {
-      const txn = window.current.transactions.find((t) => t.id === classification.transactionId);
-      if (!txn) continue;
+  for (let i = 0; i < uncachedTasks.length; i += weekConcurrency) {
+    const chunk = uncachedTasks.slice(i, i + weekConcurrency);
+    const results = await Promise.all(
+      chunk.map(async (task): Promise<{ task: WeekTask; result: WeekClassificationResponse }> => {
+        const result = await classifyWeek(categories, task.window, resolvedMap, emptyPreviousResults);
+        await cacheWeekClassification(task.window.current.weekKey, task.classifiableIds, result.transactions);
+        return { task, result };
+      }),
+    );
 
-      previousResults.set(classification.transactionId, classification.categoryName);
-
-      if (classification.categoryId === txn.category.id) continue;
-
-      weekChanges.push({
-        transactionId: classification.transactionId,
-        transactionDate: txn.date,
-        merchantName: txn.merchant.name,
-        amount: txn.amount,
-        currentCategory: txn.category.name,
-        currentCategoryId: txn.category.id,
-        proposedCategory: classification.categoryName,
-        proposedCategoryId: classification.categoryId,
-        confidence: classification.confidence,
-        type: "recategorize",
-      });
+    for (const { task, result } of results) {
+      for (const classification of result.transactions) {
+        const txn = task.window.current.transactions.find((t) => t.id === classification.transactionId);
+        if (!txn) continue;
+        if (classification.categoryId === txn.category.id) continue;
+        weekChanges.push({
+          transactionId: classification.transactionId,
+          transactionDate: txn.date,
+          merchantName: txn.merchant.name,
+          amount: txn.amount,
+          currentCategory: txn.category.name,
+          currentCategoryId: txn.category.id,
+          proposedCategory: classification.categoryName,
+          proposedCategoryId: classification.categoryId,
+          confidence: classification.confidence,
+          type: "recategorize",
+        });
+      }
+      weekCompleted += 1;
     }
+    log.progress(weekCompleted, uncachedTasks.length, "weeks classified");
   }
 
   return { weekChanges, weekGroups };
