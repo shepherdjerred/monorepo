@@ -43,11 +43,13 @@ ARGS=(
   --npm-token=env:NPM_TOKEN
   --s3-access-key-id=env:S3_ACCESS_KEY_ID
   --s3-secret-access-key=env:S3_SECRET_ACCESS_KEY
+  --argocd-admin-password=env:ARGOCD_ADMIN_PASSWORD
+  --op-service-account-token=env:OP_SERVICE_ACCOUNT_TOKEN
 )
 
 if [[ "${BUILDKITE_BRANCH}" == "main" ]]; then
   ARGS+=(
-    --version="1.0.${BUILDKITE_BUILD_NUMBER}"
+    --version="1.1.${BUILDKITE_BUILD_NUMBER}"
     --git-sha="${BUILDKITE_COMMIT}"
     --registry-username=shepherdjerred
     --registry-password=env:GH_TOKEN
