@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "TwistedFate": {
       "id": "TwistedFate",
@@ -132,7 +132,10 @@
         "Focus on dodging Wild Cards early when your champion doesn't have the hit points to afford getting hit.",
         "If you have low Health, use Destiny as an indicator to run to safety. It will give you a head start in escaping any possible ganks."
       ],
-      "tags": ["Mage", "Marksman"],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -169,7 +172,11 @@
           "description": "Twisted Fate throws three cards, dealing damage to each enemy unit they pass through.",
           "tooltip": "Twisted Fate throws three cards that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -177,23 +184,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.75, 5.5, 5.25, 5],
+          "cooldown": [
+            6,
+            5.75,
+            5.5,
+            5.25,
+            5
+          ],
           "cooldownBurn": "6/5.75/5.5/5.25/5",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +290,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [10000, 10000, 10000, 10000, 10000],
+          "range": [
+            10000,
+            10000,
+            10000,
+            10000,
+            10000
+          ],
           "rangeBurn": "10000",
           "image": {
             "full": "WildCards.png",
@@ -250,23 +335,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [40, 60, 80, 100, 120],
-            [30, 35, 40, 45, 50],
-            [1, 1.25, 1.5, 1.75, 2],
-            [30, 45, 60, 75, 90],
-            [15, 22.5, 30, 37.5, 45],
-            [70, 90, 110, 130, 150],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              60,
+              80,
+              100,
+              120
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              30,
+              45,
+              60,
+              75,
+              90
+            ],
+            [
+              15,
+              22.5,
+              30,
+              37.5,
+              45
+            ],
+            [
+              70,
+              90,
+              110,
+              130,
+              150
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +441,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [200, 200, 200, 200, 200],
+          "range": [
+            200,
+            200,
+            200,
+            200,
+            200
+          ],
           "rangeBurn": "200",
           "image": {
             "full": "PickACard.png",
@@ -303,30 +466,105 @@
           "description": "Every 4 attacks, Twisted Fate deals bonus damage. In addition, his Attack Speed is increased.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Twisted Fate gains <attackSpeed>{{ attackspeedbonus }}% Attack Speed</attackSpeed> and every 4th Attack deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage:", "Attack Speed"],
+            "label": [
+              "Bonus Damage:",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +582,13 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "CardmasterStack.png",
@@ -363,30 +607,81 @@
           "description": "Twisted Fate predicts the fortunes of his foes, revealing all enemy champions and enabling the use of Gate, which teleports Twisted Fate to any target location in 1.5 seconds.",
           "tooltip": "Twisted Fate focuses on his cards, granting <keywordStealth>True Sight</keywordStealth> of all enemy champions on the map for {{ e1 }} seconds and allowing him to <recast>Recast</recast>.<br /><br /><recast>Recast</recast>: Twisted Fate teleports up to {{ e4 }} units away.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Duration", "Cooldown"],
+            "label": [
+              "Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ recastduration }} -> {{ recastdurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [170, 140, 110],
+          "cooldown": [
+            170,
+            140,
+            110
+          ],
           "cooldownBurn": "170/140/110",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [6, 8, 10],
-            [0, 0, 0],
-            [0, 0, 0],
-            [5500, 5500, 5500],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              6,
+              8,
+              10
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5500,
+              5500,
+              5500
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -404,7 +699,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 5500, 5500],
+          "range": [
+            5500,
+            5500,
+            5500
+          ],
           "rangeBurn": "5500",
           "image": {
             "full": "Destiny.png",

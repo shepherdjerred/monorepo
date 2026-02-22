@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Smolder": {
       "id": "Smolder",
@@ -50,7 +50,10 @@
         "Smolder is very vulnerable in the early stages. Try to take advantage of his weakness before he can learn how to be a dragon!",
         "Smolders flight can be interrupted by hard CC and impacted by slows."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -87,30 +90,105 @@
           "description": "Smolder breathes fire on an enemy. As he gains more stacks, this ability becomes more powerful.",
           "tooltip": "Smolder belches flame, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> + <magicDamage>{{ spell.smolderp:passive_qdamageincrease }} magic damage</magicDamage>. If the target dies, Smolder refunds <scaleMana>{{ manarestore }} Mana</scaleMana>, once per cast.<br /><br />Based on stacks of <spellName>Dragon Practice</spellName>, this Ability evolves to gain the following effects:<li><keywordMajor>{{ stacktier1 }} Stacks</keywordMajor>: Damages all enemies surrounding the target.<li><keywordMajor>{{ stacktier2 }} Stacks</keywordMajor>: Sends <spellName>{{ tier2_numberofblowback }}</spellName> explosions beyond the target that deal {{ tier2_blowbackpercentagedamage }}% of this Ability's damage.<li><keywordMajor>{{ stacktier3 }} Stacks</keywordMajor>: Burns the target, dealing <trueDamage>{{ tier3_burn }} max Health true damage</trueDamage> over {{ tier3_dotlength }} seconds. Enemy champions that drop below <trueDamage>{{ tier3_executethreshold }}</trueDamage> total health while burning are killed instantly.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [5.5, 5, 4.5, 4, 3.5],
+          "cooldown": [
+            5.5,
+            5,
+            4.5,
+            4,
+            3.5
+          ],
           "cooldownBurn": "5.5/5/4.5/4/3.5",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -128,7 +206,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "SmolderQ.png",
@@ -161,23 +245,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -195,7 +351,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1500, 1500, 1500, 1500, 1500],
+          "range": [
+            1500,
+            1500,
+            1500,
+            1500,
+            1500
+          ],
           "rangeBurn": "1500",
           "image": {
             "full": "SmolderW.png",
@@ -214,30 +376,105 @@
           "description": "Smolder takes flight ignoring terrain and bombarding the lowest health enemy.",
           "tooltip": "Smolder takes flight, gaining <speed>{{ movespeed*100 }}% Move Speed</speed> and ignoring terrain for {{ duration }} seconds.<br /><br />While flying, Smolder bombards the lowest Health enemy <spellName>{{ totalnumberofattacks }}</spellName> (rounded down) times for <physicalDamage>{{ damageperhit }} physical damage</physicalDamage> + <magicDamage>{{ spell.smolderp:ebonusdamage }} magic damage</magicDamage> per hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 22, 20, 18, 16],
+          "cooldown": [
+            24,
+            22,
+            20,
+            18,
+            16
+          ],
           "cooldownBurn": "24/22/20/18/16",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -255,7 +492,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "SmolderE.png",
@@ -274,7 +517,11 @@
           "description": "Smolder calls his mom to breath fire from above, dealing extra damage and slowing enemies in the center of her fire.",
           "tooltip": "Smolder's mom breathes fire from above, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Enemies in the center take <physicalDamage>{{ tooltiponly_totalsweetspotdamage }} physical damage</physicalDamage> instead and are <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />Smolder's mom heals her son for <healing>{{ momhealcalc }} Health</healing> if she hits him.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Heal", "Cooldown"],
+            "label": [
+              "Damage",
+              "Heal",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ momheal }} -> {{ momhealNL }}",
@@ -282,23 +529,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -316,7 +611,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [4200, 4200, 4200],
+          "range": [
+            4200,
+            4200,
+            4200
+          ],
           "rangeBurn": "4200",
           "image": {
             "full": "SmolderR.png",

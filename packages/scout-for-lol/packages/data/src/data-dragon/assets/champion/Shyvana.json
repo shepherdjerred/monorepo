@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -86,7 +86,10 @@
         "All of Shyvana's basic abilities hit multiple enemies in dragon form. It's important for opposing champions to not cluster while fighting her.",
         "Shyvana's Fury Bar indicate her ultimate can be activated. Harassing her when she's low on Fury can be very effective."
       ],
-      "tags": ["Fighter", "Mage"],
+      "tags": [
+        "Fighter",
+        "Mage"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 8,
@@ -123,7 +126,11 @@
           "description": "Shyvana strikes twice on her next attack and grants herself Attack Speed for her next attacks. Basic attacks reduce the cooldown of Twin Bite by 0.5 seconds.<br><br><font color='#FF3300'>Dragon Form: </font>Twin Bite cleaves all units in front of Shyvana.",
           "tooltip": "Shyvana's next Attack strikes twice, dealing <physicalDamage>{{ firsthitdamagecalc }}</physicalDamage> then <physicalDamage>{{ secondhitdamagecalc }} physical damage</physicalDamage>. Her next 2 Attacks gain<speed> {{ bonusas }}% Attack Speed</speed>.<br /><br />Attacks reduce this Ability's Cooldown by {{ cdreductiononhit }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> The empowered Attacks hit all units in front of Shyvana.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage:", "Cooldown", "Attack Speed"],
+            "label": [
+              "Bonus Damage:",
+              "Cooldown",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ secondhitdamage*100.000000 }}% -> {{ secondhitdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -131,23 +138,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -165,7 +244,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "ShyvanaDoubleAttack.png",
@@ -184,7 +269,11 @@
           "description": "Shyvana surrounds herself in fire, dealing magic damage per second to nearby enemies and moving faster for 3 seconds, part of this damage is applied again when Shyvana basic attacks an enemy with Burnout active. The Move Speed reduces over the duration of the spell. Basic attacks extend the duration of Burnout. <br><br><font color='#FF3300'>Dragon Form: </font>Burnout grows in size.",
           "tooltip": "Shyvana summons a flame storm around her, gaining <speed>{{ finalmsperc }} decaying Move Speed</speed> and dealing <magicDamage>{{ damagepertickcalc }} magic damage per second</magicDamage> for {{ baseduration }} seconds. <br /><br />The flame storm also causes Shyvana's Attacks to deal an additional <magicDamage>{{ damageonhitcalc }} magic damage</magicDamage> to surrounding enemies and extend this Ability's duration by {{ bonusdurationonhit }} second.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> The size of the flame storm is increased.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage (aura)", "Damage (on hit)", "Move Speed"],
+            "label": [
+              "Damage (aura)",
+              "Damage (on hit)",
+              "Move Speed"
+            ],
             "effect": [
               "{{ damagepertick }} -> {{ damagepertickNL }}",
               "{{ onhitdamage }} -> {{ onhitdamageNL }}",
@@ -192,23 +281,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +387,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "ShyvanaImmolationAura.png",
@@ -245,30 +412,105 @@
           "description": "Shyvana unleashes a fireball that deals damage to all enemies it encounters and leaves cinders on the target, marking them for 5 seconds. Shyvana's basic attacks on marked targets deal a percentage of their maximum Health as damage on-hit.<br><br><font color='#FF3300'>Dragon Form: </font>Flame Breath explodes on impact or at target location, dealing bonus damage and scorching the earth for a short duration.",
           "tooltip": "Shyvana unleashes a fireball that deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and marks for {{ markduration }} seconds. The fireball stops on the first champion hit.<br /><br />Shyvana's Attacks against marked targets deal an additional <magicDamage>{{ percenthpdamageonhit }}% max Health magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> The fireball explodes once it ends, dealing an additional <magicDamage>{{ dragonexplosioncalc }} magic damage</magicDamage> and scorching the earth, dealing <magicDamage>{{ dragondamagetotalcalc }} magic damage</magicDamage> over 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [60, 100, 140, 180, 220],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              60,
+              100,
+              140,
+              180,
+              220
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -286,7 +528,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "ShyvanaFireball.png",
@@ -305,7 +553,11 @@
           "description": "Shyvana transforms into a dragon and takes flight to a target location. Enemies along her path take damage and are knocked toward her target location.<br><br>Shyvana passively gains Fury per second and gains 2 Fury on basic attack.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Shyvana generates <keywordMajor>{{ furygainpertick }} Fury</keywordMajor> every second, and Attacks generate an extra <keywordMajor>{{ furygainonhit }} Fury</keywordMajor>.<br /><br /><spellActive>Active: </spellActive>Shyvana transforms into <keywordMajor>Dragon Form</keywordMajor>, gaining <healing>{{ bonushp }} max Health</healing> and flying forward, dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> and <status>Knocking</status> enemies toward her target location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Fury Gain", "Bonus Health", "Flight Damage"],
+            "label": [
+              "Passive Fury Gain",
+              "Bonus Health",
+              "Flight Damage"
+            ],
             "effect": [
               "{{ furygainpertick }} -> {{ furygainpertickNL }}",
               "{{ bonushp }} -> {{ bonushpNL }}",
@@ -313,23 +565,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -347,7 +647,11 @@
           "vars": [],
           "costType": " Fury a Second",
           "maxammo": "-1",
-          "range": [850, 850, 850],
+          "range": [
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "ShyvanaTransformCast.png",

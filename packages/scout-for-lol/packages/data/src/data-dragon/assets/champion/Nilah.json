@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Nilah": {
       "id": "Nilah",
@@ -47,7 +47,10 @@
       "blurb": "Nilah is an ascetic warrior from a distant land, seeking the world's deadliest, most titanic opponents so that she might challenge and destroy them. Having won her power through an encounter with the long-imprisoned demon of joy, she has no emotions...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -84,27 +87,103 @@
           "description": "With a snap of her whip-blade, Nilah damages any enemies she hits in a straight line in her chosen direction. This action extends her attack range for a short duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Nilah gains {{ critarmorpen }} Armor Penetration, and her Attacks against champions restore <healing>{{ critlifesteal }} damage dealt as Health</healing>. Overhealing from this is converted into a <shield>Shield</shield> for {{ shieldduration }} seconds.<br /><br /><spellActive>Active:</spellActive> Nilah cracks her whip-blade, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage>. If an enemy unit or structure is hit, Nilah gains 125 Attack Range and <attackSpeed>{{ bonusattackspeedcalc }}% Attack Speed</attackSpeed>, and her Attacks hit in a cone for {{ buffduration }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -122,7 +201,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "NilahQ.png",
@@ -141,7 +226,11 @@
           "description": "Nilah envelops herself in mist, increasing her movement speed and allowing her to gracefully dodge all incoming attacks. Any allies she touches during the mist's duration will also gain this effect.",
           "tooltip": "Nilah envelops herself in mist for {{ baseduration }} seconds, becoming Ghosted, gaining <speed>{{ movespeedpercent*100 }}% Move Speed</speed>, dodging Attacks, and reducing <magicDamage>magic damage</magicDamage> taken by {{ magicdamagereduction*100 }}%.<br /><br />While active, touching allied champions envelops them in mist, granting the same benefits for {{ sharebaseduration }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Move Speed", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Cooldown",
+              "Move Speed",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ movespeedpercent*100.000000 }}% -> {{ movespeedpercentnl*100.000000 }}%",
@@ -149,23 +238,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 25, 24, 23, 22],
+          "cooldown": [
+            26,
+            25,
+            24,
+            23,
+            22
+          ],
           "cooldownBurn": "26/25/24/23/22",
-          "cost": [60, 45, 30, 15, 0],
+          "cost": [
+            60,
+            45,
+            30,
+            15,
+            0
+          ],
           "costBurn": "60/45/30/15/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -183,7 +344,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [150, 150, 150, 150, 150],
+          "range": [
+            150,
+            150,
+            150,
+            150,
+            150
+          ],
           "rangeBurn": "150",
           "image": {
             "full": "NilahW.png",
@@ -202,30 +369,105 @@
           "description": "Nilah enthusiastically dashes toward her target, dealing damage to any enemies she passes through on the way.",
           "tooltip": "Nilah dashes through a unit, dealing <physicalDamage>{{ dashdamage }} physical damage</physicalDamage> to any enemies she passes through.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Recharge Time"],
+            "label": [
+              "Damage",
+              "Recharge Time"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
           "cooldownBurn": "0.5",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -243,7 +485,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "NilahE.png",
@@ -262,7 +510,11 @@
           "description": "Twirling her whip-blade in joyful exuberance, Nilah deals damage to enemies around her before pulling them closer with her weapon.",
           "tooltip": "Nilah whirls her whip-blade, dealing <physicalDamage>{{ damagepertickcalctooltip }} physical damage</physicalDamage> over 1 second, then finishes with a burst of <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> that also <status>Pulls</status> nearby enemies toward her.<br /><br />Apotheosis heals Nilah and her nearby allies for <healing>{{ champhealingpercent }} (+{{ spell.nilahq:critlifesteal }} Formless Blade) of the damage dealt</healing> to enemy champions, converting any overhealing into a <shield>Shield</shield> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Damage Over Time"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Damage Over Time"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damagebase }} -> {{ damagebaseNL }}",
@@ -270,23 +522,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 95, 80],
+          "cooldown": [
+            110,
+            95,
+            80
+          ],
           "cooldownBurn": "110/95/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -304,7 +604,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "NilahR.png",

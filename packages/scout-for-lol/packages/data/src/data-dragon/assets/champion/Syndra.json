@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -115,7 +115,9 @@
         "Attack Syndra after she's used Scatter the Weak, it has a long cooldown so she'll be vulnerable.",
         "At max rank Syndra's spells gain bonus effects and change in appearance."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -152,30 +154,105 @@
           "description": "Syndra conjures a Dark Sphere dealing magic damage. The sphere remains and can be manipulated by her other powers.",
           "tooltip": "Syndra conjures a <keywordMajor>Dark Sphere</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The <keywordMajor>Dark Sphere</keywordMajor> remains for {{ sphereduration }} seconds and can be manipulated by Syndra's other Abilities.<br /><br /><evolve>{{ spell.syndrapassive:q1upgradethreshold }} Splinters of Wrath</evolve>: Syndra can store {{ upgrade1maxammo }} charges of <keywordMajor>Dark Sphere</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -193,7 +270,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "SyndraQ.png",
@@ -212,7 +295,11 @@
           "description": "Syndra picks up and throws a Dark Sphere or enemy minion dealing magic damage and slowing the Move Speed of enemies.",
           "tooltip": "Syndra grabs a <keywordMajor>Dark Sphere</keywordMajor>, enemy minion, or non-epic monster. She drags it with her and can <recast>Recast</recast> for up to 5 seconds.<br /><br /><recast>Recast</recast>: Syndra hurls the object, dealing <magicDamage>{{ throwdamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ totalslowamount }}% for {{ f2 }} seconds.<br /><br /><evolve>{{ spell.syndrapassive:wupgradethreshold }} Splinters of Wrath</evolve>: This Ability deals an additional <trueDamage>{{ tooltiponlypassivebonuspercent }} true damage</trueDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -220,23 +307,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -254,7 +413,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "SyndraW.png",
@@ -273,27 +438,103 @@
           "description": "Syndra knocks enemies and Dark Spheres back dealing magic damage. Enemies hit by Dark Spheres become stunned.",
           "tooltip": "Syndra projects a wave of force, <status>Knocking Back</status> enemies and <keywordMajor>Dark Spheres</keywordMajor> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dark Spheres</keywordMajor> that are pushed <status>Stun</status> enemies for {{ stunduration }} seconds and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><evolve>{{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath</evolve>: This Ability's width is increased and <status>Slows</status> enemies by <status>{{ upgradedslowamount*100 }}%</status> for {{ upgradedslowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -311,7 +552,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "SyndraE.png",
@@ -330,7 +577,11 @@
           "description": "Syndra bombards an enemy Champion with all of her Dark Spheres.",
           "tooltip": "<spellPassive>Passive</spellPassive>: <spellName>Dark Sphere</spellName> gains an additional {{ qhasteperrank }} Ability Haste for each rank of <spellName>Unleashed Power</spellName>.<br /><br />Syndra draws on her full cataclysmic power, launching the 3 <keywordMajor>Dark Spheres</keywordMajor> orbiting her plus up to 4 more nearby at an enemy champion. Each <keywordMajor>Dark Sphere</keywordMajor> deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> (max <magicDamage>{{ maxdamagecalc }} magic damage</magicDamage>).<br /><br /><evolve>{{ spell.syndrapassive:rupgradethreshold }} Splinters of Wrath</evolve>: This Ability <danger>executes</danger> enemies below {{ upgradeexecutethreshold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Dark Sphere Ability Haste"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Dark Sphere Ability Haste"
+            ],
             "effect": [
               "{{ damagepersphere }} -> {{ damagepersphereNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -338,23 +589,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -372,7 +671,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [675, 675, 675],
+          "range": [
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "SyndraR.png",
