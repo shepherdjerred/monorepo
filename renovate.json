@@ -6,7 +6,7 @@
     {
       "customType": "regex",
       "description": "Update versions.ts",
-      "managerFilePatterns": ["**/versions.ts"],
+      "managerFilePatterns": ["**/versions.ts", "**/lib-versions.ts"],
       "matchStrings": [
         "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*\"(?<depName>.+?)\":\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\"",
         "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*(?<depName>[a-zA-Z0-9_-]+):\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\""
@@ -29,9 +29,7 @@
     },
     {
       "matchPackageNames": [
-        "dagger-helm",
-        "gha-runner-scale-set-controller",
-        "gha-runner-scale-set"
+        "dagger-helm"
       ],
       "pinDigests": false
     },
