@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun
 
 import { z } from "zod";
-import cdk8sVersions from "../../packages/homelab/src/cdk8s/src/versions";
-import daggerVersions from "../src/lib-versions.ts";
+import cdk8sVersions from "@homelab/cdk8s/src/versions";
+import daggerVersions from "../src/lib/versions.ts";
 
 /**
  * Test script to validate that versions.ts files have properly formatted
@@ -176,9 +176,9 @@ async function parseVersionsFile(
 
 function getVersionsObject(filePath: string): Record<string, string> {
   // Use static imports to get the versions object
-  if (filePath === "packages/homelab/src/cdk8s/src/versions.ts") {
+  if (filePath === "src/cdk8s/src/versions.ts") {
     return cdk8sVersions;
-  } else if (filePath === ".dagger/src/lib-versions.ts") {
+  } else if (filePath === ".dagger/src/versions.ts") {
     return daggerVersions;
   } else {
     throw new Error(`Unknown versions file: ${filePath}`);
@@ -200,7 +200,7 @@ async function main() {
   const renovateRegexes = await getRenovateRegexes();
   console.log(`📋 Using ${String(renovateRegexes.length)} regex pattern(s)`);
 
-  const versionFiles = ["packages/homelab/src/cdk8s/src/versions.ts", ".dagger/src/lib-versions.ts"];
+  const versionFiles = ["src/cdk8s/src/versions.ts", ".dagger/src/versions.ts"];
 
   let totalErrors = 0;
   let totalWarnings = 0;
