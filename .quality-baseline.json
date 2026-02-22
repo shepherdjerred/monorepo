@@ -3,7 +3,9 @@
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
   },
-  "ts-suppressions": {},
+  "ts-suppressions": {
+    "packages/monarch/src/lib/costco/scraper.ts": 1
+  },
   "rust-allow": {},
   "prettier-ignore": {},
   "updated": "2026-02-18"

@@ -4,6 +4,7 @@ export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
   }),
+  { ignores: ["scripts/"] },
   { rules: { "no-console": "off" } },
   {
     files: ["src/lib/**/*.ts"],

@@ -1,15 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import type { MonarchCategory, MerchantGroup } from "../monarch/types.ts";
+import type { MonarchCategory } from "../monarch/types.ts";
+import type { WeekWindow } from "../monarch/weeks.ts";
+import type { ResolvedTransaction } from "../enrichment.ts";
 import type {
-  MerchantBatchResponse,
-  AmazonClassificationResponse,
+  AmazonBatchResponse,
+  AmazonOrderInput,
+  VenmoClassificationResponse,
+  WeekClassificationResponse,
 } from "./types.ts";
 import {
   buildSystemPrompt,
-  buildMerchantBatchPrompt,
-  buildAmazonItemPrompt,
+  buildWeekPrompt,
+  buildAmazonBatchPrompt,
+  buildVenmoClassificationPrompt,
 } from "./prompt.ts";
+import type { VenmoMatch } from "../venmo/matcher.ts";
 import { log } from "../logger.ts";
 import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
@@ -36,37 +42,46 @@ function getClient(): Anthropic {
 
 export function parseJsonResponse(text: string): unknown {
   let cleaned = text.trim();
-  const fenceMatch = /```(?:json)?\n([\s\S]*?)\n```/.exec(cleaned);
+  const fenceMatch = /```(?:json)?[ \t]*\n([\s\S]*?)\n[ \t]*```/.exec(cleaned);
   const fenceContent = fenceMatch?.[1];
   if (fenceContent !== undefined) {
     cleaned = fenceContent.trim();
   }
+  if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+    const jsonStart = cleaned.search(/[{[]/);
+    if (jsonStart >= 0) {
+      cleaned = cleaned.slice(jsonStart);
+    }
+  }
   return JSON.parse(cleaned) as unknown;
 }
 
-const MerchantBatchSchema = z.object({
-  merchants: z.array(
+const WeekClassificationSchema = z.object({
+  transactions: z.array(
     z.object({
-      merchantName: z.string(),
+      transactionId: z.string(),
       categoryId: z.string(),
       categoryName: z.string(),
       confidence: z.enum(["high", "medium", "low"]),
-      ambiguous: z.boolean(),
-      reason: z.string().optional(),
     }),
   ),
 });
 
-const AmazonClassificationSchema = z.object({
-  items: z.array(
+const AmazonBatchSchema = z.object({
+  orders: z.array(
     z.object({
-      title: z.string(),
-      price: z.number(),
-      categoryId: z.string(),
-      categoryName: z.string(),
+      orderIndex: z.number(),
+      items: z.array(
+        z.object({
+          title: z.string(),
+          price: z.number(),
+          categoryId: z.string(),
+          categoryName: z.string(),
+        }),
+      ),
+      needsSplit: z.boolean(),
     }),
   ),
-  needsSplit: z.boolean(),
 });
 
 type ClaudeResponse = {
@@ -119,22 +134,45 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
   throw new Error("Exceeded max retries");
 }
 
-export async function classifyMerchantBatch(
+export async function classifyWeek(
   categories: MonarchCategory[],
-  merchants: MerchantGroup[],
-): Promise<MerchantBatchResponse> {
-  const prompt = buildMerchantBatchPrompt(categories, merchants);
+  window: WeekWindow,
+  resolvedMap: Map<string, ResolvedTransaction>,
+  previousResults: Map<string, string>,
+): Promise<WeekClassificationResponse> {
+  const prompt = buildWeekPrompt(categories, window, resolvedMap, previousResults);
   const { text } = await callClaude(prompt);
-  return MerchantBatchSchema.parse(parseJsonResponse(text));
+  return WeekClassificationSchema.parse(parseJsonResponse(text));
 }
 
-export async function classifyAmazonItems(
+const VenmoClassificationSchema = z.object({
+  payments: z.array(
+    z.object({
+      note: z.string(),
+      amount: z.number(),
+      categoryId: z.string(),
+      categoryName: z.string(),
+      confidence: z.enum(["high", "medium", "low"]),
+    }),
+  ),
+});
+
+export async function classifyVenmoPayments(
   categories: MonarchCategory[],
-  items: { title: string; price: number }[],
-): Promise<AmazonClassificationResponse> {
-  const prompt = buildAmazonItemPrompt(categories, items);
+  matches: VenmoMatch[],
+): Promise<VenmoClassificationResponse> {
+  const prompt = buildVenmoClassificationPrompt(categories, matches);
   const { text } = await callClaude(prompt);
-  return AmazonClassificationSchema.parse(parseJsonResponse(text));
+  return VenmoClassificationSchema.parse(parseJsonResponse(text));
+}
+
+export async function classifyAmazonBatch(
+  categories: MonarchCategory[],
+  orders: AmazonOrderInput[],
+): Promise<AmazonBatchResponse> {
+  const prompt = buildAmazonBatchPrompt(categories, orders);
+  const { text } = await callClaude(prompt);
+  return AmazonBatchSchema.parse(parseJsonResponse(text));
 }
 
 export function computeSplits(

@@ -1,4 +1,7 @@
 import { parseArgs } from "node:util";
+import { homedir } from "node:os";
+import { Glob } from "bun";
+import path from "node:path";
 
 export type Config = {
   monarchToken: string;
@@ -14,6 +17,17 @@ export type Config = {
   sample: number;
   verbose: boolean;
   interactive: boolean;
+  venmoCsv: string | undefined;
+  skipVenmo: boolean;
+  conserviceCookies: string | undefined;
+  skipBilt: boolean;
+  skipUsaa: boolean;
+  sclCsv: string | undefined;
+  skipScl: boolean;
+  appleMailDir: string | undefined;
+  skipApple: boolean;
+  skipCostco: boolean;
+  output: string | undefined;
 };
 
 export function getConfig(): Config {
@@ -30,6 +44,17 @@ export function getConfig(): Config {
       sample: { type: "string", default: "0" },
       verbose: { type: "boolean", default: false },
       interactive: { type: "boolean", default: false },
+      "venmo-csv": { type: "string" },
+      "skip-venmo": { type: "boolean", default: false },
+      "conservice-cookies": { type: "string" },
+      "skip-bilt": { type: "boolean", default: false },
+      "skip-usaa": { type: "boolean", default: false },
+      "scl-csv": { type: "string" },
+      "skip-scl": { type: "boolean", default: false },
+      "apple-mail-dir": { type: "string" },
+      "skip-apple": { type: "boolean", default: false },
+      "skip-costco": { type: "boolean", default: false },
+      output: { type: "string" },
     },
     strict: true,
   });
@@ -52,6 +77,8 @@ export function getConfig(): Config {
       ? amazonYearsRaw.split(",").map(Number)
       : defaultYears;
 
+  const appleMailDir = values["apple-mail-dir"] ?? autoDetectAppleMailDir();
+
   return {
     monarchToken,
     anthropicApiKey,
@@ -66,5 +93,25 @@ export function getConfig(): Config {
     sample: Number(values.sample),
     verbose: values.verbose,
     interactive: values.interactive,
+    venmoCsv: values["venmo-csv"],
+    skipVenmo: values["skip-venmo"],
+    conserviceCookies: values["conservice-cookies"] ?? Bun.env["CONSERVICE_COOKIES"],
+    skipBilt: values["skip-bilt"],
+    skipUsaa: values["skip-usaa"],
+    sclCsv: values["scl-csv"],
+    skipScl: values["skip-scl"],
+    appleMailDir,
+    skipApple: values["skip-apple"],
+    skipCostco: values["skip-costco"],
+    output: values.output,
   };
+}
+
+function autoDetectAppleMailDir(): string | undefined {
+  const mailmateBase = path.join(homedir(), "com.freron.MailMate", "Messages", "IMAP");
+  const glob = new Glob(String.raw`*/\[Gmail\].mailbox/Archive.mailbox/Messages`);
+  for (const match of glob.scanSync(mailmateBase)) {
+    return path.join(mailmateBase, match);
+  }
+  return undefined;
 }

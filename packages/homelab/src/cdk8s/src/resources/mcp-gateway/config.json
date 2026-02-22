@@ -11,14 +11,11 @@
     },
     "todoist": {
       "command": "npx",
-      "args": ["-y", "todoist-mcp@1.2.4"]
+      "args": ["-y", "@doist/todoist-ai"]
     },
     "piazza": {
-      "command": "sh",
-      "args": [
-        "-c",
-        "[ -d /tmp/piazza-mcp ] || git clone https://github.com/clarsbyte/piazza-mcp.git /tmp/piazza-mcp && uv run --with 'fastmcp>=3.0.0b1' --with piazza-api /tmp/piazza-mcp/main.py"
-      ]
+      "command": "uv",
+      "args": ["run", "--with", "fastmcp>=3.0.0b1", "--with", "piazza-api", "/config/piazza-mcp.py"]
     },
     "home-assistant": {
       "command": "uvx",

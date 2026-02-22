@@ -26,13 +26,22 @@
 - Google Cloud is a cloud computing service — Software, not Electronics.
 - New York Times is a news subscription — Entertainment & Recreation.
 - Open Source Collective is a charitable donation to open source — Charity, not Electronics.
-- Exercism Birmingham is a coding education platform — Education.
+- GitHub Sponsors is a charitable donation to open source developers — Charity.
+- Exercism Birmingham is a donation to Exercism (coding education nonprofit) — Charity.
 
 # Shopping Corrections
 - Amazon Pharmacy is a pharmacy — categorize as Medical, not Shopping.
 - Room & Board Web is furniture — Furniture & Housewares, not Garbage.
 - Apotheke Co sells home fragrances/candles — Furniture & Housewares, not Medical.
 - Apple Services are App Store/subscription charges — Software, not Shopping.
+- Byredo is a luxury fragrance/beauty brand — Shopping.
+
+# Services
+- Gentle Giant West is a moving company — Moving Expenses.
+- Shelterwood Collective is a therapy practice — Medical, not Charity.
+
+# Marketplaces
+- eBay is primarily used for selling, not buying — categorize as Income.
 
 # Pets
 - Embrace Pet Insurance and Embrace Pet Wellness are both pet expenses — Pets.
