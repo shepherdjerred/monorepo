@@ -472,7 +472,6 @@ export function checkForFailures(
     validation.haLintResult,
     validation.cdk8sTypeCheckResult,
     validation.haTypeCheckResult,
-    publish.syncResult,
     validation.cdk8sBuildResult,
     validation.haBuildResult,
     validation.helmBuildResult,
