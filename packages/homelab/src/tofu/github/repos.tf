@@ -1,18 +1,3 @@
-resource "github_repository" "anki" {
-  name                   = "anki"
-  description            = "My Anki cards"
-  visibility             = "public"
-  has_issues             = true
-  has_projects           = false
-  has_wiki               = false
-  delete_branch_on_merge = true
-  allow_auto_merge       = true
-  allow_update_branch    = true
-  allow_squash_merge     = false
-  allow_merge_commit     = true
-  allow_rebase_merge     = true
-}
-
 resource "github_repository" "astro_opengraph_images" {
   name                   = "astro-opengraph-images"
   description            = "Generate Open Graph images for your Astro site"
@@ -33,21 +18,6 @@ resource "github_repository" "better_skill_capped" {
   name                   = "better-skill-capped"
   description            = "A better interface for Skill Capped"
   homepage_url           = "https://better-skill-capped.com/"
-  visibility             = "public"
-  has_issues             = true
-  has_projects           = false
-  has_wiki               = false
-  delete_branch_on_merge = true
-  allow_auto_merge       = true
-  allow_update_branch    = true
-  allow_squash_merge     = false
-  allow_merge_commit     = true
-  allow_rebase_merge     = true
-}
-
-resource "github_repository" "castle_casters" {
-  name                   = "castle-casters"
-  description            = "A game I wrote from scratch"
   visibility             = "public"
   has_issues             = true
   has_projects           = false
@@ -150,22 +120,6 @@ resource "github_repository" "monorepo" {
   allow_rebase_merge     = true
 }
 
-resource "github_repository" "resume" {
-  name                   = "resume"
-  description            = "My résumé"
-  homepage_url           = "https://resume.sjer.red"
-  visibility             = "public"
-  has_issues             = true
-  has_projects           = false
-  has_wiki               = false
-  delete_branch_on_merge = true
-  allow_auto_merge       = true
-  allow_update_branch    = true
-  allow_squash_merge     = false
-  allow_merge_commit     = true
-  allow_rebase_merge     = true
-}
-
 resource "github_repository" "scout_for_lol" {
   name                   = "scout-for-lol"
   description            = "Create match reports for League of Legends"
@@ -201,21 +155,6 @@ resource "github_repository" "sjer_red" {
   name                   = "sjer.red"
   description            = "My personal website"
   homepage_url           = "https://sjer.red"
-  visibility             = "public"
-  has_issues             = true
-  has_projects           = false
-  has_wiki               = false
-  delete_branch_on_merge = true
-  allow_auto_merge       = true
-  allow_update_branch    = true
-  allow_squash_merge     = false
-  allow_merge_commit     = true
-  allow_rebase_merge     = true
-}
-
-resource "github_repository" "starlight_karma_bot" {
-  name                   = "starlight-karma-bot"
-  description            = "Karma bot for my personal Discord server :^)"
   visibility             = "public"
   has_issues             = true
   has_projects           = false
