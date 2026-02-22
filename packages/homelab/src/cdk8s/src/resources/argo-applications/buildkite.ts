@@ -4,7 +4,6 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { KubeRoleBinding } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {
@@ -40,18 +39,6 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  // ArgoCD token managed by OpenTofu (tofu/argocd module)
-  // Update the item ID after running `tofu apply` and getting the output UUID
-  new OnePasswordItem(chart, "buildkite-argocd-token", {
-    spec: {
-      itemPath: vaultItemPath("PLACEHOLDER_REPLACE_WITH_TOFU_OUTPUT"),
-    },
-    metadata: {
-      name: "buildkite-argocd-token",
-      namespace: "buildkite",
-    },
-  });
-
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
@@ -71,6 +58,7 @@ export function createBuildkiteApp(chart: Chart) {
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
+                containers: [{ name: "agent" }],
               },
             },
           },
