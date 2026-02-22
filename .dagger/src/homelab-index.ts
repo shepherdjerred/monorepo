@@ -219,24 +219,22 @@ export async function ciHomelab(
 
 /**
  * Build all Helm charts.
- * @param monoRepoSource The monorepo root source directory
+ * @param homelabSource The homelab source directory (packages/homelab)
  */
 export function homelabHelmBuild(
-  monoRepoSource: Directory,
+  homelabSource: Directory,
   version: string,
 ): Directory {
-  const homelabSource = getHomelabSource(monoRepoSource);
   return buildAllCharts(homelabSource, version);
 }
 
 /**
  * Test Helm chart structure, linting, and template rendering.
- * @param monoRepoSource The monorepo root source directory
+ * @param homelabSource The homelab source directory (packages/homelab)
  */
 export async function homelabTestHelm(
-  monoRepoSource: Directory,
+  homelabSource: Directory,
 ): Promise<string> {
-  const homelabSource = getHomelabSource(monoRepoSource);
   const testVersion = "0.1.0-test";
   const helmDist = buildAllCharts(homelabSource, testVersion);
   const helmBinary = dag
