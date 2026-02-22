@@ -140,6 +140,38 @@ function ChangelogSection({
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026 02 22",
+    banner: (
+      <>
+        <strong>Riot app approval</strong> — faster reports and new features
+        ahead
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Riot App Approval"
+          color="green"
+          items={[
+            "Scout has been approved by Riot Games, unlocking higher API rate limits",
+            "Post-match reports now arrive faster thanks to more frequent polling",
+          ]}
+        />
+        <ChangelogSection
+          title="Bug Fixes"
+          color="blue"
+          items={["Fixed API integration issues for improved reliability"]}
+          className="mt-6"
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 2,
+      day: 22,
+    },
+  },
+  {
     date: "2026 01 31",
     banner: (
       <>

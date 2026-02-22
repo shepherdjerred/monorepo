@@ -28,8 +28,8 @@ import {
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
-  MAX_PLAYERS_PER_RUN,
 } from "@scout-for-lol/backend/utils/polling-intervals.ts";
+import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import { generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
 import {
   processMatchForPlayer,

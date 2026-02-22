@@ -35,6 +35,13 @@ export type VenmoClassificationResponse = {
 };
 
 export type TransactionClassification = {
+  transactionIndex: number;
+  categoryId: string;
+  categoryName: string;
+  confidence: Confidence;
+};
+
+export type CachedTransactionClassification = {
   transactionId: string;
   categoryId: string;
   categoryName: string;

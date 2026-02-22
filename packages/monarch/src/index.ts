@@ -28,7 +28,7 @@ import { classifyApple } from "./lib/apple/classify.ts";
 import type { AppleMatchResult } from "./lib/apple/matcher.ts";
 import { classifyCostco } from "./lib/costco/classify.ts";
 import type { CostcoMatchResult } from "./lib/costco/matcher.ts";
-import type { ProposedChange, WeekClassificationResponse } from "./lib/classifier/types.ts";
+import type { CachedTransactionClassification, ProposedChange, WeekClassificationResponse } from "./lib/classifier/types.ts";
 import { getCachedWeek, cacheWeekClassification } from "./lib/classifier/cache.ts";
 import {
   displayWeekChanges,
@@ -247,18 +247,27 @@ async function classifyByWeek(
     const results = await Promise.all(
       chunk.map(async (task): Promise<{ task: WeekTask; result: WeekClassificationResponse }> => {
         const result = await classifyWeek(categories, task.window, resolvedMap, emptyPreviousResults);
-        await cacheWeekClassification(task.window.current.weekKey, task.classifiableIds, result.transactions);
         return { task, result };
       }),
     );
 
     for (const { task, result } of results) {
+      const classifiable = task.window.current.transactions.filter(
+        (t) => !resolvedMap.has(t.id),
+      );
+      const cachedResults: CachedTransactionClassification[] = [];
       for (const classification of result.transactions) {
-        const txn = task.window.current.transactions.find((t) => t.id === classification.transactionId);
+        const txn = classifiable[classification.transactionIndex];
         if (!txn) continue;
+        cachedResults.push({
+          transactionId: txn.id,
+          categoryId: classification.categoryId,
+          categoryName: classification.categoryName,
+          confidence: classification.confidence,
+        });
         if (classification.categoryId === txn.category.id) continue;
         weekChanges.push({
-          transactionId: classification.transactionId,
+          transactionId: txn.id,
           transactionDate: txn.date,
           merchantName: txn.merchant.name,
           amount: txn.amount,
@@ -270,6 +279,7 @@ async function classifyByWeek(
           type: "recategorize",
         });
       }
+      await cacheWeekClassification(task.window.current.weekKey, task.classifiableIds, cachedResults);
       weekCompleted += 1;
     }
     log.progress(weekCompleted, uncachedTasks.length, "weeks classified");

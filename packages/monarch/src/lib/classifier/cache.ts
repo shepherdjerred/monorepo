@@ -1,7 +1,7 @@
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
-import type { AmazonBatchOrderClassification, TransactionClassification } from "./types.ts";
+import type { AmazonBatchOrderClassification, CachedTransactionClassification } from "./types.ts";
 import { log } from "../logger.ts";
 
 const CACHE_DIR = path.join(homedir(), ".monarch-cache");
@@ -108,7 +108,7 @@ function weekCacheKey(weekKey: string, transactionIds: string[]): string {
 export async function getCachedWeek(
   weekKey: string,
   classifiableIds: string[],
-): Promise<TransactionClassification[] | undefined> {
+): Promise<CachedTransactionClassification[] | undefined> {
   const c = await ensureWeekCacheLoaded();
   const key = weekCacheKey(weekKey, classifiableIds);
   const entry = c.get(key);
@@ -119,7 +119,7 @@ export async function getCachedWeek(
 export async function cacheWeekClassification(
   weekKey: string,
   classifiableIds: string[],
-  results: TransactionClassification[],
+  results: CachedTransactionClassification[],
 ): Promise<void> {
   const c = await ensureWeekCacheLoaded();
   const key = weekCacheKey(weekKey, classifiableIds);

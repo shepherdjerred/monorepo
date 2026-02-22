@@ -59,7 +59,7 @@ export function parseJsonResponse(text: string): unknown {
 const WeekClassificationSchema = z.object({
   transactions: z.array(
     z.object({
-      transactionId: z.string(),
+      transactionIndex: z.number(),
       categoryId: z.string(),
       categoryName: z.string(),
       confidence: z.enum(["high", "medium", "low"]),
