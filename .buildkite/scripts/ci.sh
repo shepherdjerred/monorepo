@@ -53,7 +53,7 @@ if [[ "${BUILDKITE_BRANCH}" == "main" ]]; then
     --registry-password=env:GH_TOKEN
     --commit-back-token=env:GH_TOKEN
     --argocd-token=env:ARGOCD_TOKEN
-    --chart-museum-username=env:CHARTMUSEUM_USERNAME
+    --chart-museum-username="${CHARTMUSEUM_USERNAME}"
     --chart-museum-password=env:CHARTMUSEUM_PASSWORD
     --cloudflare-api-token=env:CLOUDFLARE_API_TOKEN
     --cloudflare-account-id=env:CLOUDFLARE_ACCOUNT_ID
