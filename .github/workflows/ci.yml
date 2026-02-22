@@ -151,7 +151,7 @@ jobs:
               --registry-password=env:GITHUB_TOKEN
               --commit-back-token=env:GITHUB_TOKEN
               --argocd-token=env:ARGOCD_TOKEN
-              --chart-museum-username=env:CHARTMUSEUM_USERNAME
+              --chart-museum-username="$CHARTMUSEUM_USERNAME"
               --chart-museum-password=env:CHARTMUSEUM_PASSWORD
               --cloudflare-api-token=env:CLOUDFLARE_API_TOKEN
               --cloudflare-account-id=env:CLOUDFLARE_ACCOUNT_ID
