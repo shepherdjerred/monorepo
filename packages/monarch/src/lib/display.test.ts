@@ -57,12 +57,12 @@ describe("displaySummary", () => {
       logs.push(args.join(" "));
     };
 
-    const merchantChanges = [
+    const weekChanges = [
       makeChange(),
       makeChange({ transactionId: "txn-2" }),
     ];
 
-    displaySummary(merchantChanges, [], null);
+    displaySummary({ weekChanges, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 
@@ -97,7 +97,7 @@ describe("displaySummary", () => {
       }),
     ];
 
-    displaySummary([], amazonChanges, null);
+    displaySummary({ weekChanges: [], amazonChanges, venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 
@@ -112,16 +112,29 @@ describe("displaySummary", () => {
       logs.push(args.join(" "));
     };
 
-    displaySummary([], [], {
-      matched: [
-        {
-          transaction: stubTransaction,
-          order: stubOrder,
-          matchType: "exact",
-        },
-      ],
-      unmatchedTransactions: [stubTransaction],
-      unmatchedOrders: [],
+    displaySummary({
+      weekChanges: [],
+      amazonChanges: [],
+      venmoChanges: [],
+      biltChanges: [],
+      matchResult: {
+        matched: [
+          {
+            transaction: stubTransaction,
+            order: stubOrder,
+            matchType: "exact",
+          },
+        ],
+        unmatchedTransactions: [stubTransaction],
+        unmatchedOrders: [],
+      },
+      venmoMatchResult: null,
+      usaaChanges: [],
+      sclChanges: [],
+      appleChanges: [],
+      costcoChanges: [],
+      appleMatchResult: null,
+      costcoMatchResult: null,
     });
 
     console.log = originalLog;
@@ -142,7 +155,7 @@ describe("displaySummary", () => {
       makeChange({ type: "flag", transactionId: "txn-2" }),
     ];
 
-    displaySummary(changes, [], null);
+    displaySummary({ weekChanges: changes, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 

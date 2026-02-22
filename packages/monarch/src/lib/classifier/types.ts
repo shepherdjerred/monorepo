@@ -1,18 +1,5 @@
 export type Confidence = "high" | "medium" | "low";
 
-export type MerchantClassification = {
-  merchantName: string;
-  categoryId: string;
-  categoryName: string;
-  confidence: Confidence;
-  ambiguous: boolean;
-  reason?: string | undefined;
-};
-
-export type MerchantBatchResponse = {
-  merchants: MerchantClassification[];
-};
-
 export type AmazonItemClassification = {
   title: string;
   price: number;
@@ -20,9 +7,42 @@ export type AmazonItemClassification = {
   categoryName: string;
 };
 
-export type AmazonClassificationResponse = {
+export type AmazonOrderInput = {
+  orderIndex: number;
+  items: { title: string; price: number }[];
+};
+
+export type AmazonBatchOrderClassification = {
+  orderIndex: number;
   items: AmazonItemClassification[];
   needsSplit: boolean;
+};
+
+export type AmazonBatchResponse = {
+  orders: AmazonBatchOrderClassification[];
+};
+
+export type VenmoPaymentClassification = {
+  note: string;
+  amount: number;
+  categoryId: string;
+  categoryName: string;
+  confidence: Confidence;
+};
+
+export type VenmoClassificationResponse = {
+  payments: VenmoPaymentClassification[];
+};
+
+export type TransactionClassification = {
+  transactionId: string;
+  categoryId: string;
+  categoryName: string;
+  confidence: Confidence;
+};
+
+export type WeekClassificationResponse = {
+  transactions: TransactionClassification[];
 };
 
 export type ProposedChange = {

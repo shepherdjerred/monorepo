@@ -25,9 +25,11 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   const UID = 65_534;
   const GID = 65_534;
 
-  // Load the mcp-proxy configuration from file
+  // Load the mcp-proxy configuration and piazza script from files
   const configPath = path.join(CURRENT_DIRNAME, "config.json");
   const configContent = await Bun.file(configPath).text();
+  const piazzaScriptPath = path.join(CURRENT_DIRNAME, "piazza-mcp.py");
+  const piazzaScriptContent = await Bun.file(piazzaScriptPath).text();
 
   // Create ConfigMap for mcp-proxy configuration
   const mcpProxyConfig = new ConfigMap(chart, "mcp-proxy-config", {
@@ -36,6 +38,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
     data: {
       "config.json": configContent,
+      "piazza-mcp.py": piazzaScriptContent,
     },
   });
 
@@ -148,8 +151,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "base-url",
         }),
-        // Todoist configuration - todoist-mcp expects API_KEY env var
-        API_KEY: EnvValue.fromSecretValue({
+        // Todoist configuration - @doist/todoist-ai expects TODOIST_API_KEY
+        TODOIST_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "todoist-secret",
@@ -157,22 +160,14 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "api-key",
         }),
-        // Piazza configuration
-        PIAZZA_EMAIL: EnvValue.fromSecretValue({
+        // Piazza configuration (cookie-based auth to bypass SSO/2FA)
+        PIAZZA_COOKIES: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "piazza-email-secret",
+            "piazza-cookies-secret",
             piazzaItem.name,
           ),
-          key: "email",
-        }),
-        PIAZZA_PASSWORD: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "piazza-password-secret",
-            piazzaItem.name,
-          ),
-          key: "password",
+          key: "cookies",
         }),
         PIAZZA_COURSES: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(

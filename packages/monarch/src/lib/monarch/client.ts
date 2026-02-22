@@ -10,7 +10,6 @@ import { homedir } from "node:os";
 import { z } from "zod";
 import type {
   MonarchCategory,
-  MerchantGroup,
 } from "./types.ts";
 import {
   MonarchTransactionSchema,
@@ -150,56 +149,105 @@ function isAmazonMerchant(name: string): boolean {
   return AMAZON_MERCHANT_PATTERNS.some((p) => lower.includes(p));
 }
 
-export function groupByMerchant(
-  transactions: MonarchTransaction[],
-): {
+export function isVenmoP2P(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  const hasVenmo = lower.includes("venmo") || plaidLower.includes("venmo");
+  if (!hasVenmo) return false;
+  return !lower.includes("credit card") && !lower.includes("cash back");
+}
+
+export function isBiltTransaction(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  const hasBilt = lower.includes("bilt") || plaidLower.includes("bilt");
+  if (!hasBilt) return false;
+  return !lower.includes("credit card cash back");
+}
+
+export function isUsaaInsurance(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  return lower.includes("usaa") || plaidLower.includes("usaa");
+}
+
+export function isSclTransaction(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  return lower.includes("seattle city light") || plaidLower.includes("seattle city light") ||
+    lower.includes("scl") || plaidLower.includes("scl");
+}
+
+const APPLE_MERCHANT_PATTERNS = [
+  "apple services",
+  "apple.com",
+  "apple.com/bill",
+];
+
+export function isAppleMerchant(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  return APPLE_MERCHANT_PATTERNS.some((p) => lower.includes(p) || plaidLower.includes(p));
+}
+
+const COSTCO_MERCHANT_PATTERNS = [
+  "costco",
+  "costco whse",
+  "costco.com",
+];
+
+export function isCostcoMerchant(name: string, plaidName: string): boolean {
+  const lower = name.toLowerCase();
+  const plaidLower = plaidName.toLowerCase();
+  return COSTCO_MERCHANT_PATTERNS.some((p) => lower.includes(p) || plaidLower.includes(p));
+}
+
+export type SeparateDeepPathsResult = {
   amazonTransactions: MonarchTransaction[];
-  merchantGroups: MerchantGroup[];
-} {
+  venmoTransactions: MonarchTransaction[];
+  biltTransactions: MonarchTransaction[];
+  usaaTransactions: MonarchTransaction[];
+  sclTransactions: MonarchTransaction[];
+  appleTransactions: MonarchTransaction[];
+  costcoTransactions: MonarchTransaction[];
+  regularTransactions: MonarchTransaction[];
+};
+
+export function separateDeepPaths(
+  transactions: MonarchTransaction[],
+): SeparateDeepPathsResult {
   const amazonTransactions: MonarchTransaction[] = [];
-  const groupMap = new Map<string, MonarchTransaction[]>();
+  const venmoTransactions: MonarchTransaction[] = [];
+  const biltTransactions: MonarchTransaction[] = [];
+  const usaaTransactions: MonarchTransaction[] = [];
+  const sclTransactions: MonarchTransaction[] = [];
+  const appleTransactions: MonarchTransaction[] = [];
+  const costcoTransactions: MonarchTransaction[] = [];
+  const regularTransactions: MonarchTransaction[] = [];
 
   for (const t of transactions) {
     const merchantName = t.merchant.name;
 
     if (isAmazonMerchant(merchantName) || isAmazonMerchant(t.plaidName)) {
       amazonTransactions.push(t);
-      continue;
-    }
-
-    const existing = groupMap.get(merchantName);
-    if (existing) {
-      existing.push(t);
+    } else if (isVenmoP2P(merchantName, t.plaidName)) {
+      venmoTransactions.push(t);
+    } else if (isBiltTransaction(merchantName, t.plaidName)) {
+      biltTransactions.push(t);
+    } else if (isUsaaInsurance(merchantName, t.plaidName)) {
+      usaaTransactions.push(t);
+    } else if (isSclTransaction(merchantName, t.plaidName)) {
+      sclTransactions.push(t);
+    } else if (isAppleMerchant(merchantName, t.plaidName)) {
+      appleTransactions.push(t);
+    } else if (isCostcoMerchant(merchantName, t.plaidName)) {
+      costcoTransactions.push(t);
     } else {
-      groupMap.set(merchantName, [t]);
+      regularTransactions.push(t);
     }
   }
 
-  const merchantGroups: MerchantGroup[] = [];
-  for (const [merchantName, txns] of groupMap) {
-    const plaidNames = [
-      ...new Set(txns.map((t) => t.plaidName).filter(Boolean)),
-    ];
-    const totalAmount = txns.reduce(
-      (sum, t) => sum + Math.abs(t.amount),
-      0,
-    );
-    const first = txns[0];
-
-    merchantGroups.push({
-      merchantName,
-      transactions: txns,
-      totalAmount,
-      count: txns.length,
-      plaidNames,
-      currentCategory: first?.category.name ?? "Uncategorized",
-      currentCategoryId: first?.category.id ?? "",
-    });
-  }
-
-  merchantGroups.sort((a, b) => b.totalAmount - a.totalAmount);
-
-  return { amazonTransactions, merchantGroups };
+  return { amazonTransactions, venmoTransactions, biltTransactions, usaaTransactions, sclTransactions, appleTransactions, costcoTransactions, regularTransactions };
 }
 
 function sleep(ms: number): Promise<void> {

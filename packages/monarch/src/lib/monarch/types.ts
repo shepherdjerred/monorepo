@@ -55,12 +55,3 @@ export const MonarchTransactionSchema = z.object({
 
 export type MonarchTransaction = z.infer<typeof MonarchTransactionSchema>;
 
-export type MerchantGroup = {
-  merchantName: string;
-  transactions: MonarchTransaction[];
-  totalAmount: number;
-  count: number;
-  plaidNames: string[];
-  currentCategory: string;
-  currentCategoryId: string;
-};
