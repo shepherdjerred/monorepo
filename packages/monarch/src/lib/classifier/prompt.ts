@@ -39,6 +39,7 @@ function formatWeekTransaction(
   resolvedMap: Map<string, ResolvedTransaction>,
   previousResults: Map<string, string>,
   isCurrentWeek: boolean,
+  classifyIndex: number | undefined,
 ): string {
   const sign = txn.amount < 0 ? "-" : "+";
   const amount = `${sign}$${Math.abs(txn.amount).toFixed(2)}`;
@@ -54,9 +55,9 @@ function formatWeekTransaction(
     return `  [RESOLVED → ${resolved.category}] ${txn.date} | ${amount} | ${merchant}${bankDesc}`;
   }
 
-  if (isCurrentWeek) {
+  if (isCurrentWeek && classifyIndex !== undefined) {
     const current = ` | current: ${txn.category.name}`;
-    return `  [CLASSIFY] ${txn.date} | ${amount} | ${merchant}${bankDesc}${acct}${current}`;
+    return `  [CLASSIFY #${String(classifyIndex)}] ${txn.date} | ${amount} | ${merchant}${bankDesc}${acct}${current}`;
   }
 
   // Context week — show category (from previous results if available, otherwise Monarch's)
@@ -70,16 +71,21 @@ type WeekSectionOptions = {
   resolvedMap: Map<string, ResolvedTransaction>;
   previousResults: Map<string, string>;
   isCurrentWeek: boolean;
+  classifyIndexStart: number;
 };
 
-function formatWeekSection(opts: WeekSectionOptions): string {
-  const { week, label, resolvedMap, previousResults, isCurrentWeek } = opts;
+function formatWeekSection(opts: WeekSectionOptions): { text: string; nextIndex: number } {
+  const { week, label, resolvedMap, previousResults, isCurrentWeek, classifyIndexStart } = opts;
   const suffix = isCurrentWeek ? "" : " [CONTEXT]";
   const header = `--- ${label} (${week.startDate} to ${week.endDate})${suffix} ---`;
-  const lines = week.transactions.map((txn) =>
-    formatWeekTransaction(txn, resolvedMap, previousResults, isCurrentWeek),
-  );
-  return `${header}\n${lines.join("\n")}`;
+  let idx = classifyIndexStart;
+  const lines = week.transactions.map((txn) => {
+    const isClassifiable = isCurrentWeek && !resolvedMap.has(txn.id);
+    const line = formatWeekTransaction(txn, resolvedMap, previousResults, isCurrentWeek, isClassifiable ? idx : undefined);
+    if (isClassifiable) idx += 1;
+    return line;
+  });
+  return { text: `${header}\n${lines.join("\n")}`, nextIndex: idx };
 }
 
 export function buildWeekPrompt(
@@ -90,39 +96,44 @@ export function buildWeekPrompt(
 ): string {
   const categoryList = buildCategoryList(categories);
   const sections: string[] = [];
+  let idx = 0;
 
   if (window.previous) {
-    sections.push(
-      formatWeekSection({
-        week: window.previous,
-        label: "PREVIOUS WEEK",
-        resolvedMap,
-        previousResults,
-        isCurrentWeek: false,
-      }),
-    );
+    const result = formatWeekSection({
+      week: window.previous,
+      label: "PREVIOUS WEEK",
+      resolvedMap,
+      previousResults,
+      isCurrentWeek: false,
+      classifyIndexStart: idx,
+    });
+    sections.push(result.text);
+    idx = result.nextIndex;
   }
 
-  sections.push(
-    formatWeekSection({
+  {
+    const result = formatWeekSection({
       week: window.current,
       label: "THIS WEEK",
       resolvedMap,
       previousResults,
       isCurrentWeek: true,
-    }),
-  );
+      classifyIndexStart: idx,
+    });
+    sections.push(result.text);
+    idx = result.nextIndex;
+  }
 
   if (window.next) {
-    sections.push(
-      formatWeekSection({
-        week: window.next,
-        label: "NEXT WEEK",
-        resolvedMap,
-        previousResults,
-        isCurrentWeek: false,
-      }),
-    );
+    const result = formatWeekSection({
+      week: window.next,
+      label: "NEXT WEEK",
+      resolvedMap,
+      previousResults,
+      isCurrentWeek: false,
+      classifyIndexStart: idx,
+    });
+    sections.push(result.text);
   }
 
   return `Classify transactions marked [CLASSIFY]. Do NOT re-classify [RESOLVED] or [CONTEXT] transactions.
@@ -132,8 +143,8 @@ ${categoryList}
 
 ${sections.join("\n\n")}
 
-Respond with JSON:
-{ "transactions": [{ "transactionId": "...", "categoryId": "...", "categoryName": "...", "confidence": "high"|"medium"|"low" }] }`;
+Respond with JSON. Use the numeric index from each [CLASSIFY #N] line as the transactionIndex.
+{ "transactions": [{ "transactionIndex": 0, "categoryId": "...", "categoryName": "...", "confidence": "high"|"medium"|"low" }] }`;
 }
 
 export function buildAmazonBatchPrompt(

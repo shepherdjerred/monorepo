@@ -249,7 +249,7 @@ describe("buildWeekPrompt", () => {
       new Map(),
       new Map(),
     );
-    expect(prompt).toContain("transactionId");
+    expect(prompt).toContain("transactionIndex");
     expect(prompt).toContain("categoryId");
     expect(prompt).toContain("confidence");
   });

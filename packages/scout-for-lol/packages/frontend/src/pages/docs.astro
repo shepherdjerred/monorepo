@@ -6,6 +6,9 @@ import Header from "../components/Header.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
+import { POLLING_TIERS } from "@scout-for-lol/data/polling-config.ts";
+
+const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
 ---
 
 <Layout>
@@ -762,16 +765,33 @@ import FAQItem from "../components/FAQItem.astro";
           <div class="space-y-6">
             <FAQItem question="How often does Scout check for new matches?">
               <p class="mb-3">
-                Scout uses intelligent dynamic polling that adjusts based on player activity:
+                Scout uses intelligent dynamic polling that adjusts based on player activity.
+                Active players are checked more frequently so you get reports fast, while inactive
+                players are checked less often to stay efficient.
               </p>
-              <ul class="list-disc list-inside text-sm space-y-1 mb-3">
-                <li><strong>Active players</strong> (played within the last hour): Checked every 1 minute</li>
-                <li><strong>Recently active</strong> (6-12 hours): Checked every 5-10 minutes</li>
-                <li><strong>Inactive players</strong> (30+ days): Checked every 60 minutes</li>
-              </ul>
+              <div class="overflow-x-auto mb-3">
+                <table class="w-full text-sm border-collapse">
+                  <thead>
+                    <tr>
+                      <th class="text-left py-2 px-3 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">Time since last match</th>
+                      <th class="text-left py-2 px-3 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">Check frequency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {POLLING_TIERS.map((tier) => (
+                      <tr>
+                        <td class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300">{tier.label}</td>
+                        <td class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300">
+                          Every {tier.intervalMinutes} {tier.intervalMinutes === 1 ? "minute" : "minutes"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <p>
-                This means you'll get notifications within 1-2 minutes for players who are actively gaming, while
-                reducing unnecessary API calls for inactive accounts.
+                This means you'll get notifications within 1-2 minutes for players who are actively gaming.
+                Even for players who haven't played in a month, Scout checks at least every {maxTier.intervalMinutes} minutes.
               </p>
             </FAQItem>
 
@@ -834,10 +854,10 @@ import FAQItem from "../components/FAQItem.astro";
               </p>
               <ul class="list-disc list-inside text-sm space-y-1 mb-3">
                 <li>
-                  For <strong>active players</strong> (played within the last hour): Checked every 1 minute
+                  For <strong>active players</strong> (played within the last few hours): Checked every 1-2 minutes
                 </li>
                 <li>
-                  For <strong>less active players</strong>: May take 5-15 minutes depending on their polling interval
+                  For <strong>less active players</strong>: May take up to {maxTier.intervalMinutes} minutes depending on their polling interval
                 </li>
                 <li>Very short games (under 5 minutes) or remakes might not generate reports</li>
               </ul>
