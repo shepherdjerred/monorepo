@@ -45,3 +45,6 @@ logs/
 
 # Test coverage output
 coverage/
+
+# Obsidian plugin bundles (may contain embedded secrets)
+obsidian/.obsidian/plugins/*/main.js
