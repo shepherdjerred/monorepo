@@ -9,17 +9,19 @@ export type CommitVersionsBackOptions = {
 };
 
 /**
- * Commits updated versions back to the monorepo's versions.ts file on main.
+ * Updates versions.ts via a PR with auto-merge instead of pushing directly to main.
  *
  * Uses sed to update each version key in packages/homelab/src/cdk8s/src/versions.ts,
- * then commits and pushes directly to main. Uses [skip ci] in the commit message
- * to prevent cascading CI runs.
+ * then creates a PR and enables auto-merge. This works with branch protection
+ * rules that prevent direct pushes to main.
  *
- * @returns stdout from the git operations (either "NO_CHANGES" or commit info)
+ * @returns stdout from the git/gh operations (either "NO_CHANGES" or PR info)
  */
 export async function commitVersionsBack(
   options: CommitVersionsBackOptions,
 ): Promise<string> {
+  const branchName = `chore/update-versions-${String(Date.now())}`;
+
   let container = getGitHubContainer()
     .withSecretVariable("GH_TOKEN", options.token)
     .withEnvVariable("CACHE_BUST", Date.now().toString())
@@ -46,10 +48,16 @@ export async function commitVersionsBack(
     .withExec([
       "sh",
       "-c",
-      'git diff --quiet && echo "NO_CHANGES" || ' +
-        "(git add packages/homelab/src/cdk8s/src/versions.ts && " +
-        'git commit -m "chore: update deployed image versions [skip ci]" && ' +
-        "(git push origin main || (git pull --rebase origin main && git push origin main)))",
+      `git diff --quiet && echo "NO_CHANGES" || (` +
+        `git checkout -b ${branchName} && ` +
+        `git add packages/homelab/src/cdk8s/src/versions.ts && ` +
+        `git commit -m "chore: update deployed image versions [skip ci]" && ` +
+        `git push --set-upstream origin ${branchName} && ` +
+        `gh pr create --title "chore: update deployed image versions" ` +
+        `--body "Automated version update from CI pipeline. Updates image digests in versions.ts to match the latest published images." ` +
+        `--label "automerge" && ` +
+        `gh pr merge --auto --squash` +
+        `)`,
     ])
     .stdout();
 }

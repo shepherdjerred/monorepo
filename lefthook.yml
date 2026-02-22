@@ -305,12 +305,6 @@ pre-commit:
             glob: "tsconfig.base.json"
             run: bun run typecheck
 
-          # --- Actionlint ---
-          - name: actionlint
-            glob: ".github/workflows/**/*.yml"
-            skip:
-              - run: "! command -v actionlint >/dev/null 2>&1"
-            run: actionlint
 
           # --- Knip ---
           - name: knip

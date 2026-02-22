@@ -26,6 +26,26 @@ steps:
                   - secretRef:
                       name: buildkite-ci-secrets
 
+  - label: ":robot_face: Code Review"
+    key: code-review
+    if: build.pull_request.id != null
+    image: "oven/bun:debian"
+    command: .buildkite/scripts/code-review.sh
+    timeout_in_minutes: 30
+    soft_fail: true
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+
   - wait: ~
     if: build.branch == pipeline.default_branch
 
