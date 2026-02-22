@@ -345,7 +345,7 @@ export class Monorepo {
 
   @func()
   homelabHelmBuild(source: Directory, version: string): Directory {
-    return homelabHelmBuildFn(source, version);
+    return homelabHelmBuildFn(source.directory("packages/homelab"), version);
   }
 
   @func()
@@ -355,7 +355,7 @@ export class Monorepo {
 
   @func()
   async homelabTestHelm(source: Directory): Promise<string> {
-    return homelabTestHelmFn(source);
+    return homelabTestHelmFn(source.directory("packages/homelab"));
   }
 
   @func()
