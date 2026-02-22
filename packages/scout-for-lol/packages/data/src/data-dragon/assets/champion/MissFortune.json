@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -168,7 +168,10 @@
         "Miss Fortune's speed boost is removed if she is damaged by an enemy.",
         "Miss Fortune is easy to kill if you can reach her; target her first in team fights."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -205,30 +208,105 @@
           "description": "Miss Fortune fires a bullet at an enemy, damaging them and a target behind them. Both strikes can also apply Love Tap.",
           "tooltip": "Miss Fortune fires a bouncing shot, dealing <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to an enemy and to another one behind them. <br /><br />The second shot can critically strike for <physicalDamage>{{ totaldamagecrit }} physical damage</physicalDamage>. It always critically strikes if the first shot kills its target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6, 5, 4, 3],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [20, 45, 70, 95, 120],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [40, 40, 40, 40, 40],
-            [20, 20, 20, 20, 20],
-            [40, 40, 40, 40, 40],
-            [110, 110, 110, 110, 110],
-            [160, 160, 160, 160, 160],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              20,
+              45,
+              70,
+              95,
+              120
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              110,
+              110,
+              110,
+              110,
+              110
+            ],
+            [
+              160,
+              160,
+              160,
+              160,
+              160
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -246,7 +324,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MissFortuneRicochetShot.png",
@@ -265,7 +349,11 @@
           "description": "Miss Fortune passively gains Move Speed when not attacked. This ability can be activated to grant bonus Attack Speed for a short duration. While it's on cooldown, Love Taps reduce the remaining cooldown of Strut.",
           "tooltip": "<passive>Passive:</passive> After {{ passivebasemsooc }} seconds of not taking damage, Miss Fortune gains <speed>{{ passivebasems }} Move Speed</speed>. After another {{ passivemaxmsextraooc }} seconds, this increases to <speed>{{ passivemaxms }}</speed>.<br /><br /><active>Active:</active> Gain the passive effect's full <speed>Move Speed</speed> bonus and <attackSpeed>{{ activeas*100 }}% Attack Speed</attackSpeed> for {{ activeduration }} seconds.<br /><br /><spellName>Love Taps</spellName> reduce the Cooldown of this Ability by {{ lovetaprefund }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Move Speed", "Max Move Speed"],
+            "label": [
+              "Attack Speed",
+              "Move Speed",
+              "Max Move Speed"
+            ],
             "effect": [
               "{{ activeas*100.000000 }}% -> {{ activeasnl*100.000000 }}%",
               "{{ passivebasems }} -> {{ passivebasemsNL }}",
@@ -273,23 +361,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [45, 45, 45, 45, 45],
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -307,7 +467,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "MissFortuneViciousStrikes.png",
@@ -326,30 +492,105 @@
           "description": "Miss Fortune reveals an area with a flurry of bullets, dealing waves of damage to opponents and slowing them.",
           "tooltip": "Miss Fortune rains bullets, revealing an area, <status>Slowing</status> by {{ totalslowamount }} and dealing <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> per second for {{ baseduration }} seconds (total <magicDamage>{{ totaldamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "Cooldown"],
+            "label": [
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -367,7 +608,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "MissFortuneScattershot.png",
@@ -386,30 +633,81 @@
           "description": "Miss Fortune channels a barrage of bullets into a cone in front of her, dealing large amounts of damage to enemies. Each wave of Bullet Time can critically strike",
           "tooltip": "Miss Fortune channels a barrage of bullets, firing {{ basewaves }} waves over {{ basechannelduration }} seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per wave (total <physicalDamage>{{ totalphysicaldamage }} physical damage</physicalDamage>).<br /><br />Each wave can critically strike for %i:scaleCrit% <physicalDamage>{{ critdamageperwave }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bullet Barrages", "Cooldown"],
+            "label": [
+              "Bullet Barrages",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basewaves }} -> {{ basewavesNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -427,7 +725,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "MissFortuneBulletTime.png",

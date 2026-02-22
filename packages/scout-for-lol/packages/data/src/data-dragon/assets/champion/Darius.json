@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Darius": {
       "id": "Darius",
@@ -126,7 +126,10 @@
         "When Darius's axe grab is on cooldown, he is vulnerable to harassment attacks.",
         "Darius's ability to escape from fights is limited. If you have an advantage against him, press your lead."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -177,23 +180,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [25, 30, 35, 40, 45],
+          "cost": [
+            25,
+            30,
+            35,
+            40,
+            45
+          ],
           "costBurn": "25/30/35/40/45",
           "datavalues": {},
           "effect": [
             null,
-            [100, 110, 120, 130, 140],
-            [50, 80, 110, 140, 170],
-            [99, 99, 99, 99, 99],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [17, 17, 17, 17, 17],
-            [35, 35, 35, 35, 35],
-            [51, 51, 51, 51, 51],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              100,
+              110,
+              120,
+              130,
+              140
+            ],
+            [
+              50,
+              80,
+              110,
+              140,
+              170
+            ],
+            [
+              99,
+              99,
+              99,
+              99,
+              99
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              17,
+              17,
+              17,
+              17,
+              17
+            ],
+            [
+              35,
+              35,
+              35,
+              35,
+              35
+            ],
+            [
+              51,
+              51,
+              51,
+              51,
+              51
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +286,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "DariusCleave.png",
@@ -230,29 +311,103 @@
           "description": "Darius's next attack strikes an enemy's crucial artery. As they bleed out, their Move Speed is slowed.",
           "tooltip": "Darius' next Attack deals <physicalDamage>{{ empoweredattackdamage }} physical damage</physicalDamage> and <status>Slows</status> by {{ e2 }}% for {{ e5 }} second.<br /><br />This Ability refunds its Mana cost and reduces its Cooldown by {{ e3 }}% if it kills the target.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total AD Ratio"],
+            "label": [
+              "Total AD Ratio"
+            ],
             "effect": [
               "{{ effect4amount*100.000000 }} -> {{ effect4amountnl*100.000000 }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [90, 90, 90, 90, 90],
-            [50, 50, 50, 50, 50],
-            [1.4, 1.45, 1.5, 1.55, 1.6],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              90,
+              90,
+              90,
+              90,
+              90
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              1.4,
+              1.45,
+              1.5,
+              1.55,
+              1.6
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -270,7 +425,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "DariusNoxianTacticsONH.png",
@@ -301,23 +462,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 23.5, 21, 18.5, 16],
+          "cooldown": [
+            26,
+            23.5,
+            21,
+            18.5,
+            16
+          ],
           "cooldownBurn": "26/23.5/21/18.5/16",
-          "cost": [70, 60, 50, 40, 30],
+          "cost": [
+            70,
+            60,
+            50,
+            40,
+            30
+          ],
           "costBurn": "70/60/50/40/30",
           "datavalues": {},
           "effect": [
             null,
-            [20, 25, 30, 35, 40],
-            [40, 40, 40, 40, 40],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -335,7 +568,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [535, 535, 535, 535, 535],
+          "range": [
+            535,
+            535,
+            535,
+            535,
+            535
+          ],
           "rangeBurn": "535",
           "image": {
             "full": "DariusAxeGrabCone.png",
@@ -354,30 +593,81 @@
           "description": "Darius leaps to an enemy champion and strikes a lethal blow, dealing true damage. This damage is increased for each stack of Hemorrhage on the target. If Noxian Guillotine is a killing blow, its cooldown is refreshed for a brief duration.",
           "tooltip": "Darius leaps to an enemy and strikes a lethal blow, dealing <trueDamage>{{ damage }} true damage</trueDamage>. For each <keywordMajor>Hemorrhage</keywordMajor> on the target, this Ability deals an additional {{ rdamagepercentperhemostack*100 }}% damage, up to a max of <trueDamage>{{ maximumdamage }} damage</trueDamage>.<br /><br />If this kills the target, Darius may <recast>Recast</recast> this Ability once within {{ rrecastduration }} seconds. At rank 3, this Ability has no Mana cost and kills refresh the Cooldown completely.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 0],
+          "cost": [
+            100,
+            100,
+            0
+          ],
           "costBurn": "100/100/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +685,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [460, 460, 460],
+          "range": [
+            460,
+            460,
+            460
+          ],
           "rangeBurn": "460",
           "image": {
             "full": "DariusExecute.png",

@@ -82,7 +82,7 @@
     "apiName": "BladeWaltz",
     "name": "Blade Waltz",
     "desc": "Gain the <spellName>Blade Waltz</spellName> Summoner Spell.<br><br><rules><spellName>Blade Waltz</spellName> makes you untargetable while you dash at and damage enemies @TotalHits@ times.</rules>",
-    "tooltip": "<rules>Makes you untargetable while you dash at and deal @Damage@ damage to enemies @TotalHits@ times (deals 50% on-hit damage).</rules><br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@<br>",
+    "tooltip": "Makes you untargetable while you dash at and deal @Damage@ damage to enemies @TotalHits@ times (deals 50% on-hit damage).<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@<br>",
     "iconLarge": "assets/ux/cherry/augments/icons/bladewaltz_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/bladewaltz_small.png",
     "rarity": "gold",
@@ -2546,11 +2546,7 @@
             "__type": "StatByNamedDataValueCalculationPart",
             "mDataValue": "APRatio"
           }
-        ],
-        "mMultiplier": {
-          "__type": "NamedDataValueCalculationPart",
-          "mDataValue": "APRatio"
-        }
+        ]
       }
     },
     "type": "full"
@@ -3737,8 +3733,8 @@
     "id": 225,
     "apiName": "DualWield",
     "name": "Dual Wield",
-    "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
-    "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+    "desc": "When you Attack, fire a bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+    "tooltip": "When you Attack, fire a bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
     "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
     "rarity": "gold",
@@ -4874,7 +4870,7 @@
     "rarity": "gold",
     "dataValues": {
       "AnvilsReqToComplete": 2,
-      "ItemPercentAmp": 0.15000000596046448
+      "ItemPercentAmp": 0.30000001192092896
     },
     "calculations": {},
     "type": "full"

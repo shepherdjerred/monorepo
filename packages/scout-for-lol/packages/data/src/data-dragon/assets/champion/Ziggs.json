@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.3.1",
+  "version": "16.4.1",
   "data": {
     "Ziggs": {
       "id": "Ziggs",
@@ -109,7 +109,9 @@
         "Many of Ziggs' abilities have long cooldowns. Try catching him just after he's used his abilities.",
         "Ziggs' ultimate, Mega Inferno Bomb, deals more damage in the center of the explosion."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -160,23 +162,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [850, 850, 850, 850, 850],
-            [325, 325, 325, 325, 325],
-            [225, 225, 225, 225, 225],
-            [180, 180, 180, 180, 180],
-            [240, 240, 240, 240, 240],
-            [70, 70, 70, 70, 70],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              850,
+              850,
+              850,
+              850,
+              850
+            ],
+            [
+              325,
+              325,
+              325,
+              325,
+              325
+            ],
+            [
+              225,
+              225,
+              225,
+              225,
+              225
+            ],
+            [
+              180,
+              180,
+              180,
+              180,
+              180
+            ],
+            [
+              240,
+              240,
+              240,
+              240,
+              240
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -194,7 +268,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "ZiggsQ.png",
@@ -213,7 +293,11 @@
           "description": "Ziggs flings an explosive charge that detonates after a delay, or when this ability is activated again. The explosion deals magic damage to enemies, knocking them away. Ziggs is also knocked away, but takes no damage. <br><br>Ziggs can use the Satchel to hexplode vulnerable enemy turrets.",
           "tooltip": "Ziggs flings an explosive charge that detonates after {{ bombduration }} seconds, or when this ability is <recast>Recast</recast>. It deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies and <status>Knocks</status> them <status>Back</status>. Ziggs is also knocked away, but takes no damage.<br /><br />Satchel Charge will automatically destroy towers below {{ turretdestroypercent*100 }}% of their Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Tower Destruction Threshold"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Tower Destruction Threshold"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -221,23 +305,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -255,7 +411,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "ZiggsW.png",
@@ -288,23 +450,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 16, 16, 16, 16],
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
           "cooldownBurn": "16",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [10, 10, 10, 10, 10],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0.4, 0.4, 0.4, 0.4, 0.4],
-            [0, 0, 0, 0, 0],
-            [135, 135, 135, 135, 135],
-            [150, 150, 150, 150, 150],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              135,
+              135,
+              135,
+              135,
+              135
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -322,7 +556,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ZiggsE.png",
@@ -341,7 +581,11 @@
           "description": "Ziggs deploys his ultimate creation, the Mega Inferno Bomb, hurling it an enormous distance. Enemies in the primary blast zone take more damage than those farther away.",
           "tooltip": "Ziggs hurls his ultimate creation, dealing <magicDamage>{{ empowereddamage }} magic damage</magicDamage> in the center of the blast radius, or <magicDamage>{{ blastdamage }} magic damage</magicDamage> at the edge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Blast Zone Damage", "Damage", "Cooldown"],
+            "label": [
+              "Blast Zone Damage",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamage*0.650000 }} -> {{ basedamagenl*0.650000 }}",
@@ -349,23 +593,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 95, 70],
+          "cooldown": [
+            120,
+            95,
+            70
+          ],
           "cooldownBurn": "120/95/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -383,7 +675,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5000, 5000, 5000],
+          "range": [
+            5000,
+            5000,
+            5000
+          ],
           "rangeBurn": "5000",
           "image": {
             "full": "ZiggsR.png",
