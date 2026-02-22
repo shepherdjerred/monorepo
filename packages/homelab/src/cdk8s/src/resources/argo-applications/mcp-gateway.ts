@@ -11,7 +11,7 @@ export function createMcpGatewayApp(chart: Chart) {
       project: "default",
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~1.0.0-0",
+        targetRevision: "~1.1.0-0",
         chart: "mcp-gateway",
       },
       destination: {
