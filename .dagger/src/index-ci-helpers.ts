@@ -362,6 +362,8 @@ export type ReleasePhaseOptions = {
   hassToken?: Secret | undefined;
   tofuGithubToken?: Secret | undefined;
   commitBackToken?: Secret | undefined;
+  argocdAdminPassword?: Secret | undefined;
+  opServiceAccountToken?: Secret | undefined;
   birmelImage: Container;
   releasePleaseRunFn: (
     container: Container,

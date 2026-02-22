@@ -109,17 +109,43 @@ export async function fetchCategories(): Promise<MonarchCategory[]> {
   return response.categories.filter((c) => !c.isDisabled);
 }
 
+async function withRetry<T>(
+  label: string,
+  fn: () => Promise<T>,
+  maxRetries = 3,
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      if (attempt === maxRetries) throw error;
+      const delay = 1000 * 2 ** attempt + Math.floor(Math.random() * 500);
+      log.info(`${label} failed (attempt ${String(attempt + 1)}/${String(maxRetries)}), retrying in ${String(delay)}ms...`);
+      await sleep(delay);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 export async function applyCategory(
   transactionId: string,
   categoryId: string,
 ): Promise<void> {
-  await updateTransaction({ transactionId, categoryId });
-  await sleep(200);
+  const result = await withRetry(`updateTransaction(${transactionId})`, () =>
+    updateTransaction({ transactionId, categoryId }),
+  );
+  const actualCategoryId = result.updateTransaction.transaction.category.id;
+  if (actualCategoryId !== categoryId) {
+    log.error(`Category update may have failed for ${transactionId}: expected ${categoryId}, got ${actualCategoryId}`);
+  }
+  await sleep(500);
 }
 
 export async function flagForReview(transactionId: string): Promise<void> {
-  await updateTransaction({ transactionId, needsReview: true });
-  await sleep(200);
+  await withRetry(`flagForReview(${transactionId})`, () =>
+    updateTransaction({ transactionId, needsReview: true }),
+  );
+  await sleep(500);
 }
 
 export async function applySplits(
@@ -131,8 +157,18 @@ export async function applySplits(
     notes?: string;
   }[],
 ): Promise<void> {
-  await updateTransactionSplits(transactionId, splits);
-  await sleep(200);
+  const result = await withRetry(`applySplits(${transactionId})`, () =>
+    updateTransactionSplits(transactionId, splits),
+  );
+  const rawErrors: unknown = result.updateTransactionSplit.errors;
+  if (rawErrors === null) {
+    const txn = result.updateTransactionSplit.transaction;
+    log.debug(`Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`);
+  } else {
+    log.error(`Split failed for ${transactionId}: ${JSON.stringify(rawErrors)}`);
+    log.debug(`Split data: ${JSON.stringify(splits)}`);
+  }
+  await sleep(500);
 }
 
 const AMAZON_MERCHANT_PATTERNS = [

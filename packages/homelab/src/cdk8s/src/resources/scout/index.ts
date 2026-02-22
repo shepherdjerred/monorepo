@@ -166,15 +166,18 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
-      liveness: Probe.fromHttpGet("/ping", {
+      startup: Probe.fromHttpGet("/ping", {
         port: 3000,
-        initialDelaySeconds: Duration.seconds(10),
         periodSeconds: Duration.seconds(10),
+        failureThreshold: 12,
+      }),
+      liveness: Probe.fromHttpGet("/livez", {
+        port: 3000,
+        periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
       readiness: Probe.fromHttpGet("/healthz", {
         port: 3000,
-        initialDelaySeconds: Duration.seconds(30),
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),

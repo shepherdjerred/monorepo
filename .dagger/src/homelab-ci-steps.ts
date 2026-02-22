@@ -98,6 +98,8 @@ export async function runValidationPhase(
     hassBaseUrl,
     hassToken,
     tofuGithubToken,
+    argocdAdminPassword,
+    opServiceAccountToken,
     chartVersion,
   } = secrets;
 
@@ -158,6 +160,8 @@ export async function runValidationPhase(
         awsAccessKeyId,
         awsSecretAccessKey,
         githubToken: tofuGithubToken,
+        argocdAdminPassword,
+        opServiceAccountToken,
       }),
     ),
     runStep("CDK8s Build", () => {

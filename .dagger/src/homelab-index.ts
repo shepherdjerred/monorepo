@@ -51,6 +51,8 @@ export type HomelabSecrets = {
   hassBaseUrl?: Secret;
   hassToken?: Secret;
   tofuGithubToken?: Secret;
+  argocdAdminPassword?: Secret;
+  opServiceAccountToken?: Secret;
   appVersions?: Record<string, string>;
 };
 

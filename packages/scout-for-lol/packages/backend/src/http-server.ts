@@ -22,6 +22,80 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const applicationStartTime = Date.now();
+
+function handleLivez(): Response {
+  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
+  const now = Date.now();
+  const uptimeMs = now - applicationStartTime;
+
+  // Grace period: first 5 minutes after startup, always healthy
+  const startupGracePeriodMs = 5 * 60 * 1000;
+  if (uptimeMs < startupGracePeriodMs) {
+    return Response.json(
+      { healthy: true, reason: "startup-grace-period", uptimeMs },
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
+    );
+  }
+
+  // After grace: unhealthy if API attempts exist in last 20 min AND last success >15 min ago
+  const twentyMinutesMs = 20 * 60 * 1000;
+  const fifteenMinutesMs = 15 * 60 * 1000;
+  const hasRecentAttempts =
+    lastAttemptTimestamp !== undefined &&
+    now - lastAttemptTimestamp < twentyMinutesMs;
+  const lastSuccessStale =
+    lastSuccessTimestamp === undefined ||
+    now - lastSuccessTimestamp > fifteenMinutesMs;
+  const healthy = !(hasRecentAttempts && lastSuccessStale);
+
+  return Response.json(
+    {
+      healthy,
+      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
+      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
+      uptimeMs,
+    },
+    {
+      status: healthy ? 200 : 503,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    },
+  );
+}
+
+function handleHealthz(): Response {
+  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
+  const now = Date.now();
+  const uptimeSeconds = (now - applicationStartTime) / 1000;
+
+  // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
+  const tenMinutesMs = 10 * 60 * 1000;
+  const fiveMinutesMs = 5 * 60 * 1000;
+  const hasRecentAttempts =
+    lastAttemptTimestamp !== undefined &&
+    now - lastAttemptTimestamp < tenMinutesMs;
+  const lastSuccessStale =
+    lastSuccessTimestamp === undefined ||
+    now - lastSuccessTimestamp > fiveMinutesMs;
+  const healthy = !(hasRecentAttempts && lastSuccessStale);
+
+  return Response.json(
+    {
+      healthy,
+      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
+      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
+      uptimeSeconds,
+    },
+    {
+      status: healthy ? 200 : 503,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    },
+  );
+}
+
 /**
  * HTTP server for health checks, metrics, and tRPC API using Bun's native server
  */
@@ -39,7 +113,7 @@ const server = Bun.serve({
       });
     }
 
-    // Liveness probe - simple process alive check
+    // Startup probe - simple process alive check
     if (url.pathname === "/ping") {
       return new Response("pong", {
         status: 200,
@@ -50,38 +124,14 @@ const server = Bun.serve({
       });
     }
 
+    // Liveness probe - restarts pod on sustained API failure
+    if (url.pathname === "/livez") {
+      return handleLivez();
+    }
+
     // Readiness probe - checks Riot API health
     if (url.pathname === "/healthz") {
-      const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
-      const now = Date.now();
-      const uptimeSeconds = (now - applicationStartTime) / 1000;
-
-      // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
-      const tenMinutesMs = 10 * 60 * 1000;
-      const fiveMinutesMs = 5 * 60 * 1000;
-      const hasRecentAttempts =
-        lastAttemptTimestamp !== undefined &&
-        now - lastAttemptTimestamp < tenMinutesMs;
-      const lastSuccessStale =
-        lastSuccessTimestamp === undefined ||
-        now - lastSuccessTimestamp > fiveMinutesMs;
-      const healthy = !(hasRecentAttempts && lastSuccessStale);
-
-      return Response.json(
-        {
-          healthy,
-          lastSuccessTimestamp: lastSuccessTimestamp ?? null,
-          lastAttemptTimestamp: lastAttemptTimestamp ?? null,
-          uptimeSeconds,
-        },
-        {
-          status: healthy ? 200 : 503,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders,
-          },
-        },
-      );
+      return handleHealthz();
     }
 
     // Metrics endpoint for Prometheus
@@ -173,11 +223,10 @@ const server = Bun.serve({
   },
 });
 
-const applicationStartTime = Date.now();
-
 const port = server.port?.toString() ?? "unknown";
 logger.info(`✅ HTTP server started on http://0.0.0.0:${port}`);
-logger.info(`🏥 Liveness: http://0.0.0.0:${port}/ping`);
+logger.info(`🏥 Startup: http://0.0.0.0:${port}/ping`);
+logger.info(`🏥 Liveness: http://0.0.0.0:${port}/livez`);
 logger.info(`🏥 Readiness: http://0.0.0.0:${port}/healthz`);
 logger.info(`📊 Metrics endpoint: http://0.0.0.0:${port}/metrics`);
 logger.info(`🔌 tRPC API: http://0.0.0.0:${port}/trpc`);

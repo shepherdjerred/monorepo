@@ -20,9 +20,9 @@ function makeTxn(
     isSplitTransaction: false,
     createdAt: "2025-03-03",
     updatedAt: "2025-03-03",
-    category: { id: "cat-1", name: "Transfer" },
+    category: { id: "cat-1", name: "Uncategorized" },
     merchant: { id: "m-1", name: "Venmo", transactionsCount: 5 },
-    account: { id: "a-1", displayName: "Checking" },
+    account: { id: "a-1", displayName: "Venmo Balance" },
     tags: [],
     ...overrides,
   };
@@ -100,6 +100,35 @@ describe("matchVenmoTransactions", () => {
     const result = matchVenmoTransactions(txns, venmo);
 
     expect(result.matched).toHaveLength(0);
+  });
+
+  test("skips Transfer category transactions", () => {
+    const txns = [makeTxn({ category: { id: "cat-2", name: "Transfer" } })];
+    const venmo = [makeVenmo()];
+    const result = matchVenmoTransactions(txns, venmo);
+
+    expect(result.matched).toHaveLength(0);
+    expect(result.unmatchedVenmo).toHaveLength(1);
+  });
+
+  test("matches Venmo Balance side when both bank-side and Venmo-side exist", () => {
+    const txns = [
+      makeTxn({
+        id: "txn-bank",
+        category: { id: "cat-2", name: "Transfer" },
+        account: { id: "a-2", displayName: "Checking" },
+      }),
+      makeTxn({
+        id: "txn-venmo",
+        category: { id: "cat-1", name: "Uncategorized" },
+        account: { id: "a-1", displayName: "Venmo Balance" },
+      }),
+    ];
+    const venmo = [makeVenmo()];
+    const result = matchVenmoTransactions(txns, venmo);
+
+    expect(result.matched).toHaveLength(1);
+    expect(result.matched[0]?.transaction.id).toBe("txn-venmo");
   });
 
   test("does not duplicate matches", () => {

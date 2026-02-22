@@ -345,21 +345,49 @@ export function createScoutDashboard() {
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 33, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 33, w: 8, h: 8 }),
   );
 
-  // Riot API Rate Limit Errors
+  // Reports Failed
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Riot API Rate Limit Errors")
-      .description("Rate limit errors from Riot API")
+      .title("Reports Failed")
+      .description("Match report generation failures per minute")
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (rate(riot_api_errors_total{${buildFilter()}, http_status="429"}[5m]))`,
+            `sum by (environment) (rate(reports_failed_total{${buildFilter()}}[5m])) * 60`,
           )
           .legendFormat("{{environment}}"),
+      )
+      .unit("short")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 0.01, color: "yellow" },
+            { value: 1, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 8, y: 33, w: 8, h: 8 }),
+  );
+
+  // Riot API Errors
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Riot API Errors")
+      .description("All errors from Riot API by HTTP status")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment, http_status) (rate(riot_api_errors_total{${buildFilter()}}[5m]))`,
+          )
+          .legendFormat("{{environment}} - {{http_status}}"),
       )
       .unit("reqps")
       .lineWidth(2)
@@ -373,7 +401,7 @@ export function createScoutDashboard() {
             { value: 0.1, color: "red" },
           ]),
       )
-      .gridPos({ x: 12, y: 33, w: 12, h: 8 }),
+      .gridPos({ x: 16, y: 33, w: 8, h: 8 }),
   );
 
   return builder.build();

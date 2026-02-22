@@ -77,6 +77,8 @@ export class Monorepo {
     hassToken?: Secret,
     tofuGithubToken?: Secret,
     commitBackToken?: Secret,
+    argocdAdminPassword?: Secret,
+    opServiceAccountToken?: Secret,
   ): Promise<string> {
     const outputs: string[] = [];
     const isRelease = branch === "main";
@@ -163,7 +165,8 @@ export class Monorepo {
         registryUsername, registryPassword, s3AccessKeyId, s3SecretAccessKey,
         argocdToken, chartMuseumUsername, chartMuseumPassword,
         cloudflareApiToken, cloudflareAccountId, hassBaseUrl, hassToken,
-        tofuGithubToken, commitBackToken, birmelImage: tier0BirmelImage,
+        tofuGithubToken, commitBackToken, argocdAdminPassword, opServiceAccountToken,
+        birmelImage: tier0BirmelImage,
         releasePleaseRunFn: runReleasePleaseCommand,
         getReleasePleaseContainerFn: getReleasePleaseContainer,
         multiplexerBuildFn: (s, k, sk) => this.multiplexerBuild(s, k, sk),
@@ -326,6 +329,7 @@ export class Monorepo {
     cloudflareAccountId: Secret, awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret, hassBaseUrl?: Secret,
     hassToken?: Secret, tofuGithubToken?: Secret,
+    argocdAdminPassword?: Secret, opServiceAccountToken?: Secret,
   ): Promise<string> {
     const result = await ciHomelab(source, HomelabStage.Prod, {
       argocdToken, ghcrUsername, ghcrPassword, chartVersion,
@@ -334,6 +338,8 @@ export class Monorepo {
       ...(hassBaseUrl === undefined ? {} : { hassBaseUrl }),
       ...(hassToken === undefined ? {} : { hassToken }),
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
+      ...(argocdAdminPassword === undefined ? {} : { argocdAdminPassword }),
+      ...(opServiceAccountToken === undefined ? {} : { opServiceAccountToken }),
     });
     return result.summary;
   }
