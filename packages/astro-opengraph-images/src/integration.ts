@@ -16,6 +16,7 @@ const defaults: IntegrationDefaults = {
 export function astroOpenGraphImages({
   options,
   render,
+  filter,
 }: IntegrationInput): AstroIntegration {
   const optionsWithDefaults: IntegrationOptions = { ...defaults, ...options };
 
@@ -27,6 +28,7 @@ export function astroOpenGraphImages({
           ...entry,
           options: optionsWithDefaults,
           render,
+          filter,
         });
       },
     },
