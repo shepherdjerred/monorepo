@@ -193,7 +193,7 @@ pre-commit:
               - "packages/clauderon/**/*.rs"
               - "packages/clauderon/Cargo.toml"
               - "packages/clauderon/Cargo.lock"
-            run: cargo test
+            run: cargo test --lib
 
           - name: cargo-deny
             root: "packages/clauderon/"

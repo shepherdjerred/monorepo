@@ -36,13 +36,20 @@ impl SqliteStore {
         ))?
         .create_if_missing(true);
 
+        // Use a temporary pool for migrations to avoid stale statement caches.
+        // ALTER TABLE during migrations can cause sqlx-sqlite's cached column metadata
+        // to become stale, leading to index-out-of-bounds panics on SELECT *.
+        let migration_pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(options.clone())
+            .await?;
+        Self::run_migrations(&migration_pool).await?;
+        migration_pool.close().await;
+
         let pool = SqlitePoolOptions::new()
             .max_connections(5)
             .connect_with(options)
             .await?;
-
-        // Run migrations
-        Self::run_migrations(&pool).await?;
 
         Ok(Self {
             pool,
