@@ -217,33 +217,49 @@ export async function classifyAmazonBatch(
   return callClaudeAndParse(prompt, AmazonBatchSchema);
 }
 
-export function computeSplits(
-  transactionTotal: number,
-  items: {
-    amount: number;
-    categoryId: string;
-    itemName: string;
-    categoryName: string;
-  }[],
-): {
-  itemName: string;
+type SplitItem = {
   amount: number;
   categoryId: string;
+  itemName: string;
   categoryName: string;
-}[] {
+};
+
+function fixRoundingDrift(splits: SplitItem[], targetCents: number): void {
+  const sumCents = splits.reduce((s, i) => s + Math.round(i.amount * 100), 0);
+  const last = splits.at(-1);
+  if (sumCents !== targetCents && last !== undefined) {
+    last.amount = (Math.round(last.amount * 100) + (targetCents - sumCents)) / 100;
+  }
+}
+
+export function computeSplits(
+  transactionTotal: number,
+  items: SplitItem[],
+): SplitItem[] {
+  const target = Math.abs(transactionTotal);
+  const targetCents = Math.round(target * 100);
   const itemSum = items.reduce((sum, item) => sum + item.amount, 0);
-  const remainder = Math.abs(transactionTotal) - itemSum;
+  const remainder = target - itemSum;
 
   if (Math.abs(remainder) < 0.01) {
-    return items;
+    const rounded = items.map((item) => ({
+      ...item,
+      amount: Math.round(item.amount * 100) / 100,
+    }));
+    fixRoundingDrift(rounded, targetCents);
+    return rounded;
   }
 
-  return items.map((item) => {
+  // Prorate items to match transaction total, then fix rounding
+  const prorated = items.map((item) => {
     const proportion = item.amount / itemSum;
-    const prorated = item.amount + remainder * proportion;
+    const adjusted = item.amount + remainder * proportion;
     return {
       ...item,
-      amount: Math.round(prorated * 100) / 100,
+      amount: Math.round(adjusted * 100) / 100,
     };
   });
+  fixRoundingDrift(prorated, targetCents);
+
+  return prorated;
 }

@@ -24,23 +24,36 @@ async function promptInteractive(change: ProposedChange): Promise<"apply" | "ski
   return "skip";
 }
 
-async function applySingleChange(change: ProposedChange): Promise<void> {
-  if (change.type === "recategorize") {
-    log.info(`  Updating ${change.merchantName} → ${change.proposedCategory}`);
-    await applyCategory(change.transactionId, change.proposedCategoryId);
-  } else if (change.type === "flag") {
-    log.info(`  Flagging ${change.merchantName} for review`);
-    await flagForReview(change.transactionId);
-  } else if (change.splits !== undefined) {
-    log.info(`  Splitting ${change.merchantName}`);
-    await applySplits(
-      change.transactionId,
-      change.splits.map((s) => ({
-        amount: s.amount,
-        categoryId: s.categoryId,
-        merchantName: s.itemName,
-      })),
-    );
+async function applySingleChange(change: ProposedChange): Promise<boolean> {
+  try {
+    if (change.type === "recategorize") {
+      if (change.proposedCategoryId === change.currentCategoryId) {
+        log.debug(`  Skipping ${change.merchantName} (already ${change.currentCategory})`);
+        return true;
+      }
+      log.info(`  Updating ${change.merchantName} → ${change.proposedCategory}`);
+      await applyCategory(change.transactionId, change.proposedCategoryId);
+    } else if (change.type === "flag") {
+      log.info(`  Flagging ${change.merchantName} for review`);
+      await flagForReview(change.transactionId);
+    } else if (change.splits !== undefined) {
+      log.info(`  Splitting ${change.merchantName}`);
+      // Monarch API requires split amounts to match parent transaction sign
+      const sign = change.amount < 0 ? -1 : 1;
+      await applySplits(
+        change.transactionId,
+        change.splits.map((s) => ({
+          amount: sign * Math.abs(s.amount),
+          categoryId: s.categoryId,
+          merchantName: s.itemName,
+        })),
+      );
+    }
+    return true;
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    log.error(`  Failed to apply change for ${change.merchantName} (${change.transactionId}): ${msg}`);
+    return false;
   }
 }
 
@@ -49,6 +62,7 @@ export async function applyChanges(
   interactive: boolean,
 ): Promise<void> {
   let applied = 0;
+  let failed = 0;
 
   if (interactive) {
     for (const change of changes) {
@@ -58,16 +72,18 @@ export async function applyChanges(
         return;
       }
       if (action === "skip") continue;
-      await applySingleChange(change);
-      applied++;
+      const ok = await applySingleChange(change);
+      if (ok) applied++;
+      else failed++;
     }
   } else {
     log.info("Applying changes...");
     for (const change of changes) {
-      await applySingleChange(change);
-      applied++;
+      const ok = await applySingleChange(change);
+      if (ok) applied++;
+      else failed++;
     }
   }
 
-  log.info(`Done! Applied ${String(applied)} changes.`);
+  log.info(`Done! Applied ${String(applied)} changes.${failed > 0 ? ` ${String(failed)} failed.` : ""}`);
 }

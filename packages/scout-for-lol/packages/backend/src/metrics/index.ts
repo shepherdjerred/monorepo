@@ -354,6 +354,16 @@ export const reportsGeneratedTotal = new Counter({
 });
 
 /**
+ * Total number of match report generation failures
+ */
+export const reportsFailedTotal = new Counter({
+  name: "reports_failed_total",
+  help: "Total match report generation failures",
+  labelNames: ["queue_type"] as const,
+  registers: [registry],
+});
+
+/**
  * Total number of database queries
  */
 export const databaseQueriesTotal = new Counter({

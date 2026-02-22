@@ -25,6 +25,8 @@ steps:
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
+                  - secretRef:
+                      name: buildkite-argocd-token
 
   - label: ":robot_face: Code Review"
     key: code-review

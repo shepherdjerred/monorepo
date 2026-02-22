@@ -62,7 +62,7 @@ describe("displaySummary", () => {
       makeChange({ transactionId: "txn-2" }),
     ];
 
-    displaySummary({ weekChanges, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({ totalTransactions: 100, weekChanges, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 
@@ -97,7 +97,7 @@ describe("displaySummary", () => {
       }),
     ];
 
-    displaySummary({ weekChanges: [], amazonChanges, venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({ totalTransactions: 100, weekChanges: [], amazonChanges, venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 
@@ -113,6 +113,7 @@ describe("displaySummary", () => {
     };
 
     displaySummary({
+      totalTransactions: 100,
       weekChanges: [],
       amazonChanges: [],
       venmoChanges: [],
@@ -155,7 +156,7 @@ describe("displaySummary", () => {
       makeChange({ type: "flag", transactionId: "txn-2" }),
     ];
 
-    displaySummary({ weekChanges: changes, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({ totalTransactions: 100, weekChanges: changes, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
 
     console.log = originalLog;
 

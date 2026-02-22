@@ -37,7 +37,10 @@ import {
   saveMatchRankHistory,
   getLatestRankBefore,
 } from "@scout-for-lol/backend/league/model/rank-history.ts";
-import { reportsGeneratedTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import {
+  reportsGeneratedTotal,
+  reportsFailedTotal,
+} from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -362,6 +365,8 @@ export async function generateMatchReport(
 
     return result;
   } catch (error) {
+    const queueType = parseQueueType(matchData.info.queueId) ?? "unknown";
+    reportsFailedTotal.inc({ queue_type: queueType });
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;
   }

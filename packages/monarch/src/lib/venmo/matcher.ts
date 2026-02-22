@@ -20,7 +20,9 @@ export function matchVenmoTransactions(
   const usedVenmoIds = new Set<string>();
   const matchedTransactionIds = new Set<string>();
 
-  const eligible = monarchTxns.filter((t) => !t.isSplitTransaction);
+  const eligible = monarchTxns.filter(
+    (t) => !t.isSplitTransaction && t.category.name !== "Transfer",
+  );
 
   for (const transaction of eligible) {
     const txnAmount = transaction.amount;

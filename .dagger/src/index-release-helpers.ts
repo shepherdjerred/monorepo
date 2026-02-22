@@ -362,6 +362,8 @@ export async function runHomelabRelease(
     hassBaseUrl,
     hassToken,
     tofuGithubToken,
+    argocdAdminPassword,
+    opServiceAccountToken,
     version,
   } = options;
 
@@ -389,6 +391,8 @@ export async function runHomelabRelease(
       ...(hassBaseUrl === undefined ? {} : { hassBaseUrl }),
       ...(hassToken === undefined ? {} : { hassToken }),
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
+      ...(argocdAdminPassword === undefined ? {} : { argocdAdminPassword }),
+      ...(opServiceAccountToken === undefined ? {} : { opServiceAccountToken }),
       appVersions,
     };
     const result = await ciHomelab(source, HomelabStage.Prod, homelabSecrets);

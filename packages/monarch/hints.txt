@@ -35,6 +35,7 @@
 - Apotheke Co sells home fragrances/candles — Furniture & Housewares, not Medical.
 - Apple Services are App Store/subscription charges — Software, not Shopping.
 - Byredo is a luxury fragrance/beauty brand — Shopping.
+- Paka is a clothing brand — Shopping.
 
 # Services
 - Gentle Giant West is a moving company — Moving Expenses.
@@ -50,6 +51,7 @@
 
 # Auto
 - Audi USA is always Auto Payment (car loan), not Auto Maintenance.
+- U-Turn Audio / U-TURN AUDI is an audio/turntable equipment company — Electronics, not Auto.
 
 # Finance
 - Venmo Credit Card Cash Back is rewards — Rewards, not Transfer.

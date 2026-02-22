@@ -118,6 +118,7 @@ export function displayAmazonChanges(
 }
 
 export type SummaryOptions = {
+  totalTransactions: number;
   weekChanges: ProposedChange[];
   amazonChanges: ProposedChange[];
   venmoChanges: ProposedChange[];
@@ -133,17 +134,21 @@ export type SummaryOptions = {
 };
 
 export function displaySummary(options: SummaryOptions): void {
-  const { weekChanges, amazonChanges, venmoChanges, biltChanges, usaaChanges, sclChanges, appleChanges, costcoChanges, matchResult, venmoMatchResult, appleMatchResult, costcoMatchResult } = options;
+  const { totalTransactions, weekChanges, amazonChanges, venmoChanges, biltChanges, usaaChanges, sclChanges, appleChanges, costcoChanges, matchResult, venmoMatchResult, appleMatchResult, costcoMatchResult } = options;
   const allChanges = [...weekChanges, ...amazonChanges, ...venmoChanges, ...biltChanges, ...usaaChanges, ...sclChanges, ...appleChanges, ...costcoChanges];
   const recategorizes = allChanges.filter(
     (c) => c.type === "recategorize",
   );
   const splits = allChanges.filter((c) => c.type === "split");
   const flags = allChanges.filter((c) => c.type === "flag");
+  const unchanged = totalTransactions - allChanges.length;
 
   console.log("\n=== Summary ===\n");
   console.log(
-    `  Total transactions analyzed: ${String(allChanges.length)}`,
+    `  Total transactions analyzed: ${String(totalTransactions)}`,
+  );
+  console.log(
+    `  Already correct:             ${String(unchanged)}`,
   );
   console.log(
     `  Re-categorizations proposed: ${String(recategorizes.length)}`,

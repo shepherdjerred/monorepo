@@ -345,7 +345,7 @@ async function main(): Promise<void> {
 
   displayWeekChanges(weekChanges, weekGroups);
 
-  displaySummary({ weekChanges, ...deep });
+  displaySummary({ weekChanges, ...deep, totalTransactions: transactions.length });
   displayUsageSummary(getUsageSummary());
 
   const allChanges = [...weekChanges, ...deep.venmoChanges, ...deep.biltChanges, ...deep.usaaChanges, ...deep.sclChanges, ...deep.appleChanges, ...deep.costcoChanges, ...deep.amazonChanges];

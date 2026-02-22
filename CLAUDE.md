@@ -14,6 +14,7 @@ packages/
 ├── castle-casters/          # Game project
 ├── clauderon/               # Rust session manager (has its own CLAUDE.md)
 ├── discord-plays-pokemon/   # Discord Plays Pokemon
+├── docs/                    # AI-maintained monorepo documentation
 ├── dotfiles/                # Dotfiles & shell config
 ├── eslint-config/           # Shared ESLint rules
 ├── fonts/                   # Custom fonts
@@ -69,3 +70,4 @@ Each package has its own CLAUDE.md with specific instructions:
 - `packages/scout-for-lol/CLAUDE.md` - Match analysis pipeline
 - `packages/resume/CLAUDE.md` - Resume site
 - `packages/tools/CLAUDE.md` - CLI developer tools
+- `packages/docs/` - AI-maintained docs (see `monorepo-docs` skill)

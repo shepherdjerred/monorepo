@@ -88,13 +88,12 @@ export function createArgoCdApp(chart: Chart) {
         "exec.enabled": true,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
-        // TODO: rename
-        "accounts.gha": "apiKey",
-        "accounts.gha.enabled": true,
+        "accounts.buildkite": "apiKey",
+        "accounts.buildkite.enabled": true,
       },
       rbac: {
         // Scoped to sync-only permission for the apps application
-        "policy.csv": "p, gha, applications, sync, apps, allow",
+        "policy.csv": "p, buildkite, applications, sync, apps, allow",
       },
     },
   };

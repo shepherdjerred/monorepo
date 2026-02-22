@@ -4,7 +4,7 @@ import versions from "./lib-versions.ts";
 import { execWithOutput } from "./lib-errors.ts";
 
 const TOFU_VERSION = "1.9.0";
-const TOFU_DIRS = ["cloudflare", "github", "seaweedfs"] as const;
+const TOFU_DIRS = ["argocd", "cloudflare", "github", "seaweedfs"] as const;
 
 /**
  * Returns a container with OpenTofu installed on Alpine.
@@ -34,6 +34,8 @@ type PlanDirOptions = {
   awsAccessKeyId: Secret;
   awsSecretAccessKey: Secret;
   githubToken?: Secret | undefined;
+  argocdAdminPassword?: Secret | undefined;
+  opServiceAccountToken?: Secret | undefined;
 };
 
 export async function planDir(
@@ -47,6 +49,8 @@ export async function planDir(
     awsAccessKeyId,
     awsSecretAccessKey,
     githubToken,
+    argocdAdminPassword,
+    opServiceAccountToken,
   } = options;
   let container = getTofuContainer()
     .withMountedDirectory("/workspace", source.directory(`src/tofu/${dir}`))
@@ -58,6 +62,14 @@ export async function planDir(
 
   if (githubToken) {
     container = container.withSecretVariable("GITHUB_TOKEN", githubToken);
+  }
+
+  if (argocdAdminPassword) {
+    container = container.withSecretVariable("TF_VAR_argocd_admin_password", argocdAdminPassword);
+  }
+
+  if (opServiceAccountToken) {
+    container = container.withSecretVariable("OP_SERVICE_ACCOUNT_TOKEN", opServiceAccountToken);
   }
 
   container = container.withExec(["tofu", "init"]);
@@ -94,6 +106,8 @@ type PlanAllOptions = {
   awsAccessKeyId: Secret;
   awsSecretAccessKey: Secret;
   githubToken?: Secret | undefined;
+  argocdAdminPassword?: Secret | undefined;
+  opServiceAccountToken?: Secret | undefined;
 };
 
 export async function planAll(options: PlanAllOptions): Promise<string> {
@@ -104,6 +118,8 @@ export async function planAll(options: PlanAllOptions): Promise<string> {
     awsAccessKeyId,
     awsSecretAccessKey,
     githubToken,
+    argocdAdminPassword,
+    opServiceAccountToken,
   } = options;
   const results = await Promise.allSettled(
     TOFU_DIRS.map((dir) =>
@@ -115,6 +131,8 @@ export async function planAll(options: PlanAllOptions): Promise<string> {
         awsAccessKeyId,
         awsSecretAccessKey,
         githubToken,
+        argocdAdminPassword,
+        opServiceAccountToken,
       }),
     ),
   );
