@@ -250,7 +250,7 @@ export async function homelabHelmPublishBuilt(
         .withExec([
           "sh",
           "-c",
-          String.raw`curl -s -w '\n%{http_code}' -u $CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD --data-binary @${chartFile} ${repo}/api/charts > /tmp/result.txt 2>&1`,
+          String.raw`curl -s -w '\n%{http_code}' -u "$CHARTMUSEUM_USERNAME:$CHARTMUSEUM_PASSWORD" --data-binary @${chartFile} ${repo}/api/charts > /tmp/result.txt 2>&1`,
         ]);
 
       const result = await container.file("/tmp/result.txt").contents();
