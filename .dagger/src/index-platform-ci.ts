@@ -102,6 +102,7 @@ export async function runClauderonCi(
         "install",
         "cargo-deny",
         "--locked",
+        "--force",
         "--root",
         "/root/.cargo-tools",
       ])
@@ -153,6 +154,7 @@ export async function runClauderonCi(
         "install",
         "cargo-llvm-cov",
         "--locked",
+        "--force",
         "--root",
         "/root/.cargo-tools",
       ])
