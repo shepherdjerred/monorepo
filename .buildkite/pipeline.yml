@@ -27,6 +27,7 @@ steps:
                       name: buildkite-ci-secrets
                   - secretRef:
                       name: buildkite-argocd-token
+                      optional: true
 
   - label: ":robot_face: Code Review"
     key: code-review
