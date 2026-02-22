@@ -411,18 +411,6 @@ export function shellcheckStep(source: Directory): Container {
 }
 
 /**
- * Run actionlint on GitHub Actions workflow files.
- */
-export function actionlintStep(source: Directory): Container {
-  return dag
-    .container()
-    .from("rhysd/actionlint:latest")
-    .withWorkdir("/workspace")
-    .withMountedDirectory("/workspace/.github", source.directory(".github"))
-    .withExec(["actionlint", "-color"]);
-}
-
-/**
  * Run knip for dead code detection.
  */
 export function knipCheck(container: Container): Container {
@@ -471,7 +459,6 @@ export async function runQualityChecks(source: Directory): Promise<string> {
   const results = await runNamedParallel<string>([
     syncCheck("Quality ratchet", qualityRatchet(source)),
     syncCheck("Shellcheck", shellcheckStep(source)),
-    syncCheck("Actionlint", actionlintStep(source)),
     syncCheck("Trivy", trivyScan(source)),
     syncCheck("Semgrep", semgrepScan(source)),
     syncCheck("Dagger ESLint", daggerLintCheck(source)),

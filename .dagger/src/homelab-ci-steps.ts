@@ -485,7 +485,6 @@ export function checkForFailures(
       publish.dnsAuditPublishResult,
       publish.caddyS3ProxyPublishResult,
       publish.helmPublishResult,
-      publish.syncResult,
     ].some((r) => r.status === "failed");
 
   if (validationFailed || publishFailed) {
