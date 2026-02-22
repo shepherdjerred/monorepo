@@ -173,6 +173,8 @@ export const RawParticipantSchema = z
     playerSubteamId: z.number().optional(),
     placement: z.number().optional(),
     subteamPlacement: z.number().optional(),
+    // Player behavior data (added by Riot ~Feb 2026)
+    PlayerBehavior: z.record(z.string(), z.number()).optional(),
   })
   .strict();
 
