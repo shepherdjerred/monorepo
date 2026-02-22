@@ -232,83 +232,91 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
-**19 active packages**
+**21 active packages**
 
-### [macos-cross-compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler) (2026-02-21)
+### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-02-22)
 
-This project packages a macOS cross-compilation toolchain so Linux hosts can build C, C++, Fortran, and Rust binaries targeting macOS, ideal for CI pipelines. It relies on a Docker image configured with osxcross-based GCC, Clang, GFortran, and Zig (configurable via `mise.toml`) alongside bundled macOS SDK headers and libraries. The image mounts user source directories into `/workspace` and exposes architecture-specific targets like `aarch64-apple-darwin24-*`, enabling reproducible builds for arm64 and x86_64 macOS binaries.
+Scout for League of Legends is a Discord bot that tracks your friends’ matches and delivers post-game notifications with rich stat reports directly into your server. The codebase uses React, the Tauri app framework, Zod validation, ffmpeg-static, and both OpenAI and Google Generative AI SDKs (`package.json`). It runs configurable competitions, supports multi-region player tracking, and generates full arena-mode reports for all teams with augment and placement data.
 
-### [anki](https://github.com/shepherdjerred/monorepo/tree/main/packages/anki) (2026-02-21)
-
-This package automates turning Markdown study notes (`book_high_performance_web_applications.md`, `book_ostep.md`, `bytes.md`, `interview.md`) into Anki decks by invoking the mdanki CLI to emit `.apkg` files. The `generate.sh` workflow relies on Node.js tooling (`npx`, `mdanki`, `sql.js`) plus a shared `settings.json` template that defines the card HTML and CSS, and it swaps in the `sql-memory-growth.js` build of sql.js before running the conversions so every deck is generated with the memory-growth WebAssembly runtime.
-
-### [castle-casters](https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters) (2026-02-21)
-
-Castle Casters is a cross-platform Quoridor adaptation with a medieval fantasy theme that runs its main loop through `GameEngine` and an application-wide `EventBus`. It is built in Java 21 using LWJGL (OpenGL 4.1, OpenAL, GLFW, stb), Netty 4, Jenetics, GSON, and Lombok, and it features an alpha-beta search AI implemented with the MiniMaxAlgorithm to choose optimal turns.
-
-### [eslint-config](https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config) (2026-02-21)
-
-@shepherdjerred/eslint-config provides reusable ESLint flat configurations that enforce accessibility, import discipline, and component best practices across React and Astro codebases. The package integrates @eslint/js, typescript-eslint, eslint-plugin-astro, eslint-plugin-react, eslint-plugin-jsx-a11y, eslint-plugin-import, and the Bun-aware TypeScript resolver exposed in src/configs/*.ts. Its modular configs in src/configs/base.ts, src/configs/imports.ts, src/configs/accessibility.ts, and src/configs/react.ts each return TSESLint.FlatConfig.ConfigArray instances so teams can compose rule sets with custom tsconfig roots, project service settings, and Bun-aware import resolution.
-
-### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-21)
-
-This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces, Lefthook git hooks, Dagger tooling, and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
-
-### [sjer.red](https://github.com/shepherdjerred/monorepo/tree/main/packages/sjer.red) (2026-02-21)
-
-This repo powers the sjer.red personal site, delivering blog posts, curated bookmarks, and other content through Astro-driven static pages. It runs on Astro with plugins like @astrojs/mdx, @astrojs/rss, Tailwind CSS, and Node-based utilities such as `src/bookmarks/bookmarks.ts` that use jsdom and Zod to automate bookmark ingestion, giving the site an automated link curation pipeline.
-
-### [homelab](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab) (2026-02-21)
+### [homelab](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab) (2026-02-22)
 
 Homelab provisions and manages a Kubernetes-driven personal infrastructure cluster named `torvalds`, delivering fully automated deployments and backups through ArgoCD orchestration. The repo uses TypeScript with cdk8s built and bundled by Bun, paired with Talos control-plane scripts and generated Helm chart typings under `src/cdk8s/generated/helm`. It enforces an ArgoCD app-of-apps architecture with dependency pinning and automated updates that keep Docker images, Helm charts, and Bun packages current.
 
-### [better-skill-capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped) (2026-02-21)
+### [anki](https://github.com/shepherdjerred/monorepo/tree/main/packages/anki) (2026-02-22)
 
-Better Skill Capped is a React web app that rebuilds Skill Capped’s catalog into a richer interface driven by the service’s embedded video manifest. It is built with TypeScript, Vite, Bulma styling, Font Awesome icons, Fuse.js search utilities, and Sentry monitoring. The UI persists bookmarks and viewing status through localStorage-backed datastores, giving users personalized tracking alongside the enhanced catalog view.
+This package automates turning Markdown study notes (`book_high_performance_web_applications.md`, `book_ostep.md`, `bytes.md`, `interview.md`) into Anki decks by invoking the mdanki CLI to emit `.apkg` files. The `generate.sh` workflow relies on Node.js tooling (`npx`, `mdanki`, `sql.js`) plus a shared `settings.json` template that defines the card HTML and CSS, and it swaps in the `sql-memory-growth.js` build of sql.js before running the conversions so every deck is generated with the memory-growth WebAssembly runtime.
 
-### [tools](https://github.com/shepherdjerred/monorepo/tree/main/packages/tools) (2026-02-21)
-
-@shepherdjerred/tools is a TypeScript CLI that fetches and formats operational data from Bugsink, PagerDuty, and GitHub to streamline incident response workflows. The codebase runs on the Node.js toolchain defined in package.json, compiles TypeScript sources, and brings in the zod validation library. Command modules in src/commands—such as pr/health.ts—share formatter utilities to deliver modular features like PR health checks that bundle merge-conflict detection with CI status aggregation.
-
-### [starlight-karma-bot](https://github.com/shepherdjerred/monorepo/tree/main/packages/starlight-karma-bot) (2026-02-21)
-
-Starlight Karma Bot is a Discord bot that manages karma points, leaderboards, and history commands for servers. It runs on Bun with discord.js v14, TypeORM backed by SQLite, dotenv/env-var configuration helpers, and Sentry instrumentation declared in `package.json:1`. The data layer uses TypeORM view entities and an auto-migration routine to keep per-guild stats consistent, combining definitions like `src/db/karma-counts.ts:1` and the legacy migration in `src/db/auto-migrate.ts:1`.
-
-### [fonts](https://github.com/shepherdjerred/monorepo/tree/main/packages/fonts) (2026-02-21)
-
-Project provides a command-line workflow to patch Berkeley Mono TTF fonts with Nerd Fonts glyphs, rename them, and optionally install or archive the results. It is implemented as a Python 3.10 script that uses fontTools, fontforge, and the Nerd Fonts FontPatcher fetched with `curl`. The pipeline caches the patcher in `~/.cache/nerd-fonts-patcher`, enforces consistent style naming through a filename-to-style map, and supports post-processing steps like zipping and installing fonts.
-
-### [astro-opengraph-images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images) (2026-02-21)
-
-This project ships an Astro integration that generates Open Graph images for every page in a static Astro build. It is written in TypeScript and relies on React-based presets powered by Satori and the @resvg/resvg-js renderer. During the astro:build:done hook it sanitizes HTML with jsdom, extracts Open Graph metadata, and renders customizable presets that cover Astro content collections.
-
-### [bun-decompile](https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile) (2026-02-21)
+### [bun-decompile](https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile) (2026-02-22)
 
 bun-decompile extracts and de-minifies Bun-compiled executables, retrieving their bundled module graph and sourcemaps to recover original sources. It targets the Bun runtime with TypeScript tooling and leans on Babel, OpenAI, and Anthropic SDKs defined in `package.json`. Its AI de-minification pipeline combines call-graph analysis with Babel scope renaming to guarantee the renamed code remains functionally equivalent.
 
-### [discord-plays-pokemon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon) (2026-02-21)
+### [macos-cross-compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler) (2026-02-22)
 
-Discord Plays Pokémon turns a Discord server into a cooperative controller for a Game Boy Advance emulator, letting the community drive Pokémon (or any supported ROM) together. The Bun-powered TypeScript monorepo includes an Express + Discord.js backend and a React/Vite + Tailwind frontend that exchange commands through Socket.IO with shared logic in @discord-plays-pokemon/common. A dedicated web interface streams keypresses straight to the emulator so players can bypass chat latency while still staying coordinated with Discord inputs.
+This project packages a macOS cross-compilation toolchain so Linux hosts can build C, C++, Fortran, and Rust binaries targeting macOS, ideal for CI pipelines. It relies on a Docker image configured with osxcross-based GCC, Clang, GFortran, and Zig (configurable via `mise.toml`) alongside bundled macOS SDK headers and libraries. The image mounts user source directories into `/workspace` and exposes architecture-specific targets like `aarch64-apple-darwin24-*`, enabling reproducible builds for arm64 and x86_64 macOS binaries.
 
-### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-02-21)
-
-Clauderon is a Rust-based session manager that runs isolated Claude Code or Codex sessions inside Docker containers or Kubernetes pods for secure AI development workflows. It is built with the Tokio async runtime, Clap for CLI parsing, Ratatui and Crossterm for terminal UIs, SQLx for SQLite persistence, and integrates Sentry-powered tracing to monitor errors. Claude, Codex, and Gemini agents share a CommonAgentLogic core in `src/agents` to keep their state detection and command orchestration consistent across the platform.
-
-### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2026-02-21)
-
-This project implements the Birmel Discord bot that runs on the Bun runtime to automate guild interactions and AI-driven responses. It leverages concrete technologies like `discord.js`, `@ai-sdk/openai`, `@prisma/client`, `@opentelemetry/sdk-node`, and `@sentry/node` for messaging, language models, data access, telemetry, and monitoring. A notable architecture detail is the global Prisma client singleton that reuses the database connection across modules to keep the bot responsive.
-
-### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring) (2026-02-21)
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring) (2026-02-22)
 
 Webring aggregates the latest items from user-defined RSS feeds, implemented in TypeScript with dependencies like rss-parser, remeda, sanitize-html, and truncate-html to fetch, transform, and sanitize entries. It supports an optional cached execution path that stores results on disk via zod-validated configuration, enabling per-source preview filters and shuffle controls before returning the final list.
 
-### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-02-21)
+### [sjer.red](https://github.com/shepherdjerred/monorepo/tree/main/packages/sjer.red) (2026-02-22)
+
+This repo powers the sjer.red personal site, delivering blog posts, curated bookmarks, and other content through Astro-driven static pages. It runs on Astro with plugins like @astrojs/mdx, @astrojs/rss, Tailwind CSS, and Node-based utilities such as `src/bookmarks/bookmarks.ts` that use jsdom and Zod to automate bookmark ingestion, giving the site an automated link curation pipeline.
+
+### [discord-plays-pokemon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon) (2026-02-22)
+
+Discord Plays Pokémon turns a Discord server into a cooperative controller for a Game Boy Advance emulator, letting the community drive Pokémon (or any supported ROM) together. The Bun-powered TypeScript monorepo includes an Express + Discord.js backend and a React/Vite + Tailwind frontend that exchange commands through Socket.IO with shared logic in @discord-plays-pokemon/common. A dedicated web interface streams keypresses straight to the emulator so players can bypass chat latency while still staying coordinated with Discord inputs.
+
+### [astro-opengraph-images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images) (2026-02-22)
+
+This project ships an Astro integration that generates Open Graph images for every page in a static Astro build. It is written in TypeScript and relies on React-based presets powered by Satori and the @resvg/resvg-js renderer. During the astro:build:done hook it sanitizes HTML with jsdom, extracts Open Graph metadata, and renders customizable presets that cover Astro content collections.
+
+### [castle-casters](https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters) (2026-02-22)
+
+Castle Casters is a cross-platform Quoridor adaptation with a medieval fantasy theme that runs its main loop through `GameEngine` and an application-wide `EventBus`. It is built in Java 21 using LWJGL (OpenGL 4.1, OpenAL, GLFW, stb), Netty 4, Jenetics, GSON, and Lombok, and it features an alpha-beta search AI implemented with the MiniMaxAlgorithm to choose optimal turns.
+
+### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2026-02-22)
+
+This project implements the Birmel Discord bot that runs on the Bun runtime to automate guild interactions and AI-driven responses. It leverages concrete technologies like `discord.js`, `@ai-sdk/openai`, `@prisma/client`, `@opentelemetry/sdk-node`, and `@sentry/node` for messaging, language models, data access, telemetry, and monitoring. A notable architecture detail is the global Prisma client singleton that reuses the database connection across modules to keep the bot responsive.
+
+### [monarch](https://github.com/shepherdjerred/monorepo/tree/main/packages/monarch) (2026-02-22)
+
+Monarch is an AI-powered pipeline that categorizes Monarch Money transactions by orchestrating Claude-driven classification, Amazon order reconciliation, Venmo note parsing, and Bilt rent splitting. The Bun-based TypeScript CLI leans on @anthropic-ai/sdk, playwright scraping, and zod validation to fetch transactions, scrape Amazon order history, and batch requests. Its modular architecture routes merchant-specific handlers—like Amazon cache-aware matching and Venmo CSV ingestion—into a unified apply flow that can run interactively or automatically.
+
+### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-02-22)
 
 Repository is a Bun-managed monorepo of personal tools and assets, including a LaTeX resume defined in `packages/resume/resume.tex` and other workspace packages registered in `package.json`. It uses Bun scripts with TypeScript, Lefthook, Dagger’s TypeScript SDK, and Tauri APIs declared in `package.json` for automation and desktop integrations. Build automation is centralized through Dagger configuration in `dagger.json`, enabling the shared scripts to orchestrate tasks across every workspace.
 
-### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-02-21)
+### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-22)
 
-Scout for League of Legends is a Discord bot that tracks your friends’ matches and delivers post-game notifications with rich stat reports directly into your server. The codebase uses React, the Tauri app framework, Zod validation, ffmpeg-static, and both OpenAI and Google Generative AI SDKs (`package.json`). It runs configurable competitions, supports multi-region player tracking, and generates full arena-mode reports for all teams with augment and placement data.
+This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces, Lefthook git hooks, Dagger tooling, and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
+
+### [eslint-config](https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config) (2026-02-22)
+
+@shepherdjerred/eslint-config provides reusable ESLint flat configurations that enforce accessibility, import discipline, and component best practices across React and Astro codebases. The package integrates @eslint/js, typescript-eslint, eslint-plugin-astro, eslint-plugin-react, eslint-plugin-jsx-a11y, eslint-plugin-import, and the Bun-aware TypeScript resolver exposed in src/configs/*.ts. Its modular configs in src/configs/base.ts, src/configs/imports.ts, src/configs/accessibility.ts, and src/configs/react.ts each return TSESLint.FlatConfig.ConfigArray instances so teams can compose rule sets with custom tsconfig roots, project service settings, and Bun-aware import resolution.
+
+### [fonts](https://github.com/shepherdjerred/monorepo/tree/main/packages/fonts) (2026-02-22)
+
+Project provides a command-line workflow to patch Berkeley Mono TTF fonts with Nerd Fonts glyphs, rename them, and optionally install or archive the results. It is implemented as a Python 3.10 script that uses fontTools, fontforge, and the Nerd Fonts FontPatcher fetched with `curl`. The pipeline caches the patcher in `~/.cache/nerd-fonts-patcher`, enforces consistent style naming through a filename-to-style map, and supports post-processing steps like zipping and installing fonts.
+
+### [better-skill-capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped) (2026-02-22)
+
+Better Skill Capped is a React web app that rebuilds Skill Capped’s catalog into a richer interface driven by the service’s embedded video manifest. It is built with TypeScript, Vite, Bulma styling, Font Awesome icons, Fuse.js search utilities, and Sentry monitoring. The UI persists bookmarks and viewing status through localStorage-backed datastores, giving users personalized tracking alongside the enhanced catalog view.
+
+### [starlight-karma-bot](https://github.com/shepherdjerred/monorepo/tree/main/packages/starlight-karma-bot) (2026-02-22)
+
+Starlight Karma Bot is a Discord bot that manages karma points, leaderboards, and history commands for servers. It runs on Bun with discord.js v14, TypeORM backed by SQLite, dotenv/env-var configuration helpers, and Sentry instrumentation declared in `package.json:1`. The data layer uses TypeORM view entities and an auto-migration routine to keep per-guild stats consistent, combining definitions like `src/db/karma-counts.ts:1` and the legacy migration in `src/db/auto-migrate.ts:1`.
+
+### [clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon) (2026-02-22)
+
+Clauderon is a Rust-based session manager that runs isolated Claude Code or Codex sessions inside Docker containers or Kubernetes pods for secure AI development workflows. It is built with the Tokio async runtime, Clap for CLI parsing, Ratatui and Crossterm for terminal UIs, SQLx for SQLite persistence, and integrates Sentry-powered tracing to monitor errors. Claude, Codex, and Gemini agents share a CommonAgentLogic core in `src/agents` to keep their state detection and command orchestration consistent across the platform.
+
+### [tools](https://github.com/shepherdjerred/monorepo/tree/main/packages/tools) (2026-02-22)
+
+@shepherdjerred/tools is a TypeScript CLI that fetches and formats operational data from Bugsink, PagerDuty, and GitHub to streamline incident response workflows. The codebase runs on the Node.js toolchain defined in package.json, compiles TypeScript sources, and brings in the zod validation library. Command modules in src/commands—such as pr/health.ts—share formatter utilities to deliver modular features like PR health checks that bundle merge-conflict detection with CI status aggregation.
+
+### [docs](https://github.com/shepherdjerred/monorepo/tree/main/packages/docs) (2026-02-22)
+
+This monorepo centralizes active projects, learning efforts, and archived work under a Bun workspaces layout that standardizes commands across packages (`README.md:3`, `packages/docs/architecture/monorepo-structure.md:3`). Core tooling spans Bun scripts, TypeScript, Dagger, Tauri modules, and infrastructure stacks like cdk8s and OpenTofu, all declared in the root workspace manifest and architecture docs (`package.json:5`, `package.json:15`, `package.json:26`, `package.json:31`, `packages/docs/architecture/monorepo-structure.md:27`). Its Dagger-based CI pipeline splits Tier 0 checks into distinct Buildkite steps for granular visibility and shared caching on the serialized engine (`packages/docs/architecture/ci-pipeline.md:3`, `packages/docs/plans/buildkite.md:5`, `packages/docs/plans/buildkite.md:57`).
 
 <!--[[[end]]]-->
 
