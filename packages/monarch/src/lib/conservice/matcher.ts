@@ -116,7 +116,13 @@ export function matchBiltTransactions(
       if (Math.abs(txnAmount - month.total) > 1) continue;
 
       const splits: BiltSplit[] = [];
-      const fields = ["rent", "pets", "waterSewer", "electric", "trash"] as const;
+      const fields = [
+        "rent",
+        "pets",
+        "waterSewer",
+        "electric",
+        "trash",
+      ] as const;
 
       for (const field of fields) {
         if (month[field] > 0) {

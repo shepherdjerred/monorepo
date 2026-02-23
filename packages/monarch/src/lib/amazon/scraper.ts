@@ -91,21 +91,21 @@ async function autoLogin(page: Page): Promise<void> {
   const { email, password } = await getAmazonCredentials();
 
   // Fill email
-  const emailField = page.locator('#ap_email');
+  const emailField = page.locator("#ap_email");
   await emailField.fill(email);
 
-  const continueBtn = page.locator('input#continue');
+  const continueBtn = page.locator("input#continue");
   if (await continueBtn.isVisible()) {
     await continueBtn.click();
     await page.waitForLoadState("domcontentloaded");
   }
 
   // Fill password
-  const passwordField = page.locator('#ap_password');
+  const passwordField = page.locator("#ap_password");
   await passwordField.waitFor({ state: "visible", timeout: 10_000 });
   await passwordField.fill(password);
 
-  const signInBtn = page.locator('#signInSubmit');
+  const signInBtn = page.locator("#signInSubmit");
   await signInBtn.click();
   await page.waitForLoadState("domcontentloaded");
 
@@ -115,13 +115,15 @@ async function autoLogin(page: Page): Promise<void> {
     log.info("2FA required, fetching TOTP from 1Password...");
     const totp = await getAmazonTotp();
     await otpField.fill(totp);
-    const submitOtp = page.locator('#auth-signin-button, button[type="submit"]');
+    const submitOtp = page.locator(
+      '#auth-signin-button, button[type="submit"]',
+    );
     await submitOtp.click();
     await page.waitForLoadState("domcontentloaded");
   }
 
   // Handle "Don't ask again on this device" checkbox
-  const rememberCheck = page.locator('#auth-mfa-remember-device');
+  const rememberCheck = page.locator("#auth-mfa-remember-device");
   if (await rememberCheck.isVisible().catch(() => false)) {
     await rememberCheck.check();
   }
@@ -130,7 +132,12 @@ async function autoLogin(page: Page): Promise<void> {
   const skipPasskey = page.locator(
     'input[value="Not now"], a:has-text("Not now"), button:has-text("Not now"), a:has-text("Skip")',
   );
-  if (await skipPasskey.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+  if (
+    await skipPasskey
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false)
+  ) {
     await skipPasskey.first().click();
     await page.waitForLoadState("domcontentloaded");
   }
@@ -174,7 +181,8 @@ export async function scrapeAmazonOrders(
     // Check if we landed on the orders page (saved cookies worked)
     // or if we need to log in
     const url = page.url();
-    const isLoggedIn = url.includes("/your-orders/") || url.includes("order-history");
+    const isLoggedIn =
+      url.includes("/your-orders/") || url.includes("order-history");
 
     if (!isLoggedIn || url.includes("/ap/signin")) {
       log.info("Login required, using 1Password for credentials...");
@@ -203,7 +211,9 @@ export async function scrapeAmazonOrders(
       log.info(`Collecting orders for ${String(year)}...`);
       const yearSummaries = await collectOrderSummaries(page, year);
       summaries.push(...yearSummaries);
-      log.info(`  Found ${String(yearSummaries.length)} orders for ${String(year)}`);
+      log.info(
+        `  Found ${String(yearSummaries.length)} orders for ${String(year)}`,
+      );
     }
 
     log.info(`Fetching item details for ${String(summaries.length)} orders...`);
@@ -297,11 +307,20 @@ async function extractOrderSummary(
 
     const date = dateText?.trim();
     const total = totalText?.trim();
-    if (date === undefined || date === "" || total === undefined || total === "") return null;
+    if (
+      date === undefined ||
+      date === "" ||
+      total === undefined ||
+      total === ""
+    )
+      return null;
 
     const rawId = orderIdText?.trim();
     return {
-      orderId: rawId !== undefined && rawId !== "" ? rawId : `unknown-${String(Date.now())}`,
+      orderId:
+        rawId !== undefined && rawId !== ""
+          ? rawId
+          : `unknown-${String(Date.now())}`,
       date: parseAmazonDate(date),
       total: parsePrice(total),
     };
@@ -351,11 +370,14 @@ async function scrapeOrderDetail(
     // Use [data-component="itemTitle"] to target only order item links,
     // excluding recommendation carousel and footer links
     const mainContent = page.locator('[role="main"]');
-    const titleLinks = await mainContent.locator('[data-component="itemTitle"] a[href*="/dp/"]').all();
+    const titleLinks = await mainContent
+      .locator('[data-component="itemTitle"] a[href*="/dp/"]')
+      .all();
 
     for (const link of titleLinks) {
       const title = await link.textContent();
-      if (title === null || title.trim() === "" || title.trim().length < 10) continue;
+      if (title === null || title.trim() === "" || title.trim().length < 10)
+        continue;
 
       const trimmed = title.trim();
 
@@ -363,7 +385,8 @@ async function scrapeOrderDetail(
       if (trimmed.startsWith("$")) continue;
       if (trimmed.startsWith("(")) continue;
       if (trimmed.startsWith("List Price")) continue;
-      if (/^Amazon\s+(?:Secured|Business|Store)\s+Card/i.test(trimmed)) continue;
+      if (/^Amazon\s+(?:Secured|Business|Store)\s+Card/i.test(trimmed))
+        continue;
 
       // Deduplicate: skip if we already have this title (image + text links)
       if (items.some((existing) => existing.title === trimmed)) continue;
@@ -393,13 +416,15 @@ async function scrapeOrderDetail(
 }
 
 async function extractItemPrice(link: Locator): Promise<number> {
-  const grid = link.locator("xpath=ancestor::div[contains(@class,'a-fixed-left-grid-inner')]").first();
+  const grid = link
+    .locator("xpath=ancestor::div[contains(@class,'a-fixed-left-grid-inner')]")
+    .first();
   if ((await grid.count()) === 0) return 0;
 
   // Try data-component="unitPrice" first
   const unitPriceEl = grid.locator('[data-component="unitPrice"]');
   if ((await unitPriceEl.count()) > 0) {
-    const priceText = await unitPriceEl.first().textContent() ?? "";
+    const priceText = (await unitPriceEl.first().textContent()) ?? "";
     const price = parsePrice(priceText);
     if (price > 0) return price;
   }
@@ -407,7 +432,7 @@ async function extractItemPrice(link: Locator): Promise<number> {
   // Fallback: find price in the right column of the grid
   const rightCol = grid.locator('.a-col-right, [class*="a-text-right"]');
   if ((await rightCol.count()) > 0) {
-    const priceText = await rightCol.first().textContent() ?? "";
+    const priceText = (await rightCol.first().textContent()) ?? "";
     return parsePrice(priceText);
   }
 

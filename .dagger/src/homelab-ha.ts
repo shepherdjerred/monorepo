@@ -1,7 +1,6 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret, type File } from "@dagger.io/dagger";
 import { getWorkspaceContainer } from "./homelab-base.ts";
-import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import { execOrThrow } from "./lib-errors.ts";
 import type { StepResult } from "./homelab-index.ts";
 import versions from "./lib-versions.ts";
@@ -114,11 +113,22 @@ function buildHaContainer(source: Directory): Container {
   // Get just the HA source directory
   const haSource = source.directory("src/ha");
 
-  // Build the container with optimized layer caching
-  // Use getMiseRuntimeContainer() instead of withMiseTools(getUbuntuBaseContainer(source))
-  // to avoid invalidating mise layer when source files change
+  // Build the container using oven/bun base (bun pre-installed).
+  // Previously used getMiseRuntimeContainer() which installs tools into a
+  // Dagger cache volume that is NOT baked into published images.
   return (
-    getMiseRuntimeContainer()
+    dag
+      .container()
+      .from(`oven/bun:${versions["oven/bun"]}`)
+      .withExec(["apt-get", "update"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "git",
+        "build-essential",
+        "python3",
+      ])
       .withWorkdir("/app")
       .withExec(["bun", "install", "node-gyp"])
       // Copy workspace root files for proper dependency resolution
@@ -158,14 +168,7 @@ function buildHaContainer(source: Directory): Container {
         "org.opencontainers.image.source",
         "https://github.com/shepherdjerred/monorepo",
       )
-      .withDefaultArgs([
-        "mise",
-        "exec",
-        `bun@${versions.bun}`,
-        "--",
-        "bun",
-        "src/main.ts",
-      ])
+      .withDefaultArgs(["bun", "src/main.ts"])
   );
 }
 

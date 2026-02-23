@@ -305,7 +305,6 @@ pre-commit:
             glob: "tsconfig.base.json"
             run: bun run typecheck
 
-
           # --- Knip ---
           - name: knip
             glob:

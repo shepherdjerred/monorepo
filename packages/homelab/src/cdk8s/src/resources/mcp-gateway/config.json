@@ -15,7 +15,14 @@
     },
     "piazza": {
       "command": "uv",
-      "args": ["run", "--with", "fastmcp>=3.0.0b1", "--with", "piazza-api", "/config/piazza-mcp.py"]
+      "args": [
+        "run",
+        "--with",
+        "fastmcp>=3.0.0b1",
+        "--with",
+        "piazza-api",
+        "/config/piazza-mcp.py"
+      ]
     },
     "home-assistant": {
       "command": "uvx",

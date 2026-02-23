@@ -1,8 +1,7 @@
-import type { Config } from "../config.ts";
 import type { MonarchCategory, MonarchTransaction } from "../monarch/types.ts";
 import type { ProposedChange, ProposedSplit } from "../classifier/types.ts";
 import type { BiltMatch } from "./types.ts";
-import { fetchConserviceCharges } from "./client.ts";
+import { loadConserviceFromPdfs } from "./parser.ts";
 import { groupByMonth, matchBiltTransactions } from "./matcher.ts";
 import { log } from "../logger.ts";
 
@@ -64,29 +63,26 @@ function buildBiltRecategorizeChange(
 }
 
 export async function classifyBilt(
-  config: Config,
   categories: MonarchCategory[],
   biltTransactions: MonarchTransaction[],
 ): Promise<{ changes: ProposedChange[]; matches: BiltMatch[] }> {
-  if (config.conserviceCookies === undefined) {
-    return { changes: [], matches: [] };
-  }
-
-  const charges = await fetchConserviceCharges(config.conserviceCookies);
-  log.info(`Fetched ${String(charges.length)} Conservice charges`);
+  const charges = await loadConserviceFromPdfs();
 
   const months = groupByMonth(charges);
   log.info(`Grouped into ${String(months.length)} monthly summaries`);
 
   const matches = matchBiltTransactions(biltTransactions, months);
-  log.info(`Matched ${String(matches.length)}/${String(biltTransactions.length)} Bilt transactions`);
+  log.info(
+    `Matched ${String(matches.length)}/${String(biltTransactions.length)} Bilt transactions`,
+  );
 
   const changes: ProposedChange[] = [];
 
   for (const match of matches) {
-    const change = match.splits.length <= 1
-      ? buildBiltRecategorizeChange(match, categories)
-      : buildBiltSplitChange(match, categories);
+    const change =
+      match.splits.length <= 1
+        ? buildBiltRecategorizeChange(match, categories)
+        : buildBiltSplitChange(match, categories);
     if (change) changes.push(change);
   }
 

@@ -1,17 +1,26 @@
 import type { MonarchCategory, MonarchTransaction } from "../monarch/types.ts";
 import type { ProposedChange, ProposedSplit } from "../classifier/types.ts";
 import { matchUsaaTransactions, buildUsaaSplits } from "./matcher.ts";
+import { loadUsaaStatements } from "./parser.ts";
 import { log } from "../logger.ts";
 
-export function classifyUsaa(
+export async function classifyUsaa(
   categories: MonarchCategory[],
   usaaTransactions: MonarchTransaction[],
-): ProposedChange[] {
-  const { matched, unmatchedTransactions } = matchUsaaTransactions(usaaTransactions);
-  log.info(`Matched ${String(matched.length)}/${String(usaaTransactions.length)} USAA transactions`);
+): Promise<ProposedChange[]> {
+  const statements = await loadUsaaStatements();
+  const { matched, unmatchedTransactions } = matchUsaaTransactions(
+    usaaTransactions,
+    statements,
+  );
+  log.info(
+    `Matched ${String(matched.length)}/${String(usaaTransactions.length)} USAA transactions`,
+  );
 
   if (unmatchedTransactions.length > 0) {
-    log.info(`Unmatched USAA transactions: ${String(unmatchedTransactions.length)}`);
+    log.info(
+      `Unmatched USAA transactions: ${String(unmatchedTransactions.length)}`,
+    );
   }
 
   const insuranceCat = categories.find((c) => c.name === "Insurance");

@@ -85,6 +85,7 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
       "packages/scout-for-lol/packages/ui",
     ],
   },
+  "packages/sentinel",
 ];
 
 /** Install workspace dependencies with optimal layer ordering. */
@@ -139,8 +140,19 @@ export async function setupPrisma(
     .withExec(["bunx", "prisma", "generate"])
     .withWorkdir("/workspace");
 
+  // Sentinel Prisma
+  c = c
+    .withWorkdir("/workspace/packages/sentinel")
+    .withEnvVariable(
+      "DATABASE_URL",
+      "file:/workspace/packages/sentinel/data/test.db",
+    )
+    .withExec(["bunx", "prisma", "generate"])
+    .withExec(["bunx", "prisma", "db", "push", "--accept-data-loss"])
+    .withWorkdir("/workspace");
+
   await c.sync();
-  outputs.push("✓ Prisma setup (birmel + scout-for-lol)");
+  outputs.push("✓ Prisma setup (birmel + scout-for-lol + sentinel)");
 
   return { container: c, outputs };
 }
@@ -246,6 +258,7 @@ export async function collectTier0Results(tier0: {
   birmel: Promise<string>;
   packages: Promise<string>;
   quality: Promise<string>;
+  sentinel: Promise<string>;
 }): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
   const errors: string[] = [];
@@ -262,6 +275,11 @@ export async function collectTier0Results(tier0: {
       group: "Clauderon Mobile Validation",
     },
     { name: "Birmel", promise: tier0.birmel, group: "Birmel Validation" },
+    {
+      name: "Sentinel",
+      promise: tier0.sentinel,
+      group: "Sentinel Validation",
+    },
     { name: "Packages", promise: tier0.packages, group: "Package Validation" },
     {
       name: "Quality",
@@ -365,6 +383,7 @@ export type ReleasePhaseOptions = {
   argocdAdminPassword?: Secret | undefined;
   opServiceAccountToken?: Secret | undefined;
   birmelImage: Container;
+  sentinelImage: Container;
   releasePleaseRunFn: (
     container: Container,
     command: string,

@@ -11,10 +11,17 @@ export default [
     },
   },
   // Dagger @func() parameters become CLI flags - many are required.
-  // max-lines is raised because index.ts is the Dagger module entry
-  // point and grows with each monorepo package.
+  // max-lines is raised because these files grow with each monorepo package.
   {
     files: ["src/index.ts"],
     rules: { "max-params": "off", "max-lines": ["error", 750] },
+  },
+  {
+    files: [
+      "src/homelab-ci-steps.ts",
+      "src/index-ci-helpers.ts",
+      "src/index-release-helpers.ts",
+    ],
+    rules: { "max-lines": ["error", 750] },
   },
 ];

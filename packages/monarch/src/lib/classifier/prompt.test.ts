@@ -105,7 +105,9 @@ describe("buildWeekPrompt", () => {
     );
     expect(prompt).toContain("[RESOLVED → Groceries]");
     // The transaction line should not have [CLASSIFY] — only [RESOLVED]
-    const txnLines = prompt.split("\n").filter((l) => l.includes("Trader Joe's"));
+    const txnLines = prompt
+      .split("\n")
+      .filter((l) => l.includes("Trader Joe's"));
     expect(txnLines.every((l) => !l.includes("[CLASSIFY]"))).toBe(true);
   });
 

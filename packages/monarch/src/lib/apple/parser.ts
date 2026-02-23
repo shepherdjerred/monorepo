@@ -4,9 +4,18 @@ import type { AppleReceipt, AppleReceiptItem } from "./types.ts";
 import { log } from "../logger.ts";
 
 const MONTHS: Record<string, string> = {
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04",
-  May: "05", Jun: "06", Jul: "07", Aug: "08",
-  Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+  Jan: "01",
+  Feb: "02",
+  Mar: "03",
+  Apr: "04",
+  May: "05",
+  Jun: "06",
+  Jul: "07",
+  Aug: "08",
+  Sep: "09",
+  Oct: "10",
+  Nov: "11",
+  Dec: "12",
 };
 
 export function parseAppleDate(text: string): string {
@@ -53,7 +62,9 @@ export function parseAppleReceipt(emlContent: string): AppleReceipt | null {
 
   const orderId = orderMatch[1] ?? "";
   const date = dateMatch ? parseAppleDate(dateMatch[1]?.trim() ?? "") : "";
-  const total = totalMatch ? Number.parseFloat((totalMatch[1] ?? "0").replaceAll(",", "")) : 0;
+  const total = totalMatch
+    ? Number.parseFloat((totalMatch[1] ?? "0").replaceAll(",", ""))
+    : 0;
 
   const items = parseAppleItems(body);
 
@@ -78,7 +89,8 @@ function parseAppleItems(body: string): AppleReceiptItem[] {
     if (SKIP_TITLES.has(title.toLowerCase())) continue;
 
     const nextLine = (lines[i + 1] ?? "").trim().toLowerCase();
-    const isSubscription = nextLine.includes("subscription") || nextLine.includes("renews");
+    const isSubscription =
+      nextLine.includes("subscription") || nextLine.includes("renews");
 
     items.push({ title, price, isSubscription });
   }
@@ -103,7 +115,9 @@ export async function findAppleEmails(mailDir: string): Promise<string[]> {
   return results;
 }
 
-export async function loadAppleReceipts(mailDir: string): Promise<AppleReceipt[]> {
+export async function loadAppleReceipts(
+  mailDir: string,
+): Promise<AppleReceipt[]> {
   const emailPaths = await findAppleEmails(mailDir);
   const receipts: AppleReceipt[] = [];
 

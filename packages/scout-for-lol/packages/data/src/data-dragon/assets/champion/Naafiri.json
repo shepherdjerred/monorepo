@@ -49,10 +49,7 @@
         "Across the sands of Shurima, a chorus of howls rings out. It is the call of the dune hounds, voracious predators who form packs and compete for the right to hunt in these barren lands. Among them, one pack stands above all, for they are driven not only by canine instincts, but by the ancient power of the Darkin."
       ],
       "enemytips": [],
-      "tags": [
-        "Assassin",
-        "Fighter"
-      ],
+      "tags": ["Assassin", "Fighter"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -107,95 +104,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            8.5,
-            8,
-            7.5,
-            7
-          ],
+          "cooldown": [9, 8.5, 8, 7.5, 7],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [
-            50,
-            60,
-            70,
-            80,
-            90
-          ],
+          "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -213,13 +138,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            900,
-            900,
-            900,
-            900,
-            900
-          ],
+          "range": [900, 900, 900, 900, 900],
           "rangeBurn": "900",
           "image": {
             "full": "NaafiriQ.png",
@@ -238,105 +157,30 @@
           "description": "Naafiri becomes Untargetable and empowers her pack, spawning additional packmates and gaining increased Move Speed and Attack Damage.<br>",
           "tooltip": "Naafiri becomes Untargetable for {{ untargetableduration }} second and prepares to hunt, spawning <keywordMajor>{{ packmatestoadd }} additional Packmates</keywordMajor> and gaining <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ duration }} seconds.<br /><br /><keywordMajor>Packmates</keywordMajor> become Untargetable and are recalled to Naafiri.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Move Speed", "Cooldown"],
             "effect": [
               "{{ movespeedamount*100.000000 }}% -> {{ movespeedamountnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            26,
-            24,
-            22,
-            20,
-            18
-          ],
+          "cooldown": [26, 24, 22, 20, 18],
           "cooldownBurn": "26/24/22/20/18",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -354,13 +198,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "NaafiriR.png",
@@ -391,95 +229,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -497,13 +263,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "NaafiriE.png",
@@ -522,11 +282,7 @@
           "description": "Naafiri and her packmates dash at a champion, dealing damage. Naafiri reveals nearby enemies if she scores a takedown and can recast this Ability once. The second cast grants a shield.",
           "tooltip": "Naafiri dashes at an enemy champion, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and briefly <status>Slowing</status> them. <keywordMajor>Packmates</keywordMajor> become Untargetable and dash alongside Naafiri, dealing <physicalDamage>{{ packmatedamage }} physical damage</physicalDamage> per <keywordMajor>Packmate</keywordMajor>.<br /><br />If Naafiri scores a Takedown within {{ takedownwindow }} seconds she reveals nearby enemies and can recast this Ability once. The second cast grants <shield>{{ shieldtotal }} Shield</shield> for {{ shieldduration }} seconds.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Shield Amount",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Shield Amount", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shieldsize }} -> {{ shieldsizeNL }}",
@@ -534,71 +290,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            95,
-            80
-          ],
+          "cooldown": [110, 95, 80],
           "cooldownBurn": "110/95/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -616,11 +324,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            900,
-            900,
-            900
-          ],
+          "range": [900, 900, 900],
           "rangeBurn": "900",
           "image": {
             "full": "NaafiriW.png",

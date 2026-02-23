@@ -1,0 +1,118 @@
+# Sentinel — Autonomous Agent System
+
+## Overview
+
+Sentinel is an always-on autonomous agent system that automates operational tasks. Agents investigate issues and propose fixes — humans approve before any write actions execute.
+
+## Agents
+
+| Agent | Trigger | Purpose |
+|-------|---------|---------|
+| `ci-fixer` | Cron (30min) / GitHub webhook | Investigate CI failures on main and release branches |
+| `health-checker` | Cron (15min) | Check cluster health, ArgoCD sync, pod status |
+| `pd-triager` | PagerDuty webhook | Triage incidents, identify root cause, suggest remediation |
+
+Agents are defined in `src/agents/` as `AgentDefinition` objects with system prompts, allowed tools, permission tiers, and triggers.
+
+## Architecture
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Adapters   │────▶│  Job Queue   │────▶│   Worker     │
+│  cron/webhook│     │  (SQLite)    │     │  (Agent SDK) │
+└──────────────┘     └──────────────┘     └──────────────┘
+                                                │
+                                          ┌─────┴─────┐
+                                          │ Permission │
+                                          │  System    │
+                                          └─────┬─────┘
+                                                │
+                                          ┌─────┴─────┐
+                                          │  Discord   │
+                                          │ (approve/  │
+                                          │  deny)     │
+                                          └───────────┘
+```
+
+### Job Queue (SQLite/Prisma)
+
+- Priority-ordered queue with atomic claim (`UPDATE ... WHERE` in transaction)
+- Deduplication via unique `deduplicationKey` (webhook idempotency)
+- Deadline-based expiry for time-sensitive jobs
+- Stale job recovery on startup (reset stuck `running` jobs)
+- WAL mode + busy_timeout for concurrent access safety
+
+### Permission System (3 tiers)
+
+1. **Auto-allow**: Read, Glob, Grep, WebSearch, WebFetch — always permitted
+2. **Bash allowlist**: Safe read-only commands matched by argv prefix (e.g., `kubectl get`, `gh pr view`, `git log`)
+3. **Approval queue**: Everything else → Discord embed with approve/deny buttons → polls DB until decided (30min timeout)
+
+Security: Shell metacharacters rejected in all positions. Read-only agents denied non-tier-1 tools. Agent tool lists enforced at runtime.
+
+### Memory System
+
+- Markdown files with YAML frontmatter as source of truth
+- FTS5 sidecar index (`.index.sqlite`) for keyword search
+- Per-agent private memory + shared knowledge base
+- Context injected into agent system prompts (budget-limited to 4000 chars)
+
+### Conversation History
+
+- JSONL files per session in `data/conversations/{agent}/`
+- Every Agent SDK message logged (user, assistant, tool calls, results)
+- Content truncated at 100KB per entry
+- Session summary appended on completion
+
+### Webhook Adapters (Hono)
+
+- GitHub: `X-Hub-Signature-256` HMAC-SHA256 verification
+- PagerDuty: `X-PagerDuty-Signature` with multi-signature support
+- Bugsink: `X-Bugsink-Signature` HMAC-SHA256 verification
+- 1MB body size limit, prompt field sanitization (newline stripping)
+
+### Discord Integration
+
+- Slash commands: `/sentinel status`, `/sentinel approve <id>`, `/sentinel deny <id>`
+- Approval embeds with approve/deny buttons (fallback to slash commands after 15min)
+- Role-based authorization via `DISCORD_APPROVER_ROLE_IDS`
+- Finding notifications with agent name, job status, summary
+
+## Key Files
+
+```
+packages/sentinel/
+├── src/
+│   ├── index.ts              # Entrypoint (init → start → graceful shutdown)
+│   ├── agents/               # Agent definitions (ci-fixer, health-checker, pd-triager)
+│   ├── queue/
+│   │   ├── index.ts          # Enqueue, claim, complete, fail, recover, stats
+│   │   └── worker.ts         # Poll loop → spawn Agent SDK sessions
+│   ├── permissions/
+│   │   ├── index.ts          # buildPermissionHandler (3-tier canUseTool)
+│   │   ├── allowlist.ts      # Bash command parser + safe command patterns
+│   │   └── approval.ts       # Approval request lifecycle + Discord notification
+│   ├── adapters/
+│   │   ├── cron.ts           # node-cron scheduling from agent triggers
+│   │   └── webhook.ts        # Hono HTTP server (GitHub/PD/Bugsink)
+│   ├── discord/
+│   │   ├── client.ts         # Discord.js setup + event handlers
+│   │   ├── commands.ts       # Slash command registration + handling
+│   │   ├── approvals.ts      # Button interactions for approve/deny
+│   │   └── notifications.ts  # Send findings to channel
+│   ├── memory/
+│   │   ├── index.ts          # Read/write/list notes (atomic writes)
+│   │   ├── indexer.ts        # FTS5 indexer (incremental by mtime)
+│   │   ├── context.ts        # Build memory context for agent sessions
+│   │   └── note.ts           # Note type + gray-matter parsing
+│   ├── history/index.ts      # JSONL conversation logger
+│   ├── config/               # Zod-validated config from env vars
+│   ├── observability/        # Sentry + pino logger
+│   └── database/index.ts     # Prisma singleton + WAL mode
+├── prisma/schema.prisma      # Job, ApprovalRequest, AgentSession models
+└── test/                     # 86 tests across queue, permissions, memory, history
+```
+
+## Deployment
+
+See [Sentinel Deployment Guide](../guides/sentinel-deployment.md).

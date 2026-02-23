@@ -1,7 +1,10 @@
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
-import type { AmazonBatchOrderClassification, CachedTransactionClassification } from "./types.ts";
+import type {
+  AmazonBatchOrderClassification,
+  CachedTransactionClassification,
+} from "./types.ts";
 import { log } from "../logger.ts";
 
 const CACHE_DIR = path.join(homedir(), ".monarch-cache");
@@ -28,7 +31,9 @@ type CachedClassification = z.infer<typeof CachedClassificationSchema>;
 
 let orderCache: Map<string, CachedClassification> | undefined;
 
-async function ensureOrderCacheLoaded(): Promise<Map<string, CachedClassification>> {
+async function ensureOrderCacheLoaded(): Promise<
+  Map<string, CachedClassification>
+> {
   if (orderCache !== undefined) return orderCache;
 
   orderCache = new Map();
@@ -52,7 +57,10 @@ export async function getCachedClassification(
 }
 
 export async function cacheClassifications(
-  entries: { orderId: string; classification: AmazonBatchOrderClassification }[],
+  entries: {
+    orderId: string;
+    classification: AmazonBatchOrderClassification;
+  }[],
 ): Promise<void> {
   const c = await ensureOrderCacheLoaded();
   for (const { orderId, classification } of entries) {

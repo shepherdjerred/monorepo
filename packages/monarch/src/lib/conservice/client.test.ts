@@ -18,6 +18,8 @@ describe("parseNetDate", () => {
   });
 
   test("throws on invalid date string", () => {
-    expect(() => parseNetDate("not a date")).toThrow("Invalid .NET date string");
+    expect(() => parseNetDate("not a date")).toThrow(
+      "Invalid .NET date string",
+    );
   });
 });

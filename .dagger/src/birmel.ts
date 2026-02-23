@@ -284,25 +284,35 @@ type BirmelPublishOptions = {
 };
 
 /** Build and publish a birmel Docker image. */
-export async function publishBirmel(options: BirmelPublishOptions): Promise<string> {
-  const { source, version, gitSha, registryUsername, registryPassword } = options;
+export async function publishBirmel(
+  options: BirmelPublishOptions,
+): Promise<string> {
+  const { source, version, gitSha, registryUsername, registryPassword } =
+    options;
   const image = buildBirmelImage(source, version, gitSha);
   const result = await publishBirmelImageWithContainer({
-    image, version, gitSha,
+    image,
+    version,
+    gitSha,
     registryAuth: { username: registryUsername, password: registryPassword },
   });
   return `Published:\n${result.refs.join("\n")}`;
 }
 
 /** Run birmel CI, smoke test, and publish. */
-export async function releaseBirmel(options: BirmelPublishOptions): Promise<string> {
-  const { source, version, gitSha, registryUsername, registryPassword } = options;
+export async function releaseBirmel(
+  options: BirmelPublishOptions,
+): Promise<string> {
+  const { source, version, gitSha, registryUsername, registryPassword } =
+    options;
   const outputs: string[] = [];
   outputs.push(await checkBirmel(source));
   const birmelImage = buildBirmelImage(source, version, gitSha);
   outputs.push(await smokeTestBirmelImageWithContainer(birmelImage));
   const publishResult = await publishBirmelImageWithContainer({
-    image: birmelImage, version, gitSha,
+    image: birmelImage,
+    version,
+    gitSha,
     registryAuth: { username: registryUsername, password: registryPassword },
   });
   outputs.push(`Published:\n${publishResult.refs.join("\n")}`);

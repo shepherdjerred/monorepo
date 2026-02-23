@@ -40,6 +40,8 @@ export const HELM_CHARTS = [
   "bugsink",
   // DNS audit for SPF/DMARC/DKIM/MX validation
   "dns-audit",
+  // Sentinel autonomous agent system
+  "sentinel",
 ] as const;
 export type HelmChartName = (typeof HELM_CHARTS)[number];
 

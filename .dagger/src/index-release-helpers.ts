@@ -1,5 +1,6 @@
 import type { Secret, Container } from "@dagger.io/dagger";
 import { publishBirmelImageWithContainer } from "./birmel.ts";
+import { publishSentinelImageWithContainer } from "./sentinel.ts";
 import { deployWebringDocs } from "./webring.ts";
 import { deployStarlightKarmaBot } from "./starlight-karma-bot.ts";
 import { deployBetterSkillCapped } from "./better-skill-capped.ts";
@@ -11,7 +12,10 @@ import { Stage as HomelabStage } from "./lib-types.ts";
 import { commitVersionsBack } from "./lib-homelab.ts";
 import { formatVersionWithDigest } from "./lib-ghcr.ts";
 
-function extractVersionFromResult(result: DeployResult, version: string): string {
+function extractVersionFromResult(
+  result: DeployResult,
+  version: string,
+): string {
   return typeof result === "string"
     ? version
     : formatVersionWithDigest(version, result.versionedRef);
@@ -23,28 +27,60 @@ function getDisplayMessage(result: DeployResult): string {
 import { runNamedParallel } from "./lib-parallel.ts";
 import type { ReleasePhaseOptions } from "./index-ci-helpers.ts";
 
-const PACKAGES = ["bun-decompile", "astro-opengraph-images", "webring"] as const;
+const PACKAGES = [
+  "bun-decompile",
+  "astro-opengraph-images",
+  "webring",
+] as const;
 const REPO_URL = "shepherdjerred/monorepo";
 
 function releasePleaseCmd(subcommand: string): string {
   return `git clone https://x-access-token:$GITHUB_TOKEN@github.com/${REPO_URL}.git . && release-please ${subcommand} --token=$GITHUB_TOKEN --repo-url=${REPO_URL} --target-branch=main`;
 }
 
-export async function runReleasePleasePr(options: ReleasePhaseOptions): Promise<string[]> {
-  const prContainer = options.getReleasePleaseContainerFn().withSecretVariable("GITHUB_TOKEN", options.githubToken);
-  const prResult = await options.releasePleaseRunFn(prContainer, releasePleaseCmd("release-pr"));
+export async function runReleasePleasePr(
+  options: ReleasePhaseOptions,
+): Promise<string[]> {
+  const prContainer = options
+    .getReleasePleaseContainerFn()
+    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
+  const prResult = await options.releasePleaseRunFn(
+    prContainer,
+    releasePleaseCmd("release-pr"),
+  );
   return [`Release PR (success=${String(prResult.success)}):`, prResult.output];
 }
 
-export async function runReleasePleaseGithubRelease(options: ReleasePhaseOptions): Promise<{
-  outputs: string[]; releaseCreated: boolean; success: boolean; releaseOutput: string;
+export async function runReleasePleaseGithubRelease(
+  options: ReleasePhaseOptions,
+): Promise<{
+  outputs: string[];
+  releaseCreated: boolean;
+  success: boolean;
+  releaseOutput: string;
 }> {
-  const container = options.getReleasePleaseContainerFn().withSecretVariable("GITHUB_TOKEN", options.githubToken);
-  const result = await options.releasePleaseRunFn(container, releasePleaseCmd("github-release"));
-  const outputs = [`GitHub Release (success=${String(result.success)}):`, result.output];
-  const releaseCreated = result.success &&
-    (result.output.includes("github.com") || result.output.includes("Created release") || result.output.includes("created release"));
-  return { outputs, releaseCreated, success: result.success, releaseOutput: result.output };
+  const container = options
+    .getReleasePleaseContainerFn()
+    .withSecretVariable("GITHUB_TOKEN", options.githubToken);
+  const result = await options.releasePleaseRunFn(
+    container,
+    releasePleaseCmd("github-release"),
+  );
+  const outputs = [
+    `GitHub Release (success=${String(result.success)}):`,
+    result.output,
+  ];
+  const releaseCreated =
+    result.success &&
+    (result.output.includes("github.com") ||
+      result.output.includes("Created release") ||
+      result.output.includes("created release"));
+  return {
+    outputs,
+    releaseCreated,
+    success: result.success,
+    releaseOutput: result.output,
+  };
 }
 
 export async function publishNpmPackages(
@@ -140,9 +176,7 @@ async function withDeployRetry(
   throw new Error("unreachable");
 }
 
-export async function runAppDeployments(
-  options: ReleasePhaseOptions,
-): Promise<{
+export async function runAppDeployments(options: ReleasePhaseOptions): Promise<{
   outputs: string[];
   errors: string[];
   appVersions: Record<string, string>;
@@ -156,6 +190,7 @@ export async function runAppDeployments(
     s3AccessKeyId,
     s3SecretAccessKey,
     birmelImage,
+    sentinelImage,
   } = options;
 
   const s3Tasks: DeployTask[] = [];
@@ -181,7 +216,31 @@ export async function runAppDeployments(
             password: registryPassword,
           },
         });
-        return { message: `Published:\n${result.refs.join("\n")}`, versionedRef: result.versionedRef };
+        return {
+          message: `Published:\n${result.refs.join("\n")}`,
+          versionedRef: result.versionedRef,
+        };
+      },
+    });
+
+    // Sentinel publish (GHCR)
+    ghcrTasks.push({
+      name: "Sentinel publish",
+      versionKey: "shepherdjerred/sentinel",
+      deploy: async () => {
+        const result = await publishSentinelImageWithContainer({
+          image: sentinelImage,
+          version,
+          gitSha,
+          registryAuth: {
+            username: registryUsername,
+            password: registryPassword,
+          },
+        });
+        return {
+          message: `Published:\n${result.refs.join("\n")}`,
+          versionedRef: result.versionedRef,
+        };
       },
     });
   }
@@ -329,7 +388,10 @@ export async function runAppDeployments(
       const result = await withDeployRetry(task.name, task.deploy);
       outputs.push(`✓ ${task.name}: ${getDisplayMessage(result)}`);
       if (task.versionKey !== undefined && version !== undefined) {
-        appVersions[task.versionKey] = extractVersionFromResult(result, version);
+        appVersions[task.versionKey] = extractVersionFromResult(
+          result,
+          version,
+        );
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -344,7 +406,11 @@ export async function runAppDeployments(
 export async function runHomelabRelease(
   options: ReleasePhaseOptions,
   appVersions: Record<string, string>,
-): Promise<{ outputs: string[]; errors: string[]; infraVersions: Record<string, string> }> {
+): Promise<{
+  outputs: string[];
+  errors: string[];
+  infraVersions: Record<string, string>;
+}> {
   const outputs: string[] = [];
   const errors: string[] = [];
   let infraVersions: Record<string, string> = {};
@@ -367,8 +433,19 @@ export async function runHomelabRelease(
     version,
   } = options;
 
-  const required = { argocdToken, chartMuseumUsername, chartMuseumPassword, cloudflareApiToken, cloudflareAccountId, registryPassword, s3AccessKeyId, s3SecretAccessKey };
-  const missing = Object.entries(required).filter(([, v]) => v === undefined).map(([k]) => k);
+  const required = {
+    argocdToken,
+    chartMuseumUsername,
+    chartMuseumPassword,
+    cloudflareApiToken,
+    cloudflareAccountId,
+    registryPassword,
+    s3AccessKeyId,
+    s3SecretAccessKey,
+  };
+  const missing = Object.entries(required)
+    .filter(([, v]) => v === undefined)
+    .map(([k]) => k);
   if (missing.length > 0) {
     const msg = `Homelab release skipped: missing required secrets: ${missing.join(", ")}`;
     errors.push(msg);
@@ -422,10 +499,16 @@ export async function runVersionCommitBack(
   outputs.push("\n--- Version Commit-Back ---");
   try {
     const allVersions: Record<string, string> = {
-      "shepherdjerred/homelab": infraVersions?.["shepherdjerred/homelab"] ?? version,
-      "shepherdjerred/dependency-summary": infraVersions?.["shepherdjerred/dependency-summary"] ?? version,
-      "shepherdjerred/dns-audit": infraVersions?.["shepherdjerred/dns-audit"] ?? version,
-      "shepherdjerred/caddy-s3proxy": infraVersions?.["shepherdjerred/caddy-s3proxy"] ?? version,
+      "shepherdjerred/homelab":
+        infraVersions?.["shepherdjerred/homelab"] ?? version,
+      "shepherdjerred/dependency-summary":
+        infraVersions?.["shepherdjerred/dependency-summary"] ?? version,
+      "shepherdjerred/dns-audit":
+        infraVersions?.["shepherdjerred/dns-audit"] ?? version,
+      "shepherdjerred/caddy-s3proxy":
+        infraVersions?.["shepherdjerred/caddy-s3proxy"] ?? version,
+      "shepherdjerred/sentinel":
+        infraVersions?.["shepherdjerred/sentinel"] ?? version,
       ...appVersions,
     };
     const result = await commitVersionsBack({

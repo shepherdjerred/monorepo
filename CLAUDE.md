@@ -42,7 +42,8 @@ bun run --filter='./packages/<name>' <script>
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
 
-# CI (Dagger)
+# CI runs on Buildkite (NOT GitHub Actions)
+# Check CI status via Buildkite CLI or web UI, never `gh run`
 dagger call ci
 ```
 

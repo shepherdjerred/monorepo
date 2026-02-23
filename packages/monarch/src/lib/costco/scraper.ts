@@ -24,6 +24,8 @@ const CostcoCacheSchema = z.object({
 
 export function loadCostcoOrders(): CostcoOrder[] {
   const cache: CostcoCache = CostcoCacheSchema.parse(costcoOrdersJson);
-  log.info(`Loaded ${String(cache.orders.length)} Costco orders from hardcoded data`);
+  log.info(
+    `Loaded ${String(cache.orders.length)} Costco orders from hardcoded data`,
+  );
   return cache.orders;
 }

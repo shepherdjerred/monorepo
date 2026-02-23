@@ -4,8 +4,18 @@ import { computeSplits } from "./claude.ts";
 describe("computeSplits", () => {
   test("no proration when items sum to transaction total", () => {
     const items = [
-      { amount: 20, categoryId: "cat-1", itemName: "Item A", categoryName: "Electronics" },
-      { amount: 30, categoryId: "cat-2", itemName: "Item B", categoryName: "Pets" },
+      {
+        amount: 20,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "Electronics",
+      },
+      {
+        amount: 30,
+        categoryId: "cat-2",
+        itemName: "Item B",
+        categoryName: "Pets",
+      },
     ];
 
     const result = computeSplits(-50, items);
@@ -15,8 +25,18 @@ describe("computeSplits", () => {
 
   test("prorates tax/shipping proportionally", () => {
     const items = [
-      { amount: 20, categoryId: "cat-1", itemName: "Item A", categoryName: "Electronics" },
-      { amount: 30, categoryId: "cat-2", itemName: "Item B", categoryName: "Pets" },
+      {
+        amount: 20,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "Electronics",
+      },
+      {
+        amount: 30,
+        categoryId: "cat-2",
+        itemName: "Item B",
+        categoryName: "Pets",
+      },
     ];
 
     const result = computeSplits(-55, items);
@@ -29,9 +49,24 @@ describe("computeSplits", () => {
 
   test("rounds to cents and sums exactly to target", () => {
     const items = [
-      { amount: 10, categoryId: "cat-1", itemName: "Item A", categoryName: "A" },
-      { amount: 10, categoryId: "cat-2", itemName: "Item B", categoryName: "B" },
-      { amount: 10, categoryId: "cat-3", itemName: "Item C", categoryName: "C" },
+      {
+        amount: 10,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "A",
+      },
+      {
+        amount: 10,
+        categoryId: "cat-2",
+        itemName: "Item B",
+        categoryName: "B",
+      },
+      {
+        amount: 10,
+        categoryId: "cat-3",
+        itemName: "Item C",
+        categoryName: "C",
+      },
     ];
 
     const result = computeSplits(-31, items);
@@ -48,7 +83,12 @@ describe("computeSplits", () => {
 
   test("single-category items are returned as-is", () => {
     const items = [
-      { amount: 25, categoryId: "cat-1", itemName: "Item A", categoryName: "Electronics" },
+      {
+        amount: 25,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "Electronics",
+      },
     ];
 
     const result = computeSplits(-25, items);
@@ -58,8 +98,18 @@ describe("computeSplits", () => {
 
   test("handles near-zero remainder", () => {
     const items = [
-      { amount: 25.005, categoryId: "cat-1", itemName: "Item A", categoryName: "A" },
-      { amount: 24.995, categoryId: "cat-2", itemName: "Item B", categoryName: "B" },
+      {
+        amount: 25.005,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "A",
+      },
+      {
+        amount: 24.995,
+        categoryId: "cat-2",
+        itemName: "Item B",
+        categoryName: "B",
+      },
     ];
 
     const result = computeSplits(-50, items);
@@ -71,9 +121,24 @@ describe("computeSplits", () => {
   test("fixes rounding drift with many items", () => {
     // Simulate a real-world case: items don't sum to total, proration causes rounding drift
     const items = [
-      { amount: 30.99, categoryId: "cat-1", itemName: "Item A", categoryName: "A" },
-      { amount: 8.82, categoryId: "cat-2", itemName: "Item B", categoryName: "B" },
-      { amount: 24.79, categoryId: "cat-3", itemName: "Item C", categoryName: "C" },
+      {
+        amount: 30.99,
+        categoryId: "cat-1",
+        itemName: "Item A",
+        categoryName: "A",
+      },
+      {
+        amount: 8.82,
+        categoryId: "cat-2",
+        itemName: "Item B",
+        categoryName: "B",
+      },
+      {
+        amount: 24.79,
+        categoryId: "cat-3",
+        itemName: "Item C",
+        categoryName: "C",
+      },
     ];
 
     // Total is $69.99 but items sum to $64.60 — $5.39 of tax/shipping

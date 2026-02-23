@@ -28,9 +28,7 @@
       "pinDigests": true
     },
     {
-      "matchPackageNames": [
-        "dagger-helm"
-      ],
+      "matchPackageNames": ["dagger-helm"],
       "pinDigests": false
     },
     {

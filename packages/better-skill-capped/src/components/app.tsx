@@ -54,15 +54,15 @@ export default class App extends React.Component<unknown, AppState> {
     this.setState({
       content: {
         ...content,
-        courses: content.courses.toSorted(
+        courses: [...content.courses].toSorted(
           (left, right) =>
             right.releaseDate.getTime() - left.releaseDate.getTime(),
         ),
-        videos: content.videos.toSorted(
+        videos: [...content.videos].toSorted(
           (left, right) =>
             right.releaseDate.getTime() - left.releaseDate.getTime(),
         ),
-        commentaries: content.commentaries.toSorted(
+        commentaries: [...content.commentaries].toSorted(
           (left, right) =>
             right.releaseDate.getTime() - left.releaseDate.getTime(),
         ),

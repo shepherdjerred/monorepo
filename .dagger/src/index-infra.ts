@@ -283,7 +283,10 @@ export function complianceCheck(source: Directory): Container {
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", source.file("package.json"))
     .withMountedDirectory("/workspace/packages", source.directory("packages"))
-    .withFile("/workspace/scripts/compliance-check.sh", source.file("scripts/compliance-check.sh"))
+    .withFile(
+      "/workspace/scripts/compliance-check.sh",
+      source.file("scripts/compliance-check.sh"),
+    )
     .withExec(["sh", "scripts/compliance-check.sh"]);
 }
 
@@ -361,7 +364,10 @@ echo "Quality ratchet passed"
     .withWorkdir("/workspace")
     .withMountedDirectory("/workspace/packages", source.directory("packages"))
     .withMountedDirectory("/workspace/.dagger", source.directory(".dagger"))
-    .withFile("/workspace/.quality-baseline.json", source.file(".quality-baseline.json"))
+    .withFile(
+      "/workspace/.quality-baseline.json",
+      source.file(".quality-baseline.json"),
+    )
     .withNewFile("/tmp/ratchet.sh", script)
     .withExec(["sh", "/tmp/ratchet.sh"]);
 }
@@ -451,7 +457,13 @@ export function semgrepScan(source: Directory): Container {
 
 /** Create a named check that syncs a container and returns a success message. */
 function syncCheck(name: string, container: Container) {
-  return { name, operation: async () => { await container.sync(); return `✓ ${name}`; } };
+  return {
+    name,
+    operation: async () => {
+      await container.sync();
+      return `✓ ${name}`;
+    },
+  };
 }
 
 /** Run all quality and security checks in parallel. */
@@ -468,7 +480,10 @@ export async function runQualityChecks(source: Directory): Promise<string> {
     if (result.success) {
       outputs.push(String(result.value));
     } else {
-      const msg = result.error instanceof Error ? result.error.message : String(result.error);
+      const msg =
+        result.error instanceof Error
+          ? result.error.message
+          : String(result.error);
       outputs.push(`::warning title=${result.name}::${msg.slice(0, 200)}`);
       outputs.push(`⚠ ${result.name} (non-blocking): ${msg}`);
     }

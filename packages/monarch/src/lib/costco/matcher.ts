@@ -47,9 +47,7 @@ export function matchCostcoTransactions(
   const unmatchedTransactions = eligible.filter(
     (t) => !matchedTransactionIds.has(t.id),
   );
-  const unmatchedOrders = orders.filter(
-    (o) => !usedOrderIds.has(o.orderId),
-  );
+  const unmatchedOrders = orders.filter((o) => !usedOrderIds.has(o.orderId));
 
   return { matched, unmatchedTransactions, unmatchedOrders };
 }

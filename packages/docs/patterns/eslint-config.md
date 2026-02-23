@@ -10,12 +10,12 @@ All packages import from the shared config. Every package passes `bunx eslint . 
 
 Only these overrides are acceptable:
 
-| Override | Packages | Reason |
-|----------|----------|--------|
-| `no-console` | CLIs, bots | CLI tools need console output |
-| `max-params` | Dagger `index.ts` | Dagger decorator pattern |
-| `no-re-exports` | Library entry points | Re-exports are the API surface |
-| `no-unsafe-*` | `clauderon/web/frontend` | TypeShare generated types |
+| Override        | Packages                 | Reason                         |
+| --------------- | ------------------------ | ------------------------------ |
+| `no-console`    | CLIs, bots               | CLI tools need console output  |
+| `max-params`    | Dagger `index.ts`        | Dagger decorator pattern       |
+| `no-re-exports` | Library entry points     | Re-exports are the API surface |
+| `no-unsafe-*`   | `clauderon/web/frontend` | TypeShare generated types      |
 
 ## CJS/ESM Interop
 

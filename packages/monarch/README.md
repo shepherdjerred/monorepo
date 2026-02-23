@@ -33,23 +33,23 @@ bun run src/index.ts --apply --interactive
 
 ## CLI Flags
 
-| Flag | Description |
-|------|-------------|
-| `--apply` | Apply changes to Monarch Money (default: dry run) |
-| `--interactive` | Approve each change individually |
-| `--limit <n>` | Limit transactions to process |
-| `--batch-size <n>` | Batch size for Claude API calls (default: 25) |
-| `--model <id>` | Claude model (default: `claude-sonnet-4-20250514`) |
-| `--sample <n>` | Sample N merchant groups for testing |
-| `--verbose` | Enable debug logging |
-| `--skip-amazon` | Skip Amazon order processing |
-| `--amazon-years <years>` | Comma-separated years to scrape (default: last 2 years) |
-| `--force-scrape` | Re-scrape Amazon orders even if cached |
-| `--force-fetch` | Re-fetch transactions even if cached |
-| `--venmo-csv <path>` | Path to Venmo CSV statement |
-| `--skip-venmo` | Skip Venmo processing |
-| `--conservice-cookies <cookies>` | Conservice session cookies for Bilt integration |
-| `--skip-bilt` | Skip Bilt processing |
+| Flag                             | Description                                             |
+| -------------------------------- | ------------------------------------------------------- |
+| `--apply`                        | Apply changes to Monarch Money (default: dry run)       |
+| `--interactive`                  | Approve each change individually                        |
+| `--limit <n>`                    | Limit transactions to process                           |
+| `--batch-size <n>`               | Batch size for Claude API calls (default: 25)           |
+| `--model <id>`                   | Claude model (default: `claude-sonnet-4-20250514`)      |
+| `--sample <n>`                   | Sample N merchant groups for testing                    |
+| `--verbose`                      | Enable debug logging                                    |
+| `--skip-amazon`                  | Skip Amazon order processing                            |
+| `--amazon-years <years>`         | Comma-separated years to scrape (default: last 2 years) |
+| `--force-scrape`                 | Re-scrape Amazon orders even if cached                  |
+| `--force-fetch`                  | Re-fetch transactions even if cached                    |
+| `--venmo-csv <path>`             | Path to Venmo CSV statement                             |
+| `--skip-venmo`                   | Skip Venmo processing                                   |
+| `--conservice-cookies <cookies>` | Conservice session cookies for Bilt integration         |
+| `--skip-bilt`                    | Skip Bilt processing                                    |
 
 ## Data Sources
 

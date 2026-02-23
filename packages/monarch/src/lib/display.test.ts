@@ -4,9 +4,7 @@ import type { ProposedChange } from "./classifier/types.ts";
 import type { MonarchTransaction } from "./monarch/types.ts";
 import type { AmazonOrder } from "./amazon/types.ts";
 
-function makeChange(
-  overrides: Partial<ProposedChange> = {},
-): ProposedChange {
+function makeChange(overrides: Partial<ProposedChange> = {}): ProposedChange {
   return {
     transactionId: "txn-1",
     transactionDate: "2025-01-15",
@@ -57,12 +55,24 @@ describe("displaySummary", () => {
       logs.push(args.join(" "));
     };
 
-    const weekChanges = [
-      makeChange(),
-      makeChange({ transactionId: "txn-2" }),
-    ];
+    const weekChanges = [makeChange(), makeChange({ transactionId: "txn-2" })];
 
-    displaySummary({ totalTransactions: 100, weekChanges, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({
+      totalTransactions: 100,
+      weekChanges,
+
+      amazonChanges: [],
+      venmoChanges: [],
+      biltChanges: [],
+      matchResult: null,
+      venmoMatchResult: null,
+      usaaChanges: [],
+      sclChanges: [],
+      appleChanges: [],
+      costcoChanges: [],
+      appleMatchResult: null,
+      costcoMatchResult: null,
+    });
 
     console.log = originalLog;
 
@@ -97,7 +107,22 @@ describe("displaySummary", () => {
       }),
     ];
 
-    displaySummary({ totalTransactions: 100, weekChanges: [], amazonChanges, venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({
+      totalTransactions: 100,
+      weekChanges: [],
+
+      amazonChanges,
+      venmoChanges: [],
+      biltChanges: [],
+      matchResult: null,
+      venmoMatchResult: null,
+      usaaChanges: [],
+      sclChanges: [],
+      appleChanges: [],
+      costcoChanges: [],
+      appleMatchResult: null,
+      costcoMatchResult: null,
+    });
 
     console.log = originalLog;
 
@@ -115,6 +140,7 @@ describe("displaySummary", () => {
     displaySummary({
       totalTransactions: 100,
       weekChanges: [],
+
       amazonChanges: [],
       venmoChanges: [],
       biltChanges: [],
@@ -156,7 +182,22 @@ describe("displaySummary", () => {
       makeChange({ type: "flag", transactionId: "txn-2" }),
     ];
 
-    displaySummary({ totalTransactions: 100, weekChanges: changes, amazonChanges: [], venmoChanges: [], biltChanges: [], matchResult: null, venmoMatchResult: null, usaaChanges: [], sclChanges: [], appleChanges: [], costcoChanges: [], appleMatchResult: null, costcoMatchResult: null });
+    displaySummary({
+      totalTransactions: 100,
+      weekChanges: changes,
+
+      amazonChanges: [],
+      venmoChanges: [],
+      biltChanges: [],
+      matchResult: null,
+      venmoMatchResult: null,
+      usaaChanges: [],
+      sclChanges: [],
+      appleChanges: [],
+      costcoChanges: [],
+      appleMatchResult: null,
+      costcoMatchResult: null,
+    });
 
     console.log = originalLog;
 

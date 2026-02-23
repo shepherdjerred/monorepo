@@ -135,11 +135,7 @@
       "courseImage": "https://d20k8dfo6rtj2t.cloudfront.net/course-headers/htyq0pmzsw.png",
       "courseImage2": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/l8fzj07snv.png",
       "courseImage3": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/9vf97l3v3v.png",
-      "tags": [
-        "Support",
-        "Support - Laning",
-        "Support - Wave Control"
-      ],
+      "tags": ["Support", "Support - Laning", "Support - Wave Control"],
       "recommended": true,
       "override": true,
       "groupingKey": "support-est-old",

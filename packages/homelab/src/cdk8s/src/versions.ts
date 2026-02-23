@@ -208,6 +208,9 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
     "1.1.57@sha256:e06196ef8f4090957fc314dc758143f7bb0dd1ab2973a107664386ed0599c2eb",
+  // Custom sentinel image - Autonomous agent system for operational tasks
+  // not managed by renovate
+  "shepherdjerred/sentinel": "latest",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];

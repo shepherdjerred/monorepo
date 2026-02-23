@@ -6,6 +6,7 @@ AI-maintained knowledge base for the monorepo.
 
 - [Monorepo Structure](architecture/monorepo-structure.md) - Package layout, workspaces, and conventions
 - [CI Pipeline](architecture/ci-pipeline.md) - Dagger-based CI/CD overview
+- [Sentinel](architecture/sentinel.md) - Autonomous agent system architecture
 
 ## Patterns
 
@@ -19,7 +20,9 @@ _No decision records yet._
 
 - [Buildkite Dynamic Pipeline](plans/buildkite.md) - Split Dagger CI into granular Buildkite steps
 - [ArgoCD Token Management](plans/argocd-token-management.md) - Automate ArgoCD token via OpenTofu + 1Password
+- [Sentinel Implementation](plans/sentinel-implementation.md) - Autonomous agent system build plan with phased rollout
+- [Autonomous Agent System Research](plans/autonomous-agent-system.md) - Architecture research: memory, permissions, queue design
 
 ## Guides
 
-_No guides yet._
+- [Sentinel Deployment](guides/sentinel-deployment.md) - Manual steps to deploy sentinel to the cluster

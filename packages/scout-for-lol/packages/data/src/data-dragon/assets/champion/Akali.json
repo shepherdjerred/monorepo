@@ -162,9 +162,7 @@
         "Akali's Five Point Strike is powerful when used at maximum range and energy. Engage on her when she has low energy to maximize your chance of winning trades.",
         "Return to base if your Health is low and Akali has her ultimate available."
       ],
-      "tags": [
-        "Assassin"
-      ],
+      "tags": ["Assassin"],
       "partype": "Energy",
       "info": {
         "attack": 5,
@@ -201,105 +199,30 @@
           "description": "Akali throws out five kunai, dealing damage based on her bonus Attack Damage and Ability Power and slowing.",
           "tooltip": "Akali slings kunai in an arc, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies at the tip by {{ slowpercentage*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "@AbilityResourceName@ Cost",
-              "Damage"
-            ],
+            "label": ["@AbilityResourceName@ Cost", "Damage"],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamagenamed }} -> {{ basedamagenamedNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            1.5,
-            1.5,
-            1.5,
-            1.5,
-            1.5
-          ],
+          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
           "cooldownBurn": "1.5",
-          "cost": [
-            110,
-            100,
-            90,
-            80,
-            70
-          ],
+          "cost": [110, 100, 90, 80, 70],
           "costBurn": "110/100/90/80/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -317,13 +240,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "AkaliQ.png",
@@ -342,11 +259,7 @@
           "description": "Akali drops a cover of smoke and briefly gains Move Speed. While inside the shroud, Akali becomes invisible and unable to be selected by enemy spells and attacks. Attacking or using abilities will briefly reveal her.  ",
           "tooltip": "Akali drops a smoke bomb, unleashing a spreading cover of smoke lasting {{ baseduration }} seconds and granting herself <speed>{{ movementspeed }}% Move Speed</speed> decaying over {{ movementspeedduration }} seconds.<br /><br />Akali increases her max Energy by {{ energyrestore }} while the shroud is active. <br /><br />While inside the smoke, Akali is <keywordStealth>Invisible</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed",
-              "Duration",
-              "Cooldown"
-            ],
+            "label": ["Move Speed", "Duration", "Cooldown"],
             "effect": [
               "{{ movementspeed }}% -> {{ movementspeedNL }}%",
               "{{ baseduration }} -> {{ basedurationNL }}",
@@ -354,95 +267,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
-          ],
+          "cooldown": [20, 19, 18, 17, 16],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              140,
-              140,
-              140,
-              140,
-              140
-            ],
-            [
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              250,
-              250,
-              250,
-              250,
-              250
-            ],
-            [
-              60,
-              65,
-              70,
-              75,
-              80
-            ],
-            [
-              0.3,
-              0.35,
-              0.4,
-              0.45,
-              0.5
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              5,
-              5.5,
-              6,
-              6.5,
-              7
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [140, 140, 140, 140, 140],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [250, 250, 250, 250, 250],
+            [60, 65, 70, 75, 80],
+            [0.3, 0.35, 0.4, 0.45, 0.5],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [5, 5.5, 6, 6.5, 7],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -460,13 +301,7 @@
           "vars": [],
           "costType": " Energy",
           "maxammo": "-1",
-          "range": [
-            350,
-            350,
-            350,
-            350,
-            350
-          ],
+          "range": [350, 350, 350, 350, 350],
           "rangeBurn": "350",
           "image": {
             "full": "AkaliW.png",
@@ -485,105 +320,30 @@
           "description": "Flip backward and fire a shuriken forward, dealing magic damage. The first enemy or smoke cloud hit is marked. Re-cast to dash to the marked target, dealing additional damage.",
           "tooltip": "Akali flips backwards as she throws a shuriken, dealing <magicDamage>{{ e1damage }} magic damage</magicDamage> and marking the first enemy or smoke cloud hit. Akali can <recast>Recast</recast> this once to dash to the marked target, dealing <magicDamage>{{ e2damagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Base Damage"
-            ],
+            "label": ["Cooldown", "Base Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            14.5,
-            13,
-            11.5,
-            10
-          ],
+          "cooldown": [16, 14.5, 13, 11.5, 10],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
+          "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -601,13 +361,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            825,
-            825,
-            825,
-            825,
-            825
-          ],
+          "range": [825, 825, 825, 825, 825],
           "rangeBurn": "825",
           "image": {
             "full": "AkaliE.png",
@@ -640,71 +394,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            90,
-            60
-          ],
+          "cooldown": [120, 90, 60],
           "cooldownBurn": "120/90/60",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              1,
-              1,
-              1
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [1, 1, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -722,11 +428,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            675,
-            675,
-            675
-          ],
+          "range": [675, 675, 675],
           "rangeBurn": "675",
           "image": {
             "full": "AkaliR.png",

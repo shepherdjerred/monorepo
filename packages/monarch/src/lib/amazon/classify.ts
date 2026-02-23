@@ -1,10 +1,17 @@
 import type { MonarchCategory, MonarchTransaction } from "../monarch/types.ts";
-import type { ProposedChange, ProposedSplit, AmazonBatchOrderClassification } from "../classifier/types.ts";
+import type {
+  ProposedChange,
+  ProposedSplit,
+  AmazonBatchOrderClassification,
+} from "../classifier/types.ts";
 import type { MatchResult } from "./matcher.ts";
 import { scrapeAmazonOrders } from "./scraper.ts";
 import { matchAmazonOrders } from "./matcher.ts";
 import { classifyAmazonBatch, computeSplits } from "../classifier/claude.ts";
-import { getCachedClassification, cacheClassifications } from "../classifier/cache.ts";
+import {
+  getCachedClassification,
+  cacheClassifications,
+} from "../classifier/cache.ts";
 import { log } from "../logger.ts";
 
 export function applyClassification(
@@ -20,10 +27,7 @@ export function applyClassification(
       categoryName: item.categoryName,
     }));
 
-    const proratedSplits = computeSplits(
-      match.transaction.amount,
-      splitItems,
-    );
+    const proratedSplits = computeSplits(match.transaction.amount, splitItems);
 
     const splits: ProposedSplit[] = proratedSplits.map((s) => ({
       itemName: s.itemName,
@@ -77,7 +81,10 @@ export async function classifyAmazon(
   );
 
   const changes: ProposedChange[] = [];
-  const uncached: { match: (typeof matchResult.matched)[number]; index: number }[] = [];
+  const uncached: {
+    match: (typeof matchResult.matched)[number];
+    index: number;
+  }[] = [];
 
   for (let i = 0; i < matchResult.matched.length; i++) {
     const match = matchResult.matched[i];
@@ -85,14 +92,18 @@ export async function classifyAmazon(
 
     const cached = await getCachedClassification(match.order.orderId);
     if (cached) {
-      changes.push(applyClassification(match, { orderIndex: i, ...cached }, "Amazon"));
+      changes.push(
+        applyClassification(match, { orderIndex: i, ...cached }, "Amazon"),
+      );
     } else {
       uncached.push({ match, index: i });
     }
   }
 
   if (uncached.length < matchResult.matched.length) {
-    log.info(`${String(matchResult.matched.length - uncached.length)} orders from cache, ${String(uncached.length)} need classification`);
+    log.info(
+      `${String(matchResult.matched.length - uncached.length)} orders from cache, ${String(uncached.length)} need classification`,
+    );
   }
 
   const batchSize = 20;
@@ -114,16 +125,24 @@ export async function classifyAmazon(
             price: item.price,
           })),
         }));
-        return { batch, result: await classifyAmazonBatch(categories, orderInputs) };
+        return {
+          batch,
+          result: await classifyAmazonBatch(categories, orderInputs),
+        };
       }),
     );
 
-    const toCache: { orderId: string; classification: AmazonBatchOrderClassification }[] = [];
+    const toCache: {
+      orderId: string;
+      classification: AmazonBatchOrderClassification;
+    }[] = [];
     for (const { batch, result } of results) {
       for (const classification of result.orders) {
         const entry = batch[classification.orderIndex];
         if (!entry) continue;
-        changes.push(applyClassification(entry.match, classification, "Amazon"));
+        changes.push(
+          applyClassification(entry.match, classification, "Amazon"),
+        );
         toCache.push({ orderId: entry.match.order.orderId, classification });
       }
       completed += batch.length;

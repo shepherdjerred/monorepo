@@ -7,7 +7,10 @@ import {
   fetchCategories,
   separateDeepPaths,
 } from "./lib/monarch/client.ts";
-import type { MonarchCategory, MonarchTransaction } from "./lib/monarch/types.ts";
+import type {
+  MonarchCategory,
+  MonarchTransaction,
+} from "./lib/monarch/types.ts";
 import { groupByWeek, buildWeekWindows } from "./lib/monarch/weeks.ts";
 import type { WeekGroup, WeekWindow } from "./lib/monarch/weeks.ts";
 import { buildResolvedMap } from "./lib/enrichment.ts";
@@ -15,6 +18,7 @@ import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
   initClaude,
   classifyWeek,
+  setWebSearchEnabled,
   getUsageSummary,
 } from "./lib/classifier/claude.ts";
 import { classifyAmazon } from "./lib/amazon/classify.ts";
@@ -28,8 +32,15 @@ import { classifyApple } from "./lib/apple/classify.ts";
 import type { AppleMatchResult } from "./lib/apple/matcher.ts";
 import { classifyCostco } from "./lib/costco/classify.ts";
 import type { CostcoMatchResult } from "./lib/costco/matcher.ts";
-import type { CachedTransactionClassification, ProposedChange, WeekClassificationResponse } from "./lib/classifier/types.ts";
-import { getCachedWeek, cacheWeekClassification } from "./lib/classifier/cache.ts";
+import type {
+  CachedTransactionClassification,
+  ProposedChange,
+  WeekClassificationResponse,
+} from "./lib/classifier/types.ts";
+import {
+  getCachedWeek,
+  cacheWeekClassification,
+} from "./lib/classifier/cache.ts";
 import {
   displayWeekChanges,
   displayAmazonChanges,
@@ -81,11 +92,27 @@ type DeepClassifyOptions = {
   amazon: MonarchTransaction[];
 };
 
-async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyResult> {
-  const { config, categories, venmo: venmoTransactions, bilt: biltTransactions, usaa: usaaTransactions, scl: sclTransactions, apple: appleTransactions, costco: costcoTransactions, amazon: amazonTransactions } = options;
+async function deepClassify(
+  options: DeepClassifyOptions,
+): Promise<DeepClassifyResult> {
+  const {
+    config,
+    categories,
+    venmo: venmoTransactions,
+    bilt: biltTransactions,
+    usaa: usaaTransactions,
+    scl: sclTransactions,
+    apple: appleTransactions,
+    costco: costcoTransactions,
+    amazon: amazonTransactions,
+  } = options;
   let venmoChanges: ProposedChange[] = [];
   let venmoMatchResult: VenmoMatchResult | null = null;
-  if (!config.skipVenmo && config.venmoCsv !== undefined && venmoTransactions.length > 0) {
+  if (
+    !config.skipVenmo &&
+    config.venmoCsv !== undefined &&
+    venmoTransactions.length > 0
+  ) {
     log.info("\n--- Venmo Deep Classification ---");
     const result = await classifyVenmo(config, categories, venmoTransactions);
     venmoChanges = result.changes;
@@ -94,9 +121,9 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
   }
 
   let biltChanges: ProposedChange[] = [];
-  if (!config.skipBilt && config.conserviceCookies !== undefined && biltTransactions.length > 0) {
+  if (!config.skipBilt && biltTransactions.length > 0) {
     log.info("\n--- Bilt/Conservice Deep Classification ---");
-    const result = await classifyBilt(config, categories, biltTransactions);
+    const result = await classifyBilt(categories, biltTransactions);
     biltChanges = result.changes;
     displayBiltChanges(biltChanges, result.matches);
   }
@@ -104,12 +131,16 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
   let usaaChanges: ProposedChange[] = [];
   if (!config.skipUsaa && usaaTransactions.length > 0) {
     log.info("\n--- USAA Insurance Split ---");
-    usaaChanges = classifyUsaa(categories, usaaTransactions);
+    usaaChanges = await classifyUsaa(categories, usaaTransactions);
     displayUsaaChanges(usaaChanges);
   }
 
   let sclChanges: ProposedChange[] = [];
-  if (!config.skipScl && config.sclCsv !== undefined && sclTransactions.length > 0) {
+  if (
+    !config.skipScl &&
+    config.sclCsv !== undefined &&
+    sclTransactions.length > 0
+  ) {
     log.info("\n--- Seattle City Light Classification ---");
     sclChanges = await classifyScl(config.sclCsv, categories, sclTransactions);
     displaySclChanges(sclChanges);
@@ -117,9 +148,17 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
 
   let appleChanges: ProposedChange[] = [];
   let appleMatchResult: AppleMatchResult | null = null;
-  if (!config.skipApple && config.appleMailDir !== undefined && appleTransactions.length > 0) {
+  if (
+    !config.skipApple &&
+    config.appleMailDir !== undefined &&
+    appleTransactions.length > 0
+  ) {
     log.info("\n--- Apple Deep Classification ---");
-    const result = await classifyApple(config.appleMailDir, categories, appleTransactions);
+    const result = await classifyApple(
+      config.appleMailDir,
+      categories,
+      appleTransactions,
+    );
     appleChanges = result.changes;
     appleMatchResult = result.matchResult;
     displayAppleChanges(appleChanges, appleMatchResult);
@@ -139,16 +178,36 @@ async function deepClassify(options: DeepClassifyOptions): Promise<DeepClassifyR
   let matchResult: MatchResult | null = null;
   if (!config.skipAmazon && amazonTransactions.length > 0) {
     log.info("\n--- Amazon Deep Classification ---");
-    const result = await classifyAmazon(config.amazonYears, config.forceScrape, categories, amazonTransactions);
+    const result = await classifyAmazon(
+      config.amazonYears,
+      config.forceScrape,
+      categories,
+      amazonTransactions,
+    );
     amazonChanges = result.changes;
     matchResult = result.matchResult;
     displayAmazonChanges(amazonChanges, matchResult);
   }
 
-  return { venmoChanges, venmoMatchResult, biltChanges, usaaChanges, sclChanges, appleChanges, appleMatchResult, costcoChanges, costcoMatchResult, amazonChanges, matchResult };
+  return {
+    venmoChanges,
+    venmoMatchResult,
+    biltChanges,
+    usaaChanges,
+    sclChanges,
+    appleChanges,
+    appleMatchResult,
+    costcoChanges,
+    costcoMatchResult,
+    amazonChanges,
+    matchResult,
+  };
 }
 
-async function saveChanges(outputPath: string, changes: ProposedChange[]): Promise<void> {
+async function saveChanges(
+  outputPath: string,
+  changes: ProposedChange[],
+): Promise<void> {
   await Bun.write(outputPath, JSON.stringify(changes, null, 2));
   log.info(`Saved ${String(changes.length)} proposed changes to ${outputPath}`);
 }
@@ -172,23 +231,32 @@ async function classifyByWeek(
   const { categories, regularTransactions, deep } = opts;
 
   const allDeepChanges = [
-    ...deep.venmoChanges, ...deep.biltChanges,
-    ...deep.usaaChanges, ...deep.sclChanges,
-    ...deep.appleChanges, ...deep.costcoChanges,
+    ...deep.venmoChanges,
+    ...deep.biltChanges,
+    ...deep.usaaChanges,
+    ...deep.sclChanges,
+    ...deep.appleChanges,
+    ...deep.costcoChanges,
     ...deep.amazonChanges,
   ];
   const resolvedMap = buildResolvedMap(allDeepChanges);
 
   const allTransactions = [
     ...regularTransactions,
-    ...opts.amazonTransactions, ...opts.venmoTransactions, ...opts.biltTransactions,
-    ...opts.usaaTransactions, ...opts.sclTransactions,
-    ...opts.appleTransactions, ...opts.costcoTransactions,
+    ...opts.amazonTransactions,
+    ...opts.venmoTransactions,
+    ...opts.biltTransactions,
+    ...opts.usaaTransactions,
+    ...opts.sclTransactions,
+    ...opts.appleTransactions,
+    ...opts.costcoTransactions,
   ];
   const weekGroups = groupByWeek(allTransactions);
   const windows = buildWeekWindows(weekGroups);
 
-  log.info(`\n--- Week-Based Classification (${String(weekGroups.length)} weeks) ---`);
+  log.info(
+    `\n--- Week-Based Classification (${String(weekGroups.length)} weeks) ---`,
+  );
 
   const weekChanges: ProposedChange[] = [];
 
@@ -203,7 +271,7 @@ async function classifyByWeek(
   // Separate cached vs uncached weeks
   for (const window of windows) {
     const classifiable = window.current.transactions.filter(
-      (t) => !resolvedMap.has(t.id),
+      (t) => !resolvedMap.has(t.id) && !t.isSplitTransaction,
     );
     if (classifiable.length === 0) continue;
 
@@ -211,7 +279,9 @@ async function classifyByWeek(
     const cached = await getCachedWeek(window.current.weekKey, classifiableIds);
     if (cached) {
       for (const classification of cached) {
-        const txn = window.current.transactions.find((t) => t.id === classification.transactionId);
+        const txn = window.current.transactions.find(
+          (t) => t.id === classification.transactionId,
+        );
         if (!txn) continue;
         if (classification.categoryId === txn.category.id) continue;
         weekChanges.push({
@@ -234,7 +304,9 @@ async function classifyByWeek(
   }
 
   if (cachedTasks.length > 0) {
-    log.info(`${String(cachedTasks.length)} weeks from cache, ${String(uncachedTasks.length)} need classification`);
+    log.info(
+      `${String(cachedTasks.length)} weeks from cache, ${String(uncachedTasks.length)} need classification`,
+    );
   }
 
   // Classify uncached weeks in parallel
@@ -245,15 +317,24 @@ async function classifyByWeek(
   for (let i = 0; i < uncachedTasks.length; i += weekConcurrency) {
     const chunk = uncachedTasks.slice(i, i + weekConcurrency);
     const results = await Promise.all(
-      chunk.map(async (task): Promise<{ task: WeekTask; result: WeekClassificationResponse }> => {
-        const result = await classifyWeek(categories, task.window, resolvedMap, emptyPreviousResults);
-        return { task, result };
-      }),
+      chunk.map(
+        async (
+          task,
+        ): Promise<{ task: WeekTask; result: WeekClassificationResponse }> => {
+          const result = await classifyWeek(
+            categories,
+            task.window,
+            resolvedMap,
+            emptyPreviousResults,
+          );
+          return { task, result };
+        },
+      ),
     );
 
     for (const { task, result } of results) {
       const classifiable = task.window.current.transactions.filter(
-        (t) => !resolvedMap.has(t.id),
+        (t) => !resolvedMap.has(t.id) && !t.isSplitTransaction,
       );
       const cachedResults: CachedTransactionClassification[] = [];
       for (const classification of result.transactions) {
@@ -279,7 +360,11 @@ async function classifyByWeek(
           type: "recategorize",
         });
       }
-      await cacheWeekClassification(task.window.current.weekKey, task.classifiableIds, cachedResults);
+      await cacheWeekClassification(
+        task.window.current.weekKey,
+        task.classifiableIds,
+        cachedResults,
+      );
       weekCompleted += 1;
     }
     log.progress(weekCompleted, uncachedTasks.length, "weeks classified");
@@ -305,6 +390,7 @@ async function main(): Promise<void> {
 
   initMonarch(config.monarchToken);
   initClaude(config.anthropicApiKey, config.model);
+  setWebSearchEnabled(!config.skipResearch);
   await loadHints();
 
   const { startDate, endDate } = getDateRange();
@@ -315,7 +401,9 @@ async function main(): Promise<void> {
     fetchAllTransactions(startDate, endDate, config.forceFetch),
   ]);
 
-  log.info(`Found ${String(allTransactions.length)} transactions, ${String(categories.length)} categories`);
+  log.info(
+    `Found ${String(allTransactions.length)} transactions, ${String(categories.length)} categories`,
+  );
 
   let transactions = allTransactions;
   if (config.limit > 0) {
@@ -325,11 +413,23 @@ async function main(): Promise<void> {
 
   const separated = separateDeepPaths(transactions);
   let { amazonTransactions, venmoTransactions, biltTransactions } = separated;
-  const { usaaTransactions, sclTransactions, appleTransactions, costcoTransactions, regularTransactions } = separated;
+  const {
+    usaaTransactions,
+    sclTransactions,
+    appleTransactions,
+    costcoTransactions,
+    regularTransactions,
+  } = separated;
 
   if (config.sample > 0) {
-    amazonTransactions = amazonTransactions.slice(0, Math.ceil(config.sample / 2));
-    venmoTransactions = venmoTransactions.slice(0, Math.ceil(config.sample / 2));
+    amazonTransactions = amazonTransactions.slice(
+      0,
+      Math.ceil(config.sample / 2),
+    );
+    venmoTransactions = venmoTransactions.slice(
+      0,
+      Math.ceil(config.sample / 2),
+    );
     biltTransactions = biltTransactions.slice(0, Math.ceil(config.sample / 2));
   }
 
@@ -339,32 +439,58 @@ async function main(): Promise<void> {
 
   // 1. Run deep paths first to get resolved transactions
   const deep = await deepClassify({
-    config, categories,
-    venmo: venmoTransactions, bilt: biltTransactions,
-    usaa: usaaTransactions, scl: sclTransactions,
-    apple: appleTransactions, costco: costcoTransactions,
+    config,
+    categories,
+    venmo: venmoTransactions,
+    bilt: biltTransactions,
+    usaa: usaaTransactions,
+    scl: sclTransactions,
+    apple: appleTransactions,
+    costco: costcoTransactions,
     amazon: amazonTransactions,
   });
 
   // 2. Build week groups and classify
   const { weekChanges, weekGroups } = await classifyByWeek({
-    categories, regularTransactions, deep,
-    amazonTransactions, venmoTransactions, biltTransactions,
-    usaaTransactions, sclTransactions, appleTransactions, costcoTransactions,
+    categories,
+    regularTransactions,
+    deep,
+    amazonTransactions,
+    venmoTransactions,
+    biltTransactions,
+    usaaTransactions,
+    sclTransactions,
+    appleTransactions,
+    costcoTransactions,
   });
 
   displayWeekChanges(weekChanges, weekGroups);
 
-  displaySummary({ weekChanges, ...deep, totalTransactions: transactions.length });
+  displaySummary({
+    weekChanges,
+    ...deep,
+    totalTransactions: transactions.length,
+  });
   displayUsageSummary(getUsageSummary());
 
-  const allChanges = [...weekChanges, ...deep.venmoChanges, ...deep.biltChanges, ...deep.usaaChanges, ...deep.sclChanges, ...deep.appleChanges, ...deep.costcoChanges, ...deep.amazonChanges];
+  const allChanges = [
+    ...weekChanges,
+    ...deep.venmoChanges,
+    ...deep.biltChanges,
+    ...deep.usaaChanges,
+    ...deep.sclChanges,
+    ...deep.appleChanges,
+    ...deep.costcoChanges,
+    ...deep.amazonChanges,
+  ];
 
   if (config.output !== undefined) {
     await saveChanges(config.output, allChanges);
   } else if (config.apply) {
     if (!config.interactive) {
-      const confirmed = await promptConfirm(`About to apply ${String(allChanges.length)} changes. Continue?`);
+      const confirmed = await promptConfirm(
+        `About to apply ${String(allChanges.length)} changes. Continue?`,
+      );
       if (!confirmed) {
         log.info("Aborted.");
         return;
@@ -372,13 +498,17 @@ async function main(): Promise<void> {
     }
     await applyChanges(allChanges, config.interactive);
   } else {
-    log.info("Dry run complete. Use --apply to apply, or --output <path> to save to file.");
+    log.info(
+      "Dry run complete. Use --apply to apply, or --output <path> to save to file.",
+    );
   }
 }
 
 try {
   await main();
 } catch (error: unknown) {
-  log.error(`Fatal error: ${error instanceof Error ? error.message : String(error)}`);
+  log.error(
+    `Fatal error: ${error instanceof Error ? error.message : String(error)}`,
+  );
   process.exit(1);
 }

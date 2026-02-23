@@ -122,10 +122,7 @@
         "Lucian cannot change the aim of The Culling. Take advantage of this by avoiding the angle of the bullets.",
         "Piercing Light does not give Lucian extra Attack Range. He still needs to find a target in range to line up his shot. Avoid Piercing Light by anticipating the angle Lucian will choose."
       ],
-      "tags": [
-        "Marksman",
-        "Assassin"
-      ],
+      "tags": ["Marksman", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -162,11 +159,7 @@
           "description": "Lucian shoots a bolt of piercing light through a target.",
           "tooltip": "Lucian shoots a bolt of piercing light, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -174,95 +167,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            8,
-            7,
-            6,
-            5
-          ],
+          "cooldown": [9, 8, 7, 6, 5],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [
-            48,
-            56,
-            64,
-            72,
-            80
-          ],
+          "cost": [48, 56, 64, 72, 80],
           "costBurn": "48/56/64/72/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0.41,
-              0.41,
-              0.41,
-              0.41,
-              0.41
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0.41, 0.41, 0.41, 0.41, 0.41],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -280,13 +201,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "LucianQ.png",
@@ -305,11 +220,7 @@
           "description": "Lucian shoots a missile that explodes in a star shape, marking and briefly revealing enemies. Lucian gains Move Speed for attacking marked enemies.",
           "tooltip": "Lucian fires a shot that explodes at the end of its range or on the first enemy hit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, briefly revealing enemies and marking them for 6 seconds.<br /><br />When Lucian or an ally damages a marked enemy, Lucian gains <speed>{{ e2 }} Move Speed</speed> for 1 second. Allies triggering this effect will also grant Lucian <attention>Vigilance</attention>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Move Speed", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -317,95 +228,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              75,
-              110,
-              145,
-              180,
-              215
-            ],
-            [
-              60,
-              65,
-              70,
-              75,
-              80
-            ],
-            [
-              900,
-              900,
-              900,
-              900,
-              900
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              200,
-              200,
-              200,
-              200,
-              200
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              700,
-              700,
-              700,
-              700,
-              700
-            ]
+            [75, 110, 145, 180, 215],
+            [60, 65, 70, 75, 80],
+            [900, 900, 900, 900, 900],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [200, 200, 200, 200, 200],
+            [1, 1, 1, 1, 1],
+            [6, 6, 6, 6, 6],
+            [1, 1, 1, 1, 1],
+            [700, 700, 700, 700, 700]
           ],
           "effectBurn": [
             null,
@@ -423,13 +262,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            900,
-            900,
-            900,
-            900,
-            900
-          ],
+          "range": [900, 900, 900, 900, 900],
           "rangeBurn": "900",
           "image": {
             "full": "LucianW.png",
@@ -448,105 +281,30 @@
           "description": "Lucian quickly dashes a short distance. Lightslinger attacks reduce Relentless Pursuit's cooldown.",
           "tooltip": "Lucian dashes.<br /><br />Cooldown is reduced by {{ e1 }} second whenever Lucian hits an enemy with <spellName>Lightslinger</spellName> ({{ e2 }} seconds for champions). {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            18,
-            17,
-            16,
-            15,
-            14
-          ],
+          "cooldown": [18, 17, 16, 15, 14],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [
-            40,
-            30,
-            20,
-            10,
-            0
-          ],
+          "cost": [40, 30, 20, 10, 0],
           "costBurn": "40/30/20/10/0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              425,
-              425,
-              425,
-              425,
-              425
-            ],
-            [
-              200,
-              200,
-              200,
-              200,
-              200
-            ],
-            [
-              1350,
-              1350,
-              1350,
-              1350,
-              1350
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [1, 1, 1, 1, 1],
+            [2, 2, 2, 2, 2],
+            [425, 425, 425, 425, 425],
+            [200, 200, 200, 200, 200],
+            [1350, 1350, 1350, 1350, 1350],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -564,13 +322,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            445,
-            445,
-            445,
-            445,
-            445
-          ],
+          "range": [445, 445, 445, 445, 445],
           "rangeBurn": "445",
           "image": {
             "full": "LucianE.png",
@@ -589,81 +341,30 @@
           "description": "Lucian unleashes a torrent of shots from his weapons.",
           "tooltip": "Lucian rapidly fires <keywordMajor>{{ totalnumshots }}</keywordMajor> shots in a direction for {{ duration }} seconds or until he <recast>Recasts</recast>. Each shot deals <physicalDamage>{{ damageperbullet }} physical damage</physicalDamage> to the first enemy hit.<br /><br />While firing, Lucian may use <spellName>Relentless Pursuit</spellName>.<br /><br />Total Damage: <physicalDamage>{{ totaldamage }} physical damage</physicalDamage><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            100,
-            90
-          ],
+          "cooldown": [110, 100, 90],
           "cooldownBurn": "110/100/90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -681,11 +382,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1400,
-            1400,
-            1400
-          ],
+          "range": [1400, 1400, 1400],
           "rangeBurn": "1400",
           "image": {
             "full": "LucianR.png",

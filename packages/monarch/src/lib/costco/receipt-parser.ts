@@ -3,16 +3,19 @@ import type { CostcoItem } from "./types.ts";
 // Matches item rows: [E?] [item_number] [item_name] [price] [tax_flag?]
 // Use atomic-style pattern to avoid polynomial backtracking:
 // item name = one or more words (non-whitespace) separated by single spaces
-const ITEM_PATTERN = /^E?\s*(\d{2,})\s+(\S+(?:\s\S+)*)\s+(\d+\.\d{2})\s*[NYny]?$/;
+const ITEM_PATTERN =
+  /^E?\s*(\d{2,})\s+(\S+(?:\s\S+)*)\s+(\d+\.\d{2})\s*[NYny]?$/;
 
 // Matches discount rows: [coupon_num] / [item_number] [discount-]
 const DISCOUNT_PATTERN = /\d+\s*\/\s*(\d+)\s+(\d+\.\d{2})-/;
 
 function isHeaderOrFooter(line: string): boolean {
-  return line.includes("SUBTOTAL")
-    || line.includes("Total")
-    || line.includes("TAX")
-    || line.includes("Member");
+  return (
+    line.includes("SUBTOTAL") ||
+    line.includes("Total") ||
+    line.includes("TAX") ||
+    line.includes("Member")
+  );
 }
 
 export function parseReceiptLines(lines: string[]): CostcoItem[] {
@@ -28,13 +31,20 @@ export function parseReceiptLines(lines: string[]): CostcoItem[] {
       const itemNumber = discountMatch[1];
       const discountAmount = Number.parseFloat(discountMatch[2]);
       if (!Number.isNaN(discountAmount)) {
-        discounts.set(itemNumber, (discounts.get(itemNumber) ?? 0) + discountAmount);
+        discounts.set(
+          itemNumber,
+          (discounts.get(itemNumber) ?? 0) + discountAmount,
+        );
       }
       continue;
     }
 
     const itemMatch = ITEM_PATTERN.exec(line);
-    if (itemMatch?.[1] !== undefined && itemMatch[2] !== undefined && itemMatch[3] !== undefined) {
+    if (
+      itemMatch?.[1] !== undefined &&
+      itemMatch[2] !== undefined &&
+      itemMatch[3] !== undefined
+    ) {
       const title = itemMatch[2].trim();
       const price = Number.parseFloat(itemMatch[3]);
       if (!Number.isNaN(price) && title.length >= 2) {
@@ -52,7 +62,9 @@ export function parseReceiptLines(lines: string[]): CostcoItem[] {
   }
 
   if (items.length === 0) {
-    return [{ title: "Unknown Costco Warehouse Purchase", price: 0, quantity: 1 }];
+    return [
+      { title: "Unknown Costco Warehouse Purchase", price: 0, quantity: 1 },
+    ];
   }
 
   return items;

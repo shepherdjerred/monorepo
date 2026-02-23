@@ -7,10 +7,13 @@ describe("logger", () => {
 
   beforeEach(() => {
     captured = "";
-    writeSpy = spyOn(process.stderr, "write").mockImplementation((chunk: string | Uint8Array) => {
-      captured += typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
-      return true;
-    });
+    writeSpy = spyOn(process.stderr, "write").mockImplementation(
+      (chunk: string | Uint8Array) => {
+        captured +=
+          typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+        return true;
+      },
+    );
     setLogLevel("info");
   });
 

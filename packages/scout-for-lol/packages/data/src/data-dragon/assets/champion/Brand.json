@@ -109,10 +109,7 @@
         "Try to move away from allies when you see Pyroclasm being cast. The initial missile speed is slow, which should give your team time to react.",
         "Brand's passive allows him to excel against teams that cluster together. Be sure to split up against him."
       ],
-      "tags": [
-        "Mage",
-        "Support"
-      ],
+      "tags": ["Mage", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -149,105 +146,30 @@
           "description": "Brand launches a ball of fire forward that deals magic damage. If the target is ablaze, Sear will stun the target.",
           "tooltip": "Brand launches a fireball that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, they will be <status>Stunned</status> for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7.5,
-            7,
-            6.5,
-            6
-          ],
+          "cooldown": [8, 7.5, 7, 6.5, 6],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              100,
-              130,
-              160,
-              190
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 100, 130, 160, 190],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -265,13 +187,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1050,
-            1050,
-            1050,
-            1050,
-            1050
-          ],
+          "range": [1050, 1050, 1050, 1050, 1050],
           "rangeBurn": "1050",
           "image": {
             "full": "BrandQ.png",
@@ -290,11 +206,7 @@
           "description": "After a short delay, Brand creates a Pillar of Flame at a target area, dealing magic damage to enemy units within the area. Units that are ablaze take an additional 25% damage.",
           "tooltip": "Brand creates a pillar of pure fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Units that are <keywordMajor>Ablaze</keywordMajor> take <magicDamage>{{ empowereddamage }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -302,95 +214,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            60,
-            70,
-            80,
-            90,
-            100
-          ],
+          "cost": [60, 70, 80, 90, 100],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              20,
-              40,
-              60,
-              80,
-              100
-            ],
-            [
-              0.25,
-              0.25,
-              0.25,
-              0.25,
-              0.25
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [20, 40, 60, 80, 100],
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -408,13 +248,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            900,
-            900,
-            900,
-            900,
-            900
-          ],
+          "range": [900, 900, 900, 900, 900],
           "rangeBurn": "900",
           "image": {
             "full": "BrandW.png",
@@ -433,11 +267,7 @@
           "description": "Brand conjures a powerful blast at his target that spreads to nearby enemies, dealing magic damage. If the target is ablaze, Conflagration's spread is doubled.",
           "tooltip": "Brand conjures a powerful blast at his target, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> to surrounding units.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, the spread range is doubled.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -445,95 +275,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            12,
-            11,
-            10,
-            9
-          ],
+          "cooldown": [13, 12, 11, 10, 9],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              375,
-              375,
-              375,
-              375,
-              375
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [375, 375, 375, 375, 375],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -551,13 +309,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            625,
-            625,
-            625,
-            625,
-            625
-          ],
+          "range": [625, 625, 625, 625, 625],
           "rangeBurn": "625",
           "image": {
             "full": "BrandE.png",
@@ -576,11 +328,7 @@
           "description": "Brand unleashes a devastating torrent of fire that bounces up to 5 times off of Brand and nearby enemies, dealing magic damage to enemies each time bounce. Bounces prioritize stacking Blaze to max on Champions. If a target is ablaze, Pyroclasm will briefly slow them.",
           "tooltip": "Brand unleashes a devastating torrent of fire that can bounce to Brand or another enemy up to 5 times, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies each bounce. Bounces prioritize stacking <keywordMajor>Blaze</keywordMajor> to max on champions.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, they are briefly <status>Slowed</status> by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage per Bounce",
-              "Slow",
-              "Cooldown"
-            ],
+            "label": ["Damage per Bounce", "Slow", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%",
@@ -588,71 +336,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            90,
-            80
-          ],
+          "cooldown": [100, 90, 80],
           "cooldownBurn": "100/90/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -670,11 +370,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "BrandR.png",
