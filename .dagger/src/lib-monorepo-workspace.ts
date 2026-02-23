@@ -45,15 +45,6 @@ export function getBaseBunDebianContainer(
   let container = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
-    // Cache APT packages (version in key for invalidation on upgrade)
-    .withMountedCache(
-      "/var/cache/apt",
-      dag.cacheVolume(`apt-cache-bun-${BUN_VERSION}-debian`),
-    )
-    .withMountedCache(
-      "/var/lib/apt",
-      dag.cacheVolume(`apt-lib-bun-${BUN_VERSION}-debian`),
-    )
     .withExec(["apt-get", "update"])
     .withExec(["apt-get", "install", "-y", ...aptPackages]);
 
