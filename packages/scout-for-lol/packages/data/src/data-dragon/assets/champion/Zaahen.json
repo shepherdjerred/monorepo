@@ -35,10 +35,7 @@
       "blurb": "A fallen god wielding both divine and profane power, Zaahen hunts his fellow Darkin while defying the corruption that threatens to consume him. Once willingly sealed within his glaive to stave off madness, he now walks free, noble in heart and vicious...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Fighter",
-        "Assassin"
-      ],
+      "tags": ["Fighter", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -91,95 +88,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9,
-            8,
-            7,
-            6
-          ],
+          "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [
-            25,
-            25,
-            25,
-            25,
-            25
-          ],
+          "cost": [25, 25, 25, 25, 25],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -197,13 +122,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            25000,
-            25000,
-            25000,
-            25000,
-            25000
-          ],
+          "range": [25000, 25000, 25000, 25000, 25000],
           "rangeBurn": "25000",
           "image": {
             "full": "ZaahenQ.png",
@@ -222,105 +141,30 @@
           "description": "Zaahen stabs in a direction, damaging enemies hit, then pulls them toward him.",
           "tooltip": "Zaahen stabs in a direction, dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage> to enemies hit, then <status>Pulls</status> them toward him, dealing <physicalDamage>{{ secondarydamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ initialbasedamage }} -> {{ initialbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            15,
-            14,
-            13,
-            12
-          ],
+          "cooldown": [16, 15, 14, 13, 12],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -338,13 +182,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            850,
-            850,
-            850,
-            850,
-            850
-          ],
+          "range": [850, 850, 850, 850, 850],
           "rangeBurn": "850",
           "image": {
             "full": "ZaahenW.png",
@@ -377,95 +215,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -483,13 +249,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            25000,
-            25000,
-            25000,
-            25000,
-            25000
-          ],
+          "range": [25000, 25000, 25000, 25000, 25000],
           "rangeBurn": "25000",
           "image": {
             "full": "ZaahenE.png",
@@ -508,11 +268,7 @@
           "description": "Zaahen rises then stabs downward, damaging enemies and healing for a portion of the damage dealt.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Zaahen gains <armorPen>{{ armorpen*100 }}% %i:scaleAPen% Armor Penetration</armorPen>.<br /><br /><spellActive>Active</spellActive>: Zaahen rises, gaining {{ damagereduction*100 }}% Damage Reduction while casting.<br /><br />Zaahen then stabs downward, dealing <physicalDamage>{{ damageendcalc }} physical damage</physicalDamage> and restoring <healing>{{ healpercent*100 }}% of the damage dealt to enemy champions as Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage",
-              "Armor Penetration"
-            ],
+            "label": ["Cooldown", "Damage", "Armor Penetration"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ enddamage }} -> {{ enddamageNL }}",
@@ -520,71 +276,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            95,
-            80
-          ],
+          "cooldown": [110, 95, 80],
           "cooldownBurn": "110/95/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -602,11 +310,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "ZaahenR.png",

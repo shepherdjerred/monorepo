@@ -96,10 +96,7 @@
         "Even if Sion still hits a Decimating Smash, making him release the charge earlier reduces its impact.",
         "Use the time after Sion has died to reposition and prepare for his return."
       ],
-      "tags": [
-        "Tank",
-        "Fighter"
-      ],
+      "tags": ["Tank", "Fighter"],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -152,95 +149,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9,
-            8,
-            7,
-            6
-          ],
+          "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [
-            45,
-            45,
-            45,
-            45,
-            45
-          ],
+          "cost": [45, 45, 45, 45, 45],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              2.5,
-              2.5,
-              2.5,
-              2.5,
-              2.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              7.5,
-              7.5,
-              7.5,
-              7.5,
-              7.5
-            ],
-            [
-              60,
-              60,
-              60,
-              60,
-              60
-            ],
-            [
-              150,
-              150,
-              150,
-              150,
-              150
-            ],
-            [
-              -0.8,
-              -0.8,
-              -0.8,
-              -0.8,
-              -0.8
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0],
+            [7.5, 7.5, 7.5, 7.5, 7.5],
+            [60, 60, 60, 60, 60],
+            [150, 150, 150, 150, 150],
+            [-0.8, -0.8, -0.8, -0.8, -0.8]
           ],
           "effectBurn": [
             null,
@@ -258,13 +183,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
-          ],
+          "range": [10000, 10000, 10000, 10000, 10000],
           "rangeBurn": "10000",
           "image": {
             "full": "SionQ.png",
@@ -299,95 +218,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            15,
-            14,
-            13,
-            12,
-            11
-          ],
+          "cooldown": [15, 14, 13, 12, 11],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [
-            65,
-            70,
-            75,
-            80,
-            85
-          ],
+          "cost": [65, 70, 75, 80, 85],
           "costBurn": "65/70/75/80/85",
           "datavalues": {},
           "effect": [
             null,
-            [
-              60,
-              75,
-              90,
-              105,
-              120
-            ],
-            [
-              40,
-              65,
-              90,
-              115,
-              140
-            ],
-            [
-              8,
-              10,
-              12,
-              14,
-              16
-            ],
-            [
-              14,
-              14,
-              14,
-              14,
-              14
-            ],
-            [
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            [
-              15,
-              15,
-              15,
-              15,
-              15
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              15,
-              15,
-              15,
-              15,
-              15
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [60, 75, 90, 105, 120],
+            [40, 65, 90, 115, 140],
+            [8, 10, 12, 14, 16],
+            [14, 14, 14, 14, 14],
+            [4, 4, 4, 4, 4],
+            [15, 15, 15, 15, 15],
+            [3, 3, 3, 3, 3],
+            [15, 15, 15, 15, 15],
+            [6, 6, 6, 6, 6],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -405,13 +252,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "SionW.png",
@@ -444,95 +285,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            11,
-            10,
-            9,
-            8
-          ],
+          "cooldown": [12, 11, 10, 9, 8],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [
-            35,
-            40,
-            45,
-            50,
-            55
-          ],
+          "cost": [35, 40, 45, 50, 55],
           "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
-            [
-              65,
-              100,
-              135,
-              170,
-              205
-            ],
-            [
-              40,
-              45,
-              50,
-              55,
-              60
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              40,
-              45,
-              50,
-              55,
-              60
-            ],
-            [
-              25,
-              25,
-              25,
-              25,
-              25
-            ],
-            [
-              30,
-              30,
-              30,
-              30,
-              30
-            ],
-            [
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            [
-              2.5,
-              2.5,
-              2.5,
-              2.5,
-              2.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [65, 100, 135, 170, 205],
+            [40, 45, 50, 55, 60],
+            [5, 5, 5, 5, 5],
+            [40, 45, 50, 55, 60],
+            [25, 25, 25, 25, 25],
+            [30, 30, 30, 30, 30],
+            [4, 4, 4, 4, 4],
+            [2.5, 2.5, 2.5, 2.5, 2.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -550,13 +319,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "SionE.png",
@@ -575,12 +338,7 @@
           "description": "Sion charges in a direction, ramping up speed over time. He can steer his charge slightly with the mouse cursor location. When he collides with an enemy he deals damage and knocks them up based on the distance he has charged.",
           "tooltip": "Sion charges Unstoppably in a direction for 8 seconds, turning towards the mouse cursor. Sion stops on colliding with an enemy champion or wall or on <recast>Recasting</recast> this Ability.  <br /><br />At the end of the charge, Sion deals between <physicalDamage>{{ mindamagetotal }} and {{ maxdamagetotal }} physical damage</physicalDamage> based on distance travelled. Enemies close to Sion are <status>Stunned</status> for between {{ minstunduration }} and {{ maxstunduration }} seconds based on distance travelled. Enemies in a larger area are <status>Slowed</status> by {{ slowamount }}% for 3 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Minimum Damage",
-              "Maximum Damage",
-              "Slow",
-              "Cooldown"
-            ],
+            "label": ["Minimum Damage", "Maximum Damage", "Slow", "Cooldown"],
             "effect": [
               "{{ mindamage }} -> {{ mindamageNL }}",
               "{{ maxdamage }} -> {{ maxdamageNL }}",
@@ -589,71 +347,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            140,
-            100,
-            60
-          ],
+          "cooldown": [140, 100, 60],
           "cooldownBurn": "140/100/60",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -671,11 +381,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            7500,
-            7500,
-            7500
-          ],
+          "range": [7500, 7500, 7500],
           "rangeBurn": "7500",
           "image": {
             "full": "SionR.png",

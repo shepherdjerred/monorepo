@@ -23,9 +23,7 @@ describe("ManifestSchema", () => {
     const video = result.videos[0];
 
     expect(video.role).toBe("all");
-    expect(video.title).toBe(
-      "The New Most Underrated Champion For Solo Queue",
-    );
+    expect(video.title).toBe("The New Most Underrated Champion For Solo Queue");
     expect(video.uuid).toBe("4lt153z6bl");
     expect(video.durSec).toBe(436);
     expect(video.tId).toBe(1);
@@ -105,8 +103,7 @@ describe("ManifestSchema", () => {
 
   test("parses videosToCourses vids with optional altTitle", () => {
     const result = ManifestSchema.parse(fixture);
-    const entry =
-      result.videosToCourses["Chapter 1: Wave Control {support}"];
+    const entry = result.videosToCourses["Chapter 1: Wave Control {support}"];
 
     expect(entry).toBeDefined();
     expect(entry!.chapters[0].vids[0].altTitle).toBe(

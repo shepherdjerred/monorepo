@@ -48,7 +48,10 @@ function parseCSVRow(line: string): string[] {
 }
 
 function parseAmount(raw: string): number {
-  const cleaned = raw.replaceAll("$", "").replaceAll(",", "").replaceAll(" ", "");
+  const cleaned = raw
+    .replaceAll("$", "")
+    .replaceAll(",", "")
+    .replaceAll(" ", "");
   if (cleaned === "" || cleaned === "+" || cleaned === "-") return 0;
   const value = Number.parseFloat(cleaned);
   return Number.isNaN(value) ? 0 : value;

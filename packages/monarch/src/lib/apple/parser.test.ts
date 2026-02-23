@@ -73,11 +73,7 @@ describe("parseAppleReceipt", () => {
   });
 
   test("returns null for non-receipt email", () => {
-    const eml = [
-      "Subject: Hello",
-      "",
-      "This is not a receipt.",
-    ].join("\n");
+    const eml = ["Subject: Hello", "", "This is not a receipt."].join("\n");
 
     expect(parseAppleReceipt(eml)).toBeNull();
   });

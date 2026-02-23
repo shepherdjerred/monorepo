@@ -23,36 +23,60 @@ import { buildAndPushDnsAuditImage } from "./homelab-dns-audit.ts";
 import { buildAndPushCaddyS3ProxyImage } from "./homelab-caddy-s3proxy.ts";
 import { HELM_CHARTS } from "./homelab-helm.ts";
 import { Stage } from "./lib-types.ts";
-import type { StepResult, HelmBuildResult, HomelabSecrets } from "./homelab-index.ts";
-import { homelabTestHelm, homelabTestRenovateRegex, homelabHelmBuild } from "./homelab-index.ts";
+import type {
+  StepResult,
+  HelmBuildResult,
+  HomelabSecrets,
+} from "./homelab-index.ts";
+import {
+  homelabTestHelm,
+  homelabTestRenovateRegex,
+  homelabHelmBuild,
+} from "./homelab-index.ts";
 import { formatVersionWithDigest } from "./lib-ghcr.ts";
 import { planAll } from "./homelab-tofu.ts";
 import versions from "./lib-versions.ts";
 
 /** Run an async step and capture the result as a StepResult. */
-async function runStep(name: string, fn: () => Promise<string>): Promise<StepResult> {
+async function runStep(
+  name: string,
+  fn: () => Promise<string>,
+): Promise<StepResult> {
   try {
     const msg = await fn();
-    return { status: "passed", message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}` };
+    return {
+      status: "passed",
+      message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}`,
+    };
   } catch (error: unknown) {
-    return { status: "failed", message: `${name}: FAILED\n${formatDaggerError(error)}` };
+    return {
+      status: "failed",
+      message: `${name}: FAILED\n${formatDaggerError(error)}`,
+    };
   }
 }
 
 /** Run a step or skip it if versionOnly is true. */
 function runStepOrSkip(
-  name: string, versionOnly: boolean, fn: () => Promise<string>,
+  name: string,
+  versionOnly: boolean,
+  fn: () => Promise<string>,
 ): Promise<StepResult> {
   if (versionOnly) {
-    return Promise.resolve({ status: "skipped" as const, message: `${name}: SKIPPED (version-only)` });
+    return Promise.resolve({
+      status: "skipped" as const,
+      message: `${name}: SKIPPED (version-only)`,
+    });
   }
   return runStep(name, fn);
 }
 
 /** Run an async step that depends on a container promise. */
 async function runContainerStep(
-  name: string, containerPromise: Promise<Container> | undefined,
-  versionOnly: boolean, fn: (container: Container) => Promise<string>,
+  name: string,
+  containerPromise: Promise<Container> | undefined,
+  versionOnly: boolean,
+  fn: (container: Container) => Promise<string>,
 ): Promise<StepResult> {
   if (versionOnly || containerPromise === undefined) {
     return { status: "skipped", message: `${name}: SKIPPED (version-only)` };
@@ -60,9 +84,15 @@ async function runContainerStep(
   try {
     const container = await containerPromise;
     const msg = await fn(container);
-    return { status: "passed", message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}` };
+    return {
+      status: "passed",
+      message: `${name}: PASSED${msg === "" ? "" : `\n${msg}`}`,
+    };
   } catch (error: unknown) {
-    return { status: "failed", message: `${name}: FAILED\n${formatDaggerError(error)}` };
+    return {
+      status: "failed",
+      message: `${name}: FAILED\n${formatDaggerError(error)}`,
+    };
   }
 }
 
@@ -138,11 +168,21 @@ export async function runValidationPhase(
     haBuildResult,
     helmBuildResult,
   ] = await Promise.all([
-    runStep("Renovate Test", () => homelabTestRenovateRegex(updatedSource, monoRepoSource)),
-    runStepOrSkip("Helm Test", versionOnly, () => homelabTestHelm(updatedSource)),
-    runStepOrSkip("CDK8s Test", versionOnly, () => testCdk8sWithContainer(cdk8sContainer)),
-    runStepOrSkip("Caddyfile Validate", versionOnly, () => validateCaddyfileWithContainer(cdk8sContainer)),
-    runStepOrSkip("CDK8s Lint", versionOnly, () => lintCdk8sWithContainer(cdk8sContainer)),
+    runStep("Renovate Test", () =>
+      homelabTestRenovateRegex(updatedSource, monoRepoSource),
+    ),
+    runStepOrSkip("Helm Test", versionOnly, () =>
+      homelabTestHelm(updatedSource),
+    ),
+    runStepOrSkip("CDK8s Test", versionOnly, () =>
+      testCdk8sWithContainer(cdk8sContainer),
+    ),
+    runStepOrSkip("Caddyfile Validate", versionOnly, () =>
+      validateCaddyfileWithContainer(cdk8sContainer),
+    ),
+    runStepOrSkip("CDK8s Lint", versionOnly, () =>
+      lintCdk8sWithContainer(cdk8sContainer),
+    ),
     runContainerStep("HA Lint", haContainerPromise, versionOnly, (c) =>
       lintHaWithContainer(c),
     ),
@@ -210,8 +250,14 @@ export async function runValidationPhase(
 
 /** Combine two publish results (versioned + latest tags) into one. */
 function combinePublishResults(results: [StepResult, StepResult]): StepResult {
-  const status = results[0].status === "passed" && results[1].status === "passed" ? "passed" : "failed";
-  return { status, message: `Versioned tag: ${results[0].message}\nLatest tag: ${results[1].message}` };
+  const status =
+    results[0].status === "passed" && results[1].status === "passed"
+      ? "passed"
+      : "failed";
+  return {
+    status,
+    message: `Versioned tag: ${results[0].message}\nLatest tag: ${results[1].message}`,
+  };
 }
 
 type PublishResults = {
@@ -415,7 +461,10 @@ export async function runPublishPhase(
   ];
   for (const [key, result] of infraMapping) {
     if (result.status === "passed" && result.publishRef !== undefined) {
-      infraVersions[key] = formatVersionWithDigest(chartVersion, result.publishRef);
+      infraVersions[key] = formatVersionWithDigest(
+        chartVersion,
+        result.publishRef,
+      );
     }
   }
 

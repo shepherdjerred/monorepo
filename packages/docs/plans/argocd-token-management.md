@@ -45,6 +45,7 @@ kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.pas
 ### Step 3: Add secrets to `buildkite-ci-secrets` 1Password item
 
 Add two new fields:
+
 - `ARGOCD_ADMIN_PASSWORD` = admin password from step 2
 - `OP_SERVICE_ACCOUNT_TOKEN` = service account token from step 1
 
@@ -61,6 +62,7 @@ Note: you'll need `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `TF_VAR_argocd_a
 ### Step 5: Update placeholder in buildkite.ts
 
 Get the UUID:
+
 ```bash
 op run --env-file=.env -- tofu output onepassword_item_id
 ```

@@ -109,9 +109,7 @@
         "Talon is heavily reliant on Shadow Assault to escape a fight. When it is down he's significantly more vulnerable.",
         "Talon has unrivaled roaming ability. Make sure to keep track of his position or force him to stay in lane by pushing aggressively."
       ],
-      "tags": [
-        "Assassin"
-      ],
+      "tags": ["Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -148,105 +146,30 @@
           "description": "Talon stabs the target unit. If they are within melee range, this attack deals critical damage. If they are outside melee range, Talon will leap at his target before stabbing them. Talon refunds some health and cooldown if this ability kills the target.",
           "tooltip": "Talon leaps to a target and deals <physicalDamage>{{ leapdamage }} physical damage</physicalDamage>. If used in melee range, this Ability instead critically strikes for <physicalDamage>{{ criticaldamage }} physical damage</physicalDamage>.<br /><br />If this Ability kills the target, Talon restores <healing>{{ totalhealing }} Health</healing> and refunds {{ cooldownrefund*100 }}% of its Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7.5,
-            7,
-            6.5,
-            6
-          ],
+          "cooldown": [8, 7.5, 7, 6.5, 6],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -264,13 +187,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            575,
-            575,
-            575,
-            575,
-            575
-          ],
+          "range": [575, 575, 575, 575, 575],
           "rangeBurn": "575",
           "image": {
             "full": "TalonQ.png",
@@ -305,95 +222,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            8.5,
-            8,
-            7.5,
-            7
-          ],
+          "cooldown": [9, 8.5, 8, 7.5, 7],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -411,13 +256,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "TalonW.png",
@@ -436,103 +275,27 @@
           "description": "Talon vaults over any terrain or structure, up to a max distance. This ability has a low cooldown, but puts the used terrain on a long cooldown.",
           "tooltip": "Talon vaults over the nearest terrain or structure. Talon cannot dash over the same terrain more than once every {{ wallcd }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Terrain Cooldown"
-            ],
-            "effect": [
-              "{{ wallcd }} -> {{ wallcdNL }}"
-            ]
+            "label": ["Terrain Cooldown"],
+            "effect": ["{{ wallcd }} -> {{ wallcdNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              625,
-              625,
-              625,
-              625,
-              625
-            ],
-            [
-              1250,
-              1250,
-              1250,
-              1250,
-              1250
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              160,
-              135,
-              110,
-              85,
-              60
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [625, 625, 625, 625, 625],
+            [1250, 1250, 1250, 1250, 1250],
+            [2, 2, 2, 2, 2],
+            [160, 135, 110, 85, 60],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -550,13 +313,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725,
-            725,
-            725
-          ],
+          "range": [725, 725, 725, 725, 725],
           "rangeBurn": "725",
           "image": {
             "full": "TalonE.png",
@@ -575,11 +332,7 @@
           "description": "Talon disperses a ring of blades and becomes Invisible while gaining additional Move Speed. When Talon emerges from Invisibility, the blades converge on his location. Each time the blades move, Shadow Assault deals physical damage to enemies hit by at least one blade.",
           "tooltip": "Talon disperses a ring of blades that deal <physicalDamage>{{ damage }} physical damage</physicalDamage>, gains <speed>{{ movespeed*100 }}% Move Speed</speed>, and becomes <keywordStealth>Invisible</keywordStealth> for {{ duration }} seconds. When the <keywordStealth>Invisibility</keywordStealth> ends, the blades return to Talon, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> again.<br /><br />If Talon cancels the <keywordStealth>Invisibility</keywordStealth> with an Attack or with <spellName>Noxian Diplomacy</spellName>, the blades return to the target instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Move Speed", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
@@ -587,71 +340,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            80,
-            60
-          ],
+          "cooldown": [100, 80, 60],
           "cooldownBurn": "100/80/60",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -669,11 +374,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "TalonR.png",

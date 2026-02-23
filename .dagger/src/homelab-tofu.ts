@@ -65,11 +65,19 @@ export async function planDir(
   }
 
   if (argocdAdminPassword) {
-    container = container.withSecretVariable("TF_VAR_argocd_admin_password", argocdAdminPassword);
+    container = container.withSecretVariable(
+      "TF_VAR_argocd_admin_password",
+      argocdAdminPassword,
+    );
   }
 
   if (opServiceAccountToken) {
-    container = container.withSecretVariable("OP_SERVICE_ACCOUNT_TOKEN", opServiceAccountToken);
+    container = container
+      .withSecretVariable("OP_CONNECT_TOKEN", opServiceAccountToken)
+      .withEnvVariable(
+        "TF_VAR_op_connect_url",
+        "http://onepassword-connect.1password.svc.cluster.local:8080",
+      );
   }
 
   container = container.withExec(["tofu", "init"]);

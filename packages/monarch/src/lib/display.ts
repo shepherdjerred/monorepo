@@ -11,9 +11,15 @@ const NO_COLOR = Bun.env["NO_COLOR"] !== undefined;
 function ansi(code: number, text: string): string {
   return NO_COLOR ? text : `\u001B[${String(code)}m${text}\u001B[0m`;
 }
-function green(t: string): string { return ansi(32, t); }
-function yellow(t: string): string { return ansi(33, t); }
-function dim(t: string): string { return ansi(90, t); }
+function green(t: string): string {
+  return ansi(32, t);
+}
+function yellow(t: string): string {
+  return ansi(33, t);
+}
+function dim(t: string): string {
+  return ansi(90, t);
+}
 
 export function displayWeekChanges(
   changes: ProposedChange[],
@@ -32,7 +38,10 @@ export function displayWeekChanges(
     for (const c of recategorizes) {
       let weekKey = "unknown";
       for (const wg of weekGroups) {
-        if (c.transactionDate >= wg.startDate && c.transactionDate <= wg.endDate) {
+        if (
+          c.transactionDate >= wg.startDate &&
+          c.transactionDate <= wg.endDate
+        ) {
           weekKey = wg.weekKey;
           break;
         }
@@ -87,12 +96,9 @@ export function displayAmazonChanges(
 
   if (matchResult !== null) {
     const total =
-      matchResult.matched.length +
-      matchResult.unmatchedTransactions.length;
+      matchResult.matched.length + matchResult.unmatchedTransactions.length;
     const matchRate =
-      total > 0
-        ? ((matchResult.matched.length / total) * 100).toFixed(1)
-        : "0";
+      total > 0 ? ((matchResult.matched.length / total) * 100).toFixed(1) : "0";
     console.log(
       `Match rate: ${String(matchResult.matched.length)}/${String(total)} (${matchRate}%)`,
     );
@@ -134,32 +140,46 @@ export type SummaryOptions = {
 };
 
 export function displaySummary(options: SummaryOptions): void {
-  const { totalTransactions, weekChanges, amazonChanges, venmoChanges, biltChanges, usaaChanges, sclChanges, appleChanges, costcoChanges, matchResult, venmoMatchResult, appleMatchResult, costcoMatchResult } = options;
-  const allChanges = [...weekChanges, ...amazonChanges, ...venmoChanges, ...biltChanges, ...usaaChanges, ...sclChanges, ...appleChanges, ...costcoChanges];
-  const recategorizes = allChanges.filter(
-    (c) => c.type === "recategorize",
-  );
+  const {
+    totalTransactions,
+    weekChanges,
+    amazonChanges,
+    venmoChanges,
+    biltChanges,
+    usaaChanges,
+    sclChanges,
+    appleChanges,
+    costcoChanges,
+    matchResult,
+    venmoMatchResult,
+    appleMatchResult,
+    costcoMatchResult,
+  } = options;
+  const allChanges = [
+    ...weekChanges,
+    ...amazonChanges,
+    ...venmoChanges,
+    ...biltChanges,
+    ...usaaChanges,
+    ...sclChanges,
+    ...appleChanges,
+    ...costcoChanges,
+  ];
+  const recategorizes = allChanges.filter((c) => c.type === "recategorize");
   const splits = allChanges.filter((c) => c.type === "split");
   const flags = allChanges.filter((c) => c.type === "flag");
   const unchanged = totalTransactions - allChanges.length;
 
   console.log("\n=== Summary ===\n");
-  console.log(
-    `  Total transactions analyzed: ${String(totalTransactions)}`,
-  );
-  console.log(
-    `  Already correct:             ${String(unchanged)}`,
-  );
-  console.log(
-    `  Re-categorizations proposed: ${String(recategorizes.length)}`,
-  );
+  console.log(`  Total transactions analyzed: ${String(totalTransactions)}`);
+  console.log(`  Already correct:             ${String(unchanged)}`);
+  console.log(`  Re-categorizations proposed: ${String(recategorizes.length)}`);
   console.log(`  Splits proposed:             ${String(splits.length)}`);
   console.log(`  Flagged for review:          ${String(flags.length)}`);
 
   if (matchResult !== null) {
     const total =
-      matchResult.matched.length +
-      matchResult.unmatchedTransactions.length;
+      matchResult.matched.length + matchResult.unmatchedTransactions.length;
     console.log(
       `  Amazon match rate:           ${String(matchResult.matched.length)}/${String(total)}`,
     );
@@ -178,21 +198,15 @@ export function displaySummary(options: SummaryOptions): void {
   }
 
   if (biltChanges.length > 0) {
-    console.log(
-      `  Bilt splits:                 ${String(biltChanges.length)}`,
-    );
+    console.log(`  Bilt splits:                 ${String(biltChanges.length)}`);
   }
 
   if (usaaChanges.length > 0) {
-    console.log(
-      `  USAA splits:                 ${String(usaaChanges.length)}`,
-    );
+    console.log(`  USAA splits:                 ${String(usaaChanges.length)}`);
   }
 
   if (sclChanges.length > 0) {
-    console.log(
-      `  SCL recategorizations:       ${String(sclChanges.length)}`,
-    );
+    console.log(`  SCL bimonthly splits:        ${String(sclChanges.length)}`);
   }
 
   if (appleMatchResult !== null) {
@@ -239,12 +253,18 @@ export function displaySingleChange(change: ProposedChange): void {
   if (change.type === "split" && change.splits !== undefined) {
     console.log(`  Proposed: ${green("SPLIT")}`);
     for (const s of change.splits) {
-      console.log(`    ├─ ${truncate(s.itemName, 40)} | $${s.amount.toFixed(2)} → ${green(s.categoryName)}`);
+      console.log(
+        `    ├─ ${truncate(s.itemName, 40)} | $${s.amount.toFixed(2)} → ${green(s.categoryName)}`,
+      );
     }
   } else if (change.type === "flag") {
-    console.log(`  Proposed: ${yellow("FLAG")} (${change.reason ?? "ambiguous"})`);
+    console.log(
+      `  Proposed: ${yellow("FLAG")} (${change.reason ?? "ambiguous"})`,
+    );
   } else {
-    console.log(`  Proposed: ${green(change.proposedCategory)} ${dim(`(confidence: ${change.confidence})`)}`);
+    console.log(
+      `  Proposed: ${green(change.proposedCategory)} ${dim(`(confidence: ${change.confidence})`)}`,
+    );
   }
 }
 
@@ -271,11 +291,13 @@ export function displayVenmoChanges(
   console.log("\n=== Venmo Transactions ===\n");
 
   if (matchResult !== null) {
-    const total = matchResult.matched.length + matchResult.unmatchedTransactions.length;
-    const matchRate = total > 0
-      ? ((matchResult.matched.length / total) * 100).toFixed(1)
-      : "0";
-    console.log(`Match rate: ${String(matchResult.matched.length)}/${String(total)} (${matchRate}%)`);
+    const total =
+      matchResult.matched.length + matchResult.unmatchedTransactions.length;
+    const matchRate =
+      total > 0 ? ((matchResult.matched.length / total) * 100).toFixed(1) : "0";
+    console.log(
+      `Match rate: ${String(matchResult.matched.length)}/${String(total)} (${matchRate}%)`,
+    );
     console.log("");
   }
 
@@ -293,7 +315,9 @@ export function displayBiltChanges(
   if (changes.length === 0 && matches.length === 0) return;
 
   console.log("\n=== Bilt Transactions ===\n");
-  console.log(`Matched ${String(matches.length)} Bilt payments to Conservice data\n`);
+  console.log(
+    `Matched ${String(matches.length)} Bilt payments to Conservice data\n`,
+  );
 
   for (const c of changes) {
     if (c.type === "split" && c.splits !== undefined) {
@@ -335,12 +359,24 @@ export function displayUsaaChanges(changes: ProposedChange[]): void {
 export function displaySclChanges(changes: ProposedChange[]): void {
   if (changes.length === 0) return;
 
-  console.log("\n=== Seattle City Light ===\n");
+  console.log("\n=== Seattle City Light (bimonthly split) ===\n");
 
   for (const c of changes) {
-    console.log(
-      `  ${c.transactionDate} | $${Math.abs(c.amount).toFixed(2)} | ${c.merchantName} → ${green(c.proposedCategory)}`,
-    );
+    if (c.type === "split" && c.splits !== undefined) {
+      console.log(
+        `  ${c.transactionDate} | $${Math.abs(c.amount).toFixed(2)} | ${c.merchantName} → SPLIT across months:`,
+      );
+      for (const s of c.splits) {
+        const dateNote = s.date !== undefined && s.date !== "" ? ` (→ ${s.date})` : "";
+        console.log(
+          `    ├─ ${padRight(s.itemName, 30)} | $${s.amount.toFixed(2)} → ${green(s.categoryName)}${dim(dateNote)}`,
+        );
+      }
+    } else {
+      console.log(
+        `  ${c.transactionDate} | $${Math.abs(c.amount).toFixed(2)} | ${c.merchantName} → ${green(c.proposedCategory)}`,
+      );
+    }
   }
 }
 
@@ -358,12 +394,9 @@ export function displayAppleChanges(
 
   if (matchResult !== null) {
     const total =
-      matchResult.matched.length +
-      matchResult.unmatchedTransactions.length;
+      matchResult.matched.length + matchResult.unmatchedTransactions.length;
     const matchRate =
-      total > 0
-        ? ((matchResult.matched.length / total) * 100).toFixed(1)
-        : "0";
+      total > 0 ? ((matchResult.matched.length / total) * 100).toFixed(1) : "0";
     console.log(
       `Match rate: ${String(matchResult.matched.length)}/${String(total)} (${matchRate}%)`,
     );
@@ -402,12 +435,9 @@ export function displayCostcoChanges(
 
   if (matchResult !== null) {
     const total =
-      matchResult.matched.length +
-      matchResult.unmatchedTransactions.length;
+      matchResult.matched.length + matchResult.unmatchedTransactions.length;
     const matchRate =
-      total > 0
-        ? ((matchResult.matched.length / total) * 100).toFixed(1)
-        : "0";
+      total > 0 ? ((matchResult.matched.length / total) * 100).toFixed(1) : "0";
     console.log(
       `Match rate: ${String(matchResult.matched.length)}/${String(total)} (${matchRate}%)`,
     );

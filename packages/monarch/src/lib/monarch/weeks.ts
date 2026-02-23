@@ -53,9 +53,7 @@ export function getWeekBounds(weekKey: string): {
   };
 }
 
-export function groupByWeek(
-  transactions: MonarchTransaction[],
-): WeekGroup[] {
+export function groupByWeek(transactions: MonarchTransaction[]): WeekGroup[] {
   const weekMap = new Map<string, MonarchTransaction[]>();
 
   for (const txn of transactions) {

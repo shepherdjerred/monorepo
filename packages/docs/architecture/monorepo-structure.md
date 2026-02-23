@@ -24,15 +24,15 @@ packages/scout-for-lol/packages/*
 
 ## Key Packages
 
-| Package | Description |
-|---------|-------------|
+| Package         | Description                                          |
+| --------------- | ---------------------------------------------------- |
 | `eslint-config` | Shared ESLint flat config (`recommended()` function) |
-| `homelab` | K8s infrastructure (cdk8s, OpenTofu) |
-| `clauderon` | Rust session manager with web frontend |
-| `birmel` | Discord bot (VoltAgent + Claude AI) |
-| `scout-for-lol` | League of Legends match analysis |
-| `tools` | CLI developer tools |
-| `docs` | This documentation (AI-maintained) |
+| `homelab`       | K8s infrastructure (cdk8s, OpenTofu)                 |
+| `clauderon`     | Rust session manager with web frontend               |
+| `birmel`        | Discord bot (VoltAgent + Claude AI)                  |
+| `scout-for-lol` | League of Legends match analysis                     |
+| `tools`         | CLI developer tools                                  |
+| `docs`          | This documentation (AI-maintained)                   |
 
 ## Verification Commands
 

@@ -31,6 +31,12 @@ import {
   releaseBirmel,
 } from "./birmel.ts";
 import {
+  checkSentinel,
+  buildSentinelImage,
+  smokeTestSentinelImageWithContainer,
+  runSentinelValidation,
+} from "./sentinel.ts";
+import {
   getRustContainer,
   getReleasePleaseContainer,
   runReleasePleaseCommand,
@@ -89,7 +95,11 @@ export class Monorepo {
       return "✓ Compliance check";
     });
     const tier0Mobile = withTiming("Mobile CI", () => this.mobileCi(source));
-    const tier0BirmelImage = buildBirmelImage(source, version ?? "dev", gitSha ?? "dev");
+    const tier0BirmelImage = buildBirmelImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
     const tier0Birmel = withTiming("Birmel validation", () =>
       this.birmelValidation(source, version ?? "dev", gitSha ?? "dev"),
     );
@@ -99,13 +109,46 @@ export class Monorepo {
     const tier0Quality = withTiming("Quality & security checks", () =>
       this.qualityChecks(source),
     );
-    void Promise.allSettled([tier0Compliance, tier0Mobile, tier0Birmel, tier0Packages, tier0Quality]);
+    const tier0SentinelImage = buildSentinelImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
+    const tier0Sentinel = withTiming("Sentinel validation", () =>
+      this.sentinelValidation(source, version ?? "dev", gitSha ?? "dev"),
+    );
+    void Promise.allSettled([
+      tier0Compliance,
+      tier0Mobile,
+      tier0Birmel,
+      tier0Packages,
+      tier0Quality,
+      tier0Sentinel,
+    ]);
 
     // === TIER 1: Critical path — bun install + TypeShare in parallel ===
     const typeSharePromise = withTiming("TypeShare generation", async () => {
-      const rc = getRustContainer(source, undefined, s3AccessKeyId, s3SecretAccessKey)
-        .withExec(["cargo", "install", "typeshare-cli", "--locked", "--force", "--root", "/root/.cargo-tools"])
-        .withExec(["typeshare", ".", "--lang=typescript", "--output-file=web/shared/src/generated/index.ts"]);
+      const rc = getRustContainer(
+        source,
+        undefined,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+      )
+        .withExec([
+          "cargo",
+          "install",
+          "typeshare-cli",
+          "--locked",
+          "--force",
+          "--root",
+          "/root/.cargo-tools",
+        ])
+        .withExec([
+          "typeshare",
+          ".",
+          "--lang=typescript",
+          "--output-file=web/shared/src/generated/index.ts",
+        ]);
       await rc.sync();
       return rc;
     });
@@ -114,24 +157,38 @@ export class Monorepo {
       return setupPrisma(c);
     });
 
-    const [rustContainer, prismaResult] = await Promise.all([typeSharePromise, bunSetupPromise]);
+    const [rustContainer, prismaResult] = await Promise.all([
+      typeSharePromise,
+      bunSetupPromise,
+    ]);
     let container = prismaResult.container;
     outputs.push("✓ Install", ...prismaResult.outputs);
 
     // Web build (needs both TypeShare types and bun workspace)
     outputs.push("\n--- Clauderon TypeScript Type Generation ---");
-    const webResult = await withTiming("Web build", () => buildClauderonWeb(container, rustContainer));
+    const webResult = await withTiming("Web build", () =>
+      buildClauderonWeb(container, rustContainer),
+    );
     container = webResult.container;
     outputs.push(...webResult.outputs);
 
     // === TIER 2: Clauderon Rust CI + monorepo build in parallel ===
     const [clauderonResult, buildResult] = await Promise.allSettled([
       withTiming("Clauderon Rust CI", () =>
-        this.clauderonCi(source, webResult.frontendDist, s3AccessKeyId, s3SecretAccessKey),
+        this.clauderonCi(
+          source,
+          webResult.frontendDist,
+          s3AccessKeyId,
+          s3SecretAccessKey,
+        ),
       ),
       withTiming("Monorepo build", async () => {
-        const webringBuilt = container.withWorkdir("/workspace/packages/webring").withExec(["bun", "run", "build"]);
-        const webringDist = webringBuilt.directory("/workspace/packages/webring/dist");
+        const webringBuilt = container
+          .withWorkdir("/workspace/packages/webring")
+          .withExec(["bun", "run", "build"]);
+        const webringDist = webringBuilt.directory(
+          "/workspace/packages/webring/dist",
+        );
         const c = container
           .withMountedDirectory("/workspace/packages/webring/dist", webringDist)
           .withWorkdir("/workspace")
@@ -153,6 +210,7 @@ export class Monorepo {
         birmel: tier0Birmel,
         packages: tier0Packages,
         quality: tier0Quality,
+        sentinel: tier0Sentinel,
       }),
     ]);
     handleTier3Results(knipResult, tier0Result, outputs);
@@ -161,12 +219,29 @@ export class Monorepo {
     if (isRelease && githubToken !== undefined && npmToken !== undefined) {
       outputs.push("\n--- Release Workflow ---");
       const releaseOptions: ReleasePhaseOptions = {
-        source, container, githubToken, npmToken, version, gitSha,
-        registryUsername, registryPassword, s3AccessKeyId, s3SecretAccessKey,
-        argocdToken, chartMuseumUsername, chartMuseumPassword,
-        cloudflareApiToken, cloudflareAccountId, hassBaseUrl, hassToken,
-        tofuGithubToken, commitBackToken, argocdAdminPassword, opServiceAccountToken,
+        source,
+        container,
+        githubToken,
+        npmToken,
+        version,
+        gitSha,
+        registryUsername,
+        registryPassword,
+        s3AccessKeyId,
+        s3SecretAccessKey,
+        argocdToken,
+        chartMuseumUsername,
+        chartMuseumPassword,
+        cloudflareApiToken,
+        cloudflareAccountId,
+        hassBaseUrl,
+        hassToken,
+        tofuGithubToken,
+        commitBackToken,
+        argocdAdminPassword,
+        opServiceAccountToken,
         birmelImage: tier0BirmelImage,
+        sentinelImage: tier0SentinelImage,
         releasePleaseRunFn: runReleasePleaseCommand,
         getReleasePleaseContainerFn: getReleasePleaseContainer,
         multiplexerBuildFn: (s, k, sk) => this.multiplexerBuild(s, k, sk),
@@ -179,8 +254,12 @@ export class Monorepo {
       outputs.push(...releaseResult.outputs);
       if (releaseResult.errors.length > 0) {
         outputs.push(`\n--- Release Phase Failed ---`);
-        outputs.push(`${String(releaseResult.errors.length)} error(s) occurred during release:`);
-        releaseResult.errors.forEach((err, i) => outputs.push(`  ${String(i + 1)}. ${err}`));
+        outputs.push(
+          `${String(releaseResult.errors.length)} error(s) occurred during release:`,
+        );
+        releaseResult.errors.forEach((err, i) =>
+          outputs.push(`  ${String(i + 1)}. ${err}`),
+        );
         throw new Error(
           `Release phase failed with ${String(releaseResult.errors.length)} error(s):\n${releaseResult.errors.join("\n")}`,
         );
@@ -190,7 +269,11 @@ export class Monorepo {
   }
 
   @func()
-  async packageValidation(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+  async packageValidation(
+    source: Directory,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+  ): Promise<string> {
     const result = await runPackageValidation(source, hassBaseUrl, hassToken);
     const outputs = [...result.outputs];
     if (result.errors.length > 0) {
@@ -207,7 +290,11 @@ export class Monorepo {
   }
 
   @func()
-  async birmelValidation(source: Directory, version: string, gitSha: string): Promise<string> {
+  async birmelValidation(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
     return runBirmelValidation(source, version, gitSha);
   }
 
@@ -222,24 +309,78 @@ export class Monorepo {
   }
 
   @func()
-  async birmelSmokeTest(source: Directory, version: string, gitSha: string): Promise<string> {
-    return smokeTestBirmelImageWithContainer(buildBirmelImage(source, version, gitSha));
+  async birmelSmokeTest(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
+    return smokeTestBirmelImageWithContainer(
+      buildBirmelImage(source, version, gitSha),
+    );
   }
 
   @func()
   async birmelPublish(
-    source: Directory, version: string, gitSha: string,
-    registryUsername: string, registryPassword: Secret,
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
   ): Promise<string> {
-    return publishBirmel({ source, version, gitSha, registryUsername, registryPassword });
+    return publishBirmel({
+      source,
+      version,
+      gitSha,
+      registryUsername,
+      registryPassword,
+    });
   }
 
   @func()
   async birmelRelease(
-    source: Directory, version: string, gitSha: string,
-    registryUsername: string, registryPassword: Secret,
+    source: Directory,
+    version: string,
+    gitSha: string,
+    registryUsername: string,
+    registryPassword: Secret,
   ): Promise<string> {
-    return releaseBirmel({ source, version, gitSha, registryUsername, registryPassword });
+    return releaseBirmel({
+      source,
+      version,
+      gitSha,
+      registryUsername,
+      registryPassword,
+    });
+  }
+
+  @func()
+  async sentinelValidation(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
+    return runSentinelValidation(source, version, gitSha);
+  }
+
+  @func()
+  async sentinelCi(source: Directory): Promise<string> {
+    return checkSentinel(source);
+  }
+
+  @func()
+  sentinelBuild(source: Directory, version: string, gitSha: string): Container {
+    return buildSentinelImage(source, version, gitSha);
+  }
+
+  @func()
+  async sentinelSmokeTest(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
+    return smokeTestSentinelImageWithContainer(
+      buildSentinelImage(source, version, gitSha),
+    );
   }
 
   @func()
@@ -249,24 +390,42 @@ export class Monorepo {
 
   @func()
   async clauderonCi(
-    source: Directory, frontendDist?: Directory,
-    s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
+    source: Directory,
+    frontendDist?: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
-    return runClauderonCi(source, frontendDist, s3AccessKeyId, s3SecretAccessKey);
+    return runClauderonCi(
+      source,
+      frontendDist,
+      s3AccessKeyId,
+      s3SecretAccessKey,
+    );
   }
 
   @func()
-  multiplexerBuild(source: Directory, s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret): Directory {
+  multiplexerBuild(
+    source: Directory,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
+  ): Directory {
     return buildMultiplexerBinaries(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
   async multiplexerRelease(
-    source: Directory, version: string, githubToken: Secret,
-    s3AccessKeyId?: Secret, s3SecretAccessKey?: Secret,
+    source: Directory,
+    version: string,
+    githubToken: Secret,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     return releaseMultiplexer({
-      source, version, githubToken, s3AccessKeyId, s3SecretAccessKey,
+      source,
+      version,
+      githubToken,
+      s3AccessKeyId,
+      s3SecretAccessKey,
       clauderonCiFn: (s, fd, k, sk) => this.clauderonCi(s, fd, k, sk),
     });
   }
@@ -282,7 +441,11 @@ export class Monorepo {
   }
 
   @func()
-  async muxSiteDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
+  async muxSiteDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
     return deployMuxSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
@@ -297,44 +460,86 @@ export class Monorepo {
   }
 
   @func()
-  async resumeDeploy(source: Directory, s3AccessKeyId: Secret, s3SecretAccessKey: Secret): Promise<string> {
+  async resumeDeploy(
+    source: Directory,
+    s3AccessKeyId: Secret,
+    s3SecretAccessKey: Secret,
+  ): Promise<string> {
     return deployResumeSite(source, s3AccessKeyId, s3SecretAccessKey);
   }
 
   @func()
   async codeReview(
-    source: Directory, githubToken: Secret, claudeOauthToken: Secret,
-    prNumber: number, baseBranch: string, headSha: string,
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    baseBranch: string,
+    headSha: string,
   ): Promise<string> {
-    return reviewPr({ source, githubToken, claudeOauthToken, prNumber, baseBranch, headSha });
+    return reviewPr({
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      baseBranch,
+      headSha,
+    });
   }
 
   @func()
   async codeReviewInteractive(
-    source: Directory, githubToken: Secret, claudeOauthToken: Secret,
-    prNumber: number, commentBody: Secret, commentPath?: string,
-    commentLine?: number, commentDiffHunk?: string,
+    source: Directory,
+    githubToken: Secret,
+    claudeOauthToken: Secret,
+    prNumber: number,
+    commentBody: Secret,
+    commentPath?: string,
+    commentLine?: number,
+    commentDiffHunk?: string,
   ): Promise<string> {
     return handleInteractiveFromSecret({
-      source, githubToken, claudeOauthToken, prNumber, commentBody,
-      commentPath, commentLine, commentDiffHunk,
+      source,
+      githubToken,
+      claudeOauthToken,
+      prNumber,
+      commentBody,
+      commentPath,
+      commentLine,
+      commentDiffHunk,
     });
   }
 
   @func()
   async homelabCi(
-    source: Directory, argocdToken: Secret, ghcrUsername: string,
-    ghcrPassword: Secret, chartVersion: string, chartMuseumUsername: string,
-    chartMuseumPassword: Secret, cloudflareApiToken: Secret,
-    cloudflareAccountId: Secret, awsAccessKeyId: Secret,
-    awsSecretAccessKey: Secret, hassBaseUrl?: Secret,
-    hassToken?: Secret, tofuGithubToken?: Secret,
-    argocdAdminPassword?: Secret, opServiceAccountToken?: Secret,
+    source: Directory,
+    argocdToken: Secret,
+    ghcrUsername: string,
+    ghcrPassword: Secret,
+    chartVersion: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    cloudflareApiToken: Secret,
+    cloudflareAccountId: Secret,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+    tofuGithubToken?: Secret,
+    argocdAdminPassword?: Secret,
+    opServiceAccountToken?: Secret,
   ): Promise<string> {
     const result = await ciHomelab(source, HomelabStage.Prod, {
-      argocdToken, ghcrUsername, ghcrPassword, chartVersion,
-      chartMuseumUsername, chartMuseumPassword, cloudflareApiToken,
-      cloudflareAccountId, awsAccessKeyId, awsSecretAccessKey,
+      argocdToken,
+      ghcrUsername,
+      ghcrPassword,
+      chartVersion,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      cloudflareApiToken,
+      cloudflareAccountId,
+      awsAccessKeyId,
+      awsSecretAccessKey,
       ...(hassBaseUrl === undefined ? {} : { hassBaseUrl }),
       ...(hassToken === undefined ? {} : { hassToken }),
       ...(tofuGithubToken === undefined ? {} : { tofuGithubToken }),
@@ -345,7 +550,11 @@ export class Monorepo {
   }
 
   @func()
-  async homelabCheckAll(source: Directory, hassBaseUrl?: Secret, hassToken?: Secret): Promise<string> {
+  async homelabCheckAll(
+    source: Directory,
+    hassBaseUrl?: Secret,
+    hassToken?: Secret,
+  ): Promise<string> {
     return checkHomelab(source, hassBaseUrl, hassToken);
   }
 
@@ -366,13 +575,24 @@ export class Monorepo {
 
   @func()
   async homelabTestRenovateRegex(source: Directory): Promise<string> {
-    return homelabTestRenovateRegexFn(source.directory("packages/homelab"), source);
+    return homelabTestRenovateRegexFn(
+      source.directory("packages/homelab"),
+      source,
+    );
   }
 
   @func()
   async updateReadmes(
-    source: Directory, githubToken: Secret, openaiApiKey: Secret, baseBranch = "main",
+    source: Directory,
+    githubToken: Secret,
+    openaiApiKey: Secret,
+    baseBranch = "main",
   ): Promise<string> {
-    return await updateReadmesFn({ source, githubToken, openaiApiKey, baseBranch });
+    return await updateReadmesFn({
+      source,
+      githubToken,
+      openaiApiKey,
+      baseBranch,
+    });
   }
 }

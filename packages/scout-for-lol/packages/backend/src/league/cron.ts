@@ -13,10 +13,14 @@ import {
   getFlag,
   MY_SERVER,
 } from "@scout-for-lol/backend/configuration/flags.ts";
+import { runStartupRecovery } from "@scout-for-lol/backend/league/tasks/recovery/startup-recovery.ts";
 
 const logger = createLogger("league-cron");
 
-export function startCronJobs() {
+export async function startCronJobs() {
+  logger.info("⏰ Running startup recovery before cron initialization");
+  await runStartupRecovery();
+
   logger.info("⏰ Initializing cron job scheduler");
 
   // check match history every minute

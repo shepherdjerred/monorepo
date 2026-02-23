@@ -230,6 +230,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 ## 27 learning projects
 
 ### [leetcode](https://github.com/shepherdjerred/monorepo/tree/main/practice/leetcode) (2026-02-21)
@@ -242,11 +243,11 @@ This monorepo centralizes the author’s active projects, learning experiments, 
 
 ### [Exercism](https://github.com/shepherdjerred/monorepo/tree/main/practice/Exercism) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [langchain](https://github.com/shepherdjerred/monorepo/tree/main/practice/langchain) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [posit-academy](https://github.com/shepherdjerred/monorepo/tree/main/practice/posit-academy) (2026-02-21)
 
@@ -310,7 +311,7 @@ This Rust project builds a 2D space shooter where player and enemy ships move an
 
 ### [hson](https://github.com/shepherdjerred/monorepo/tree/main/practice/hson) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [bevy-experiment](https://github.com/shepherdjerred/monorepo/tree/main/practice/bevy-experiment) (2026-02-21)
 

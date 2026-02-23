@@ -119,10 +119,7 @@
         "If you're a physical damage character stay behind your allies when fighting Malphite. Ground Slam can significantly reduce your damage output.",
         "Malphite is one of a couple tanks who are capable of jungling. Watch out if he gets Smite."
       ],
-      "tags": [
-        "Tank",
-        "Mage"
-      ],
+      "tags": ["Tank", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -159,11 +156,7 @@
           "description": "Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing Move Speed for 3 seconds.",
           "tooltip": "Malphite launches a shard of earth at an enemy, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> them by {{ e2 }}% for {{ slowduration }} seconds. Malphite also steals the amount <status>Slowed</status>, gaining it as <speed>Move Speed</speed> for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "@AbilityResourceName@ Cost",
-              "Damage",
-              "Slow"
-            ],
+            "label": ["@AbilityResourceName@ Cost", "Damage", "Slow"],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -171,95 +164,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            8,
-            8,
-            8,
-            8
-          ],
+          "cooldown": [8, 8, 8, 8, 8],
           "cooldownBurn": "8",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              120,
-              170,
-              220,
-              270
-            ],
-            [
-              20,
-              25,
-              30,
-              35,
-              40
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 120, 170, 220, 270],
+            [20, 25, 30, 35, 40],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -277,13 +198,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            625,
-            625,
-            625,
-            625,
-            625
-          ],
+          "range": [625, 625, 625, 625, 625],
           "rangeBurn": "625",
           "image": {
             "full": "SeismicShard.png",
@@ -318,95 +233,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -424,13 +267,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "Obduracy.png",
@@ -461,95 +298,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -567,13 +332,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "Landslide.png",
@@ -592,81 +351,30 @@
           "description": "Malphite launches himself to a location at high speed, damaging enemies and knocking them into the air.",
           "tooltip": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite <status>Knocks Up</status> for {{ knockupduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage"
-            ],
+            "label": ["Cooldown", "Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e2 }} -> {{ e2NL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            130,
-            115,
-            100
-          ],
+          "cooldown": [130, 115, 100],
           "cooldownBurn": "130/115/100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1.5,
-              1.75,
-              2
-            ],
-            [
-              200,
-              300,
-              400
-            ],
-            [
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [1.5, 1.75, 2],
+            [200, 300, 400],
+            [1.5, 1.5, 1.5],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -684,11 +392,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "UFSlash.png",

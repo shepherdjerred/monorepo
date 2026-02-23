@@ -1,0 +1,67 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Job {
+  id               String    @id @default(cuid())
+  agent            String
+  prompt           String
+  priority         Int       @default(2) // 0=critical,1=high,2=normal,3=low
+  status           String    @default("pending")
+  triggerType      String
+  triggerSource    String
+  triggerMetadata  String    @default("{}")
+  deduplicationKey String?   @unique
+  deadlineAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  claimedAt        DateTime?
+  completedAt      DateTime?
+  result           String?
+  retryCount       Int       @default(0)
+  maxRetries       Int       @default(3)
+
+  @@index([status, priority, createdAt])
+  @@index([agent])
+}
+
+model ApprovalRequest {
+  id        String    @id @default(cuid())
+  jobId     String
+  agent     String
+  toolName  String
+  toolInput String
+  status    String    @default("pending")
+  decidedBy String?
+  reason    String?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  decidedAt DateTime?
+
+  @@index([status])
+  @@index([jobId])
+}
+
+model AgentSession {
+  id           String    @id @default(cuid())
+  agent        String
+  jobId        String
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  turnsUsed    Int       @default(0)
+  status       String    @default("running")
+  error        String?
+  inputTokens  Int       @default(0)
+  outputTokens Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([agent])
+  @@index([jobId])
+}

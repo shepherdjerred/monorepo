@@ -3,7 +3,9 @@ import { matchAppleTransactions } from "./matcher.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { AppleReceipt } from "./types.ts";
 
-function makeTxn(overrides: Partial<MonarchTransaction> = {}): MonarchTransaction {
+function makeTxn(
+  overrides: Partial<MonarchTransaction> = {},
+): MonarchTransaction {
   return {
     id: "txn-1",
     amount: -14.32,

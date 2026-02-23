@@ -33,9 +33,15 @@ export const MonarchTransactionSchema = z.object({
   date: z.string(),
   hideFromReports: z.boolean(),
   plaidName: z.string(),
-  notes: z.string().nullable().transform((v) => v ?? ""),
+  notes: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
   isRecurring: z.boolean(),
-  reviewStatus: z.string().nullable().transform((v) => v ?? ""),
+  reviewStatus: z
+    .string()
+    .nullable()
+    .transform((v) => v ?? ""),
   needsReview: z.boolean(),
   isSplitTransaction: z.boolean(),
   createdAt: z.string(),
@@ -54,4 +60,3 @@ export const MonarchTransactionSchema = z.object({
 });
 
 export type MonarchTransaction = z.infer<typeof MonarchTransactionSchema>;
-

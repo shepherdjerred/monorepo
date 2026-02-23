@@ -20,5 +20,8 @@ provider "argocd" {
 }
 
 provider "onepassword" {
-  # Authenticated via OP_SERVICE_ACCOUNT_TOKEN env var
+  # Authenticated via OP_CONNECT_TOKEN env var.
+  # In CI (Dagger): uses in-cluster 1Password Connect server.
+  # Locally: requires kubectl port-forward svc/onepassword-connect -n 1password 8080:8080
+  url = var.op_connect_url
 }

@@ -75,11 +75,7 @@ async function loadCache(): Promise<ConserviceCharge[] | null> {
 async function saveCache(charges: ConserviceCharge[]): Promise<void> {
   await Bun.write(
     CACHE_FILE,
-    JSON.stringify(
-      { cachedAt: new Date().toISOString(), charges },
-      null,
-      2,
-    ),
+    JSON.stringify({ cachedAt: new Date().toISOString(), charges }, null, 2),
   );
   log.info(`Cached ${String(charges.length)} Conservice charges`);
 }

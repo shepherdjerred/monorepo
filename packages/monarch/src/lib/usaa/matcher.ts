@@ -1,6 +1,5 @@
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { UsaaStatement, UsaaMatch } from "./types.ts";
-import { USAA_STATEMENTS } from "./data.ts";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -16,6 +15,7 @@ export type UsaaMatchResult = {
 
 export function matchUsaaTransactions(
   monarchTxns: MonarchTransaction[],
+  statements: UsaaStatement[],
 ): UsaaMatchResult {
   const matched: UsaaMatch[] = [];
   const matchedTxnIds = new Set<string>();
@@ -27,11 +27,12 @@ export function matchUsaaTransactions(
     const txnAmount = Math.abs(txn.amount);
     const txnDate = new Date(txn.date);
 
-    for (const statement of USAA_STATEMENTS) {
+    for (const statement of statements) {
       if (usedStatements.has(statement.draftDate)) continue;
 
       const draftDate = new Date(statement.draftDate);
-      const daysDiff = Math.abs(txnDate.getTime() - draftDate.getTime()) / MS_PER_DAY;
+      const daysDiff =
+        Math.abs(txnDate.getTime() - draftDate.getTime()) / MS_PER_DAY;
 
       if (daysDiff > 3) continue;
       if (Math.abs(txnAmount - statement.totalAmount) > 0.02) continue;
@@ -48,7 +49,9 @@ export function matchUsaaTransactions(
     }
   }
 
-  const unmatchedTransactions = eligible.filter((t) => !matchedTxnIds.has(t.id));
+  const unmatchedTransactions = eligible.filter(
+    (t) => !matchedTxnIds.has(t.id),
+  );
   return { matched, unmatchedTransactions };
 }
 

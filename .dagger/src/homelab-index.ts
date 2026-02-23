@@ -273,7 +273,10 @@ export async function homelabTestRenovateRegex(
     .withFile("package.json", homelabSource.file("package.json"))
     .withFile("bun.lock", homelabSource.file("bun.lock"))
     // Path must match patchedDependencies in package.json (monorepo-root-relative)
-    .withDirectory("packages/homelab/patches", homelabSource.directory("patches"))
+    .withDirectory(
+      "packages/homelab/patches",
+      homelabSource.directory("patches"),
+    )
     .withDirectory("src/ha", homelabSource.directory("src/ha"), {
       exclude: ["node_modules"],
     })
@@ -295,7 +298,10 @@ export async function homelabTestRenovateRegex(
       dag.cacheVolume("bun-cache-default"),
     )
     .withExec(["bun", "install", "--frozen-lockfile"])
-    .withFile("renovate.json", (monoRepoSource ?? homelabSource).file("renovate.json"))
+    .withFile(
+      "renovate.json",
+      (monoRepoSource ?? homelabSource).file("renovate.json"),
+    )
     .withFile(
       "src/cdk8s/src/versions.ts",
       homelabSource.file("src/cdk8s/src/versions.ts"),

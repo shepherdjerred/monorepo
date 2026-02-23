@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sentinel
+description: Sentinel autonomous agent system
+type: application
+version: "$version"
+appVersion: "$appVersion"

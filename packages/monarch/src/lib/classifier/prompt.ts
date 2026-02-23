@@ -18,7 +18,8 @@ Rules:
 - Use only category IDs from the provided list
 - Only classify transactions marked [CLASSIFY] — do NOT re-classify [RESOLVED] or [CONTEXT] transactions
 - Use temporal context: transactions on the same day or nearby days can inform each other (e.g., a Venmo payment near a restaurant charge is likely for that meal)
-- If you are unsure or cannot confidently determine the category, use the "Uncategorized" category
+- If you have a web search tool available, use it to look up merchants you don't recognize before classifying. This is especially important for unfamiliar merchant names — search to find out what they sell or what industry they are in.
+- If you are unsure or cannot confidently determine the category even after searching, use the "Uncategorized" category
 - Do NOT guess a category when you have low confidence — use Uncategorized instead`;
 
   if (userHints === "") return base;
@@ -34,13 +35,18 @@ export function buildCategoryList(categories: MonarchCategory[]): string {
     .join("\n");
 }
 
+type FormatTxnContext = {
+  resolvedMap: Map<string, ResolvedTransaction>;
+  previousResults: Map<string, string>;
+  isCurrentWeek: boolean;
+  classifyIndex: number | undefined;
+};
+
 function formatWeekTransaction(
   txn: MonarchTransaction,
-  resolvedMap: Map<string, ResolvedTransaction>,
-  previousResults: Map<string, string>,
-  isCurrentWeek: boolean,
-  classifyIndex: number | undefined,
+  ctx: FormatTxnContext,
 ): string {
+  const { resolvedMap, previousResults, isCurrentWeek, classifyIndex } = ctx;
   const sign = txn.amount < 0 ? "-" : "+";
   const amount = `${sign}$${Math.abs(txn.amount).toFixed(2)}`;
   const merchant = txn.merchant.name;
@@ -74,14 +80,29 @@ type WeekSectionOptions = {
   classifyIndexStart: number;
 };
 
-function formatWeekSection(opts: WeekSectionOptions): { text: string; nextIndex: number } {
-  const { week, label, resolvedMap, previousResults, isCurrentWeek, classifyIndexStart } = opts;
+function formatWeekSection(opts: WeekSectionOptions): {
+  text: string;
+  nextIndex: number;
+} {
+  const {
+    week,
+    label,
+    resolvedMap,
+    previousResults,
+    isCurrentWeek,
+    classifyIndexStart,
+  } = opts;
   const suffix = isCurrentWeek ? "" : " [CONTEXT]";
   const header = `--- ${label} (${week.startDate} to ${week.endDate})${suffix} ---`;
   let idx = classifyIndexStart;
   const lines = week.transactions.map((txn) => {
     const isClassifiable = isCurrentWeek && !resolvedMap.has(txn.id);
-    const line = formatWeekTransaction(txn, resolvedMap, previousResults, isCurrentWeek, isClassifiable ? idx : undefined);
+    const line = formatWeekTransaction(txn, {
+      resolvedMap,
+      previousResults,
+      isCurrentWeek,
+      classifyIndex: isClassifiable ? idx : undefined,
+    });
     if (isClassifiable) idx += 1;
     return line;
   });
@@ -190,10 +211,12 @@ export function buildVenmoClassificationPrompt(
   const categoryList = buildCategoryList(categories);
   const matchList = matches
     .map((m) => {
-      const direction = m.venmoTransaction.amount > 0 ? "received from" : "sent to";
-      const other = m.venmoTransaction.amount > 0
-        ? m.venmoTransaction.from
-        : m.venmoTransaction.to;
+      const direction =
+        m.venmoTransaction.amount > 0 ? "received from" : "sent to";
+      const other =
+        m.venmoTransaction.amount > 0
+          ? m.venmoTransaction.from
+          : m.venmoTransaction.to;
       const date = m.venmoTransaction.datetime.split("T")[0] ?? "";
       return `  - $${Math.abs(m.venmoTransaction.amount).toFixed(2)} ${direction} ${other} | Note: "${m.venmoTransaction.note}" | Date: ${date}`;
     })

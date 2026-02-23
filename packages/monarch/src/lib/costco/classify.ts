@@ -1,10 +1,17 @@
 import type { MonarchCategory, MonarchTransaction } from "../monarch/types.ts";
-import type { ProposedChange, AmazonOrderInput, AmazonBatchOrderClassification } from "../classifier/types.ts";
+import type {
+  ProposedChange,
+  AmazonOrderInput,
+  AmazonBatchOrderClassification,
+} from "../classifier/types.ts";
 import type { CostcoMatchResult } from "./matcher.ts";
 import { loadCostcoOrders } from "./scraper.ts";
 import { matchCostcoTransactions } from "./matcher.ts";
 import { classifyAmazonBatch, computeSplits } from "../classifier/claude.ts";
-import { getCachedClassification, cacheClassifications } from "../classifier/cache.ts";
+import {
+  getCachedClassification,
+  cacheClassifications,
+} from "../classifier/cache.ts";
 import { log } from "../logger.ts";
 
 // Reuse the shared helper from index.ts via inline logic
@@ -71,7 +78,10 @@ export async function classifyCostco(
   );
 
   const changes: ProposedChange[] = [];
-  const uncached: { match: (typeof matchResult.matched)[number]; index: number }[] = [];
+  const uncached: {
+    match: (typeof matchResult.matched)[number];
+    index: number;
+  }[] = [];
 
   for (let i = 0; i < matchResult.matched.length; i++) {
     const match = matchResult.matched[i];
@@ -79,14 +89,18 @@ export async function classifyCostco(
 
     const cached = await getCachedClassification(match.order.orderId);
     if (cached) {
-      changes.push(applyClassification(match.transaction, { orderIndex: i, ...cached }));
+      changes.push(
+        applyClassification(match.transaction, { orderIndex: i, ...cached }),
+      );
     } else {
       uncached.push({ match, index: i });
     }
   }
 
   if (uncached.length < matchResult.matched.length) {
-    log.info(`${String(matchResult.matched.length - uncached.length)} orders from cache, ${String(uncached.length)} need classification`);
+    log.info(
+      `${String(matchResult.matched.length - uncached.length)} orders from cache, ${String(uncached.length)} need classification`,
+    );
   }
 
   const batchSize = 20;
@@ -104,13 +118,18 @@ export async function classifyCostco(
 
     const result = await classifyAmazonBatch(categories, orderInputs);
 
-    const toCache: { orderId: string; classification: AmazonBatchOrderClassification }[] = [];
+    const toCache: {
+      orderId: string;
+      classification: AmazonBatchOrderClassification;
+    }[] = [];
 
     for (const classification of result.orders) {
       const entry = batch[classification.orderIndex];
       if (!entry) continue;
 
-      changes.push(applyClassification(entry.match.transaction, classification));
+      changes.push(
+        applyClassification(entry.match.transaction, classification),
+      );
       toCache.push({ orderId: entry.match.order.orderId, classification });
     }
 

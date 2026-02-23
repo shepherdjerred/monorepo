@@ -11,6 +11,7 @@ One Dagger engine pod (K8s) means all `dagger call` must be serialized. Sequenti
 `complianceCheck` in `index-infra.ts:279` is a plain function (not a `@func()`), so it can't be called via `dagger call`. Add a `@func()` wrapper to the `Monorepo` class.
 
 **File:** `.dagger/src/index.ts`
+
 ```ts
 @func()
 async complianceCheck(source: Directory): Promise<string> {
@@ -24,6 +25,7 @@ async complianceCheck(source: Directory): Promise<string> {
 **Create:** `.buildkite/scripts/setup-dagger.sh`
 
 Extract the ~30 lines duplicated across `ci.sh`, `code-review.sh`, `code-review-interactive.sh`, `update-readmes.sh`:
+
 - Install system deps (curl, jq)
 - Install kubectl
 - Install Dagger CLI (version from `dagger.json`)
@@ -34,6 +36,7 @@ Extract the ~30 lines duplicated across `ci.sh`, `code-review.sh`, `code-review-
 ## Step 3: Create generic dagger wrapper
 
 **Create:** `.buildkite/scripts/run-dagger.sh`
+
 - Sources `setup-dagger.sh`
 - Runs `dagger -v call "$@"`
 - No retry (Buildkite `retry.automatic` handles it)
@@ -43,17 +46,20 @@ Extract the ~30 lines duplicated across `ci.sh`, `code-review.sh`, `code-review-
 **Create:** `.buildkite/generate-pipeline.ts`
 
 A bun script that:
+
 1. Detects versions-only changes (Renovate fast path) via `git diff`
 2. Builds a pipeline object with typed step definitions
 3. Outputs JSON to stdout (Buildkite's `pipeline upload` accepts JSON)
 
 The script defines step configs for:
+
 - 5 Tier 0 checks (compliance, quality, mobile, birmel, packages)
 - Main CI step (`ci-main.sh`, depends_on all 5 checks)
 - Code review (PR only, soft_fail, independent)
 - Update READMEs (main only, depends_on CI)
 
 Every dagger-calling step gets:
+
 - `concurrency: 1` + `concurrency_group: "dagger"` (serializes within AND across builds)
 - `retry.automatic` for exit codes -1 and 255
 - The kubernetes plugin with `buildkite-ci-secrets`
@@ -65,6 +71,7 @@ Each check step's `command` is: `.buildkite/scripts/run-dagger.sh <function-name
 ## Step 5: Create main CI step script
 
 **Create:** `.buildkite/scripts/ci-main.sh`
+
 - Sources `setup-dagger.sh`
 - Builds args array with branch-specific secrets (from current `ci.sh`)
 - Runs `dagger -v call ci "${ARGS[@]}"`
@@ -74,6 +81,7 @@ Each check step's `command` is: `.buildkite/scripts/run-dagger.sh <function-name
 **Modify:** `.buildkite/pipeline.yml`
 
 Replace all steps with a single generator:
+
 ```yaml
 steps:
   - label: ":pipeline: Generate Pipeline"

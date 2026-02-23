@@ -33,7 +33,8 @@ export function matchSclTransactions(
 
       // Match against due date (when payment is typically made) with wider window
       const dueDate = new Date(bill.dueDate);
-      const daysDiff = Math.abs(txnDate.getTime() - dueDate.getTime()) / MS_PER_DAY;
+      const daysDiff =
+        Math.abs(txnDate.getTime() - dueDate.getTime()) / MS_PER_DAY;
 
       if (daysDiff > 5) continue;
       if (Math.abs(txnAmount - bill.billAmount) > 0.02) continue;
@@ -45,7 +46,9 @@ export function matchSclTransactions(
     }
   }
 
-  const unmatchedTransactions = eligible.filter((t) => !matchedTxnIds.has(t.id));
+  const unmatchedTransactions = eligible.filter(
+    (t) => !matchedTxnIds.has(t.id),
+  );
   const unmatchedBills = bills.filter((b) => !usedBillDates.has(b.billDate));
   return { matched, unmatchedTransactions, unmatchedBills };
 }

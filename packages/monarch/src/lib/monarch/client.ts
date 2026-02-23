@@ -8,12 +8,8 @@ import {
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
-import type {
-  MonarchCategory,
-} from "./types.ts";
-import {
-  MonarchTransactionSchema,
-} from "./types.ts";
+import type { MonarchCategory } from "./types.ts";
+import { MonarchTransactionSchema } from "./types.ts";
 import type { MonarchTransaction } from "./types.ts";
 import { log } from "../logger.ts";
 
@@ -50,7 +46,9 @@ async function loadTxnCache(
     return null;
   }
 
-  log.info(`Loaded ${String(parsed.transactions.length)} transactions from cache (${String(Math.round(age / 60_000))}m old)`);
+  log.info(
+    `Loaded ${String(parsed.transactions.length)} transactions from cache (${String(Math.round(age / 60_000))}m old)`,
+  );
   return parsed.transactions;
 }
 
@@ -62,7 +60,11 @@ async function saveTxnCache(
   const cachePath = txnCachePath(startDate, endDate);
   await Bun.write(
     cachePath,
-    JSON.stringify({ cachedAt: new Date().toISOString(), transactions }, null, 2),
+    JSON.stringify(
+      { cachedAt: new Date().toISOString(), transactions },
+      null,
+      2,
+    ),
   );
   log.info(`Cached ${String(transactions.length)} transactions`);
 }
@@ -120,7 +122,9 @@ async function withRetry<T>(
     } catch (error: unknown) {
       if (attempt === maxRetries) throw error;
       const delay = 1000 * 2 ** attempt + Math.floor(Math.random() * 500);
-      log.info(`${label} failed (attempt ${String(attempt + 1)}/${String(maxRetries)}), retrying in ${String(delay)}ms...`);
+      log.info(
+        `${label} failed (attempt ${String(attempt + 1)}/${String(maxRetries)}), retrying in ${String(delay)}ms...`,
+      );
       await sleep(delay);
     }
   }
@@ -136,7 +140,9 @@ export async function applyCategory(
   );
   const actualCategoryId = result.updateTransaction.transaction.category.id;
   if (actualCategoryId !== categoryId) {
-    log.error(`Category update may have failed for ${transactionId}: expected ${categoryId}, got ${actualCategoryId}`);
+    log.error(
+      `Category update may have failed for ${transactionId}: expected ${categoryId}, got ${actualCategoryId}`,
+    );
   }
   await sleep(500);
 }
@@ -155,6 +161,7 @@ export async function applySplits(
     amount: number;
     categoryId: string;
     notes?: string;
+    date?: string;
   }[],
 ): Promise<void> {
   const result = await withRetry(`applySplits(${transactionId})`, () =>
@@ -163,9 +170,28 @@ export async function applySplits(
   const rawErrors: unknown = result.updateTransactionSplit.errors;
   if (rawErrors === null) {
     const txn = result.updateTransactionSplit.transaction;
-    log.debug(`Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`);
+    log.debug(
+      `Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`,
+    );
+
+    // Apply date overrides on sub-transactions
+    const subTxns: { id: string }[] = txn.splitTransactions;
+    for (const [i, split] of splits.entries()) {
+      const subTxn = subTxns[i];
+      if (split.date !== undefined && split.date !== "" && subTxn) {
+        const subId = subTxn.id;
+        const dateOverride = split.date;
+        log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
+        await withRetry(`updateDate(${subId})`, () =>
+          updateTransaction({ transactionId: subId, date: dateOverride }),
+        );
+        await sleep(500);
+      }
+    }
   } else {
-    log.error(`Split failed for ${transactionId}: ${JSON.stringify(rawErrors)}`);
+    log.error(
+      `Split failed for ${transactionId}: ${JSON.stringify(rawErrors)}`,
+    );
     log.debug(`Split data: ${JSON.stringify(splits)}`);
   }
   await sleep(500);
@@ -210,8 +236,12 @@ export function isUsaaInsurance(name: string, plaidName: string): boolean {
 export function isSclTransaction(name: string, plaidName: string): boolean {
   const lower = name.toLowerCase();
   const plaidLower = plaidName.toLowerCase();
-  return lower.includes("seattle city light") || plaidLower.includes("seattle city light") ||
-    lower.includes("scl") || plaidLower.includes("scl");
+  return (
+    lower.includes("seattle city light") ||
+    plaidLower.includes("seattle city light") ||
+    lower.includes("scl") ||
+    plaidLower.includes("scl")
+  );
 }
 
 const APPLE_MERCHANT_PATTERNS = [
@@ -223,19 +253,19 @@ const APPLE_MERCHANT_PATTERNS = [
 export function isAppleMerchant(name: string, plaidName: string): boolean {
   const lower = name.toLowerCase();
   const plaidLower = plaidName.toLowerCase();
-  return APPLE_MERCHANT_PATTERNS.some((p) => lower.includes(p) || plaidLower.includes(p));
+  return APPLE_MERCHANT_PATTERNS.some(
+    (p) => lower.includes(p) || plaidLower.includes(p),
+  );
 }
 
-const COSTCO_MERCHANT_PATTERNS = [
-  "costco",
-  "costco whse",
-  "costco.com",
-];
+const COSTCO_MERCHANT_PATTERNS = ["costco", "costco whse", "costco.com"];
 
 export function isCostcoMerchant(name: string, plaidName: string): boolean {
   const lower = name.toLowerCase();
   const plaidLower = plaidName.toLowerCase();
-  return COSTCO_MERCHANT_PATTERNS.some((p) => lower.includes(p) || plaidLower.includes(p));
+  return COSTCO_MERCHANT_PATTERNS.some(
+    (p) => lower.includes(p) || plaidLower.includes(p),
+  );
 }
 
 export type SeparateDeepPathsResult = {
@@ -283,7 +313,16 @@ export function separateDeepPaths(
     }
   }
 
-  return { amazonTransactions, venmoTransactions, biltTransactions, usaaTransactions, sclTransactions, appleTransactions, costcoTransactions, regularTransactions };
+  return {
+    amazonTransactions,
+    venmoTransactions,
+    biltTransactions,
+    usaaTransactions,
+    sclTransactions,
+    appleTransactions,
+    costcoTransactions,
+    regularTransactions,
+  };
 }
 
 function sleep(ms: number): Promise<void> {

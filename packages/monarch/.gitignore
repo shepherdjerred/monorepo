@@ -1,1 +1,4 @@
 data/
+scripts/accuracy/dataset.json
+scripts/accuracy/tool-output.json
+scripts/accuracy/accuracy-report.json

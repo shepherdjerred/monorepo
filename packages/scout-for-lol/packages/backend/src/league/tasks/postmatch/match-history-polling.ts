@@ -39,6 +39,7 @@ import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { setLastSuccessfulPollAt } from "@scout-for-lol/backend/league/tasks/recovery/app-state.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -276,6 +277,7 @@ export async function checkMatchHistory(): Promise<void> {
 
     if (accountsWithState.length === 0) {
       logger.info("⏸️  No players to check");
+      await setLastSuccessfulPollAt(new Date());
       return;
     }
 
@@ -340,6 +342,7 @@ export async function checkMatchHistory(): Promise<void> {
       logger.info(
         "⏸️  No players to check this cycle (based on polling intervals)",
       );
+      await setLastSuccessfulPollAt(new Date());
       return;
     }
 
@@ -409,6 +412,7 @@ export async function checkMatchHistory(): Promise<void> {
       logger.info(
         `⏱️  Match history check completed in ${totalTime.toString()}ms`,
       );
+      await setLastSuccessfulPollAt(new Date());
       return;
     }
 
@@ -442,6 +446,8 @@ export async function checkMatchHistory(): Promise<void> {
     logger.info(
       `📊 Processed ${processedMatchIds.size.toString()} unique match(es)`,
     );
+
+    await setLastSuccessfulPollAt(new Date());
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;

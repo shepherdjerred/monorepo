@@ -8,17 +8,23 @@ export async function promptConfirm(message: string): Promise<boolean> {
   const reader = Bun.stdin.stream().getReader();
   const { value } = await reader.read();
   reader.releaseLock();
-  const input = value ? new TextDecoder().decode(value).trim().toLowerCase() : "";
+  const input = value
+    ? new TextDecoder().decode(value).trim().toLowerCase()
+    : "";
   return input === "y" || input === "yes";
 }
 
-async function promptInteractive(change: ProposedChange): Promise<"apply" | "skip" | "quit"> {
+async function promptInteractive(
+  change: ProposedChange,
+): Promise<"apply" | "skip" | "quit"> {
   displaySingleChange(change);
   process.stderr.write("\n  [a]pply / [s]kip / [q]uit: ");
   const reader = Bun.stdin.stream().getReader();
   const { value } = await reader.read();
   reader.releaseLock();
-  const input = value ? new TextDecoder().decode(value).trim().toLowerCase() : "s";
+  const input = value
+    ? new TextDecoder().decode(value).trim().toLowerCase()
+    : "s";
   if (input === "a" || input === "apply") return "apply";
   if (input === "q" || input === "quit") return "quit";
   return "skip";
@@ -28,10 +34,14 @@ async function applySingleChange(change: ProposedChange): Promise<boolean> {
   try {
     if (change.type === "recategorize") {
       if (change.proposedCategoryId === change.currentCategoryId) {
-        log.debug(`  Skipping ${change.merchantName} (already ${change.currentCategory})`);
+        log.debug(
+          `  Skipping ${change.merchantName} (already ${change.currentCategory})`,
+        );
         return true;
       }
-      log.info(`  Updating ${change.merchantName} → ${change.proposedCategory}`);
+      log.info(
+        `  Updating ${change.merchantName} → ${change.proposedCategory}`,
+      );
       await applyCategory(change.transactionId, change.proposedCategoryId);
     } else if (change.type === "flag") {
       log.info(`  Flagging ${change.merchantName} for review`);
@@ -46,13 +56,20 @@ async function applySingleChange(change: ProposedChange): Promise<boolean> {
           amount: sign * Math.abs(s.amount),
           categoryId: s.categoryId,
           merchantName: s.itemName,
+          ...(s.date !== undefined && s.date !== "" ? { date: s.date } : {}),
         })),
       );
     }
     return true;
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    log.error(`  Failed to apply change for ${change.merchantName} (${change.transactionId}): ${msg}`);
+    const raw = error instanceof Error ? error.message : String(error);
+    // monarch-money-api appends the full JSON response/request to error messages — strip it
+    const jsonIdx = raw.indexOf('{"response":');
+    const msg =
+      jsonIdx > 0 ? raw.slice(0, jsonIdx).replace(/[:\s]+$/, "") : raw;
+    log.error(
+      `  Failed to apply change for ${change.merchantName} (${change.transactionId}): ${msg}`,
+    );
     return false;
   }
 }
@@ -68,7 +85,9 @@ export async function applyChanges(
     for (const change of changes) {
       const action = await promptInteractive(change);
       if (action === "quit") {
-        log.info(`Stopped. Applied ${String(applied)} of ${String(changes.length)} changes.`);
+        log.info(
+          `Stopped. Applied ${String(applied)} of ${String(changes.length)} changes.`,
+        );
         return;
       }
       if (action === "skip") continue;
@@ -85,5 +104,7 @@ export async function applyChanges(
     }
   }
 
-  log.info(`Done! Applied ${String(applied)} changes.${failed > 0 ? ` ${String(failed)} failed.` : ""}`);
+  log.info(
+    `Done! Applied ${String(applied)} changes.${failed > 0 ? ` ${String(failed)} failed.` : ""}`,
+  );
 }

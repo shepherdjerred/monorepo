@@ -51,7 +51,8 @@ export const log = {
   },
   progress(current: number, total: number, label: string): void {
     if (!shouldLog("info")) return;
-    const text = COLORS.info(`[${String(current)}/${String(total)}]`) + ` ${label}`;
+    const text =
+      COLORS.info(`[${String(current)}/${String(total)}]`) + ` ${label}`;
     if (IS_TTY) {
       process.stderr.write(`\r${text}`);
       if (current >= total) process.stderr.write("\n");

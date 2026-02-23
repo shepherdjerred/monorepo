@@ -47,9 +47,21 @@ function makeTxn(
 describe("groupByMonth", () => {
   test("groups charges by month", () => {
     const charges = [
-      makeCharge({ postMonth: "2026-03-01", chargeTypeId: 19, chargeAmount: 2000 }),
-      makeCharge({ postMonth: "2026-03-15", chargeTypeId: 112, chargeAmount: 50 }),
-      makeCharge({ postMonth: "2026-04-01", chargeTypeId: 19, chargeAmount: 2000 }),
+      makeCharge({
+        postMonth: "2026-03-01",
+        chargeTypeId: 19,
+        chargeAmount: 2000,
+      }),
+      makeCharge({
+        postMonth: "2026-03-15",
+        chargeTypeId: 112,
+        chargeAmount: 50,
+      }),
+      makeCharge({
+        postMonth: "2026-04-01",
+        chargeTypeId: 19,
+        chargeAmount: 2000,
+      }),
     ];
 
     const result = groupByMonth(charges);
@@ -172,7 +184,14 @@ describe("matchBiltTransactions", () => {
   test("generates splits for non-zero amounts only", () => {
     const txns = [makeTxn({ amount: -4700, date: "2026-03-15" })];
     const months = [
-      makeMonth({ total: 4700, rent: 4500, pets: 0, waterSewer: 100, electric: 100, trash: 0 }),
+      makeMonth({
+        total: 4700,
+        rent: 4500,
+        pets: 0,
+        waterSewer: 100,
+        electric: 100,
+        trash: 0,
+      }),
     ];
 
     const result = matchBiltTransactions(txns, months);

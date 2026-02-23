@@ -35,9 +35,7 @@
       "blurb": "Unwavering in her devotion to Ionia, Yunara has spent centuries cloistered away in the spirit realm honing her skills with the Aion Er'na, a legendary Kinkou relic. Despite all she has sacrificed, Yunara's vow to rid the land of disharmony and strife...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Marksman"
-      ],
+      "tags": ["Marksman"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -86,95 +84,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
+          "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -192,13 +118,7 @@
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
-          "range": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "range": [0, 0, 0, 0, 0],
           "rangeBurn": "0",
           "image": {
             "full": "YunaraQ.png",
@@ -217,105 +137,30 @@
           "description": "Yunara fires a spinning prayer bead that deals damage and slows enemies. While in her Transcendent State she instead fires off a laser that deals damage and slows enemies.",
           "tooltip": "Yunara lets rip a prayer bead that deals <magicDamage>{{ calc_damage_initial }} magic damage</magicDamage> and <status>Slows by {{ calc_slow }} decaying over {{ slow_duration }} seconds</status>. It deals an additional <magicDamage>{{ calc_damage_per_second }} magic damage</magicDamage> per second.<br /><br /><keywordMajor>Transcendent State - Arc of Ruin</keywordMajor>: Yunara fires a laser that deals <magicDamage>{{ spell.yunarar:calc_rw_damage }} magic damage</magicDamage> and <status>Slows by {{ spell.yunarar:calc_rw_slow_amount }} decaying over {{ spell.yunarar:rw_slow_duration }} second</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Damage Per Second"
-            ],
+            "label": ["Damage", "Damage Per Second"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ damage*0.600000 }} -> {{ damagenl*0.600000 }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
-          ],
+          "cooldown": [10, 10, 10, 10, 10],
           "cooldownBurn": "10",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -333,13 +178,7 @@
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
-          "range": [
-            1150,
-            1150,
-            1150,
-            1150,
-            1150
-          ],
+          "range": [1150, 1150, 1150, 1150, 1150],
           "rangeBurn": "1150",
           "image": {
             "full": "YunaraW.png",
@@ -358,105 +197,30 @@
           "description": "Yunara gains Move Speed and becomes Ghosted. While in her Transcendent State she instead dashes in a direction.",
           "tooltip": "Yunara gains <speed>{{ calc_move_speed }} Move Speed</speed>, increased to <speed>{{ calc_move_speed_enhanced }} Move Speed</speed> when moving toward an enemy champion, for {{ buff_duration }} seconds.<br /><br /><keywordMajor>Transcendent State - Untouchable Shadow</keywordMajor>: Yunara dashes in a direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed",
-              "Max Move Speed"
-            ],
+            "label": ["Move Speed", "Max Move Speed"],
             "effect": [
               "{{ move_speed*100.000000 }}% -> {{ move_speednl*100.000000 }}%",
               "{{ move_speed*150.000000 }}% -> {{ move_speednl*150.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            9,
-            9,
-            9,
-            9
-          ],
+          "cooldown": [9, 9, 9, 9, 9],
           "cooldownBurn": "9",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -474,13 +238,7 @@
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
-          "range": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "range": [0, 0, 0, 0, 0],
           "rangeBurn": "0",
           "image": {
             "full": "YunaraE.png",
@@ -511,71 +269,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            90,
-            80
-          ],
+          "cooldown": [100, 90, 80],
           "cooldownBurn": "100/90/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -593,11 +303,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            0,
-            0,
-            0
-          ],
+          "range": [0, 0, 0],
           "rangeBurn": "0",
           "image": {
             "full": "YunaraR.png",

@@ -11,7 +11,10 @@ export async function classifyVenmo(
   config: Config,
   categories: MonarchCategory[],
   venmoTransactions: MonarchTransaction[],
-): Promise<{ changes: ProposedChange[]; matchResult: VenmoMatchResult | null }> {
+): Promise<{
+  changes: ProposedChange[];
+  matchResult: VenmoMatchResult | null;
+}> {
   if (config.venmoCsv === undefined) {
     return { changes: [], matchResult: null };
   }
@@ -28,7 +31,10 @@ export async function classifyVenmo(
     return { changes: [], matchResult };
   }
 
-  const classification = await classifyVenmoPayments(categories, matchResult.matched);
+  const classification = await classifyVenmoPayments(
+    categories,
+    matchResult.matched,
+  );
   const changes: ProposedChange[] = [];
 
   for (const payment of classification.payments) {
@@ -40,9 +46,10 @@ export async function classifyVenmo(
     if (!match) continue;
 
     const direction = match.venmoTransaction.amount > 0 ? "from" : "to";
-    const other = match.venmoTransaction.amount > 0
-      ? match.venmoTransaction.from
-      : match.venmoTransaction.to;
+    const other =
+      match.venmoTransaction.amount > 0
+        ? match.venmoTransaction.from
+        : match.venmoTransaction.to;
 
     changes.push({
       transactionId: match.transaction.id,

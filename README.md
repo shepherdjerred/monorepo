@@ -232,6 +232,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 **19 active packages**
 
 ### [macos-cross-compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler) (2026-02-21)
@@ -248,7 +249,7 @@ Castle Casters is a cross-platform Quoridor adaptation with a medieval fantasy t
 
 ### [eslint-config](https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config) (2026-02-21)
 
-@shepherdjerred/eslint-config provides reusable ESLint flat configurations that enforce accessibility, import discipline, and component best practices across React and Astro codebases. The package integrates @eslint/js, typescript-eslint, eslint-plugin-astro, eslint-plugin-react, eslint-plugin-jsx-a11y, eslint-plugin-import, and the Bun-aware TypeScript resolver exposed in src/configs/*.ts. Its modular configs in src/configs/base.ts, src/configs/imports.ts, src/configs/accessibility.ts, and src/configs/react.ts each return TSESLint.FlatConfig.ConfigArray instances so teams can compose rule sets with custom tsconfig roots, project service settings, and Bun-aware import resolution.
+@shepherdjerred/eslint-config provides reusable ESLint flat configurations that enforce accessibility, import discipline, and component best practices across React and Astro codebases. The package integrates @eslint/js, typescript-eslint, eslint-plugin-astro, eslint-plugin-react, eslint-plugin-jsx-a11y, eslint-plugin-import, and the Bun-aware TypeScript resolver exposed in src/configs/\*.ts. Its modular configs in src/configs/base.ts, src/configs/imports.ts, src/configs/accessibility.ts, and src/configs/react.ts each return TSESLint.FlatConfig.ConfigArray instances so teams can compose rule sets with custom tsconfig roots, project service settings, and Bun-aware import resolution.
 
 ### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-21)
 

@@ -398,6 +398,30 @@ export function getRiotApiHealth(): {
 }
 
 // =======================
+// Recovery / Backfill Metrics
+// =======================
+
+/**
+ * Total number of matches processed during S3 backfill
+ */
+export const backfillMatchesTotal = new Counter({
+  name: "backfill_matches_total",
+  help: "Total number of matches processed during S3 backfill after downtime",
+  labelNames: ["status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Total number of downtime events detected at startup
+ */
+export const downtimeDetectedTotal = new Counter({
+  name: "downtime_detected_total",
+  help: "Total number of downtime events detected at startup",
+  labelNames: ["severity"] as const,
+  registers: [registry],
+});
+
+// =======================
 // Application Metrics
 // =======================
 

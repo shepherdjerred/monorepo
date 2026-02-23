@@ -23,11 +23,16 @@ import { createUsageTracker } from "../usage.ts";
 let client: Anthropic | undefined;
 let modelId = "claude-sonnet-4-20250514";
 let tracker: ReturnType<typeof createUsageTracker> | undefined;
+let webSearchEnabled = false;
 
 export function initClaude(apiKey: string, model?: string): void {
   client = new Anthropic({ apiKey });
   if (model !== undefined) modelId = model;
   tracker = createUsageTracker(modelId);
+}
+
+export function setWebSearchEnabled(enabled: boolean): void {
+  webSearchEnabled = enabled;
 }
 
 export function getUsageSummary(): UsageSummary {
@@ -112,22 +117,33 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      const tools: Anthropic.Messages.ToolUnion[] | undefined = webSearchEnabled
+        ? [{ type: "web_search_20250305", name: "web_search", max_uses: 20 }]
+        : undefined;
+
       const response = await claude.messages.create({
         model: modelId,
         max_tokens: 16_384,
         system: buildSystemPrompt(),
         messages: [{ role: "user", content: userPrompt }],
+        ...(tools === undefined ? {} : { tools }),
       });
-
-      const block = response.content[0];
-      if (block?.type !== "text") {
-        throw new Error("Unexpected response type");
-      }
 
       if (response.stop_reason === "max_tokens") {
         throw new Error(
           `Response truncated (${String(response.usage.output_tokens)} output tokens). Consider reducing batch size.`,
         );
+      }
+
+      // With web search, response may contain interleaved tool_use/result and text blocks.
+      // Extract text from all text blocks.
+      const text = response.content
+        .filter((block) => block.type === "text")
+        .map((block) => ("text" in block ? block.text : ""))
+        .join("");
+
+      if (text === "") {
+        throw new Error("No text content in response");
       }
 
       const usage = {
@@ -136,10 +152,13 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
       };
       tracker?.record(usage.inputTokens, usage.outputTokens);
 
-      return { text: block.text, usage };
+      return { text, usage };
     } catch (error: unknown) {
       if (isApiRetryable(error) && attempt < maxRetries) {
-        const status = error instanceof Anthropic.APIError ? String(error.status) : "unknown";
+        const status =
+          error instanceof Anthropic.APIError
+            ? String(error.status)
+            : "unknown";
         const delay = jitteredDelay(1000 * 2 ** attempt);
         log.warn(
           `API error (${status}), retrying in ${String(Math.round(delay / 1000))}s (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
@@ -166,7 +185,8 @@ async function callClaudeAndParse<T>(
     } catch (error: unknown) {
       if (isParseRetryable(error) && attempt < maxRetries) {
         const delay = jitteredDelay(2000 * 2 ** attempt);
-        const label = error instanceof Error ? error.message.slice(0, 60) : "Unknown error";
+        const label =
+          error instanceof Error ? error.message.slice(0, 60) : "Unknown error";
         log.warn(
           `Parse failed: ${label}, retrying in ${String(Math.round(delay / 1000))}s (attempt ${String(attempt + 1)}/${String(maxRetries)})...`,
         );
@@ -185,7 +205,12 @@ export async function classifyWeek(
   resolvedMap: Map<string, ResolvedTransaction>,
   previousResults: Map<string, string>,
 ): Promise<WeekClassificationResponse> {
-  const prompt = buildWeekPrompt(categories, window, resolvedMap, previousResults);
+  const prompt = buildWeekPrompt(
+    categories,
+    window,
+    resolvedMap,
+    previousResults,
+  );
   return callClaudeAndParse(prompt, WeekClassificationSchema);
 }
 
@@ -228,7 +253,8 @@ function fixRoundingDrift(splits: SplitItem[], targetCents: number): void {
   const sumCents = splits.reduce((s, i) => s + Math.round(i.amount * 100), 0);
   const last = splits.at(-1);
   if (sumCents !== targetCents && last !== undefined) {
-    last.amount = (Math.round(last.amount * 100) + (targetCents - sumCents)) / 100;
+    last.amount =
+      (Math.round(last.amount * 100) + (targetCents - sumCents)) / 100;
   }
 }
 

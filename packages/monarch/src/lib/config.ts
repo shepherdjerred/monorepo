@@ -27,6 +27,7 @@ export type Config = {
   appleMailDir: string | undefined;
   skipApple: boolean;
   skipCostco: boolean;
+  skipResearch: boolean;
   output: string | undefined;
 };
 
@@ -54,6 +55,7 @@ export function getConfig(): Config {
       "apple-mail-dir": { type: "string" },
       "skip-apple": { type: "boolean", default: false },
       "skip-costco": { type: "boolean", default: false },
+      "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
     },
     strict: true,
@@ -95,7 +97,8 @@ export function getConfig(): Config {
     interactive: values.interactive,
     venmoCsv: values["venmo-csv"],
     skipVenmo: values["skip-venmo"],
-    conserviceCookies: values["conservice-cookies"] ?? Bun.env["CONSERVICE_COOKIES"],
+    conserviceCookies:
+      values["conservice-cookies"] ?? Bun.env["CONSERVICE_COOKIES"],
     skipBilt: values["skip-bilt"],
     skipUsaa: values["skip-usaa"],
     sclCsv: values["scl-csv"],
@@ -103,13 +106,21 @@ export function getConfig(): Config {
     appleMailDir,
     skipApple: values["skip-apple"],
     skipCostco: values["skip-costco"],
+    skipResearch: values["skip-research"],
     output: values.output,
   };
 }
 
 function autoDetectAppleMailDir(): string | undefined {
-  const mailmateBase = path.join(homedir(), "com.freron.MailMate", "Messages", "IMAP");
-  const glob = new Glob(String.raw`*/\[Gmail\].mailbox/Archive.mailbox/Messages`);
+  const mailmateBase = path.join(
+    homedir(),
+    "com.freron.MailMate",
+    "Messages",
+    "IMAP",
+  );
+  const glob = new Glob(
+    String.raw`*/\[Gmail\].mailbox/Archive.mailbox/Messages`,
+  );
   for (const match of glob.scanSync(mailmateBase)) {
     return path.join(mailmateBase, match);
   }

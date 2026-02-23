@@ -38,7 +38,7 @@ import "@scout-for-lol/backend/discord/index.ts";
 
 logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "@scout-for-lol/backend/league/cron.ts";
-startCronJobs();
+void startCronJobs();
 
 logger.info("✅ Backend application startup complete");
 

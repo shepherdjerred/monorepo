@@ -1,12 +1,15 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag, type Secret } from "@dagger.io/dagger";
-import { getMiseRuntimeContainer } from "./lib-mise.ts";
 import type { StepResult } from "./homelab-index.ts";
 import versions from "./lib-versions.ts";
 
 /**
  * Builds a container with the dependency-summary script ready to run.
  * Includes: bun, git, helm (for transitive dependency detection).
+ *
+ * Uses oven/bun as base image instead of getMiseRuntimeContainer() because
+ * mise installs tools into a Dagger cache volume that is NOT baked into
+ * published images.
  *
  * @param source The source directory.
  * @returns A configured Container ready to run the dependency-summary script.
@@ -21,9 +24,13 @@ function buildDependencySummaryContainer(source: Directory): Container {
     .from(`alpine/helm:${versions["alpine/helm"]}`)
     .file("/usr/bin/helm");
 
-  // Build the container with optimized layer caching
+  // Build the container using oven/bun base (bun pre-installed)
   return (
-    getMiseRuntimeContainer()
+    dag
+      .container()
+      .from(`oven/bun:${versions["oven/bun"]}`)
+      .withExec(["apt-get", "update"])
+      .withExec(["apt-get", "install", "-y", "git"])
       .withWorkdir("/app")
       // Install helm CLI (needed for transitive dependency detection)
       .withFile("/usr/local/bin/helm", helmBinary)

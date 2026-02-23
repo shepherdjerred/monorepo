@@ -101,10 +101,7 @@
       "blurb": "Something has awoken in Runeterra. Something ancient. Something terrible. The ageless horror known as Fiddlesticks stalks the edges of mortal society, drawn to areas thick with paranoia where it feeds upon terrorized victims. Wielding a jagged scythe...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Mage",
-        "Support"
-      ],
+      "tags": ["Mage", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -141,11 +138,7 @@
           "description": "Fiddlesticks damaging enemies with spells while unseen or targeting an enemy with Terrify's activation strikes a target unit with fear, causing it to flee in terror for a duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> While unseen and out of combat or impersonating an <keywordMajor>Effigy</keywordMajor>, damaging an enemy with an ability <status>Fears</status> them for {{ fearduration }} second(s).<br /><br /><spellActive>Active:</spellActive> <status>Fear</status> an enemy for {{ fearduration }} second(s) and deal <magicDamage>{{ totalpercenthealthdamage }} current Health magic damage</magicDamage>. If the target has recently been <status>Feared</status> by Fiddlesticks, instead deal <magicDamage>{{ totalpercenthealthdamagefeared }} current Health magic damage</magicDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Duration",
-              "Cooldown",
-              "Current Health %"
-            ],
+            "label": ["Duration", "Cooldown", "Current Health %"],
             "effect": [
               "{{ fearduration }} -> {{ feardurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -153,95 +146,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            15,
-            14.5,
-            14,
-            13.5,
-            13
-          ],
+          "cooldown": [15, 14.5, 14, 13.5, 13],
           "cooldownBurn": "15/14.5/14/13.5/13",
-          "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
-          ],
+          "cost": [65, 65, 65, 65, 65],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -259,13 +180,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            575,
-            575,
-            575,
-            575,
-            575
-          ],
+          "range": [575, 575, 575, 575, 575],
           "rangeBurn": "575",
           "image": {
             "full": "FiddleSticksQ.png",
@@ -298,95 +213,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -404,13 +247,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "FiddleSticksW.png",
@@ -443,95 +280,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9,
-            8,
-            7,
-            6
-          ],
+          "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -549,13 +314,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            850,
-            850,
-            850,
-            850,
-            850
-          ],
+          "range": [850, 850, 850, 850, 850],
           "rangeBurn": "850",
           "image": {
             "full": "FiddleSticksE.png",
@@ -574,81 +333,30 @@
           "description": "A murder of crows flock wildly around Fiddlesticks, dealing damage per second to all enemy units in the area.",
           "tooltip": "Fiddlesticks channels for {{ channeltime }} seconds, then teleports and unleashes a murder of crows, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage Per Second",
-              "Cooldown"
-            ],
+            "label": ["Damage Per Second", "Cooldown"],
             "effect": [
               "{{ damagepersecond }} -> {{ damagepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            140,
-            110,
-            80
-          ],
+          "cooldown": [140, 110, 80],
           "cooldownBurn": "140/110/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              125,
-              225,
-              325
-            ],
-            [
-              5,
-              5,
-              5
-            ],
-            [
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [125, 225, 325],
+            [5, 5, 5],
+            [1.5, 1.5, 1.5],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -666,11 +374,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "FiddleSticksR.png",

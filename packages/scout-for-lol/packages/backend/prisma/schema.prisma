@@ -275,6 +275,12 @@ model StoredSound {
   @@index([sourceUrl])
 }
 
+model BotState {
+  id                   Int       @id @default(1)
+  lastSuccessfulPollAt DateTime?
+  updatedAt            DateTime  @updatedAt
+}
+
 model GameEventLog {
   id          Int      @id @default(autoincrement())
   userId      String

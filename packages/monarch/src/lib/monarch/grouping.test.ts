@@ -1,6 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { separateDeepPaths, isVenmoP2P, isBiltTransaction, isAppleMerchant, isCostcoMerchant } from "./client.ts";
-import { groupByWeek, buildWeekWindows, getISOWeekKey, getWeekBounds } from "./weeks.ts";
+import {
+  separateDeepPaths,
+  isVenmoP2P,
+  isBiltTransaction,
+  isAppleMerchant,
+  isCostcoMerchant,
+} from "./client.ts";
+import {
+  groupByWeek,
+  buildWeekWindows,
+  getISOWeekKey,
+  getWeekBounds,
+} from "./weeks.ts";
 import type { MonarchTransaction } from "./types.ts";
 
 function makeTxn(
@@ -64,7 +75,11 @@ describe("separateDeepPaths", () => {
       }),
       makeTxn({
         id: "t2",
-        merchant: { id: "m-2", name: "Venmo Credit Card Payment", transactionsCount: 1 },
+        merchant: {
+          id: "m-2",
+          name: "Venmo Credit Card Payment",
+          transactionsCount: 1,
+        },
         plaidName: "VENMO CREDIT CARD",
       }),
       makeTxn({
@@ -76,7 +91,11 @@ describe("separateDeepPaths", () => {
     const { venmoTransactions, regularTransactions } = separateDeepPaths(txns);
     expect(venmoTransactions).toHaveLength(1);
     expect(venmoTransactions[0]?.id).toBe("t1");
-    expect(regularTransactions.some((t) => t.merchant.name === "Venmo Credit Card Payment")).toBe(true);
+    expect(
+      regularTransactions.some(
+        (t) => t.merchant.name === "Venmo Credit Card Payment",
+      ),
+    ).toBe(true);
   });
 
   test("separates Bilt transactions", () => {
@@ -88,7 +107,11 @@ describe("separateDeepPaths", () => {
       }),
       makeTxn({
         id: "t2",
-        merchant: { id: "m-2", name: "Bilt Credit Card Cash Back", transactionsCount: 1 },
+        merchant: {
+          id: "m-2",
+          name: "Bilt Credit Card Cash Back",
+          transactionsCount: 1,
+        },
         plaidName: "BILT REWARDS",
       }),
       makeTxn({
@@ -100,7 +123,11 @@ describe("separateDeepPaths", () => {
     const { biltTransactions, regularTransactions } = separateDeepPaths(txns);
     expect(biltTransactions).toHaveLength(1);
     expect(biltTransactions[0]?.id).toBe("t1");
-    expect(regularTransactions.some((t) => t.merchant.name === "Bilt Credit Card Cash Back")).toBe(true);
+    expect(
+      regularTransactions.some(
+        (t) => t.merchant.name === "Bilt Credit Card Cash Back",
+      ),
+    ).toBe(true);
   });
 
   test("puts regular transactions in regularTransactions", () => {

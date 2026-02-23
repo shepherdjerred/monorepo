@@ -31,7 +31,9 @@ export function matchAmazonOrders(
       if (usedOrderIds.has(order.orderId)) continue;
 
       const orderDate = new Date(order.date);
-      const daysDiff = Math.abs(txnDate.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24);
+      const daysDiff =
+        Math.abs(txnDate.getTime() - orderDate.getTime()) /
+        (1000 * 60 * 60 * 24);
 
       if (daysDiff > 3) continue;
 
@@ -52,9 +54,7 @@ export function matchAmazonOrders(
   const unmatchedTransactions = eligible.filter(
     (t) => !matchedTransactionIds.has(t.id),
   );
-  const unmatchedOrders = orders.filter(
-    (o) => !usedOrderIds.has(o.orderId),
-  );
+  const unmatchedOrders = orders.filter((o) => !usedOrderIds.has(o.orderId));
 
   return { matched, unmatchedTransactions, unmatchedOrders };
 }

@@ -76,7 +76,10 @@ export function createHaDeployment(chart: Chart) {
           key: "credential",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
-        SENTRY_RELEASE: EnvValue.fromValue(versions["shepherdjerred/homelab"].split("@")[0] ?? versions["shepherdjerred/homelab"]),
+        SENTRY_RELEASE: EnvValue.fromValue(
+          versions["shepherdjerred/homelab"].split("@")[0] ??
+            versions["shepherdjerred/homelab"],
+        ),
       },
       securityContext: {
         ensureNonRoot: false,

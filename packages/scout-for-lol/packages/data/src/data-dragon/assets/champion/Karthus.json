@@ -95,9 +95,7 @@
         "Karthus can cast spells for a short duration after he is killed. Move away from his corpse to be safe.",
         "Make sure you always have enough health to survive Requiem, even if you have to go back to the base more frequently to heal."
       ],
-      "tags": [
-        "Mage"
-      ],
+      "tags": ["Mage"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -134,105 +132,30 @@
           "description": "Karthus unleashes a delayed blast at a location, dealing damage to nearby enemies. Deals increased damage to isolated enemies. ",
           "tooltip": "Karthus creates a blast of magic, dealing <magicDamage>{{ qdamage }} magic damage</magicDamage>. If the blast hits only one enemy, it instead deals <magicDamage>{{ qsingletargetdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            20,
-            25,
-            30,
-            35,
-            40
-          ],
+          "cost": [20, 25, 30, 35, 40],
           "costBurn": "20/25/30/35/40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              45,
-              65,
-              85,
-              105,
-              125
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [45, 65, 85, 105, 125],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -250,13 +173,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [
-            875,
-            875,
-            875,
-            875,
-            875
-          ],
+          "range": [875, 875, 875, 875, 875],
           "rangeBurn": "875",
           "image": {
             "full": "KarthusLayWasteA1.png",
@@ -275,105 +192,27 @@
           "description": "Karthus creates a passable screen of leeching energy. Any enemy units that walk through the screen have their Move Speed and Magic Resist reduced for a period.",
           "tooltip": "Karthus creates a wall that lasts for {{ e4 }} seconds. Enemies that pass through lose <scaleMR>{{ e1 }}% Magic Resist</scaleMR> for {{ e5 }} seconds and are <status>Slowed</status> by {{ e3 }}% decaying over the duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Wall Width",
-              "Move Speed Slow"
-            ],
-            "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e3 }}% -> {{ e3NL }}%"
-            ]
+            "label": ["Wall Width", "Move Speed Slow"],
+            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ e3 }}% -> {{ e3NL }}%"]
           },
           "maxrank": 5,
-          "cooldown": [
-            15,
-            15,
-            15,
-            15,
-            15
-          ],
+          "cooldown": [15, 15, 15, 15, 15],
           "cooldownBurn": "15",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              25,
-              25,
-              25,
-              25,
-              25
-            ],
-            [
-              800,
-              900,
-              1000,
-              1100,
-              1200
-            ],
-            [
-              40,
-              50,
-              60,
-              70,
-              80
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [25, 25, 25, 25, 25],
+            [800, 900, 1000, 1100, 1200],
+            [40, 50, 60, 70, 80],
+            [5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -391,13 +230,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "KarthusWallOfPain.png",
@@ -428,95 +261,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.5,
-            0.5,
-            0.5,
-            0.5,
-            0.5
-          ],
+          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
           "cooldownBurn": "0.5",
-          "cost": [
-            30,
-            42,
-            54,
-            66,
-            78
-          ],
+          "cost": [30, 42, 54, 66, 78],
           "costBurn": "30/42/54/66/78",
           "datavalues": {},
           "effect": [
             null,
-            [
-              30,
-              50,
-              70,
-              90,
-              110
-            ],
-            [
-              10,
-              20,
-              30,
-              40,
-              50
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [30, 50, 70, 90, 110],
+            [10, 20, 30, 40, 50],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -534,13 +295,7 @@
           "vars": [],
           "costType": " Mana per Second",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "KarthusDefile.png",
@@ -559,81 +314,30 @@
           "description": "After channeling for 3 seconds, Karthus deals damage to all enemy champions.",
           "tooltip": "Karthus channels for 3 seconds, then deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemy champions, regardless of distance.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            200,
-            180,
-            160
-          ],
+          "cooldown": [200, 180, 160],
           "cooldownBurn": "200/180/160",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -651,11 +355,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            10000,
-            10000,
-            10000
-          ],
+          "range": [10000, 10000, 10000],
           "rangeBurn": "10000",
           "image": {
             "full": "KarthusFallenOne.png",

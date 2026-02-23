@@ -230,6 +230,7 @@ for dirname, commit_date in subdirs_with_dates:
             cog.outl("*No description available.*")
     cog.outl()
 ]]]-->
+
 ## 41 archived projects
 
 ### [gpt-2-simple-sagemaker-container](https://github.com/shepherdjerred/monorepo/tree/main/archive/gpt-2-simple-sagemaker-container) (2026-02-21)
@@ -266,7 +267,7 @@ File-matcher is a Python script that scans a directory and cross-references file
 
 ### [siphon](https://github.com/shepherdjerred/monorepo/tree/main/archive/siphon) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [herd](https://github.com/shepherdjerred/monorepo/tree/main/archive/herd) (2026-02-21)
 
@@ -294,7 +295,7 @@ The project polls the West Elm order-tracking API every hour to detect shipment 
 
 ### [eng211-research-paper](https://github.com/shepherdjerred/monorepo/tree/main/archive/eng211-research-paper) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [type-challenges](https://github.com/shepherdjerred/monorepo/tree/main/archive/type-challenges) (2026-02-21)
 
@@ -306,7 +307,7 @@ Skill Capped Discord Bot is a TypeScript-powered Discord automation project that
 
 ### [is-quarantine-over-yet](https://github.com/shepherdjerred/monorepo/tree/main/archive/is-quarantine-over-yet) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [nutrition](https://github.com/shepherdjerred/monorepo/tree/main/archive/nutrition) (2026-02-21)
 
@@ -358,7 +359,7 @@ EC2 Instance Restart Frontend delivers a React web interface for start/stop cont
 
 ### [the-button](https://github.com/shepherdjerred/monorepo/tree/main/archive/the-button) (2026-02-21)
 
-This React Native mobile app connects to https://the-button-api.herokuapp.com/ to show a shared countdown and let users press a styled button while tracking connected peers in real time. It is built with React Native components, socket.io-client for the live socket connection, and react-test-renderer-backed tests living under app/__tests__. The App component maintains socket-driven state updates and delegates UI responsibilities to focused child components like app-button, app-progress, and app-users for clearer separation of concerns.
+This React Native mobile app connects to https://the-button-api.herokuapp.com/ to show a shared countdown and let users press a styled button while tracking connected peers in real time. It is built with React Native components, socket.io-client for the live socket connection, and react-test-renderer-backed tests living under app/**tests**. The App component maintains socket-driven state updates and delegates UI responsibilities to focused child components like app-button, app-progress, and app-users for clearer separation of concerns.
 
 ### [lambda-sagemaker-endpoint](https://github.com/shepherdjerred/monorepo/tree/main/archive/lambda-sagemaker-endpoint) (2026-02-21)
 
@@ -386,7 +387,7 @@ Funsheet is a Java-backed web application that lets users catalog activities and
 
 ### [devcontainers-features](https://github.com/shepherdjerred/monorepo/tree/main/archive/devcontainers-features) (2026-02-21)
 
-*No description available.*
+_No description available._
 
 ### [frankie-and-jos-flavor-scraper](https://github.com/shepherdjerred/monorepo/tree/main/archive/frankie-and-jos-flavor-scraper) (2026-02-21)
 

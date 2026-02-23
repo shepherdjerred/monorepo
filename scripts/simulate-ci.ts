@@ -728,10 +728,7 @@ function findCriticalPath(results: SimResult[]): SimResult[] {
     for (const depId of node.dependsOn) {
       const dep = resultMap.get(depId);
       if (dep !== undefined) {
-        if (
-          criticalDep === undefined ||
-          dep.endTime > criticalDep.endTime
-        ) {
+        if (criticalDep === undefined || dep.endTime > criticalDep.endTime) {
           criticalDep = dep;
         }
       }
@@ -779,17 +776,13 @@ function renderCacheAnalysis(
 
   // Group by cache status
   const cached = results.filter((r) => r.cached);
-  const directMiss = results.filter(
-    (r) => !r.cached && r.reason === "direct",
-  );
+  const directMiss = results.filter((r) => !r.cached && r.reason === "direct");
   const cascadeMiss = results.filter(
     (r) => !r.cached && r.reason === "cascade",
   );
 
   if (directMiss.length > 0) {
-    lines.push(
-      `  ${c.red}Direct invalidation${c.reset} (inputs changed):`,
-    );
+    lines.push(`  ${c.red}Direct invalidation${c.reset} (inputs changed):`);
     for (const r of directMiss) {
       const input = r.matchedInput === "*" ? "full source" : r.matchedInput;
       lines.push(
@@ -842,7 +835,9 @@ function renderGantt(results: SimResult[]): string {
   const step = maxTime <= 60 ? 10 : maxTime <= 180 ? 30 : 60;
   for (let t = 0; t <= maxTime; t += step) {
     const pos = Math.round(t * scale);
-    timeMarks.push(`${String(t).padStart(pos > 0 ? pos - (timeMarks.length > 0 ? timeMarks.join("").length : 0) : 0)}s`);
+    timeMarks.push(
+      `${String(t).padStart(pos > 0 ? pos - (timeMarks.length > 0 ? timeMarks.join("").length : 0) : 0)}s`,
+    );
   }
 
   // Simpler time axis
@@ -861,7 +856,10 @@ function renderGantt(results: SimResult[]): string {
   for (const r of sorted) {
     const label = r.name.slice(0, nameWidth).padEnd(nameWidth);
     const startPos = Math.round(r.startTime * scale);
-    const endPos = Math.max(Math.round(r.endTime * scale), startPos + (r.cached ? 0 : 1));
+    const endPos = Math.max(
+      Math.round(r.endTime * scale),
+      startPos + (r.cached ? 0 : 1),
+    );
     const barLen = endPos - startPos;
 
     let status: string;
@@ -926,22 +924,14 @@ function renderSummary(results: SimResult[]): string {
   const fullBuildNodes = results.map((r) => ({
     ...r,
     cached: false,
-    duration:
-      PIPELINE.find((n) => n.id === r.id)?.duration ?? r.duration,
+    duration: PIPELINE.find((n) => n.id === r.id)?.duration ?? r.duration,
   }));
   const fullResults = simulate(
-    PIPELINE.filter(
-      (n) => results.some((r) => r.id === n.id),
-    ),
+    PIPELINE.filter((n) => results.some((r) => r.id === n.id)),
     new Map(
-      results.map((r) => [
-        r.id,
-        { cached: false, reason: "direct" as const },
-      ]),
+      results.map((r) => [r.id, { cached: false, reason: "direct" as const }]),
     ),
-    results.some((r) =>
-      PIPELINE.find((n) => n.id === r.id)?.releaseOnly,
-    ),
+    results.some((r) => PIPELINE.find((n) => n.id === r.id)?.releaseOnly),
   );
   const fullBuildTime = Math.max(...fullResults.map((r) => r.endTime));
 
@@ -950,15 +940,11 @@ function renderSummary(results: SimResult[]): string {
   lines.push(
     `  Wall-clock time:     ${c.bold}${formatDuration(totalWallClock)}${c.reset}`,
   );
-  lines.push(
-    `  Full rebuild time:   ${formatDuration(fullBuildTime)}`,
-  );
+  lines.push(`  Full rebuild time:   ${formatDuration(fullBuildTime)}`);
   lines.push(
     `  Cache savings:       ${formatDuration(fullBuildTime - totalWallClock)}`,
   );
-  lines.push(
-    `  Total work (serial): ${formatDuration(totalWork)}`,
-  );
+  lines.push(`  Total work (serial): ${formatDuration(totalWork)}`);
   lines.push("");
   lines.push(
     `  Nodes: ${c.green}${cachedCount} cached${c.reset}, ${c.red}${missCount} direct miss${c.reset}, ${c.yellow}${cascadeCount} cascade miss${c.reset}`,
@@ -996,7 +982,9 @@ function main() {
   if (listPresets) {
     console.log(`\n${c.bold}Available presets:${c.reset}\n`);
     for (const [name, preset] of Object.entries(PRESETS)) {
-      console.log(`  ${c.cyan}${name.padEnd(20)}${c.reset} ${preset.description}`);
+      console.log(
+        `  ${c.cyan}${name.padEnd(20)}${c.reset} ${preset.description}`,
+      );
       for (const f of preset.files) {
         console.log(`  ${" ".repeat(20)} ${c.dim}${f}${c.reset}`);
       }
@@ -1027,9 +1015,7 @@ function main() {
     scenarioName = preset.description;
   } else {
     // Collect file arguments (skip flags)
-    const fileArgs = args.filter(
-      (a) => !a.startsWith("--"),
-    );
+    const fileArgs = args.filter((a) => !a.startsWith("--"));
     if (fileArgs.length > 0) {
       changedFiles = fileArgs;
       scenarioName = `Custom: ${fileArgs.join(", ")}`;
@@ -1042,9 +1028,7 @@ function main() {
 
   // Header
   console.log("");
-  console.log(
-    `${c.bold}${c.cyan}Dagger CI Pipeline Simulator${c.reset}`,
-  );
+  console.log(`${c.bold}${c.cyan}Dagger CI Pipeline Simulator${c.reset}`);
   console.log(`${c.dim}${"─".repeat(60)}${c.reset}`);
   console.log(`  Scenario: ${c.bold}${scenarioName}${c.reset}`);
   console.log(`  Release:  ${isRelease ? `${c.yellow}yes${c.reset}` : "no"}`);
