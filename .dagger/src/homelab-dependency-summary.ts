@@ -30,8 +30,16 @@ function buildDependencySummaryContainer(source: Directory): Container {
       .container()
       .from(`oven/bun:${versions["oven/bun"]}`)
       .withExec(["apt-get", "update"])
-      .withExec(["apt-get", "install", "-y", "git"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "git",
+        "build-essential",
+        "python3",
+      ])
       .withWorkdir("/app")
+      .withExec(["bun", "install", "node-gyp"])
       // Install helm CLI (needed for transitive dependency detection)
       .withFile("/usr/local/bin/helm", helmBinary)
       .withExec(["chmod", "+x", "/usr/local/bin/helm"])
