@@ -13,6 +13,8 @@ import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 const SENTINEL_WORKSPACES: WorkspaceEntry[] = [
   "packages/sentinel",
   "packages/eslint-config",
+  // Explicit (non-glob) workspace in root package.json — must exist for bun install
+  { path: "packages/clauderon/docs", fullDirPhase1: true, depsOnly: true },
 ];
 
 /**
@@ -89,9 +91,39 @@ export function buildSentinelImage(
   version: string,
   gitSha: string,
 ): Container {
+  // CLI tool versions for agents (kubectl, argocd, talosctl)
+  // renovate: datasource=github-releases versioning=semver depName=kubernetes/kubernetes
+  const kubectlVersion = "v1.35.0";
+  // renovate: datasource=github-releases versioning=semver depName=siderolabs/talos
+  const talosctlVersion = "v1.12.0";
+
   return installSentinelWorkspaceDeps(workspaceSource, false)
     .withWorkdir("/workspace/packages/sentinel")
     .withExec(["bunx", "prisma", "generate"])
+    // Install CLI tools for agents
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "--no-install-recommends",
+      "curl",
+      "ca-certificates",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL "https://dl.k8s.io/release/${kubectlVersion}/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl`,
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      'curl -fsSL "https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64" -o /usr/local/bin/argocd && chmod +x /usr/local/bin/argocd',
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL "https://github.com/siderolabs/talos/releases/download/${talosctlVersion}/talosctl-linux-amd64" -o /usr/local/bin/talosctl && chmod +x /usr/local/bin/talosctl`,
+    ])
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withEnvVariable("NODE_ENV", "production")
