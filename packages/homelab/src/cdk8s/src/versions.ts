@@ -210,7 +210,7 @@ const versions = {
     "1.1.57@sha256:e06196ef8f4090957fc314dc758143f7bb0dd1ab2973a107664386ed0599c2eb",
   // Custom sentinel image - Autonomous agent system for operational tasks
   // not managed by renovate
-  "shepherdjerred/sentinel": "latest",
+  "shepherdjerred/sentinel": "1.1.78@sha256:5c5cfe014a0aea22aa69e2a0267e754377f4cd239cbc77a0acbe7415d60bbdaa",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];
