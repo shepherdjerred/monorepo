@@ -1,5 +1,9 @@
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
-import { PrismaClient } from "@prisma/client";
+import { describe, it, expect, beforeEach } from "bun:test";
+import {
+  setupTestDatabase,
+  testPrisma,
+  testAgent,
+} from "./helpers.ts";
 import {
   parseCommand,
   isAllowedCommand,
@@ -8,82 +12,10 @@ import { buildPermissionHandler } from "@shepherdjerred/sentinel/permissions/ind
 import { resetConfig } from "@shepherdjerred/sentinel/config/index.ts";
 import type { AgentDefinition } from "@shepherdjerred/sentinel/types/agent.ts";
 
-// Use in-memory SQLite for tests
-Bun.env["DATABASE_URL"] = "file::memory:?cache=shared";
-Bun.env["ANTHROPIC_API_KEY"] = "test-key";
-Bun.env["DISCORD_TOKEN"] = "test-token";
-Bun.env["DISCORD_CHANNEL_ID"] = "test-channel";
-Bun.env["DISCORD_GUILD_ID"] = "test-guild";
 // Short approval timeout so tier 3 tests don't block
 Bun.env["APPROVAL_TIMEOUT_MS"] = "100";
 
-const testPrisma = new PrismaClient({
-  datasourceUrl: "file::memory:?cache=shared",
-});
-
-async function setupDatabase(): Promise<void> {
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS Job (
-      id TEXT PRIMARY KEY,
-      agent TEXT NOT NULL,
-      prompt TEXT NOT NULL,
-      priority INTEGER NOT NULL DEFAULT 2,
-      status TEXT NOT NULL DEFAULT 'pending',
-      triggerType TEXT NOT NULL,
-      triggerSource TEXT NOT NULL,
-      triggerMetadata TEXT NOT NULL DEFAULT '{}',
-      deduplicationKey TEXT UNIQUE,
-      deadlineAt DATETIME,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      claimedAt DATETIME,
-      completedAt DATETIME,
-      result TEXT,
-      retryCount INTEGER NOT NULL DEFAULT 0,
-      maxRetries INTEGER NOT NULL DEFAULT 3
-    )
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS ApprovalRequest (
-      id TEXT PRIMARY KEY,
-      jobId TEXT NOT NULL,
-      agent TEXT NOT NULL,
-      toolName TEXT NOT NULL,
-      toolInput TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending',
-      decidedBy TEXT,
-      reason TEXT,
-      expiresAt DATETIME NOT NULL,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      decidedAt DATETIME
-    )
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS idx_approval_status ON ApprovalRequest(status)
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS idx_approval_job ON ApprovalRequest(jobId)
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS AgentSession (
-      id TEXT PRIMARY KEY,
-      agent TEXT NOT NULL,
-      jobId TEXT NOT NULL,
-      startedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      endedAt DATETIME,
-      turnsUsed INTEGER NOT NULL DEFAULT 0,
-      status TEXT NOT NULL DEFAULT 'running',
-      error TEXT,
-      inputTokens INTEGER NOT NULL DEFAULT 0,
-      outputTokens INTEGER NOT NULL DEFAULT 0,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-}
-
-await setupDatabase();
+await setupTestDatabase();
 // Reset config cache so APPROVAL_TIMEOUT_MS is picked up
 resetConfig();
 
@@ -91,21 +23,6 @@ beforeEach(async () => {
   resetConfig();
   await testPrisma.$executeRawUnsafe("DELETE FROM ApprovalRequest");
 });
-
-afterAll(async () => {
-  await testPrisma.$disconnect();
-});
-
-const testAgent: AgentDefinition = {
-  name: "test-agent",
-  description: "Test agent",
-  systemPrompt: "You are a test agent.",
-  tools: ["Read", "Glob", "Grep", "Bash", "Edit", "Write", "Task", "WebSearch", "WebFetch"],
-  maxTurns: 10,
-  permissionTier: "write-with-approval",
-  triggers: [],
-  memory: { private: "test", shared: [] },
-};
 
 describe("parseCommand", () => {
   it("should parse simple commands", () => {
@@ -232,7 +149,7 @@ describe("isAllowedCommand", () => {
   });
 
   it("should reject unknown commands", () => {
-    const result = isAllowedCommand(["curl", "http://evil.com"]);
+    const result = isAllowedCommand(["rm", "-rf", "/"]);
     expect(result.allowed).toBe(false);
     expect(result.matchedRule).toBeUndefined();
   });
@@ -346,7 +263,7 @@ describe("buildPermissionHandler - Tier 2 (bash allowlist)", () => {
   it("should reject unknown commands", async () => {
     const handler = buildPermissionHandler(testAgent, "session-1");
     const result = await handler("Bash", {
-      command: "curl http://evil.com",
+      command: "rm -rf /tmp/test",
     });
     expect(result.behavior).toBe("deny");
   });

@@ -1,0 +1,6 @@
+module react_networking {
+  umbrella header "React-networking-umbrella.h"
+
+  export *
+  module * { export * }
+}

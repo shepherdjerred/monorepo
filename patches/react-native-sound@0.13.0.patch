@@ -1,0 +1,12 @@
+diff --git a/RNSound.podspec b/RNSound.podspec
+index 1432387c03c4b755a9cb2d8001147407f18a7ace..edf35c1502e0a153b6534478a23bbf24b8f18499 100644
+--- a/RNSound.podspec
++++ b/RNSound.podspec
+@@ -16,6 +16,7 @@ Pod::Spec.new do |s|
+ 
+   s.source       = { :git => "https://github.com/zmxv/react-native-sound.git" }
+   s.source_files = "ios/**/*.{h,m,mm,cpp}"
++  s.frameworks   = "AVFoundation"
+ 
+   # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.
+   # See https://github.com/facebook/react-native/blob/febf6b7f33fdb4904669f99d795eba4c0f95d7bf/scripts/cocoapods/new_architecture.rb#L79.

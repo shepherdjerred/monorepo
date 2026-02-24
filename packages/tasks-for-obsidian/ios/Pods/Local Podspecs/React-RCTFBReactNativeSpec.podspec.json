@@ -1,0 +1,85 @@
+{
+  "name": "React-RCTFBReactNativeSpec",
+  "version": "0.83.1",
+  "summary": "FBReactNativeSpec for React Native.",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "FBReactNativeSpec/**/*.{c,h,m,mm,cpp}",
+  "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
+  "exclude_files": [
+    "FBReactNativeSpec/react/renderer/components",
+    " -DRCT_NEW_ARCH_ENABLED=1"
+  ],
+  "header_dir": "FBReactNativeSpec",
+  "pod_target_xcconfig": {
+    "USE_HEADERMAP": "NO",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "HEADER_SEARCH_PATHS": [
+      "\"$(PODS_TARGET_SRCROOT)/FBReactNativeSpec\"",
+      "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/bridging\"",
+      "$(PODS_ROOT)/glog",
+      "$(PODS_ROOT)/boost",
+      "$(PODS_ROOT)/DoubleConversion",
+      "$(PODS_ROOT)/fast_float/include",
+      "$(PODS_ROOT)/fmt/include",
+      "$(PODS_ROOT)/SocketRocket",
+      "$(PODS_ROOT)/RCT-Folly"
+    ]
+  },
+  "dependencies": {
+    "React-jsi": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "React-Core": [],
+    "React-NativeModulesApple": [],
+    "ReactCommon": [],
+    "hermes-engine": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  },
+  "script_phases": [
+    {
+      "name": "[RN]Check FBReactNativeSpec",
+      "execution_position": "before_compile",
+      "always_out_of_date": "1",
+      "script": "echo \"Checking whether Codegen has run...\"\nfbReactNativeSpecPath=\"$REACT_NATIVE_PATH/React/FBReactNativeSpec\"\n\nif [[ ! -d \"$fbReactNativeSpecPath\" ]]; then\n  echo 'error: Codegen did not run properly in your project. Please reinstall cocoapods with `bundle exec pod install`.'\n  exit 1\nfi\n"
+    }
+  ],
+  "subspecs": [
+    {
+      "name": "components",
+      "source_files": "FBReactNativeSpec/react/renderer/components/FBReactNativeSpec/**/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/components/FBReactNativeSpec",
+      "pod_target_xcconfig": {
+        "HEADER_SEARCH_PATHS": "\"${PODS_CONFIGURATION_BUILD_DIR}/React-featureflags/React_featureflags.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-debug/React_debug.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-rendererdebug/React_rendererdebug.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-utils/React_utils.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx\""
+      },
+      "dependencies": {
+        "React-featureflags": [],
+        "React-debug": [],
+        "React-rendererdebug": [],
+        "React-utils": [],
+        "React-graphics": [],
+        "React-Fabric": [],
+        "Yoga": []
+      }
+    }
+  ]
+}

@@ -29,6 +29,9 @@ export type Config = {
   skipCostco: boolean;
   skipResearch: boolean;
   output: string | undefined;
+  rebuildKb: boolean;
+  skipEnrich: boolean;
+  suggest: boolean;
 };
 
 export function getConfig(): Config {
@@ -57,6 +60,9 @@ export function getConfig(): Config {
       "skip-costco": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
+      "rebuild-kb": { type: "boolean", default: false },
+      "skip-enrich": { type: "boolean", default: false },
+      suggest: { type: "boolean", default: true },
     },
     strict: true,
   });
@@ -108,6 +114,9 @@ export function getConfig(): Config {
     skipCostco: values["skip-costco"],
     skipResearch: values["skip-research"],
     output: values.output,
+    rebuildKb: values["rebuild-kb"],
+    skipEnrich: values["skip-enrich"],
+    suggest: values.suggest,
   };
 }
 

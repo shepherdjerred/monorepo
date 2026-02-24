@@ -1,0 +1,48 @@
+{
+  "name": "React-networking",
+  "version": "0.83.1",
+  "summary": "Common networking modules for React Native",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "*.{cpp,h}",
+  "header_dir": "react/networking",
+  "pod_target_xcconfig": {
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "HEADER_SEARCH_PATHS": [
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-featureflags/React_featureflags.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspectornetwork/jsinspector_modernnetwork.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspectortracing/jsinspector_moderntracing.framework/Headers\"",
+      "$(PODS_ROOT)/glog",
+      "$(PODS_ROOT)/boost",
+      "$(PODS_ROOT)/DoubleConversion",
+      "$(PODS_ROOT)/fast_float/include",
+      "$(PODS_ROOT)/fmt/include",
+      "$(PODS_ROOT)/SocketRocket",
+      "$(PODS_ROOT)/RCT-Folly"
+    ],
+    "DEFINES_MODULE": "YES"
+  },
+  "dependencies": {
+    "React-featureflags": [],
+    "React-jsinspectornetwork": [],
+    "React-jsinspectortracing": [],
+    "React-performancetimeline": [],
+    "React-timing": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  }
+}

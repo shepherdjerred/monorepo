@@ -1,0 +1,44 @@
+{
+  "name": "React-domnativemodule",
+  "version": "0.83.1",
+  "summary": "React Native DOM native module",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "*.{cpp,h}",
+  "header_dir": "react/nativemodule/dom",
+  "pod_target_xcconfig": {
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/Yoga\" $(PODS_ROOT)/glog $(PODS_ROOT)/boost $(PODS_ROOT)/DoubleConversion $(PODS_ROOT)/fast_float/include $(PODS_ROOT)/fmt/include $(PODS_ROOT)/SocketRocket $(PODS_ROOT)/RCT-Folly \"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers/platform/ios\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-RCTFBReactNativeSpec/React_RCTFBReactNativeSpec.framework/Headers\"",
+    "OTHER_CFLAGS": "$(inherited)",
+    "DEFINES_MODULE": "YES"
+  },
+  "dependencies": {
+    "React-jsi": [],
+    "React-jsiexecutor": [],
+    "hermes-engine": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": [],
+    "Yoga": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-Fabric": [],
+    "React-Fabric/bridging": [],
+    "React-FabricComponents": [],
+    "React-runtimeexecutor": [],
+    "React-graphics": [],
+    "React-RCTFBReactNativeSpec": []
+  }
+}

@@ -2,12 +2,14 @@ import {
   Client,
   GatewayIntentBits,
   Events,
+  Partials,
   type Interaction,
 } from "discord.js";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 import { handleInteraction, registerCommands } from "./commands.ts";
 import { handleButtonInteraction } from "./approvals.ts";
+import { handleDirectMessage } from "./chat.ts";
 
 const discordLogger = logger.child({ module: "discord" });
 
@@ -24,15 +26,21 @@ export async function startDiscord(config: Config): Promise<void> {
     return;
   }
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  const newClient = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
+      GatewayIntentBits.MessageContent,
+    ],
+    partials: [Partials.Channel, Partials.Message],
     rest: {
       timeout: 30_000,
       retries: 3,
     },
   });
 
-  client.once(Events.ClientReady, (readyClient) => {
+  newClient.once(Events.ClientReady, (readyClient) => {
     discordLogger.info(
       { user: readyClient.user.tag },
       "Discord client ready",
@@ -41,11 +49,19 @@ export async function startDiscord(config: Config): Promise<void> {
     void registerCommands(readyClient, discordConfig.guildId);
   });
 
-  client.on(Events.InteractionCreate, (interaction: Interaction) => {
+  newClient.on(Events.InteractionCreate, (interaction: Interaction) => {
     void handleInteractionSafe(interaction, config);
   });
 
-  await client.login(discordConfig.token);
+  newClient.on(Events.MessageCreate, (message) => {
+    if (message.author.bot) return;
+    if (message.guild != null) return; // Only handle DMs
+    void handleDirectMessage(message);
+  });
+
+  // Only set the module-level client after successful login
+  await newClient.login(discordConfig.token);
+  client = newClient;
 }
 
 async function handleInteractionSafe(

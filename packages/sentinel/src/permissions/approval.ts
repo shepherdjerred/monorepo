@@ -2,6 +2,7 @@ import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 import type { PermissionDecision } from "@shepherdjerred/sentinel/types/permission.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 import { sendApprovalRequest } from "@shepherdjerred/sentinel/discord/approvals.ts";
+import { emitSSE } from "@shepherdjerred/sentinel/sse/index.ts";
 
 const approvalLogger = logger.child({ module: "permissions:approval" });
 
@@ -36,6 +37,13 @@ export async function requestApproval(
     },
     "Approval request created",
   );
+
+  emitSSE({
+    type: "approval:created",
+    id: request.id,
+    agent: params.agentName,
+    toolName: params.toolName,
+  });
 
   // Send Discord notification (non-blocking, never crash on failure)
   void notifyDiscord({

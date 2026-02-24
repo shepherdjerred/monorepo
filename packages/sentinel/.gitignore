@@ -1,5 +1,8 @@
 data/
+!data/memory/
+!data/memory/**
 node_modules/
 dist/
 *.db
-.index.sqlite
+.index.sqlite*
+.env

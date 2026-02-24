@@ -28,6 +28,7 @@ export const QueueConfigSchema = z.object({
   pollIntervalMs: z.number().default(5000),
   maxJobDurationMs: z.number().default(600_000),
   defaultMaxRetries: z.number().default(3),
+  maxConcurrentJobs: z.number().default(3),
 });
 
 export const WebhooksConfigSchema = z.object({

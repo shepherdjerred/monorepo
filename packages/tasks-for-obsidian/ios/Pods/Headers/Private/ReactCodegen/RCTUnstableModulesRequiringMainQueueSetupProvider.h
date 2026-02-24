@@ -1,0 +1,1 @@
+../../../../build/generated/ios/ReactCodegen/RCTUnstableModulesRequiringMainQueueSetupProvider.h

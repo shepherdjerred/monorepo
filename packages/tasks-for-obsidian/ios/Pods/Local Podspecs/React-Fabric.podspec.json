@@ -1,0 +1,239 @@
+{
+  "name": "React-Fabric",
+  "version": "0.83.1",
+  "summary": "Fabric for React Native.",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "dummyFile.cpp",
+  "pod_target_xcconfig": {
+    "USE_HEADERMAP": "YES",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "DEFINES_MODULE": "YES",
+    "HEADER_SEARCH_PATHS": [
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers/platform/ios\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-rendererdebug/React_rendererdebug.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-utils/React_utils.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-utils/React_utils.framework/Headers/react/utils/platform/ios\"",
+      "$(PODS_ROOT)/glog",
+      "$(PODS_ROOT)/boost",
+      "$(PODS_ROOT)/DoubleConversion",
+      "$(PODS_ROOT)/fast_float/include",
+      "$(PODS_ROOT)/fmt/include",
+      "$(PODS_ROOT)/SocketRocket",
+      "$(PODS_ROOT)/RCT-Folly"
+    ]
+  },
+  "dependencies": {
+    "React-jsiexecutor": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-jsi": [],
+    "React-logger": [],
+    "React-Core": [],
+    "React-debug": [],
+    "React-featureflags": [],
+    "React-runtimescheduler": [],
+    "React-cxxreact": [],
+    "React-runtimeexecutor": [],
+    "React-rendererdebug": [],
+    "React-graphics": [],
+    "React-utils": [],
+    "hermes-engine": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  },
+  "subspecs": [
+    {
+      "name": "animated",
+      "source_files": "react/renderer/animated/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/animated/tests",
+      "header_dir": "react/renderer/animated"
+    },
+    {
+      "name": "animations",
+      "source_files": "react/renderer/animations/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/animations/tests",
+      "header_dir": "react/renderer/animations"
+    },
+    {
+      "name": "animationbackend",
+      "source_files": "react/renderer/animationbackend/**/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/animationbackend"
+    },
+    {
+      "name": "attributedstring",
+      "source_files": "react/renderer/attributedstring/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/attributedstring/tests",
+      "header_dir": "react/renderer/attributedstring"
+    },
+    {
+      "name": "bridging",
+      "source_files": "react/renderer/bridging/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/bridging/tests",
+      "header_dir": "react/renderer/bridging"
+    },
+    {
+      "name": "core",
+      "source_files": "react/renderer/core/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/core/tests",
+      "header_dir": "react/renderer/core",
+      "pod_target_xcconfig": {
+        "HEADER_SEARCH_PATHS": "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_ROOT)/Headers/Private/Yoga\" \"$(PODS_TARGET_SRCROOT)\""
+      }
+    },
+    {
+      "name": "componentregistry",
+      "source_files": "react/renderer/componentregistry/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/componentregistry"
+    },
+    {
+      "name": "componentregistrynative",
+      "source_files": "react/renderer/componentregistry/native/**/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/componentregistry/native"
+    },
+    {
+      "name": "components",
+      "subspecs": [
+        {
+          "name": "root",
+          "source_files": "react/renderer/components/root/**/*.{m,mm,cpp,h}",
+          "exclude_files": "react/renderer/components/root/tests",
+          "header_dir": "react/renderer/components/root"
+        },
+        {
+          "name": "view",
+          "dependencies": {
+            "React-renderercss": [],
+            "Yoga": []
+          },
+          "source_files": [
+            "react/renderer/components/view/*.{m,mm,cpp,h}",
+            "react/renderer/components/view/platform/cxx/**/*.{m,mm,cpp,h}"
+          ],
+          "header_dir": "react/renderer/components/view"
+        },
+        {
+          "name": "scrollview",
+          "source_files": "react/renderer/components/scrollview/**/*.{m,mm,cpp,h}",
+          "header_dir": "react/renderer/components/scrollview",
+          "exclude_files": [
+            "react/renderer/components/scrollview/tests",
+            "react/renderer/components/scrollview/platform/android"
+          ]
+        },
+        {
+          "name": "legacyviewmanagerinterop",
+          "source_files": "react/renderer/components/legacyviewmanagerinterop/**/*.{m,mm,cpp,h}",
+          "exclude_files": "react/renderer/components/legacyviewmanagerinterop/tests",
+          "header_dir": "react/renderer/components/legacyviewmanagerinterop"
+        }
+      ]
+    },
+    {
+      "name": "dom",
+      "dependencies": {
+        "React-graphics": []
+      },
+      "source_files": "react/renderer/dom/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/dom/tests",
+      "header_dir": "react/renderer/dom"
+    },
+    {
+      "name": "scheduler",
+      "source_files": "react/renderer/scheduler/**/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/scheduler",
+      "dependencies": {
+        "React-performancecdpmetrics": [],
+        "React-performancetimeline": [],
+        "React-Fabric/observers/events": []
+      }
+    },
+    {
+      "name": "imagemanager",
+      "source_files": "react/renderer/imagemanager/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/imagemanager"
+    },
+    {
+      "name": "mounting",
+      "source_files": "react/renderer/mounting/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/mounting/tests",
+      "header_dir": "react/renderer/mounting"
+    },
+    {
+      "name": "observers",
+      "subspecs": [
+        {
+          "name": "events",
+          "source_files": "react/renderer/observers/events/**/*.{m,mm,cpp,h}",
+          "exclude_files": "react/renderer/observers/events/tests",
+          "header_dir": "react/renderer/observers/events"
+        },
+        {
+          "name": "intersection",
+          "source_files": "react/renderer/observers/intersection/**/*.{m,mm,cpp,h}",
+          "exclude_files": "react/renderer/observers/intersection/tests",
+          "header_dir": "react/renderer/observers/intersection"
+        }
+      ]
+    },
+    {
+      "name": "templateprocessor",
+      "source_files": "react/renderer/templateprocessor/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/templateprocessor/tests",
+      "header_dir": "react/renderer/templateprocessor"
+    },
+    {
+      "name": "telemetry",
+      "source_files": "react/renderer/telemetry/**/*.{m,mm,cpp,h}",
+      "exclude_files": "react/renderer/telemetry/tests",
+      "header_dir": "react/renderer/telemetry"
+    },
+    {
+      "name": "consistency",
+      "source_files": "react/renderer/consistency/**/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/consistency"
+    },
+    {
+      "name": "uimanager",
+      "dependencies": {
+        "React-rendererconsistency": []
+      },
+      "source_files": "react/renderer/uimanager/*.{m,mm,cpp,h}",
+      "header_dir": "react/renderer/uimanager",
+      "subspecs": [
+        {
+          "name": "consistency",
+          "source_files": "react/renderer/uimanager/consistency/*.{m,mm,cpp,h}",
+          "header_dir": "react/renderer/uimanager/consistency"
+        }
+      ]
+    },
+    {
+      "name": "leakchecker",
+      "source_files": "react/renderer/leakchecker/**/*.{cpp,h}",
+      "exclude_files": "react/renderer/leakchecker/tests",
+      "header_dir": "react/renderer/leakchecker",
+      "pod_target_xcconfig": {
+        "GCC_WARN_PEDANTIC": "YES"
+      }
+    }
+  ]
+}

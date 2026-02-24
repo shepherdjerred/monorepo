@@ -43,8 +43,8 @@ export function getPrisma(): PrismaClient {
 
 export async function initDatabase(): Promise<void> {
   const prisma = getPrisma();
-  await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
-  await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000;");
+  await prisma.$queryRawUnsafe("PRAGMA journal_mode = WAL;");
+  await prisma.$queryRawUnsafe("PRAGMA busy_timeout = 5000;");
 }
 
 export async function disconnectPrisma(): Promise<void> {

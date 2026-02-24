@@ -1,5 +1,10 @@
 glob_matcher: doublestar
 
+commit-msg:
+  jobs:
+    - name: validate-commit-msg
+      run: bun scripts/validate-commit-msg.ts {1}
+
 pre-commit:
   jobs:
     # TIER 1: Fast checks (sequential, fail-fast)

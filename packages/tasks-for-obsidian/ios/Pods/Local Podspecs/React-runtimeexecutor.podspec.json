@@ -1,0 +1,43 @@
+{
+  "name": "React-runtimeexecutor",
+  "module_name": "React_runtimeexecutor",
+  "version": "0.83.1",
+  "summary": "-",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": [
+    "ReactCommon/*.{m,mm,cpp,h}",
+    "platform/ios/**/*.{m,mm,cpp,h}"
+  ],
+  "header_dir": "ReactCommon",
+  "pod_target_xcconfig": {
+    "USE_HEADERMAP": "NO",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "HEADER_SEARCH_PATHS": "\"$(PODS_TARGET_SRCROOT)\" $(PODS_ROOT)/glog $(PODS_ROOT)/boost $(PODS_ROOT)/DoubleConversion $(PODS_ROOT)/fast_float/include $(PODS_ROOT)/fmt/include $(PODS_ROOT)/SocketRocket $(PODS_ROOT)/RCT-Folly \"${PODS_CONFIGURATION_BUILD_DIR}/React-featureflags/React_featureflags.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-debug/React_debug.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-utils/React_utils.framework/Headers\" \"${PODS_CONFIGURATION_BUILD_DIR}/React-utils/React_utils.framework/Headers/react/utils/platform/ios\"",
+    "DEFINES_MODULE": "YES"
+  },
+  "dependencies": {
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": [],
+    "React-jsi": [
+      "0.83.1"
+    ],
+    "React-featureflags": [],
+    "React-debug": [],
+    "React-utils": []
+  }
+}

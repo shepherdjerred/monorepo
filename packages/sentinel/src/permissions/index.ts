@@ -7,7 +7,7 @@ import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 const permLogger = logger.child({ module: "permissions" });
 
 type PermissionResult =
-  | { behavior: "allow" }
+  | { behavior: "allow"; updatedInput?: ToolInput }
   | { behavior: "deny"; message: string };
 
 type ToolInput = Record<string, unknown>;
@@ -27,10 +27,11 @@ const TIER_3_TOOLS = new Set(["Edit", "Write", "Task"]);
 export function buildPermissionHandler(
   agentDef: AgentDefinition,
   sessionId: string,
-): (toolName: string, toolInput: ToolInput) => Promise<PermissionResult> {
+): (toolName: string, toolInput: ToolInput, options?: { signal: AbortSignal }) => Promise<PermissionResult> {
   return async (
     toolName: string,
     toolInput: ToolInput,
+    _options?: { signal: AbortSignal },
   ): Promise<PermissionResult> => {
     const inputSummary = summarizeInput(toolName, toolInput);
 
@@ -81,7 +82,7 @@ export function buildPermissionHandler(
         },
         "Permission: auto-allowed (tier 1)",
       );
-      return { behavior: "allow" };
+      return { behavior: "allow", updatedInput: toolInput };
     }
 
     // Tier 2: Bash with allowlist
@@ -175,7 +176,7 @@ function handleBash(
       },
       "Permission: allowed (bash allowlist)",
     );
-    return { behavior: "allow" };
+    return { behavior: "allow", updatedInput: toolInput };
   }
 
   // Not in allowlist: deny (in future, could go to approval)
@@ -241,7 +242,7 @@ async function handleApproval(
   );
 
   if (decision.approved) {
-    return { behavior: "allow" };
+    return { behavior: "allow", updatedInput: params.toolInput };
   }
 
   return {

@@ -1,0 +1,1 @@
+../../../../../node_modules/react-native-screens/ios/helpers/scroll-view/RNSScrollEdgeEffectApplicator.h

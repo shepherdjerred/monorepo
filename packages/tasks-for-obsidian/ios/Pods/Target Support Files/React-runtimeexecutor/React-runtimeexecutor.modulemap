@@ -1,0 +1,6 @@
+module React_runtimeexecutor {
+  umbrella header "React-runtimeexecutor-umbrella.h"
+
+  export *
+  module * { export * }
+}

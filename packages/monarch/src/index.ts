@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import { getConfig } from "./lib/config.ts";
-import type { Config } from "./lib/config.ts";
 import {
   initMonarch,
   fetchAllTransactions,
@@ -11,45 +10,33 @@ import type {
   MonarchCategory,
   MonarchTransaction,
 } from "./lib/monarch/types.ts";
-import { groupByWeek, buildWeekWindows } from "./lib/monarch/weeks.ts";
-import type { WeekGroup, WeekWindow } from "./lib/monarch/weeks.ts";
-import { buildResolvedMap } from "./lib/enrichment.ts";
+import { runEnrichmentPipeline } from "./lib/enrichment/pipeline.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
   initClaude,
-  classifyWeek,
   setWebSearchEnabled,
   getUsageSummary,
 } from "./lib/classifier/claude.ts";
-import { classifyAmazon } from "./lib/amazon/classify.ts";
-import type { MatchResult } from "./lib/amazon/matcher.ts";
-import { classifyVenmo } from "./lib/venmo/classify.ts";
-import type { VenmoMatchResult } from "./lib/venmo/matcher.ts";
-import { classifyBilt } from "./lib/conservice/classify.ts";
-import { classifyUsaa } from "./lib/usaa/classify.ts";
-import { classifyScl } from "./lib/scl/classify.ts";
-import { classifyApple } from "./lib/apple/classify.ts";
-import type { AppleMatchResult } from "./lib/apple/matcher.ts";
-import { classifyCostco } from "./lib/costco/classify.ts";
-import type { CostcoMatchResult } from "./lib/costco/matcher.ts";
-import type {
-  CachedTransactionClassification,
-  ProposedChange,
-  WeekClassificationResponse,
-} from "./lib/classifier/types.ts";
+import { classifyTier1 } from "./lib/classifier/tier1.ts";
+import { classifyTier2 } from "./lib/classifier/tier2.ts";
+import { classifyTier3 } from "./lib/classifier/tier3.ts";
+import type { ProposedChange } from "./lib/classifier/types.ts";
+import { verifyClassifications } from "./lib/verification/verify.ts";
 import {
-  getCachedWeek,
-  cacheWeekClassification,
-} from "./lib/classifier/cache.ts";
+  loadKnowledgeBase,
+  saveKnowledgeBase,
+  parseHintsToKB,
+  addMerchantToKB,
+  learnFromClassification,
+} from "./lib/knowledge/store.ts";
+import type { MerchantKnowledge } from "./lib/knowledge/types.ts";
+import { buildCategoryDefinitions } from "./lib/knowledge/definitions.ts";
+import { buildMerchantStats, statsToKBEntries } from "./lib/knowledge/history.ts";
 import {
-  displayWeekChanges,
-  displayAmazonChanges,
-  displayVenmoChanges,
-  displayBiltChanges,
-  displayUsaaChanges,
-  displaySclChanges,
-  displayAppleChanges,
-  displayCostcoChanges,
+  displayTierBreakdown,
+  displayEnrichmentStats,
+  displayChanges,
+  displaySuggestions,
   displaySummary,
   displayUsageSummary,
 } from "./lib/display.ts";
@@ -66,142 +53,59 @@ function getDateRange(): { startDate: string; endDate: string } {
   return { startDate, endDate };
 }
 
-type DeepClassifyResult = {
-  venmoChanges: ProposedChange[];
-  venmoMatchResult: VenmoMatchResult | null;
-  biltChanges: ProposedChange[];
-  usaaChanges: ProposedChange[];
-  sclChanges: ProposedChange[];
-  appleChanges: ProposedChange[];
-  appleMatchResult: AppleMatchResult | null;
-  costcoChanges: ProposedChange[];
-  costcoMatchResult: CostcoMatchResult | null;
-  amazonChanges: ProposedChange[];
-  matchResult: MatchResult | null;
-};
+async function loadHints(): Promise<string> {
+  const hintsPath = path.join(import.meta.dirname, "..", "hints.txt");
+  const hintsFile = Bun.file(hintsPath);
+  if (await hintsFile.exists()) {
+    const hints = await hintsFile.text();
+    setUserHints(hints.trim());
+    log.info("Loaded user hints");
+    return hints.trim();
+  }
+  return "";
+}
 
-type DeepClassifyOptions = {
-  config: Config;
-  categories: MonarchCategory[];
-  venmo: MonarchTransaction[];
-  bilt: MonarchTransaction[];
-  usaa: MonarchTransaction[];
-  scl: MonarchTransaction[];
-  apple: MonarchTransaction[];
-  costco: MonarchTransaction[];
-  amazon: MonarchTransaction[];
-};
+async function buildKnowledgeBase(
+  categories: MonarchCategory[],
+  allTransactions: MonarchTransaction[],
+  hints: string,
+  rebuildKb: boolean,
+): Promise<Map<string, MerchantKnowledge>> {
+  let kb: Map<string, MerchantKnowledge>;
 
-async function deepClassify(
-  options: DeepClassifyOptions,
-): Promise<DeepClassifyResult> {
-  const {
-    config,
-    categories,
-    venmo: venmoTransactions,
-    bilt: biltTransactions,
-    usaa: usaaTransactions,
-    scl: sclTransactions,
-    apple: appleTransactions,
-    costco: costcoTransactions,
-    amazon: amazonTransactions,
-  } = options;
-  let venmoChanges: ProposedChange[] = [];
-  let venmoMatchResult: VenmoMatchResult | null = null;
-  if (
-    !config.skipVenmo &&
-    config.venmoCsv !== undefined &&
-    venmoTransactions.length > 0
-  ) {
-    log.info("\n--- Venmo Deep Classification ---");
-    const result = await classifyVenmo(config, categories, venmoTransactions);
-    venmoChanges = result.changes;
-    venmoMatchResult = result.matchResult;
-    displayVenmoChanges(venmoChanges, venmoMatchResult);
+  if (rebuildKb) {
+    kb = new Map();
+    log.info("Rebuilding knowledge base from scratch");
+  } else {
+    kb = await loadKnowledgeBase();
   }
 
-  let biltChanges: ProposedChange[] = [];
-  if (!config.skipBilt && biltTransactions.length > 0) {
-    log.info("\n--- Bilt/Conservice Deep Classification ---");
-    const result = await classifyBilt(categories, biltTransactions);
-    biltChanges = result.changes;
-    displayBiltChanges(biltChanges, result.matches);
+  // Import hints into KB (hints always take priority)
+  const hintEntries = parseHintsToKB(hints, categories);
+  for (const entry of hintEntries) {
+    addMerchantToKB(kb, entry);
+  }
+  if (hintEntries.length > 0) {
+    log.info(`Imported ${String(hintEntries.length)} hints into KB`);
   }
 
-  let usaaChanges: ProposedChange[] = [];
-  if (!config.skipUsaa && usaaTransactions.length > 0) {
-    log.info("\n--- USAA Insurance Split ---");
-    usaaChanges = await classifyUsaa(categories, usaaTransactions);
-    displayUsaaChanges(usaaChanges);
+  // Build history-based entries for merchants not already in KB
+  const stats = buildMerchantStats(allTransactions);
+  const historyEntries = statsToKBEntries(stats, 3);
+  let historyAdded = 0;
+  for (const entry of historyEntries) {
+    const key = entry.merchantName.toLowerCase();
+    if (!kb.has(key)) {
+      addMerchantToKB(kb, entry);
+      historyAdded++;
+    }
+  }
+  if (historyAdded > 0) {
+    log.info(`Added ${String(historyAdded)} history-based KB entries`);
   }
 
-  let sclChanges: ProposedChange[] = [];
-  if (
-    !config.skipScl &&
-    config.sclCsv !== undefined &&
-    sclTransactions.length > 0
-  ) {
-    log.info("\n--- Seattle City Light Classification ---");
-    sclChanges = await classifyScl(config.sclCsv, categories, sclTransactions);
-    displaySclChanges(sclChanges);
-  }
-
-  let appleChanges: ProposedChange[] = [];
-  let appleMatchResult: AppleMatchResult | null = null;
-  if (
-    !config.skipApple &&
-    config.appleMailDir !== undefined &&
-    appleTransactions.length > 0
-  ) {
-    log.info("\n--- Apple Deep Classification ---");
-    const result = await classifyApple(
-      config.appleMailDir,
-      categories,
-      appleTransactions,
-    );
-    appleChanges = result.changes;
-    appleMatchResult = result.matchResult;
-    displayAppleChanges(appleChanges, appleMatchResult);
-  }
-
-  let costcoChanges: ProposedChange[] = [];
-  let costcoMatchResult: CostcoMatchResult | null = null;
-  if (!config.skipCostco && costcoTransactions.length > 0) {
-    log.info("\n--- Costco Deep Classification ---");
-    const result = await classifyCostco(categories, costcoTransactions);
-    costcoChanges = result.changes;
-    costcoMatchResult = result.matchResult;
-    displayCostcoChanges(costcoChanges, costcoMatchResult);
-  }
-
-  let amazonChanges: ProposedChange[] = [];
-  let matchResult: MatchResult | null = null;
-  if (!config.skipAmazon && amazonTransactions.length > 0) {
-    log.info("\n--- Amazon Deep Classification ---");
-    const result = await classifyAmazon(
-      config.amazonYears,
-      config.forceScrape,
-      categories,
-      amazonTransactions,
-    );
-    amazonChanges = result.changes;
-    matchResult = result.matchResult;
-    displayAmazonChanges(amazonChanges, matchResult);
-  }
-
-  return {
-    venmoChanges,
-    venmoMatchResult,
-    biltChanges,
-    usaaChanges,
-    sclChanges,
-    appleChanges,
-    appleMatchResult,
-    costcoChanges,
-    costcoMatchResult,
-    amazonChanges,
-    matchResult,
-  };
+  await saveKnowledgeBase(kb);
+  return kb;
 }
 
 async function saveChanges(
@@ -212,177 +116,6 @@ async function saveChanges(
   log.info(`Saved ${String(changes.length)} proposed changes to ${outputPath}`);
 }
 
-type ClassifyByWeekOptions = {
-  categories: MonarchCategory[];
-  regularTransactions: MonarchTransaction[];
-  deep: DeepClassifyResult;
-  amazonTransactions: MonarchTransaction[];
-  venmoTransactions: MonarchTransaction[];
-  biltTransactions: MonarchTransaction[];
-  usaaTransactions: MonarchTransaction[];
-  sclTransactions: MonarchTransaction[];
-  appleTransactions: MonarchTransaction[];
-  costcoTransactions: MonarchTransaction[];
-};
-
-async function classifyByWeek(
-  opts: ClassifyByWeekOptions,
-): Promise<{ weekChanges: ProposedChange[]; weekGroups: WeekGroup[] }> {
-  const { categories, regularTransactions, deep } = opts;
-
-  const allDeepChanges = [
-    ...deep.venmoChanges,
-    ...deep.biltChanges,
-    ...deep.usaaChanges,
-    ...deep.sclChanges,
-    ...deep.appleChanges,
-    ...deep.costcoChanges,
-    ...deep.amazonChanges,
-  ];
-  const resolvedMap = buildResolvedMap(allDeepChanges);
-
-  const allTransactions = [
-    ...regularTransactions,
-    ...opts.amazonTransactions,
-    ...opts.venmoTransactions,
-    ...opts.biltTransactions,
-    ...opts.usaaTransactions,
-    ...opts.sclTransactions,
-    ...opts.appleTransactions,
-    ...opts.costcoTransactions,
-  ];
-  const weekGroups = groupByWeek(allTransactions);
-  const windows = buildWeekWindows(weekGroups);
-
-  log.info(
-    `\n--- Week-Based Classification (${String(weekGroups.length)} weeks) ---`,
-  );
-
-  const weekChanges: ProposedChange[] = [];
-
-  type WeekTask = {
-    window: WeekWindow;
-    classifiableIds: string[];
-  };
-
-  const cachedTasks: WeekTask[] = [];
-  const uncachedTasks: WeekTask[] = [];
-
-  // Separate cached vs uncached weeks
-  for (const window of windows) {
-    const classifiable = window.current.transactions.filter(
-      (t) => !resolvedMap.has(t.id) && !t.isSplitTransaction,
-    );
-    if (classifiable.length === 0) continue;
-
-    const classifiableIds = classifiable.map((t) => t.id);
-    const cached = await getCachedWeek(window.current.weekKey, classifiableIds);
-    if (cached) {
-      for (const classification of cached) {
-        const txn = window.current.transactions.find(
-          (t) => t.id === classification.transactionId,
-        );
-        if (!txn) continue;
-        if (classification.categoryId === txn.category.id) continue;
-        weekChanges.push({
-          transactionId: classification.transactionId,
-          transactionDate: txn.date,
-          merchantName: txn.merchant.name,
-          amount: txn.amount,
-          currentCategory: txn.category.name,
-          currentCategoryId: txn.category.id,
-          proposedCategory: classification.categoryName,
-          proposedCategoryId: classification.categoryId,
-          confidence: classification.confidence,
-          type: "recategorize",
-        });
-      }
-      cachedTasks.push({ window, classifiableIds });
-    } else {
-      uncachedTasks.push({ window, classifiableIds });
-    }
-  }
-
-  if (cachedTasks.length > 0) {
-    log.info(
-      `${String(cachedTasks.length)} weeks from cache, ${String(uncachedTasks.length)} need classification`,
-    );
-  }
-
-  // Classify uncached weeks in parallel
-  const weekConcurrency = 3;
-  let weekCompleted = 0;
-  const emptyPreviousResults = new Map<string, string>();
-
-  for (let i = 0; i < uncachedTasks.length; i += weekConcurrency) {
-    const chunk = uncachedTasks.slice(i, i + weekConcurrency);
-    const results = await Promise.all(
-      chunk.map(
-        async (
-          task,
-        ): Promise<{ task: WeekTask; result: WeekClassificationResponse }> => {
-          const result = await classifyWeek(
-            categories,
-            task.window,
-            resolvedMap,
-            emptyPreviousResults,
-          );
-          return { task, result };
-        },
-      ),
-    );
-
-    for (const { task, result } of results) {
-      const classifiable = task.window.current.transactions.filter(
-        (t) => !resolvedMap.has(t.id) && !t.isSplitTransaction,
-      );
-      const cachedResults: CachedTransactionClassification[] = [];
-      for (const classification of result.transactions) {
-        const txn = classifiable[classification.transactionIndex];
-        if (!txn) continue;
-        cachedResults.push({
-          transactionId: txn.id,
-          categoryId: classification.categoryId,
-          categoryName: classification.categoryName,
-          confidence: classification.confidence,
-        });
-        if (classification.categoryId === txn.category.id) continue;
-        weekChanges.push({
-          transactionId: txn.id,
-          transactionDate: txn.date,
-          merchantName: txn.merchant.name,
-          amount: txn.amount,
-          currentCategory: txn.category.name,
-          currentCategoryId: txn.category.id,
-          proposedCategory: classification.categoryName,
-          proposedCategoryId: classification.categoryId,
-          confidence: classification.confidence,
-          type: "recategorize",
-        });
-      }
-      await cacheWeekClassification(
-        task.window.current.weekKey,
-        task.classifiableIds,
-        cachedResults,
-      );
-      weekCompleted += 1;
-    }
-    log.progress(weekCompleted, uncachedTasks.length, "weeks classified");
-  }
-
-  return { weekChanges, weekGroups };
-}
-
-async function loadHints(): Promise<void> {
-  const hintsPath = path.join(import.meta.dirname, "..", "hints.txt");
-  const hintsFile = Bun.file(hintsPath);
-  if (await hintsFile.exists()) {
-    const hints = await hintsFile.text();
-    setUserHints(hints.trim());
-    log.info("Loaded user hints");
-  }
-}
-
 async function main(): Promise<void> {
   const config = getConfig();
 
@@ -391,7 +124,7 @@ async function main(): Promise<void> {
   initMonarch(config.monarchToken);
   initClaude(config.anthropicApiKey, config.model);
   setWebSearchEnabled(!config.skipResearch);
-  await loadHints();
+  const hints = await loadHints();
 
   const { startDate, endDate } = getDateRange();
   log.info(`Fetching transactions from ${startDate} to ${endDate}...`);
@@ -411,92 +144,118 @@ async function main(): Promise<void> {
     log.info(`Limited to ${String(transactions.length)} transactions`);
   }
 
-  const separated = separateDeepPaths(transactions);
-  let { amazonTransactions, venmoTransactions, biltTransactions } = separated;
-  const {
-    usaaTransactions,
-    sclTransactions,
-    appleTransactions,
-    costcoTransactions,
-    regularTransactions,
-  } = separated;
+  // Build category definitions for prompts
+  const categoryDefinitions = buildCategoryDefinitions(categories);
 
-  if (config.sample > 0) {
-    amazonTransactions = amazonTransactions.slice(
-      0,
-      Math.ceil(config.sample / 2),
-    );
-    venmoTransactions = venmoTransactions.slice(
-      0,
-      Math.ceil(config.sample / 2),
-    );
-    biltTransactions = biltTransactions.slice(0, Math.ceil(config.sample / 2));
-  }
-
-  log.info(
-    `${String(regularTransactions.length)} regular, ${String(amazonTransactions.length)} Amazon, ${String(venmoTransactions.length)} Venmo, ${String(biltTransactions.length)} Bilt, ${String(usaaTransactions.length)} USAA, ${String(sclTransactions.length)} SCL, ${String(appleTransactions.length)} Apple, ${String(costcoTransactions.length)} Costco`,
+  // Build or load the knowledge base
+  const knowledgeBase = await buildKnowledgeBase(
+    categories,
+    allTransactions,
+    hints,
+    config.rebuildKb,
   );
 
-  // 1. Run deep paths first to get resolved transactions
-  const deep = await deepClassify({
-    config,
+  // Separate transactions by deep path
+  const separated = separateDeepPaths(transactions);
+
+  log.info(
+    `${String(separated.regularTransactions.length)} regular, ${String(separated.amazonTransactions.length)} Amazon, ${String(separated.venmoTransactions.length)} Venmo, ${String(separated.biltTransactions.length)} Bilt, ${String(separated.usaaTransactions.length)} USAA, ${String(separated.sclTransactions.length)} SCL, ${String(separated.appleTransactions.length)} Apple, ${String(separated.costcoTransactions.length)} Costco`,
+  );
+
+  // === Phase 1: Enrichment ===
+  log.info("\n--- Enrichment Phase ---");
+  const { enrichedTransactions, stats: enrichmentStats } =
+    await runEnrichmentPipeline(config, separated, knowledgeBase);
+
+  displayEnrichmentStats(enrichmentStats);
+
+  // Filter out split transactions
+  const classifiable = enrichedTransactions.filter(
+    (e) => !e.transaction.isSplitTransaction,
+  );
+
+  // === Phase 2: Tiered Classification ===
+  log.info("\n--- Classification Phase ---");
+
+  const tier1Txns = classifiable.filter((e) => e.tier === 1);
+  const tier2Txns = classifiable.filter((e) => e.tier === 2);
+  const tier3Txns = classifiable.filter((e) => e.tier === 3);
+
+  displayTierBreakdown(tier1Txns.length, tier2Txns.length, tier3Txns.length);
+
+  // Tier 1: KB lookup (instant, no API calls)
+  const tier1Changes = classifyTier1(tier1Txns, knowledgeBase);
+
+  // Tier 2: Batch classification with enrichment context
+  const tier2Changes = await classifyTier2(
     categories,
-    venmo: venmoTransactions,
-    bilt: biltTransactions,
-    usaa: usaaTransactions,
-    scl: sclTransactions,
-    apple: appleTransactions,
-    costco: costcoTransactions,
-    amazon: amazonTransactions,
+    categoryDefinitions,
+    tier2Txns,
+    config.batchSize,
+  );
+
+  // Tier 3: Agentic per-transaction classification
+  const tier3Changes = await classifyTier3({
+    categories,
+    definitions: categoryDefinitions,
+    transactions: tier3Txns,
+    allTransactions,
+    knowledgeBase,
   });
 
-  // 2. Build week groups and classify
-  const { weekChanges, weekGroups } = await classifyByWeek({
-    categories,
-    regularTransactions,
-    deep,
-    amazonTransactions,
-    venmoTransactions,
-    biltTransactions,
-    usaaTransactions,
-    sclTransactions,
-    appleTransactions,
-    costcoTransactions,
-  });
+  const allChanges = [...tier1Changes, ...tier2Changes, ...tier3Changes];
 
-  displayWeekChanges(weekChanges, weekGroups);
+  // === Phase 3: Verification ===
+  log.info("\n--- Verification Phase ---");
+  const { changes: verifiedChanges, flagged, suggestions } =
+    verifyClassifications(allChanges, enrichedTransactions, knowledgeBase);
+
+  const finalChanges = [...verifiedChanges, ...flagged];
+
+  // Learn from high-confidence classifications
+  for (const change of verifiedChanges) {
+    if (change.confidence === "high" && change.type === "recategorize") {
+      learnFromClassification(
+        knowledgeBase,
+        change.merchantName,
+        change.proposedCategory,
+      );
+    }
+  }
+  await saveKnowledgeBase(knowledgeBase);
+
+  // === Display Results ===
+  displayChanges(finalChanges);
 
   displaySummary({
-    weekChanges,
-    ...deep,
-    totalTransactions: transactions.length,
+    totalTransactions: classifiable.length,
+    tier1Changes: tier1Changes.length,
+    tier2Changes: tier2Changes.length,
+    tier3Changes: tier3Changes.length,
+    flagged: flagged.length,
+    enrichmentStats,
   });
+
   displayUsageSummary(getUsageSummary());
 
-  const allChanges = [
-    ...weekChanges,
-    ...deep.venmoChanges,
-    ...deep.biltChanges,
-    ...deep.usaaChanges,
-    ...deep.sclChanges,
-    ...deep.appleChanges,
-    ...deep.costcoChanges,
-    ...deep.amazonChanges,
-  ];
+  if (config.suggest) {
+    displaySuggestions(suggestions);
+  }
 
+  // === Apply or Save ===
   if (config.output !== undefined) {
-    await saveChanges(config.output, allChanges);
+    await saveChanges(config.output, finalChanges);
   } else if (config.apply) {
     if (!config.interactive) {
       const confirmed = await promptConfirm(
-        `About to apply ${String(allChanges.length)} changes. Continue?`,
+        `About to apply ${String(finalChanges.length)} changes. Continue?`,
       );
       if (!confirmed) {
         log.info("Aborted.");
         return;
       }
     }
-    await applyChanges(allChanges, config.interactive);
+    await applyChanges(finalChanges, config.interactive);
   } else {
     log.info(
       "Dry run complete. Use --apply to apply, or --output <path> to save to file.",

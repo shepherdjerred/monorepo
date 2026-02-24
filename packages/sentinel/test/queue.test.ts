@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
-import { PrismaClient } from "@prisma/client";
+import { describe, it, expect, beforeEach } from "bun:test";
+import {
+  setupTestDatabase,
+  testPrisma,
+} from "./helpers.ts";
 import {
   enqueueJob,
   claimJob,
@@ -9,91 +12,12 @@ import {
   getQueueStats,
 } from "@shepherdjerred/sentinel/queue/index.ts";
 
-// Use in-memory SQLite for tests
-Bun.env["DATABASE_URL"] = "file::memory:?cache=shared";
-Bun.env["ANTHROPIC_API_KEY"] = "test-key";
-Bun.env["DISCORD_TOKEN"] = "test-token";
-Bun.env["DISCORD_CHANNEL_ID"] = "test-channel";
-Bun.env["DISCORD_GUILD_ID"] = "test-guild";
-
-// We need to push the schema to the test database
-const testPrisma = new PrismaClient({
-  datasourceUrl: "file::memory:?cache=shared",
-});
-
-async function setupDatabase(): Promise<void> {
-  // Create tables manually for in-memory SQLite
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS Job (
-      id TEXT PRIMARY KEY,
-      agent TEXT NOT NULL,
-      prompt TEXT NOT NULL,
-      priority INTEGER NOT NULL DEFAULT 2,
-      status TEXT NOT NULL DEFAULT 'pending',
-      triggerType TEXT NOT NULL,
-      triggerSource TEXT NOT NULL,
-      triggerMetadata TEXT NOT NULL DEFAULT '{}',
-      deduplicationKey TEXT UNIQUE,
-      deadlineAt DATETIME,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      claimedAt DATETIME,
-      completedAt DATETIME,
-      result TEXT,
-      retryCount INTEGER NOT NULL DEFAULT 0,
-      maxRetries INTEGER NOT NULL DEFAULT 3
-    )
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS idx_job_status_priority ON Job(status, priority, createdAt)
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS idx_job_agent ON Job(agent)
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS ApprovalRequest (
-      id TEXT PRIMARY KEY,
-      jobId TEXT NOT NULL,
-      agent TEXT NOT NULL,
-      toolName TEXT NOT NULL,
-      toolInput TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending',
-      decidedBy TEXT,
-      reason TEXT,
-      expiresAt DATETIME NOT NULL,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      decidedAt DATETIME
-    )
-  `);
-  await testPrisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS AgentSession (
-      id TEXT PRIMARY KEY,
-      agent TEXT NOT NULL,
-      jobId TEXT NOT NULL,
-      startedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      endedAt DATETIME,
-      turnsUsed INTEGER NOT NULL DEFAULT 0,
-      status TEXT NOT NULL DEFAULT 'running',
-      error TEXT,
-      inputTokens INTEGER NOT NULL DEFAULT 0,
-      outputTokens INTEGER NOT NULL DEFAULT 0,
-      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-}
-
 beforeEach(async () => {
   await testPrisma.$executeRawUnsafe("DELETE FROM Job");
 });
 
-afterAll(async () => {
-  await testPrisma.$disconnect();
-});
-
 // Run setup once
-await setupDatabase();
+await setupTestDatabase();
 
 describe("enqueueJob", () => {
   it("should create a job with default priority", async () => {

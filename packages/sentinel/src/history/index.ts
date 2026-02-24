@@ -50,6 +50,7 @@ export class ConversationLogger {
       role: "system",
       content: JSON.stringify(summary),
       turnNumber: 0,
+      metadata: { type: "summary" },
     };
     await this.appendEntry(entry);
   }

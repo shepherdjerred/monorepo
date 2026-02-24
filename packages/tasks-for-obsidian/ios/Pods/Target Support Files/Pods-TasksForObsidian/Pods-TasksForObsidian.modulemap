@@ -1,0 +1,6 @@
+module Pods_TasksForObsidian {
+  umbrella header "Pods-TasksForObsidian-umbrella.h"
+
+  export *
+  module * { export * }
+}

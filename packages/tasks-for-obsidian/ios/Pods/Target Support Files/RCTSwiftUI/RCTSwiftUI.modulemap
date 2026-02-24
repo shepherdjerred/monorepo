@@ -1,0 +1,6 @@
+module RCTSwiftUI {
+  umbrella header "RCTSwiftUI-umbrella.h"
+
+  export *
+  module * { export * }
+}

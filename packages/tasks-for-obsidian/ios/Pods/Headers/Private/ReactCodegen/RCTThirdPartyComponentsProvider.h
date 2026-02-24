@@ -1,0 +1,1 @@
+../../../../build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.h

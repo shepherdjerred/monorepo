@@ -1,0 +1,6 @@
+module jsinspector_modern_cdp {
+  umbrella header "React-jsinspectorcdp-umbrella.h"
+
+  export *
+  module * { export * }
+}

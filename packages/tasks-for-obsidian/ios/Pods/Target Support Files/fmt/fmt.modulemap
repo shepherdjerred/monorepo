@@ -1,0 +1,6 @@
+module fmt {
+  umbrella header "fmt-umbrella.h"
+
+  export *
+  module * { export * }
+}

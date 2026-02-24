@@ -8,37 +8,54 @@ type AllowlistEntry = {
 };
 
 const SAFE_COMMANDS: AllowlistEntry[] = [
+  // GitHub CLI (read-only)
   { command: ["gh", "run", "list"], description: "List GitHub Actions runs" },
+  { command: ["gh", "run", "view"], description: "View GitHub Actions run" },
   { command: ["gh", "pr", "view"], description: "View a GitHub PR" },
   { command: ["gh", "pr", "list"], description: "List GitHub PRs" },
+  { command: ["gh", "pr", "checks"], description: "View PR check status" },
   { command: ["gh", "issue", "list"], description: "List GitHub issues" },
+  { command: ["gh", "issue", "view"], description: "View a GitHub issue" },
+  { command: ["gh", "api"], description: "GitHub API call" },
+  // Kubernetes (read-only)
   { command: ["kubectl", "get"], description: "Get Kubernetes resources" },
-  {
-    command: ["kubectl", "describe"],
-    description: "Describe Kubernetes resources",
-  },
+  { command: ["kubectl", "describe"], description: "Describe Kubernetes resources" },
   { command: ["kubectl", "logs"], description: "View pod logs" },
-  {
-    command: ["argocd", "app", "list"],
-    description: "List ArgoCD applications",
-  },
-  {
-    command: ["argocd", "app", "get"],
-    description: "Get ArgoCD app details",
-  },
-  {
-    command: ["talosctl", "health"],
-    description: "Check Talos cluster health",
-  },
+  { command: ["kubectl", "top"], description: "View resource usage" },
+  // ArgoCD (read-only)
+  { command: ["argocd", "app", "list"], description: "List ArgoCD applications" },
+  { command: ["argocd", "app", "get"], description: "Get ArgoCD app details" },
+  { command: ["argocd", "app", "diff"], description: "Diff ArgoCD app" },
+  // Talos (read-only)
+  { command: ["talosctl", "health"], description: "Check Talos cluster health" },
   { command: ["talosctl", "get"], description: "Get Talos resources" },
+  { command: ["talosctl", "dashboard"], description: "View Talos dashboard" },
+  // Git (read-only)
   { command: ["git", "log"], description: "View git log" },
   { command: ["git", "status"], description: "Check git status" },
   { command: ["git", "diff"], description: "View git diff" },
   { command: ["git", "show"], description: "Show git object" },
+  { command: ["git", "branch"], description: "List branches" },
+  { command: ["git", "rev-parse"], description: "Parse git refs" },
+  // Build tools (safe — these don't modify code)
   { command: ["bun", "run", "typecheck"], description: "Run typecheck" },
   { command: ["bun", "run", "test"], description: "Run tests" },
   { command: ["bun", "run", "lint"], description: "Run linter" },
+  { command: ["bun", "run", "build"], description: "Run build" },
   { command: ["bunx", "eslint"], description: "Run ESLint" },
+  // System tools (read-only)
+  { command: ["ls"], description: "List directory" },
+  { command: ["cat"], description: "Read file" },
+  { command: ["head"], description: "Read file head" },
+  { command: ["tail"], description: "Read file tail" },
+  { command: ["wc"], description: "Count lines/words" },
+  { command: ["which"], description: "Find command path" },
+  { command: ["date"], description: "Show date/time" },
+  { command: ["df"], description: "Show disk usage" },
+  { command: ["du"], description: "Show directory size" },
+  { command: ["ps"], description: "List processes" },
+  { command: ["uptime"], description: "Show system uptime" },
+  { command: ["curl"], description: "HTTP request" },
 ];
 
 // Characters that indicate shell metacharacter injection.

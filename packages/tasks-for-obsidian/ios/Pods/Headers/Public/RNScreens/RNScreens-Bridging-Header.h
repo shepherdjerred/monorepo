@@ -1,0 +1,1 @@
+../../../../../node_modules/react-native-screens/ios/RNScreens-Bridging-Header.h

@@ -33,13 +33,13 @@ function buildDiscordConfig():
       approverRoleIds: string[];
     }
   | undefined {
-  const token = Bun.env["DISCORD_TOKEN"];
+  const token = resolveEnv("DISCORD_TOKEN");
   if (token == null || token.length === 0) {
     return undefined;
   }
 
-  const channelId = Bun.env["DISCORD_CHANNEL_ID"];
-  const guildId = Bun.env["DISCORD_GUILD_ID"];
+  const channelId = resolveEnv("DISCORD_CHANNEL_ID");
+  const guildId = resolveEnv("DISCORD_GUILD_ID");
 
   if (channelId == null || channelId.length === 0) {
     throw new Error("DISCORD_CHANNEL_ID is required when DISCORD_TOKEN is set");
@@ -52,43 +52,56 @@ function buildDiscordConfig():
     token,
     channelId,
     guildId,
-    approverRoleIds: parseStringArray(Bun.env["DISCORD_APPROVER_ROLE_IDS"]),
+    approverRoleIds: parseStringArray(resolveEnv("DISCORD_APPROVER_ROLE_IDS")),
   };
+}
+
+/**
+ * Resolve an env var value, skipping unresolved 1Password `op://` references.
+ * Returns undefined for `op://` values so they fall through to optional handling.
+ */
+function resolveEnv(key: string): string | undefined {
+  const value = Bun.env[key];
+  if (value == null || value.startsWith("op://")) {
+    return undefined;
+  }
+  return value;
 }
 
 function loadConfigFromEnv(): Config {
   return ConfigSchema.parse({
     anthropic: {
-      apiKey: Bun.env["ANTHROPIC_API_KEY"] ?? "",
-      model: Bun.env["ANTHROPIC_MODEL"] ?? "claude-sonnet-4-20250514",
+      apiKey: resolveEnv("ANTHROPIC_API_KEY") ?? "",
+      model: resolveEnv("ANTHROPIC_MODEL") ?? "claude-sonnet-4-20250514",
     },
     discord: buildDiscordConfig(),
     sentry: {
-      dsn: Bun.env["SENTRY_DSN"],
-      enabled: parseBoolean(Bun.env["SENTRY_ENABLED"], false),
-      environment: Bun.env["SENTRY_ENVIRONMENT"] ?? "development",
+      dsn: resolveEnv("SENTRY_DSN"),
+      enabled: parseBoolean(resolveEnv("SENTRY_ENABLED"), false),
+      environment: resolveEnv("SENTRY_ENVIRONMENT") ?? "development",
     },
     telemetry: {
-      enabled: parseBoolean(Bun.env["TELEMETRY_ENABLED"], true),
+      enabled: parseBoolean(resolveEnv("TELEMETRY_ENABLED"), true),
     },
     queue: {
-      pollIntervalMs: parseNumber(Bun.env["QUEUE_POLL_INTERVAL_MS"], 5000),
+      pollIntervalMs: parseNumber(resolveEnv("QUEUE_POLL_INTERVAL_MS"), 5000),
       maxJobDurationMs: parseNumber(
-        Bun.env["QUEUE_MAX_JOB_DURATION_MS"],
+        resolveEnv("QUEUE_MAX_JOB_DURATION_MS"),
         600_000,
       ),
-      defaultMaxRetries: parseNumber(Bun.env["QUEUE_DEFAULT_MAX_RETRIES"], 3),
+      defaultMaxRetries: parseNumber(resolveEnv("QUEUE_DEFAULT_MAX_RETRIES"), 3),
+      maxConcurrentJobs: parseNumber(resolveEnv("QUEUE_MAX_CONCURRENT_JOBS"), 3),
     },
     webhooks: {
-      port: parseNumber(Bun.env["WEBHOOKS_PORT"], 3000),
-      host: Bun.env["WEBHOOKS_HOST"] ?? "0.0.0.0",
-      githubSecret: Bun.env["GITHUB_WEBHOOK_SECRET"],
-      pagerdutySecret: Bun.env["PAGERDUTY_WEBHOOK_SECRET"],
-      bugsinkSecret: Bun.env["BUGSINK_WEBHOOK_SECRET"],
-      buildkiteToken: Bun.env["BUILDKITE_WEBHOOK_TOKEN"],
+      port: parseNumber(resolveEnv("WEBHOOKS_PORT"), 3000),
+      host: resolveEnv("WEBHOOKS_HOST") ?? "0.0.0.0",
+      githubSecret: resolveEnv("GITHUB_WEBHOOK_SECRET"),
+      pagerdutySecret: resolveEnv("PAGERDUTY_WEBHOOK_SECRET"),
+      bugsinkSecret: resolveEnv("BUGSINK_WEBHOOK_SECRET"),
+      buildkiteToken: resolveEnv("BUILDKITE_WEBHOOK_TOKEN"),
     },
     permissions: {
-      approvalTimeoutMs: parseNumber(Bun.env["APPROVAL_TIMEOUT_MS"], 1_800_000),
+      approvalTimeoutMs: parseNumber(resolveEnv("APPROVAL_TIMEOUT_MS"), 1_800_000),
     },
   });
 }

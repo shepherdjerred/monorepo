@@ -53,10 +53,9 @@ export async function commitVersionsBack(
         `git add packages/homelab/src/cdk8s/src/versions.ts && ` +
         `git commit -m "chore: update deployed image versions [skip ci]" && ` +
         `git push --set-upstream origin ${branchName} && ` +
-        `gh pr create --title "chore: update deployed image versions" ` +
-        `--body "Automated version update from CI pipeline. Updates image digests in versions.ts to match the latest published images." ` +
-        `--label "automerge" && ` +
-        `gh pr merge --auto --squash` +
+        `gh pr create --title "chore: update deployed image versions [skip ci]" ` +
+        `--body "Automated version update from CI pipeline. Updates image digests in versions.ts to match the latest published images." && ` +
+        `gh pr merge --auto --merge` +
         `)`,
     ])
     .stdout();

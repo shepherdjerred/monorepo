@@ -32,6 +32,7 @@
     "@tauri-apps/plugin-dialog": "^2.6.0"
   },
   "patchedDependencies": {
-    "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch"
+    "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch",
+    "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch"
   }
 }

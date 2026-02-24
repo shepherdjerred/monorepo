@@ -1,0 +1,23 @@
+{
+  "name": "RCTSwiftUI",
+  "version": "0.83.1",
+  "summary": "Swift utilities for React Native.",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "*.{h,m,swift}",
+  "public_header_files": "*.h",
+  "module_name": "RCTSwiftUI",
+  "header_dir": "RCTSwiftUI",
+  "pod_target_xcconfig": {
+    "SWIFT_VERSION": "5.0",
+    "DEFINES_MODULE": "YES"
+  }
+}

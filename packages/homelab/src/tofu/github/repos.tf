@@ -120,6 +120,16 @@ resource "github_repository" "monorepo" {
   allow_rebase_merge     = true
 }
 
+resource "github_branch_protection" "monorepo_main" {
+  repository_id = github_repository.monorepo.node_id
+  pattern       = "main"
+
+  required_status_checks {
+    strict   = true
+    contexts = ["buildkite/monorepo"]
+  }
+}
+
 resource "github_repository" "scout_for_lol" {
   name                   = "scout-for-lol"
   description            = "Create match reports for League of Legends"

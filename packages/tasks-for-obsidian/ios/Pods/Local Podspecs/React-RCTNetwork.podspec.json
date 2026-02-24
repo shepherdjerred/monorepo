@@ -1,0 +1,69 @@
+{
+  "name": "React-RCTNetwork",
+  "version": "0.83.1",
+  "summary": "The networking library of React Native.",
+  "homepage": "https://reactnative.dev/",
+  "license": "MIT",
+  "authors": "Meta Platforms, Inc. and its affiliates",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "compiler_flags": "-Wno-nullability-completeness",
+  "source": {
+    "git": "https://github.com/facebook/react-native.git",
+    "tag": "v0.83.1"
+  },
+  "source_files": "*.{m,mm}",
+  "preserve_paths": [
+    "package.json",
+    "LICENSE",
+    "LICENSE-docs"
+  ],
+  "header_dir": "RCTNetwork",
+  "pod_target_xcconfig": {
+    "USE_HEADERMAP": "YES",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "HEADER_SEARCH_PATHS": [
+      "\"${PODS_ROOT}/Headers/Public/ReactCodegen/react/renderer/components\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-debug/React_debug.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-RCTFBReactNativeSpec/React_RCTFBReactNativeSpec.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-featureflags/React_featureflags.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspectorcdp/jsinspector_moderncdp.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspectornetwork/jsinspector_modernnetwork.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers/build/generated/ios\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-networking/React_networking.framework/Headers\"",
+      "$(PODS_ROOT)/glog",
+      "$(PODS_ROOT)/boost",
+      "$(PODS_ROOT)/DoubleConversion",
+      "$(PODS_ROOT)/fast_float/include",
+      "$(PODS_ROOT)/fmt/include",
+      "$(PODS_ROOT)/SocketRocket",
+      "$(PODS_ROOT)/RCT-Folly"
+    ]
+  },
+  "frameworks": "MobileCoreServices",
+  "dependencies": {
+    "RCTTypeSafety": [],
+    "React-jsi": [],
+    "React-Core/RCTNetworkHeaders": [],
+    "React-debug": [],
+    "React-RCTFBReactNativeSpec": [],
+    "ReactCommon": [],
+    "React-featureflags": [],
+    "React-jsinspectorcdp": [],
+    "React-jsinspectornetwork": [],
+    "React-NativeModulesApple": [],
+    "React-networking": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  }
+}
