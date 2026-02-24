@@ -1,11 +1,28 @@
 import {
   SlashCommandBuilder,
   type Client,
-  type ChatInputCommandInteraction,
 } from "discord.js";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
+import { enqueueJob } from "@shepherdjerred/sentinel/queue/index.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
+
+export type CommandInteraction = {
+  commandName: string;
+  user: { id: string; tag: string };
+  member: {
+    roles: { cache: Map<string, { id: string }> } | string[];
+  } | null;
+  guildId: string | null;
+  channelId: string;
+  options: {
+    getSubcommand: () => string;
+    getString: (name: string, required?: boolean) => string | null;
+  };
+  deferReply: () => Promise<unknown>;
+  editReply: (content: string) => Promise<unknown>;
+  reply: (content: string | { content: string; ephemeral?: boolean }) => Promise<unknown>;
+}
 
 const commandLogger = logger.child({ module: "discord:commands" });
 
@@ -42,6 +59,17 @@ const sentinelCommand = new SlashCommandBuilder()
           .setDescription("Reason for denial")
           .setRequired(false),
       ),
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("ask")
+      .setDescription("Ask the personal assistant a question")
+      .addStringOption((opt) =>
+        opt
+          .setName("prompt")
+          .setDescription("Your question")
+          .setRequired(true),
+      ),
   );
 
 export async function registerCommands(
@@ -62,7 +90,7 @@ export async function registerCommands(
 }
 
 export async function handleInteraction(
-  interaction: ChatInputCommandInteraction,
+  interaction: CommandInteraction,
   config: Config,
 ): Promise<void> {
   if (interaction.commandName !== "sentinel") {
@@ -84,6 +112,10 @@ export async function handleInteraction(
       await handleDecision(interaction, config, "denied");
       break;
     }
+    case "ask": {
+      await handleAsk(interaction);
+      break;
+    }
     default: {
       await interaction.reply({
         content: `Unknown subcommand: ${subcommand}`,
@@ -98,7 +130,7 @@ function formatJob(job: { id: string; agent: string; status: string }): string {
 }
 
 async function handleStatus(
-  interaction: ChatInputCommandInteraction,
+  interaction: CommandInteraction,
 ): Promise<void> {
   await interaction.deferReply();
 
@@ -142,8 +174,41 @@ async function handleStatus(
   await interaction.editReply(content);
 }
 
+async function handleAsk(
+  interaction: CommandInteraction,
+): Promise<void> {
+  const prompt = interaction.options.getString("prompt");
+  if (prompt == null) {
+    await interaction.reply({ content: "Prompt is required.", ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply();
+
+  try {
+    const job = await enqueueJob({
+      agent: "personal-assistant",
+      prompt,
+      triggerType: "discord",
+      triggerSource: "slash_command",
+      triggerMetadata: {
+        userId: interaction.user.id,
+        guildId: interaction.guildId,
+        channelId: interaction.channelId,
+      },
+    });
+
+    await interaction.editReply(
+      `Job enqueued (\`${job.id.slice(0, 8)}\`). I'll post the result when done.`,
+    );
+  } catch (error: unknown) {
+    commandLogger.error(error, "Failed to enqueue ask job");
+    await interaction.editReply("Failed to enqueue job. Please try again.");
+  }
+}
+
 function getMemberRoleIds(
-  member: NonNullable<ChatInputCommandInteraction["member"]>,
+  member: NonNullable<CommandInteraction["member"]>,
 ): string[] {
   if ("cache" in member.roles) {
     return [...member.roles.cache.keys()];
@@ -152,11 +217,15 @@ function getMemberRoleIds(
 }
 
 async function handleDecision(
-  interaction: ChatInputCommandInteraction,
+  interaction: CommandInteraction,
   config: Config,
   status: "approved" | "denied",
 ): Promise<void> {
-  const requestId = interaction.options.getString("id", true);
+  const requestId = interaction.options.getString("id");
+  if (requestId == null) {
+    await interaction.reply({ content: "ID is required.", ephemeral: true });
+    return;
+  }
   const reason = interaction.options.getString("reason");
 
   // Check authorization — require guild context (reject DMs to prevent auth bypass)

@@ -48,6 +48,22 @@ async function enqueueCronJob(
   prompt: string,
 ): Promise<void> {
   try {
+    const prisma = getPrisma();
+    const activeJob = await prisma.job.findFirst({
+      where: {
+        agent,
+        triggerType: "cron",
+        status: { in: ["pending", "running"] },
+      },
+    });
+    if (activeJob != null) {
+      cronLogger.debug(
+        { agent, jobId: activeJob.id },
+        "Cron job skipped — active job exists",
+      );
+      return;
+    }
+
     cronLogger.info({ agent }, "Cron trigger fired");
     await enqueueJob({
       agent,

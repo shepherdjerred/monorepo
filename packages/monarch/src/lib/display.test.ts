@@ -1,136 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import { displaySummary } from "./display.ts";
-import type { ProposedChange } from "./classifier/types.ts";
-import type { MonarchTransaction } from "./monarch/types.ts";
-import type { AmazonOrder } from "./amazon/types.ts";
+import type { EnrichmentStats } from "./enrichment/pipeline.ts";
 
-function makeChange(overrides: Partial<ProposedChange> = {}): ProposedChange {
-  return {
-    transactionId: "txn-1",
-    transactionDate: "2025-01-15",
-    merchantName: "Test Merchant",
-    amount: -50,
-    currentCategory: "Shopping",
-    currentCategoryId: "cat-1",
-    proposedCategory: "Groceries",
-    proposedCategoryId: "cat-2",
-    confidence: "high",
-    type: "recategorize",
-    ...overrides,
-  };
-}
-
-const stubTransaction: MonarchTransaction = {
-  id: "txn-stub",
-  amount: -10,
-  pending: false,
-  date: "2025-01-01",
-  hideFromReports: false,
-  plaidName: "",
-  notes: "",
-  isRecurring: false,
-  reviewStatus: "none",
-  needsReview: false,
-  isSplitTransaction: false,
-  createdAt: "2025-01-01",
-  updatedAt: "2025-01-01",
-  category: { id: "c", name: "Cat" },
-  merchant: { id: "m", name: "Merch", transactionsCount: 1 },
-  account: { id: "a", displayName: "Acct" },
-  tags: [],
-};
-
-const stubOrder: AmazonOrder = {
-  orderId: "o-stub",
-  date: "2025-01-01",
-  total: 10,
-  items: [],
+const defaultStats: EnrichmentStats = {
+  amazon: { matched: 0, total: 0 },
+  venmo: { matched: 0, total: 0 },
+  bilt: { matched: 0, total: 0 },
+  usaa: { matched: 0, total: 0 },
+  scl: { matched: 0, total: 0 },
+  apple: { matched: 0, total: 0 },
+  costco: { matched: 0, total: 0 },
+  tier1Count: 0,
+  tier2Count: 0,
+  tier3Count: 0,
 };
 
 describe("displaySummary", () => {
-  test("counts recategorizations correctly", () => {
-    const logs: string[] = [];
-    const originalLog = console.log;
-    console.log = (...args: unknown[]) => {
-      logs.push(args.join(" "));
-    };
-
-    const weekChanges = [makeChange(), makeChange({ transactionId: "txn-2" })];
-
-    displaySummary({
-      totalTransactions: 100,
-      weekChanges,
-
-      amazonChanges: [],
-      venmoChanges: [],
-      biltChanges: [],
-      matchResult: null,
-      venmoMatchResult: null,
-      usaaChanges: [],
-      sclChanges: [],
-      appleChanges: [],
-      costcoChanges: [],
-      appleMatchResult: null,
-      costcoMatchResult: null,
-    });
-
-    console.log = originalLog;
-
-    const summaryLine = logs.find((l) => l.includes("Re-categorizations"));
-    expect(summaryLine).toContain("2");
-  });
-
-  test("counts splits correctly", () => {
-    const logs: string[] = [];
-    const originalLog = console.log;
-    console.log = (...args: unknown[]) => {
-      logs.push(args.join(" "));
-    };
-
-    const amazonChanges = [
-      makeChange({
-        type: "split",
-        splits: [
-          {
-            itemName: "A",
-            amount: 20,
-            categoryId: "c1",
-            categoryName: "Electronics",
-          },
-          {
-            itemName: "B",
-            amount: 30,
-            categoryId: "c2",
-            categoryName: "Pets",
-          },
-        ],
-      }),
-    ];
-
-    displaySummary({
-      totalTransactions: 100,
-      weekChanges: [],
-
-      amazonChanges,
-      venmoChanges: [],
-      biltChanges: [],
-      matchResult: null,
-      venmoMatchResult: null,
-      usaaChanges: [],
-      sclChanges: [],
-      appleChanges: [],
-      costcoChanges: [],
-      appleMatchResult: null,
-      costcoMatchResult: null,
-    });
-
-    console.log = originalLog;
-
-    const splitsLine = logs.find((l) => l.includes("Splits proposed"));
-    expect(splitsLine).toContain("1");
-  });
-
-  test("includes Amazon match rate when provided", () => {
+  test("counts changes by tier correctly", () => {
     const logs: string[] = [];
     const originalLog = console.log;
     console.log = (...args: unknown[]) => {
@@ -139,35 +25,17 @@ describe("displaySummary", () => {
 
     displaySummary({
       totalTransactions: 100,
-      weekChanges: [],
-
-      amazonChanges: [],
-      venmoChanges: [],
-      biltChanges: [],
-      matchResult: {
-        matched: [
-          {
-            transaction: stubTransaction,
-            order: stubOrder,
-            matchType: "exact",
-          },
-        ],
-        unmatchedTransactions: [stubTransaction],
-        unmatchedOrders: [],
-      },
-      venmoMatchResult: null,
-      usaaChanges: [],
-      sclChanges: [],
-      appleChanges: [],
-      costcoChanges: [],
-      appleMatchResult: null,
-      costcoMatchResult: null,
+      tier1Changes: 5,
+      tier2Changes: 10,
+      tier3Changes: 2,
+      flagged: 0,
+      enrichmentStats: { ...defaultStats, tier1Count: 20, tier2Count: 70, tier3Count: 10 },
     });
 
     console.log = originalLog;
 
-    const matchLine = logs.find((l) => l.includes("Amazon match rate"));
-    expect(matchLine).toContain("1/2");
+    const changesLine = logs.find((l) => l.includes("Changes proposed"));
+    expect(changesLine).toContain("17");
   });
 
   test("counts flagged for review", () => {
@@ -177,31 +45,40 @@ describe("displaySummary", () => {
       logs.push(args.join(" "));
     };
 
-    const changes = [
-      makeChange({ type: "flag" }),
-      makeChange({ type: "flag", transactionId: "txn-2" }),
-    ];
-
     displaySummary({
       totalTransactions: 100,
-      weekChanges: changes,
-
-      amazonChanges: [],
-      venmoChanges: [],
-      biltChanges: [],
-      matchResult: null,
-      venmoMatchResult: null,
-      usaaChanges: [],
-      sclChanges: [],
-      appleChanges: [],
-      costcoChanges: [],
-      appleMatchResult: null,
-      costcoMatchResult: null,
+      tier1Changes: 0,
+      tier2Changes: 0,
+      tier3Changes: 0,
+      flagged: 3,
+      enrichmentStats: defaultStats,
     });
 
     console.log = originalLog;
 
     const flagLine = logs.find((l) => l.includes("Flagged for review"));
-    expect(flagLine).toContain("2");
+    expect(flagLine).toContain("3");
+  });
+
+  test("shows tier distribution", () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => {
+      logs.push(args.join(" "));
+    };
+
+    displaySummary({
+      totalTransactions: 100,
+      tier1Changes: 0,
+      tier2Changes: 0,
+      tier3Changes: 0,
+      flagged: 0,
+      enrichmentStats: { ...defaultStats, tier1Count: 30, tier2Count: 60, tier3Count: 10 },
+    });
+
+    console.log = originalLog;
+
+    const distLine = logs.find((l) => l.includes("Tier distribution"));
+    expect(distLine).toContain("30/60/10");
   });
 });

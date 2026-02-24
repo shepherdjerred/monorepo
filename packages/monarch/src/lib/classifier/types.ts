@@ -65,6 +65,8 @@ export type ProposedChange = {
   type: "recategorize" | "split" | "flag";
   splits?: ProposedSplit[] | undefined;
   reason?: string | undefined;
+  tier?: 1 | 2 | 3 | undefined;
+  enrichmentSource?: string | undefined;
 };
 
 export type ProposedSplit = {

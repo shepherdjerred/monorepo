@@ -7,6 +7,7 @@ AI-maintained knowledge base for the monorepo.
 - [Monorepo Structure](architecture/monorepo-structure.md) - Package layout, workspaces, and conventions
 - [CI Pipeline](architecture/ci-pipeline.md) - Dagger-based CI/CD overview
 - [Sentinel](architecture/sentinel.md) - Autonomous agent system architecture
+- [Monarch](architecture/monarch.md) - Transaction categorization pipeline with tiered classification
 
 ## Patterns
 

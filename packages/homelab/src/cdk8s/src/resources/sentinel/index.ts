@@ -1,13 +1,17 @@
 import {
+  ClusterRole,
+  ClusterRoleBinding,
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Probe,
   Secret,
   Service,
+  ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -16,9 +20,26 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createSentinelDeployment(chart: Chart) {
+  // ServiceAccount with read-only cluster access for agents (kubectl, argocd)
+  const serviceAccount = new ServiceAccount(chart, "sentinel-sa", {
+    automountToken: true,
+  });
+  const viewRole = ClusterRole.fromClusterRoleName(
+    chart,
+    "sentinel-view-role",
+    "view",
+  );
+  const binding = new ClusterRoleBinding(
+    chart,
+    "sentinel-view-binding",
+    { role: viewRole },
+  );
+  binding.addSubjects(serviceAccount);
+
   const deployment = new Deployment(chart, "sentinel", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    serviceAccount,
     securityContext: {
       fsGroup: 1000,
       ensureNonRoot: false,
@@ -51,6 +72,21 @@ export function createSentinelDeployment(chart: Chart) {
         ensureNonRoot: false,
       },
       ports: [{ number: 3000, name: "webhooks" }],
+      startup: Probe.fromHttpGet("/livez", {
+        port: 3000,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 18,
+      }),
+      liveness: Probe.fromHttpGet("/livez", {
+        port: 3000,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromHttpGet("/healthz", {
+        port: 3000,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
       volumeMounts: [
         {
           path: "/app/data",
@@ -126,6 +162,14 @@ export function createSentinelDeployment(chart: Chart) {
           key: "pagerduty-webhook-secret",
         }),
 
+        BUGSINK_WEBHOOK_SECRET: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "sentinel-bugsink-webhook-secret",
+            onePasswordItem.name,
+          ),
+          key: "bugsink-webhook-secret",
+        }),
         BUILDKITE_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,

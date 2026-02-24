@@ -168,6 +168,48 @@ console.log(
   `  Change recall:    ${c.bold}${(changeRecall * 100).toFixed(1)}%${c.reset} (when change needed, did tool catch it?)`,
 );
 
+// By tier
+console.log(
+  `\n${c.bold}Accuracy by Tier${c.reset}`,
+);
+const tiers = [1, 2, 3, undefined] as const;
+for (const tier of tiers) {
+  const tierChanges = toolChanges.filter((ch) => ch.tier === tier);
+  if (tierChanges.length === 0) continue;
+  const tierIds = new Set(tierChanges.map((ch) => ch.transactionId));
+  const tierResults = results.filter((r) => tierIds.has(r.transactionId));
+  if (tierResults.length === 0) continue;
+  const tierCorrect = tierResults.filter((r) => r.isCorrect).length;
+  const label = tier === undefined ? "legacy" : `tier ${String(tier)}`;
+  console.log(
+    `  ${label.padEnd(8)} ${pct(tierCorrect, tierResults.length).padStart(6)} (${String(tierCorrect)}/${String(tierResults.length)})`,
+  );
+}
+
+// By enrichment source
+console.log(
+  `\n${c.bold}Accuracy by Enrichment Source${c.reset}`,
+);
+const enrichmentSources = [
+  ...new Set(
+    toolChanges
+      .map((ch) => ch.enrichmentSource)
+      .filter((s): s is string => s !== undefined),
+  ),
+].sort();
+for (const source of enrichmentSources) {
+  const sourceChanges = toolChanges.filter(
+    (ch) => ch.enrichmentSource === source,
+  );
+  const sourceIds = new Set(sourceChanges.map((ch) => ch.transactionId));
+  const sourceResults = results.filter((r) => sourceIds.has(r.transactionId));
+  if (sourceResults.length === 0) continue;
+  const sourceCorrect = sourceResults.filter((r) => r.isCorrect).length;
+  console.log(
+    `  ${source.padEnd(10)} ${pct(sourceCorrect, sourceResults.length).padStart(6)} (${String(sourceCorrect)}/${String(sourceResults.length)})`,
+  );
+}
+
 // Split detection
 const labelsWithSplit = dataset.labels.filter((l) => l.shouldSplit);
 const toolSplits = new Set(

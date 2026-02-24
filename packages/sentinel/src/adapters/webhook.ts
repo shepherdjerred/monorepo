@@ -1,11 +1,16 @@
 import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
 import type { Context } from "hono";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import { enqueueJob, getQueueStats } from "@shepherdjerred/sentinel/queue/index.ts";
 import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
+import { appRouter } from "@shepherdjerred/sentinel/trpc/router/index.ts";
+import { createContext } from "@shepherdjerred/sentinel/trpc/context.ts";
+import { addSSEListener } from "@shepherdjerred/sentinel/sse/index.ts";
 
 const webhookLogger = logger.child({ module: "webhook" });
 
@@ -97,8 +102,8 @@ function verifyMultiSignature(payload: string, header: string, secret: string, p
 
 function verifyWebhookSignature(c: Context, options: SigVerifyOptions): Response | null {
   if (options.secret == null) {
-    webhookLogger.warn(`${options.provider} webhook secret not configured, skipping`);
-    return null;
+    webhookLogger.warn(`${options.provider} webhook secret not configured`);
+    return c.json({ error: "webhook not configured" }, 500);
   }
   const sig = c.req.header(options.headerName);
   if (sig == null) {
@@ -321,7 +326,7 @@ export function createApp(config: Config): Hono {
   app.get("/healthz", async (c) => {
     try {
       const prisma = getPrisma();
-      await prisma.$executeRawUnsafe("SELECT 1");
+      await prisma.$queryRawUnsafe("SELECT 1");
       return c.text("ok");
     } catch (error: unknown) {
       webhookLogger.error({ error }, "Health check failed");
@@ -332,6 +337,29 @@ export function createApp(config: Config): Hono {
   app.get("/metrics", async (c) => {
     const stats = await getQueueStats();
     return c.json(stats);
+  });
+
+  app.all("/trpc/*", (c) =>
+    fetchRequestHandler({ endpoint: "/trpc", req: c.req.raw, router: appRouter, createContext }),
+  );
+
+  app.get("/api/events", (c) => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const send = (data: string) => { controller.enqueue(encoder.encode(`data: ${data}\n\n`)); };
+        const heartbeat = setInterval(() => { send(JSON.stringify({ type: "heartbeat" })); }, 30_000);
+        const removeListener = addSSEListener(send);
+        c.req.raw.signal.addEventListener("abort", () => {
+          clearInterval(heartbeat);
+          removeListener();
+          controller.close();
+        });
+      },
+    });
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   });
 
   app.post("/webhook/github", async (c) => {
@@ -439,6 +467,11 @@ export function createApp(config: Config): Hono {
     const result = await handleBuildkiteBuild(p, c.req.header("X-Buildkite-Event"));
     return c.json(result, result.error == null ? 200 : 500);
   });
+
+  // Static file serving for web UI (production build)
+  app.use("/*", serveStatic({ root: "./dist/web" }));
+  // SPA fallback: serve index.html for unmatched routes
+  app.get("/*", serveStatic({ root: "./dist/web", path: "index.html" }));
 
   return app;
 }

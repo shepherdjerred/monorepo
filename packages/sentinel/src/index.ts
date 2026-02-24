@@ -76,8 +76,12 @@ async function main(): Promise<void> {
   if (config.discord == null) {
     logger.info("Discord not configured, skipping");
   } else {
-    await startDiscord(config);
-    logger.info("Discord client started");
+    try {
+      await startDiscord(config);
+      logger.info("Discord client started");
+    } catch (error: unknown) {
+      logger.warn(error, "Discord failed to start, continuing without it");
+    }
   }
 
   logger.info("Sentinel ready");

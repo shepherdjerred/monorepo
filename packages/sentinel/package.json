@@ -11,16 +11,24 @@
     "src"
   ],
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "op run --env-file=.env.op -- bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "build": "true",
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev:web": "cd web && bun run dev",
+    "dev:all": "bun run dev & bun run dev:web",
+    "build:web": "cd web && bun run build",
+    "typecheck:web": "cd web && bun run typecheck",
+    "test:webhook": "bun run scripts/test-webhook.ts",
+    "test:queue": "bun run scripts/check-queue.ts"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
     "@prisma/client": "^6.0.0",
     "@sentry/bun": "^10.32.1",
+    "@trpc/server": "11",
     "cron": "^4.3.0",
     "discord.js": "^14.25.1",
     "gray-matter": "^4.0.3",

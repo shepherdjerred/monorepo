@@ -77,6 +77,11 @@ export function createSentinelChart(app: App) {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
+        // Talos API (talosctl health via port 50000)
+        {
+          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+          ports: [{ port: IntOrString.fromNumber(50_000), protocol: "TCP" }],
+        },
       ],
     },
   });

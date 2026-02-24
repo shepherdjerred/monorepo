@@ -40,9 +40,21 @@ export function getUsageSummary(): UsageSummary {
   return tracker.getSummary();
 }
 
-function getClient(): Anthropic {
+export function getClient(): Anthropic {
   if (client === undefined) throw new Error("Call initClaude() first");
   return client;
+}
+
+export function getModelId(): string {
+  return modelId;
+}
+
+export function getTracker(): ReturnType<typeof createUsageTracker> | undefined {
+  return tracker;
+}
+
+export function isWebSearchEnabled(): boolean {
+  return webSearchEnabled;
 }
 
 export function parseJsonResponse(text: string): unknown {
@@ -173,7 +185,7 @@ async function callClaude(userPrompt: string): Promise<ClaudeResponse> {
   throw new Error("Exceeded max retries");
 }
 
-async function callClaudeAndParse<T>(
+export async function callClaudeAndParse<T>(
   prompt: string,
   schema: z.ZodType<T>,
 ): Promise<T> {

@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/sentinel/types/job.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 import { getConfig } from "@shepherdjerred/sentinel/config/index.ts";
+import { emitSSE } from "@shepherdjerred/sentinel/sse/index.ts";
 
 const queueLogger = logger.child({ module: "queue" });
 
@@ -66,6 +67,7 @@ export async function enqueueJob(params: EnqueueJobParams): Promise<Job> {
       },
       "Job enqueued",
     );
+    emitSSE({ type: "job:created", jobId: job.id, agent: job.agent, status: job.status });
     return job;
   } catch (error) {
     // Handle P2002 unique constraint race on deduplicationKey
@@ -148,6 +150,7 @@ export async function completeJob(id: string, result: string): Promise<Job> {
     },
   });
   queueLogger.info({ jobId: id }, "Job completed");
+  emitSSE({ type: "job:updated", jobId: id, status: "completed" });
   return job;
 }
 
@@ -181,6 +184,7 @@ export async function failJob(id: string, error: string): Promise<Job> {
     },
   });
   queueLogger.info({ jobId: id }, "Job failed permanently");
+  emitSSE({ type: "job:updated", jobId: id, status: "failed" });
   return job;
 }
 
