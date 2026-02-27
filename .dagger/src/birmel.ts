@@ -73,6 +73,8 @@ const BIRMEL_WORKSPACES: WorkspaceEntry[] = [
   "packages/sjer.red",
   "packages/webring",
   "packages/starlight-karma-bot",
+  // Explicit (non-glob) workspace in root package.json — must exist for bun install
+  { path: "packages/sentinel/web", depsOnly: true },
 ];
 
 /**

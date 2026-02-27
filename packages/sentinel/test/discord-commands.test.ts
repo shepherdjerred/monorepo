@@ -10,17 +10,11 @@ import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import type { CommandInteraction } from "@shepherdjerred/sentinel/discord/commands.ts";
 import type { DirectMessage } from "@shepherdjerred/sentinel/discord/chat.ts";
 
-// Mock database to use test prisma
 function noop() {
   // no-op for mocks
 }
 
-void mock.module("@shepherdjerred/sentinel/database/index.ts", () => ({
-  getPrisma: () => testPrisma,
-  initPrisma: noop,
-}));
-
-// Mock SSE
+// Mock SSE (prevent real event emission)
 void mock.module("@shepherdjerred/sentinel/sse/index.ts", () => ({
   emitSSE: noop,
   addSSEListener: () => noop,
