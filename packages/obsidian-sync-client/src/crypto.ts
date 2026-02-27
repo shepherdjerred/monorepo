@@ -1,5 +1,9 @@
-import { scrypt, subtle } from "node:crypto";
+import { scrypt } from "node:crypto";
 import { AesSiv } from "./aes-siv.ts";
+
+// Use globalThis.crypto.subtle instead of node:crypto's subtle to avoid
+// type incompatibility between webcrypto.CryptoKey and global CryptoKey.
+const { subtle } = globalThis.crypto;
 
 const SCRYPT_N = 32_768;
 const SCRYPT_R = 8;

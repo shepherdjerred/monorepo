@@ -9,7 +9,7 @@ import {
   textToBuffer,
   bufferToText,
 } from "./crypto.ts";
-import { subtle } from "node:crypto";
+const { subtle } = globalThis.crypto;
 
 function randomKeyBuffer(): ArrayBuffer {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
