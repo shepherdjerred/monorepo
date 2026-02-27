@@ -210,13 +210,13 @@ const versions = {
     "1.1.57@sha256:e06196ef8f4090957fc314dc758143f7bb0dd1ab2973a107664386ed0599c2eb",
   // Custom sentinel image - Autonomous agent system for operational tasks
   // not managed by renovate
-  "shepherdjerred/sentinel": "latest",
+  "shepherdjerred/sentinel": "1.1.137@sha256:0a17e38a26ebdbd13bdd3111c29839ca40ab588d1b6668a56bdbce21febbfb36",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
-  "shepherdjerred/tasknotes-server": "latest",
+  "shepherdjerred/tasknotes-server": "1.1.137@sha256:fe9f6f78875e8e273a85ec92adf4db0dd29e2af0581dd3dabbdc050a5e3d8eab",
   // Custom obsidian-sync-client image - Obsidian Sync headless client
   // not managed by renovate
-  "shepherdjerred/obsidian-sync-client": "latest",
+  "shepherdjerred/obsidian-sync-client": "1.1.137@sha256:03e72664f23779e5711635077e7fe2895d54c93b3d1c86bbd97711e4906f5d3c",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];
