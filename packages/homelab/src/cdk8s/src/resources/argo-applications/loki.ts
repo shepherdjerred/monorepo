@@ -193,6 +193,25 @@ groups:
           runbook_url: "https://grafana.tailnet-1a49.ts.net/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bapp%3D%5C%22homeassistant%5C%22%7D%20%7C~%20%5C%22(?i)(setup%20failed%7Cintegration%20.*%20failed%7Cunable%20to%20set%20up)%5C%22%22%7D%5D%7D%7D"
 `;
 
+// Loki alerting rules for TaskNotes logs
+// Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
+const tasknotesAlertRules = `
+groups:
+  - name: tasknotes-logs
+    rules:
+      - alert: TasknotesErrorLogs
+        expr: |
+          sum by (container) (
+            count_over_time({namespace="tasknotes"} |~ "(?i)(error|exception|failed|failure)" [5m])
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TaskNotes error logs detected"
+          description: "TaskNotes container {{ "{{" }} $labels.container {{ "}}" }} has logged {{ "{{" }} $value {{ "}}" }} errors in the last 5 minutes."
+`;
+
 export function createLokiApp(chart: Chart) {
   createIngress(chart, "loki-ingress", {
     namespace: "loki",
@@ -212,6 +231,7 @@ export function createLokiApp(chart: Chart) {
       "homeassistant-rules.yaml": lokiAlertRules,
       "kubernetes-events-rules.yaml": kubernetesEventsAlertRules,
       "dns-audit-rules.yaml": dnsAuditAlertRules,
+      "tasknotes-rules.yaml": tasknotesAlertRules,
     },
   });
 

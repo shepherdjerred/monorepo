@@ -9,7 +9,8 @@
     "packages/clauderon/docs",
     "packages/discord-plays-pokemon/packages/*",
     "packages/homelab/src/*",
-    "packages/scout-for-lol/packages/*"
+    "packages/scout-for-lol/packages/*",
+    "packages/sentinel/web"
   ],
   "scripts": {
     "build": "bun run scripts/run-package-script.ts build",

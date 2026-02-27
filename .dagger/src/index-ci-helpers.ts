@@ -85,7 +85,10 @@ export const CI_WORKSPACES: WorkspaceEntry[] = [
       "packages/scout-for-lol/packages/ui",
     ],
   },
-  "packages/sentinel",
+  {
+    path: "packages/sentinel",
+    subPackages: ["packages/sentinel/web"],
+  },
 ];
 
 /** Install workspace dependencies with optimal layer ordering. */

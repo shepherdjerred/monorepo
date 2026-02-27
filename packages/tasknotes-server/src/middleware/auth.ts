@@ -3,7 +3,7 @@ import type { Context, Next } from "hono";
 import { config } from "../config.ts";
 
 export async function authMiddleware(c: Context, next: Next): Promise<Response | undefined> {
-  if (c.req.path === "/api/health") {
+  if (c.req.path === "/api/health" || c.req.path === "/metrics") {
     await next();
     return undefined;
   }

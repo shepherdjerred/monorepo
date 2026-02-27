@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { z } from "zod";
 import { MessageBubble } from "@/components/message-bubble";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -21,37 +22,33 @@ type ConversationEntry = {
   metadata?: Record<string, unknown> | undefined;
 };
 
-type SessionSummary = {
-  totalTurns: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  durationMs: number;
-  outcome: string;
-  totalCostUsd?: number;
-  durationApiMs?: number;
-  modelUsage?: Record<string, {
-    inputTokens: number;
-    outputTokens: number;
-    cacheReadInputTokens: number;
-    cacheCreationInputTokens: number;
-    costUsd: number;
-  }>;
-  permissionDenials?: { toolName: string; toolInput: string }[];
-  systemPrompt?: string;
-};
+const SessionSummarySchema = z.object({
+  totalTurns: z.number(),
+  totalInputTokens: z.number(),
+  totalOutputTokens: z.number(),
+  durationMs: z.number(),
+  outcome: z.string(),
+  totalCostUsd: z.number().optional(),
+  durationApiMs: z.number().optional(),
+  modelUsage: z.record(z.string(), z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    cacheReadInputTokens: z.number(),
+    cacheCreationInputTokens: z.number(),
+    costUsd: z.number(),
+  })).optional(),
+  permissionDenials: z.array(z.object({
+    toolName: z.string(),
+    toolInput: z.string(),
+  })).optional(),
+  systemPrompt: z.string().optional(),
+});
+
+type SessionSummary = z.infer<typeof SessionSummarySchema>;
 
 type ConversationViewerProps = {
   entries: ConversationEntry[];
 };
-
-function isSummary(value: unknown): value is SessionSummary {
-  if (value == null || typeof value !== "object") return false;
-  return "totalTurns" in value && typeof value.totalTurns === "number"
-    && "totalInputTokens" in value && typeof value.totalInputTokens === "number"
-    && "totalOutputTokens" in value && typeof value.totalOutputTokens === "number"
-    && "durationMs" in value && typeof value.durationMs === "number"
-    && "outcome" in value && typeof value.outcome === "string";
-}
 
 function parseSummary(entries: ConversationEntry[]): SessionSummary | null {
   const summaryEntry = entries.find(
@@ -60,7 +57,8 @@ function parseSummary(entries: ConversationEntry[]): SessionSummary | null {
   if (summaryEntry == null) return null;
   try {
     const parsed: unknown = JSON.parse(summaryEntry.content);
-    return isSummary(parsed) ? parsed : null;
+    const result = SessionSummarySchema.safeParse(parsed);
+    return result.success ? result.data : null;
   } catch {
     return null;
   }

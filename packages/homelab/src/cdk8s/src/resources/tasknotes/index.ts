@@ -16,6 +16,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
 export function createTasknotesDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "tasknotes", {
@@ -158,8 +159,22 @@ export function createTasknotesDeployment(chart: Chart) {
 
   // Service for API server
   const apiService = new Service(chart, "tasknotes-service", {
+    metadata: {
+      labels: {
+        app: "tasknotes",
+      },
+    },
     selector: deployment,
     ports: [{ port: 3000, name: "http" }],
+  });
+
+  // ServiceMonitor for Prometheus to scrape TaskNotes metrics
+  createServiceMonitor(chart, {
+    name: "tasknotes",
+    port: "http",
+    path: "/metrics",
+    namespace: "tasknotes",
+    matchLabels: { app: "tasknotes" },
   });
 
   // TailscaleIngress (no funnel — only accessible via Tailscale)

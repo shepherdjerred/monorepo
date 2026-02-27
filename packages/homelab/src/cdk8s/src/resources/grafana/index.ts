@@ -5,6 +5,7 @@ import { exportHaWorkflowDashboardJson } from "@shepherdjerred/homelab/cdk8s/gra
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/smartctl-dashboard.ts";
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
+import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 
 /**
@@ -83,6 +84,13 @@ const VELERO_DASHBOARD: DashboardConfig = {
   exportFn: exportVeleroDashboardJson,
 };
 
+const TASKNOTES_DASHBOARD: DashboardConfig = {
+  id: "tasknotes-dashboard-configmap",
+  name: "tasknotes-dashboard",
+  jsonFilename: "tasknotes.json",
+  exportFn: exportTasknotesDashboardJson,
+};
+
 const ZFS_DASHBOARD: DashboardConfig = {
   id: "zfs-dashboard-configmap",
   name: "zfs-dashboard",
@@ -95,6 +103,7 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   HA_WORKFLOW_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
+  TASKNOTES_DASHBOARD,
   VELERO_DASHBOARD,
   ZFS_DASHBOARD,
 ];
