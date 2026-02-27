@@ -14,6 +14,7 @@ import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
+import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -180,6 +181,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getScoutRuleGroups(),
+    },
+  });
+
+  // Create TaskNotes rules
+  new PrometheusRule(chart, "prometheus-tasknotes-rules", {
+    metadata: {
+      name: "prometheus-tasknotes-rules",
+      namespace: "tasknotes",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getTasknotesRuleGroups(),
     },
   });
 }

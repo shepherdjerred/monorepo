@@ -16,7 +16,8 @@ export default [
     },
   },
   {
-    // web/ is not a workspace member; relative parent import is the only way to get AppRouter type
+    // trpc.ts imports AppRouter type from parent sentinel package via relative path
+    // (can't use workspace dep — would be circular since sentinel embeds the web build)
     files: ["src/lib/trpc.ts"],
     rules: {
       "import/no-relative-packages": "off",

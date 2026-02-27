@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -184,16 +185,25 @@ function ToolResultContent({ entry }: { entry: ConversationEntry }) {
   );
 }
 
+const McpServerSchema = z.object({
+  name: z.string(),
+});
+
+const InitContentSchema = z.object({
+  model: z.string().optional(),
+  tools: z.array(z.unknown()).optional(),
+  mcpServers: z.array(McpServerSchema).optional(),
+});
+
 function SystemContent({ entry }: { entry: ConversationEntry }) {
   const metadataType = entry.metadata?.type;
 
   if (metadataType === "init") {
     try {
       const parsed: unknown = JSON.parse(entry.content);
-      if (parsed != null && typeof parsed === "object") {
-        const model = "model" in parsed && typeof parsed.model === "string" ? parsed.model : null;
-        const tools = "tools" in parsed && Array.isArray(parsed.tools) ? parsed.tools : null;
-        const mcpServers = "mcpServers" in parsed && Array.isArray(parsed.mcpServers) ? parsed.mcpServers : null;
+      const result = InitContentSchema.safeParse(parsed);
+      if (result.success) {
+        const { model, tools, mcpServers } = result.data;
         return (
           <div className="space-y-2 text-xs">
             {model != null && (
@@ -208,10 +218,7 @@ function SystemContent({ entry }: { entry: ConversationEntry }) {
             {mcpServers != null && mcpServers.length > 0 && (
               <div>
                 <span className="font-medium">MCP Servers:</span>{" "}
-                {mcpServers.map((s: unknown) => {
-                  if (s != null && typeof s === "object" && "name" in s && typeof s.name === "string") return s.name;
-                  return "unknown";
-                }).join(", ")}
+                {mcpServers.map((s) => s.name).join(", ")}
               </div>
             )}
           </div>

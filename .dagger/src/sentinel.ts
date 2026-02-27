@@ -11,7 +11,10 @@ import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
  * Minimal — sentinel only needs itself and eslint-config.
  */
 const SENTINEL_WORKSPACES: WorkspaceEntry[] = [
-  "packages/sentinel",
+  {
+    path: "packages/sentinel",
+    subPackages: ["packages/sentinel/web"],
+  },
   "packages/eslint-config",
   // Explicit (non-glob) workspace in root package.json — must exist for bun install
   { path: "packages/clauderon/docs", fullDirPhase1: true, depsOnly: true },
