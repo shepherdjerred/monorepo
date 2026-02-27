@@ -1,13 +1,16 @@
-import React, { useCallback } from "react";
+import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { TaskId } from "../domain/types";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { useTasks } from "../hooks/useTasks";
+import { type FilterConfig, type SortConfig, EMPTY_FILTER, DEFAULT_SORT, applyFilter, applySort } from "../domain/filters";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
+import { useTip } from "../hooks/use-tip";
 import { TaskList } from "../components/task/TaskList";
-import { FAB } from "../components/common/FAB";
+import { FilterSortBar } from "../components/input/FilterSortBar";
+import { Fab } from "../components/common/Fab";
+import { TipPopover } from "../components/common/TipPopover";
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, "Inbox">,
@@ -15,30 +18,45 @@ type Props = CompositeScreenProps<
 >;
 
 export function InboxScreen({ navigation }: Props) {
-  const { inboxTasks, toggleTask, refresh, refreshing } = useTasks();
+  const { inboxTasks, projectNames, contextNames, tagNames, refreshing, handlePress, handleToggle, handleDelete, handleRefresh, handleFabPress } =
+    useTaskListScreen(navigation);
+  const swipeTip = useTip("swipe-actions");
+  const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
+  const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
 
-  const handlePress = useCallback(
-    (id: TaskId) => navigation.navigate("TaskDetail", { taskId: id }),
-    [navigation],
-  );
-
-  const handleToggle = useCallback(
-    (id: TaskId) => toggleTask(id),
-    [toggleTask],
+  const displayTasks = useMemo(
+    () => applySort(applyFilter(inboxTasks, filter), sort),
+    [inboxTasks, filter, sort],
   );
 
   return (
     <View style={styles.container}>
+      <FilterSortBar
+        filter={filter}
+        sort={sort}
+        onFilterChange={setFilter}
+        onSortChange={setSort}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
+      />
       <TaskList
-        tasks={inboxTasks}
+        tasks={displayTasks}
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
-        onRefresh={refresh}
+        onTaskDelete={handleDelete}
+        onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="Inbox is empty"
         emptySubtitle="Tasks without a project appear here"
       />
-      <FAB onPress={() => navigation.navigate("QuickAdd")} />
+      <TipPopover
+        visible={swipeTip.visible}
+        title="Swipe for quick actions"
+        message="Swipe left to delete, right to complete"
+        onDismiss={swipeTip.dismiss}
+      />
+      <Fab onPress={handleFabPress} />
     </View>
   );
 }

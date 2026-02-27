@@ -2,12 +2,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { type Colors, colors as lightColors } from "../styles/colors";
-import { darkColors } from "../styles/darkColors";
+import { darkColors } from "../styles/dark-colors";
 import { setFeedbackGlobalEnabled } from "../lib/feedback";
+import { getAuthToken, setAuthToken as setSecureAuthToken } from "../lib/secure-storage";
 
 const STORAGE_KEYS = {
   apiUrl: "@tasknotes/api-url",
-  authToken: "@tasknotes/auth-token",
   isDarkMode: "@tasknotes/dark-mode",
   feedbackEnabled: "@tasknotes/feedback-enabled",
 } as const;
@@ -37,7 +37,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       const [savedUrl, savedToken, savedDark, savedFeedback] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.apiUrl),
-        AsyncStorage.getItem(STORAGE_KEYS.authToken),
+        getAuthToken(),
         AsyncStorage.getItem(STORAGE_KEYS.isDarkMode),
         AsyncStorage.getItem(STORAGE_KEYS.feedbackEnabled),
       ]);
@@ -61,7 +61,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setAuthToken = useCallback(async (token: string) => {
     setAuthTokenState(token);
-    await AsyncStorage.setItem(STORAGE_KEYS.authToken, token);
+    await setSecureAuthToken(token);
   }, []);
 
   const setIsDarkMode = useCallback(async (dark: boolean) => {

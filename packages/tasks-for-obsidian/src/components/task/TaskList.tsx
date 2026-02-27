@@ -1,16 +1,25 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { SectionList, View, Text, StyleSheet } from "react-native";
+import type { SharedValue } from "react-native-reanimated";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import { SwipeDirection } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { Task, TaskId } from "../../domain/types";
-import { useSettings } from "../../hooks/useSettings";
+import type { Priority } from "../../domain/priority";
+import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { groupBy } from "../../lib/utils";
 import { TaskRow } from "./TaskRow";
 import { EmptyState } from "../common/EmptyState";
+import { LeftSwipeActions, RightSwipeActions, ACTION_WIDTH } from "./SwipeActions";
 
 type TaskListProps = {
   tasks: Task[];
   onTaskPress: (id: TaskId) => void;
   onTaskToggle: (id: TaskId) => void;
+  onTaskDelete: (id: TaskId) => void;
+  onTaskEdit?: ((id: TaskId) => void) | undefined;
+  onTaskSetPriority?: ((id: TaskId, priority: Priority) => void) | undefined;
   onRefresh?: (() => void) | undefined;
   refreshing?: boolean | undefined;
   emptyTitle?: string | undefined;
@@ -22,6 +31,9 @@ export function TaskList({
   tasks,
   onTaskPress,
   onTaskToggle,
+  onTaskDelete,
+  onTaskEdit,
+  onTaskSetPriority,
   onRefresh,
   refreshing,
   emptyTitle = "No tasks",
@@ -29,6 +41,7 @@ export function TaskList({
   sectionBy,
 }: TaskListProps) {
   const { colors } = useSettings();
+  const openRowRef = useRef<SwipeableMethods | null>(null);
 
   const sections = useMemo(() => {
     if (!sectionBy) {
@@ -39,14 +52,55 @@ export function TaskList({
   }, [tasks, sectionBy]);
 
   const renderItem = useCallback(
-    ({ item }: { item: Task }) => (
-      <TaskRow
-        task={item}
-        onPress={() => onTaskPress(item.id)}
-        onToggle={() => onTaskToggle(item.id)}
-      />
-    ),
-    [onTaskPress, onTaskToggle],
+    ({ item }: { item: Task }) => {
+      let swipeableRef: SwipeableMethods | null = null;
+
+      const renderLeft = (progress: SharedValue<number>, _translation: SharedValue<number>, methods: SwipeableMethods) => {
+        swipeableRef = methods;
+        return <LeftSwipeActions progress={progress} />;
+      };
+
+      const renderRight = (progress: SharedValue<number>, _translation: SharedValue<number>, methods: SwipeableMethods) => {
+        swipeableRef = methods;
+        return <RightSwipeActions progress={progress} />;
+      };
+
+      const handleOpen = (direction: SwipeDirection) => {
+        if (openRowRef.current && openRowRef.current !== swipeableRef) {
+          openRowRef.current.close();
+        }
+        openRowRef.current = swipeableRef;
+
+        if (direction === SwipeDirection.LEFT) {
+          onTaskToggle(item.id);
+        } else {
+          onTaskDelete(item.id);
+        }
+        swipeableRef?.close();
+      };
+
+      return (
+        <ReanimatedSwipeable
+          renderLeftActions={renderLeft}
+          renderRightActions={renderRight}
+          leftThreshold={ACTION_WIDTH}
+          rightThreshold={ACTION_WIDTH}
+          overshootLeft={false}
+          overshootRight={false}
+          onSwipeableOpen={handleOpen}
+        >
+          <TaskRow
+            task={item}
+            onPress={() => { onTaskPress(item.id); }}
+            onToggle={() => { onTaskToggle(item.id); }}
+            onEdit={onTaskEdit ? () => { onTaskEdit(item.id); } : undefined}
+            onDelete={() => { onTaskDelete(item.id); }}
+            onSetPriority={onTaskSetPriority ? (priority) => { onTaskSetPriority(item.id, priority); } : undefined}
+          />
+        </ReanimatedSwipeable>
+      );
+    },
+    [onTaskPress, onTaskToggle, onTaskDelete, onTaskEdit, onTaskSetPriority],
   );
 
   const renderSectionHeader = useCallback(
@@ -76,6 +130,10 @@ export function TaskList({
       onRefresh={onRefresh}
       refreshing={refreshing ?? false}
       stickySectionHeadersEnabled
+      removeClippedSubviews={true}
+      windowSize={10}
+      maxToRenderPerBatch={15}
+      initialNumToRender={20}
     />
   );
 }

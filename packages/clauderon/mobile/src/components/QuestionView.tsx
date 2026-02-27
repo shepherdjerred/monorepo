@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import type { Message } from "../lib/claudeParser";
+import type { Message } from "../lib/claude-parser";
+import { QuestionsSchema } from "../lib/schemas";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 
@@ -16,21 +17,12 @@ export function QuestionView({ message }: QuestionViewProps) {
     return null;
   }
 
-  const questions = questionTool.input["questions"] as
-    | {
-        question: string;
-        header: string;
-        options: {
-          label: string;
-          description: string;
-        }[];
-        multiSelect: boolean;
-      }[]
-    | undefined;
-
-  if (!questions || questions.length === 0) {
+  const parsed = QuestionsSchema.safeParse(questionTool.input["questions"]);
+  if (!parsed.success || parsed.data.length === 0) {
     return null;
   }
+
+  const questions = parsed.data;
 
   return (
     <View style={styles.container}>

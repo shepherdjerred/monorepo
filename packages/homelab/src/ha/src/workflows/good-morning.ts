@@ -1,6 +1,7 @@
 import type { TServiceParams } from "@digital-alchemy/core";
 import {
   isAnyoneHome,
+  mediaParam,
   openCoversWithDelay,
   runParallel,
   runSequential,
@@ -128,9 +129,13 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                     return Promise.resolve();
                   },
                   () =>
-                    hass.call.media_player.unjoin({
-                      entity_id: bedroomMediaPlayer.entity_id,
-                    }),
+                    withTimeout(
+                      hass.call.media_player.unjoin({
+                        entity_id: bedroomMediaPlayer.entity_id,
+                      }),
+                      { amount: 30, unit: "s" },
+                      "media_player.unjoin",
+                    ),
                   // Wait longer for unjoin to complete fully
                   () => wait({ amount: 5, unit: "s" }),
                   // Debug: Log state after unjoin
@@ -147,10 +152,14 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                   () =>
                     (async () => {
                       logger.info("Calling volume_set with volume_level: 0");
-                      await hass.call.media_player.volume_set({
-                        entity_id: bedroomMediaPlayer.entity_id,
-                        volume_level: 0,
-                      });
+                      await withTimeout(
+                        hass.call.media_player.volume_set({
+                          entity_id: bedroomMediaPlayer.entity_id,
+                          volume_level: 0,
+                        }),
+                        { amount: 30, unit: "s" },
+                        "media_player.volume_set",
+                      );
                       logger.info("volume_set call completed");
                       return;
                     })(),
@@ -170,13 +179,17 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                         logger.info(
                           "Attempting to play media on bedroom player",
                         );
-                        await hass.call.media_player.play_media({
-                          entity_id: bedroomMediaPlayer.entity_id,
-                          media: JSON.stringify({
-                            media_content_id: "FV:2/5",
-                            media_content_type: "favorite_item_id",
+                        await withTimeout(
+                          hass.call.media_player.play_media({
+                            entity_id: bedroomMediaPlayer.entity_id,
+                            media: mediaParam({
+                              media_content_id: "FV:2/5",
+                              media_content_type: "favorite_item_id",
+                            }),
                           }),
-                        });
+                          { amount: 30, unit: "s" },
+                          "media_player.play_media",
+                        );
                         logger.info("Successfully started media playback");
                       } catch (playError) {
                         const errorMsg =
@@ -189,13 +202,17 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                         logger.info("Waiting additional time and retrying...");
                         await wait({ amount: 3, unit: "s" });
                         try {
-                          await hass.call.media_player.play_media({
-                            entity_id: bedroomMediaPlayer.entity_id,
-                            media: JSON.stringify({
-                              media_content_id: "FV:2/5",
-                              media_content_type: "favorite_item_id",
+                          await withTimeout(
+                            hass.call.media_player.play_media({
+                              entity_id: bedroomMediaPlayer.entity_id,
+                              media: mediaParam({
+                                media_content_id: "FV:2/5",
+                                media_content_type: "favorite_item_id",
+                              }),
                             }),
-                          });
+                            { amount: 30, unit: "s" },
+                            "media_player.play_media retry",
+                          );
                           logger.info("Retry successful");
                         } catch (retryError) {
                           const retryErrorMsg =
@@ -281,10 +298,14 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                 })(),
               // Join all players together
               () =>
-                hass.call.media_player.join({
-                  entity_id: bedroomMediaPlayer.entity_id,
-                  group_members: extraMediaPlayers.map((p) => p.entity_id),
-                }),
+                withTimeout(
+                  hass.call.media_player.join({
+                    entity_id: bedroomMediaPlayer.entity_id,
+                    group_members: extraMediaPlayers.map((p) => p.entity_id),
+                  }),
+                  { amount: 30, unit: "s" },
+                  "media_player.join",
+                ),
               // Gentle volume increase for all players (bedroom + extra)
               () =>
                 runSequentialWithDelay(

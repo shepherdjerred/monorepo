@@ -2,6 +2,7 @@ import type { TServiceParams } from "@digital-alchemy/core";
 import { z } from "zod";
 import {
   wait,
+  mediaParam,
   openCoversWithDelay,
   closeCoversWithDelay,
   verifyAfterDelay,
@@ -40,6 +41,7 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
                 "A91A15AA-479E-416C-8F51-BD983A999266"
             ) {
               logger.debug("Event actionID does not match; ignoring");
+              return;
             }
 
             await hass.call.notify.notify({
@@ -84,24 +86,36 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
             }
 
             logger.debug("Unjoining bedroom media player");
-            await hass.call.media_player.unjoin({
-              entity_id: bedroomMediaPlayer.entity_id,
-            });
+            await withTimeout(
+              hass.call.media_player.unjoin({
+                entity_id: bedroomMediaPlayer.entity_id,
+              }),
+              { amount: 30, unit: "s" },
+              "media_player.unjoin",
+            );
 
             logger.debug("Setting bedroom media player volume to 0");
-            await hass.call.media_player.volume_set({
-              entity_id: bedroomMediaPlayer.entity_id,
-              volume_level: 0,
-            });
+            await withTimeout(
+              hass.call.media_player.volume_set({
+                entity_id: bedroomMediaPlayer.entity_id,
+                volume_level: 0,
+              }),
+              { amount: 30, unit: "s" },
+              "media_player.volume_set",
+            );
 
             logger.debug("Playing media on bedroom media player");
-            await hass.call.media_player.play_media({
-              entity_id: bedroomMediaPlayer.entity_id,
-              media: JSON.stringify({
-                media_content_id: "FV:2/7",
-                media_content_type: "favorite_item_id",
+            await withTimeout(
+              hass.call.media_player.play_media({
+                entity_id: bedroomMediaPlayer.entity_id,
+                media: mediaParam({
+                  media_content_id: "FV:2/7",
+                  media_content_type: "favorite_item_id",
+                }),
               }),
-            });
+              { amount: 30, unit: "s" },
+              "media_player.play_media",
+            );
 
             for (let i = 0; i < 9; i++) {
               logger.debug(

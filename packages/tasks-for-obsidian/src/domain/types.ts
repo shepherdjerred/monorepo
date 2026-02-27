@@ -1,28 +1,32 @@
+import { z } from "zod";
+
 import type { Priority } from "./priority";
 import type { TaskStatus } from "./status";
 
-declare const __brand: unique symbol;
-type Brand<T, B extends string> = T & { readonly [__brand]: B };
+export const TaskIdSchema = z.string().brand("TaskId");
+export const ProjectNameSchema = z.string().brand("ProjectName");
+export const ContextNameSchema = z.string().brand("ContextName");
+export const TagNameSchema = z.string().brand("TagName");
 
-export type TaskId = Brand<string, "TaskId">;
-export type ProjectName = Brand<string, "ProjectName">;
-export type ContextName = Brand<string, "ContextName">;
-export type TagName = Brand<string, "TagName">;
+export type TaskId = z.infer<typeof TaskIdSchema>;
+export type ProjectName = z.infer<typeof ProjectNameSchema>;
+export type ContextName = z.infer<typeof ContextNameSchema>;
+export type TagName = z.infer<typeof TagNameSchema>;
 
 export function taskId(id: string): TaskId {
-  return id as TaskId;
+  return TaskIdSchema.parse(id);
 }
 
 export function projectName(name: string): ProjectName {
-  return name as ProjectName;
+  return ProjectNameSchema.parse(name);
 }
 
 export function contextName(name: string): ContextName {
-  return name as ContextName;
+  return ContextNameSchema.parse(name);
 }
 
 export function tagName(name: string): TagName {
-  return name as TagName;
+  return TagNameSchema.parse(name);
 }
 
 export type Task = {

@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Pressable, Text, StyleSheet } from "react-native";
+import { View, Pressable, Text, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
-import { useTasks } from "../hooks/useTasks";
-import { useSettings } from "../hooks/useSettings";
+import { useTasks } from "../hooks/use-tasks";
+import { useSettings } from "../hooks/use-settings";
+import { useTip } from "../hooks/use-tip";
 import { parseTaskInput } from "../lib/nlp";
 import { feedbackTaskCreate } from "../lib/feedback";
 import { NaturalLanguageInput } from "../components/input/NaturalLanguageInput";
+import { TipPopover } from "../components/common/TipPopover";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QuickAdd">;
 
@@ -15,13 +17,14 @@ export function QuickAddScreen({ route, navigation }: Props) {
   const [text, setText] = useState(initialText);
   const { createTask } = useTasks();
   const { colors } = useSettings();
+  const nlpTip = useTip("natural-language");
 
   const parsed = useMemo(() => parseTaskInput(text), [text]);
 
   const handleCreate = useCallback(() => {
     if (!parsed.title.trim()) return;
     feedbackTaskCreate();
-    createTask({
+    void createTask({
       title: parsed.title,
       due: parsed.due,
       priority: parsed.priority,
@@ -33,12 +36,21 @@ export function QuickAddScreen({ route, navigation }: Props) {
   }, [parsed, createTask, navigation]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <View style={styles.inputArea}>
         <NaturalLanguageInput
           value={text}
           onChange={setText}
           parsedResult={parsed}
+        />
+        <TipPopover
+          visible={nlpTip.visible}
+          title="Try natural language"
+          message={'Type "Buy milk tomorrow !high p:Shopping"'}
+          onDismiss={nlpTip.dismiss}
         />
       </View>
       <Pressable
@@ -48,10 +60,13 @@ export function QuickAddScreen({ route, navigation }: Props) {
         ]}
         onPress={handleCreate}
         disabled={!parsed.title.trim()}
+        accessibilityRole="button"
+        accessibilityLabel="Create task"
+        accessibilityState={{ disabled: !parsed.title.trim() }}
       >
         <Text style={styles.createText}>Create Task</Text>
       </Pressable>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

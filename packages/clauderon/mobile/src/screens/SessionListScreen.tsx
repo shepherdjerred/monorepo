@@ -21,7 +21,7 @@ import { typography } from "../styles/typography";
 type SessionListScreenProps = MainTabScreenProps<"Sessions">;
 
 function getFilteredSessions(sessions: Map<string, Session>, filter: FilterStatus): Session[] {
-  const sessionArray = Array.from(sessions.values());
+  const sessionArray = [...sessions.values()];
   switch (filter) {
     case "running":
       return sessionArray.filter((s) => s.status === SessionStatus.Running);
@@ -31,7 +31,7 @@ function getFilteredSessions(sessions: Map<string, Session>, filter: FilterStatu
       return sessionArray.filter((s) => s.status === SessionStatus.Completed);
     case "archived":
       return sessionArray.filter((s) => s.status === SessionStatus.Archived);
-    default:
+    case "all":
       return sessionArray.filter((s) => s.status !== SessionStatus.Archived);
   }
 }
@@ -98,11 +98,9 @@ export function SessionListScreen({ navigation }: SessionListScreenProps) {
     if (!archiveTarget) return;
     setIsArchiving(true);
     try {
-      if (archiveTarget.status === SessionStatus.Archived) {
-        await unarchiveSession(archiveTarget.id);
-      } else {
-        await archiveSession(archiveTarget.id);
-      }
+      await (archiveTarget.status === SessionStatus.Archived
+        ? unarchiveSession(archiveTarget.id)
+        : archiveSession(archiveTarget.id));
       setArchiveTarget(null);
     } catch {
       // Error is handled by context

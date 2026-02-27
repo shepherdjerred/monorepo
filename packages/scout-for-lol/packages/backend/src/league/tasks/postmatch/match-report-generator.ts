@@ -128,9 +128,16 @@ async function processArenaMatch(
   matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
-): Promise<MessageCreateOptions> {
+): Promise<MessageCreateOptions | undefined> {
   logger.info(`[generateMatchReport] 🎯 Processing as arena match`);
   const arenaMatch = toArenaMatch(players, matchData);
+
+  if (arenaMatch === undefined) {
+    logger.warn(
+      `[generateMatchReport] All tracked players filtered out due to participant mismatch in arena match ${matchId}`,
+    );
+    return undefined;
+  }
 
   // Create Discord message for arena
   const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
@@ -164,7 +171,7 @@ type StandardMatchContext = {
  */
 async function processStandardMatch(
   ctx: StandardMatchContext,
-): Promise<MessageCreateOptions> {
+): Promise<MessageCreateOptions | undefined> {
   const {
     players,
     matchData,
@@ -221,6 +228,13 @@ async function processStandardMatch(
 
   // Build CompletedMatch with per-player rank data
   const completedMatch = toMatch(players, matchData, playerRanksMap);
+
+  if (completedMatch === undefined) {
+    logger.warn(
+      `[generateMatchReport] All tracked players filtered out due to participant mismatch in match ${matchId}`,
+    );
+    return undefined;
+  }
 
   // Generate AI review (text and optional image) - gated by feature flag and queue type
   const { text: reviewText, image: reviewImage } =
@@ -343,9 +357,10 @@ export async function generateMatchReport(
     );
 
     // Process match based on queue type
-    const result = await match<number, Promise<MessageCreateOptions>>(
-      matchData.info.queueId,
-    )
+    const result = await match<
+      number,
+      Promise<MessageCreateOptions | undefined>
+    >(matchData.info.queueId)
       .with(1700, () =>
         processArenaMatch(players, matchData, matchId, playersInMatch),
       )
@@ -359,6 +374,10 @@ export async function generateMatchReport(
           targetGuildIds: options.targetGuildIds,
         }),
       );
+
+    if (result === undefined) {
+      return undefined;
+    }
 
     const queueType = parseQueueType(matchData.info.queueId) ?? "unknown";
     reportsGeneratedTotal.inc({ queue_type: queueType });

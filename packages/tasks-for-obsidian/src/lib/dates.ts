@@ -20,7 +20,7 @@ export function isOverdue(dateStr?: string): boolean {
   return date.getTime() < today.getTime();
 }
 
-export function isUpcoming(dateStr?: string, days: number = 7): boolean {
+export function isUpcoming(dateStr?: string, days = 7): boolean {
   if (!dateStr) return false;
   const date = toStartOfDay(parseDate(dateStr));
   const today = toStartOfDay(new Date());

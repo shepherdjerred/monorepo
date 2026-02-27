@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -13,8 +15,8 @@ import type { RootStackParamList } from "../navigation/types";
 import type { Priority } from "../domain/priority";
 import { PRIORITY_LABELS } from "../domain/priority";
 import { STATUS_LABELS } from "../domain/status";
-import { useTasks } from "../hooks/useTasks";
-import { useSettings } from "../hooks/useSettings";
+import { useTasks } from "../hooks/use-tasks";
+import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 import { formatRelativeDate } from "../lib/dates";
 import { PriorityPicker } from "../components/input/PriorityPicker";
@@ -50,7 +52,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   const handleSave = useCallback(() => {
     feedbackTaskCreate();
-    updateTask(taskId, { title, priority, due: due ?? null });
+    void updateTask(taskId, { title, priority, due: due ?? null });
     setEditing(false);
   }, [taskId, title, priority, due, updateTask]);
 
@@ -62,7 +64,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
         style: "destructive",
         onPress: () => {
           feedbackTaskDelete();
-          deleteTask(taskId);
+          void deleteTask(taskId);
           navigation.goBack();
         },
       },
@@ -81,38 +83,44 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   if (editing) {
     return (
-      <ScrollView
+      <KeyboardAvoidingView
         style={styles.container}
-        contentContainerStyle={styles.content}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Text style={[typography.label, { color: colors.textSecondary }]}>Title</Text>
-        <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
-          value={title}
-          onChangeText={setTitle}
-        />
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={[typography.label, { color: colors.textSecondary }]}>Title</Text>
+          <TextInput
+            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+            value={title}
+            onChangeText={setTitle}
+          />
 
-        <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Priority</Text>
-        <PriorityPicker value={priority} onChange={setPriority} />
+          <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Priority</Text>
+          <PriorityPicker value={priority} onChange={setPriority} />
 
-        <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Due Date</Text>
-        <DatePicker value={due} onChange={setDue} />
+          <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Due Date</Text>
+          <DatePicker value={due} onChange={setDue} />
 
-        <View style={styles.actions}>
-          <Pressable
-            style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={handleSave}
-          >
-            <Text style={styles.buttonText}>Save</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
-            onPress={() => setEditing(false)}
-          >
-            <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={handleSave}
+              accessibilityRole="button"
+              accessibilityLabel="Save changes"
+            >
+              <Text style={styles.buttonText}>Save</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.button, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
+              onPress={() => { setEditing(false); }}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel editing"
+            >
+              <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -142,20 +150,26 @@ export function TaskDetailScreen({ route, navigation }: Props) {
             } else {
               feedbackTaskComplete();
             }
-            toggleTask(taskId);
+            void toggleTask(taskId);
           }}
+          accessibilityRole="button"
+          accessibilityLabel={isCompletedStatus(task.status) ? "Mark as incomplete" : "Mark as complete"}
         >
           <Text style={styles.buttonText}>Toggle Status</Text>
         </Pressable>
         <Pressable
           style={[styles.button, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
-          onPress={() => setEditing(true)}
+          onPress={() => { setEditing(true); }}
+          accessibilityRole="button"
+          accessibilityLabel="Edit task"
         >
           <Text style={[styles.buttonText, { color: colors.text }]}>Edit</Text>
         </Pressable>
         <Pressable
           style={[styles.button, { backgroundColor: colors.error }]}
           onPress={handleDelete}
+          accessibilityRole="button"
+          accessibilityLabel="Delete task"
         >
           <Text style={styles.buttonText}>Delete</Text>
         </Pressable>

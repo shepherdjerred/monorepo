@@ -5,8 +5,7 @@ import { ConnectionError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { err } from "../domain/result";
 import type { PomodoroStatus, TaskId } from "../domain/types";
-import { TaskNotesClient } from "../data/api/TaskNotesClient";
-import { useSettingsContext } from "./SettingsContext";
+import { useApiClient } from "./ApiClientContext";
 
 type PomodoroContextValue = {
   status: PomodoroStatus | null;
@@ -19,13 +18,8 @@ type PomodoroContextValue = {
 const PomodoroContext = createContext<PomodoroContextValue | null>(null);
 
 export function PomodoroProvider({ children }: { children: React.ReactNode }) {
-  const { apiUrl } = useSettingsContext();
+  const client = useApiClient();
   const [status, setStatus] = useState<PomodoroStatus | null>(null);
-
-  const client = useMemo(
-    () => (apiUrl ? new TaskNotesClient({ baseUrl: apiUrl }) : null),
-    [apiUrl],
-  );
 
   const refreshStatus = useCallback(async () => {
     if (!client) return;

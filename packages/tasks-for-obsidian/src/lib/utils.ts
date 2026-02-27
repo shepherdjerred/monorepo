@@ -14,9 +14,7 @@ export function groupBy<T>(
   const result: Record<string, T[]> = {};
   for (const item of items) {
     const group = key(item);
-    if (!result[group]) {
-      result[group] = [];
-    }
+    result[group] ??= [];
     result[group].push(item);
   }
   return result;

@@ -1,11 +1,11 @@
 import React from "react";
 import { View, Pressable, Text, StyleSheet } from "react-native";
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from "../../hooks/use-settings";
 import { formatDate } from "../../lib/dates";
 
 export type DatePickerProps = {
   value?: string | undefined;
-  onChange: (date: string | undefined) => void;
+  onChange: (date?: string) => void;
 };
 
 function toISODate(date: Date): string {
@@ -37,7 +37,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
           <Pressable
             key={preset.label}
             style={[styles.preset, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => handlePreset(preset.offset)}
+            onPress={() => { handlePreset(preset.offset); }}
           >
             <Text style={[styles.presetText, { color: colors.text }]}>
               {preset.label}
@@ -46,7 +46,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
         ))}
         <Pressable
           style={[styles.preset, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => onChange(undefined)}
+          onPress={() => { onChange(); }}
         >
           <Text style={[styles.presetText, { color: colors.textSecondary }]}>
             None

@@ -11,6 +11,7 @@ import type { TSESLint } from "@typescript-eslint/utils";
 export { baseConfig, type BaseConfigOptions } from "./configs/base.js";
 export { importsConfig, type ImportsConfigOptions } from "./configs/imports.js";
 export { reactConfig } from "./configs/react.js";
+export { reactNativeConfig } from "./configs/react-native.js";
 export { accessibilityConfig } from "./configs/accessibility.js";
 export { astroConfig } from "./configs/astro.js";
 export { namingConfig } from "./configs/naming.js";
@@ -46,6 +47,7 @@ export {
 import { baseConfig, type BaseConfigOptions } from "./configs/base.js";
 import { importsConfig, type ImportsConfigOptions } from "./configs/imports.js";
 import { reactConfig } from "./configs/react.js";
+import { reactNativeConfig } from "./configs/react-native.js";
 import { accessibilityConfig } from "./configs/accessibility.js";
 import { namingConfig } from "./configs/naming.js";
 import { customRulesPlugin } from "./rules/index.js";
@@ -55,6 +57,8 @@ export type RecommendedOptions = BaseConfigOptions &
   ImportsConfigOptions & {
     /** Include React and React Hooks rules */
     react?: boolean;
+    /** Include React Native rules (implies react: true) */
+    reactNative?: boolean;
     /** Include accessibility (jsx-a11y) rules */
     accessibility?: boolean;
     /** Custom rules configuration */
@@ -95,6 +99,7 @@ export function recommended(
 ): TSESLint.FlatConfig.ConfigArray {
   const {
     react = false,
+    reactNative: isReactNative = false,
     accessibility = false,
     customRules = {
       reactRules: true,
@@ -106,13 +111,25 @@ export function recommended(
     ...baseOptions
   } = options;
 
+  // reactNative implies react
+  const useReact = react || isReactNative;
+
+  // RN projects use standard TS resolver instead of Bun resolver
+  const importsOptions = isReactNative
+    ? { ...baseOptions, useBunResolver: false }
+    : baseOptions;
+
   const configs: TSESLint.FlatConfig.ConfigArray = [
     ...baseConfig(baseOptions),
-    ...importsConfig(baseOptions),
+    ...importsConfig(importsOptions),
   ];
 
-  if (react) {
+  if (useReact) {
     configs.push(...reactConfig());
+  }
+
+  if (isReactNative) {
+    configs.push(...reactNativeConfig());
   }
 
   if (accessibility) {
@@ -134,12 +151,12 @@ export function recommended(
       "custom-rules/no-function-overloads": "error",
       // Always on — code organization
       "custom-rules/no-re-exports": "error",
-      "custom-rules/no-parent-imports": "error",
+      "custom-rules/no-parent-imports": isReactNative ? "off" : "error",
       // Always on — async style
       "custom-rules/prefer-async-await": "error",
-      // Always on — Bun
-      "custom-rules/prefer-bun-apis": "error",
-      "custom-rules/require-ts-extensions": "error",
+      // Bun-specific — disabled for React Native projects
+      "custom-rules/prefer-bun-apis": isReactNative ? "off" : "error",
+      "custom-rules/require-ts-extensions": isReactNative ? "off" : "error",
       // Always on — Zod
       "custom-rules/zod-schema-naming": "error",
       "custom-rules/no-redundant-zod-parse": "error",

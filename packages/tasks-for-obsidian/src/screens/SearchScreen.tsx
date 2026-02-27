@@ -1,22 +1,25 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import { View, TextInput, KeyboardAvoidingView, Platform, Alert, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
-import { useTasks } from "../hooks/useTasks";
-import { useSettings } from "../hooks/useSettings";
+import { useTasks } from "../hooks/use-tasks";
+import { useSettings } from "../hooks/use-settings";
+import { useDebounce } from "../hooks/use-debounce";
+import { feedbackTaskDelete } from "../lib/feedback";
 import { TaskList } from "../components/task/TaskList";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Search">;
 
 export function SearchScreen({ navigation }: Props) {
   const [query, setQuery] = useState("");
-  const { taskList, toggleTask } = useTasks();
+  const debouncedQuery = useDebounce(query, 300);
+  const { taskList, toggleTask, deleteTask } = useTasks();
   const { colors } = useSettings();
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return [];
-    const lower = query.toLowerCase();
+    if (!debouncedQuery.trim()) return [];
+    const lower = debouncedQuery.toLowerCase();
     return taskList.filter(
       (t) =>
         t.title.toLowerCase().includes(lower) ||
@@ -24,20 +27,40 @@ export function SearchScreen({ navigation }: Props) {
         t.contexts.some((c: string) => c.toLowerCase().includes(lower)) ||
         t.tags.some((tag: string) => tag.toLowerCase().includes(lower)),
     );
-  }, [taskList, query]);
+  }, [taskList, debouncedQuery]);
 
   const handlePress = useCallback(
-    (id: TaskId) => navigation.navigate("TaskDetail", { taskId: id }),
+    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
     [navigation],
   );
 
   const handleToggle = useCallback(
-    (id: TaskId) => toggleTask(id),
+    (id: TaskId) => { void toggleTask(id); },
     [toggleTask],
   );
 
+  const handleDelete = useCallback(
+    (id: TaskId) => {
+      Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            feedbackTaskDelete();
+            void deleteTask(id);
+          },
+        },
+      ]);
+    },
+    [deleteTask],
+  );
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <View style={styles.searchBar}>
         <TextInput
           style={[
@@ -54,15 +77,18 @@ export function SearchScreen({ navigation }: Props) {
           placeholderTextColor={colors.textTertiary}
           autoFocus
           returnKeyType="search"
+          accessibilityLabel="Search tasks"
+          accessibilityHint="Type to search by title, project, context, or tag"
         />
       </View>
       <TaskList
         tasks={filtered}
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
-        emptyTitle={query.trim() ? "No results" : "Start typing to search"}
+        onTaskDelete={handleDelete}
+        emptyTitle={debouncedQuery.trim() ? "No results" : "Start typing to search"}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

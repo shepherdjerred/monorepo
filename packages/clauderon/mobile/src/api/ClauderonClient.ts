@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type {
   Session,
   CreateSessionRequest,
@@ -9,16 +10,22 @@ import type {
 } from "../types/generated";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
 import { Platform } from "react-native";
+import { ErrorResponseSchema, UploadResponseSchema } from "../lib/schemas";
 
-/**
- * React Native file object for FormData
- * This is the RN-specific format for file uploads
- */
-type ReactNativeFile = {
-  uri: string;
-  type: string;
-  name: string;
-};
+// Schemas for API response wrappers using z.custom for complex generated types
+const SessionsResponseSchema = z.object({ sessions: z.array(z.custom<Session>()) });
+const SessionResponseSchema = z.object({ session: z.custom<Session>() });
+const CreateResponseSchema = z.object({
+  id: z.string(),
+  warnings: z.array(z.string()).optional(),
+});
+const RecentReposResponseSchema = z.object({ repos: z.array(z.custom<RecentRepoDto>()) });
+const SystemStatusResponseSchema = z.custom<SystemStatus>();
+const HistoryResponseSchema = z.object({
+  lines: z.array(z.string()),
+  total_lines: z.number(),
+  file_exists: z.boolean(),
+});
 
 /**
  * Configuration options for ClauderonClient
@@ -51,7 +58,7 @@ export class ClauderonClient {
    * List all sessions
    */
   async listSessions(): Promise<Session[]> {
-    const response = await this.request<{ sessions: Session[] }>("GET", "/api/sessions");
+    const response = SessionsResponseSchema.parse(await this.requestJson("GET", "/api/sessions"));
     return response.sessions;
   }
 
@@ -60,9 +67,8 @@ export class ClauderonClient {
    */
   async getSession(id: string): Promise<Session> {
     try {
-      const response = await this.request<{ session: Session }>(
-        "GET",
-        `/api/sessions/${encodeURIComponent(id)}`,
+      const response = SessionResponseSchema.parse(
+        await this.requestJson("GET", `/api/sessions/${encodeURIComponent(id)}`),
       );
       return response.session;
     } catch (error) {
@@ -76,41 +82,38 @@ export class ClauderonClient {
   /**
    * Create a new session
    */
-  async createSession(request: CreateSessionRequest): Promise<{ id: string; warnings?: string[] }> {
-    const response = await this.request<{ id: string; warnings?: string[] }>(
-      "POST",
-      "/api/sessions",
-      request,
-    );
-    return response;
+  async createSession(
+    request: CreateSessionRequest,
+  ): Promise<{ id: string; warnings?: string[] | undefined }> {
+    return CreateResponseSchema.parse(await this.requestJson("POST", "/api/sessions", request));
   }
 
   /**
    * Delete a session
    */
   async deleteSession(id: string): Promise<void> {
-    await this.request("DELETE", `/api/sessions/${encodeURIComponent(id)}`);
+    await this.requestVoid("DELETE", `/api/sessions/${encodeURIComponent(id)}`);
   }
 
   /**
    * Archive a session
    */
   async archiveSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/archive`);
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/archive`);
   }
 
   /**
    * Unarchive a session
    */
   async unarchiveSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/unarchive`);
   }
 
   /**
    * Update session metadata (title and/or description)
    */
   async updateSessionMetadata(id: string, title?: string, description?: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, {
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/metadata`, {
       title,
       description,
     });
@@ -120,9 +123,8 @@ export class ClauderonClient {
    * Regenerate session metadata using AI
    */
   async regenerateMetadata(id: string): Promise<Session> {
-    const response = await this.request<{ session: Session }>(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`,
+    const response = SessionResponseSchema.parse(
+      await this.requestJson("POST", `/api/sessions/${encodeURIComponent(id)}/regenerate-metadata`),
     );
     return response.session;
   }
@@ -131,14 +133,16 @@ export class ClauderonClient {
    * Refresh a Docker session (pull latest image and recreate container)
    */
   async refreshSession(id: string): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/refresh`);
   }
 
   /**
    * Get recent repositories
    */
   async getRecentRepos(): Promise<RecentRepoDto[]> {
-    const response = await this.request<{ repos: RecentRepoDto[] }>("GET", "/api/recent-repos");
+    const response = RecentReposResponseSchema.parse(
+      await this.requestJson("GET", "/api/recent-repos"),
+    );
     return response.repos;
   }
 
@@ -146,7 +150,7 @@ export class ClauderonClient {
    * Update session access mode
    */
   async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.request("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, {
+    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, {
       access_mode: mode,
     });
   }
@@ -155,8 +159,7 @@ export class ClauderonClient {
    * Get system status including credentials and proxies
    */
   async getSystemStatus(): Promise<SystemStatus> {
-    const response = await this.request<SystemStatus>("GET", "/api/status");
-    return response;
+    return SystemStatusResponseSchema.parse(await this.requestJson("GET", "/api/status"));
   }
 
   /**
@@ -167,7 +170,7 @@ export class ClauderonClient {
       service_id: serviceId,
       value,
     };
-    await this.request("POST", "/api/credentials", request);
+    await this.requestVoid("POST", "/api/credentials", request);
   }
 
   /**
@@ -194,11 +197,7 @@ export class ClauderonClient {
     const queryString = params.toString();
     const url = `/api/sessions/${encodeURIComponent(id)}/history${queryString ? `?${queryString}` : ""}`;
 
-    const response = await this.request<{
-      lines: string[];
-      total_lines: number;
-      file_exists: boolean;
-    }>("GET", url);
+    const response = HistoryResponseSchema.parse(await this.requestJson("GET", url));
 
     return {
       lines: response.lines,
@@ -225,13 +224,12 @@ export class ClauderonClient {
     const normalizedUri =
       Platform.OS === "ios" || Platform.OS === "macos" ? imageUri.replace("file://", "") : imageUri;
 
-    const file: ReactNativeFile = {
+    // React Native's FormData accepts RN-specific file objects via the extended type declaration
+    formData.append("file", {
       uri: normalizedUri,
-      type: "image/jpeg", // Default to JPEG, could be improved to detect actual type
+      type: "image/jpeg",
       name: fileName,
-    };
-    // React Native's FormData accepts RN-specific file objects
-    formData.append("file", file as unknown as Blob);
+    });
 
     const url = `${this.baseUrl}/api/sessions/${encodeURIComponent(sessionId)}/upload`;
 
@@ -245,7 +243,7 @@ export class ClauderonClient {
       });
 
       if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
+        const data = ErrorResponseSchema.parse(await response.json());
         throw new ApiError(
           data.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
@@ -253,7 +251,7 @@ export class ClauderonClient {
         );
       }
 
-      return (await response.json()) as UploadResponse;
+      return UploadResponseSchema.parse(await response.json());
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
@@ -266,9 +264,9 @@ export class ClauderonClient {
   }
 
   /**
-   * Internal method to make HTTP requests
+   * Internal method to make HTTP requests that return no body
    */
-  private async request<T = void>(method: string, path: string, body?: unknown): Promise<T> {
+  private async requestVoid(method: string, path: string, body?: unknown): Promise<void> {
     const url = `${this.baseUrl}${path}`;
 
     try {
@@ -285,17 +283,59 @@ export class ClauderonClient {
 
       const response = await this.fetch(url, init);
 
-      // Handle empty responses (204 No Content, etc.)
       if (response.status === 204 || response.headers.get("content-length") === "0") {
-        return undefined as T;
+        return;
       }
 
-      // Parse JSON response
       const data: unknown = await response.json();
 
-      // Check for error responses
       if (!response.ok) {
-        const errorData = data as { error?: string };
+        const errorData = ErrorResponseSchema.parse(data);
+        throw new ApiError(
+          errorData.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
+          undefined,
+          response.status,
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new NetworkError(
+        `Failed to fetch ${method} ${path}: ${error instanceof Error ? error.message : String(error)}`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Internal method to make HTTP requests that return JSON
+   */
+  private async requestJson(method: string, path: string, body?: unknown): Promise<unknown> {
+    const url = `${this.baseUrl}${path}`;
+
+    try {
+      const init: RequestInit = {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (body !== undefined) {
+        init.body = JSON.stringify(body);
+      }
+
+      const response = await this.fetch(url, init);
+
+      if (response.status === 204 || response.headers.get("content-length") === "0") {
+        return undefined;
+      }
+
+      const data: unknown = await response.json();
+
+      if (!response.ok) {
+        const errorData = ErrorResponseSchema.parse(data);
         throw new ApiError(
           errorData.error ?? `HTTP ${String(response.status)}: ${response.statusText}`,
           undefined,
@@ -303,7 +343,7 @@ export class ClauderonClient {
         );
       }
 
-      return data as T;
+      return data;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;

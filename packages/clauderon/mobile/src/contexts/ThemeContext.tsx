@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { z } from "zod";
 import { useColorScheme } from "react-native";
 import { storage } from "../lib/storage";
 import { colors as lightColors } from "../styles/colors";
-import { darkColors } from "../styles/darkColors";
+import { darkColors } from "../styles/dark-colors";
 
 const THEME_STORAGE_KEY = "clauderon_theme";
 
@@ -27,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load saved theme preference
   useEffect(() => {
     const loadTheme = async () => {
-      const saved = await storage.get<string>(THEME_STORAGE_KEY);
+      const saved = await storage.get(THEME_STORAGE_KEY, z.string());
       if (saved === "light" || saved === "dark" || saved === "system") {
         setModeState(saved);
       }

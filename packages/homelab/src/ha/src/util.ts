@@ -60,6 +60,8 @@ type DscCheckBase = {
   delay: Time;
   logger: TServiceParams["logger"];
   hass: TServiceParams["hass"];
+  retries?: number;
+  retryDelay?: Time;
 };
 
 type DscCheckExact = DscCheckBase & { check: string };
@@ -83,41 +85,54 @@ function describeDscCheck(opts: DscCheck): string {
 }
 
 export function verifyAfterDelay(opts: DscCheck): void {
+  const maxAttempts = (opts.retries ?? 0) + 1;
+  const retryDelayTime = opts.retryDelay ?? { amount: 30, unit: "s" as const };
+
   setTimeout(() => {
     void instrumentWorkflow(`dsc_${opts.workflowName}`, async () => {
-      const actual = opts.getActualState();
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const actual = opts.getActualState();
 
-      if (resolveDscCheck(opts.check, actual)) {
-        opts.logger.info(`DSC passed: ${opts.entityId} state='${actual}'`);
-        return;
-      }
+        if (resolveDscCheck(opts.check, actual)) {
+          opts.logger.info(`DSC passed: ${opts.entityId} state='${actual}'`);
+          return;
+        }
 
-      const expected = describeDscCheck(opts);
-      const error = new DscVerificationError(
-        opts.entityId,
-        expected,
-        actual,
-        opts.workflowName,
-      );
-      opts.logger.error(error.message);
+        if (attempt < maxAttempts) {
+          opts.logger.info(
+            `DSC check ${opts.entityId} attempt ${attempt.toString()}/${maxAttempts.toString()} failed (state='${actual}'), retrying in ${timeToMs(retryDelayTime).toString()}ms`,
+          );
+          await wait(retryDelayTime);
+          continue;
+        }
 
-      Sentry.withScope((scope) => {
-        scope.setTag("entity_id", opts.entityId);
-        scope.setTag("workflow", opts.workflowName);
-        scope.setContext("dsc", {
-          entityId: opts.entityId,
+        const expected = describeDscCheck(opts);
+        const error = new DscVerificationError(
+          opts.entityId,
           expected,
           actual,
-          workflowName: opts.workflowName,
-        });
-        Sentry.captureException(error);
-      });
+          opts.workflowName,
+        );
+        opts.logger.error(error.message);
 
-      await opts.hass.call.notify.notify({
-        title: "Device Verification Failed",
-        message: error.message,
-      });
-      throw error;
+        Sentry.withScope((scope) => {
+          scope.setTag("entity_id", opts.entityId);
+          scope.setTag("workflow", opts.workflowName);
+          scope.setContext("dsc", {
+            entityId: opts.entityId,
+            expected,
+            actual,
+            workflowName: opts.workflowName,
+          });
+          Sentry.captureException(error);
+        });
+
+        await opts.hass.call.notify.notify({
+          title: "Device Verification Failed",
+          message: error.message,
+        });
+        throw error;
+      }
     });
   }, timeToMs(opts.delay));
 }
@@ -231,9 +246,28 @@ export function startRoombaWithVerification(
     getActualState: () => roomba.state,
     check: "cleaning",
     delay: { amount: delay, unit: "m" },
+    retries: 3,
+    retryDelay: { amount: 1, unit: "m" },
     logger,
     hass,
   });
+}
+
+/**
+ * Wraps a media object as the `media` parameter for `play_media`.
+ *
+ * The generated types from @digital-alchemy/type-writer incorrectly declare
+ * `media` as `string`, but Home Assistant expects an object with
+ * `media_content_id` and `media_content_type`. Passing a JSON string causes
+ * HA's `_promote_media_fields()` to skip field promotion, failing schema
+ * validation and leaving the websocket promise permanently pending.
+ */
+export function mediaParam(media: {
+  media_content_id: string;
+  media_content_type: string;
+}): string {
+  // @ts-expect-error HA expects object but generated types say string
+  return media;
 }
 
 export function runIf(

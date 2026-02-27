@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
 import type { Event as WsEvent } from "../types/generated";
@@ -9,14 +10,11 @@ import { WebSocketError } from "./errors";
  */
 export type SessionEvent = WsEvent;
 
-/**
- * Message received from the events WebSocket
- */
-type EventsMessage = {
-  type: string;
-  event?: SessionEvent;
-  message?: string;
-};
+const EventsMessageSchema = z.object({
+  type: z.string(),
+  event: z.custom<SessionEvent>().optional(),
+  message: z.string().optional(),
+});
 
 /**
  * Configuration for EventsClient
@@ -52,7 +50,7 @@ export class EventsClient {
   private intentionallyClosed = false;
   private appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
 
-  private listeners: {
+  private readonly listeners: {
     connected: (() => void)[];
     disconnected: (() => void)[];
     event: ((event: SessionEvent) => void)[];
@@ -105,9 +103,9 @@ export class EventsClient {
 
       this.ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(
-            typeof event.data === "string" ? event.data : "",
-          ) as EventsMessage;
+          const data = EventsMessageSchema.parse(
+            JSON.parse(typeof event.data === "string" ? event.data : ""),
+          );
 
           // Handle connection acknowledgment
           if (data.type === "connected") {
@@ -213,7 +211,7 @@ export class EventsClient {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  private handleAppStateChange = (nextAppState: AppStateStatus): void => {
+  private readonly handleAppStateChange = (nextAppState: AppStateStatus): void => {
     // Reconnect when app comes to foreground
     if (nextAppState === "active" && !this.isConnected && !this.intentionallyClosed) {
       this.connect();

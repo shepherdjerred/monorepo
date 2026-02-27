@@ -6,33 +6,41 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { useSync } from "../../hooks/useSync";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSync } from "../../hooks/use-sync";
 
 const BANNER_HEIGHT = 24;
 
 export function ConnectionBanner() {
   const { isConnected, isSyncing } = useSync();
+  const insets = useSafeAreaInsets();
   const visible = !isConnected || isSyncing;
 
-  const height = useSharedValue(visible ? BANNER_HEIGHT : 0);
+  const totalHeight = BANNER_HEIGHT + insets.top;
+  const height = useSharedValue(visible ? totalHeight : 0);
 
   useEffect(() => {
-    height.value = withTiming(visible ? BANNER_HEIGHT : 0, {
+    height.value = withTiming(visible ? totalHeight : 0, {
       duration: 150,
       easing: Easing.ease,
     });
-  }, [visible, height]);
+  }, [visible, height, totalHeight]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
     overflow: "hidden" as const,
   }));
 
-  const message = !isConnected ? "No connection" : "Syncing...";
-  const backgroundColor = !isConnected ? "#ef4444" : "#f59e0b";
+  const message = isConnected ? "Syncing..." : "No connection";
+  const backgroundColor = isConnected ? "#f59e0b" : "#ef4444";
 
   return (
-    <Animated.View style={[styles.banner, { backgroundColor }, animatedStyle]}>
+    <Animated.View
+      style={[styles.banner, { backgroundColor, paddingTop: insets.top }, animatedStyle]}
+      accessibilityRole="alert"
+      accessibilityLabel={message}
+      accessibilityLiveRegion="polite"
+    >
       <Text style={styles.text}>{message}</Text>
     </Animated.View>
   );

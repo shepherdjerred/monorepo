@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
@@ -12,10 +13,11 @@ export const STORAGE_KEYS = {
  * Generic storage helper with typed get/set methods
  */
 export const storage = {
-  async get<T>(key: string): Promise<T | null> {
+  async get(key: string, schema: z.ZodType<string>): Promise<string | null> {
     try {
       const value = await AsyncStorage.getItem(key);
-      return value ? (JSON.parse(value) as T) : null;
+      if (value === null) return null;
+      return schema.parse(JSON.parse(value));
     } catch (error) {
       console.error(`Failed to get ${key}:`, error);
       return null;

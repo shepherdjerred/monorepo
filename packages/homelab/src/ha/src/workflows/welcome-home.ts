@@ -95,7 +95,13 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
 
           if (shouldStopCleaning(roomba.state)) {
             logger.debug("Commanding Roomba to return to base");
-            await roomba.return_to_base();
+            await withTimeout(
+              hass.call.vacuum.return_to_base({
+                entity_id: roomba.entity_id,
+              }),
+              { amount: 30, unit: "s" },
+              "vacuum.return_to_base",
+            );
           }
         })(),
         { amount: 2, unit: "m" },

@@ -27,6 +27,8 @@ const EXCLUDED_FILES = [
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",
+  // Intentional: HA generated types declare media as string but HA expects object
+  "packages/homelab/src/ha/src/util.ts",
 ];
 
 type Finding = {

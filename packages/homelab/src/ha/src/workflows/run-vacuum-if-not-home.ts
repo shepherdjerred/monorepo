@@ -39,7 +39,11 @@ export function runVacuumIfNotHome({
                   "The Roomba has started cleaning since no one is home.",
               });
 
-              await roomba.start();
+              await withTimeout(
+                hass.call.vacuum.start({ entity_id: roomba.entity_id }),
+                { amount: 30, unit: "s" },
+                "vacuum.start",
+              );
               startRoombaWithVerification(hass, logger, roomba);
             }
           })(),

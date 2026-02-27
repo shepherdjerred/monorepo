@@ -452,6 +452,21 @@ export async function runHomelabRelease(
     return { outputs: [msg], errors, infraVersions };
   }
 
+  if (
+    !argocdToken ||
+    !registryPassword ||
+    chartMuseumUsername === undefined ||
+    !chartMuseumPassword ||
+    !cloudflareApiToken ||
+    !cloudflareAccountId ||
+    !s3AccessKeyId ||
+    !s3SecretAccessKey
+  ) {
+    const msg = "Homelab release skipped: required secrets are undefined after validation";
+    errors.push(msg);
+    return { outputs: [msg], errors, infraVersions };
+  }
+
   outputs.push("\n--- Homelab Release ---");
   try {
     const homelabSecrets = {

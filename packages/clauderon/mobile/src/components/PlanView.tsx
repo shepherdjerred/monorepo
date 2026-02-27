@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import type { Message } from "../lib/claudeParser";
+import type { Message } from "../lib/claude-parser";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 import Markdown from "react-native-markdown-display";

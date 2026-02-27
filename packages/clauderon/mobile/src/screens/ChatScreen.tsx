@@ -13,17 +13,17 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { launchImageLibrary, launchCamera } from "../lib/imagePicker";
+import { launchImageLibrary, launchCamera } from "../lib/image-picker";
 import type { RootStackScreenProps } from "../types/navigation";
-import { useConsole } from "../hooks/useConsole";
-import { useSessionHistory } from "../hooks/useSessionHistory";
-import type { Message } from "../lib/claudeParser";
+import { useConsole } from "../hooks/use-console";
+import { useSessionHistory } from "../hooks/use-session-history";
+import type { Message } from "../lib/claude-parser";
 import { MessageBubble } from "../components/MessageBubble";
 import { ConnectionStatus } from "../components/ConnectionStatus";
 import { colors } from "../styles/colors";
 import { typography } from "../styles/typography";
 import { commonStyles } from "../styles/common";
-import { useClauderonClient } from "../hooks/useClauderonClient";
+import { useClauderonClient } from "../hooks/use-clauderon-client";
 
 type ChatScreenProps = RootStackScreenProps<"Chat">;
 
@@ -69,12 +69,15 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     }
 
     if (result.assets) {
-      const newImages = result.assets
-        .filter((asset): asset is typeof asset & { uri: string } => asset.uri !== undefined)
-        .map((asset) => ({
-          uri: asset.uri,
-          name: asset.fileName ?? "image.jpg",
-        }));
+      const newImages: { uri: string; name: string }[] = [];
+      for (const asset of result.assets) {
+        if (asset.uri !== undefined) {
+          newImages.push({
+            uri: asset.uri,
+            name: asset.fileName ?? "image.jpg",
+          });
+        }
+      }
       setAttachedImages((prev) => [...prev, ...newImages]);
     }
   };

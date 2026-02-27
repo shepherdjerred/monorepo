@@ -20,7 +20,7 @@ type TaskCheckboxProps = {
   onToggle: () => void;
 };
 
-export function TaskCheckbox({ status, priority, onToggle }: TaskCheckboxProps) {
+export const TaskCheckbox = React.memo(function TaskCheckbox({ status, priority, onToggle }: TaskCheckboxProps) {
   const completed = isCompletedStatus(status);
   const borderColor = PRIORITY_COLORS[priority];
 
@@ -32,20 +32,20 @@ export function TaskCheckbox({ status, priority, onToggle }: TaskCheckboxProps) 
   }, [completed, fillProgress]);
 
   const handleToggle = () => {
-    if (!completed) {
-      feedbackTaskComplete();
-      scale.value = withSequence(
-        withSpring(1.2, { damping: 12, stiffness: 600 }),
-        withSpring(1.0, { damping: 15, stiffness: 400 }),
-      );
-      fillProgress.value = withTiming(1, { duration: 80 });
-    } else {
+    if (completed) {
       feedbackTaskUncomplete();
       scale.value = withSequence(
         withTiming(0.9, { duration: 50 }),
-        withSpring(1.0, { damping: 15, stiffness: 400 }),
+        withSpring(1, { damping: 15, stiffness: 400 }),
       );
       fillProgress.value = withTiming(0, { duration: 60 });
+    } else {
+      feedbackTaskComplete();
+      scale.value = withSequence(
+        withSpring(1.2, { damping: 12, stiffness: 600 }),
+        withSpring(1, { damping: 15, stiffness: 400 }),
+      );
+      fillProgress.value = withTiming(1, { duration: 80 });
     }
     onToggle();
   };
@@ -56,11 +56,17 @@ export function TaskCheckbox({ status, priority, onToggle }: TaskCheckboxProps) 
   }));
 
   return (
-    <Pressable onPress={handleToggle} hitSlop={8}>
+    <Pressable
+      onPress={handleToggle}
+      hitSlop={11}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: completed }}
+      accessibilityLabel={`${completed ? "Uncheck" : "Check"} task`}
+    >
       <Animated.View style={[styles.circle, { borderColor }, animatedStyle]} />
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   circle: {

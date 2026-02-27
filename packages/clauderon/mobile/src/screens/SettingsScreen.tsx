@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import type { MainTabScreenProps } from "../types/navigation";
-import { useSettings } from "../hooks/useSettings";
+import { useSettings } from "../hooks/use-settings";
 import { useTheme, type ThemeMode } from "../contexts/ThemeContext";
 import { typography } from "../styles/typography";
 
@@ -51,10 +51,10 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       } else {
         Alert.alert("Error", `Connection failed: ${response.statusText}`);
       }
-    } catch (err) {
+    } catch (error_) {
       Alert.alert(
         "Error",
-        `Failed to connect: ${err instanceof Error ? err.message : "Unknown error"}`,
+        `Failed to connect: ${error_ instanceof Error ? error_.message : "Unknown error"}`,
       );
     }
   };

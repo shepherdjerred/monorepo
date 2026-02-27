@@ -32,7 +32,7 @@ resource "cloudflare_record" "glitter_boys_com_dmarc" {
   zone_id = cloudflare_zone.glitter_boys_com.id
   name    = "_dmarc"
   type    = "TXT"
-  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s;"
+  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; rua=mailto:dmarc@sjer.red"
 }
 
 resource "cloudflare_record" "glitter_boys_com_dkim_wildcard" {

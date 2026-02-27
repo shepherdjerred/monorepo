@@ -11,10 +11,14 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		E19B46A355184D2FA5BC166C /* complete.wav in Resources */ = {isa = PBXBuildFile; fileRef = 7E2F375BF79D498ABCCB414A /* complete.wav */; };
+		E7C8B6EB5FE641159FA0B595 /* delete.wav in Resources */ = {isa = PBXBuildFile; fileRef = D46F3A8068C244D7BF495293 /* delete.wav */; };
 		EF5A5B93E0F582F95A4D984B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		FCD92C3D55E44B60B5722C17 /* create.wav in Resources */ = {isa = PBXBuildFile; fileRef = 122847316460414586706DFD /* create.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		122847316460414586706DFD /* create.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = create.wav; path = ../src/assets/sounds/create.wav; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TasksForObsidian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TasksForObsidian.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TasksForObsidian/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TasksForObsidian/Info.plist; sourceTree = "<group>"; };
@@ -23,7 +27,9 @@
 		5709B34CF0A7D63546082F79 /* Pods-TasksForObsidian.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TasksForObsidian.release.xcconfig"; path = "Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-TasksForObsidian.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TasksForObsidian.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TasksForObsidian/AppDelegate.swift; sourceTree = "<group>"; };
+		7E2F375BF79D498ABCCB414A /* complete.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = complete.wav; path = ../src/assets/sounds/complete.wav; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = TasksForObsidian/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D46F3A8068C244D7BF495293 /* delete.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = delete.wav; path = ../src/assets/sounds/delete.wav; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -60,6 +66,17 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		7384F407425C43309051BF95 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				122847316460414586706DFD /* create.wav */,
+				7E2F375BF79D498ABCCB414A /* complete.wav */,
+				D46F3A8068C244D7BF495293 /* delete.wav */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -75,6 +92,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				7384F407425C43309051BF95 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -161,6 +179,9 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				EF5A5B93E0F582F95A4D984B /* PrivacyInfo.xcprivacy in Resources */,
+				FCD92C3D55E44B60B5722C17 /* create.wav in Resources */,
+				E19B46A355184D2FA5BC166C /* complete.wav in Resources */,
+				E7C8B6EB5FE641159FA0B595 /* delete.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

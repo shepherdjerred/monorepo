@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, Appearance, StyleSheet } from "react-native";
 import type { ReactNode, ErrorInfo } from "react";
+import * as Sentry from "@sentry/react-native";
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -21,8 +22,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { hasError: true, error };
   }
 
-  override componentDidCatch(_error: Error, _info: ErrorInfo) {
-    // Error already captured in state via getDerivedStateFromError
+  override componentDidCatch(error: Error, info: ErrorInfo) {
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   handleRetry = () => {
@@ -31,13 +32,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   override render() {
     if (this.state.hasError) {
+      const isDark = Appearance.getColorScheme() === "dark";
+      const themeColors = isDark
+        ? { background: "#111827", title: "#f9fafb", message: "#9ca3af", button: "#6366f1" }
+        : { background: "#ffffff", title: "#111827", message: "#6b7280", button: "#6366f1" };
+
       return (
-        <View style={styles.container}>
-          <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+          <Text style={[styles.title, { color: themeColors.title }]}>Something went wrong</Text>
+          <Text style={[styles.message, { color: themeColors.message }]}>
             {this.state.error?.message ?? "An unexpected error occurred"}
           </Text>
-          <Pressable style={styles.button} onPress={this.handleRetry}>
+          <Pressable style={[styles.button, { backgroundColor: themeColors.button }]} onPress={this.handleRetry} accessibilityRole="button" accessibilityLabel="Try again">
             <Text style={styles.buttonText}>Try Again</Text>
           </Pressable>
         </View>
@@ -54,22 +60,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 32,
-    backgroundColor: "#ffffff",
   },
   title: {
     fontSize: 22,
     fontWeight: "600",
-    color: "#111827",
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: "#6b7280",
     textAlign: "center",
     marginBottom: 24,
   },
   button: {
-    backgroundColor: "#6366f1",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

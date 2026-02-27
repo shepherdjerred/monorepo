@@ -44,7 +44,7 @@ export class NotFoundError extends ApiError {
 }
 
 export class ConnectionError extends TaskNotesError {
-  constructor(message: string = "Unable to connect to TaskNotes server") {
+  constructor(message = "Unable to connect to TaskNotes server") {
     super(message);
     this.name = "ConnectionError";
   }

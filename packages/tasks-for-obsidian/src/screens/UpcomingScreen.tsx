@@ -1,14 +1,15 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { TaskId } from "../domain/types";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { useTasks } from "../hooks/useTasks";
+import { type FilterConfig, type SortConfig, EMPTY_FILTER, DEFAULT_SORT, applyFilter, applySort } from "../domain/filters";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { getDateGroup } from "../lib/dates";
 import { TaskList } from "../components/task/TaskList";
-import { FAB } from "../components/common/FAB";
+import { FilterSortBar } from "../components/input/FilterSortBar";
+import { Fab } from "../components/common/Fab";
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, "Upcoming">,
@@ -16,16 +17,14 @@ type Props = CompositeScreenProps<
 >;
 
 export function UpcomingScreen({ navigation }: Props) {
-  const { upcomingTasks, toggleTask, refresh, refreshing } = useTasks();
+  const { upcomingTasks, projectNames, contextNames, tagNames, refreshing, handlePress, handleToggle, handleDelete, handleRefresh, handleFabPress } =
+    useTaskListScreen(navigation);
+  const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
+  const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
 
-  const handlePress = useCallback(
-    (id: TaskId) => navigation.navigate("TaskDetail", { taskId: id }),
-    [navigation],
-  );
-
-  const handleToggle = useCallback(
-    (id: TaskId) => toggleTask(id),
-    [toggleTask],
+  const displayTasks = useMemo(
+    () => applySort(applyFilter(upcomingTasks, filter), sort),
+    [upcomingTasks, filter, sort],
   );
 
   const sectionBy = useCallback(
@@ -35,17 +34,27 @@ export function UpcomingScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <FilterSortBar
+        filter={filter}
+        sort={sort}
+        onFilterChange={setFilter}
+        onSortChange={setSort}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
+      />
       <TaskList
-        tasks={upcomingTasks}
+        tasks={displayTasks}
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
-        onRefresh={refresh}
+        onTaskDelete={handleDelete}
+        onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="No upcoming tasks"
         emptySubtitle="Tasks with future due dates appear here"
         sectionBy={sectionBy}
       />
-      <FAB onPress={() => navigation.navigate("QuickAdd")} />
+      <Fab onPress={handleFabPress} />
     </View>
   );
 }
