@@ -13,8 +13,9 @@ import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 const TASKNOTES_SERVER_WORKSPACES: WorkspaceEntry[] = [
   "packages/tasknotes-server",
   "packages/eslint-config",
-  // Explicit (non-glob) workspace in root package.json — must exist for bun install
+  // Explicit (non-glob) workspaces in root package.json — must exist for bun install
   { path: "packages/clauderon/docs", fullDirPhase1: true, depsOnly: true },
+  { path: "packages/sentinel/web", depsOnly: true },
 ];
 
 /**
