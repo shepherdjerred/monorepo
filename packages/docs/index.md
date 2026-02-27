@@ -8,6 +8,7 @@ AI-maintained knowledge base for the monorepo.
 - [CI Pipeline](architecture/ci-pipeline.md) - Dagger-based CI/CD overview
 - [Sentinel](architecture/sentinel.md) - Autonomous agent system architecture
 - [Monarch](architecture/monarch.md) - Transaction categorization pipeline with tiered classification
+- [Package Integration Audit](architecture/package-integration-audit.md) - Integration status of new packages (sentinel, tasks-for-obsidian, obsidian-sync-client, tasknotes-server)
 
 ## Patterns
 
