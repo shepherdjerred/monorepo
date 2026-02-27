@@ -211,6 +211,12 @@ const versions = {
   // Custom sentinel image - Autonomous agent system for operational tasks
   // not managed by renovate
   "shepherdjerred/sentinel": "latest",
+  // Custom tasknotes-server image - TaskNotes API server for mobile app
+  // not managed by renovate
+  "shepherdjerred/tasknotes-server": "latest",
+  // Custom obsidian-sync-client image - Obsidian Sync headless client
+  // not managed by renovate
+  "shepherdjerred/obsidian-sync-client": "latest",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];

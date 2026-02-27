@@ -59,6 +59,7 @@ import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createDnsAuditApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dns-audit.ts";
 import { createSentinelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/sentinel.ts";
+import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -154,6 +155,7 @@ export async function createAppsChart(app: App) {
   createBugsinkApp(chart);
   createDnsAuditApp(chart);
   createSentinelApp(chart);
+  createTasknotesApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

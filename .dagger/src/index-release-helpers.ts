@@ -1,6 +1,8 @@
 import type { Secret, Container } from "@dagger.io/dagger";
 import { publishBirmelImageWithContainer } from "./birmel.ts";
 import { publishSentinelImageWithContainer } from "./sentinel.ts";
+import { publishTasknotesServerImage } from "./tasknotes-server.ts";
+import { publishObsidianSyncClientImage } from "./obsidian-sync-client.ts";
 import { deployWebringDocs } from "./webring.ts";
 import { deployStarlightKarmaBot } from "./starlight-karma-bot.ts";
 import { deployBetterSkillCapped } from "./better-skill-capped.ts";
@@ -191,6 +193,8 @@ export async function runAppDeployments(options: ReleasePhaseOptions): Promise<{
     s3SecretAccessKey,
     birmelImage,
     sentinelImage,
+    tasknotesServerImage,
+    obsidianSyncClientImage,
   } = options;
 
   const s3Tasks: DeployTask[] = [];
@@ -230,6 +234,48 @@ export async function runAppDeployments(options: ReleasePhaseOptions): Promise<{
       deploy: async () => {
         const result = await publishSentinelImageWithContainer({
           image: sentinelImage,
+          version,
+          gitSha,
+          registryAuth: {
+            username: registryUsername,
+            password: registryPassword,
+          },
+        });
+        return {
+          message: `Published:\n${result.refs.join("\n")}`,
+          versionedRef: result.versionedRef,
+        };
+      },
+    });
+
+    // TaskNotes Server publish (GHCR)
+    ghcrTasks.push({
+      name: "TaskNotes Server publish",
+      versionKey: "shepherdjerred/tasknotes-server",
+      deploy: async () => {
+        const result = await publishTasknotesServerImage({
+          image: tasknotesServerImage,
+          version,
+          gitSha,
+          registryAuth: {
+            username: registryUsername,
+            password: registryPassword,
+          },
+        });
+        return {
+          message: `Published:\n${result.refs.join("\n")}`,
+          versionedRef: result.versionedRef,
+        };
+      },
+    });
+
+    // Obsidian Sync Client publish (GHCR)
+    ghcrTasks.push({
+      name: "Obsidian Sync Client publish",
+      versionKey: "shepherdjerred/obsidian-sync-client",
+      deploy: async () => {
+        const result = await publishObsidianSyncClientImage({
+          image: obsidianSyncClientImage,
           version,
           gitSha,
           registryAuth: {

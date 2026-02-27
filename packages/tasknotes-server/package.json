@@ -1,0 +1,26 @@
+{
+  "name": "tasknotes-server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile=dist/tasknotes-server",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "bunx eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "hono": "^4",
+    "zod": "^3.24",
+    "gray-matter": "^4",
+    "yaml": "^2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8",
+    "@types/bun": "latest",
+    "eslint": "^9.39.2",
+    "typescript-eslint": "^8.53.1",
+    "jiti": "^2.6.1"
+  }
+}
