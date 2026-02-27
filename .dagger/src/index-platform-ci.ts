@@ -3,6 +3,7 @@ import { dag } from "@dagger.io/dagger";
 import versions from "./lib-versions.ts";
 import { runNamedParallel } from "./lib-parallel.ts";
 import { getRustContainer } from "./index-infra.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 const BUN_VERSION = versions.bun;
 
@@ -10,6 +11,8 @@ const BUN_VERSION = versions.bun;
  * Run Clauderon Mobile CI: lint, typecheck, format check, test.
  */
 export async function runMobileCi(source: Directory): Promise<string> {
+  const builtEslintConfig = getBuiltEslintConfig(source);
+
   const base = dag
     .container()
     .from(`oven/bun:${BUN_VERSION}-debian`)
@@ -21,6 +24,8 @@ export async function runMobileCi(source: Directory): Promise<string> {
       source.directory("packages/clauderon/web/shared/src/generated"),
     )
     .withFile("/tsconfig.base.json", source.file("tsconfig.base.json"))
+    // eslint.config.ts imports ../../eslint-config/local.ts (resolves to /eslint-config/)
+    .withDirectory("/eslint-config", builtEslintConfig)
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   const results = await runNamedParallel<string>([

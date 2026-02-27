@@ -1,28 +1,49 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import { dag } from "@dagger.io/dagger";
-import versions from "./lib-versions.ts";
-
-const BUN_VERSION = versions.bun;
+import {
+  getBaseBunDebianContainer,
+  installMonorepoWorkspaceDeps,
+} from "./lib-monorepo-workspace.ts";
+import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 /**
- * Get a base container for the obsidian-sync-client package.
- * Standalone package (not a workspace member) — copies its own source and installs deps.
+ * Workspace entries for obsidian-sync-client CI/build.
+ * Minimal — obsidian-sync-client only needs itself and eslint-config.
  */
-function getBaseContainer(
-  source: Directory,
+const OBSIDIAN_SYNC_CLIENT_WORKSPACES: WorkspaceEntry[] = [
+  "packages/obsidian-sync-client",
+  "packages/eslint-config",
+  // Explicit (non-glob) workspace in root package.json — must exist for bun install
+  { path: "packages/clauderon/docs", fullDirPhase1: true, depsOnly: true },
+];
+
+/**
+ * Install obsidian-sync-client workspace dependencies.
+ */
+function installObsidianSyncClientWorkspaceDeps(
+  workspaceSource: Directory,
   useMounts: boolean,
 ): Container {
-  const pkgDir = source.directory("packages/obsidian-sync-client");
+  return installMonorepoWorkspaceDeps({
+    baseContainer: getBaseBunDebianContainer(),
+    source: workspaceSource,
+    useMounts,
+    workspaces: OBSIDIAN_SYNC_CLIENT_WORKSPACES,
+    rootConfigFiles: ["tsconfig.base.json"],
+  });
+}
 
-  let container = dag
-    .container()
-    .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withWorkdir("/workspace");
-
-  container = useMounts ? container.withMountedDirectory("/workspace", pkgDir) : container.withDirectory("/workspace", pkgDir);
-
-  return container.withExec(["bun", "install", "--frozen-lockfile"]);
+/**
+ * Get a prepared container with all dependencies installed (using mounts for CI).
+ */
+function getObsidianSyncClientPrepared(workspaceSource: Directory): Container {
+  const builtEslintConfig = getBuiltEslintConfig(workspaceSource);
+  return installObsidianSyncClientWorkspaceDeps(workspaceSource, true)
+    .withDirectory(
+      "/workspace/packages/eslint-config/dist",
+      builtEslintConfig.directory("dist"),
+    )
+    .withWorkdir("/workspace/packages/obsidian-sync-client");
 }
 
 /**
@@ -32,7 +53,7 @@ function getBaseContainer(
 export async function checkObsidianSyncClient(
   source: Directory,
 ): Promise<string> {
-  const prepared = getBaseContainer(source, true)
+  const prepared = getObsidianSyncClientPrepared(source)
     .withEnvVariable("TEST_MODE", "unit");
 
   await Promise.all([
@@ -52,7 +73,8 @@ export function buildObsidianSyncClientImage(
   version: string,
   _gitSha: string,
 ): Container {
-  return getBaseContainer(source, false)
+  return installObsidianSyncClientWorkspaceDeps(source, false)
+    .withWorkdir("/workspace/packages/obsidian-sync-client")
     .withEnvVariable("NODE_ENV", "production")
     .withEntrypoint(["bun", "run", "src/index.ts"])
     .withLabel("org.opencontainers.image.title", "obsidian-sync-client")
