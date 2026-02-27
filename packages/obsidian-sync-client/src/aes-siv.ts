@@ -1,4 +1,5 @@
-import { subtle } from "node:crypto";
+// Use globalThis.crypto.subtle for type compatibility with global CryptoKey.
+const { subtle } = globalThis.crypto;
 
 const AES_BLOCK_SIZE = 16;
 const AES_BLOCK_R = 135;

@@ -20,9 +20,21 @@ void mock.module("@shepherdjerred/sentinel/sse/index.ts", () => ({
   addSSEListener: () => noop,
 }));
 
-// Mock Discord client (chat.ts imports it)
+// Mock Discord client (chat.ts has circular dependency with client.ts)
 void mock.module("@shepherdjerred/sentinel/discord/client.ts", () => ({
   getDiscordClient: () => null,
+  startDiscord: noop,
+  stopDiscord: noop,
+}));
+
+// Mock database to ensure getPrisma returns testPrisma everywhere.
+// In CI, bun's module resolution order can cause queue/index.ts to bind the
+// real getPrisma before mock.module takes effect. This mock ensures all
+// dynamically-imported modules get testPrisma.
+void mock.module("@shepherdjerred/sentinel/database/index.ts", () => ({
+  getPrisma: () => testPrisma,
+  initDatabase: async () => { /* no-op */ },
+  disconnectPrisma: async () => { /* no-op */ },
 }));
 
 // Import modules under test AFTER mocks
