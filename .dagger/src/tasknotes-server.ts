@@ -1,28 +1,49 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import { dag } from "@dagger.io/dagger";
-import versions from "./lib-versions.ts";
-
-const BUN_VERSION = versions.bun;
+import {
+  getBaseBunDebianContainer,
+  installMonorepoWorkspaceDeps,
+} from "./lib-monorepo-workspace.ts";
+import type { WorkspaceEntry } from "./lib-monorepo-workspace.ts";
+import { getBuiltEslintConfig } from "./lib-eslint-config.ts";
 
 /**
- * Get a base container for the tasknotes-server package.
- * Standalone package (not a workspace member) — copies its own source and installs deps.
+ * Workspace entries for tasknotes-server CI/build.
+ * Minimal — tasknotes-server only needs itself and eslint-config.
  */
-function getBaseContainer(
-  source: Directory,
+const TASKNOTES_SERVER_WORKSPACES: WorkspaceEntry[] = [
+  "packages/tasknotes-server",
+  "packages/eslint-config",
+  // Explicit (non-glob) workspace in root package.json — must exist for bun install
+  { path: "packages/clauderon/docs", fullDirPhase1: true, depsOnly: true },
+];
+
+/**
+ * Install tasknotes-server workspace dependencies.
+ */
+function installTasknotesServerWorkspaceDeps(
+  workspaceSource: Directory,
   useMounts: boolean,
 ): Container {
-  const pkgDir = source.directory("packages/tasknotes-server");
+  return installMonorepoWorkspaceDeps({
+    baseContainer: getBaseBunDebianContainer(),
+    source: workspaceSource,
+    useMounts,
+    workspaces: TASKNOTES_SERVER_WORKSPACES,
+    rootConfigFiles: ["tsconfig.base.json"],
+  });
+}
 
-  let container = dag
-    .container()
-    .from(`oven/bun:${BUN_VERSION}-debian`)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-cache"))
-    .withWorkdir("/workspace");
-
-  container = useMounts ? container.withMountedDirectory("/workspace", pkgDir) : container.withDirectory("/workspace", pkgDir);
-
-  return container.withExec(["bun", "install", "--frozen-lockfile"]);
+/**
+ * Get a prepared container with all dependencies installed (using mounts for CI).
+ */
+function getTasknotesServerPrepared(workspaceSource: Directory): Container {
+  const builtEslintConfig = getBuiltEslintConfig(workspaceSource);
+  return installTasknotesServerWorkspaceDeps(workspaceSource, true)
+    .withDirectory(
+      "/workspace/packages/eslint-config/dist",
+      builtEslintConfig.directory("dist"),
+    )
+    .withWorkdir("/workspace/packages/tasknotes-server");
 }
 
 /**
@@ -31,7 +52,7 @@ function getBaseContainer(
 export async function checkTasknotesServer(
   source: Directory,
 ): Promise<string> {
-  const prepared = getBaseContainer(source, true);
+  const prepared = getTasknotesServerPrepared(source);
 
   await Promise.all([
     prepared.withExec(["bun", "run", "typecheck"]).sync(),
@@ -50,7 +71,8 @@ export function buildTasknotesServerImage(
   version: string,
   _gitSha: string,
 ): Container {
-  return getBaseContainer(source, false)
+  return installTasknotesServerWorkspaceDeps(source, false)
+    .withWorkdir("/workspace/packages/tasknotes-server")
     .withEnvVariable("NODE_ENV", "production")
     .withEntrypoint(["bun", "run", "src/index.ts"])
     .withExposedPort(3000)
