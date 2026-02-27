@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "hono": "^4",
+    "prom-client": "^15",
     "zod": "^3.24",
     "gray-matter": "^4",
     "yaml": "^2"
