@@ -5,8 +5,7 @@ import { ConnectionError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { err } from "../domain/result";
 import type { TaskId, TimeEntry, TimeSummary } from "../domain/types";
-import { TaskNotesClient } from "../data/api/TaskNotesClient";
-import { useSettingsContext } from "./SettingsContext";
+import { useApiClient } from "./ApiClientContext";
 
 type TimeTrackingContextValue = {
   activeEntry: TimeEntry | null;
@@ -18,13 +17,8 @@ type TimeTrackingContextValue = {
 const TimeTrackingContext = createContext<TimeTrackingContextValue | null>(null);
 
 export function TimeTrackingProvider({ children }: { children: React.ReactNode }) {
-  const { apiUrl } = useSettingsContext();
+  const client = useApiClient();
   const [activeEntry, setActiveEntry] = useState<TimeEntry | null>(null);
-
-  const client = useMemo(
-    () => (apiUrl ? new TaskNotesClient({ baseUrl: apiUrl }) : null),
-    [apiUrl],
-  );
 
   const startTracking = useCallback(
     async (taskId: TaskId): Promise<Result<void, AppError>> => {

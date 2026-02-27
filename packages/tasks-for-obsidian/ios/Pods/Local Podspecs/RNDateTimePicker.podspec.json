@@ -1,0 +1,55 @@
+{
+  "name": "RNDateTimePicker",
+  "version": "8.6.0",
+  "summary": "DateTimePicker component for React Native",
+  "description": "DateTimePicker component for React Native",
+  "license": "MIT",
+  "authors": "Martijn Swaagman <mswaagman@godaddy.com> (https://github.com/swaagie)",
+  "homepage": "https://github.com/react-native-community/datetimepicker#readme",
+  "platforms": {
+    "ios": "11.0",
+    "visionos": "1.0"
+  },
+  "source": {
+    "git": "https://github.com/react-native-community/datetimepicker",
+    "tag": "v8.6.0"
+  },
+  "source_files": "ios/**/*.{h,m,mm,cpp}",
+  "requires_arc": true,
+  "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
+  "dependencies": {
+    "React-Core": [],
+    "React-RCTFabric": [],
+    "ReactCodegen": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "ReactCommon/turbomodule/bridging": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-NativeModulesApple": [],
+    "Yoga": [],
+    "React-Fabric": [],
+    "React-graphics": [],
+    "React-utils": [],
+    "React-featureflags": [],
+    "React-debug": [],
+    "React-ImageManager": [],
+    "React-rendererdebug": [],
+    "React-jsi": [],
+    "React-renderercss": [],
+    "hermes-engine": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  },
+  "pod_target_xcconfig": {
+    "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 ",
+    "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED"
+  }
+}

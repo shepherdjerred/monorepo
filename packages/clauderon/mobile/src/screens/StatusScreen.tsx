@@ -37,8 +37,8 @@ export function StatusScreen(_props: StatusScreenProps) {
     try {
       const systemStatus = await client.getSystemStatus();
       setStatus(systemStatus);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load status");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to load status");
     } finally {
       setIsLoading(false);
     }

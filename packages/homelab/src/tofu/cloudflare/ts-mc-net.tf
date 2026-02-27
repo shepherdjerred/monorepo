@@ -119,7 +119,7 @@ resource "cloudflare_record" "ts_mc_net_dmarc" {
   zone_id = cloudflare_zone.ts_mc_net.id
   name    = "_dmarc"
   type    = "TXT"
-  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s;"
+  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; rua=mailto:dmarc@sjer.red"
 }
 
 # DNSSEC

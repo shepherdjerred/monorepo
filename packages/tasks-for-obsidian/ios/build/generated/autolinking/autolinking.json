@@ -28,6 +28,31 @@
         }
       }
     },
+    "@react-native-community/datetimepicker": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/datetimepicker",
+      "name": "@react-native-community/datetimepicker",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/datetimepicker/RNDateTimePicker.podspec",
+          "version": "8.6.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/datetimepicker/android",
+          "packageImportPath": "import com.reactcommunity.rndatetimepicker.RNDateTimePickerPackage;",
+          "packageInstance": "new RNDateTimePickerPackage()",
+          "buildTypes": [],
+          "libraryName": "RNDateTimePickerCGen",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "@react-native-community/netinfo": {
       "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/netinfo",
       "name": "@react-native-community/netinfo",
@@ -46,6 +71,61 @@
           "libraryName": "RNCNetInfoSpec",
           "componentDescriptors": [],
           "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-community/netinfo/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "@react-native-menu/menu": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-menu/menu",
+      "name": "@react-native-menu/menu",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-menu/menu/react-native-menu.podspec",
+          "version": "2.0.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-menu/menu/android",
+          "packageImportPath": "import com.reactnativemenu.MenuPackage;",
+          "packageInstance": "new MenuPackage()",
+          "buildTypes": [],
+          "libraryName": "RNMenuViewSpec",
+          "componentDescriptors": [
+            "MenuViewComponentDescriptor"
+          ],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@react-native-menu/menu/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "@sentry/react-native": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@sentry/react-native",
+      "name": "@sentry/react-native",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@sentry/react-native/RNSentry.podspec",
+          "version": "8.1.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@sentry/react-native/android",
+          "packageImportPath": "import io.sentry.react.RNSentryPackage;",
+          "packageInstance": "new RNSentryPackage()",
+          "buildTypes": [],
+          "libraryName": "RNSentrySpec",
+          "componentDescriptors": [
+            "RNSentryReplayMaskComponentDescriptor",
+            "RNSentryReplayUnmaskComponentDescriptor"
+          ],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/@sentry/react-native/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -99,6 +179,69 @@
           "libraryName": "RNHapticFeedbackSpec",
           "componentDescriptors": [],
           "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-haptic-feedback/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-ios-context-menu": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-context-menu",
+      "name": "react-native-ios-context-menu",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-context-menu/react-native-ios-context-menu.podspec",
+          "version": "3.2.1",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": null
+      }
+    },
+    "react-native-ios-utilities": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-utilities",
+      "name": "react-native-ios-utilities",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-utilities/react-native-ios-utilities.podspec",
+          "version": "5.2.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-utilities/android",
+          "packageImportPath": "import com.iosutilities.IosUtilitiesPackage;",
+          "packageInstance": "new IosUtilitiesPackage()",
+          "buildTypes": [],
+          "libraryName": "RNIUtilitiesSpec",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-ios-utilities/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-keychain": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-keychain",
+      "name": "react-native-keychain",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-keychain/RNKeychain.podspec",
+          "version": "10.0.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-keychain/android",
+          "packageImportPath": "import com.oblador.keychain.KeychainPackage;",
+          "packageInstance": "new KeychainPackage()",
+          "buildTypes": [],
+          "libraryName": "RNKeychainSpec",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-keychain/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -216,6 +359,31 @@
           "libraryName": "RNSoundSpec",
           "componentDescriptors": [],
           "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-sound/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-vector-icons": {
+      "root": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-vector-icons",
+      "name": "react-native-vector-icons",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-vector-icons/RNVectorIcons.podspec",
+          "version": "10.3.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-vector-icons/android",
+          "packageImportPath": "import com.oblador.vectoricons.VectorIconsPackage;",
+          "packageInstance": "new VectorIconsPackage()",
+          "buildTypes": [],
+          "libraryName": "RNVectorIconsSpec",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -675,7 +843,9 @@
     "ios": {},
     "android": {}
   },
-  "assets": [],
+  "assets": [
+    "./src/assets/sounds"
+  ],
   "project": {
     "ios": {
       "sourceDir": "/Users/jerred/git/monorepo/packages/tasks-for-obsidian/ios",

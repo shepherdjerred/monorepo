@@ -1,10 +1,11 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-import { useSettings } from "../hooks/useSettings";
+import { useSettings } from "../hooks/use-settings";
+import { AppIcon } from "../components/common/AppIcon";
 import { linking } from "./linking";
 import type { RootStackParamList, MainTabParamList } from "./types";
 
@@ -19,6 +20,10 @@ import { SearchScreen } from "../screens/SearchScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { PomodoroScreen } from "../screens/PomodoroScreen";
 import { TimeReportScreen } from "../screens/TimeReportScreen";
+import { ContextDetailScreen } from "../screens/ContextDetailScreen";
+import { TagDetailScreen } from "../screens/TagDetailScreen";
+import { SavedViewScreen } from "../screens/SavedViewScreen";
+import { JobSearchKanbanScreen } from "../screens/JobSearchKanbanScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -82,9 +87,14 @@ export function AppNavigator() {
             headerShown: true,
             title: "Tasks",
             headerRight: () => (
-              <Pressable onPress={() => nav.navigate("Settings")} hitSlop={8}>
-                <Text style={{ fontSize: 22 }}>{"⚙"}</Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Pressable onPress={() => { nav.navigate("Search"); }} hitSlop={8}>
+                  <AppIcon name="search" size={22} color={colors.text} />
+                </Pressable>
+                <Pressable onPress={() => { nav.navigate("Settings"); }} hitSlop={8}>
+                  <AppIcon name="settings" size={22} color={colors.text} />
+                </Pressable>
+              </View>
             ),
           })}
         />
@@ -97,6 +107,26 @@ export function AppNavigator() {
           name="ProjectDetail"
           component={ProjectDetailScreen}
           options={{ title: "Project" }}
+        />
+        <Stack.Screen
+          name="ContextDetail"
+          component={ContextDetailScreen}
+          options={{ title: "Context" }}
+        />
+        <Stack.Screen
+          name="TagDetail"
+          component={TagDetailScreen}
+          options={{ title: "Tag" }}
+        />
+        <Stack.Screen
+          name="SavedView"
+          component={SavedViewScreen}
+          options={{ title: "Saved View" }}
+        />
+        <Stack.Screen
+          name="JobSearchKanban"
+          component={JobSearchKanbanScreen}
+          options={{ title: "Job Search Board" }}
         />
         <Stack.Screen
           name="QuickAdd"

@@ -1,0 +1,1 @@
+../../../Sentry/Sources/Sentry/SentryBreadcrumb+Private.h

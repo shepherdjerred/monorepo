@@ -170,9 +170,16 @@ function convertRawMatchToInternalFormat(
     ranks: {},
   };
 
-  return queueType === "arena"
-    ? toArenaMatch([player], rawMatch)
-    : toMatch([player], rawMatch, new Map());
+  const result =
+    queueType === "arena"
+      ? toArenaMatch([player], rawMatch)
+      : toMatch([player], rawMatch, new Map());
+
+  if (result === undefined) {
+    throw new Error("Participant mismatch: player not found in match info");
+  }
+
+  return result;
 }
 
 type S3MatchResult = {

@@ -1,181 +1,59 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
-import react from "eslint-plugin-react";
-import reactNative from "eslint-plugin-react-native";
+import { recommended } from "../../eslint-config/local.ts";
 
-/**
- * ESLint configuration for clauderon-mobile
- * Standalone flat config for React Native with strict TypeScript
- */
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
-  {
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    reactNative: true,
     ignores: [
-      "node_modules/",
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      // RN-specific
       "android/",
       "ios/",
       "macos/",
       "windows/",
-      "eslint.config.ts",
-      "metro.config.js",
-      "metro.config.macos.js",
-      "babel.config.js",
-      "jest.config.js",
-      "jest.config.windows.js",
-      "coverage/",
       ".expo/",
-      // Root-level JS files not in tsconfig
+      "coverage/",
+      "App.tsx",
       "index.js",
       "react-native.config.js",
-      "App.tsx",
-      // Generated types (from TypeShare)
       "src/types/generated/",
-      // Test files (excluded from tsconfig, use jest for linting)
       "**/*.test.ts",
       "**/*.test.tsx",
       "**/__tests__/**",
+      "eslint.config.ts",
     ],
-  },
+    customRules: { reactRules: true },
+  }),
   {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-      globals: {
-        // React Native globals
-        __DEV__: "readonly",
-        fetch: "readonly",
-        FormData: "readonly",
-        Headers: "readonly",
-        Request: "readonly",
-        Response: "readonly",
-        AbortController: "readonly",
-        Blob: "readonly",
-        URL: "readonly",
-        URLSearchParams: "readonly",
-        // Jest globals
-        jest: "readonly",
-        describe: "readonly",
-        it: "readonly",
-        expect: "readonly",
-        beforeEach: "readonly",
-        afterEach: "readonly",
-        beforeAll: "readonly",
-        afterAll: "readonly",
-        // Console (available in RN)
-        console: "readonly",
-        // Timers
-        setTimeout: "readonly",
-        setInterval: "readonly",
-        clearTimeout: "readonly",
-        clearInterval: "readonly",
-        setImmediate: "readonly",
-        clearImmediate: "readonly",
-        requestAnimationFrame: "readonly",
-        cancelAnimationFrame: "readonly",
-      },
-    },
-  },
-  {
-    plugins: {
-      "react-hooks": reactHooks,
-      react: react,
-      "react-native": reactNative,
-    },
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
     rules: {
-      // TypeScript rules
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: true,
-        },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
-      "@typescript-eslint/no-non-null-assertion": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "warn",
-      "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/no-unnecessary-condition": "warn",
-      // Relaxed for React Native - conditional rendering idiomatically uses falsy checks
-      "@typescript-eslint/strict-boolean-expressions": "off",
-      // Allow numbers in template literals (common in RN)
-      "@typescript-eslint/restrict-template-expressions": [
-        "error",
-        {
-          allowNumber: true,
-          allowBoolean: false,
-          allowAny: false,
-          allowNullish: false,
-        },
-      ],
-
-      // React hooks rules
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "error",
-
-      // React Native specific rules
-      // Set to warn - has false positives with dynamic themed styles
-      "react-native/no-unused-styles": "warn",
-      "react-native/no-inline-styles": "warn",
-      "react-native/no-color-literals": "warn",
-      "react-native/no-raw-text": "off", // Often too strict for RN apps
-      "react-native/no-single-element-style-arrays": "error",
-
-      // React rules (disable DOM-specific ones)
-      "react/jsx-key": "error",
-      "react/jsx-no-duplicate-props": "error",
-      "react/jsx-no-undef": "error",
-      "react/no-children-prop": "error",
-      "react/no-danger-with-children": "error",
-      "react/no-deprecated": "warn",
-      "react/no-direct-mutation-state": "error",
-      "react/no-find-dom-node": "off", // Not applicable to RN
-      "react/no-is-mounted": "error",
-      "react/no-render-return-value": "error",
-      "react/no-string-refs": "error",
-      "react/no-unescaped-entities": "error",
-      "react/no-unknown-property": "off", // Not applicable to RN
-      "react/require-render-return": "error",
-
-      // Code complexity limits
-      "max-lines": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
-      complexity: ["warn", 20],
-      "max-depth": ["warn", 4],
-      "max-nested-callbacks": ["warn", 4],
+      "no-console": "off",
+      // Not a workspace member — relative package imports are the only option
+      "import/no-relative-packages": "off",
+      // Navigation types barrel file needs re-exports
+      "custom-rules/no-re-exports": "off",
     },
   },
   {
-    // Relaxed rules for test files
-    files: ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*"],
+    files: ["src/components/SessionCard.tsx"],
     rules: {
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-dynamic-delete": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/strict-boolean-expressions": "off",
-      "max-lines": "off",
+      // Large component with many status helper functions
+      "max-lines": ["error", { max: 530 }],
     },
   },
-);
+  {
+    files: ["src/api/ConsoleClient.ts", "src/api/EventsClient.ts"],
+    rules: {
+      // React Native WebSocket doesn't support addEventListener
+      "unicorn/prefer-add-event-listener": "off",
+    },
+  },
+];

@@ -379,7 +379,6 @@ export const databaseQueriesTotal = new Counter({
 
 let lastSuccessfulRiotApiCall: number | undefined;
 let lastRiotApiAttempt: number | undefined;
-
 export function updateRiotApiHealth(success: boolean): void {
   lastRiotApiAttempt = Date.now();
   if (success) {
@@ -396,6 +395,14 @@ export function getRiotApiHealth(): {
     lastAttemptTimestamp: lastRiotApiAttempt,
   };
 }
+
+/** Riot API returned participant in metadata but not in info (known bug: RiotGames/developer-relations#898) */
+export const participantMismatchTotal = new Counter({
+  name: "participant_mismatch_total",
+  help: "Riot API returned participant in metadata but not in info",
+  labelNames: ["queue_type"] as const,
+  registers: [registry],
+});
 
 // =======================
 // Recovery / Backfill Metrics

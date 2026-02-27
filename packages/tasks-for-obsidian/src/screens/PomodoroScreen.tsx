@@ -3,9 +3,9 @@ import { View, Text, Pressable, FlatList, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import type { Task, TaskId } from "../domain/types";
-import { useTasks } from "../hooks/useTasks";
-import { usePomodoro } from "../hooks/usePomodoro";
-import { useSettings } from "../hooks/useSettings";
+import { useTasks } from "../hooks/use-tasks";
+import { usePomodoro } from "../hooks/use-pomodoro";
+import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 import { PomodoroTimer } from "../components/timer/PomodoroTimer";
 
@@ -28,7 +28,7 @@ export function PomodoroScreen({ route }: Props) {
     ({ item }: { item: Task }) => (
       <Pressable
         style={[styles.taskItem, { borderBottomColor: colors.borderLight }]}
-        onPress={() => handleStart(item.id)}
+        onPress={() => { handleStart(item.id); }}
       >
         <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>
           {item.title}
@@ -76,7 +76,7 @@ export function PomodoroScreen({ route }: Props) {
         )}
       </View>
 
-      {!isActive ? (
+      {isActive ? null : (
         <View style={styles.taskListContainer}>
           <Text style={[typography.label, { color: colors.textSecondary }, styles.taskListHeader]}>
             Select a task
@@ -87,7 +87,7 @@ export function PomodoroScreen({ route }: Props) {
             renderItem={renderTaskItem}
           />
         </View>
-      ) : null}
+      )}
     </View>
   );
 }

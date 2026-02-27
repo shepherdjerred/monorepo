@@ -6,11 +6,13 @@ import {
   Switch,
   Pressable,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
-import { useSettings } from "../hooks/useSettings";
+import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Settings">;
@@ -19,30 +21,33 @@ export function SettingsScreen(_props: Props) {
   const { colors, isDarkMode, feedbackEnabled, apiUrl, authToken, setApiUrl, setAuthToken, setIsDarkMode, setFeedbackEnabled } = useSettings();
   const [testStatus, setTestStatus] = useState<string | null>(null);
 
-  const handleTestConnection = useCallback(async () => {
-    setTestStatus("Testing...");
-    try {
-      const response = await fetch(`${apiUrl}/api/health`);
-      if (response.ok) {
-        setTestStatus("Connected");
-      } else {
-        setTestStatus(`Error: ${response.status}`);
+  const handleTestConnection = useCallback(() => {
+    void (async () => {
+      setTestStatus("Testing...");
+      try {
+        const response = await fetch(`${apiUrl}/api/health`);
+        if (response.ok) {
+          setTestStatus("Connected");
+        } else {
+          setTestStatus(`Error: ${response.status}`);
+        }
+      } catch {
+        setTestStatus("Failed to connect");
       }
-    } catch {
-      setTestStatus("Failed to connect");
-    }
+    })();
   }, [apiUrl]);
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.content}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <ScrollView contentContainerStyle={styles.content}>
       <Text style={[typography.label, { color: colors.textSecondary }]}>API URL</Text>
       <TextInput
         style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
         value={apiUrl}
-        onChangeText={setApiUrl}
+        onChangeText={(text) => { void setApiUrl(text); }}
         placeholder="http://localhost:8080"
         placeholderTextColor={colors.textTertiary}
         autoCapitalize="none"
@@ -56,7 +61,7 @@ export function SettingsScreen(_props: Props) {
       <TextInput
         style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
         value={authToken}
-        onChangeText={setAuthToken}
+        onChangeText={(text) => { void setAuthToken(text); }}
         placeholder="Optional auth token"
         placeholderTextColor={colors.textTertiary}
         autoCapitalize="none"
@@ -66,17 +71,19 @@ export function SettingsScreen(_props: Props) {
 
       <View style={[styles.row, styles.sectionLabel]}>
         <Text style={[typography.body, { color: colors.text }]}>Dark Mode</Text>
-        <Switch value={isDarkMode} onValueChange={setIsDarkMode} />
+        <Switch value={isDarkMode} onValueChange={setIsDarkMode} accessibilityLabel="Dark mode" />
       </View>
 
       <View style={[styles.row, styles.sectionLabel]}>
-        <Text style={[typography.body, { color: colors.text }]}>Haptics &amp; Sounds</Text>
-        <Switch value={feedbackEnabled} onValueChange={setFeedbackEnabled} />
+        <Text style={[typography.body, { color: colors.text }]}>Haptics & Sounds</Text>
+        <Switch value={feedbackEnabled} onValueChange={setFeedbackEnabled} accessibilityLabel="Haptics and sounds" />
       </View>
 
       <Pressable
         style={[styles.button, { backgroundColor: colors.primary }]}
         onPress={handleTestConnection}
+        accessibilityRole="button"
+        accessibilityLabel="Test connection"
       >
         <Text style={styles.buttonText}>Test Connection</Text>
       </Pressable>
@@ -92,7 +99,8 @@ export function SettingsScreen(_props: Props) {
           {testStatus}
         </Text>
       ) : null}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

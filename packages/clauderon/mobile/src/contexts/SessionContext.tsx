@@ -3,8 +3,8 @@ import type { Session, CreateSessionRequest, AccessMode } from "../types/generat
 import { ClauderonClient } from "../api/ClauderonClient";
 import type { SessionEvent } from "../api/EventsClient";
 import { EventsClient } from "../api/EventsClient";
-import { useSettings } from "../hooks/useSettings";
-import { useSessionEvents } from "../hooks/useSessionEvents";
+import { useSettings } from "../hooks/use-settings";
+import { useSessionEvents } from "../hooks/use-session-events";
 
 type SessionContextValue = {
   sessions: Map<string, Session>;
@@ -41,9 +41,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
     const wsUrl = daemonUrl.replace(/^http/, "ws") + "/ws/events";
-    const eventsClient = new EventsClient({ url: wsUrl });
-    eventsClient.connect();
-    return eventsClient;
+    const client_ = new EventsClient({ url: wsUrl });
+    client_.connect();
+    return client_;
   }, [daemonUrl]);
 
   // Handle session events
@@ -62,6 +62,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           // Event payload contains { id: string }
           const payload = event.payload;
           next.delete(payload.id);
+          break;
+        }
+        case "StatusChanged":
+        case "SessionProgress":
+        case "SessionFailed": {
+          // These events don't require map updates
           break;
         }
       }
@@ -88,8 +94,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         sessionMap.set(session.id, session);
       }
       setSessions(sessionMap);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load sessions"));
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_ : new Error("Failed to load sessions"));
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +124,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       try {
         const result = await client.createSession(request);
         return result.id;
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to create session"));
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to create session"));
         return null;
       }
     },
@@ -134,9 +140,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await client.deleteSession(id);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to delete session"));
-        throw err;
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to delete session"));
+        throw error_;
       }
     },
     [client],
@@ -150,9 +156,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await client.archiveSession(id);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to archive session"));
-        throw err;
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to archive session"));
+        throw error_;
       }
     },
     [client],
@@ -166,9 +172,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await client.unarchiveSession(id);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to unarchive session"));
-        throw err;
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to unarchive session"));
+        throw error_;
       }
     },
     [client],
@@ -182,9 +188,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await client.refreshSession(id);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to refresh session"));
-        throw err;
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to refresh session"));
+        throw error_;
       }
     },
     [client],
@@ -198,9 +204,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await client.updateAccessMode(id, mode);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to update access mode"));
-        throw err;
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_ : new Error("Failed to update access mode"));
+        throw error_;
       }
     },
     [client],

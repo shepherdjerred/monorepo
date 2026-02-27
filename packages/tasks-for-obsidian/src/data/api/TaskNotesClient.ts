@@ -1,4 +1,4 @@
-import type { ZodType } from "zod";
+import { z, type ZodType, type ZodTypeDef } from "zod";
 
 import type {
   CalendarEvent,
@@ -22,66 +22,64 @@ import {
   ValidationError,
 } from "../../domain/errors";
 import type { AppError } from "../../domain/errors";
-import { type Result, err, ok } from "../../domain/result";
+import { type Result, OK_VOID, err, ok } from "../../domain/result";
 import {
-  calendarEventsSchema,
-  createTaskResponseSchema,
-  deleteResponseSchema,
-  filterOptionsSchema,
-  healthStatusSchema,
-  nlpParseResultSchema,
-  pomodoroStatusSchema,
-  queryResponseSchema,
-  taskListSchema,
-  taskResponseSchema,
-  taskSchema,
-  taskStatsSchema,
-  timeSummarySchema,
+  CalendarEventsSchema,
+  CreateTaskResponseSchema,
+  DeleteResponseSchema,
+  FilterOptionsSchema,
+  HealthStatusSchema,
+  NlpParseResultSchema,
+  PomodoroStatusSchema,
+  QueryResponseSchema,
+  TaskListSchema,
+  TaskResponseSchema,
+  TaskSchema,
+  TaskStatsSchema,
+  TimeSummarySchema,
+  ApiResponseSchema,
 } from "../../domain/schemas";
 import { PATHS } from "./endpoints";
 
 export type TaskNotesClientConfig = {
   baseUrl: string;
+  authToken?: string | undefined;
   fetch?: typeof fetch;
 };
 
 export class TaskNotesClient {
   private readonly baseUrl: string;
+  private readonly authToken: string | undefined;
   private readonly fetch: typeof fetch;
 
   constructor(config: TaskNotesClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, "");
+    this.authToken = config.authToken;
     this.fetch = config.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
   async listTasks(): Promise<Result<Task[], AppError>> {
-    const result = await this.request("GET", PATHS.TASKS, taskListSchema);
+    const result = await this.request("GET", `${PATHS.TASKS}?limit=1000`, TaskListSchema);
     if (!result.ok) return result;
-    return ok(result.value.tasks as unknown as Task[]);
+    return ok(result.value.tasks);
   }
 
   async getTask(id: TaskId): Promise<Result<Task, AppError>> {
-    const result = await this.request("GET", PATHS.TASK(id), taskResponseSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as Task);
+    return this.request("GET", PATHS.TASK(id), TaskResponseSchema);
   }
 
   async createTask(request: CreateTaskRequest): Promise<Result<Task, AppError>> {
-    const result = await this.request("POST", PATHS.TASKS, createTaskResponseSchema, request);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as Task);
+    return this.request("POST", PATHS.TASKS, CreateTaskResponseSchema, request);
   }
 
   async updateTask(id: TaskId, request: UpdateTaskRequest): Promise<Result<Task, AppError>> {
-    const result = await this.request("PUT", PATHS.TASK(id), taskResponseSchema, request);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as Task);
+    return this.request("PUT", PATHS.TASK(id), TaskResponseSchema, request);
   }
 
   async deleteTask(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("DELETE", PATHS.TASK(id), deleteResponseSchema);
+    const result = await this.request("DELETE", PATHS.TASK(id), DeleteResponseSchema);
     if (!result.ok) return result;
-    return ok(undefined);
+    return OK_VOID;
   }
 
   async toggleTaskStatus(id: TaskId, newStatus: TaskStatus): Promise<Result<Task, AppError>> {
@@ -89,91 +87,69 @@ export class TaskNotesClient {
   }
 
   async archiveTask(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TASK_ARCHIVE(id), deleteResponseSchema);
+    const result = await this.request("POST", PATHS.TASK_ARCHIVE(id), DeleteResponseSchema);
     if (!result.ok) return result;
-    return ok(undefined);
+    return OK_VOID;
   }
 
   async completeRecurringInstance(id: TaskId): Promise<Result<Task, AppError>> {
-    const result = await this.request("POST", PATHS.TASK_RECURRING(id), taskResponseSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as Task);
+    return this.request("POST", PATHS.TASK_RECURRING(id), TaskResponseSchema);
   }
 
   async queryTasks(filter: TaskQueryFilter): Promise<Result<{ tasks: Task[]; total: number }, AppError>> {
-    const result = await this.request("POST", PATHS.TASKS_QUERY, queryResponseSchema, filter);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as { tasks: Task[]; total: number });
+    return this.request("POST", PATHS.TASKS_QUERY, QueryResponseSchema, filter);
   }
 
   async getFilterOptions(): Promise<Result<FilterOptions, AppError>> {
-    const result = await this.request("GET", PATHS.FILTER_OPTIONS, filterOptionsSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as FilterOptions);
+    return this.request("GET", PATHS.FILTER_OPTIONS, FilterOptionsSchema);
   }
 
   async getStats(): Promise<Result<TaskStats, AppError>> {
-    const result = await this.request("GET", PATHS.STATS, taskStatsSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as TaskStats);
+    return this.request("GET", PATHS.STATS, TaskStatsSchema);
   }
 
   async parseNaturalLanguage(text: string): Promise<Result<NlpParseResult, AppError>> {
-    return this.request("POST", PATHS.NLP_PARSE, nlpParseResultSchema, { text });
+    return this.request("POST", PATHS.NLP_PARSE, NlpParseResultSchema, { text });
   }
 
   async createFromNaturalLanguage(text: string): Promise<Result<Task, AppError>> {
-    const result = await this.request("POST", PATHS.NLP_CREATE, taskSchema, { text });
-    if (!result.ok) return result;
-    return ok(result.value as unknown as Task);
+    return this.request("POST", PATHS.NLP_CREATE, TaskSchema, { text });
   }
 
   async startTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TIME_START(id), deleteResponseSchema);
+    const result = await this.request("POST", PATHS.TIME_START(id), DeleteResponseSchema);
     if (!result.ok) return result;
-    return ok(undefined);
+    return OK_VOID;
   }
 
   async stopTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TIME_STOP(id), deleteResponseSchema);
+    const result = await this.request("POST", PATHS.TIME_STOP(id), DeleteResponseSchema);
     if (!result.ok) return result;
-    return ok(undefined);
+    return OK_VOID;
   }
 
   async getTaskTime(id: TaskId): Promise<Result<TimeSummary, AppError>> {
-    const result = await this.request("GET", PATHS.TASK_TIME(id), timeSummarySchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as TimeSummary);
+    return this.request("GET", PATHS.TASK_TIME(id), TimeSummarySchema);
   }
 
   async getTimeSummary(): Promise<Result<TimeSummary, AppError>> {
-    const result = await this.request("GET", PATHS.TIME_SUMMARY, timeSummarySchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as TimeSummary);
+    return this.request("GET", PATHS.TIME_SUMMARY, TimeSummarySchema);
   }
 
   async startPomodoro(pomodoroTaskId?: TaskId): Promise<Result<PomodoroStatus, AppError>> {
-    const result = await this.request("POST", PATHS.POMODORO_START, pomodoroStatusSchema, pomodoroTaskId ? { taskId: pomodoroTaskId } : undefined);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as PomodoroStatus);
+    return this.request("POST", PATHS.POMODORO_START, PomodoroStatusSchema, pomodoroTaskId ? { taskId: pomodoroTaskId } : undefined);
   }
 
   async stopPomodoro(): Promise<Result<PomodoroStatus, AppError>> {
-    const result = await this.request("POST", PATHS.POMODORO_STOP, pomodoroStatusSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as PomodoroStatus);
+    return this.request("POST", PATHS.POMODORO_STOP, PomodoroStatusSchema);
   }
 
   async pausePomodoro(): Promise<Result<PomodoroStatus, AppError>> {
-    const result = await this.request("POST", PATHS.POMODORO_PAUSE, pomodoroStatusSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as PomodoroStatus);
+    return this.request("POST", PATHS.POMODORO_PAUSE, PomodoroStatusSchema);
   }
 
   async getPomodoroStatus(): Promise<Result<PomodoroStatus, AppError>> {
-    const result = await this.request("GET", PATHS.POMODORO_STATUS, pomodoroStatusSchema);
-    if (!result.ok) return result;
-    return ok(result.value as unknown as PomodoroStatus);
+    return this.request("GET", PATHS.POMODORO_STATUS, PomodoroStatusSchema);
   }
 
   async getCalendarEvents(start?: string, end?: string): Promise<Result<CalendarEvent[], AppError>> {
@@ -182,34 +158,49 @@ export class TaskNotesClient {
     if (end) parts.push(`end=${encodeURIComponent(end)}`);
     const query = parts.join("&");
     const path = query ? `${PATHS.CALENDAR}?${query}` : PATHS.CALENDAR;
-    const result = await this.request("GET", path, calendarEventsSchema);
+    const result = await this.request("GET", path, CalendarEventsSchema);
     if (!result.ok) return result;
-    return ok(result.value.events as unknown as CalendarEvent[]);
+    return ok(result.value.events);
   }
 
   async health(): Promise<Result<HealthStatus, AppError>> {
-    return this.request("GET", PATHS.HEALTH, healthStatusSchema);
+    return this.request("GET", PATHS.HEALTH, HealthStatusSchema);
   }
 
   private async request<T>(
     method: string,
     path: string,
-    schema: ZodType<T>,
+    schema: ZodType<T, ZodTypeDef, unknown>,
     body?: unknown,
   ): Promise<Result<T, AppError>> {
     const url = `${this.baseUrl}${path}`;
+
+    const headers: Record<string, string> = {};
+    if (body) headers["Content-Type"] = "application/json";
+    if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => { controller.abort(); }, 15_000);
 
     let response: Response;
     try {
       response = await this.fetch(url, {
         method,
-        headers: body ? { "Content-Type": "application/json" } : undefined,
+        headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return err(new ConnectionError(
+          `Request to ${this.baseUrl} timed out after 15s`,
+        ));
+      }
       return err(new ConnectionError(
         `Failed to connect to ${this.baseUrl}: ${error instanceof Error ? error.message : String(error)}`,
       ));
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
@@ -220,7 +211,7 @@ export class TaskNotesClient {
       try {
         responseBody = await response.json();
       } catch {
-        responseBody = await response.text().catch(() => undefined);
+        responseBody = await response.text().catch(() => "");
       }
       return err(new ApiError(
         `HTTP ${response.status}: ${response.statusText}`,
@@ -239,17 +230,12 @@ export class TaskNotesClient {
     }
 
     // Unwrap the API envelope: { success, data, error }
-    if (
-      typeof json === "object" &&
-      json !== null &&
-      "success" in json &&
-      "data" in json
-    ) {
-      const envelope = json as { success: boolean; data: unknown; error?: string };
-      if (!envelope.success) {
-        return err(new ApiError(envelope.error ?? "API returned success=false", 0));
+    const envelope = ApiResponseSchema(z.unknown()).safeParse(json);
+    if (envelope.success) {
+      if (!envelope.data.success) {
+        return err(new ApiError(envelope.data.error ?? "API returned success=false", 0));
       }
-      json = envelope.data;
+      json = envelope.data.data;
     }
 
     const parsed = schema.safeParse(json);

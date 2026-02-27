@@ -34,6 +34,6 @@
     "declarationMap": false,
     "noUncheckedSideEffectImports": false
   },
-  "include": ["src/**/*", "App.tsx", "index.js"],
+  "include": ["src/**/*", "App.tsx", "index.js", "react-native.d.ts"],
   "exclude": ["node_modules", "android", "ios", "**/*.test.ts", "**/*.test.tsx"]
 }

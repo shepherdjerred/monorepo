@@ -38,8 +38,8 @@ export function RecentReposSelector({ visible, onSelect, onClose }: RecentReposS
     try {
       const recentRepos = await client.getRecentRepos();
       setRepos(recentRepos);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load repositories");
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : "Failed to load repositories");
     } finally {
       setIsLoading(false);
     }

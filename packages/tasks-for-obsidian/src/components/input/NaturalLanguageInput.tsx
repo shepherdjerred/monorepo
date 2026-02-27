@@ -2,7 +2,7 @@ import React from "react";
 import { View, TextInput, Text, StyleSheet } from "react-native";
 import type { NlpParseResult } from "../../domain/types";
 import { PRIORITY_LABELS } from "../../domain/priority";
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from "../../hooks/use-settings";
 
 type NaturalLanguageInputProps = {
   value: string;

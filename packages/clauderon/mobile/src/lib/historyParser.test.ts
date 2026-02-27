@@ -1,4 +1,4 @@
-import { parseHistoryEntry, parseHistoryLines } from "./historyParser";
+import { parseHistoryEntry, parseHistoryLines } from "./history-parser";
 
 describe("parseHistoryEntry", () => {
   test("parses user message with string content", () => {

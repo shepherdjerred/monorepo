@@ -79,7 +79,11 @@ export function leavingHome({ hass, logger }: TServiceParams) {
 
           if (shouldStartCleaning(roomba.state)) {
             logger.debug("Commanding Roomba to start cleaning");
-            await roomba.start();
+            await withTimeout(
+              hass.call.vacuum.start({ entity_id: roomba.entity_id }),
+              { amount: 30, unit: "s" },
+              "vacuum.start",
+            );
             startRoombaWithVerification(hass, logger, roomba);
           }
         })(),

@@ -1,0 +1,6 @@
+module react_native_ios_utilities {
+  umbrella header "react-native-ios-utilities-umbrella.h"
+
+  export *
+  module * { export * }
+}

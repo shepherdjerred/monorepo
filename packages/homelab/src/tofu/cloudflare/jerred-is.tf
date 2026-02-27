@@ -32,7 +32,7 @@ resource "cloudflare_record" "jerred_is_dmarc" {
   zone_id = cloudflare_zone.jerred_is.id
   name    = "_dmarc"
   type    = "TXT"
-  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s;"
+  content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; rua=mailto:dmarc@sjer.red"
 }
 
 resource "cloudflare_record" "jerred_is_dkim_wildcard" {

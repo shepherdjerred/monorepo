@@ -1,0 +1,17 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/sounds/create.wav",
+      "sha1": "70adb507c173942ab8ec93d43d2426595bd1b692"
+    },
+    {
+      "path": "src/assets/sounds/complete.wav",
+      "sha1": "f63c61ecb73f65c739e134e655bb61870c8c3692"
+    },
+    {
+      "path": "src/assets/sounds/delete.wav",
+      "sha1": "a37005c586a39f6959fa80d81c29977e762dced1"
+    }
+  ]
+}

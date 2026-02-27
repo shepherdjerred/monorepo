@@ -24,6 +24,7 @@ import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { participantMismatchTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("model-match");
 
@@ -34,7 +35,7 @@ export function toMatch(
     string,
     { before: Rank | undefined; after: Rank | undefined }
   >,
-): CompletedMatch {
+): CompletedMatch | undefined {
   const teams = getTeams(rawMatch.info.participants, participantToChampion);
   const queueType = parseQueueType(rawMatch.info.queueId);
 
@@ -42,86 +43,96 @@ export function toMatch(
     throw new Error("arena matches are not supported");
   }
 
-  // Build CompletedMatch.players for all tracked players
-  const matchPlayers = players.map((player) => {
-    // CRITICAL: Validate player.config doesn't have puuid at top level
-    // This ensures no participant data leaks into player config
-    const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
-    if (!configValidation.success) {
-      throw new Error(
-        `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+  // Build CompletedMatch.players for all tracked players, skipping any with missing participant data
+  const matchPlayers = players
+    .map((player) => {
+      // CRITICAL: Validate player.config doesn't have puuid at top level
+      // This ensures no participant data leaks into player config
+      const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
+      if (!configValidation.success) {
+        throw new Error(
+          `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+        );
+      }
+      // Use validated config to ensure no extra fields
+      const validatedConfig = configValidation.data;
+
+      const participantRaw = findParticipant(
+        player.config.league.leagueAccount.puuid,
+        rawMatch.info.participants,
       );
-    }
-    // Use validated config to ensure no extra fields
-    const validatedConfig = configValidation.data;
+      if (participantRaw === undefined) {
+        const searchingFor = player.config.league.leagueAccount.puuid;
+        const metadataPuuids = rawMatch.metadata.participants;
+        const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
 
-    const participantRaw = findParticipant(
-      player.config.league.leagueAccount.puuid,
-      rawMatch.info.participants,
-    );
-    if (participantRaw === undefined) {
-      const searchingFor = player.config.league.leagueAccount.puuid;
-      const metadataPuuids = rawMatch.metadata.participants;
-      const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
+        // Known Riot API bug: metadata.participants lists a PUUID but info.participants has no matching entry
+        // https://github.com/RiotGames/developer-relations/issues/898
+        logger.warn(
+          "Participant mismatch: in metadata but not in info (skipping player)",
+          {
+            searchingFor,
+            playerAlias: player.config.alias,
+            matchId: rawMatch.metadata.matchId,
+            queueId: rawMatch.info.queueId,
+            inMetadata: metadataPuuids.includes(searchingFor),
+            inInfo: infoPuuids.includes(searchingFor),
+            metadataPuuids,
+            infoPuuids,
+            metadataCount: metadataPuuids.length,
+            infoCount: infoPuuids.length,
+            mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
+            emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
+          },
+        );
 
-      logger.error("Participant lookup failed", {
-        searchingFor,
-        playerAlias: player.config.alias,
-        matchId: rawMatch.metadata.matchId,
-        queueId: rawMatch.info.queueId,
-        inMetadata: metadataPuuids.includes(searchingFor),
-        inInfo: infoPuuids.includes(searchingFor),
-        metadataPuuids,
-        infoPuuids,
-        metadataCount: metadataPuuids.length,
-        infoCount: infoPuuids.length,
-        mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
-        emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
-      });
+        participantMismatchTotal.inc({ queue_type: queueType ?? "unknown" });
+        return;
+      }
 
-      throw new Error(
-        `participant not found for player ${player.config.alias}`,
-      );
-    }
+      // TypeScript needs explicit narrowing after the undefined check
+      const participant: RawParticipant = participantRaw;
 
-    // TypeScript needs explicit narrowing after throw
-    const participant: RawParticipant = participantRaw;
+      const champion = participantToChampion(participant);
+      const team = parseTeam(participant.teamId);
 
-    const champion = participantToChampion(participant);
-    const team = parseTeam(participant.teamId);
+      assert.ok(team !== undefined);
 
-    assert.ok(team !== undefined);
+      const enemyTeam = invertTeam(team);
 
-    const enemyTeam = invertTeam(team);
+      // Get per-player rank data from the map
+      const puuid = player.config.league.leagueAccount.puuid;
+      const ranks = playerRanks.get(puuid) ?? {
+        before: undefined,
+        after: undefined,
+      };
 
-    // Get per-player rank data from the map
-    const puuid = player.config.league.leagueAccount.puuid;
-    const ranks = playerRanks.get(puuid) ?? {
-      before: undefined,
-      after: undefined,
-    };
+      const playerObject = {
+        playerConfig: validatedConfig,
+        rankBeforeMatch: ranks.before,
+        rankAfterMatch: ranks.after,
+        wins:
+          queueType === "solo" || queueType === "flex"
+            ? (player.ranks[queueType]?.wins ?? undefined)
+            : undefined,
+        losses:
+          queueType === "solo" || queueType === "flex"
+            ? (player.ranks[queueType]?.losses ?? undefined)
+            : undefined,
+        champion,
+        outcome: getOutcome(participant),
+        team: team,
+        lane: champion.lane,
+        laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
+      };
 
-    const playerObject = {
-      playerConfig: validatedConfig,
-      rankBeforeMatch: ranks.before,
-      rankAfterMatch: ranks.after,
-      wins:
-        queueType === "solo" || queueType === "flex"
-          ? (player.ranks[queueType]?.wins ?? undefined)
-          : undefined,
-      losses:
-        queueType === "solo" || queueType === "flex"
-          ? (player.ranks[queueType]?.losses ?? undefined)
-          : undefined,
-      champion,
-      outcome: getOutcome(participant),
-      team: team,
-      lane: champion.lane,
-      laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
-    };
+      return playerObject;
+    })
+    .filter((p) => p !== undefined);
 
-    return playerObject;
-  });
+  if (matchPlayers.length === 0) {
+    return undefined;
+  }
 
   const result: CompletedMatch = {
     queueType,
@@ -232,72 +243,82 @@ export function getArenaPlacement(participant: RawParticipant) {
 export function toArenaMatch(
   players: Player[],
   rawMatch: RawMatch,
-): ArenaMatch {
+): ArenaMatch | undefined {
   const subteams = toArenaSubteams(rawMatch.info.participants);
 
-  // Build ArenaMatch.players for all tracked players
-  const arenaPlayers = players.map((player) => {
-    // CRITICAL: Validate player.config doesn't have puuid at top level
-    // This ensures no participant data leaks into player config
-    const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
-    if (!configValidation.success) {
-      throw new Error(
-        `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+  // Build ArenaMatch.players for all tracked players, skipping any with missing participant data
+  const arenaPlayers = players
+    .map((player) => {
+      // CRITICAL: Validate player.config doesn't have puuid at top level
+      // This ensures no participant data leaks into player config
+      const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
+      if (!configValidation.success) {
+        throw new Error(
+          `Invalid player config for ${player.config.alias}: config has unexpected fields`,
+        );
+      }
+      // Use validated config to ensure no extra fields
+      const validatedConfig = configValidation.data;
+
+      const participant = findParticipant(
+        validatedConfig.league.leagueAccount.puuid,
+        rawMatch.info.participants,
       );
-    }
-    // Use validated config to ensure no extra fields
-    const validatedConfig = configValidation.data;
+      if (participant === undefined) {
+        const searchingFor = validatedConfig.league.leagueAccount.puuid;
+        const metadataPuuids = rawMatch.metadata.participants;
+        const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
 
-    const participant = findParticipant(
-      validatedConfig.league.leagueAccount.puuid,
-      rawMatch.info.participants,
-    );
-    if (participant === undefined) {
-      const searchingFor = validatedConfig.league.leagueAccount.puuid;
-      const metadataPuuids = rawMatch.metadata.participants;
-      const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
+        // Known Riot API bug: metadata.participants lists a PUUID but info.participants has no matching entry
+        // https://github.com/RiotGames/developer-relations/issues/898
+        logger.warn(
+          "Arena participant mismatch: in metadata but not in info (skipping player)",
+          {
+            searchingFor,
+            playerAlias: validatedConfig.alias,
+            matchId: rawMatch.metadata.matchId,
+            queueId: rawMatch.info.queueId,
+            inMetadata: metadataPuuids.includes(searchingFor),
+            inInfo: infoPuuids.includes(searchingFor),
+            metadataPuuids,
+            infoPuuids,
+            metadataCount: metadataPuuids.length,
+            infoCount: infoPuuids.length,
+            mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
+            emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
+          },
+        );
 
-      logger.error("Arena participant lookup failed", {
-        searchingFor,
-        playerAlias: validatedConfig.alias,
-        matchId: rawMatch.metadata.matchId,
-        queueId: rawMatch.info.queueId,
-        inMetadata: metadataPuuids.includes(searchingFor),
-        inInfo: infoPuuids.includes(searchingFor),
-        metadataPuuids,
-        infoPuuids,
-        metadataCount: metadataPuuids.length,
-        infoCount: infoPuuids.length,
-        mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
-        emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
-      });
-
-      throw new Error(
-        `participant not found for player ${validatedConfig.alias}`,
+        participantMismatchTotal.inc({ queue_type: "arena" });
+        return;
+      }
+      const subteamId = validateArenaSubteamId(participant);
+      const placement = getArenaPlacement(participant);
+      const champion = participantToArenaChampion(participant);
+      const teammateRaw = getArenaTeammate(
+        participant,
+        rawMatch.info.participants,
       );
-    }
-    const subteamId = validateArenaSubteamId(participant);
-    const placement = getArenaPlacement(participant);
-    const champion = participantToArenaChampion(participant);
-    const teammateRaw = getArenaTeammate(
-      participant,
-      rawMatch.info.participants,
-    );
-    if (!teammateRaw) {
-      throw new Error(
-        `arena teammate not found for player ${validatedConfig.alias}`,
-      );
-    }
-    const arenaTeammate = participantToArenaChampion(teammateRaw);
+      if (!teammateRaw) {
+        throw new Error(
+          `arena teammate not found for player ${validatedConfig.alias}`,
+        );
+      }
+      const arenaTeammate = participantToArenaChampion(teammateRaw);
 
-    return {
-      playerConfig: validatedConfig,
-      placement: ArenaPlacementSchema.parse(placement),
-      champion,
-      teamId: ArenaTeamIdSchema.parse(subteamId),
-      teammate: arenaTeammate,
-    };
-  });
+      return {
+        playerConfig: validatedConfig,
+        placement: ArenaPlacementSchema.parse(placement),
+        champion,
+        teamId: ArenaTeamIdSchema.parse(subteamId),
+        teammate: arenaTeammate,
+      };
+    })
+    .filter((p) => p !== undefined);
+
+  if (arenaPlayers.length === 0) {
+    return undefined;
+  }
 
   return {
     durationInSeconds: rawMatch.info.gameDuration,

@@ -29,7 +29,7 @@ function resolveDate(word: string): string | undefined {
   }
 
   const dayIndex = DAY_NAMES.indexOf(lower);
-  if (dayIndex >= 0) {
+  if (dayIndex !== -1) {
     const d = new Date(today);
     const currentDay = d.getDay();
     const daysAhead = (dayIndex - currentDay + 7) % 7 || 7;

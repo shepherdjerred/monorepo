@@ -6,8 +6,8 @@ import { err } from "../domain/result";
 import { ConnectionError } from "../domain/errors";
 import { getNextStatus } from "../domain/status";
 import type { CreateTaskRequest, Task, TaskId, UpdateTaskRequest } from "../domain/types";
-import { TaskNotesClient } from "../data/api/TaskNotesClient";
-import { useSettingsContext } from "./SettingsContext";
+import { syncWidgetData } from "../native/sync-widget";
+import { useApiClient } from "./ApiClientContext";
 
 type TaskContextValue = {
   tasks: Map<TaskId, Task>;
@@ -23,15 +23,10 @@ type TaskContextValue = {
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const { apiUrl } = useSettingsContext();
+  const client = useApiClient();
   const [tasks, setTasks] = useState<Map<TaskId, Task>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
-
-  const client = useMemo(
-    () => (apiUrl ? new TaskNotesClient({ baseUrl: apiUrl }) : null),
-    [apiUrl],
-  );
 
   const refreshTasks = useCallback(async () => {
     if (!client) return;
@@ -53,6 +48,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void refreshTasks();
   }, [refreshTasks]);
+
+  useEffect(() => {
+    syncWidgetData(tasks);
+  }, [tasks]);
 
   const createTask = useCallback(
     async (req: CreateTaskRequest): Promise<Result<Task, AppError>> => {
@@ -105,18 +104,18 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const toggleStatus = useCallback(
     async (id: TaskId): Promise<Result<Task, AppError>> => {
       if (!client) return err(new ConnectionError("API URL not configured"));
-      const existing = tasks.get(id);
-      if (existing) {
+      let existing: Task | undefined;
+      setTasks((prev) => {
+        existing = prev.get(id);
+        if (!existing) return prev;
         const optimistic: Task = {
           ...existing,
           status: getNextStatus(existing.status),
         };
-        setTasks((prev) => {
-          const next = new Map(prev);
-          next.set(id, optimistic);
-          return next;
-        });
-      }
+        const next = new Map(prev);
+        next.set(id, optimistic);
+        return next;
+      });
       const newStatus = getNextStatus(existing?.status ?? "open");
       const result = await client.toggleTaskStatus(id, newStatus);
       if (result.ok) {
@@ -126,15 +125,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           return next;
         });
       } else if (existing) {
+        const rollback = existing;
         setTasks((prev) => {
           const next = new Map(prev);
-          next.set(id, existing);
+          next.set(id, rollback);
           return next;
         });
       }
       return result;
     },
-    [client, tasks],
+    [client],
   );
 
   const value = useMemo<TaskContextValue>(

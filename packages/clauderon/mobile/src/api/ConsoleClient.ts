@@ -1,12 +1,5 @@
 import { WebSocketError, DecodeError } from "./errors";
-
-/**
- * Message received from the console WebSocket
- */
-type ConsoleMessage = {
-  type: string;
-  data?: string;
-};
+import { ConsoleMessageSchema } from "../lib/schemas";
 
 /**
  * Validate base64 string format
@@ -18,7 +11,7 @@ function isValidBase64(str: string): boolean {
   }
 
   // Base64 should only contain A-Z, a-z, 0-9, +, /, and = for padding
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+  const base64Regex = /^[a-z0-9+/]*={0,2}$/i;
 
   // Check format
   if (!base64Regex.test(str)) {
@@ -64,7 +57,7 @@ export class ConsoleClient {
   private readonly MAX_ERRORS_PER_SECOND = 5;
   private isErrorThrottled = false;
 
-  private listeners: {
+  private readonly listeners: {
     connected: (() => void)[];
     disconnected: (() => void)[];
     data: ((data: string) => void)[];
@@ -128,14 +121,14 @@ export class ConsoleClient {
         console.error(
           `[ConsoleClient] Invalid base64 format (stage: validation) for session ${this.sessionId ?? "unknown"}. ` +
             `Length: ${data.length}, ` +
-            `First 50 chars: ${data.substring(0, 50)}`,
+            `First 50 chars: ${data.slice(0, 50)}`,
         );
         this.emit(
           "error",
           new DecodeError(`Invalid base64 format received from server`, "validation", {
             sessionId: this.sessionId,
             dataLength: data.length,
-            dataSample: data.substring(0, 100),
+            dataSample: data.slice(0, 100),
           }),
         );
       }
@@ -165,14 +158,14 @@ export class ConsoleClient {
     let bytes: Uint8Array;
     try {
       const binaryString = atob(data);
-      bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+      bytes = Uint8Array.from(binaryString, (char) => char.codePointAt(0) ?? 0);
     } catch (atobError) {
       if (this.shouldEmitError()) {
         const errorMsg = atobError instanceof Error ? atobError.message : String(atobError);
         console.error(
           `[ConsoleClient] Base64 decode error (stage: atob) for session ${this.sessionId ?? "unknown"}: ${errorMsg}. ` +
             `Data length: ${data.length}, ` +
-            `Sample: ${data.substring(0, 100)}`,
+            `Sample: ${data.slice(0, 100)}`,
         );
         this.emit(
           "error",
@@ -182,7 +175,7 @@ export class ConsoleClient {
             {
               sessionId: this.sessionId,
               dataLength: data.length,
-              dataSample: data.substring(0, 100),
+              dataSample: data.slice(0, 100),
             },
             atobError,
           ),
@@ -205,7 +198,8 @@ export class ConsoleClient {
       if (this.shouldEmitError()) {
         const errorMsg = utf8Error instanceof Error ? utf8Error.message : String(utf8Error);
         // Include hex dump of first 32 bytes for debugging
-        const hexSample = Array.from(bytes.slice(0, 32))
+        const sampleBytes = bytes.slice(0, 32);
+        const hexSample = [...sampleBytes]
           .map((b) => "0x" + b.toString(16).padStart(2, "0"))
           .join(" ");
         console.error(
@@ -261,9 +255,9 @@ export class ConsoleClient {
 
       this.ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(
-            typeof event.data === "string" ? event.data : "",
-          ) as ConsoleMessage;
+          const message = ConsoleMessageSchema.parse(
+            JSON.parse(typeof event.data === "string" ? event.data : ""),
+          );
 
           if (message.type === "output" && typeof message.data === "string") {
             this.handleOutputMessage(message.data);
@@ -316,7 +310,7 @@ export class ConsoleClient {
     // Encode UTF-8 string to bytes, then to base64
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
-    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+    const binaryString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
     const encoded = btoa(binaryString);
 
     const message = {

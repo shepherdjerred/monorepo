@@ -1,0 +1,102 @@
+{
+  "name": "react-native-ios-context-menu",
+  "version": "3.2.1",
+  "summary": "A react-native component to use context menu's (UIMenu) on iOS 13/14+",
+  "homepage": "https://github.com/dominicstop/react-native-ios-context-menu#readme",
+  "license": "MIT",
+  "authors": "Dominic Go <dominic@dominicgo.dev> (https://github.com/dominicstop)",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": "https://github.com/dominicstop/react-native-ios-context-menu.git",
+    "tag": "3.2.1"
+  },
+  "swift_versions": "5.4",
+  "static_framework": true,
+  "header_dir": "react-native-ios-context-menu",
+  "pod_target_xcconfig": {
+    "USE_HEADERMAP": "YES",
+    "DEFINES_MODULE": "YES",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "SWIFT_COMPILATION_MODE": "wholemodule",
+    "OTHER_SWIFT_FLAGS": "$(inherited) -DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED",
+    "HEADER_SEARCH_PATHS": [
+      "\"$(PODS_ROOT)/Headers/Private/React-Core\"",
+      "\"$(PODS_ROOT)/DoubleConversion\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspector/jsinspector_modern.framework/Headers\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/React-jsinspectortracing/jsinspector_moderntracing.framework/Headers\"",
+      "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
+      "$(PODS_ROOT)/glog",
+      "$(PODS_ROOT)/boost",
+      "$(PODS_ROOT)/DoubleConversion",
+      "$(PODS_ROOT)/fast_float/include",
+      "$(PODS_ROOT)/fmt/include",
+      "$(PODS_ROOT)/SocketRocket",
+      "$(PODS_ROOT)/RCT-Folly"
+    ],
+    "FRAMEWORK_SEARCH_PATHS": "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 "
+  },
+  "user_target_xcconfig": {
+    "HEADER_SEARCH_PATHS": [
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-ios-utilities/**\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-ios-utilities/Swift Compatibility Header\"",
+      "\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-ios-context-menu/Swift Compatibility Header\"",
+      "\"$(PODS_ROOT)/Headers/Private/React-bridging/react/bridging\"",
+      "\"$(PODS_CONFIGURATION_BUILD_DIR)/React-bridging/react_bridging.framework/Headers\"",
+      "\"$(PODS_ROOT)/Headers/Private/Yoga\""
+    ]
+  },
+  "dependencies": {
+    "hermes-engine": [],
+    "React-jsinspector": [],
+    "React-jsinspectortracing": [],
+    "React-Core": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-RCTAppDelegate": [],
+    "React-NativeModulesApple": [],
+    "React-RCTFabric": [],
+    "RCT-Folly": [],
+    "react-native-ios-utilities": [],
+    "DGSwiftUtilities": [],
+    "ContextMenuAuxiliaryPreview": [
+      "~> 0.5"
+    ],
+    "ReactCodegen": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "ReactCommon/turbomodule/bridging": [],
+    "Yoga": [],
+    "React-Fabric": [],
+    "React-graphics": [],
+    "React-utils": [],
+    "React-featureflags": [],
+    "React-debug": [],
+    "React-ImageManager": [],
+    "React-rendererdebug": [],
+    "React-jsi": [],
+    "React-renderercss": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  },
+  "compiler_flags": "-DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_TARGET_VERSION=83 -DUSE_HERMES -DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED",
+  "source_files": [
+    "ios/**/*.{h,m,mm,swift,cpp}",
+    "common/cpp/**/*.{h,cpp}"
+  ],
+  "exclude_files": [
+    "ios/Tests/"
+  ],
+  "public_header_files": "ios/**/*.h",
+  "private_header_files": [
+    "ios/**/*+Private.h",
+    "ios/**/Swift.h"
+  ],
+  "swift_version": "5.4"
+}

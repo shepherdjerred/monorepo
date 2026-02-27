@@ -1,36 +1,42 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactPlugin from "eslint-plugin-react";
-import reactHooksPlugin from "eslint-plugin-react-hooks";
-import reactNativePlugin from "eslint-plugin-react-native";
+import { recommended } from "../eslint-config/local.ts";
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    plugins: {
-      react: reactPlugin,
-      "react-hooks": reactHooksPlugin,
-      "react-native": reactNativePlugin,
-    },
-    rules: {
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      "react-native/no-unused-styles": "warn",
-      "react-native/no-inline-styles": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+export default [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    reactNative: true,
+    projectService: {
+      allowDefaultProject: [
+        "src/domain/*.test.ts",
+        "src/lib/*.test.ts",
       ],
-      "no-console": "warn",
     },
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
-  },
+    ignores: [
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
+      // RN-specific
+      "android/",
+      "ios/",
+      // Config file is not in tsconfig
+      "eslint.config.ts",
+      // Ambient type declarations
+      "react-native.d.ts",
+    ],
+    customRules: { reactRules: true },
+  }),
   {
-    ignores: ["android/", "ios/", "node_modules/", "metro.config.js", "babel.config.js", "react-native.config.js"],
+    rules: {
+      "no-console": "off",
+      // TODO: move color literals to theme constants and inline styles to StyleSheet
+      "react-native/no-color-literals": "off",
+      "react-native/no-inline-styles": "off",
+    },
   },
-);
+];

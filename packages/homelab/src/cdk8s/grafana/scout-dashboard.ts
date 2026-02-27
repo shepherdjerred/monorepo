@@ -404,6 +404,36 @@ export function createScoutDashboard() {
       .gridPos({ x: 16, y: 33, w: 8, h: 8 }),
   );
 
+  // Participant Mismatches (known Riot API bug)
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Participant Mismatches")
+      .description(
+        "Riot API metadata/info participant inconsistencies per minute",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment) (rate(participant_mismatch_total{${buildFilter()}}[5m])) * 60`,
+          )
+          .legendFormat("{{environment}}"),
+      )
+      .unit("short")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 0.01, color: "yellow" },
+            { value: 1, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 0, y: 41, w: 8, h: 8 }),
+  );
+
   return builder.build();
 }
 

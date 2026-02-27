@@ -20,7 +20,14 @@
 
   dispatch_once(&nativeComponentsToken, ^{
     thirdPartyComponents = @{
+		@"RNDateTimePicker": NSClassFromString(@"RNDateTimePickerComponentView"), // @react-native-community/datetimepicker
+		@"MenuView": NSClassFromString(@"MenuView"), // @react-native-menu/menu
 		@"RNGestureHandlerButton": NSClassFromString(@"RNGestureHandlerButtonComponentView"), // react-native-gesture-handler
+		@"RNIContextMenuView": NSClassFromString(@"RNIContextMenuView"), // react-native-ios-context-menu
+		@"RNIContextMenuButton": NSClassFromString(@"RNIContextMenuButton"), // react-native-ios-context-menu
+		@"RNIDetachedView": NSClassFromString(@"RNIDetachedView"), // react-native-ios-utilities
+		@"RNIDummyTestView": NSClassFromString(@"RNIDummyTestView"), // react-native-ios-utilities
+		@"RNIWrapperView": NSClassFromString(@"RNIWrapperView"), // react-native-ios-utilities
 		@"RNCSafeAreaProvider": NSClassFromString(@"RNCSafeAreaProviderComponentView"), // react-native-safe-area-context
 		@"RNCSafeAreaView": NSClassFromString(@"RNCSafeAreaViewComponentView"), // react-native-safe-area-context
 		@"RNSFullWindowOverlay": NSClassFromString(@"RNSFullWindowOverlay"), // react-native-screens

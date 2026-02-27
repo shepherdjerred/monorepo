@@ -71,4 +71,5 @@ Each package has its own CLAUDE.md with specific instructions:
 - `packages/scout-for-lol/CLAUDE.md` - Match analysis pipeline
 - `packages/resume/CLAUDE.md` - Resume site
 - `packages/tools/CLAUDE.md` - CLI developer tools
+- `packages/tasks-for-obsidian/CLAUDE.md` - React Native task app
 - `packages/docs/` - AI-maintained docs (see `monorepo-docs` skill)

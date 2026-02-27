@@ -1,0 +1,6 @@
+module RNSentry {
+  umbrella header "RNSentry-umbrella.h"
+
+  export *
+  module * { export * }
+}

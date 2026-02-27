@@ -10,4 +10,9 @@ export default defineConfig(...rootConfig, {
       tsconfigRootDir: import.meta.dirname,
     },
   },
+}, {
+  files: ["src/type-converter.ts", "src/type-inference.ts", "src/yaml-comments.ts"],
+  rules: {
+    "max-lines": ["error", { max: 600 }],
+  },
 });

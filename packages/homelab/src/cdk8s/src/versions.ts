@@ -71,7 +71,7 @@ const versions = {
   // Custom dependency-summary image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/dependency-summary":
-    "1.1.57@sha256:27e2b31df75d0c978c73b90315637b17aaab94f1693d6de73e14abb9c08fa81c",
+    "1.1.78@sha256:21e0e28e8377e6d3512de310cbbb8729f0257c34c61d289f4073f76392e07ff4",
   // Custom better-skill-capped-fetcher image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/better-skill-capped-fetcher":

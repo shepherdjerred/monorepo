@@ -371,7 +371,7 @@ function getClaudeStatusText(status: ClaudeWorkingStatus): string {
       return "Waiting for input";
     case ClaudeWorkingStatus.Idle:
       return "Idle";
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return "Unknown";
   }
 }
@@ -385,8 +385,7 @@ function getClaudeStatusTextStyle(status: ClaudeWorkingStatus) {
     case ClaudeWorkingStatus.WaitingInput:
       return { color: "#eab308" }; // yellow
     case ClaudeWorkingStatus.Idle:
-      return { color: "#9ca3af" }; // gray
-    default:
+    case ClaudeWorkingStatus.Unknown:
       return { color: "#9ca3af" }; // gray
   }
 }

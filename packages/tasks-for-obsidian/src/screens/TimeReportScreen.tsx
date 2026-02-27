@@ -3,9 +3,9 @@ import { View, Text, FlatList, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import type { TimeSummary } from "../domain/types";
-import { useTasks } from "../hooks/useTasks";
-import { useTaskNotesClient } from "../hooks/useTaskNotesClient";
-import { useSettings } from "../hooks/useSettings";
+import { useTasks } from "../hooks/use-tasks";
+import { useTaskNotesClient } from "../hooks/use-task-notes-client";
+import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 import { formatDuration } from "../lib/utils";
 import { EmptyState } from "../components/common/EmptyState";
@@ -26,9 +26,11 @@ export function TimeReportScreen(_props: Props) {
 
   useEffect(() => {
     if (!client) return;
-    void client.getTimeSummary().then((result) => {
+    const fetchSummary = async () => {
+      const result = await client.getTimeSummary();
       if (result.ok) setSummary(result.value);
-    });
+    };
+    void fetchSummary();
   }, [client]);
 
   const items: TimeReportItem[] = React.useMemo(() => {
@@ -47,7 +49,7 @@ export function TimeReportScreen(_props: Props) {
         totalMinutes,
       });
     }
-    return result.sort((a, b) => b.totalMinutes - a.totalMinutes);
+    return result.toSorted((a, b) => b.totalMinutes - a.totalMinutes);
   }, [summary, taskList]);
 
   if (items.length === 0) {

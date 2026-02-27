@@ -2,7 +2,7 @@ import type { TaskNotesClient } from "../api/TaskNotesClient";
 import { TypedStorage } from "../cache/storage";
 import type { MutationQueue, Mutation } from "./MutationQueue";
 import type { AppError } from "../../domain/errors";
-import { type Result, ok } from "../../domain/result";
+import { type Result, OK_VOID } from "../../domain/result";
 import type { Task, TaskId } from "../../domain/types";
 import { getNextStatus } from "../../domain/status";
 
@@ -30,7 +30,7 @@ export class SyncEngine {
     // 4. Notify via callback
     this.onTasksUpdated(result.value);
 
-    return ok(undefined);
+    return OK_VOID;
   }
 
   applyOptimistic(mutation: Mutation, tasks: Map<TaskId, Task>): Map<TaskId, Task> {
@@ -42,24 +42,23 @@ export class SyncEngine {
         break;
       }
       case "update": {
-        if (!mutation.taskId) break;
         const existing = next.get(mutation.taskId);
         if (existing) {
-          next.set(mutation.taskId, {
-            ...existing,
-            ...(mutation.payload as Partial<Task>),
-          });
+          const updates: Partial<Task> = {};
+          for (const [key, value] of Object.entries(mutation.payload)) {
+            if (value !== undefined) {
+              Object.assign(updates, { [key]: value });
+            }
+          }
+          next.set(mutation.taskId, { ...existing, ...updates });
         }
         break;
       }
       case "delete": {
-        if (mutation.taskId) {
-          next.delete(mutation.taskId);
-        }
+        next.delete(mutation.taskId);
         break;
       }
       case "toggle_status": {
-        if (!mutation.taskId) break;
         const existing = next.get(mutation.taskId);
         if (existing) {
           const newStatus = getNextStatus(existing.status);

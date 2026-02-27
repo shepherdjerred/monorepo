@@ -1,0 +1,6 @@
+module ContextMenuAuxiliaryPreview {
+  umbrella header "ContextMenuAuxiliaryPreview-umbrella.h"
+
+  export *
+  module * { export * }
+}

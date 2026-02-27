@@ -8,4 +8,5 @@ module.exports = {
       sourceDir: "./android",
     },
   },
+  assets: ["./src/assets/sounds"],
 };

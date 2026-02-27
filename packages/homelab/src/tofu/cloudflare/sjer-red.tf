@@ -408,6 +408,63 @@ resource "cloudflare_record" "sjer_red_dmarc" {
   content = "v=DMARC1; p=quarantine; rua=mailto:dmarc@sjer.red"
 }
 
+# DMARC aggregate report authorization for external domains (RFC 7489 §7.1)
+resource "cloudflare_record" "sjer_red_dmarc_report_ts_mc_net" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "ts-mc.net._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_scout_for_lol_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "scout-for-lol.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_better_skill_capped_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "better-skill-capped.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_discord_plays_pokemon_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "discord-plays-pokemon.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_clauderon_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "clauderon.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_jerred_is" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "jerred.is._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_jerredshepherd_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "jerredshepherd.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
+resource "cloudflare_record" "sjer_red_dmarc_report_glitter_boys_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "glitter-boys.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
 resource "cloudflare_record" "sjer_red_spf_rp" {
   zone_id = cloudflare_zone.sjer_red.id
   name    = "rp"

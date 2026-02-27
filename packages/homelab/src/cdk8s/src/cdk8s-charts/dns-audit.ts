@@ -107,7 +107,10 @@ def check_domain(domain, parked=False):
                 log("error", "MX error", domain=domain, error=mx["error"], type="mx")
             elif mx.get("warnings"):
                 for w in mx["warnings"]:
-                    log("warning", "MX warning", domain=domain, warning=w, type="mx")
+                    if "Connection timed out" in w:
+                        log("info", "MX connectivity skipped (expected in-cluster)", domain=domain, warning=w, type="mx")
+                    else:
+                        log("warning", "MX warning", domain=domain, warning=w, type="mx")
 
         log("info", "Domain check complete", domain=domain)
 

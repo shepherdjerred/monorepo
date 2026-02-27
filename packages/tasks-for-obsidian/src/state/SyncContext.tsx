@@ -1,8 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import NetInfo from "@react-native-community/netinfo";
 
-import { TaskNotesClient } from "../data/api/TaskNotesClient";
-import { useSettingsContext } from "./SettingsContext";
+import { useApiClient } from "./ApiClientContext";
 import { useTaskContext } from "./TaskContext";
 
 const HEALTH_POLL_INTERVAL = 30_000;
@@ -18,18 +17,14 @@ type SyncContextValue = {
 const SyncContext = createContext<SyncContextValue | null>(null);
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
-  const { apiUrl } = useSettingsContext();
+  const client = useApiClient();
   const { refreshTasks } = useTaskContext();
   const [isConnected, setIsConnected] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const wasDisconnected = useRef(false);
-
-  const client = useMemo(
-    () => (apiUrl ? new TaskNotesClient({ baseUrl: apiUrl }) : null),
-    [apiUrl],
-  );
+  const isSyncingRef = useRef(false);
 
   const checkHealth = useCallback(async () => {
     if (!client) {
@@ -49,11 +44,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const syncNow = useCallback(async () => {
     if (!client) return;
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
     setIsSyncing(true);
     try {
       await refreshTasks();
       setLastSyncTime(new Date());
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
     }
   }, [client, refreshTasks]);
@@ -71,7 +69,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         void syncNow();
       }
     });
-    return () => unsubscribe();
+    return () => { unsubscribe(); };
   }, [checkHealth, syncNow]);
 
   // Poll health endpoint
@@ -79,7 +77,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     if (!client) return;
     void checkHealth();
     const interval = setInterval(() => void checkHealth(), HEALTH_POLL_INTERVAL);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); };
   }, [client, checkHealth]);
 
   const value = useMemo<SyncContextValue>(
