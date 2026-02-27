@@ -48,6 +48,16 @@ import {
 } from "./index-infra.ts";
 import { runMobileCi, runClauderonCi } from "./index-platform-ci.ts";
 import {
+  checkTasknotesServer,
+  buildTasknotesServerImage,
+  runTasknotesServerValidation,
+} from "./tasknotes-server.ts";
+import {
+  checkObsidianSyncClient,
+  buildObsidianSyncClientImage,
+  runObsidianSyncClientValidation,
+} from "./obsidian-sync-client.ts";
+import {
   buildMuxSiteContainer,
   getMuxSiteOutput,
   deployMuxSite,
@@ -117,6 +127,22 @@ export class Monorepo {
     const tier0Sentinel = withTiming("Sentinel validation", () =>
       this.sentinelValidation(source, version ?? "dev", gitSha ?? "dev"),
     );
+    const tier0TasknotesServerImage = buildTasknotesServerImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
+    const tier0TasknotesServer = withTiming("TaskNotes Server validation", () =>
+      this.tasknotesServerValidation(source, version ?? "dev", gitSha ?? "dev"),
+    );
+    const tier0ObsidianSyncClient = withTiming("Obsidian Sync Client validation", () =>
+      this.obsidianSyncClientValidation(source),
+    );
+    const tier0ObsidianSyncClientImage = buildObsidianSyncClientImage(
+      source,
+      version ?? "dev",
+      gitSha ?? "dev",
+    );
     void Promise.allSettled([
       tier0Compliance,
       tier0Mobile,
@@ -124,6 +150,8 @@ export class Monorepo {
       tier0Packages,
       tier0Quality,
       tier0Sentinel,
+      tier0TasknotesServer,
+      tier0ObsidianSyncClient,
     ]);
 
     // === TIER 1: Critical path — bun install + TypeShare in parallel ===
@@ -211,6 +239,8 @@ export class Monorepo {
         packages: tier0Packages,
         quality: tier0Quality,
         sentinel: tier0Sentinel,
+        tasknotesServer: tier0TasknotesServer,
+        obsidianSyncClient: tier0ObsidianSyncClient,
       }),
     ]);
     handleTier3Results(knipResult, tier0Result, outputs);
@@ -242,6 +272,8 @@ export class Monorepo {
         opServiceAccountToken,
         birmelImage: tier0BirmelImage,
         sentinelImage: tier0SentinelImage,
+        tasknotesServerImage: tier0TasknotesServerImage,
+        obsidianSyncClientImage: tier0ObsidianSyncClientImage,
         releasePleaseRunFn: runReleasePleaseCommand,
         getReleasePleaseContainerFn: getReleasePleaseContainer,
         multiplexerBuildFn: (s, k, sk) => this.multiplexerBuild(s, k, sk),
@@ -381,6 +413,42 @@ export class Monorepo {
     return smokeTestSentinelImageWithContainer(
       buildSentinelImage(source, version, gitSha),
     );
+  }
+
+  @func()
+  async tasknotesServerValidation(
+    source: Directory,
+    version: string,
+    gitSha: string,
+  ): Promise<string> {
+    return runTasknotesServerValidation(source, version, gitSha);
+  }
+
+  @func()
+  async tasknotesServerCi(source: Directory): Promise<string> {
+    return checkTasknotesServer(source);
+  }
+
+  @func()
+  tasknotesServerBuild(source: Directory, version: string, gitSha: string): Container {
+    return buildTasknotesServerImage(source, version, gitSha);
+  }
+
+  @func()
+  async obsidianSyncClientValidation(
+    source: Directory,
+  ): Promise<string> {
+    return runObsidianSyncClientValidation(source);
+  }
+
+  @func()
+  async obsidianSyncClientCi(source: Directory): Promise<string> {
+    return checkObsidianSyncClient(source);
+  }
+
+  @func()
+  obsidianSyncClientBuild(source: Directory, version: string, gitSha: string): Container {
+    return buildObsidianSyncClientImage(source, version, gitSha);
   }
 
   @func()

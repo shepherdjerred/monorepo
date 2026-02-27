@@ -259,6 +259,8 @@ export async function collectTier0Results(tier0: {
   packages: Promise<string>;
   quality: Promise<string>;
   sentinel: Promise<string>;
+  tasknotesServer: Promise<string>;
+  obsidianSyncClient: Promise<string>;
 }): Promise<{ outputs: string[]; errors: string[] }> {
   const outputs: string[] = [];
   const errors: string[] = [];
@@ -285,6 +287,16 @@ export async function collectTier0Results(tier0: {
       name: "Quality",
       promise: tier0.quality,
       group: "Quality & Security Checks",
+    },
+    {
+      name: "TaskNotes Server",
+      promise: tier0.tasknotesServer,
+      group: "TaskNotes Server Validation",
+    },
+    {
+      name: "Obsidian Sync Client",
+      promise: tier0.obsidianSyncClient,
+      group: "Obsidian Sync Client Validation",
     },
   ];
 
@@ -384,6 +396,8 @@ export type ReleasePhaseOptions = {
   opServiceAccountToken?: Secret | undefined;
   birmelImage: Container;
   sentinelImage: Container;
+  tasknotesServerImage: Container;
+  obsidianSyncClientImage: Container;
   releasePleaseRunFn: (
     container: Container,
     command: string,

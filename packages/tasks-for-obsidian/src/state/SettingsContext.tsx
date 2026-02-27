@@ -27,7 +27,7 @@ type SettingsContextValue = {
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [apiUrl, setApiUrlState] = useState("http://macbook.tailnet-1a49.ts.net:8080");
+  const [apiUrl, setApiUrlState] = useState("https://tasknotes.tailnet-1a49.ts.net");
   const [authToken, setAuthTokenState] = useState("");
   const [isDarkMode, setIsDarkModeState] = useState(false);
   const [feedbackEnabled, setFeedbackEnabledState] = useState(true);

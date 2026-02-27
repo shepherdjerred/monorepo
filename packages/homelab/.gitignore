@@ -16,6 +16,8 @@ dist/
 
 # Secrets
 .env
+# Tofu .env only contains op:// references, not secrets
+!src/tofu/.env
 
 # OpenTofu / Terraform
 .terraform/
