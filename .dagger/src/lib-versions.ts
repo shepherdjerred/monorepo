@@ -24,7 +24,7 @@ const defaultVersions = {
     "8.18.0@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   caddy:
-    "2.10.2@sha256:f20f80e1fb627294fb84b8515b7593aff8018c840f1396dc942a50ed0c2db648",
+    "2.10.2@sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "alpine/kubectl":
     "1.35.0@sha256:e7e078c7bb25012141e5957d500834b2a5b266d6de20ecfa862b30d8a892fc7e",
