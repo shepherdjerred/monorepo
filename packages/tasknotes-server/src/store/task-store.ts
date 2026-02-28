@@ -25,27 +25,8 @@ function toISODate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-function buildStatusCounts(): TaskStats["byStatus"] {
-  return {
-    "open": 0,
-    "in-progress": 0,
-    "done": 0,
-    "cancelled": 0,
-    "waiting": 0,
-    "delegated": 0,
-  };
-}
-
-function buildPriorityCounts(): TaskStats["byPriority"] {
-  return {
-    "highest": 0,
-    "high": 0,
-    "medium": 0,
-    "normal": 0,
-    "low": 0,
-    "none": 0,
-  };
-}
+const ACTIVE_STATUSES = new Set<string>(["open", "in-progress", "waiting", "delegated"]);
+const COMPLETED_STATUSES = new Set<string>(["done", "cancelled"]);
 
 export class TaskStore {
   private tasks = new Map<string, Task>();
@@ -97,7 +78,7 @@ export class TaskStore {
       totalTrackedTime: 0,
       isBlocked: false,
       isBlocking: false,
-      description: request.description,
+      details: request.details,
     };
 
     const absPath = taskFilePath(this.vaultPath, this.tasksDir, task);
@@ -119,7 +100,7 @@ export class TaskStore {
     const updated: Task = {
       ...existing,
       title: request.title ?? existing.title,
-      description: request.description ?? existing.description,
+      details: request.details ?? existing.details,
       status: request.status ?? existing.status,
       priority: request.priority ?? existing.priority,
       due: request.due === null ? undefined : (request.due ?? existing.due),
@@ -225,7 +206,7 @@ export class TaskStore {
       results = results.filter(
         (t) =>
           t.title.toLowerCase().includes(searchLower) ||
-          (t.description?.toLowerCase().includes(searchLower) ?? false),
+          (t.details?.toLowerCase().includes(searchLower) ?? false),
       );
     }
 
@@ -236,35 +217,30 @@ export class TaskStore {
     const all = [...this.tasks.values()];
     const today = toISODate(new Date());
 
-    const byStatus = buildStatusCounts();
-    const byPriority = buildPriorityCounts();
-
+    let completed = 0;
+    let active = 0;
     let overdue = 0;
-    let dueToday = 0;
-    let upcoming = 0;
+    let archived = 0;
+    let withTimeTracking = 0;
 
     for (const task of all) {
-      byStatus[task.status]++;
-      byPriority[task.priority]++;
+      if (task.archived) archived++;
+      if (COMPLETED_STATUSES.has(task.status)) completed++;
+      if (ACTIVE_STATUSES.has(task.status) && !task.archived) active++;
+      if (task.totalTrackedTime > 0) withTimeTracking++;
 
-      if (task.due !== undefined) {
-        if (task.due < today && task.status !== "done" && task.status !== "cancelled") {
-          overdue++;
-        } else if (task.due === today) {
-          dueToday++;
-        } else if (task.due > today) {
-          upcoming++;
-        }
+      if (task.due !== undefined && task.due < today && !COMPLETED_STATUSES.has(task.status) && !task.archived) {
+        overdue++;
       }
     }
 
     return {
       total: all.length,
-      byStatus,
-      byPriority,
+      completed,
+      active,
       overdue,
-      dueToday,
-      upcoming,
+      archived,
+      withTimeTracking,
     };
   }
 

@@ -1,0 +1,77 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# .gitkeep ensures the dist/ directory exists in the source tree for
+# include_dir! in Rust compilation. Force-added to git despite .gitignore.
+exports_files(
+    ["dist/.gitkeep"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "dist_gitkeep",
+    srcs = ["dist/.gitkeep"],
+    visibility = ["//visibility:public"],
+)
+
+# Vite/React SPA; this js_library wraps sources for dependency tracking.
+js_library(
+    name = "pkg",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/react",
+        ":node_modules/react-dom",
+        ":node_modules/zod",
+        "//packages/clauderon/web/client:pkg",
+        "//packages/clauderon/web/shared:pkg",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    deps = [
+        "//packages/clauderon/web/client:pkg",
+        "//packages/clauderon/web/shared:pkg",
+    ],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    deps = [
+        ":pkg",
+        "//packages/clauderon/web/client:pkg",
+        "//packages/clauderon/web/shared:pkg",
+    ],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    deps = [
+        ":pkg",
+        "//packages/clauderon/web/client:pkg",
+        "//packages/clauderon/web/shared:pkg",
+    ],
+)

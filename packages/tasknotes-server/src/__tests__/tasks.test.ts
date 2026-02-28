@@ -37,7 +37,7 @@ describe("TaskStore.create", () => {
   test("creates a task with all fields", async () => {
     const task = await store.create({
       title: "Fix bug",
-      description: "Fix the login bug",
+      details: "Fix the login bug",
       status: "in-progress",
       priority: "high",
       due: "2026-03-01",
@@ -49,7 +49,7 @@ describe("TaskStore.create", () => {
       timeEstimate: 3600,
     });
     expect(task.title).toBe("Fix bug");
-    expect(task.description).toBe("Fix the login bug");
+    expect(task.details).toBe("Fix the login bug");
     expect(task.status).toBe("in-progress");
     expect(task.priority).toBe("high");
     expect(task.due).toBe("2026-03-01");
@@ -290,9 +290,9 @@ describe("TaskStore.query", () => {
     expect(tasks[0]?.title).toBe("Buy groceries");
   });
 
-  test("filters by search text in description", async () => {
-    await store.create({ title: "Task", description: "Important details here" });
-    await store.create({ title: "Other task", description: "Nothing relevant" });
+  test("filters by search text in details", async () => {
+    await store.create({ title: "Task", details: "Important details here" });
+    await store.create({ title: "Other task", details: "Nothing relevant" });
 
     const { tasks } = store.query({ search: "important" });
     expect(tasks).toHaveLength(1);
@@ -327,30 +327,30 @@ describe("TaskStore.getStats", () => {
   test("returns stats for empty store", () => {
     const stats = store.getStats();
     expect(stats.total).toBe(0);
+    expect(stats.completed).toBe(0);
+    expect(stats.active).toBe(0);
     expect(stats.overdue).toBe(0);
-    expect(stats.dueToday).toBe(0);
-    expect(stats.upcoming).toBe(0);
+    expect(stats.archived).toBe(0);
+    expect(stats.withTimeTracking).toBe(0);
   });
 
-  test("counts tasks by status", async () => {
+  test("counts completed and active tasks", async () => {
     await store.create({ title: "Open 1" });
     await store.create({ title: "Open 2" });
     await store.create({ title: "Done", status: "done" });
 
     const stats = store.getStats();
     expect(stats.total).toBe(3);
-    expect(stats.byStatus.open).toBe(2);
-    expect(stats.byStatus.done).toBe(1);
+    expect(stats.active).toBe(2);
+    expect(stats.completed).toBe(1);
   });
 
-  test("counts tasks by priority", async () => {
-    await store.create({ title: "High 1", priority: "high" });
-    await store.create({ title: "High 2", priority: "high" });
-    await store.create({ title: "Low", priority: "low" });
+  test("counts archived tasks", async () => {
+    const task = await store.create({ title: "Archive me" });
+    await store.archive(task.id);
 
     const stats = store.getStats();
-    expect(stats.byPriority.high).toBe(2);
-    expect(stats.byPriority.low).toBe(1);
+    expect(stats.archived).toBe(1);
   });
 
   test("counts overdue tasks", async () => {
@@ -359,7 +359,6 @@ describe("TaskStore.getStats", () => {
 
     const stats = store.getStats();
     expect(stats.overdue).toBe(1);
-    expect(stats.upcoming).toBe(1);
   });
 
   test("does not count done tasks as overdue", async () => {

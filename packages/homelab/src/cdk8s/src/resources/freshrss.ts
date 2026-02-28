@@ -78,7 +78,6 @@ export function createFreshRssDeployment(chart: Chart) {
   new TailscaleIngress(chart, "freshrss-tailscale-ingress", {
     service,
     host: "freshrss",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "freshrss-cf-tunnel", {

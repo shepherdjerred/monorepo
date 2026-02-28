@@ -439,11 +439,9 @@ export function createBugsinkDeployment(chart: Chart) {
     },
   });
 
-  // Tailscale Ingress with Funnel for public access (error ingestion from external clients)
   new TailscaleIngress(chart, "bugsink-tailscale-ingress", {
     service,
     host: "bugsink",
-    funnel: true,
   });
 
   // Cloudflare Tunnel for public access

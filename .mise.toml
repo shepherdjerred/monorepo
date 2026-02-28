@@ -3,8 +3,9 @@
 
 [tools]
 bun = "latest"
-dagger = "latest"
 rust = "latest"
+bazelisk = "latest"
+buildifier = "latest"
 
 [tasks.dev]
 description = "Set up the development environment for all packages"
@@ -18,21 +19,13 @@ echo "🔧 Setting up development environment..."
 echo "📋 Trusting mise configuration..."
 mise trust
 
-# Install mise tools (bun, dagger, etc.)
+# Install mise tools
 echo "🛠️  Installing mise tools..."
 mise install
 
 # Install root dependencies
 echo "📦 Installing root dependencies..."
 bun install
-
-# Install dagger module dependencies
-echo "📦 Installing dagger module dependencies..."
-cd .dagger && bun install && cd ..
-
-# Run dagger develop to generate SDK
-echo "🚀 Running dagger develop..."
-dagger develop
 
 # Generate Prisma client for birmel
 echo "🗄️  Generating Prisma client for birmel..."
@@ -48,7 +41,3 @@ depends = ["dev"]
 [tasks.prisma]
 description = "Generate Prisma client for birmel"
 run = "cd packages/birmel && bunx prisma generate"
-
-[tasks.dagger]
-description = "Run dagger develop to generate SDK"
-run = "dagger develop"

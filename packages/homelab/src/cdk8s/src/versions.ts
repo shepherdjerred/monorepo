@@ -150,8 +150,6 @@ const versions = {
   "siderolabs/talos": "1.12.0",
   // renovate: datasource=helm registryUrl=https://opensource.zalando.com/postgres-operator/charts/postgres-operator versioning=semver
   "postgres-operator": "1.15.1",
-  // renovate: datasource=helm registryUrl=https://helm.coder.com/v2 versioning=semver
-  coder: "2.29.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "cooperspencer/gickup":
     "0.10.39@sha256:3d0dabf3180ac8d3cc1939161e8b55947d697e453abeda29bdc42bb0319a9ed1",
@@ -216,9 +214,9 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
     "1.1.137@sha256:fe9f6f78875e8e273a85ec92adf4db0dd29e2af0581dd3dabbdc050a5e3d8eab",
-  // Custom obsidian-sync-client image - Obsidian Sync headless client
+  // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
-  "shepherdjerred/obsidian-sync-client":
+  "shepherdjerred/obsidian-headless":
     "1.1.137@sha256:03e72664f23779e5711635077e7fe2895d54c93b3d1c86bbd97711e4906f5d3c",
 };
 

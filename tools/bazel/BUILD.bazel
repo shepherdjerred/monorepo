@@ -1,0 +1,8 @@
+# Shared Bazel macros for the monorepo
+
+exports_files([
+    "eslint_entry.js",
+    "bun_test_entry.js",
+    "typecheck_entry.js",
+    "workspace_status.sh",
+])

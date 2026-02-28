@@ -7,14 +7,12 @@ import {
   withTimeout,
 } from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
+import { setAwayMode } from "@shepherdjerred/homelab/ha/src/climate-modes.ts";
 
 export function leavingHome({ hass, logger }: TServiceParams) {
   const personJerred = hass.refBy.id("person.jerred");
   const personShuxin = hass.refBy.id("person.shuxin");
   const roomba = hass.refBy.id("vacuum.roomba");
-  const bedroomHeater = hass.refBy.id("climate.bedroom_thermostat");
-  // TODO: Re-enable when living room thermostat is back online
-  // const livingRoomClimate = hass.refBy.id("climate.living_room");
 
   async function runLeavingHome() {
     await instrumentWorkflow("leaving_home", async () => {
@@ -22,45 +20,28 @@ export function leavingHome({ hass, logger }: TServiceParams) {
         (async () => {
           logger.info("Leaving Home automation triggered");
 
-          await hass.call.notify.notify({
-            title: "Leaving Home",
-            message: "Goodbye! The Roomba will start cleaning soon.",
-          });
+          await withTimeout(
+            hass.call.notify.notify({
+              title: "Leaving Home",
+              message: "Goodbye! The Roomba will start cleaning soon.",
+            }),
+            { amount: 30, unit: "s" },
+            "notify.notify leaving_home",
+          );
 
-          // Set climate to energy-saving away mode (20°C)
+          // Set climate to energy-saving away mode
           logger.debug("Setting climate to away mode");
-          await hass.call.climate.set_temperature({
-            entity_id: bedroomHeater.entity_id,
-            hvac_mode: "heat",
-            temperature: 20,
-          });
-          // TODO: Re-enable when living room thermostat is back online
-          // try {
-          //   await livingRoomClimate.set_temperature({
-          //     hvac_mode: "heat",
-          //     temperature: 20,
-          //   });
-          // } catch {
-          //   logger.debug("Living room climate not available, skipping");
-          // }
-
-          // Set climate DSC
-          verifyAfterDelay({
-            entityId: bedroomHeater.entity_id,
-            workflowName: "climate_leaving_home",
-            getActualState: () => String(bedroomHeater.attributes.temperature),
-            check: (actual) => actual === "20",
-            delay: { amount: 30, unit: "s" },
-            description: "target 20°C",
-            logger,
-            hass,
-          });
+          await setAwayMode(hass, logger);
 
           // turn off all lights
           logger.debug("Turning off all lights");
           const lights = hass.refBy.domain("light");
           for (const light of lights) {
-            await hass.call.light.turn_off({ entity_id: light.entity_id });
+            await withTimeout(
+              hass.call.light.turn_off({ entity_id: light.entity_id }),
+              { amount: 30, unit: "s" },
+              `light.turn_off ${light.entity_id}`,
+            );
           }
           logger.debug("All lights turned off");
 

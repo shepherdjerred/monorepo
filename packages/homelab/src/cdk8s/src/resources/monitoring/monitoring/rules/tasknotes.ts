@@ -124,13 +124,13 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TasknotesSyncClientDown",
           annotations: {
-            summary: "TaskNotes Obsidian sync client is not running",
+            summary: "TaskNotes Obsidian Headless sync is not running",
             message: escapePrometheusTemplate(
-              "The obsidian-sync-client container in the TaskNotes deployment has not been running for 10+ minutes. Vault sync is unavailable.",
+              "The obsidian-headless container in the TaskNotes deployment has not been running for 10+ minutes. Vault sync is unavailable.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `kube_pod_container_status_running{namespace="tasknotes", container="obsidian-sync-client"} == 0`,
+            `kube_pod_container_status_running{namespace="tasknotes", container="obsidian-headless"} == 0`,
           ),
           for: "10m",
           labels: {

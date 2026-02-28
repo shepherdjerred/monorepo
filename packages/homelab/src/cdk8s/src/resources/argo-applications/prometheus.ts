@@ -23,7 +23,6 @@ export async function createPrometheusApp(chart: Chart) {
     service: "prometheus-kube-prometheus-alertmanager",
     port: 9093,
     hosts: ["alertmanager"],
-    funnel: false,
   });
 
   createIngress(chart, "prometheus-ingress", {
@@ -31,7 +30,6 @@ export async function createPrometheusApp(chart: Chart) {
     service: "prometheus-kube-prometheus-prometheus",
     port: 9090,
     hosts: ["prometheus"],
-    funnel: false,
   });
 
   const alertmanagerSecrets = new OnePasswordItem(

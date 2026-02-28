@@ -153,7 +153,6 @@ export function createPokemonDeployment(chart: Chart) {
   new TailscaleIngress(chart, "ui-tailscale-ingress", {
     service: uiService,
     host: "pokebot",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {

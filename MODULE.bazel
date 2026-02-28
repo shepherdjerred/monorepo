@@ -1,0 +1,213 @@
+"""Monorepo Bazel module definition.
+
+This configures bzlmod dependencies for building TypeScript packages with Bun,
+Rust packages with rules_rust, and container images with rules_oci.
+"""
+
+module(
+    name = "monorepo",
+    version = "0.0.0",
+)
+
+# Core dependencies
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+bazel_dep(name = "aspect_rules_js", version = "2.9.2")
+bazel_dep(name = "aspect_rules_ts", version = "3.8.5")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_nodejs", version = "6.7.3")
+
+# Rust (for clauderon)
+bazel_dep(name = "rules_rust", version = "0.69.0")
+
+# Container images
+bazel_dep(name = "rules_oci", version = "2.2.7")
+bazel_dep(name = "rules_pkg", version = "1.2.0")
+
+##############################################################################
+# Rust toolchain
+##############################################################################
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2024")
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+
+##############################################################################
+# Rust crate dependencies (crate_universe)
+##############################################################################
+
+crate = use_extension(
+    "@rules_rust//crate_universe:extensions.bzl",
+    "crate",
+)
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//packages/clauderon:Cargo.lock",
+    manifests = ["//packages/clauderon:Cargo.toml"],
+)
+
+# rav1e's build script uses the `built` crate which requires many CARGO_PKG_* env vars.
+crate.annotation(
+    build_script_env = {
+        "CARGO_PKG_AUTHORS": "rav1e contributors",
+        "CARGO_PKG_DESCRIPTION": "The fastest and safest AV1 encoder",
+        "CARGO_PKG_HOMEPAGE": "https://github.com/xiph/rav1e",
+        "CARGO_PKG_REPOSITORY": "https://github.com/xiph/rav1e",
+        "CARGO_PKG_LICENSE": "BSD-2-Clause",
+    },
+    crate = "rav1e",
+)
+use_repo(crate, "crates")
+
+##############################################################################
+# Bun toolchain
+##############################################################################
+
+bun = use_extension("//tools/bun:extensions.bzl", "bun")
+bun.toolchain(bun_version = "1.3.9")
+
+register_toolchains(
+    "@bun_darwin_arm64//:bun_toolchain",
+    "@bun_darwin_arm64//:bun_runtime_toolchain",
+    "@bun_darwin_amd64//:bun_toolchain",
+    "@bun_darwin_amd64//:bun_runtime_toolchain",
+    "@bun_linux_arm64//:bun_toolchain",
+    "@bun_linux_arm64//:bun_runtime_toolchain",
+    "@bun_linux_amd64//:bun_toolchain",
+    "@bun_linux_amd64//:bun_runtime_toolchain",
+)
+
+use_repo(
+    bun,
+    "bun_darwin_amd64",
+    "bun_darwin_arm64",
+    "bun_linux_amd64",
+    "bun_linux_arm64",
+)
+
+##############################################################################
+# TypeScript compiler (managed by rules_ts)
+##############################################################################
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+rules_ts_ext.deps()
+use_repo(rules_ts_ext, "npm_typescript")
+
+##############################################################################
+# pnpm + npm dependencies
+##############################################################################
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+pnpm.pnpm(
+    name = "pnpm",
+    pnpm_version = "9.15.9",
+)
+use_repo(pnpm, "pnpm", "pnpm__links")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    bins = {
+        "typescript": [
+            "tsc=./bin/tsc",
+            "tsserver=./bin/tsserver",
+        ],
+    },
+    data = [
+        "//:package.json",
+        "//:pnpm-workspace.yaml",
+        "//packages/astro-opengraph-images:package.json",
+        "//packages/better-skill-capped:package.json",
+        "//packages/better-skill-capped/fetcher:package.json",
+        "//packages/birmel:package.json",
+        "//packages/bun-decompile:package.json",
+        "//packages/clauderon/docs:package.json",
+        "//packages/clauderon/web/client:package.json",
+        "//packages/clauderon/web/frontend:package.json",
+        "//packages/clauderon/web/shared:package.json",
+        "//packages/discord-plays-pokemon:package.json",
+        "//packages/discord-plays-pokemon/packages/backend:package.json",
+        "//packages/discord-plays-pokemon/packages/common:package.json",
+        "//packages/discord-plays-pokemon/packages/frontend:package.json",
+        "//packages/eslint-config:package.json",
+        "//packages/homelab:package.json",
+        "//packages/homelab/src/cdk8s:package.json",
+        "//packages/homelab/src/deps-email:package.json",
+        "//packages/homelab/src/ha:package.json",
+        "//packages/homelab/src/helm-types:package.json",
+        "//packages/monarch:package.json",
+        "//packages/resume:package.json",
+        "//packages/scout-for-lol:package.json",
+        "//packages/scout-for-lol/packages/backend:package.json",
+        "//packages/scout-for-lol/packages/data:package.json",
+        "//packages/scout-for-lol/packages/desktop:package.json",
+        "//packages/scout-for-lol/packages/frontend:package.json",
+        "//packages/scout-for-lol/packages/report:package.json",
+        "//packages/scout-for-lol/packages/ui:package.json",
+        "//packages/sentinel:package.json",
+        "//packages/sentinel/web:package.json",
+        "//packages/sjer.red:package.json",
+        "//packages/starlight-karma-bot:package.json",
+        "//packages/tasknotes-server:package.json",
+        "//packages/tasknotes-types:package.json",
+        "//packages/tasks-for-obsidian:package.json",
+        "//packages/tools:package.json",
+        "//packages/webring:package.json",
+    ],
+    pnpm_lock = "//:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
+##############################################################################
+# Container base images (rules_oci)
+##############################################################################
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+# Bun runtime on Debian — used by birmel, sentinel, tasknotes-server
+oci.pull(
+    name = "bun_debian",
+    digest = "sha256:d48b40bf0106dc1e94462c7086fbf4e8aab97f0870db2c87a05ecf8765f964df",
+    image = "docker.io/oven/bun",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+
+# Bun runtime (Alpine) — used by starlight-karma-bot
+oci.pull(
+    name = "bun_alpine",
+    digest = "sha256:856da45d07aeb62eb38ea3e7f9e1794c0143a4ff63efb00e6c4491b627e2a521",
+    image = "docker.io/oven/bun",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+
+# Node.js slim — used by obsidian-headless
+# Note: node images use variant=v8 for arm64, so we pull platform-specific digests.
+oci.pull(
+    name = "node_slim",
+    digest = "sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94",
+    image = "docker.io/library/node",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(
+    oci,
+    "bun_alpine",
+    "bun_alpine_linux_amd64",
+    "bun_alpine_linux_arm64",
+    "bun_debian",
+    "bun_debian_linux_amd64",
+    "bun_debian_linux_arm64",
+    "node_slim",
+    "node_slim_linux_amd64",
+    "node_slim_linux_arm64_v8",
+)

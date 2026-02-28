@@ -85,7 +85,6 @@ import type { PostgresoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/g
 import type { PromtailHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/promtail.types";
 import type { TailscaleoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tailscale-operator.types";
 import type { VeleroHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/velero.types";
-import type { CoderHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/coder.types";
 import type { RedisHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/redis.types";
 import type { SeaweedfsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/seaweedfs.types";
 import type { PrometheusblackboxexporterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-blackbox-exporter.types";
@@ -107,7 +106,6 @@ type HelmChartValuesMap = {
   promtail: PromtailHelmValues;
   "tailscale-operator": TailscaleoperatorHelmValues;
   velero: VeleroHelmValues;
-  coder: CoderHelmValues;
   redis: RedisHelmValues;
   seaweedfs: SeaweedfsHelmValues;
   "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;

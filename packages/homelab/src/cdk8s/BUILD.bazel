@@ -1,0 +1,55 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# CDK8s infrastructure-as-code — stub js_library for dependency tracking.
+# Full cdk8s synth build is complex and not yet integrated.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@grafana/grafana-foundation-sdk",
+        ":node_modules/cdk8s",
+        ":node_modules/cdk8s-plus-31",
+        ":node_modules/constructs",
+        ":node_modules/cron-parser",
+        ":node_modules/lodash",
+        ":node_modules/remeda",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+        "//packages/homelab/src/helm-types:pkg",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+    deps = ["//packages/homelab/src/helm-types:pkg"],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/homelab/src/helm-types:pkg",
+    ],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/homelab/src/helm-types:pkg",
+    ],
+)

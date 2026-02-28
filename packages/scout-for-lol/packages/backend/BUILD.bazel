@@ -1,0 +1,69 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@aws-sdk/client-s3",
+        ":node_modules/@discordjs/voice",
+        ":node_modules/@google/generative-ai",
+        ":node_modules/@prisma/client",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@trpc/server",
+        ":node_modules/cron",
+        ":node_modules/date-fns",
+        ":node_modules/discord.js",
+        ":node_modules/dotenv",
+        ":node_modules/env-var",
+        ":node_modules/openai",
+        ":node_modules/prism-media",
+        ":node_modules/prisma",
+        ":node_modules/prom-client",
+        ":node_modules/react",
+        ":node_modules/remeda",
+        ":node_modules/sodium-native",
+        ":node_modules/ts-pattern",
+        ":node_modules/tslog",
+        ":node_modules/twisted",
+        ":node_modules/uuid",
+        ":node_modules/yoga-wasm-web",
+        ":node_modules/zod",
+        ":node_modules/zod-validation-error",
+        "//packages/scout-for-lol/packages/data:pkg",
+        "//packages/scout-for-lol/packages/report:pkg",
+    ],
+)
+
+js_binary(
+    name = "backend",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/scout-for-lol/packages/data:pkg",
+        "//packages/scout-for-lol/packages/report:pkg",
+    ],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/scout-for-lol/packages/data:pkg",
+        "//packages/scout-for-lol/packages/report:pkg",
+    ],
+)

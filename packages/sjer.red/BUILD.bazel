@@ -1,0 +1,93 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# Astro site -- full astro build is not yet wired up in Bazel.
+# This js_library exposes the sources for dependency tracking.
+js_library(
+    name = "pkg",
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.astro",
+            "src/**/*.mdx",
+            "src/**/*.md",
+            "src/**/*.css",
+            "src/**/*.scss",
+        ],
+        allow_empty = True,
+    ) + [
+        "astro.config.ts",
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@astrojs/check",
+        ":node_modules/@astrojs/markdown-remark",
+        ":node_modules/@astrojs/mdx",
+        ":node_modules/@astrojs/rss",
+        ":node_modules/@astrojs/sitemap",
+        ":node_modules/@fontsource-variable/lora",
+        ":node_modules/@fontsource/nunito",
+        ":node_modules/@iconify-json/mdi",
+        ":node_modules/@resvg/resvg-js",
+        ":node_modules/@sentry/browser",
+        ":node_modules/@shikijs/twoslash",
+        ":node_modules/@tailwindcss/forms",
+        ":node_modules/@tailwindcss/typography",
+        ":node_modules/@tailwindcss/vite",
+        ":node_modules/astro",
+        ":node_modules/astro-diagram",
+        ":node_modules/astro-icon",
+        ":node_modules/astro-opengraph-images",
+        ":node_modules/astro-seo",
+        ":node_modules/jsdom",
+        ":node_modules/markdown-it",
+        ":node_modules/react",
+        ":node_modules/rehype-autolink-headings",
+        ":node_modules/rehype-mermaid",
+        ":node_modules/remark-toc",
+        ":node_modules/remeda",
+        ":node_modules/sanitize-html",
+        ":node_modules/sass",
+        ":node_modules/sharp",
+        ":node_modules/tailwindcss",
+        ":node_modules/ts-pattern",
+        ":node_modules/webring",
+        ":node_modules/zod",
+        "//packages/webring:pkg",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        allow_empty = True,
+    ),
+    deps = ["//packages/webring:pkg"],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        allow_empty = True,
+    ),
+    deps = [
+        ":pkg",
+        "//packages/webring:pkg",
+    ],
+)

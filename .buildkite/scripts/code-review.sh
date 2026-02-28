@@ -1,42 +1,50 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Install system dependencies
-echo "--- :debian: Installing system dependencies"
-apt-get update -qq && apt-get install -y -qq curl jq > /dev/null
+source "$(dirname "$0")/setup-tools.sh"
 
-# Install kubectl
-KUBECTL_VERSION="v1.34.1"
-echo "--- :kubectl: Installing kubectl ${KUBECTL_VERSION}"
-curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
-chmod +x /usr/local/bin/kubectl
+install_base
+install_gh
 
-# Install Dagger CLI (version from dagger.json)
-DAGGER_VERSION=$(jq -r '.engineVersion' dagger.json | sed 's/^v//')
-echo "--- :dagger: Installing Dagger CLI ${DAGGER_VERSION}"
-if ! curl -fsSL https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION="${DAGGER_VERSION}" BIN_DIR="/usr/local/bin" sh; then
-  echo "Primary source failed, trying GitHub releases..."
-  curl -fsSL "https://github.com/dagger/dagger/releases/download/v${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz" | tar xz -C /usr/local/bin
-  chmod +x /usr/local/bin/dagger
-fi
+# Install Node.js + Claude CLI
+echo "--- :robot_face: Installing Claude Code CLI"
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash - > /dev/null 2>&1
+apt-get install -y -qq nodejs > /dev/null
+npm install -g @anthropic-ai/claude-code > /dev/null 2>&1
+claude --version
 
-# Connect to remote Dagger engine
-echo "--- :kubernetes: Connecting to Dagger engine"
-DAGGER_ENGINE_POD_NAME="$(kubectl get pod \
-  --selector=name=dagger-dagger-helm-engine \
-  --namespace=dagger \
-  --output=jsonpath='{.items[0].metadata.name}')"
-export _EXPERIMENTAL_DAGGER_RUNNER_HOST="kube-pod://${DAGGER_ENGINE_POD_NAME}?namespace=dagger"
-
-# Install Dagger module dependencies
-echo "--- :bun: Installing Dagger module dependencies"
-cd .dagger && bun install --frozen-lockfile && cd ..
+# Validate required env vars
+: "${BUILDKITE_PULL_REQUEST:?Required}"
+: "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:?Required}"
+: "${BUILDKITE_COMMIT:?Required}"
+: "${GH_TOKEN:?Required}"
+: "${CLAUDE_CODE_OAUTH_TOKEN:?Required}"
 
 echo "+++ :robot_face: Running code review"
-dagger call code-review \
-  --source=. \
-  --github-token=env:GH_TOKEN \
-  --claude-oauth-token=env:CLAUDE_CODE_OAUTH_TOKEN \
-  --pr-number="${BUILDKITE_PULL_REQUEST}" \
-  --base-branch="${BUILDKITE_PULL_REQUEST_BASE_BRANCH}" \
-  --head-sha="${BUILDKITE_COMMIT}"
+
+# Run Claude CLI directly for PR review
+claude --print \
+  --dangerously-skip-permissions \
+  --model claude-opus-4-6 \
+  --max-turns 35 \
+  "Review PR #${BUILDKITE_PULL_REQUEST} on branch ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} (head SHA: ${BUILDKITE_COMMIT}).
+
+Read the CLAUDE.md file first for project context.
+
+Use gh CLI to inspect the PR diff and details:
+  gh pr view ${BUILDKITE_PULL_REQUEST} --repo shepherdjerred/monorepo
+  gh pr diff ${BUILDKITE_PULL_REQUEST} --repo shepherdjerred/monorepo
+
+Review this PR focusing on things linters and typecheckers can't catch:
+- Functionality: Does the code actually do what the PR claims?
+- Architectural fit: Does this change fit the codebase patterns?
+- Logic errors: Are there bugs, race conditions, or edge cases?
+- Security: Any vulnerabilities that static analysis would miss?
+- Design: Is this the right approach? Are there simpler alternatives?
+
+After reviewing, post your review using gh CLI:
+  gh pr review ${BUILDKITE_PULL_REQUEST} --repo shepherdjerred/monorepo --approve --body 'your review'
+  OR
+  gh pr review ${BUILDKITE_PULL_REQUEST} --repo shepherdjerred/monorepo --request-changes --body 'your review'
+
+Be direct and concise. If the PR is trivial (pure merge/rebase with minimal changes), approve with a brief note."

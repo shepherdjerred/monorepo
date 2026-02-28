@@ -447,7 +447,6 @@ export function createPostalDeployment(
     service: webService.name,
     port: 5000,
     hosts: ["postal"],
-    funnel: false,
   });
 
   // Create ServiceMonitor for Prometheus metrics (targets worker which exposes /metrics)

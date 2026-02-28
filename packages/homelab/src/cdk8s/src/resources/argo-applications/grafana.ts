@@ -19,7 +19,6 @@ export function createGrafanaApp(chart: Chart) {
     service: "prometheus-grafana",
     port: 80,
     hosts: ["grafana"],
-    funnel: false,
   });
 
   return new Application(chart, "grafana-app", {

@@ -10,7 +10,6 @@ export function createArgoCdApp(chart: Chart) {
     service: "argocd-server",
     port: 443,
     hosts: ["argocd"],
-    funnel: true,
   });
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {

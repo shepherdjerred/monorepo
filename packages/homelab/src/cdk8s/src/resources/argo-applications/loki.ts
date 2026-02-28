@@ -218,7 +218,6 @@ export function createLokiApp(chart: Chart) {
     service: "loki",
     port: 3100,
     hosts: ["loki"],
-    funnel: false,
   });
 
   // Create ConfigMap for Loki alert rules

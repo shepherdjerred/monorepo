@@ -11,6 +11,7 @@ import {
 } from "./metrics.ts";
 import { authMiddleware } from "./middleware/auth.ts";
 import { envelopeMiddleware } from "./middleware/envelope.ts";
+import { loggerMiddleware } from "./middleware/logger.ts";
 import { metricsMiddleware } from "./middleware/metrics.ts";
 import { calendarRoutes } from "./routes/calendar.ts";
 import { healthRoutes } from "./routes/health.ts";
@@ -28,6 +29,7 @@ const taskStore = new TaskStore(config.vaultPath, config.tasksDir);
 const timeStore = new TimeStore(config.vaultPath);
 const pomodoroStore = new PomodoroStore();
 
+app.use("*", loggerMiddleware);
 app.use("*", metricsMiddleware);
 app.use("*", authMiddleware);
 app.use("*", envelopeMiddleware);

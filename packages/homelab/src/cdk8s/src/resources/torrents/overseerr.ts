@@ -66,7 +66,6 @@ export function createOverseerrDeployment(chart: Chart) {
   new TailscaleIngress(chart, "overseerr-tailscale-ingress", {
     service,
     host: "overseerr",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "overseerr-cf-tunnel", {

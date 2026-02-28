@@ -461,18 +461,6 @@
         "typescript": "^5.7.2",
       },
     },
-    "packages/obsidian-sync-client": {
-      "name": "obsidian-sync-client",
-      "version": "0.1.0",
-      "dependencies": {
-        "zod": "^3.24",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "eslint": "^9.0.0",
-        "typescript": "^5.8",
-      },
-    },
     "packages/resume": {
       "name": "@shepherdjerred/resume",
       "version": "1.0.0",
@@ -818,11 +806,25 @@
         "gray-matter": "^4",
         "hono": "^4",
         "prom-client": "^15",
+        "tasknotes-types": "file:../tasknotes-types",
         "yaml": "^2",
         "zod": "^3.24",
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "eslint": "^9.39.2",
+        "jiti": "^2.6.1",
+        "typescript": "^5.8",
+        "typescript-eslint": "^8.53.1",
+      },
+    },
+    "packages/tasknotes-types": {
+      "name": "tasknotes-types",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^3.24",
+      },
+      "devDependencies": {
         "eslint": "^9.39.2",
         "jiti": "^2.6.1",
         "typescript": "^5.8",
@@ -854,6 +856,7 @@
         "react-native-screens": "4.19.0",
         "react-native-sound": "^0.13.0",
         "react-native-vector-icons": "^10.3.0",
+        "tasknotes-types": "file:../tasknotes-types",
         "ts-pattern": "^5.7.1",
         "zeego": "^3.0.6",
         "zod": "^3.25.3",
@@ -5184,8 +5187,6 @@
 
     "object.values": ["object.values@1.2.1", "", { "dependencies": { "call-bind": "^1.0.8", "call-bound": "^1.0.3", "define-properties": "^1.2.1", "es-object-atoms": "^1.0.0" } }, "sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA=="],
 
-    "obsidian-sync-client": ["obsidian-sync-client@workspace:packages/obsidian-sync-client"],
-
     "obug": ["obug@2.1.1", "", {}, "sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ=="],
 
     "ofetch": ["ofetch@1.5.1", "", { "dependencies": { "destr": "^2.0.5", "node-fetch-native": "^1.6.7", "ufo": "^1.6.1" } }, "sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA=="],
@@ -5987,6 +5988,8 @@
     "tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
     "tasknotes-server": ["tasknotes-server@workspace:packages/tasknotes-server"],
+
+    "tasknotes-types": ["tasknotes-types@workspace:packages/tasknotes-types"],
 
     "tasks-for-obsidian": ["tasks-for-obsidian@workspace:packages/tasks-for-obsidian"],
 
@@ -7344,8 +7347,6 @@
 
     "nypm/citty": ["citty@0.2.0", "", {}, "sha512-8csy5IBFI2ex2hTVpaHN2j+LNE199AgiI7y4dMintrr8i0lQiFn+0AWMZrWdHKIgMOer65f8IThysYhoReqjWA=="],
 
-    "obsidian-sync-client/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
-
     "ollama-ai-provider-v2/@ai-sdk/provider": ["@ai-sdk/provider@2.0.1", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-KCUwswvsC5VsW2PWFqF8eJgSCu5Ysj7m1TxiHTVA6g7k360bk0RNQENT8KTMAYEs+8fWPD3Uu4dEmzGHc+jGng=="],
 
     "ollama-ai-provider-v2/@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@3.0.20", "", { "dependencies": { "@ai-sdk/provider": "2.0.1", "@standard-schema/spec": "^1.0.0", "eventsource-parser": "^3.0.6" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-iXHVe0apM2zUEzauqJwqmpC37A5rihrStAih5Ks+JE32iTe4LZ58y17UGBjpQQTCRw9YxMeo2UFLxLpBluyvLQ=="],
@@ -7487,6 +7488,8 @@
     "tar-fs/chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
 
     "tasknotes-server/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "tasknotes-types/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "tasks-for-obsidian/react": ["react@19.2.3", "", {}, "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA=="],
 

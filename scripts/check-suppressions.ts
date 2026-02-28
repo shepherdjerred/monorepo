@@ -24,6 +24,7 @@ const SUPPRESSION_PATTERNS = [
 const EXCLUDED_FILES = [
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
+  "scripts/ci/src/ci/lib/quality.py",
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",

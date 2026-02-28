@@ -1,0 +1,69 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files([
+    "package.json",
+    "tsconfig.json",
+])
+
+# Bun-native: TypeScript executed directly by Bun, no transpilation needed.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@anthropic-ai/claude-agent-sdk",
+        ":node_modules/@prisma/client",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@trpc/server",
+        ":node_modules/@types/bun",
+        ":node_modules/cron",
+        ":node_modules/discord.js",
+        ":node_modules/gray-matter",
+        ":node_modules/hono",
+        ":node_modules/pino",
+        ":node_modules/zod",
+    ],
+)
+
+js_binary(
+    name = "sentinel",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+# Container image for K8s deployment
+bun_service_image(
+    name = "image",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+        "prisma/schema.prisma",
+    ],
+    entry_point = "src/index.ts",
+    env = {"NODE_ENV": "production"},
+    labels = {
+        "org.opencontainers.image.title": "sentinel",
+        "org.opencontainers.image.description": "Autonomous agent system for operational task automation",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    repository = "ghcr.io/shepherdjerred/sentinel",
+    visibility = ["//visibility:public"],
+)

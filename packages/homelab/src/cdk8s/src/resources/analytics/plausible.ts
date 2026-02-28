@@ -187,12 +187,9 @@ export function createPlausibleDeployment(
     ports: [{ port: 8000, name: "http" }],
   });
 
-  // Tailscale Ingress with Funnel for public access
-  // This allows external websites to send tracking data
   new TailscaleIngress(chart, "plausible-tailscale-ingress", {
     service,
     host: "plausible",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "plausible-cf-tunnel", {

@@ -1,0 +1,43 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files([
+    "package.json",
+    "tsconfig.json",
+])
+
+js_library(
+    name = "pkg",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/**/*.test.ts"],
+    ) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/remeda",
+        ":node_modules/rss-parser",
+        ":node_modules/sanitize-html",
+        ":node_modules/truncate-html",
+        ":node_modules/zod",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+)

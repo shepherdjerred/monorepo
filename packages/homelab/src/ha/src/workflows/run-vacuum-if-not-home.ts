@@ -33,11 +33,15 @@ export function runVacuumIfNotHome({
             if (isEveryoneAway() && shouldStartCleaning(roomba.state)) {
               logger.debug("Conditions met; starting Roomba");
 
-              await hass.call.notify.notify({
-                title: "Vacuum Started",
-                message:
-                  "The Roomba has started cleaning since no one is home.",
-              });
+              await withTimeout(
+                hass.call.notify.notify({
+                  title: "Vacuum Started",
+                  message:
+                    "The Roomba has started cleaning since no one is home.",
+                }),
+                { amount: 30, unit: "s" },
+                "notify.notify vacuum_started",
+              );
 
               await withTimeout(
                 hass.call.vacuum.start({ entity_id: roomba.entity_id }),

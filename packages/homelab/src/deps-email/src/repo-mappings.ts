@@ -7,7 +7,6 @@
 export const HELM_CHART_GITHUB_REPOS: Record<string, string> = {
   "argo-cd": "argoproj/argo-helm",
   "cert-manager": "cert-manager/cert-manager",
-  coder: "coder/coder",
   velero: "vmware-tanzu/helm-charts",
   "kube-prometheus-stack": "prometheus-community/helm-charts",
   openebs: "openebs/openebs",
@@ -28,7 +27,6 @@ export const HELM_CHART_GITHUB_REPOS: Record<string, string> = {
 export const HELM_CHART_APP_REPOS: Record<string, string> = {
   "argo-cd": "argoproj/argo-cd",
   "cert-manager": "cert-manager/cert-manager",
-  coder: "coder/coder",
   velero: "vmware-tanzu/velero",
   "kube-prometheus-stack": "prometheus/prometheus", // Main app
   openebs: "openebs/openebs",

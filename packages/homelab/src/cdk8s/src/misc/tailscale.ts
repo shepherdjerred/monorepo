@@ -14,13 +14,12 @@ export class TailscaleIngress extends Construct {
     id: string,
     props: Partial<IngressProps> & {
       host: string;
-      funnel?: boolean;
       service: Service;
     },
   ) {
     super(scope, id);
 
-    let base: IngressProps = {
+    const base: IngressProps = {
       defaultBackend: IngressBackend.fromService(props.service),
       tls: [
         {
@@ -28,17 +27,6 @@ export class TailscaleIngress extends Construct {
         },
       ],
     };
-
-    if (props.funnel === true) {
-      base = {
-        ...base,
-        metadata: {
-          annotations: {
-            "tailscale.com/funnel": "true",
-          },
-        },
-      };
-    }
 
     const ingress = new Ingress(scope, `${id}-ingress`, merge({}, base, props));
 
@@ -56,13 +44,11 @@ export function createIngress(
     service: string;
     port: number;
     hosts: string[];
-    funnel: boolean;
   },
 ) {
   const ingress = new KubeIngress(chart, name, {
     metadata: {
       namespace: options.namespace,
-      annotations: options.funnel ? { "tailscale.com/funnel": "true" } : {},
     },
     spec: {
       defaultBackend: {

@@ -6,6 +6,7 @@ import {
   withTimeout,
 } from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
+import { setHomeComfortMode } from "@shepherdjerred/homelab/ha/src/climate-modes.ts";
 
 export function welcomeHome({ hass, logger }: TServiceParams) {
   const personJerred = hass.refBy.id("person.jerred");
@@ -13,15 +14,6 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
   const roomba = hass.refBy.id("vacuum.roomba");
   const entrywayLight = hass.refBy.id("switch.entryway_overhead_lights");
   const livingRoomScene = hass.refBy.id("scene.living_room_main_bright");
-  const bedroomHeater = hass.refBy.id("climate.bedroom_thermostat");
-  // TODO: Re-enable when living room thermostat is back online
-  // const livingRoomClimate = hass.refBy.id("climate.living_room");
-
-  // TODO: Re-enable when Christmas decorations are back
-  // const christmasScenes = [
-  //   hass.refBy.id("scene.christmas_tree_silent_night"),
-  //   hass.refBy.id("scene.christmas_tree_under_the_tree"),
-  // ];
 
   async function runWelcomeHome() {
     await instrumentWorkflow("welcome_home", async () => {
@@ -29,44 +21,27 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
         (async () => {
           logger.info("Welcome Home automation triggered");
 
-          await hass.call.notify.notify({
-            title: "Welcome Home",
-            message: "Welcome back! Hope you had a great time.",
-          });
+          await withTimeout(
+            hass.call.notify.notify({
+              title: "Welcome Home",
+              message: "Welcome back! Hope you had a great time.",
+            }),
+            { amount: 30, unit: "s" },
+            "notify.notify welcome_home",
+          );
 
-          // Set climate to comfortable home temperature (22°C)
+          // Set climate to comfortable home temperature
           logger.debug("Setting climate to home comfort mode");
-          await hass.call.climate.set_temperature({
-            entity_id: bedroomHeater.entity_id,
-            hvac_mode: "heat",
-            temperature: 22,
-          });
-          // TODO: Re-enable when living room thermostat is back online
-          // try {
-          //   await livingRoomClimate.set_temperature({
-          //     hvac_mode: "heat",
-          //     temperature: 24,
-          //   });
-          // } catch {
-          //   logger.debug("Living room climate not available, skipping");
-          // }
-
-          // Verify climate
-          verifyAfterDelay({
-            entityId: bedroomHeater.entity_id,
-            workflowName: "climate_welcome_home",
-            getActualState: () => String(bedroomHeater.attributes.temperature),
-            check: (actual) => actual === "22",
-            delay: { amount: 30, unit: "s" },
-            description: "target 22°C",
-            logger,
-            hass,
-          });
+          await setHomeComfortMode(hass, logger);
 
           logger.debug("Turning on entryway light");
-          await hass.call.switch.turn_on({
-            entity_id: entrywayLight.entity_id,
-          });
+          await withTimeout(
+            hass.call.switch.turn_on({
+              entity_id: entrywayLight.entity_id,
+            }),
+            { amount: 30, unit: "s" },
+            "switch.turn_on entryway",
+          );
 
           // Verify entryway light
           verifyAfterDelay({
@@ -80,18 +55,13 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
           });
 
           logger.debug("Setting living room scene to bright");
-          await hass.call.scene.turn_on({
-            entity_id: livingRoomScene.entity_id,
-          });
-
-          // TODO: Re-enable when Christmas decorations are back
-          // const randomScene = christmasScenes[Math.floor(Math.random() * christmasScenes.length)];
-          // if (randomScene) {
-          //   logger.debug("Turning on random Christmas tree scene");
-          //   await randomScene.turn_on();
-          // } else {
-          //   throw new Error("No Christmas tree scene found");
-          // }
+          await withTimeout(
+            hass.call.scene.turn_on({
+              entity_id: livingRoomScene.entity_id,
+            }),
+            { amount: 30, unit: "s" },
+            "scene.turn_on living_room",
+          );
 
           if (shouldStopCleaning(roomba.state)) {
             logger.debug("Commanding Roomba to return to base");

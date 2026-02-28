@@ -5,18 +5,15 @@ import {
   mediaParam,
   openCoversWithDelay,
   closeCoversWithDelay,
-  verifyAfterDelay,
   withTimeout,
 } from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
+import { setBedtimeMode } from "@shepherdjerred/homelab/ha/src/climate-modes.ts";
 
 export function goodNight({ hass, logger, context }: TServiceParams) {
   const bedroomScene = hass.refBy.id("scene.bedroom_dimmed");
   const bedroomMediaPlayer = hass.refBy.id("media_player.bedroom");
   const bedroomLight = hass.refBy.id("light.bedroom");
-  const bedroomHeater = hass.refBy.id("climate.bedroom_thermostat");
-  // TODO: Re-enable when living room thermostat is back online
-  // const livingRoomClimate = hass.refBy.id("climate.living_room");
 
   hass.socket.onEvent({
     context,
@@ -44,45 +41,28 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
               return;
             }
 
-            await hass.call.notify.notify({
-              title: "Good Night",
-              message: "Good Night! Sleep well.",
-            });
+            await withTimeout(
+              hass.call.notify.notify({
+                title: "Good Night",
+                message: "Good Night! Sleep well.",
+              }),
+              { amount: 30, unit: "s" },
+              "notify.notify good_night",
+            );
 
             // Set climate to bedtime mode - comfortable for falling asleep
             logger.debug("Setting climate to bedtime mode");
-            await hass.call.climate.set_temperature({
-              entity_id: bedroomHeater.entity_id,
-              hvac_mode: "heat",
-              temperature: 22,
-            });
-
-            verifyAfterDelay({
-              entityId: bedroomHeater.entity_id,
-              workflowName: "climate_good_night",
-              getActualState: () =>
-                String(bedroomHeater.attributes.temperature),
-              check: (actual) => actual === "22",
-              delay: { amount: 30, unit: "s" },
-              description: "target 22°C",
-              logger,
-              hass,
-            });
-            // TODO: Re-enable when living room thermostat is back online
-            // try {
-            //   await livingRoomClimate.set_temperature({
-            //     hvac_mode: "heat",
-            //     temperature: 22,
-            //   });
-            // } catch {
-            //   logger.debug("Living room climate not available, skipping");
-            // }
+            await setBedtimeMode(hass, logger);
 
             if (bedroomLight.state === "on") {
               logger.debug("Turning on bedroom scene");
-              await hass.call.scene.turn_on({
-                entity_id: bedroomScene.entity_id,
-              });
+              await withTimeout(
+                hass.call.scene.turn_on({
+                  entity_id: bedroomScene.entity_id,
+                }),
+                { amount: 30, unit: "s" },
+                "scene.turn_on bedroom",
+              );
             }
 
             logger.debug("Unjoining bedroom media player");
@@ -125,9 +105,13 @@ export function goodNight({ hass, logger, context }: TServiceParams) {
                 amount: 5,
                 unit: "s",
               });
-              await hass.call.media_player.volume_up({
-                entity_id: bedroomMediaPlayer.entity_id,
-              });
+              await withTimeout(
+                hass.call.media_player.volume_up({
+                  entity_id: bedroomMediaPlayer.entity_id,
+                }),
+                { amount: 10, unit: "s" },
+                "media_player.volume_up",
+              );
             }
 
             logger.debug("Closing bedroom covers");

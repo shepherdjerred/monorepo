@@ -1,6 +1,6 @@
 # TaskNotes Server
 
-Hono HTTP server (Bun runtime) that reads/writes task markdown files and exposes the TaskNotes API. Designed to run alongside the obsidian-sync-client as a K8s sidecar sharing a vault volume.
+Hono HTTP server (Bun runtime) that reads/writes task markdown files and exposes the TaskNotes API. Designed to run alongside obsidian-headless (official Obsidian CLI) as a K8s sidecar sharing a vault volume.
 
 ## NOT a workspace member
 
@@ -22,8 +22,8 @@ bun run start                        # Run directly
 
 ```
 src/
-  domain/types.ts          # Task, branded types (mirrors mobile app)
-  domain/schemas.ts        # Zod request validation schemas
+  domain/types.ts          # Re-exports from tasknotes-types
+  domain/schemas.ts        # Re-exports from tasknotes-types + server-only schemas
   middleware/auth.ts        # Bearer token auth (skips /api/health)
   middleware/envelope.ts    # Wraps responses in { success, data }
   routes/                  # 23 Hono route handlers
@@ -43,8 +43,8 @@ src/
 All responses use envelope: `{ success: boolean, data: T, error?: string }`
 
 - Task CRUD: `GET/POST/PUT/DELETE /api/tasks[/:id]`
-- Status/Archive: `POST /api/tasks/:id/status`, `/archive`, `/complete-recurring`
-- Query/Stats: `POST /api/tasks/query`, `GET /api/tasks/stats`, `/filters`
+- Status/Archive: `POST /api/tasks/:id/toggle-status`, `/archive`, `/complete-instance`
+- Query/Stats: `POST /api/tasks/query`, `GET /api/stats`, `/filter-options`
 - NLP: `POST /api/nlp/parse`, `/create`
 - Time: `POST /api/time/:id/start`, `/stop`, `GET /api/time/:id`, `/summary`
 - Pomodoro: `POST /api/pomodoro/start`, `/stop`, `/pause`, `GET /api/pomodoro/status`
@@ -60,6 +60,6 @@ All responses use envelope: `{ success: boolean, data: T, error?: string }`
 | `AUTH_TOKEN` | Yes | — | Bearer token for API auth |
 | `PORT` | No | `3000` | Server port |
 
-## Domain Compatibility
+## Shared Types
 
-Types and schemas mirror the mobile app (`packages/tasks-for-obsidian/src/domain/`). Changes to the mobile app's API contract should be reflected here.
+Types and schemas come from `packages/tasknotes-types/` (shared with mobile app). The `details` field (not `description`) holds the task body content. `TaskStats` uses upstream shape: `{ total, completed, active, overdue, archived, withTimeTracking }`.

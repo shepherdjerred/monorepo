@@ -24,7 +24,6 @@ export function createMinecraftShuxinApp(chart: Chart) {
     service: "minecraft-shuxin-bluemap",
     port: 8100,
     hosts: ["minecraft-shuxin-bluemap"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-shuxin-bluemap-cf-tunnel", {

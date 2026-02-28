@@ -2,11 +2,11 @@ agents:
   queue: default
 
 steps:
-  - label: ":dagger: CI"
-    key: ci
-    image: "oven/bun:debian"
-    command: .buildkite/scripts/ci.sh
-    timeout_in_minutes: 60
+  # Build + Test (every push)
+  - label: ":bazel: Build & Test"
+    key: build
+    command: .buildkite/scripts/build-and-test.sh
+    timeout_in_minutes: 30
     retry:
       automatic:
         - exit_status: -1
@@ -22,6 +22,10 @@ steps:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
               - name: container-0
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "8Gi"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
@@ -29,10 +33,10 @@ steps:
                       name: buildkite-argocd-token
                       optional: true
 
+  # Code Review (PRs only)
   - label: ":robot_face: Code Review"
     key: code-review
     if: build.pull_request.id != null
-    image: "oven/bun:debian"
     command: .buildkite/scripts/code-review.sh
     timeout_in_minutes: 30
     soft_fail: true
@@ -49,13 +53,161 @@ steps:
                   - secretRef:
                       name: buildkite-ci-secrets
 
+  # Release gate (main only)
+  - wait: ~
+    if: build.branch == pipeline.default_branch
+
+  - label: ":bookmark: Release"
+    key: release
+    if: build.branch == pipeline.default_branch
+    command: .buildkite/scripts/release.sh
+    timeout_in_minutes: 10
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+
+  - wait: ~
+    if: build.branch == pipeline.default_branch
+
+  # Publish (main only)
+  - label: ":package: Publish"
+    key: publish
+    if: build.branch == pipeline.default_branch
+    depends_on: release
+    command: .buildkite/scripts/publish.sh
+    timeout_in_minutes: 30
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+                  - secretRef:
+                      name: buildkite-argocd-token
+                      optional: true
+
+  # Clauderon binary release (main only, conditional on release-please)
+  - label: ":rust: Clauderon Release"
+    key: clauderon-release
+    if: build.branch == pipeline.default_branch
+    command: .buildkite/scripts/clauderon-release.sh
+    timeout_in_minutes: 30
+    soft_fail: true
+    depends_on: release
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "8Gi"
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+
+  - wait: ~
+    if: build.branch == pipeline.default_branch
+
+  # Deploy static sites (main only)
+  - label: ":ship: Deploy"
+    key: deploy
+    if: build.branch == pipeline.default_branch
+    command: .buildkite/scripts/deploy.sh
+    timeout_in_minutes: 30
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+                  - secretRef:
+                      name: buildkite-argocd-token
+                      optional: true
+
+  # Homelab release (main only) - builds infra images, packages Helm charts,
+  # runs OpenTofu, syncs ArgoCD
+  - label: ":kubernetes: Homelab Release"
+    key: homelab-release
+    if: build.branch == pipeline.default_branch
+    command: .buildkite/scripts/homelab-release.sh
+    timeout_in_minutes: 45
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "8Gi"
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+                  - secretRef:
+                      name: buildkite-argocd-token
+                      optional: true
+
+  - wait: ~
+    if: build.branch == pipeline.default_branch
+
+  # Version commit-back (main only) - after all images are published
+  - label: ":bookmark: Version Commit-Back"
+    key: version-commit-back
+    if: build.branch == pipeline.default_branch
+    command: .buildkite/scripts/version-commit-back.sh
+    timeout_in_minutes: 10
+    soft_fail: true
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: --depth=1
+            fetchFlags: --depth=1
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                envFrom:
+                  - secretRef:
+                      name: buildkite-ci-secrets
+
+  # Update READMEs (main only)
   - wait: ~
     if: build.branch == pipeline.default_branch
 
   - label: ":books: Update READMEs"
     key: update-readmes
     if: build.branch == pipeline.default_branch
-    image: "oven/bun:debian"
     command: .buildkite/scripts/update-readmes.sh
     timeout_in_minutes: 30
     plugins:

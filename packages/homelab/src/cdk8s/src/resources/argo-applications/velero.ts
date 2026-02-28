@@ -6,10 +6,6 @@ import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import {
-  KubeClusterRole,
-  KubeClusterRoleBinding,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
@@ -19,57 +15,6 @@ export function createVeleroApp(chart: Chart) {
         "pod-security.kubernetes.io/enforce": "privileged",
       },
     },
-  });
-
-  // Grant Coder default ServiceAccount access to Velero resources
-  new KubeClusterRole(chart, "velero-coder-access-role", {
-    metadata: {
-      name: "velero-coder-access",
-    },
-    rules: [
-      {
-        apiGroups: ["velero.io"],
-        resources: [
-          "backups",
-          "restores",
-          "schedules",
-          "backupstoragelocations",
-          "volumesnapshotlocations",
-          "downloadrequests",
-          "deletebackuprequests",
-          "podvolumebackups",
-        ],
-        verbs: ["get", "list", "watch", "create", "delete", "patch", "update"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods", "pods/log"],
-        verbs: ["get", "list", "watch"],
-      },
-      {
-        apiGroups: ["apps"],
-        resources: ["deployments"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "velero-coder-access-binding", {
-    metadata: {
-      name: "velero-coder-access-binding",
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "velero-coder-access",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: "default",
-        namespace: "coder",
-      },
-    ],
   });
 
   // 1Password secret for cloud credentials (AWS/GCP/Azure)

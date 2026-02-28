@@ -2,8 +2,8 @@ terraform {
   backend "s3" {
     bucket                      = "homelab-tofu-state"
     key                         = "argocd/terraform.tfstate"
-    # Tailscale funnel instead of Cloudflare tunnel -- CF rewrites Accept-Encoding
-    # headers which breaks SigV4 signatures (hashicorp/terraform#36412)
+    # Tailscale (tailnet-only) instead of Cloudflare tunnel -- CF rewrites
+    # Accept-Encoding headers which breaks SigV4 signatures (hashicorp/terraform#36412)
     endpoints                   = { s3 = "https://seaweedfs-s3.tailnet-1a49.ts.net" }
     region                      = "auto"
     skip_credentials_validation = true

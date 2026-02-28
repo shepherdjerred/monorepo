@@ -49,7 +49,6 @@ export function createMinecraftSjerredApp(chart: Chart) {
     service: "minecraft-sjerred-bluemap",
     port: 8100,
     hosts: ["minecraft-sjerred-bluemap"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-sjerred-bluemap-cf-tunnel", {

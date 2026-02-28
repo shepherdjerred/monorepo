@@ -1,5 +1,0 @@
-node_modules
-sdk
-/**/node_modules/**
-/**/.pnpm-store/**
-/.env

@@ -175,7 +175,7 @@ describe("frontmatterToTask", () => {
     expect(task?.totalTrackedTime).toBe(3600);
     expect(task?.isBlocked).toBe(true);
     expect(task?.isBlocking).toBe(false);
-    expect(task?.description).toBe("Task body");
+    expect(task?.details).toBe("Task body");
     expect(task?.path).toBe("tasks/full.md");
   });
 
@@ -214,9 +214,9 @@ describe("frontmatterToTask", () => {
     expect(task).toBeUndefined();
   });
 
-  test("sets description to undefined for empty body", () => {
+  test("sets details to undefined for empty body", () => {
     const task = frontmatterToTask({ id: "abc", title: "No body" }, "", "test.md");
-    expect(task?.description).toBeUndefined();
+    expect(task?.details).toBeUndefined();
   });
 });
 
@@ -238,7 +238,7 @@ describe("taskToFrontmatter", () => {
       totalTrackedTime: 1800,
       isBlocked: true,
       isBlocking: true,
-      description: "Task body",
+      details: "Task body",
     };
 
     const { data, content } = taskToFrontmatter(task);
@@ -288,7 +288,7 @@ describe("taskToFrontmatter", () => {
     expect(data["isBlocking"]).toBeUndefined();
   });
 
-  test("returns empty string content for task without description", () => {
+  test("returns empty string content for task without details", () => {
     const task: Task = {
       id: "xyz",
       path: "test.md",
@@ -322,7 +322,7 @@ describe("frontmatterToTask -> taskToFrontmatter round-trip", () => {
       tags: ["urgent"],
     };
 
-    const task = frontmatterToTask(originalData, "Some description", "tasks/rt.md");
+    const task = frontmatterToTask(originalData, "Some details", "tasks/rt.md");
     expect(task).toBeDefined();
 
     const { data, content } = taskToFrontmatter(task!);
@@ -337,6 +337,6 @@ describe("frontmatterToTask -> taskToFrontmatter round-trip", () => {
     expect(reconstructed?.contexts).toEqual(task?.contexts);
     expect(reconstructed?.projects).toEqual(task?.projects);
     expect(reconstructed?.tags).toEqual(task?.tags);
-    expect(reconstructed?.description).toBe(task?.description);
+    expect(reconstructed?.details).toBe(task?.details);
   });
 });

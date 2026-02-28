@@ -127,10 +127,14 @@ export function verifyAfterDelay(opts: DscCheck): void {
           Sentry.captureException(error);
         });
 
-        await opts.hass.call.notify.notify({
-          title: "Device Verification Failed",
-          message: error.message,
-        });
+        await withTimeout(
+          opts.hass.call.notify.notify({
+            title: "Device Verification Failed",
+            message: error.message,
+          }),
+          { amount: 30, unit: "s" },
+          "notify.notify dsc_failure",
+        );
         throw error;
       }
     });
@@ -212,7 +216,7 @@ export function shouldStartCleaning(
     .with("docked", () => true)
     .with("charging", () => true)
     .with("paused", () => true)
-    .with("returning", () => true)
+    .with("returning", () => false)
     .with("cleaning", () => false)
     .with("idle", () => true)
     .with("unavailable", () => false)

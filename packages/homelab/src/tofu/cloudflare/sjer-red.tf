@@ -69,14 +69,6 @@ resource "cloudflare_record" "sjer_red_cname_clauderon_com" {
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_coder" {
-  zone_id = cloudflare_zone.sjer_red.id
-  name    = "coder"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_record" "sjer_red_cname_discord_plays_pokemon_com" {
   zone_id = cloudflare_zone.sjer_red.id
   name    = "discord-plays-pokemon.com"
@@ -186,6 +178,22 @@ resource "cloudflare_record" "sjer_red_cname_sjerred_bluemap" {
 resource "cloudflare_record" "sjer_red_cname_ts_mc_net" {
   zone_id = cloudflare_zone.sjer_red.id
   name    = "ts-mc.net"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_record" "sjer_red_cname_sentinel_webhooks" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "sentinel-webhooks"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_record" "sjer_red_cname_birmel_oauth" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "birmel-oauth"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

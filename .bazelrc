@@ -1,0 +1,44 @@
+# Bazel configuration for monorepo
+
+# Use bzlmod for dependency management
+build --enable_bzlmod
+
+# Hermetic builds
+build --incompatible_strict_action_env
+
+# Workspace status for build stamping
+build --workspace_status_command=tools/bazel/workspace_status.sh
+
+# Allow empty globs (many packages may or may not have .tsx, .astro, etc.)
+build --noincompatible_disallow_empty_glob
+
+# Test output
+test --test_output=errors
+
+# Performance
+build --jobs=auto
+build --experimental_remote_merkle_tree_cache
+
+# Convenience
+build --color=yes
+test --color=yes
+
+# Remote cache (SeaweedFS S3)
+# Uncomment when remote cache is configured:
+# build --remote_cache=https://seaweedfs.sjer.red/bazel-cache
+# build --remote_upload_local_results=true
+
+# TypeScript
+build --@aspect_rules_ts//ts:skipLibCheck=always
+# Use tsc as the default transpiler for ts_project rules
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# CI-specific settings
+# TODO: Set up bazel-remote or similar HTTP cache proxy in front of SeaweedFS.
+# For now, use disk cache within the CI pod for intra-build caching.
+build:ci --disk_cache=/tmp/bazel-disk-cache
+build:ci --color=yes
+test:ci --test_output=all
+
+# Local development
+build:local --disk_cache=~/.cache/bazel-disk

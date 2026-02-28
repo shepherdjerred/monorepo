@@ -1,0 +1,17 @@
+packages:
+  - "packages/*"
+  - "packages/better-skill-capped/*"
+  - "packages/clauderon/web/*"
+  - "packages/clauderon/docs"
+  - "packages/discord-plays-pokemon/packages/*"
+  - "packages/homelab/src/*"
+  - "packages/scout-for-lol/packages/*"
+  - "packages/sentinel/web"
+
+onlyBuiltDependencies:
+  - "@resvg/resvg-js"
+  - esbuild
+  - lefthook
+  - playwright
+  - prisma
+  - sharp

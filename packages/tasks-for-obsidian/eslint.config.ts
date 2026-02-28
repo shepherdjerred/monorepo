@@ -39,4 +39,15 @@ export default [
       "react-native/no-inline-styles": "off",
     },
   },
+  {
+    files: [
+      "src/domain/types.ts",
+      "src/domain/schemas.ts",
+      "src/domain/priority.ts",
+      "src/domain/status.ts",
+    ],
+    rules: {
+      "custom-rules/no-re-exports": "off",
+    },
+  },
 ];
