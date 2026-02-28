@@ -11,9 +11,14 @@ import {
   StyleSheet,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { z } from "zod";
 import type { RootStackParamList } from "../navigation/types";
 import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
+
+const HealthCheckSchema = z.object({
+  authenticated: z.boolean().optional(),
+});
 
 type Props = NativeStackScreenProps<RootStackParamList, "Settings">;
 
@@ -25,17 +30,27 @@ export function SettingsScreen(_props: Props) {
     void (async () => {
       setTestStatus("Testing...");
       try {
-        const response = await fetch(`${apiUrl}/api/health`);
-        if (response.ok) {
-          setTestStatus("Connected");
-        } else {
+        const headers: Record<string, string> = {};
+        if (authToken) {
+          headers["Authorization"] = `Bearer ${authToken}`;
+        }
+        const response = await fetch(`${apiUrl}/api/health`, { headers });
+        if (!response.ok) {
           setTestStatus(`Error: ${response.status}`);
+          return;
+        }
+        const json: unknown = await response.json();
+        const body = HealthCheckSchema.parse(json);
+        if (body.authenticated === false) {
+          setTestStatus("Connected, but token is invalid");
+        } else {
+          setTestStatus("Connected");
         }
       } catch {
         setTestStatus("Failed to connect");
       }
     })();
-  }, [apiUrl]);
+  }, [apiUrl, authToken]);
 
   return (
     <KeyboardAvoidingView

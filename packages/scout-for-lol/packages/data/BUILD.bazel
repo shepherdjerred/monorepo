@@ -1,0 +1,32 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/date-fns",
+        ":node_modules/remeda",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+    ],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [":pkg"],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [":pkg"],
+)

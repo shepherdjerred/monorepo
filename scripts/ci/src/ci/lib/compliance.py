@@ -1,0 +1,50 @@
+"""Compliance check - verifies each package has required scripts and config."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+REQUIRED_SCRIPTS = ["lint", "typecheck"]
+REQUIRED_FILES = ["eslint.config.ts"]
+PACKAGES_DIR = Path("packages")
+
+# Packages to skip (not regular TS packages)
+SKIP_PACKAGES = {
+    "fonts", "dotfiles", "anki", "macos-cross-compiler",
+    "castle-casters",  # Java project
+}
+
+
+def check() -> tuple[bool, str]:
+    """Run compliance check. Returns (passed, message)."""
+    violations = []
+    checked = 0
+
+    for pkg_dir in sorted(PACKAGES_DIR.iterdir()):
+        if not pkg_dir.is_dir():
+            continue
+        name = pkg_dir.name
+        if name in SKIP_PACKAGES or name.startswith("."):
+            continue
+
+        pkg_json = pkg_dir / "package.json"
+        if not pkg_json.exists():
+            continue
+
+        checked += 1
+        with open(pkg_json) as f:
+            pkg = json.load(f)
+
+        scripts = pkg.get("scripts", {})
+        for script_name in REQUIRED_SCRIPTS:
+            if script_name not in scripts:
+                violations.append(f"{name}: missing '{script_name}' script")
+
+        for filename in REQUIRED_FILES:
+            if not (pkg_dir / filename).exists():
+                violations.append(f"{name}: missing {filename}")
+
+    summary = f"Compliance check: {checked} packages checked"
+    if violations:
+        return False, f"{summary}\n\nViolations:\n" + "\n".join(violations)
+    return True, f"{summary}, all passed"

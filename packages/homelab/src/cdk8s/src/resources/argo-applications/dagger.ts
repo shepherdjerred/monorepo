@@ -3,10 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
-import {
-  KubeRole,
-  KubeRoleBinding,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { KubeRole } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 
 export function createDaggerApp(chart: Chart) {
@@ -27,26 +24,6 @@ export function createDaggerApp(chart: Chart) {
         apiGroups: [""],
         resources: ["pods", "pods/exec", "pods/log"],
         verbs: ["get", "list", "watch", "create", "delete", "patch"],
-      },
-    ],
-  });
-
-  // Grant Coder default ServiceAccount access to pods in dagger namespace
-  new KubeRoleBinding(chart, "dagger-coder-access-binding", {
-    metadata: {
-      name: "dagger-coder-access-binding",
-      namespace: "dagger",
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "dagger-access",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: "default",
-        namespace: "coder",
       },
     ],
   });

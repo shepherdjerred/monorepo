@@ -25,11 +25,11 @@ export function taskRoutes(store: TaskStore): Hono {
     });
   });
 
-  app.get("/api/tasks/filters", (c) => {
+  app.get("/api/filter-options", (c) => {
     return c.json(store.getFilterOptions());
   });
 
-  app.get("/api/tasks/stats", (c) => {
+  app.get("/api/stats", (c) => {
     return c.json(store.getStats());
   });
 
@@ -85,7 +85,7 @@ export function taskRoutes(store: TaskStore): Hono {
     return c.json({ success: true });
   });
 
-  app.post("/api/tasks/:id/status", async (c) => {
+  app.post("/api/tasks/:id/toggle-status", async (c) => {
     const id = c.req.param("id");
     const body: unknown = await c.req.json();
     const parsed = UpdateTaskRequestSchema.safeParse(body);
@@ -108,7 +108,7 @@ export function taskRoutes(store: TaskStore): Hono {
     return c.json({ success: true });
   });
 
-  app.post("/api/tasks/:id/complete-recurring", async (c) => {
+  app.post("/api/tasks/:id/complete-instance", async (c) => {
     const id = c.req.param("id");
     const task = await store.completeRecurring(id);
     if (task === undefined) {

@@ -26,7 +26,7 @@ describe("frontmatterToTask", () => {
     expect(task!.contexts).toEqual(["home"]);
     expect(task!.projects).toEqual(["MyProject"]);
     expect(task!.tags).toEqual(["urgent"]);
-    expect(task!.description).toBe("Description here");
+    expect(task!.details).toBe("Description here");
     expect(task!.path).toBe("tasks/test.md");
   });
 
@@ -41,7 +41,7 @@ describe("frontmatterToTask", () => {
     expect(task!.tags).toEqual([]);
     expect(task!.archived).toBe(false);
     expect(task!.totalTrackedTime).toBe(0);
-    expect(task!.description).toBeUndefined();
+    expect(task!.details).toBeUndefined();
   });
 
   test("returns undefined for missing id", () => {
@@ -75,7 +75,7 @@ describe("taskToFrontmatter", () => {
       totalTrackedTime: 0,
       isBlocked: false,
       isBlocking: false,
-      description: "Task body",
+      details: "Task body",
     };
 
     const { data, content } = taskToFrontmatter(task);

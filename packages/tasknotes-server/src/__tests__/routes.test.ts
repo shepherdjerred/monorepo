@@ -124,12 +124,12 @@ describe("tasks CRUD", () => {
     expect(list.tasks.length).toBe(0);
   });
 
-  test("POST /api/tasks/:id/complete-recurring completes task", async () => {
+  test("POST /api/tasks/:id/complete-instance completes task", async () => {
     const created = await createTask({
       title: "Recurring",
       recurrence: "every week",
     });
-    const res = await makeRequest("POST", `/api/tasks/${created.id}/complete-recurring`);
+    const res = await makeRequest("POST", `/api/tasks/${created.id}/complete-instance`);
     expect(res.status).toBe(200);
     const task = await res.json();
     expect(task.status).toBe("done");
@@ -150,19 +150,19 @@ describe("tasks query", () => {
     expect(data.tasks[0].title).toBe("Open task");
   });
 
-  test("GET /api/tasks/stats returns stats", async () => {
+  test("GET /api/stats returns stats", async () => {
     await createTask({ title: "Task 1" });
     await createTask({ title: "Task 2", status: "done" });
 
-    const res = await makeRequest("GET", "/api/tasks/stats");
+    const res = await makeRequest("GET", "/api/stats");
     expect(res.status).toBe(200);
     const stats = await res.json();
     expect(stats.total).toBe(2);
-    expect(stats.byStatus.open).toBe(1);
-    expect(stats.byStatus.done).toBe(1);
+    expect(stats.active).toBe(1);
+    expect(stats.completed).toBe(1);
   });
 
-  test("GET /api/tasks/filters returns filter options", async () => {
+  test("GET /api/filter-options returns filter options", async () => {
     await createTask({
       title: "Task",
       contexts: ["home"],
@@ -170,7 +170,7 @@ describe("tasks query", () => {
       tags: ["urgent"],
     });
 
-    const res = await makeRequest("GET", "/api/tasks/filters");
+    const res = await makeRequest("GET", "/api/filter-options");
     expect(res.status).toBe(200);
     const filters = await res.json();
     expect(filters.contexts).toContain("home");

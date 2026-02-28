@@ -1,0 +1,58 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@sentry/bun",
+        ":node_modules/discord.js",
+        ":node_modules/dotenv",
+        ":node_modules/env-var",
+        ":node_modules/lodash",
+        ":node_modules/reflect-metadata",
+        ":node_modules/sqlite3",
+        ":node_modules/typeorm",
+    ],
+)
+
+js_binary(
+    name = "starlight_karma_bot",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+# Container image for K8s deployment
+bun_service_image(
+    name = "image",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    entry_point = "src/index.ts",
+    env = {"NODE_ENV": "production"},
+    exposed_ports = ["8000"],
+    labels = {
+        "org.opencontainers.image.title": "starlight-karma-bot",
+        "org.opencontainers.image.description": "Discord karma tracking bot",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    repository = "ghcr.io/shepherdjerred/starlight-karma-bot",
+    visibility = ["//visibility:public"],
+)

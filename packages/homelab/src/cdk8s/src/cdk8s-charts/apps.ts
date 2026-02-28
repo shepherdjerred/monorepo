@@ -27,7 +27,6 @@ import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
 import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/velero.ts";
 import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/postgres-operator.ts";
-import { createCoderApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/coder.ts";
 import { createSeaweedfsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/seaweedfs.ts";
 import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { createDdnsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ddns.ts";
@@ -78,17 +77,6 @@ export async function createAppsChart(app: App) {
     },
   });
 
-  new Namespace(chart, `devpod-namespace`, {
-    metadata: {
-      name: `devpod`,
-      labels: {
-        "pod-security.kubernetes.io/audit": "privileged",
-        "pod-security.kubernetes.io/enforce": "privileged",
-        "pod-security.kubernetes.io/warn": "privileged",
-      },
-    },
-  });
-
   createAppsApp(chart);
   createOpenEBSApp(chart);
   createOnePasswordApp(chart);
@@ -117,7 +105,6 @@ export async function createAppsChart(app: App) {
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);
   createPostgresOperatorApp(chart);
-  createCoderApp(chart);
   createSeaweedfsApp(chart);
   // Create all Grafana dashboards (gitckup, ha-workflow, scout, smartctl, velero, zfs)
   createAllGrafanaDashboards(chart);

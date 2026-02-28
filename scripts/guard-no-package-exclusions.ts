@@ -16,16 +16,6 @@ const checks: Check[] = [
       "Root workspace contains '!packages/...'. All packages must be integrated.",
   },
   {
-    file: ".dagger/src/index.ts",
-    pattern: /\bEXCLUDED\s*=/,
-    message: "Dagger quality checks contain an EXCLUDED package list.",
-  },
-  {
-    file: ".dagger/src/index.ts",
-    pattern: /Skip exempt packages/,
-    message: "Dagger compliance logic still mentions exempt packages.",
-  },
-  {
     file: "scripts/compliance-check.sh",
     pattern: /\bcase\s+"\$PKG"\s+in|continue\s*;;/,
     message: "Compliance check contains package exemption branching.",

@@ -7,14 +7,14 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
 - **Infrastructure**: CDK8s for Kubernetes manifests
-- **CI/CD**: Dagger (TypeScript SDK) + GitHub Actions
+- **CI/CD**: Bazel + Buildkite + Python CI scripts
 
 ## Workspaces
 
 - `src/cdk8s` - Kubernetes infrastructure as code
 - `src/ha` - Home Assistant automations
 - `src/helm-types` - Type-safe Helm chart parameter generator
-- `../../.dagger/src/homelab` - CI/CD pipeline module implementation
+- `../../scripts/ci/src/ci/homelab_release.py` - CI/CD release scripts
 
 ## Commands
 
@@ -124,8 +124,8 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
    appVersion: "$appVersion"
    ```
 
-3. **Dagger Helm Registry** - `../../.dagger/src/homelab/helm.ts`
-   - Add `"{name}"` to the `HELM_CHARTS` array
+3. **Helm Charts List** - `../../scripts/ci/src/ci/homelab_release.py`
+   - Add `"{name}"` to the `HELM_CHARTS` list
 
 4. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
    - Export a `create{Name}App(chart: Chart)` function

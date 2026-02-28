@@ -1,0 +1,74 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/gray-matter",
+        ":node_modules/hono",
+        ":node_modules/prom-client",
+        ":node_modules/yaml",
+        ":node_modules/zod",
+        "//packages/tasknotes-types:pkg",
+    ],
+)
+
+js_binary(
+    name = "tasknotes_server",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        "//packages/tasknotes-types:pkg",
+    ],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        "//packages/tasknotes-types:pkg",
+    ],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        "//packages/tasknotes-types:pkg",
+    ],
+)
+
+# Container image for K8s deployment
+bun_service_image(
+    name = "image",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    entry_point = "src/index.ts",
+    env = {"NODE_ENV": "production"},
+    exposed_ports = ["3000"],
+    labels = {
+        "org.opencontainers.image.title": "tasknotes-server",
+        "org.opencontainers.image.description": "TaskNotes API server for the Tasks for Obsidian mobile app",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    repository = "ghcr.io/shepherdjerred/tasknotes-server",
+    visibility = ["//visibility:public"],
+    workspace_packages = {
+        "packages/tasknotes-types": "//packages/tasknotes-types:pkg",
+    },
+)

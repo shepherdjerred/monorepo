@@ -1,0 +1,43 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@anthropic-ai/sdk",
+        ":node_modules/monarch-money-api",
+        ":node_modules/pdfjs-dist",
+        ":node_modules/playwright",
+        ":node_modules/zod",
+    ],
+)
+
+js_binary(
+    name = "monarch",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+)

@@ -21,7 +21,7 @@ export function createSentinelChart(app: App) {
 
   createSentinelDeployment(chart);
 
-  // NetworkPolicy: Allow ingress from Tailscale (webhook server via funnel)
+  // NetworkPolicy: Allow ingress from Tailscale and Cloudflare Tunnel
   new KubeNetworkPolicy(chart, "sentinel-ingress-netpol", {
     metadata: { name: "sentinel-ingress-netpol" },
     spec: {
@@ -33,6 +33,11 @@ export function createSentinelChart(app: App) {
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" },
               },
             },
           ],

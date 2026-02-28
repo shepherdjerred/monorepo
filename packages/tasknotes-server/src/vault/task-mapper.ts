@@ -47,7 +47,7 @@ export function frontmatterToTask(
     totalTrackedTime: fm.totalTrackedTime,
     isBlocked: fm.isBlocked,
     isBlocking: fm.isBlocking,
-    description: body || undefined,
+    details: body || undefined,
   };
 }
 
@@ -73,5 +73,5 @@ export function taskToFrontmatter(task: Task): {
   if (task.isBlocked) data["isBlocked"] = true;
   if (task.isBlocking) data["isBlocking"] = true;
 
-  return { data, content: task.description ?? "" };
+  return { data, content: task.details ?? "" };
 }

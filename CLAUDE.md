@@ -26,7 +26,7 @@ packages/
 ├── starlight-karma-bot/     # Discord karma bot
 ├── tools/                   # CLI developer tools
 ├── webring/                 # Webring component
-.dagger/                     # CI/CD pipeline
+scripts/ci/                  # Python CI scripts (uv + Python)
 archive/                     # Legacy projects (do not modify)
 ```
 
@@ -42,15 +42,21 @@ bun run --filter='./packages/<name>' <script>
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
 
+# Bazel build & test
+bazel build //...
+bazel test //...
+
 # CI runs on Buildkite (NOT GitHub Actions)
 # Check CI status via Buildkite CLI or web UI, never `gh run`
-dagger call ci
+
+# Python CI scripts (release, deploy, etc.)
+cd scripts/ci && uv run python -m ci.<module>
 ```
 
 ## Development Setup
 
 ```bash
-mise trust && mise dev   # Installs bun + dagger
+mise trust && mise dev   # Installs bun + bazel
 ```
 
 ## Verification

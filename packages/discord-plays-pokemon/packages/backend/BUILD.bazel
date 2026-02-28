@@ -1,0 +1,63 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# Bun-native: TypeScript executed directly by Bun after tsc build.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@d6v/zconf",
+        ":node_modules/@sentry/node",
+        ":node_modules/cors",
+        ":node_modules/discord.js",
+        ":node_modules/express",
+        ":node_modules/lodash",
+        ":node_modules/rxjs",
+        ":node_modules/selenium-webdriver",
+        ":node_modules/socket.io",
+        ":node_modules/ts-pattern",
+        ":node_modules/winston",
+        ":node_modules/zod",
+        "//packages/discord-plays-pokemon/packages/common:pkg",
+    ],
+)
+
+js_binary(
+    name = "backend",
+    data = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+    deps = ["//packages/discord-plays-pokemon/packages/common:pkg"],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/discord-plays-pokemon/packages/common:pkg",
+    ],
+)
+
+bun_test(
+    name = "test",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":pkg",
+        "//packages/discord-plays-pokemon/packages/common:pkg",
+    ],
+)

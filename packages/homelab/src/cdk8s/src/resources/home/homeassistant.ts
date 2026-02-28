@@ -122,7 +122,6 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   new TailscaleIngress(chart, "homeassistant-tailscale-ingress", {
     service,
     host: "homeassistant",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "homeassistant-cf-tunnel", {

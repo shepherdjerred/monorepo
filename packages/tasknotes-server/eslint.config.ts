@@ -25,6 +25,12 @@ export default [
     },
   },
   {
+    files: ["src/domain/types.ts", "src/domain/schemas.ts"],
+    rules: {
+      "custom-rules/no-re-exports": "off",
+    },
+  },
+  {
     files: ["src/vault/watcher.ts"],
     rules: {
       "no-restricted-imports": "off",

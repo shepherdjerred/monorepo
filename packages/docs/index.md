@@ -5,10 +5,10 @@ AI-maintained knowledge base for the monorepo.
 ## Architecture
 
 - [Monorepo Structure](architecture/monorepo-structure.md) - Package layout, workspaces, and conventions
-- [CI Pipeline](architecture/ci-pipeline.md) - Dagger-based CI/CD overview
+- [CI Pipeline](architecture/ci-pipeline.md) - Bazel-based CI/CD overview
 - [Sentinel](architecture/sentinel.md) - Autonomous agent system architecture
 - [Monarch](architecture/monarch.md) - Transaction categorization pipeline with tiered classification
-- [Package Integration Audit](architecture/package-integration-audit.md) - Integration status of new packages (sentinel, tasks-for-obsidian, obsidian-sync-client, tasknotes-server)
+- [Package Integration Audit](architecture/package-integration-audit.md) - Integration status of new packages (sentinel, tasks-for-obsidian, tasknotes-server)
 
 ## Patterns
 
@@ -20,7 +20,7 @@ _No decision records yet._
 
 ## Plans
 
-- [Buildkite Dynamic Pipeline](plans/buildkite.md) - Split Dagger CI into granular Buildkite steps
+- [Buildkite Dynamic Pipeline](plans/buildkite.md) - Bazel + Buildkite CI pipeline design
 - [ArgoCD Token Management](plans/argocd-token-management.md) - Automate ArgoCD token via OpenTofu + 1Password
 - [Sentinel Implementation](plans/sentinel-implementation.md) - Autonomous agent system build plan with phased rollout
 - [Autonomous Agent System Research](plans/autonomous-agent-system.md) - Architecture research: memory, permissions, queue design

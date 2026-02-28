@@ -1,0 +1,43 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# TypeScript library built with tsc.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@sentry/node",
+        ":node_modules/@types/bun",
+        ":node_modules/firebase",
+    ],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+# Container image for scheduled fetcher job
+bun_service_image(
+    name = "image",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    entry_point = "src/index.ts",
+    env = {"NODE_ENV": "production"},
+    labels = {
+        "org.opencontainers.image.title": "better-skill-capped-fetcher",
+        "org.opencontainers.image.description": "Fetcher for Better Skill Capped browser extension",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    repository = "ghcr.io/shepherdjerred/better-skill-capped-fetcher",
+    visibility = ["//visibility:public"],
+)

@@ -1,4 +1,8 @@
-export type Priority = "highest" | "high" | "medium" | "normal" | "low" | "none";
+import { ALL_PRIORITIES as _ALL_PRIORITIES } from "tasknotes-types";
+import type { Priority as _Priority } from "tasknotes-types";
+
+export type Priority = _Priority;
+export const ALL_PRIORITIES: readonly Priority[] = [..._ALL_PRIORITIES];
 
 export const PRIORITY_ORDER: Record<Priority, number> = {
   highest: 0,
@@ -26,8 +30,6 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   low: "P4",
   none: "None",
 };
-
-export const ALL_PRIORITIES: readonly Priority[] = ["highest", "high", "medium", "normal", "low", "none"] as const;
 
 export function comparePriority(a: Priority, b: Priority): number {
   return PRIORITY_ORDER[a] - PRIORITY_ORDER[b];

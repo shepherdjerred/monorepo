@@ -1,0 +1,49 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# Vite-based React SPA — stub js_library for dependency tracking.
+# Full Vite build integration is not yet implemented.
+js_library(
+    name = "pkg",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.css",
+    ]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@tanstack/react-query",
+        ":node_modules/@trpc/client",
+        ":node_modules/@trpc/react-query",
+        ":node_modules/clsx",
+        ":node_modules/lucide-react",
+        ":node_modules/react",
+        ":node_modules/react-dom",
+        ":node_modules/tailwind-merge",
+        ":node_modules/zod",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+)

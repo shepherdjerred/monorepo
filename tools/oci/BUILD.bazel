@@ -1,0 +1,10 @@
+# OCI container image helpers for Bun services.
+# See bun_service_image.bzl for the reusable macro.
+
+load(":obsidian_headless.bzl", "obsidian_headless_image")
+
+# Obsidian Headless: standalone image (no monorepo source, just npm install)
+obsidian_headless_image(
+    name = "obsidian_headless",
+    visibility = ["//visibility:public"],
+)

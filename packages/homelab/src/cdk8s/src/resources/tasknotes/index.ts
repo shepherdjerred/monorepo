@@ -107,11 +107,15 @@ export function createTasknotesDeployment(chart: Chart) {
     }),
   );
 
-  // Container 2: Obsidian Sync Client (long-lived sidecar)
+  // Container 2: Obsidian Headless Sync (official CLI)
   deployment.addContainer(
     withCommonProps({
-      name: "obsidian-sync-client",
-      image: `ghcr.io/shepherdjerred/obsidian-sync-client:${versions["shepherdjerred/obsidian-sync-client"]}`,
+      name: "obsidian-headless",
+      image: `ghcr.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && ob sync --continuous --path /vault',
+      ],
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
@@ -128,8 +132,7 @@ export function createTasknotesDeployment(chart: Chart) {
       },
       volumeMounts: [sharedVaultMount],
       envVariables: {
-        VAULT_PATH: EnvValue.fromValue("/vault"),
-        OBSIDIAN_TOKEN: EnvValue.fromSecretValue({
+        OBSIDIAN_AUTH_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "tasknotes-obsidian-token-secret",
@@ -177,7 +180,7 @@ export function createTasknotesDeployment(chart: Chart) {
     matchLabels: { app: "tasknotes" },
   });
 
-  // TailscaleIngress (no funnel — only accessible via Tailscale)
+  // TailscaleIngress (only accessible via Tailscale)
   new TailscaleIngress(chart, "tasknotes-ingress", {
     service: apiService,
     host: "tasknotes",

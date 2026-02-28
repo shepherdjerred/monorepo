@@ -1,0 +1,26 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files([
+    "tsconfig.base.json",
+    "package.json",
+    "bun.lock",
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    ".bazelignore",
+])
+
+copy_to_bin(
+    name = "tsconfig_base",
+    srcs = ["tsconfig.base.json"],
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "tsconfig",
+    srcs = ["tsconfig.base.json"],
+    visibility = ["//visibility:public"],
+)

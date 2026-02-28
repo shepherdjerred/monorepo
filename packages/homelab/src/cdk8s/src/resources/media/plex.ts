@@ -227,7 +227,6 @@ export function createPlexDeployment(
   new TailscaleIngress(chart, "plex-tailscale-ingress", {
     service,
     host: "plex",
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "plex-cf-tunnel", {

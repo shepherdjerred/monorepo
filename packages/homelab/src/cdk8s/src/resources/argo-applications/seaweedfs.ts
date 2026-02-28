@@ -35,13 +35,11 @@ export function createSeaweedfsApp(chart: Chart) {
     },
   });
 
-  // Tailscale ingress with funnel for S3 API (external access)
   createIngress(chart, "seaweedfs-s3-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-s3",
     port: 8333,
     hosts: ["seaweedfs-s3"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "seaweedfs-s3-cf-tunnel", {
@@ -82,7 +80,6 @@ export function createSeaweedfsApp(chart: Chart) {
     service: "seaweedfs-filer-ui",
     port: 8888,
     hosts: ["seaweedfs-filer"],
-    funnel: false,
   });
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {

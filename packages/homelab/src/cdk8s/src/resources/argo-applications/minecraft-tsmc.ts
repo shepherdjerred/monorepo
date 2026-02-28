@@ -49,7 +49,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
     service: "minecraft-tsmc-bluemap",
     port: 8100,
     hosts: ["minecraft-tsmc-bluemap"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {

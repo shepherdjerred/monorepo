@@ -13,6 +13,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createBirmelDeployment(chart: Chart) {
@@ -184,7 +185,7 @@ export function createBirmelDeployment(chart: Chart) {
     ports: [{ port: 4111, name: "studio" }],
   });
 
-  // TailscaleIngress for internal access to Studio (no funnel)
+  // TailscaleIngress for internal access to Studio
   new TailscaleIngress(chart, "birmel-studio-ingress", {
     service: studioService,
     host: "birmel-studio",
@@ -196,10 +197,13 @@ export function createBirmelDeployment(chart: Chart) {
     ports: [{ port: 4112, name: "oauth" }],
   });
 
-  // TailscaleIngress with funnel for OAuth (publicly accessible for GitHub callback)
   new TailscaleIngress(chart, "birmel-oauth-ingress", {
     service: oauthService,
     host: "birmel-oauth",
-    funnel: true,
+  });
+
+  createCloudflareTunnelBinding(chart, "birmel-oauth-cf-tunnel", {
+    serviceName: oauthService.name,
+    subdomain: "birmel-oauth",
   });
 }

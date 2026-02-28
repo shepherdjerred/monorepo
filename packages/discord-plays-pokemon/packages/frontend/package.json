@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@sentry/react": "^10.0.0",
-    "@discord-plays-pokemon/common": "1.0.0",
+    "@discord-plays-pokemon/common": "workspace:*",
     "@tailwindcss/vite": "^4.0.17",
     "@tanstack/react-query": "^5.70.0",
     "keyboardjs": "^2.7.0",

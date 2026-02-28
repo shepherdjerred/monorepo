@@ -1,7 +1,27 @@
 import { z } from "zod";
 
-import type { Priority } from "./priority";
-import type { TaskStatus } from "./status";
+import type {
+  Task as BaseTask,
+  CreateTaskRequest as BaseCreateTaskRequest,
+  UpdateTaskRequest as BaseUpdateTaskRequest,
+  TaskQueryFilter as _TaskQueryFilter,
+  FilterOptions as _FilterOptions,
+  NlpParseResult as _NlpParseResult,
+  TimeSummary as _TimeSummary,
+  PomodoroStatus as _PomodoroStatus,
+  CalendarEvent as _CalendarEvent,
+  HealthStatus as _HealthStatus,
+  TaskStats as _TaskStats,
+} from "tasknotes-types";
+
+export type TaskQueryFilter = _TaskQueryFilter;
+export type FilterOptions = _FilterOptions;
+export type NlpParseResult = _NlpParseResult;
+export type TimeSummary = _TimeSummary;
+export type PomodoroStatus = _PomodoroStatus;
+export type CalendarEvent = _CalendarEvent;
+export type HealthStatus = _HealthStatus;
+export type TaskStats = _TaskStats;
 
 export const TaskIdSchema = z.string().brand("TaskId");
 export const ProjectNameSchema = z.string().brand("ProjectName");
@@ -29,122 +49,22 @@ export function tagName(name: string): TagName {
   return TagNameSchema.parse(name);
 }
 
-export type Task = {
+export type Task = Omit<BaseTask, "id" | "contexts" | "projects" | "tags"> & {
   readonly id: TaskId;
-  readonly path: string;
-  readonly title: string;
-  readonly status: TaskStatus;
-  readonly priority: Priority;
-  readonly due?: string | undefined;
-  readonly scheduled?: string | undefined;
   readonly contexts: readonly ContextName[];
   readonly projects: readonly ProjectName[];
   readonly tags: readonly TagName[];
-  readonly recurrence?: string | undefined;
-  readonly archived: boolean;
-  readonly totalTrackedTime: number;
-  readonly isBlocked: boolean;
-  readonly isBlocking: boolean;
 };
 
-export type CreateTaskRequest = {
-  readonly title: string;
-  readonly description?: string | undefined;
-  readonly status?: TaskStatus | undefined;
-  readonly priority?: Priority | undefined;
-  readonly due?: string | undefined;
-  readonly scheduled?: string | undefined;
-  readonly contexts?: readonly string[] | undefined;
-  readonly projects?: readonly string[] | undefined;
-  readonly tags?: readonly string[] | undefined;
-  readonly recurrence?: string | undefined;
-  readonly timeEstimate?: number | undefined;
-};
+export type CreateTaskRequest = BaseCreateTaskRequest;
 
-export type UpdateTaskRequest = {
-  readonly title?: string | undefined;
-  readonly description?: string | undefined;
-  readonly status?: TaskStatus | undefined;
-  readonly priority?: Priority | undefined;
-  readonly due?: string | null | undefined;
-  readonly scheduled?: string | null | undefined;
-  readonly contexts?: readonly string[] | undefined;
-  readonly projects?: readonly string[] | undefined;
-  readonly tags?: readonly string[] | undefined;
-  readonly recurrence?: string | null | undefined;
-  readonly timeEstimate?: number | null | undefined;
-};
-
-export type TaskQueryFilter = {
-  readonly status?: readonly TaskStatus[] | undefined;
-  readonly priority?: readonly Priority[] | undefined;
-  readonly projects?: readonly string[] | undefined;
-  readonly contexts?: readonly string[] | undefined;
-  readonly tags?: readonly string[] | undefined;
-  readonly dueBefore?: string | undefined;
-  readonly dueAfter?: string | undefined;
-  readonly hasNoDueDate?: boolean | undefined;
-  readonly hasNoProject?: boolean | undefined;
-  readonly search?: string | undefined;
-};
-
-export type TaskStats = {
-  readonly total: number;
-  readonly byStatus: Record<TaskStatus, number>;
-  readonly byPriority: Record<Priority, number>;
-  readonly overdue: number;
-  readonly dueToday: number;
-  readonly upcoming: number;
-};
-
-export type FilterOptions = {
-  readonly projects: readonly string[];
-  readonly contexts: readonly string[];
-  readonly tags: readonly string[];
-  readonly statuses: readonly TaskStatus[];
-  readonly priorities: readonly Priority[];
-};
-
-export type NlpParseResult = {
-  readonly title: string;
-  readonly due?: string | undefined;
-  readonly priority?: Priority | undefined;
-  readonly projects?: readonly string[] | undefined;
-  readonly contexts?: readonly string[] | undefined;
-  readonly tags?: readonly string[] | undefined;
-  readonly recurrence?: string | undefined;
-};
+export type UpdateTaskRequest = BaseUpdateTaskRequest;
 
 export type TimeEntry = {
   readonly taskId: TaskId;
   readonly startTime: string;
   readonly endTime?: string | undefined;
   readonly duration?: number | undefined;
-};
-
-export type TimeSummary = {
-  readonly totalTime: number;
-  readonly entries: readonly TimeEntry[];
-};
-
-export type PomodoroStatus = {
-  readonly active: boolean;
-  readonly taskId?: TaskId | undefined;
-  readonly timeRemaining?: number | undefined;
-  readonly type?: "work" | "break" | undefined;
-};
-
-export type CalendarEvent = {
-  readonly id: string;
-  readonly title: string;
-  readonly date: string;
-  readonly taskId?: TaskId | undefined;
-};
-
-export type HealthStatus = {
-  readonly status: "ok" | "error";
-  readonly version?: string | undefined;
-  readonly uptime?: number | undefined;
 };
 
 export type ApiResponse<T> = {

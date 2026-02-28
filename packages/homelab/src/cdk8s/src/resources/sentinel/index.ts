@@ -17,6 +17,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createSentinelDeployment(chart: Chart) {
@@ -247,10 +248,13 @@ export function createSentinelDeployment(chart: Chart) {
     ports: [{ port: 3000, name: "webhooks" }],
   });
 
-  // TailscaleIngress with funnel for webhooks (publicly accessible for GitHub/PagerDuty)
   new TailscaleIngress(chart, "sentinel-webhook-ingress", {
     service: webhookService,
     host: "sentinel-webhooks",
-    funnel: true,
+  });
+
+  createCloudflareTunnelBinding(chart, "sentinel-webhook-cf-tunnel", {
+    serviceName: webhookService.name,
+    subdomain: "sentinel-webhooks",
   });
 }

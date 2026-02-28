@@ -1,0 +1,43 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# Home Assistant automations — runs directly with Bun.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@digital-alchemy/automation",
+        ":node_modules/@digital-alchemy/core",
+        ":node_modules/@digital-alchemy/hass",
+        ":node_modules/@digital-alchemy/synapse",
+        ":node_modules/@digital-alchemy/type-writer",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@total-typescript/ts-reset",
+        ":node_modules/openai",
+        ":node_modules/prom-client",
+        ":node_modules/remeda",
+        ":node_modules/simple-git",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    deps = [":pkg"],
+)

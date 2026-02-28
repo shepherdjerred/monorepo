@@ -157,17 +157,19 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: eslint-dagger
-                  root: ".dagger/"
-                  glob: ".dagger/**/*.ts"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
                 # --- cargo fmt ---
                 - name: cargo-fmt
                   root: "packages/clauderon/"
                   glob: "packages/clauderon/**/*.rs"
                   run: cargo fmt
+
+                # --- buildifier ---
+                - name: buildifier
+                  glob: "**/{BUILD.bazel,*.bzl,MODULE.bazel,REPO.bazel}"
+                  exclude:
+                    - "node_modules/**"
+                    - "**/node_modules/**"
+                  run: buildifier --lint=warn {staged_files}
 
                 # --- shellcheck ---
                 - name: shellcheck

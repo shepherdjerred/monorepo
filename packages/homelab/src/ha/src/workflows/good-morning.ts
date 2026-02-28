@@ -13,6 +13,7 @@ import {
   withTimeout,
 } from "@shepherdjerred/homelab/ha/src/util.ts";
 import { instrumentWorkflow } from "@shepherdjerred/homelab/ha/src/metrics.ts";
+import { setHomeComfortMode } from "@shepherdjerred/homelab/ha/src/climate-modes.ts";
 
 export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   const bedroomScene = hass.refBy.id("scene.bedroom_dimmed");
@@ -22,9 +23,6 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
     hass.refBy.id("media_player.main_bathroom"),
     hass.refBy.id("media_player.entryway"),
   ];
-  const bedroomHeater = hass.refBy.id("climate.bedroom_thermostat");
-  // TODO: Re-enable when living room thermostat is back online
-  // const livingRoomClimate = hass.refBy.id("climate.living_room");
   const entrywayLight = hass.refBy.id("switch.entryway_overhead_lights");
   const mainBathroomLight = hass.refBy.id("switch.main_bathroom_lights");
   const personJerred = hass.refBy.id("person.jerred");
@@ -76,11 +74,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
     logger.info("good_morning_early triggered");
     await withTimeout(
       runIf(isAnyoneHomeWithLogging(), () =>
-        hass.call.climate.set_temperature({
-          entity_id: bedroomHeater.entity_id,
-          hvac_mode: "heat",
-          temperature: 22, // pre-wake heating
-        }),
+        setHomeComfortMode(hass, logger),
       ),
       { amount: 2, unit: "m" },
       "good_morning_early workflow",
@@ -91,31 +85,19 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
     logger.info("good_morning_wake_up triggered");
     await withTimeout(
       runParallel([
-        () =>
-          hass.call.climate.set_temperature({
-            entity_id: bedroomHeater.entity_id,
-            hvac_mode: "heat",
-            temperature: 22,
-          }),
-        // TODO: Re-enable when living room thermostat is back online
-        // async () => {
-        //   try {
-        //     await livingRoomClimate.set_temperature({
-        //       hvac_mode: "heat",
-        //       temperature: 24,
-        //     });
-        //   } catch {
-        //     logger.debug("Living room climate not available, skipping");
-        //   }
-        // },
+        () => setHomeComfortMode(hass, logger),
         () =>
           runIf(isAnyoneHomeWithLogging(), () =>
             runParallel([
               () =>
-                hass.call.notify.notify({
-                  title: "Good Morning",
-                  message: "Good Morning! Time to wake up.",
-                }),
+                withTimeout(
+                  hass.call.notify.notify({
+                    title: "Good Morning",
+                    message: "Good Morning! Time to wake up.",
+                  }),
+                  { amount: 30, unit: "s" },
+                  "notify.notify good_morning",
+                ),
               () =>
                 runSequential([
                   // Debug: Log the full state before doing anything
@@ -228,9 +210,13 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                     runSequentialWithDelay(
                       repeat(
                         () =>
-                          hass.call.media_player.volume_up({
-                            entity_id: bedroomMediaPlayer.entity_id,
-                          }),
+                          withTimeout(
+                            hass.call.media_player.volume_up({
+                              entity_id: bedroomMediaPlayer.entity_id,
+                            }),
+                            { amount: 10, unit: "s" },
+                            "media_player.volume_up",
+                          ),
                         initialVolumeSteps,
                       ),
                       {
@@ -240,15 +226,23 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                     ),
                 ]),
               () =>
-                hass.call.scene.turn_on({
-                  entity_id: bedroomScene.entity_id,
-                  transition: 3,
-                }),
+                withTimeout(
+                  hass.call.scene.turn_on({
+                    entity_id: bedroomScene.entity_id,
+                    transition: 3,
+                  }),
+                  { amount: 30, unit: "s" },
+                  "scene.turn_on bedroom_dimmed",
+                ),
               () =>
                 (async () => {
-                  await hass.call.switch.turn_on({
-                    entity_id: mainBathroomLight.entity_id,
-                  });
+                  await withTimeout(
+                    hass.call.switch.turn_on({
+                      entity_id: mainBathroomLight.entity_id,
+                    }),
+                    { amount: 30, unit: "s" },
+                    "switch.turn_on main_bathroom",
+                  );
                   verifyAfterDelay({
                     entityId: mainBathroomLight.entity_id,
                     workflowName: "switch_on",
@@ -280,20 +274,28 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
               ]),
             ),
           () =>
-            hass.call.scene.turn_on({
-              entity_id: bedroomBrightScene.entity_id,
-              transition: 60,
-            }),
+            withTimeout(
+              hass.call.scene.turn_on({
+                entity_id: bedroomBrightScene.entity_id,
+                transition: 60,
+              }),
+              { amount: 30, unit: "s" },
+              "scene.turn_on bedroom_bright",
+            ),
           () =>
             runSequential([
               // Set extra players to start volume
               () =>
                 (async () => {
                   for (const player of extraMediaPlayers) {
-                    await hass.call.media_player.volume_set({
-                      entity_id: player.entity_id,
-                      volume_level: startVolume,
-                    });
+                    await withTimeout(
+                      hass.call.media_player.volume_set({
+                        entity_id: player.entity_id,
+                        volume_level: startVolume,
+                      }),
+                      { amount: 30, unit: "s" },
+                      `media_player.volume_set ${player.entity_id}`,
+                    );
                   }
                 })(),
               // Join all players together
@@ -311,21 +313,29 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
                 runSequentialWithDelay(
                   repeat(async () => {
                     // Increase bedroom player volume
-                    await hass.call.media_player.volume_up({
-                      entity_id: bedroomMediaPlayer.entity_id,
-                    });
+                    await withTimeout(
+                      hass.call.media_player.volume_up({
+                        entity_id: bedroomMediaPlayer.entity_id,
+                      }),
+                      { amount: 10, unit: "s" },
+                      "media_player.volume_up bedroom",
+                    );
                     // Increase extra players volume
                     await Promise.all(
                       extraMediaPlayers.map(async (player) => {
                         logger.debug(
                           `Increasing volume for ${player.entity_id}`,
                         );
-                        await hass.call.media_player.volume_up({
-                          entity_id: player.entity_id,
-                        });
+                        await withTimeout(
+                          hass.call.media_player.volume_up({
+                            entity_id: player.entity_id,
+                          }),
+                          { amount: 10, unit: "s" },
+                          `media_player.volume_up ${player.entity_id}`,
+                        );
                       }),
                     );
-                  }, additionalVolumeSteps), // Only 2 additional steps instead of 5+3
+                  }, additionalVolumeSteps),
                   {
                     amount: 5,
                     unit: "s",
@@ -334,9 +344,13 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
             ]),
           () =>
             (async () => {
-              await hass.call.switch.turn_on({
-                entity_id: entrywayLight.entity_id,
-              });
+              await withTimeout(
+                hass.call.switch.turn_on({
+                  entity_id: entrywayLight.entity_id,
+                }),
+                { amount: 30, unit: "s" },
+                "switch.turn_on entryway",
+              );
               verifyAfterDelay({
                 entityId: entrywayLight.entity_id,
                 workflowName: "switch_on",

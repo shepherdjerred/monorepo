@@ -23,7 +23,7 @@
   "dependencies": {
     "@sentry/node": "^10.0.0",
     "@d6v/zconf": "^0.0.4",
-    "@discord-plays-pokemon/common": "1.0.0",
+    "@discord-plays-pokemon/common": "workspace:*",
     "cors": "^2.8.5",
     "discord.js": "^14.18.0",
     "express": "^5.0.0",

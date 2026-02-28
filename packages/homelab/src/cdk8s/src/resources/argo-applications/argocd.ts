@@ -11,7 +11,6 @@ export function createArgoCdApp(chart: Chart) {
     service: "argocd-server",
     port: 443,
     hosts: ["argocd"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {

@@ -2,7 +2,7 @@
 
 ## Environment Notes
 
-**Dagger/Docker Availability**: Dagger and Docker commands are NOT available when `CLAUDE_CODE_REMOTE=true`. Use `bun run` commands for local development tasks instead.
+**Remote environments**: When `CLAUDE_CODE_REMOTE=true`, use `bun run` commands for local development tasks.
 
 ## Project Structure
 
@@ -27,7 +27,7 @@ packages/
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Dagger (requires Docker)         |
+| CI/CD         | Bazel + Buildkite                |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
@@ -56,7 +56,7 @@ bun run duplication-check # Check for code duplication
 mise run dev             # Setup development environment
 mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
 mise run generate        # Generate Prisma client
-mise run ci              # Run full CI pipeline with Dagger
+mise run ci              # Run full CI pipeline
 ```
 
 ### Backend Package
@@ -84,52 +84,20 @@ bun run build:windows    # Build for Windows
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## Dagger CI/CD Pipeline
+## CI/CD Pipeline (Bazel + Buildkite)
 
-> Only available when Docker is running (not available when `CLAUDE_CODE_REMOTE=true`)
-
-### Discovery
+### Build & Test
 
 ```bash
-dagger functions              # List all available Dagger functions
-dagger functions --help       # View specific function details
+bazel build //packages/scout-for-lol/...    # Build all packages
+bazel test //packages/scout-for-lol/...     # Run all tests
 ```
 
-### Main Targets
+### Container Image
 
 ```bash
-dagger call check                                       # Run lint, typecheck, test
-dagger call build --version="1.0.0" --git-sha="abc123" # Build all packages
-dagger call ci --version="1.0.0" --git-sha="abc123"    # Full CI pipeline
-dagger call deploy --version="1.0.0" --stage="beta"    # Deploy to stage
+bazel build //packages/scout-for-lol:image  # Build backend container image
 ```
-
-### Package-Specific
-
-```bash
-dagger call check-backend
-dagger call check-report
-dagger call check-data
-dagger call generate-prisma
-dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
-dagger call build-report-for-npm --version="1.0.0"
-```
-
-### Docker Export & Run
-
-```bash
-# Build and export backend image
-dagger call build-backend-image --version="test" --git-sha="test123" export --path="./backend-image.tar.gz"
-
-# Load and run
-docker load < ./backend-image.tar.gz
-docker run --rm <image_sha>
-```
-
-### Common Dagger Issues
-
-- **Module not found "src/database/migrate.ts"**: Fix entrypoint in `dagger/src/backend.ts` to use correct working directory
-- **failed to find arg "DataSource"**: Remove unused parameters from `dagger/src/index.ts` function signatures
 
 ---
 
@@ -357,7 +325,7 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 
 - Use `env-var` for type-safe environment variables
 - Validate all configuration with Zod schemas
-- Use Dagger secrets for sensitive data in CI/CD
+- Use CI secrets for sensitive data in CI/CD
 - Separate development and production configurations
 
 ---

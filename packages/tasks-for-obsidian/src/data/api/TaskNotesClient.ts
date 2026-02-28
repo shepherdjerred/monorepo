@@ -83,7 +83,7 @@ export class TaskNotesClient {
   }
 
   async toggleTaskStatus(id: TaskId, newStatus: TaskStatus): Promise<Result<Task, AppError>> {
-    return this.updateTask(id, { status: newStatus });
+    return this.request("POST", PATHS.TASK_TOGGLE_STATUS(id), TaskResponseSchema, { status: newStatus });
   }
 
   async archiveTask(id: TaskId): Promise<Result<void, AppError>> {
@@ -93,7 +93,7 @@ export class TaskNotesClient {
   }
 
   async completeRecurringInstance(id: TaskId): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASK_RECURRING(id), TaskResponseSchema);
+    return this.request("POST", PATHS.TASK_COMPLETE_INSTANCE(id), TaskResponseSchema);
   }
 
   async queryTasks(filter: TaskQueryFilter): Promise<Result<{ tasks: Task[]; total: number }, AppError>> {

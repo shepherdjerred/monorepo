@@ -1,10 +1,12 @@
 # CLAUDE.md - resume
 
-LaTeX resume. Build/deploy handled by Dagger (not Bun).
+LaTeX resume. Build/deploy handled by Bazel + Buildkite (not Bun).
 
 ## Build
 
-dagger call resume-build --source=. export --path=./resume.pdf
+```bash
+bazel build //packages/resume:resume
+```
 
 ## Deploy
 

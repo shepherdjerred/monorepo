@@ -12,9 +12,15 @@ import type {
   TimeSummary,
 } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
+import {
+  PrioritySchema,
+  TaskStatusSchema as _TaskStatusSchema,
+  TaskStatsSchema as BaseTaskStatsSchema,
+  FilterOptionsSchema as BaseFilterOptionsSchema,
+  NlpParseResultSchema as BaseNlpParseResultSchema,
+} from "tasknotes-types";
 
-const PrioritySchema = z.enum(["highest", "high", "medium", "normal", "low", "none"]);
-export const TaskStatusSchema = z.enum(["open", "in-progress", "done", "cancelled", "waiting", "delegated"]);
+export const TaskStatusSchema = _TaskStatusSchema;
 
 export const TaskSchema = z.object({
   id: z.string(),
@@ -32,6 +38,7 @@ export const TaskSchema = z.object({
   totalTrackedTime: z.number().default(0),
   isBlocked: z.boolean().default(false),
   isBlocking: z.boolean().default(false),
+  details: z.string().optional(),
 }).transform((raw): Task => ({
   id: taskId(raw.id),
   path: raw.path,
@@ -48,6 +55,7 @@ export const TaskSchema = z.object({
   totalTrackedTime: raw.totalTrackedTime,
   isBlocked: raw.isBlocked,
   isBlocking: raw.isBlocking,
+  details: raw.details,
 }));
 
 export const TaskListSchema = z.object({
@@ -69,42 +77,11 @@ export const TaskListSchema = z.object({
 export const TaskResponseSchema = TaskSchema;
 export const CreateTaskResponseSchema = TaskSchema;
 
-export const TaskStatsSchema = z.object({
-  total: z.number(),
-  byStatus: z.record(TaskStatusSchema, z.number()),
-  byPriority: z.record(PrioritySchema, z.number()),
-  overdue: z.number(),
-  dueToday: z.number(),
-  upcoming: z.number(),
-}).transform((raw): TaskStats => ({
-  ...raw,
-  byStatus: {
-    "open": 0, "in-progress": 0, "done": 0, "cancelled": 0, "waiting": 0, "delegated": 0,
-    ...raw.byStatus,
-  },
-  byPriority: {
-    "highest": 0, "high": 0, "medium": 0, "normal": 0, "low": 0, "none": 0,
-    ...raw.byPriority,
-  },
-}));
+export const TaskStatsSchema = BaseTaskStatsSchema.transform((raw): TaskStats => raw);
 
-export const FilterOptionsSchema = z.object({
-  projects: z.array(z.string()),
-  contexts: z.array(z.string()),
-  tags: z.array(z.string()),
-  statuses: z.array(TaskStatusSchema),
-  priorities: z.array(PrioritySchema),
-}).transform((raw): FilterOptions => raw);
+export const FilterOptionsSchema = BaseFilterOptionsSchema.transform((raw): FilterOptions => raw);
 
-export const NlpParseResultSchema = z.object({
-  title: z.string(),
-  due: z.string().optional(),
-  priority: PrioritySchema.optional(),
-  projects: z.array(z.string()).optional(),
-  contexts: z.array(z.string()).optional(),
-  tags: z.array(z.string()).optional(),
-  recurrence: z.string().optional(),
-}).transform((raw): NlpParseResult => raw);
+export const NlpParseResultSchema = BaseNlpParseResultSchema.transform((raw): NlpParseResult => raw);
 
 export const TimeEntrySchema = z.object({
   taskId: z.string(),

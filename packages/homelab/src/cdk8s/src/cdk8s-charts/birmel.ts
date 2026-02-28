@@ -21,7 +21,7 @@ export function createBirmelChart(app: App) {
 
   createBirmelDeployment(chart);
 
-  // NetworkPolicy: Allow ingress from Tailscale (handles both studio:4111 and funnel oauth:4112)
+  // NetworkPolicy: Allow ingress from Tailscale and Cloudflare Tunnel
   new KubeNetworkPolicy(chart, "birmel-ingress-netpol", {
     metadata: { name: "birmel-ingress-netpol" },
     spec: {
@@ -33,6 +33,11 @@ export function createBirmelChart(app: App) {
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" },
               },
             },
           ],

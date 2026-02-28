@@ -1,8 +1,0 @@
-{
-  "name": "monorepo",
-  "engineVersion": "v0.19.11",
-  "sdk": {
-    "source": "typescript"
-  },
-  "source": ".dagger"
-}

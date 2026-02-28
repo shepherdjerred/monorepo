@@ -1,0 +1,44 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:typecheck.bzl", "typecheck_test")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+# Astro build is complex; this js_library wraps sources for dependency tracking.
+js_library(
+    name = "pkg",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.astro",
+        "src/**/*.css",
+    ]) + ["package.json"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@astrojs/mdx",
+        ":node_modules/@astrojs/react",
+        ":node_modules/@astrojs/tailwind",
+        ":node_modules/@trpc/client",
+        ":node_modules/astro",
+        ":node_modules/react",
+        ":node_modules/react-dom",
+        ":node_modules/zod",
+        "//packages/scout-for-lol/packages/data:pkg",
+        "//packages/scout-for-lol/packages/report:pkg",
+    ],
+)
+
+typecheck_test(
+    name = "typecheck",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    deps = [
+        ":pkg",
+        "//packages/scout-for-lol/packages/data:pkg",
+        "//packages/scout-for-lol/packages/report:pkg",
+    ],
+)

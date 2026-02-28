@@ -13,7 +13,6 @@ export function createChartMuseumApp(chart: Chart) {
     service: "chartmuseum",
     port: 8080,
     hosts: ["chartmuseum"],
-    funnel: true,
   });
 
   createCloudflareTunnelBinding(chart, "chartmuseum-cf-tunnel", {

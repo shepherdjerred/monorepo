@@ -1,4 +1,6 @@
-export type TaskStatus = "open" | "in-progress" | "done" | "cancelled" | "waiting" | "delegated";
+import type { TaskStatus as _TaskStatus } from "tasknotes-types";
+
+export type TaskStatus = _TaskStatus;
 
 export const ACTIVE_STATUSES: readonly TaskStatus[] = ["open", "in-progress", "waiting", "delegated"] as const;
 export const COMPLETED_STATUSES: readonly TaskStatus[] = ["done", "cancelled"] as const;
