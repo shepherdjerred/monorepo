@@ -42,6 +42,8 @@ export const HELM_CHARTS = [
   "dns-audit",
   // Sentinel autonomous agent system
   "sentinel",
+  // TaskNotes API server with Obsidian Sync sidecar
+  "tasknotes",
 ] as const;
 export type HelmChartName = (typeof HELM_CHARTS)[number];
 
