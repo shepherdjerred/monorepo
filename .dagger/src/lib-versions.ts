@@ -27,7 +27,7 @@ const defaultVersions = {
     "2.10.2@sha256:f20f80e1fb627294fb84b8515b7593aff8018c840f1396dc942a50ed0c2db648",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "alpine/kubectl":
-    "1.35.0@sha256:e7e078c7bb25012141e5957d500834b2a5b266d6de20ecfa862b30d8a892fc7e",
+    "1.35.0@sha256:862d86046bbcad03c252bbc10ab8bf893e7aa50aa7a20de8bfc46727dd645883",
   // renovate: datasource=github-releases versioning=semver
   "stackrox/kube-linter": "v0.8.1",
   // renovate: datasource=python-version versioning=semver
