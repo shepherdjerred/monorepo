@@ -28,7 +28,9 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], *
             ":node_modules/typescript",
             ":node_modules/typescript-eslint",
             "//packages/eslint-config:pkg",
+            "//tools/bazel:eslint_entry",
         ],
+        no_copy_to_bin = ["//tools/bazel:eslint_entry.js"],
         tags = ["lint"],
         **kwargs
     )
