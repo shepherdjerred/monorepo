@@ -270,7 +270,7 @@ def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> d
             ]
         },
         "plugins": [
-            _k8s_plugin(cpu="4", memory="8Gi"),
+            _k8s_plugin(cpu="2", memory="4Gi"),
             {"bazel-annotate#v1.1.1": {}},
         ],
     }

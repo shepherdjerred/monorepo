@@ -3,7 +3,12 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { KubeRoleBinding } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  KubePersistentVolumeClaim,
+  KubeRoleBinding,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {
@@ -39,6 +44,15 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
+    metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS,
+      resources: { requests: { storage: Quantity.fromString("5Gi") } },
+    },
+  });
+
   new OnePasswordItem(chart, "buildkite-argocd-token", {
     spec: {
       itemPath:
@@ -66,7 +80,18 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              "max-in-flight": 2,
+              "max-in-flight": 6,
+              "default-checkout-params": {
+                gitMirrors: {
+                  volume: {
+                    name: "buildkite-git-mirrors",
+                    persistentVolumeClaim: {
+                      claimName: "buildkite-git-mirrors",
+                    },
+                  },
+                  lockTimeout: 300,
+                },
+              },
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
