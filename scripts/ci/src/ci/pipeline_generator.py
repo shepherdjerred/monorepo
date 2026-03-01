@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 
 from ci.lib import bazel
 
+CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:latest"
+
 
 # Kubernetes pod spec shared across all steps
 def _k8s_plugin(
@@ -39,7 +41,7 @@ def _k8s_plugin(
     return {
         "kubernetes": {
             "checkout": {
-                "cloneFlags": "--depth=100",
+                "cloneFlags": "--depth=100 --dissociate",
                 "fetchFlags": "--depth=100",
             },
             "podSpecPatch": {
@@ -47,7 +49,7 @@ def _k8s_plugin(
                 "containers": [
                     {
                         "name": "container-0",
-                        "image": "oven/bun:debian",
+                        "image": CI_BASE_IMAGE,
                         "resources": {"requests": {"cpu": cpu, "memory": memory}},
                         "envFrom": secret_refs,
                     }
@@ -169,6 +171,16 @@ def _get_last_green_commit() -> str | None:
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             builds = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            print(
+                "Buildkite API 401: BUILDKITE_API_TOKEN not set or "
+                "agent token lacks REST API permissions",
+                flush=True,
+            )
+        else:
+            print(f"Buildkite API request failed: {e}", flush=True)
+        return None
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
         print(f"Buildkite API request failed: {e}", flush=True)
         return None
