@@ -1,36 +1,36 @@
-"""ESLint test macro for hermetic linting inside Bazel's sandbox.
+"""ESLint test macro - delegates to the package's lint npm script.
 
-Wraps js_test to run ESLint programmatically via eslint_entry.js.
-The eslint.config.ts in each package is auto-detected by the ESLint API.
+Runs `bun run lint` in the actual source tree for full compatibility
+with the development environment (generated types, resolved deps, etc.).
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_test")
-
-def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], **kwargs):
-    """Hermetic ESLint test using Bazel-managed node_modules.
+def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], tags = [], **kwargs):
+    """ESLint test that delegates to the package's lint npm script.
 
     Args:
         name: Target name (conventionally "lint")
-        srcs: Source files to lint
+        srcs: Source files to lint (used for change detection / caching)
         config: ESLint config file (default: eslint.config.ts)
-        deps: Additional dependencies (e.g., workspace packages)
+        deps: Additional dependencies
         data: Additional data files
-        **kwargs: Additional args passed to js_test
+        tags: Additional tags (merged with default tags)
+        **kwargs: Additional args passed to native.sh_test
     """
-    js_test(
+
+
+    # buildifier: disable=native-sh-test
+    native.sh_test(
         name = name,
-        entry_point = "//tools/bazel:eslint_entry.cjs",
+        srcs = ["//tools/bazel:run_npm_script.sh"],
+        args = ["lint"],
         data = srcs + deps + data + [
             config,
             "tsconfig.json",
             "package.json",
-            "//:node_modules/eslint",
-            "//:node_modules/typescript",
-            "//:node_modules/typescript-eslint",
-            "//packages/eslint-config:pkg",
-            "//tools/bazel:eslint_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:eslint_entry.cjs"],
-        tags = ["lint"],
+        env = {
+            "MONOREPO_PACKAGE": native.package_name(),
+        },
+        tags = ["lint", "local"] + tags,
         **kwargs
     )

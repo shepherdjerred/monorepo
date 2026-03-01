@@ -46,4 +46,5 @@ typecheck_test(
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
+    tags = ["exclusive"],
 )

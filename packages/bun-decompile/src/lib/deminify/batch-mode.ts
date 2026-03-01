@@ -11,8 +11,9 @@
 import type { DeminifyCache } from "./cache.ts";
 import { shouldCache, hashSource } from "./cache.ts";
 import { getFunctionContext } from "./call-graph.ts";
-import type { BatchDeminifyClient, BatchStatus } from "./batch-client.ts";
+import type { BatchDeminifyClient } from "./batch-client.ts";
 import type { OpenAIBatchClient, OpenAIBatchStatus } from "./openai-batch.ts";
+import { toCommonStatus, formatBatchProgress } from "./batch-utils.ts";
 import {
   saveBatchState,
   loadBatchState,
@@ -34,28 +35,6 @@ import type {
   FileContext,
 } from "./types.ts";
 import type { DeminifyFileOptions } from "./deminifier.ts";
-
-/** Convert OpenAI batch status to common BatchStatus */
-function toCommonStatus(status: OpenAIBatchStatus): BatchStatus {
-  return {
-    batchId: status.batchId,
-    status: status.status === "completed" ? "ended" : "in_progress",
-    total: status.total,
-    succeeded: status.completed,
-    errored: status.failed,
-    processing: status.total - status.completed - status.failed,
-  };
-}
-
-/** Format batch progress for terminal display */
-function formatBatchProgress(
-  completed: number,
-  total: number,
-  failed: number,
-): string {
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  return `\r  Progress: ${String(completed)}/${String(total)} (${String(pct)}%) | Errors: ${String(failed)}     `;
-}
 
 /** Batch mode orchestrator for de-minification. Manages batch API submissions, polling, and result retrieval. */
 export class BatchModeProcessor {
@@ -479,9 +458,11 @@ export class BatchModeProcessor {
     console.log("\n\nRetrieving results...");
 
     // Get results using appropriate client
-    const results = isOpenAI
-      ? await this.getOpenAIResults(batchId, contexts)
-      : await this.getAnthropicResults(batchId, contexts);
+    const client = isOpenAI ? this.openAIBatchClient : this.batchClient;
+    if (!client) {
+      throw new Error(`${isOpenAI ? "OpenAI" : "Anthropic"} batch client not initialized`);
+    }
+    const results = await client.getResults(batchId, contexts);
 
     console.log(`Retrieved ${String(results.size)} results`);
 
@@ -506,27 +487,5 @@ export class BatchModeProcessor {
     }
 
     return reassembled;
-  }
-
-  /** Get results from OpenAI batch client */
-  private async getOpenAIResults(
-    batchId: string,
-    contexts: Map<string, DeminifyContext>,
-  ): Promise<Map<string, DeminifyResult>> {
-    if (!this.openAIBatchClient) {
-      throw new Error("OpenAI batch client not initialized");
-    }
-    return this.openAIBatchClient.getResults(batchId, contexts);
-  }
-
-  /** Get results from Anthropic batch client */
-  private async getAnthropicResults(
-    batchId: string,
-    contexts: Map<string, DeminifyContext>,
-  ): Promise<Map<string, DeminifyResult>> {
-    if (!this.batchClient) {
-      throw new Error("Anthropic batch client not initialized");
-    }
-    return this.batchClient.getResults(batchId, contexts);
   }
 }

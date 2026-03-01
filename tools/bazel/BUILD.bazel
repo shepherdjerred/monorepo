@@ -6,6 +6,7 @@ exports_files([
     "eslint_entry.cjs",
     "bun_test_entry.cjs",
     "typecheck_entry.cjs",
+    "run_npm_script.sh",
     "workspace_status.sh",
 ])
 

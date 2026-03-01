@@ -54,16 +54,19 @@ js_binary(
 eslint_test(
     name = "lint",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["exclusive"],
 )
 
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["exclusive"],
 )
 
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["exclusive"],
 )
 
 # Container image for K8s deployment
