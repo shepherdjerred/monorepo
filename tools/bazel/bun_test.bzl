@@ -1,29 +1,33 @@
-"""Bun test macro for hermetic test execution inside Bazel's sandbox.
+"""Bun test macro - delegates to the package's test npm script.
 
-Wraps js_test to run `bun test` via bun_test_entry.js.
+Runs `bun run test` in the actual source tree for full compatibility.
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_test")
-
-def bun_test(name, srcs, deps = [], data = [], **kwargs):
-    """Hermetic Bun test runner.
+def bun_test(name, srcs, deps = [], data = [], tags = [], **kwargs):
+    """Bun test runner via the package's test npm script.
 
     Args:
         name: Target name (conventionally "test")
-        srcs: Source files including test files
+        srcs: Source files including test files (used for change detection)
         deps: npm and workspace dependencies
         data: Additional runtime data files
-        **kwargs: Additional args passed to js_test
+        tags: Additional tags (merged with default tags)
+        **kwargs: Additional args passed to native.sh_test
     """
-    js_test(
+
+
+    # buildifier: disable=native-sh-test
+    native.sh_test(
         name = name,
-        entry_point = "//tools/bazel:bun_test_entry.cjs",
+        srcs = ["//tools/bazel:run_npm_script.sh"],
+        args = ["test"],
         data = srcs + deps + data + [
             "package.json",
             "tsconfig.json",
-            "//tools/bazel:bun_test_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:bun_test_entry.cjs"],
-        tags = ["test"],
+        env = {
+            "MONOREPO_PACKAGE": native.package_name(),
+        },
+        tags = ["test", "local"] + tags,
         **kwargs
     )

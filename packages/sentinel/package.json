@@ -16,7 +16,7 @@
     "build": "true",
     "test": "bun test",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "prisma generate && eslint .",
     "dev:web": "cd web && bun run dev",
     "dev:all": "bun run dev & bun run dev:web",
     "build:web": "cd web && bun run build",

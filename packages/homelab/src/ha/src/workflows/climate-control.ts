@@ -116,12 +116,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
             logger.info(
               "Pre-wake heating for weekday - warming house before wake time",
             );
-            await setClimateZones(
-              hass,
-              logger,
-              TEMP_PRE_WAKE,
-              TEMP_PRE_WAKE,
-            );
+            await setClimateZones(hass, logger, TEMP_PRE_WAKE, TEMP_PRE_WAKE);
           }),
           { amount: 2, unit: "m" },
           "climate_pre_wake_weekday",
@@ -142,12 +137,7 @@ export function climateControl({ hass, scheduler, logger }: TServiceParams) {
             logger.info(
               "Pre-wake heating for weekend - warming house before wake time",
             );
-            await setClimateZones(
-              hass,
-              logger,
-              TEMP_PRE_WAKE,
-              TEMP_PRE_WAKE,
-            );
+            await setClimateZones(hass, logger, TEMP_PRE_WAKE, TEMP_PRE_WAKE);
           }),
           { amount: 2, unit: "m" },
           "climate_pre_wake_weekend",

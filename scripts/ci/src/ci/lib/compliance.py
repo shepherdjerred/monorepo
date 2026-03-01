@@ -2,16 +2,28 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
+
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
 
 REQUIRED_SCRIPTS = ["lint", "typecheck"]
 REQUIRED_FILES = ["eslint.config.ts"]
-PACKAGES_DIR = Path("packages")
+PACKAGES_DIR = _repo_root() / "packages"
 
 # Packages to skip (not regular TS packages)
 SKIP_PACKAGES = {
     "fonts", "dotfiles", "anki", "macos-cross-compiler",
     "castle-casters",  # Java project
+    "resume",  # LaTeX project
 }
 
 

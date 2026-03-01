@@ -14,7 +14,6 @@ Once the input is sorted, it becomes a bit easier. We just need to store two poi
 
 The drawback of this approach is that it requires `n` extra space to store a sorted copy of the array.
 
-
 ```typescript
 function twoSum(nums: number[], target: number): number[] {
     const copy = [...nums];

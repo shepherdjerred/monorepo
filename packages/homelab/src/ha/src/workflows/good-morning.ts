@@ -73,9 +73,7 @@ export function goodMorning({ hass, scheduler, logger }: TServiceParams) {
   async function runEarly() {
     logger.info("good_morning_early triggered");
     await withTimeout(
-      runIf(isAnyoneHomeWithLogging(), () =>
-        setHomeComfortMode(hass, logger),
-      ),
+      runIf(isAnyoneHomeWithLogging(), () => setHomeComfortMode(hass, logger)),
       { amount: 2, unit: "m" },
       "good_morning_early workflow",
     );

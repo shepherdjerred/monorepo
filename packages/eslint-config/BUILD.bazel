@@ -16,7 +16,12 @@ js_library(
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/**/*.test.ts"],
-    ) + ["package.json"],
+    ) + glob(["dist/**"]) + [
+        "local.d.ts",
+        "local.ts",
+        "local-rules.ts",
+        "package.json",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@eslint-community/eslint-plugin-eslint-comments",

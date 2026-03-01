@@ -18,9 +18,21 @@ importers:
       '@dagger.io/dagger':
         specifier: ^0.19.0
         version: 0.19.11
+      '@types/bun':
+        specifier: ^1.3.5
+        version: 1.3.9
+      '@types/node':
+        specifier: ^22.15.0
+        version: 22.19.13
       eslint:
         specifier: ^9.30.1
         version: 9.39.3(jiti@2.6.1)
+      eslint-import-resolver-typescript:
+        specifier: ^4.4.3
+        version: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.3(jiti@2.6.1))
+      eslint-import-resolver-typescript-bun:
+        specifier: ^0.0.104
+        version: 0.0.104(bun-types@1.3.10)(eslint-plugin-import@2.32.0)(eslint@9.39.3(jiti@2.6.1))
       lefthook:
         specifier: ^2.1.1
         version: 2.1.1
@@ -899,7 +911,7 @@ importers:
     dependencies:
       '@digital-alchemy/automation':
         specifier: ^25.11.18
-        version: 25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)
+        version: 25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)
       '@digital-alchemy/core':
         specifier: ^25.12.8
         version: 25.12.8
@@ -908,7 +920,7 @@ importers:
         version: 25.11.27(@digital-alchemy/core@25.12.8)
       '@digital-alchemy/synapse':
         specifier: ^25.12.19
-        version: 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
+        version: 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
       '@digital-alchemy/type-writer':
         specifier: ^25.11.16
         version: 25.11.16(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))
@@ -1731,7 +1743,7 @@ importers:
         version: 5.1.7
       typeorm:
         specifier: ^0.3.20
-        version: 0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@25.3.2))(sqlite3@5.1.7)
+        version: 0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@22.19.13))(sqlite3@5.1.7)
     devDependencies:
       '@commitlint/types':
         specifier: ^20.4.0
@@ -17547,11 +17559,11 @@ snapshots:
       http-response-object: 3.0.2
       parse-cache-control: 1.0.1
 
-  '@digital-alchemy/automation@25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)':
+  '@digital-alchemy/automation@25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)':
     dependencies:
       '@digital-alchemy/core': 25.12.8
       '@digital-alchemy/hass': 25.11.27(@digital-alchemy/core@25.12.8)
-      '@digital-alchemy/synapse': 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
+      '@digital-alchemy/synapse': 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
       dayjs: 1.11.19
 
   '@digital-alchemy/core@25.12.8':
@@ -17577,14 +17589,14 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)':
+  '@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)':
     dependencies:
       '@digital-alchemy/core': 25.12.8
       '@digital-alchemy/hass': 25.11.27(@digital-alchemy/core@25.12.8)
       better-sqlite3: 12.6.2
       dayjs: 1.11.19
-      drizzle-orm: 0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@25.3.2))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)
-      mysql2: 3.18.2(@types/node@25.3.2)
+      drizzle-orm: 0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@22.19.13))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)
+      mysql2: 3.18.2(@types/node@22.19.13)
       postgres: 3.4.8
       uuid: 13.0.0
     transitivePeerDependencies:
@@ -18433,7 +18445,7 @@ snapshots:
   '@grpc/grpc-js@1.9.15':
     dependencies:
       '@grpc/proto-loader': 0.7.15
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@grpc/proto-loader@0.7.15':
     dependencies:
@@ -18730,14 +18742,14 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       jest-mock: 29.7.0
 
   '@jest/fake-timers@29.7.0':
     dependencies:
       '@jest/types': 29.6.3
       '@sinonjs/fake-timers': 10.3.0
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       jest-message-util: 29.7.0
       jest-mock: 29.7.0
       jest-util: 29.7.0
@@ -18770,7 +18782,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       '@types/yargs': 15.0.20
       chalk: 4.1.2
 
@@ -18779,7 +18791,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -22244,7 +22256,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/bun@1.3.9':
     dependencies:
@@ -22257,11 +22269,11 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/d3-array@3.2.2': {}
 
@@ -22410,7 +22422,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -22425,7 +22437,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/hammerjs@2.0.46': {}
 
@@ -22453,7 +22465,7 @@ snapshots:
 
   '@types/jsdom@27.0.0':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       '@types/tough-cookie': 4.0.5
       parse5: 7.3.0
 
@@ -22486,7 +22498,7 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/nlcst@2.0.3':
     dependencies:
@@ -22494,7 +22506,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       form-data: 4.0.5
 
   '@types/node@10.17.60': {}
@@ -22519,7 +22531,7 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       pg-protocol: 1.12.0
       pg-types: 2.2.0
 
@@ -22567,21 +22579,21 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/selenium-webdriver@4.35.5':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       '@types/ws': 8.18.1
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/sinon@17.0.4':
     dependencies:
@@ -22593,7 +22605,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/tough-cookie@4.0.5': {}
 
@@ -22616,7 +22628,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -22630,7 +22642,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)':
@@ -23799,11 +23811,11 @@ snapshots:
 
   bun-types@1.3.10:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   bun-types@1.3.9:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
 
   bundle-require@5.1.0(esbuild@0.27.3):
     dependencies:
@@ -24005,7 +24017,7 @@ snapshots:
 
   chrome-launcher@0.15.2:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -24014,7 +24026,7 @@ snapshots:
 
   chromium-edge-launcher@0.2.0:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -24820,7 +24832,7 @@ snapshots:
 
   dotenv@17.3.1: {}
 
-  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@25.3.2))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7):
+  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@22.19.13))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7):
     optionalDependencies:
       '@libsql/client': 0.15.15
       '@opentelemetry/api': 1.9.0
@@ -24828,7 +24840,7 @@ snapshots:
       '@types/pg': 8.15.6
       better-sqlite3: 12.6.2
       bun-types: 1.3.10
-      mysql2: 3.18.2(@types/node@25.3.2)
+      mysql2: 3.18.2(@types/node@22.19.13)
       postgres: 3.4.8
       prisma: 6.19.2(typescript@5.9.3)
       sqlite3: 5.1.7
@@ -24917,7 +24929,7 @@ snapshots:
   engine.io@6.6.5:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -26843,7 +26855,7 @@ snapshots:
       '@jest/environment': 29.7.0
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       jest-mock: 29.7.0
       jest-util: 29.7.0
 
@@ -26853,7 +26865,7 @@ snapshots:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.9
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -26880,7 +26892,7 @@ snapshots:
   jest-mock@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       jest-util: 29.7.0
 
   jest-regex-util@29.6.3: {}
@@ -26888,7 +26900,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -26905,7 +26917,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -28473,9 +28485,9 @@ snapshots:
 
   muggle-string@0.4.1: {}
 
-  mysql2@3.18.2(@types/node@25.3.2):
+  mysql2@3.18.2(@types/node@22.19.13):
     dependencies:
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       aws-ssl-profiles: 1.1.2
       denque: 2.1.0
       generate-function: 2.3.1
@@ -29292,7 +29304,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       long: 5.3.2
 
   protobufjs@8.0.0:
@@ -29307,7 +29319,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 25.3.2
+      '@types/node': 22.19.13
       long: 5.3.2
 
   proxy-addr@2.0.7:
@@ -31328,7 +31340,7 @@ snapshots:
       typescript: 5.9.3
       yaml: 2.8.2
 
-  typeorm@0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@25.3.2))(sqlite3@5.1.7):
+  typeorm@0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@22.19.13))(sqlite3@5.1.7):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.2.0
@@ -31347,7 +31359,7 @@ snapshots:
       yargs: 17.7.2
     optionalDependencies:
       better-sqlite3: 12.6.2
-      mysql2: 3.18.2(@types/node@25.3.2)
+      mysql2: 3.18.2(@types/node@22.19.13)
       sqlite3: 5.1.7
     transitivePeerDependencies:
       - babel-plugin-macros

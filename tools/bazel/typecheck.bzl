@@ -1,35 +1,34 @@
-"""TypeScript type-check macro for hermetic checking inside Bazel's sandbox.
+"""TypeScript type-check macro - delegates to the package's typecheck npm script.
 
-Wraps js_test to run `tsc --noEmit` via typecheck_entry.js. This is an
-alternative to the ts_project-based bun_typecheck in bun_package.bzl,
-offering more flexibility for packages with workspace deps or custom
-tsconfig paths.
+Runs `bun run typecheck` in the actual source tree for full compatibility.
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_test")
-
-def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [], **kwargs):
-    """Hermetic TypeScript type checking.
+def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [], tags = [], **kwargs):
+    """TypeScript type checking via the package's typecheck npm script.
 
     Args:
         name: Target name (conventionally "typecheck")
-        srcs: Source files to type-check
+        srcs: Source files (used for change detection / caching)
         deps: npm and workspace dependencies
         tsconfig: Path to tsconfig.json (default: tsconfig.json)
         data: Additional data files
-        **kwargs: Additional args passed to js_test
+        tags: Additional tags (merged with default tags)
+        **kwargs: Additional args passed to native.sh_test
     """
-    js_test(
+
+
+    # buildifier: disable=native-sh-test
+    native.sh_test(
         name = name,
-        entry_point = "//tools/bazel:typecheck_entry.cjs",
+        srcs = ["//tools/bazel:run_npm_script.sh"],
+        args = ["typecheck"],
         data = srcs + deps + data + [
             tsconfig,
             "package.json",
-            "//:tsconfig_base",
-            "//:node_modules/typescript",
-            "//tools/bazel:typecheck_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:typecheck_entry.cjs"],
-        tags = ["typecheck"],
+        env = {
+            "MONOREPO_PACKAGE": native.package_name(),
+        },
+        tags = ["typecheck", "local"] + tags,
         **kwargs
     )
