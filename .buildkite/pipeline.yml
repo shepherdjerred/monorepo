@@ -13,6 +13,7 @@ steps:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
               - name: container-0
+                image: "debian:bookworm-slim"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
