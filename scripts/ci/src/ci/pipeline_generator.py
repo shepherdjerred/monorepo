@@ -361,6 +361,7 @@ def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> d
         "retry": {
             "automatic": [
                 {"exit_status": -1, "limit": 2},
+                {"exit_status": 3, "limit": 1},
                 {"exit_status": 255, "limit": 2},
             ]
         },
