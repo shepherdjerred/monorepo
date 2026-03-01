@@ -27,7 +27,6 @@ def _k8s_plugin(
     cpu: str = "2",
     memory: str = "4Gi",
     secrets: list[str] | None = None,
-    clone_depth: int = 100,
 ) -> dict:
     """Build the kubernetes plugin config for a Buildkite step."""
     secret_refs = [{"secretRef": {"name": "buildkite-ci-secrets"}}]
@@ -38,8 +37,8 @@ def _k8s_plugin(
     return {
         "kubernetes": {
             "checkout": {
-                "cloneFlags": f"--depth={clone_depth}",
-                "fetchFlags": f"--depth={clone_depth}",
+                "cloneFlags": "--depth=100",
+                "fetchFlags": "--depth=100",
             },
             "podSpecPatch": {
                 "serviceAccountName": "buildkite-agent-stack-k8s-controller",
@@ -226,18 +225,44 @@ def _analyze_targets(targets: list[str]) -> AffectedPackages:
     return result
 
 
-def _generate_build_test_step(packages: set[str], build_all: bool) -> dict:
-    """Generate the Build & Test step."""
-    if build_all:
-        label = ":bazel: Build & Test (all)"
-    else:
-        label = f":bazel: Build & Test ({len(packages)} packages)"
+# All top-level packages with BUILD.bazel files (used when build_all=True)
+ALL_PACKAGES = [
+    "astro-opengraph-images",
+    "better-skill-capped",
+    "birmel",
+    "bun-decompile",
+    "clauderon",
+    "discord-plays-pokemon",
+    "eslint-config",
+    "homelab",
+    "monarch",
+    "resume",
+    "scout-for-lol",
+    "sentinel",
+    "sjer.red",
+    "starlight-karma-bot",
+    "tasknotes-server",
+    "tasknotes-types",
+    "tasks-for-obsidian",
+    "tools",
+    "webring",
+]
 
-    step: dict = {
-        "label": label,
-        "key": "build",
-        "command": ".buildkite/scripts/build-and-test.sh",
-        "timeout_in_minutes": 30,
+
+def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> dict:
+    """Generate a build+test step for a single package."""
+    cmd = f".buildkite/scripts/bazel-package.sh //packages/{package}/..."
+    if stamp_images:
+        cmd += " --stamp-images"
+
+    # Buildkite keys only allow [a-zA-Z0-9_-]
+    key = f"build-{package.replace('.', '-')}"
+
+    return {
+        "label": f":bazel: {package}",
+        "key": key,
+        "command": cmd,
+        "timeout_in_minutes": 20,
         "retry": {
             "automatic": [
                 {"exit_status": -1, "limit": 2},
@@ -245,15 +270,21 @@ def _generate_build_test_step(packages: set[str], build_all: bool) -> dict:
             ]
         },
         "plugins": [
-            _k8s_plugin(cpu="4", memory="8Gi", secrets=["buildkite-argocd-token"]),
+            _k8s_plugin(cpu="4", memory="8Gi"),
+            {"bazel-annotate#v1.1.1": {}},
         ],
     }
 
-    if not build_all and packages:
-        targets = " ".join(f"//packages/{p}/..." for p in sorted(packages))
-        step["env"] = {"BUILDKITE_BUILD_TARGETS": targets}
 
-    return step
+def _generate_quality_gate_step() -> dict:
+    """Generate the Quality & Compliance step."""
+    return {
+        "label": ":mag: Quality & Compliance",
+        "key": "quality-gate",
+        "command": ".buildkite/scripts/quality-gate.sh",
+        "timeout_in_minutes": 10,
+        "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
+    }
 
 
 def _generate_code_review_step() -> dict:
@@ -428,8 +459,15 @@ def generate_pipeline() -> dict:
         })
         return {"agents": {"queue": "default"}, "steps": steps}
 
-    # --- Build & Test (every push) ---
-    steps.append(_generate_build_test_step(affected.packages, affected.build_all))
+    # --- Per-package build & test steps (every push) ---
+    is_release = os.environ.get("BUILDKITE_BRANCH", "") == "main"
+    packages = sorted(ALL_PACKAGES) if affected.build_all else sorted(affected.packages)
+    for pkg in packages:
+        stamp = pkg in PACKAGES_WITH_IMAGES and is_release
+        steps.append(_generate_per_package_step(pkg, stamp_images=stamp))
+
+    # --- Quality & Compliance (every push) ---
+    steps.append(_generate_quality_gate_step())
 
     # --- Code Review (PRs only) ---
     steps.append(_generate_code_review_step())
