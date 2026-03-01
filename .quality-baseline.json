@@ -3,11 +3,9 @@
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
   },
-  "ts-expect-error": {
+  "ts-suppressions": {
     "packages/homelab/src/ha/src/util.ts": 1
   },
-  "ts-ignore": {},
-  "ts-nocheck": {},
   "rust-allow": {},
   "prettier-ignore": {},
   "updated": "2026-03-01"

@@ -17,10 +17,14 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 # Bazelisk
-ARG BAZELISK_VERSION=1.25.0
+ARG BAZELISK_VERSION=1.28.1
 RUN curl -fsSL "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64" \
     -o /usr/local/bin/bazel && \
     chmod +x /usr/local/bin/bazel
+
+# Pre-download the actual Bazel binary (avoid download on first run)
+COPY .bazelversion /tmp/.bazelversion
+RUN cd /tmp && USE_BAZEL_VERSION=$(tr -d '\r' < .bazelversion) bazel --version
 
 # target-determinator
 ARG TARGET_DETERMINATOR_VERSION=0.32.0
