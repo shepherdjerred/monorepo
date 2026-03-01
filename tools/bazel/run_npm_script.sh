@@ -113,8 +113,27 @@ build_if_missing "${REPO_ROOT}/packages/discord-plays-pokemon/packages/common/di
 
 # Generate Prisma client for scout-for-lol (typecheck/test need it).
 # Uses the full generate script: prisma generate + brand-types + test-template-db.
-build_if_missing "${REPO_ROOT}/packages/scout-for-lol/packages/backend/generated" \
-  "packages/scout-for-lol/packages/backend" "${BUN}" run generate
+# IMPORTANT: We check for .generate-done (not generated/) because prisma creates
+# the generated/ directory BEFORE brand-types finishes. Without this, parallel
+# Bazel tests see generated/ and proceed with unbranded types.
+SCOUT_BACKEND="${REPO_ROOT}/packages/scout-for-lol/packages/backend"
+SCOUT_GENERATE_DONE="${SCOUT_BACKEND}/.generate-done"
+if [ ! -f "${SCOUT_GENERATE_DONE}" ]; then
+  lock_name="packages-scout-for-lol-packages-backend-generate"
+  lockdir="${REPO_ROOT}/.build-${lock_name}.lock"
+  if mkdir "${lockdir}" 2>/dev/null; then
+    trap 'rmdir "${lockdir}" 2>/dev/null' EXIT
+    echo "Generating scout-for-lol prisma client..." >&2
+    (cd "${SCOUT_BACKEND}" && "${BUN}" run generate) >&2
+    touch "${SCOUT_GENERATE_DONE}"
+    rmdir "${lockdir}" 2>/dev/null
+    trap - EXIT
+  else
+    while [ ! -f "${SCOUT_GENERATE_DONE}" ] && [ -d "${lockdir}" ]; do
+      sleep 1
+    done
+  fi
+fi
 
 cd "${SOURCE_DIR}"
 exec "${BUN}" run "${SCRIPT_NAME}"
