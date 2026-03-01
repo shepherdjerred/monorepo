@@ -7,7 +7,7 @@ BAZELISK_VERSION="1.25.0"
 
 install_base() {
     echo "--- :debian: Installing system dependencies"
-    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates unzip gcc > /dev/null
+    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates unzip gcc python3 > /dev/null
 }
 
 install_ripgrep() {
