@@ -12,4 +12,10 @@ install_awscli
 install_tofu
 
 echo "+++ :ship: Deploy"
-cd scripts/ci && uv run python -m ci.deploy
+ARGS=""
+if [ -n "${BUILDKITE_DEPLOY_SITES:-}" ]; then
+    # shellcheck disable=SC2086
+    ARGS="--sites ${BUILDKITE_DEPLOY_SITES}"
+fi
+# shellcheck disable=SC2086
+cd scripts/ci && uv run python -m ci.deploy ${ARGS}

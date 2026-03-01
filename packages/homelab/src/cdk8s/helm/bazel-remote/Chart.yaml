@@ -1,0 +1,6 @@
+apiVersion: v2
+name: bazel-remote
+description: Bazel remote cache proxy backed by SeaweedFS S3
+type: application
+version: "$version"
+appVersion: "$appVersion"

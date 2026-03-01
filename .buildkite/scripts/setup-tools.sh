@@ -65,3 +65,10 @@ install_gh() {
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
     apt-get update -qq && apt-get install -y -qq gh > /dev/null
 }
+
+install_target_determinator() {
+    local version="0.32.0"
+    echo "--- :bazel: Installing target-determinator ${version}"
+    curl -fsSL "https://github.com/bazel-contrib/target-determinator/releases/download/v${version}/target-determinator.linux.amd64" -o /usr/local/bin/target-determinator
+    chmod +x /usr/local/bin/target-determinator
+}

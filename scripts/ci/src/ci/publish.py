@@ -1,9 +1,13 @@
 """Publish container images and NPM packages.
 
-Usage: uv run -m ci.publish
+Usage: uv run -m ci.publish [--packages PKG ...]
 
 Pushes container images to GHCR via `bazel run --stamp //pkg:push`,
 then publishes NPM packages via `bun publish`.
+
+Args:
+  --packages: Only publish specific packages (by Bazel package name, e.g. "birmel").
+              If not specified, all packages are published.
 
 Required env vars:
   GHCR_USERNAME, GHCR_PASSWORD - GitHub Container Registry auth
@@ -13,6 +17,7 @@ Required env vars:
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -81,11 +86,25 @@ def _get_metadata(key: str, default: str = "false") -> str:
     return result.stdout.strip() if result.returncode == 0 else default
 
 
+def _filter_by_packages(items: list[str], packages: list[str] | None) -> list[str]:
+    """Filter a list of Bazel targets to only include those matching package names."""
+    if not packages:
+        return items
+    return [t for t in items if any(f"packages/{p}" in t for p in packages)]
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Publish container images and NPM packages")
+    parser.add_argument("--packages", nargs="+", default=None, help="Only publish specific packages")
+    args = parser.parse_args()
+
     config = ReleaseConfig.from_env()
     if not config.is_release:
         print("Not on main branch, skipping publish", flush=True)
         return
+
+    if args.packages:
+        print(f"Filtering to packages: {', '.join(args.packages)}", flush=True)
 
     errors: list[str] = []
 
@@ -93,10 +112,11 @@ def main() -> None:
     digests: dict[str, str] = {}
     ghcr_username = os.environ.get("GHCR_USERNAME", "")
     ghcr_password = os.environ.get("GHCR_PASSWORD", "")
+    push_targets = _filter_by_packages(PUSH_TARGETS, args.packages)
     if ghcr_username and ghcr_password:
         print("\n--- Publish container images to GHCR ---", flush=True)
         ghcr.login(ghcr_username, ghcr_password)
-        for target in PUSH_TARGETS:
+        for target in push_targets:
             try:
                 print(f"\nPushing {target}", flush=True)
                 output = bazel.run_capture(target, stamp=True, embed_label=config.version)
@@ -111,8 +131,12 @@ def main() -> None:
         print("GHCR credentials not set, skipping container publish", flush=True)
 
     # --- Docker-built images ---
+    docker_images = DOCKER_IMAGES if not args.packages else [
+        img for img in DOCKER_IMAGES
+        if any(p in img["name"] for p in args.packages)
+    ]
     if ghcr_username and ghcr_password:
-        for img in DOCKER_IMAGES:
+        for img in docker_images:
             try:
                 tag = f"{img['repository']}:{config.version}"
                 print(f"\nBuilding Docker image {img['name']} ({tag})", flush=True)
@@ -153,11 +177,15 @@ def main() -> None:
     # --- NPM publishing (only when release-please created a release) ---
     release_created = _get_metadata("release_created") == "true"
     npm_token = os.environ.get("NPM_TOKEN", "")
+    npm_packages = NPM_PACKAGES if not args.packages else [
+        p for p in NPM_PACKAGES
+        if any(pkg in p for pkg in args.packages)
+    ]
     if not release_created:
         print("\nNo release created, skipping NPM publish", flush=True)
     elif npm_token:
         print("\n--- Publish NPM packages ---", flush=True)
-        for pkg_dir in NPM_PACKAGES:
+        for pkg_dir in npm_packages:
             try:
                 print(f"\nPublishing {pkg_dir}", flush=True)
                 npm.publish(pkg_dir, npm_token)
