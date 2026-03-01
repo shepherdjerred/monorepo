@@ -9,8 +9,15 @@ set -euo pipefail
 SCRIPT_NAME="${1:?Usage: run_npm_script.sh <script_name>}"
 PACKAGE="${MONOREPO_PACKAGE:?MONOREPO_PACKAGE not set}"
 
-# Find the repo root
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+# Find the repo root. In Bazel's execroot, .git is a symlink to the real repo's
+# .git directory, so we resolve it to find the actual source tree.
+_git_dir="$(git rev-parse --show-toplevel)/.git"
+if [ -L "${_git_dir}" ]; then
+  # Bazel execroot: .git is a symlink — resolve to find the real repo
+  REPO_ROOT="$(dirname "$(readlink "${_git_dir}")")"
+else
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+fi
 SOURCE_DIR="${REPO_ROOT}/${PACKAGE}"
 
 if [ ! -f "${SOURCE_DIR}/package.json" ]; then
@@ -45,6 +52,24 @@ export PATH="${HOME}/.local/share/mise/shims:${HOME}/.local/share/mise/installs/
 
 # Trust all mise configs in the monorepo to avoid interactive prompts
 export MISE_TRUSTED_CONFIG_PATHS="${REPO_ROOT}"
+
+# Ensure dependencies are installed (critical for CI where node_modules don't exist)
+if [ ! -d "${REPO_ROOT}/node_modules" ]; then
+  LOCKDIR="${REPO_ROOT}/.bun-install.lock"
+  # Use mkdir as a portable atomic lock (works on macOS and Linux)
+  if mkdir "${LOCKDIR}" 2>/dev/null; then
+    trap 'rmdir "${LOCKDIR}" 2>/dev/null' EXIT
+    echo "Installing dependencies with bun install..." >&2
+    (cd "${REPO_ROOT}" && "${BUN}" install --frozen-lockfile) >&2
+    rmdir "${LOCKDIR}" 2>/dev/null
+    trap - EXIT
+  else
+    # Another process is installing; wait for it to finish
+    while [ ! -d "${REPO_ROOT}/node_modules" ] && [ -d "${LOCKDIR}" ]; do
+      sleep 1
+    done
+  fi
+fi
 
 cd "${SOURCE_DIR}"
 exec "${BUN}" run "${SCRIPT_NAME}"
