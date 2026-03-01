@@ -489,7 +489,9 @@ def generate_pipeline() -> dict:
     steps.append(_generate_quality_gate_step())
 
     # --- Code Review (PRs only) ---
-    steps.append(_generate_code_review_step())
+    pr_number = os.environ.get("BUILDKITE_PULL_REQUEST", "false")
+    if pr_number not in ("false", "", None):
+        steps.append(_generate_code_review_step())
 
     # --- Main-only steps ---
     has_main_steps = (
