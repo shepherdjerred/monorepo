@@ -28,9 +28,11 @@ import type {
 
 /** Find the trailer position by searching backwards from the end */
 function findTrailerPosition(buffer: Uint8Array): number {
-  // On macOS Mach-O binaries, there may be significant padding after the trailer
-  // Search backwards from the end to find it (up to 4MB for large binaries)
-  const searchLimit = Math.min(buffer.length, 4 * 1024 * 1024); // Search last 4MB max
+  // Search backwards from the end to find the trailer.
+  // On macOS Mach-O, significant padding may exist after the trailer.
+  // On Linux ELF, the trailer position varies by Bun version/binary size.
+  // Search up to 64MB to handle large binaries while keeping it bounded.
+  const searchLimit = Math.min(buffer.length, 64 * 1024 * 1024);
 
   for (
     let pos = buffer.length - BUN_TRAILER_LENGTH;

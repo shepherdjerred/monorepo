@@ -14,7 +14,7 @@ Bun.env["DISCORD_CLIENT_ID"] ??= "test-client-id";
 Bun.env["OPENAI_API_KEY"] ??= "test-key";
 Bun.env["SHELL_ENABLED"] ??= "true";
 Bun.env["SCHEDULER_ENABLED"] ??= "true";
-Bun.env["BROWSER_ENABLED"] ??= "true";
+Bun.env["BROWSER_ENABLED"] ??= "false";
 Bun.env["BROWSER_HEADLESS"] ??= "true";
 
 // If no database path is set (local dev), use a local file database
