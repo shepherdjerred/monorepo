@@ -39,6 +39,7 @@ packages/dpp/
 .bun-install.lock
 .bun-install-done
 .build-*.lock
+.generate-done
 
 # Bazel
 bazel-bin
