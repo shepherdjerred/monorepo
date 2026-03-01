@@ -155,25 +155,25 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
         name = name,
         srcs = srcs,
         outs = [name + ".tar"],
-        cmd = """\\\r
-            EXECROOT=$$PWD && \\\r
-            OUTPUT_TAR=$$EXECROOT/$@ && \\\r
-            TMPDIR=$$(mktemp -d) && \\\r
-            trap 'rm -rf $$TMPDIR' EXIT && \\\r
-            cp $(location //:package.json) $$TMPDIR/package.json && \\\r
-            cp $(location //:bun.lock) $$TMPDIR/bun.lock && \\\r
-            mkdir -p $$TMPDIR/{pkg_dir} && \\\r
-            cp $(location {package_json}) $$TMPDIR/{pkg_dir}/package.json && \\\r
-            {ws_copies} \\\r
-            cd $$TMPDIR && \\\r
-            bun install --frozen-lockfile 2>/dev/null || bun install 2>/dev/null || true && \\\r
-            tar -cf $$OUTPUT_TAR \\\r
-                -C $$TMPDIR \\\r
-                --transform 's,^,workspace/,' \\\r
-                {pkg_dir}/node_modules \\\r
-                node_modules \\\r
-                2>/dev/null || \\\r
-            tar -cf $$OUTPUT_TAR --files-from=/dev/null \\\r
+        cmd = """
+            EXECROOT=$$PWD && \
+            OUTPUT_TAR=$$EXECROOT/$@ && \
+            TMPDIR=$$(mktemp -d) && \
+            trap 'rm -rf $$TMPDIR' EXIT && \
+            cp $(location //:package.json) $$TMPDIR/package.json && \
+            cp $(location //:bun.lock) $$TMPDIR/bun.lock && \
+            mkdir -p $$TMPDIR/{pkg_dir} && \
+            cp $(location {package_json}) $$TMPDIR/{pkg_dir}/package.json && \
+            {ws_copies} \
+            cd $$TMPDIR && \
+            bun install --frozen-lockfile 2>/dev/null || bun install 2>/dev/null || true && \
+            tar -cf $$OUTPUT_TAR \
+                -C $$TMPDIR \
+                --transform 's,^,workspace/,' \
+                {pkg_dir}/node_modules \
+                node_modules \
+                2>/dev/null || \
+            tar -cf $$OUTPUT_TAR --files-from=/dev/null
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
