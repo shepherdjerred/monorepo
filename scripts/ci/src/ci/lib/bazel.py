@@ -16,12 +16,20 @@ def build(*targets: str, config: str = "ci", stamp: bool = False, bep_file: str 
 
 
 def test(*targets: str, config: str = "ci", bep_file: str | None = None) -> None:
-    """Run bazel test with the given targets."""
+    """Run bazel test with the given targets.
+
+    Exit code 4 means "no test targets found" — treated as success.
+    """
     cmd = ["bazel", "test", f"--config={config}"]
     if bep_file:
         cmd.append(f"--build_event_binary_file={bep_file}")
     cmd.extend(targets)
-    _run(cmd)
+    print(f"+ {' '.join(cmd)}", flush=True)
+    result = subprocess.run(cmd, check=False)
+    if result.returncode == 4:
+        print("No test targets found, skipping.", flush=True)
+    elif result.returncode != 0:
+        sys.exit(result.returncode)
 
 
 def run(target: str, config: str = "ci", stamp: bool = False, embed_label: str | None = None) -> None:

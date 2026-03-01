@@ -17,13 +17,13 @@ def bun_test(name, srcs, deps = [], data = [], **kwargs):
     """
     js_test(
         name = name,
-        entry_point = "//tools/bazel:bun_test_entry.js",
+        entry_point = "//tools/bazel:bun_test_entry.cjs",
         data = srcs + deps + data + [
             "package.json",
             "tsconfig.json",
             "//tools/bazel:bun_test_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:bun_test_entry.js"],
+        no_copy_to_bin = ["//tools/bazel:bun_test_entry.cjs"],
         tags = ["test"],
         **kwargs
     )
