@@ -246,8 +246,6 @@ def _generate_build_test_step(packages: set[str], build_all: bool) -> dict:
         },
         "plugins": [
             _k8s_plugin(cpu="4", memory="8Gi", secrets=["buildkite-argocd-token"]),
-            {"bazel-annotate#v1.1.1": {"bep_file": "bazel-build-events.pb", "skip_if_no_bep": True}},
-            {"bazel-annotate#v1.1.1": {"bep_file": "bazel-test-events.pb", "skip_if_no_bep": True}},
         ],
     }
 
@@ -428,7 +426,7 @@ def generate_pipeline() -> dict:
             "command": "echo 'No affected targets detected, nothing to build.'",
             "plugins": [_k8s_plugin()],
         })
-        return {"steps": steps}
+        return {"agents": {"queue": "default"}, "steps": steps}
 
     # --- Build & Test (every push) ---
     steps.append(_generate_build_test_step(affected.packages, affected.build_all))
@@ -487,7 +485,7 @@ def generate_pipeline() -> dict:
             steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
             steps.append(_generate_update_readmes_step())
 
-    return {"steps": steps}
+    return {"agents": {"queue": "default"}, "steps": steps}
 
 
 def main() -> None:
