@@ -291,7 +291,6 @@ def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> d
         },
         "plugins": [
             _k8s_plugin(cpu=cpu, memory=memory),
-            {"bazel-annotate#v1.1.1": {}},
         ],
     }
 

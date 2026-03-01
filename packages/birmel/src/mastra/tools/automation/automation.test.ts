@@ -230,7 +230,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
   });
 });
 
-describe.skipIf(Bun.env["BROWSER_ENABLED"] === "false")(
+describe.skipIf(Bun.env["BROWSER_ENABLED"] !== "true")(
   "Phase 3: Browser Tools",
   () => {
     test("navigates to a URL", async () => {
