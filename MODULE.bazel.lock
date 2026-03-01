@@ -206,7 +206,7 @@
   "moduleExtensions": {
     "//tools/bun:extensions.bzl%bun": {
       "general": {
-        "bzlTransitiveDigest": "6l66aGuQvHw3JJ8ad0AzvhHeBKbPlMCQcpE0rNoINCg=",
+        "bzlTransitiveDigest": "/sI57UPcLcc6OKBt+ws5vC0Rz9fubwrzR22fZuEs5yM=",
         "usagesDigest": "BB07BruV4yPwWcuwSfFYocOus/nngpiUeETPffsteBY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -377,7 +377,7 @@
     "@@rules_nodejs+//nodejs:extensions.bzl%node": {
       "general": {
         "bzlTransitiveDigest": "4pUxCNc22K4I+6+4Nxu52Hur12tFRfa1JMsN5mdDv60=",
-        "usagesDigest": "gMU73A1sR3CfXtsvOOGTR7u9+RzswLfBcMGmaDO/3DA=",
+        "usagesDigest": "h1HR1ulY3cLXY736VUSiDUmhEu0j5hOgwENhxqwdwgY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -390,7 +390,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "linux_amd64"
             }
@@ -403,7 +403,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "linux_arm64"
             }
@@ -416,7 +416,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "linux_s390x"
             }
@@ -429,7 +429,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "linux_ppc64le"
             }
@@ -442,7 +442,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "darwin_amd64"
             }
@@ -455,7 +455,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "darwin_arm64"
             }
@@ -468,7 +468,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "windows_amd64"
             }
@@ -481,7 +481,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "22.22.0",
+              "node_version": "22.14.0",
               "include_headers": false,
               "platform": "windows_arm64"
             }
@@ -807,7 +807,7 @@
     "@@rules_rust+//crate_universe:extensions.bzl%crate": {
       "general": {
         "bzlTransitiveDigest": "Mb7iFKl6zLzGPR5Iz5EnQ2OV5dFAHQ6U5StiU13GNXY=",
-        "usagesDigest": "bxhtAyWSH7FxySx4w5C6lPDpkbxEfjkHBkEIy9T7sMY=",
+        "usagesDigest": "8OP/+zL8AKxXSRHmajyqrgteRCeYa6/L7iyPK4Sg1aA=",
         "recordedFileInputs": {
           "@@//packages/clauderon/Cargo.lock": "b1e51ffff558eab7dbc23246713e830bafeaf405d43c0f703b8ba6db8be70e20",
           "@@//packages/clauderon/Cargo.toml": "d3c06740b06d016d1567f7f8dd96de61868fa84cb8290656ed1cf18bb6145ee9"
