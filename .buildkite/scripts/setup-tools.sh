@@ -7,10 +7,14 @@ BAZELISK_VERSION="1.25.0"
 
 install_base() {
     echo "--- :debian: Installing system dependencies"
-    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates unzip > /dev/null
+    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates unzip gcc > /dev/null
 }
 
 install_ripgrep() {
+    if command -v rg &>/dev/null; then
+        echo "--- :mag: ripgrep already installed, skipping"
+        return
+    fi
     echo "--- :mag: Installing ripgrep"
     curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp
     cp /tmp/ripgrep-14.1.1-x86_64-unknown-linux-musl/rg /usr/local/bin/rg
@@ -18,12 +22,20 @@ install_ripgrep() {
 }
 
 install_bazel() {
+    if command -v bazel &>/dev/null; then
+        echo "--- :bazel: Bazelisk already installed, skipping"
+        return
+    fi
     echo "--- :bazel: Installing Bazelisk ${BAZELISK_VERSION}"
     curl -fsSL "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64" -o /usr/local/bin/bazel
     chmod +x /usr/local/bin/bazel
 }
 
 install_uv() {
+    if command -v uv &>/dev/null; then
+        echo "--- :python: uv already installed, skipping"
+        return
+    fi
     echo "--- :python: Installing uv"
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
@@ -74,6 +86,10 @@ install_gh() {
 }
 
 install_target_determinator() {
+    if command -v target-determinator &>/dev/null; then
+        echo "--- :bazel: target-determinator already installed, skipping"
+        return
+    fi
     local version="0.32.0"
     echo "--- :bazel: Installing target-determinator ${version}"
     curl -fsSL "https://github.com/bazel-contrib/target-determinator/releases/download/v${version}/target-determinator.linux.amd64" -o /usr/local/bin/target-determinator
