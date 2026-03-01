@@ -7,13 +7,13 @@ steps:
     plugins:
       - kubernetes:
           checkout:
-            cloneFlags: --depth=100
+            cloneFlags: "--depth=100 --dissociate"
             fetchFlags: --depth=100
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
               - name: container-0
-                image: "oven/bun:debian"
+                image: "ghcr.io/shepherdjerred/ci-base:latest"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
