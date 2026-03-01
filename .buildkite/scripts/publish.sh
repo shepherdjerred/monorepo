@@ -7,4 +7,10 @@ install_bazel
 install_uv
 
 echo "+++ :package: Publish"
-cd scripts/ci && uv run python -m ci.publish
+ARGS=""
+if [ -n "${BUILDKITE_PUBLISH_PACKAGES:-}" ]; then
+    # shellcheck disable=SC2086
+    ARGS="--packages ${BUILDKITE_PUBLISH_PACKAGES}"
+fi
+# shellcheck disable=SC2086
+cd scripts/ci && uv run python -m ci.publish ${ARGS}

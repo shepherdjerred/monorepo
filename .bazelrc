@@ -23,10 +23,9 @@ build --experimental_remote_merkle_tree_cache
 build --color=yes
 test --color=yes
 
-# Remote cache (SeaweedFS S3)
-# Uncomment when remote cache is configured:
-# build --remote_cache=https://seaweedfs.sjer.red/bazel-cache
-# build --remote_upload_local_results=true
+# Remote cache (bazel-remote -> SeaweedFS S3)
+# Local dev can use the Tailscale ingress; CI uses the in-cluster service URL.
+# build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
 
 # TypeScript
 build --@aspect_rules_ts//ts:skipLibCheck=always
@@ -34,8 +33,8 @@ build --@aspect_rules_ts//ts:skipLibCheck=always
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 # CI-specific settings
-# TODO: Set up bazel-remote or similar HTTP cache proxy in front of SeaweedFS.
-# For now, use disk cache within the CI pod for intra-build caching.
+build:ci --remote_cache=http://bazel-remote.bazel-remote.svc.cluster.local:8080
+build:ci --remote_upload_local_results=true
 build:ci --disk_cache=/tmp/bazel-disk-cache
 build:ci --color=yes
 test:ci --test_output=all

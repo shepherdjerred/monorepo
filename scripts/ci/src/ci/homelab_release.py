@@ -61,6 +61,7 @@ HELM_CHARTS = [
     "dns-audit",
     "sentinel",
     "tasknotes",
+    "bazel-remote",
 ]
 
 # Docker images for homelab infra (built via docker build, not Bazel).

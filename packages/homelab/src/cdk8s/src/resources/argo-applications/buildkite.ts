@@ -66,6 +66,7 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
+              "max-in-flight": 2,
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,

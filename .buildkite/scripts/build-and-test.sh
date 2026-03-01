@@ -7,4 +7,10 @@ install_bazel
 install_uv
 
 echo "+++ :bazel: Build & Test"
-cd scripts/ci && uv run python -m ci.build_and_test
+ARGS=""
+if [ -n "${BUILDKITE_BUILD_TARGETS:-}" ]; then
+    # shellcheck disable=SC2086
+    ARGS="--targets ${BUILDKITE_BUILD_TARGETS}"
+fi
+# shellcheck disable=SC2086
+cd scripts/ci && uv run python -m ci.build_and_test ${ARGS}

@@ -24,6 +24,7 @@ import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
 import { createDnsAuditChart } from "./cdk8s-charts/dns-audit.ts";
 import { createSentinelChart } from "./cdk8s-charts/sentinel.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
+import { createBazelRemoteChart } from "./cdk8s-charts/bazel-remote.ts";
 
 /**
  * Sets up all charts for the application
@@ -66,4 +67,5 @@ export async function setupCharts(app: App): Promise<void> {
   createDnsAuditChart(app);
   createSentinelChart(app);
   createTasknotesChart(app);
+  createBazelRemoteChart(app);
 }

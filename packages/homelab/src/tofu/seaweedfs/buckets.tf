@@ -69,6 +69,35 @@ resource "terraform_data" "sccache_lifecycle" {
   }
 }
 
+# Bazel remote cache with 30-day expiration
+resource "aws_s3_bucket" "bazel_cache" {
+  bucket = "bazel-cache"
+}
+
+resource "terraform_data" "bazel_cache_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.bazel_cache.id
+    expire_days  = 30
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-cache-objects",
+            "Status": "Enabled",
+            "Filter": {"Prefix": ""},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
+}
+
 # OpenTofu state backend for all modules
 resource "aws_s3_bucket" "homelab_tofu_state" {
   bucket = "homelab-tofu-state"
