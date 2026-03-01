@@ -7,7 +7,7 @@ BAZELISK_VERSION="1.25.0"
 
 install_base() {
     echo "--- :debian: Installing system dependencies"
-    apt-get update -qq && apt-get install -y -qq curl jq > /dev/null
+    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates > /dev/null
 }
 
 install_bazel() {
