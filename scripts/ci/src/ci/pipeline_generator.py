@@ -83,6 +83,24 @@ PACKAGE_TO_SITE = {
     "clauderon": "clauderon-docs",
 }
 
+# Resource tiers for per-package build steps
+_HEAVY = ("4", "8Gi")
+_MEDIUM = ("2", "4Gi")
+_LIGHT = ("1", "2Gi")
+
+PACKAGE_RESOURCES: dict[str, tuple[str, str]] = {
+    "clauderon": _HEAVY,
+    "homelab": _HEAVY,
+    "birmel": _MEDIUM,
+    "scout-for-lol": _MEDIUM,
+    "discord-plays-pokemon": _MEDIUM,
+    "sentinel": _MEDIUM,
+    "starlight-karma-bot": _MEDIUM,
+    "tasknotes-server": _MEDIUM,
+    "better-skill-capped": _MEDIUM,
+    "sjer.red": _MEDIUM,
+}
+
 # Packages that have container image push targets
 PACKAGES_WITH_IMAGES = {
     "birmel",
@@ -258,6 +276,8 @@ def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> d
     # Buildkite keys only allow [a-zA-Z0-9_-]
     key = f"build-{package.replace('.', '-')}"
 
+    cpu, memory = PACKAGE_RESOURCES.get(package, _LIGHT)
+
     return {
         "label": f":bazel: {package}",
         "key": key,
@@ -270,7 +290,7 @@ def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> d
             ]
         },
         "plugins": [
-            _k8s_plugin(cpu="2", memory="4Gi"),
+            _k8s_plugin(cpu=cpu, memory=memory),
             {"bazel-annotate#v1.1.1": {}},
         ],
     }
