@@ -80,7 +80,7 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              "max-in-flight": 6,
+              "max-in-flight": 20,
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {
