@@ -53,15 +53,6 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  new KubePersistentVolumeClaim(chart, "buildkite-bazel-cache-pvc", {
-    metadata: { name: "buildkite-bazel-cache", namespace: "buildkite" },
-    spec: {
-      accessModes: ["ReadWriteMany"],
-      storageClassName: NVME_STORAGE_CLASS,
-      resources: { requests: { storage: Quantity.fromString("20Gi") } },
-    },
-  });
-
   new OnePasswordItem(chart, "buildkite-argocd-token", {
     spec: {
       itemPath:
@@ -104,25 +95,7 @@ export function createBuildkiteApp(chart: Chart) {
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                volumes: [
-                  {
-                    name: "buildkite-bazel-cache",
-                    persistentVolumeClaim: {
-                      claimName: "buildkite-bazel-cache",
-                    },
-                  },
-                ],
-                containers: [
-                  {
-                    name: "agent",
-                    volumeMounts: [
-                      {
-                        name: "buildkite-bazel-cache",
-                        mountPath: "/cache/bazel",
-                      },
-                    ],
-                  },
-                ],
+                containers: [{ name: "agent" }],
               },
             },
           },
