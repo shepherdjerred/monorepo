@@ -42,8 +42,6 @@ build:ci --remote_cache=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
 build:ci --remote_upload_local_results=true
 build:ci --remote_local_fallback
 build:ci --experimental_remote_downloader=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
-build:ci --repository_cache=/cache/bazel/repository
-build:ci --repo_contents_cache=/cache/bazel/repo-contents
 build:ci --lockfile_mode=error
 build:ci --color=yes
 test:ci --test_output=all
