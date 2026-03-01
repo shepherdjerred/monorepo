@@ -49,15 +49,19 @@ export function createBazelRemoteChart(app: App) {
           labels: { app: "bazel-remote" },
         },
         spec: {
+          // Disable K8s service links to prevent BAZEL_REMOTE_* env var collisions
+          // (the Service named "bazel-remote" causes K8s to inject vars that conflict with the app)
+          enableServiceLinks: false,
           containers: [
             {
               name: "bazel-remote",
-              image: "buchgr/bazel-remote-cache:v2",
+              image: "buchgr/bazel-remote-cache:v2.6.1",
               args: [
                 "--s3.endpoint=seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
                 "--s3.bucket=bazel-cache",
                 "--s3.auth_method=access_key",
                 "--max_size=50",
+                "--experimental_remote_asset_api",
               ],
               ports: [
                 { containerPort: 8080, name: "http", protocol: "TCP" },
@@ -65,7 +69,7 @@ export function createBazelRemoteChart(app: App) {
               ],
               env: [
                 {
-                  name: "AWS_ACCESS_KEY_ID",
+                  name: "BAZEL_REMOTE_S3_ACCESS_KEY_ID",
                   valueFrom: {
                     secretKeyRef: {
                       name: S3_CREDENTIALS_SECRET_NAME,
@@ -74,7 +78,7 @@ export function createBazelRemoteChart(app: App) {
                   },
                 },
                 {
-                  name: "AWS_SECRET_ACCESS_KEY",
+                  name: "BAZEL_REMOTE_S3_SECRET_ACCESS_KEY",
                   valueFrom: {
                     secretKeyRef: {
                       name: S3_CREDENTIALS_SECRET_NAME,

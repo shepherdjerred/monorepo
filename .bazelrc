@@ -28,8 +28,9 @@ build --color=yes
 test --color=yes
 
 # Remote cache (bazel-remote -> SeaweedFS S3)
-# Local dev can use the Tailscale ingress; CI uses the in-cluster service URL.
-# build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
+# Local dev uses Tailscale ingress (read-only); CI uses in-cluster gRPC (read-write).
+build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
+build --remote_upload_local_results=false
 
 # TypeScript
 build --@aspect_rules_ts//ts:skipLibCheck=always
@@ -37,9 +38,13 @@ build --@aspect_rules_ts//ts:skipLibCheck=always
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 # CI-specific settings
-# Remote cache via bazel-remote (enable after deploying bazel-remote service)
-# build:ci --remote_cache=http://bazel-remote.bazel-remote.svc.cluster.local:8080
-# build:ci --remote_upload_local_results=true
+build:ci --remote_cache=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
+build:ci --remote_upload_local_results=true
+build:ci --remote_local_fallback
+build:ci --experimental_remote_downloader=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
+build:ci --repository_cache=/cache/bazel/repository
+build:ci --repo_contents_cache=/cache/bazel/repo-contents
+build:ci --lockfile_mode=error
 build:ci --color=yes
 test:ci --test_output=all
 
