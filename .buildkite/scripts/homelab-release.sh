@@ -10,4 +10,4 @@ install_tofu
 
 # Docker is available in the k8s pod via DinD or socket mount
 echo "+++ :kubernetes: Homelab Release"
-cd scripts/ci && uv run python -m ci.homelab_release
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.homelab_release

@@ -7,4 +7,4 @@ install_uv
 install_gh
 
 echo "+++ :bookmark: Version Commit-Back"
-cd scripts/ci && uv run python -m ci.version_commit_back
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.version_commit_back

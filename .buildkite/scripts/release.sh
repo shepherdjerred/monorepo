@@ -10,4 +10,4 @@ echo "--- :npm: Installing release-please"
 npm install -g release-please
 
 echo "+++ :bookmark: Release"
-cd scripts/ci && uv run python -m ci.release
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.release

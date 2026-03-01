@@ -18,4 +18,4 @@ if [ -n "${BUILDKITE_DEPLOY_SITES:-}" ]; then
     ARGS="--sites ${BUILDKITE_DEPLOY_SITES}"
 fi
 # shellcheck disable=SC2086
-cd scripts/ci && uv run python -m ci.deploy ${ARGS}
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.deploy ${ARGS}

@@ -25,4 +25,4 @@ linker = "aarch64-linux-gnu-gcc"
 EOF
 
 echo "+++ :rust: Clauderon Release"
-cd scripts/ci && uv run python -m ci.clauderon_release
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.clauderon_release

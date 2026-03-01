@@ -13,4 +13,4 @@ if [ -n "${BUILDKITE_BUILD_TARGETS:-}" ]; then
     ARGS="--targets ${BUILDKITE_BUILD_TARGETS}"
 fi
 # shellcheck disable=SC2086
-cd scripts/ci && uv run python -m ci.build_and_test ${ARGS}
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.build_and_test ${ARGS}
