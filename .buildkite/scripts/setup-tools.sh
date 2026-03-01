@@ -7,7 +7,14 @@ BAZELISK_VERSION="1.25.0"
 
 install_base() {
     echo "--- :debian: Installing system dependencies"
-    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates > /dev/null
+    apt-get update -qq && apt-get install -y -qq curl jq git ca-certificates unzip > /dev/null
+}
+
+install_ripgrep() {
+    echo "--- :mag: Installing ripgrep"
+    curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp
+    cp /tmp/ripgrep-14.1.1-x86_64-unknown-linux-musl/rg /usr/local/bin/rg
+    chmod +x /usr/local/bin/rg
 }
 
 install_bazel() {
