@@ -41,7 +41,6 @@ common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 build:ci --remote_cache=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
 build:ci --remote_upload_local_results=true
 build:ci --remote_local_fallback
-build:ci --experimental_remote_downloader=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
 build:ci --lockfile_mode=error
 build:ci --color=yes
 test:ci --test_output=all
