@@ -39,8 +39,8 @@ PATTERNS = [
 
 
 def count_pattern(pattern: str, glob: str, paths: list[str] | None = None,
-                  exclude_path_patterns: list[str] | None = None) -> int:
-    """Count occurrences of a pattern across files matching glob."""
+                  exclude_path_patterns: list[str] | None = None) -> dict[str, int]:
+    """Count occurrences of a pattern per file matching glob."""
     search_paths = [str(_REPO_ROOT / p) for p in (paths or ["packages/"])]
     excludes = exclude_path_patterns or []
     result = subprocess.run(
@@ -49,19 +49,19 @@ def count_pattern(pattern: str, glob: str, paths: list[str] | None = None,
          pattern, *search_paths],
         capture_output=True, text=True, check=False,
     )
-    total = 0
+    counts: dict[str, int] = {}
     for line in result.stdout.strip().splitlines():
         parts = line.rsplit(":", 1)
         if len(parts) == 2:
             file_path = parts[0]
-            # Filter out paths matching exclude patterns
             if any(ep in file_path for ep in excludes):
                 continue
             try:
-                total += int(parts[1])
-            except ValueError:
+                rel_path = str(Path(file_path).relative_to(_REPO_ROOT))
+                counts[rel_path] = int(parts[1])
+            except (ValueError, ValueError):
                 pass
-    return total
+    return counts
 
 
 def check() -> tuple[bool, str]:
@@ -77,16 +77,31 @@ def check() -> tuple[bool, str]:
     for p in PATTERNS:
         current = count_pattern(p["pattern"], p["glob"], p.get("paths"),
                                 p.get("exclude_path_patterns"))
-        # Baseline stores per-file counts; sum the category total
         baseline_entry = baseline.get(p["name"], {})
-        if isinstance(baseline_entry, dict):
-            allowed = sum(baseline_entry.values())
-        else:
-            allowed = baseline_entry
-        status = "PASS" if current <= allowed else "FAIL"
-        results.append(f"  {p['name']}: {current}/{allowed} ({status})")
-        if current > allowed:
-            violations.append(f"{p['name']}: {current} > {allowed}")
+        if not isinstance(baseline_entry, dict):
+            baseline_entry = {}
+
+        current_total = sum(current.values())
+        allowed_total = sum(baseline_entry.values())
+        all_files = sorted(set(current) | set(baseline_entry))
+        file_violations = []
+
+        for f in all_files:
+            cur = current.get(f, 0)
+            base = baseline_entry.get(f, 0)
+            if cur != base:
+                if cur > base and base == 0:
+                    file_violations.append(f"    {f}: {cur} (new file, not in baseline)")
+                elif cur > base:
+                    file_violations.append(f"    {f}: {cur} > {base} (regression)")
+                elif cur == 0:
+                    file_violations.append(f"    {f}: gone (baseline has {base}, remove from .quality-baseline.json)")
+                else:
+                    file_violations.append(f"    {f}: {cur} < {base} (decreased, update .quality-baseline.json)")
+
+        status = "PASS" if not file_violations else "FAIL"
+        results.append(f"  {p['name']}: {current_total}/{allowed_total} ({status})")
+        violations.extend(file_violations)
 
     summary = "Quality Ratchet:\n" + "\n".join(results)
     if violations:

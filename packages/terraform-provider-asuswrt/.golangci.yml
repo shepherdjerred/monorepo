@@ -1,0 +1,189 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    # Error-prone (non-negotiable)
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+    # Bugs & correctness
+    - bodyclose
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - copyloopvar
+    - noctx
+    - sqlclosecheck
+    - nilerr
+
+    # Style & consistency
+    - gocritic
+    - revive
+    - godot
+    - errname
+    - goprintffuncname
+    - unconvert
+    - whitespace
+    - asciicheck
+    - dupword
+
+    # Complexity
+    - cyclop
+    - gocognit
+    - nestif
+
+    # Security
+    - gosec
+
+    # Performance
+    - perfsprint
+    - prealloc
+    - intrange
+
+    # Error handling
+    - wrapcheck
+
+    # Best practices
+    - nolintlint
+    - forbidigo
+    - depguard
+    - mirror
+    - usestdlibvars
+    - wastedassign
+
+    # Testing
+    - testifylint
+    - tparallel
+
+  settings:
+    cyclop:
+      max-complexity: 10
+    gocognit:
+      min-complexity: 15
+    nestif:
+      min-complexity: 4
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - opinionated
+        - performance
+    revive:
+      rules:
+        - name: blank-imports
+        - name: bare-return
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: deep-exit
+        - name: defer
+        - name: dot-imports
+        - name: early-return
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: get-return
+        - name: identical-branches
+        - name: if-return
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: time-naming
+        - name: unconditional-recursion
+        - name: unexported-return
+        - name: unhandled-error
+          arguments:
+            - "strings.Builder.WriteByte"
+            - "strings.Builder.WriteString"
+            - "strings.Builder.WriteRune"
+        - name: unnecessary-stmt
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: unused-receiver
+        - name: useless-break
+        - name: var-declaration
+        - name: var-naming
+        - name: waitgroup-by-value
+    gosec:
+      excludes:
+        - G104
+        - G117
+        - G704
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: io/ioutil
+              desc: "Deprecated: use io and os packages"
+            - pkg: github.com/pkg/errors
+              desc: "Use stdlib errors and fmt.Errorf"
+    forbidigo:
+      forbid:
+        - pattern: ^print$
+          msg: "Do not commit print statements"
+        - pattern: ^fmt\.Print(f|ln)?$
+          msg: "Use tflog instead of fmt.Print"
+        - pattern: ^panic$
+          msg: "Use error returns instead of panic"
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+      ignore-package-globs:
+        - github.com/hashicorp/terraform-plugin-framework/*
+        - github.com/hashicorp/terraform-plugin-go/*
+        - encoding/json
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    testifylint:
+      enable-all: true
+
+  exclusions:
+    presets:
+      - comments
+    rules:
+      - path: _test\.go$
+        linters:
+          - cyclop
+          - gocognit
+          - nestif
+          - wrapcheck
+          - gocritic
+      # Terraform plugin framework imposes method signatures with large value
+      # receivers and unused receiver names.
+      - path: internal/provider/
+        text: "hugeParam"
+        linters:
+          - gocritic
+      - path: internal/provider/
+        text: "unused-receiver"
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      extra-rules: true
+    goimports:
+      local-prefixes:
+        - github.com/shepherdjerred/terraform-provider-asuswrt
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

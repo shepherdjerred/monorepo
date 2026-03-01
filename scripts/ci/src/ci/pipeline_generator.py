@@ -57,8 +57,10 @@ def _k8s_plugin(
     }
 
 
-# Minimum number of :bazel: jobs a build must have to qualify as "fully tested"
-MIN_GREEN_BAZEL_JOBS = 10
+# Minimum number of :bazel: jobs a build must have to qualify as "fully tested".
+# With 19 packages × 4 sub-steps per group, a full build has ~76 jobs.
+# Threshold of 40 ensures we don't treat partial builds as green.
+MIN_GREEN_BAZEL_JOBS = 40
 
 
 # Files that, if changed, should trigger a full build
@@ -342,32 +344,49 @@ ALL_PACKAGES = [
 ]
 
 
-def _generate_per_package_step(package: str, *, stamp_images: bool = False) -> dict:
-    """Generate a build+test step for a single package."""
-    cmd = f".buildkite/scripts/bazel-package.sh //packages/{package}/..."
-    if stamp_images:
-        cmd += " --stamp-images"
-
-    # Buildkite keys only allow [a-zA-Z0-9_-]
-    key = f"build-{package.replace('.', '-')}"
-
+def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> dict:
+    """Generate a Buildkite group with build + lint/typecheck/test steps for a package."""
+    safe_key = package.replace(".", "-")
+    build_key = f"build-{safe_key}"
     cpu, memory = PACKAGE_RESOURCES.get(package, _LIGHT)
 
+    build_cmd = f".buildkite/scripts/bazel-phase.sh //packages/{package}/... build"
+    if stamp_images:
+        build_cmd += " --stamp-images"
+
+    _retry = {
+        "automatic": [
+            {"exit_status": -1, "limit": 2},
+            {"exit_status": 255, "limit": 2},
+        ]
+    }
+
+    build_step = {
+        "label": ":building_construction: Build",
+        "key": build_key,
+        "command": build_cmd,
+        "timeout_in_minutes": 15,
+        "retry": _retry,
+        "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
+    }
+
+    phases = [("lint", ":eslint:"), ("typecheck", ":typescript:"), ("test", ":test_tube:")]
+    test_steps = []
+    for phase, emoji in phases:
+        test_steps.append({
+            "label": f"{emoji} {phase.title()}",
+            "key": f"{phase}-{safe_key}",
+            "depends_on": build_key,
+            "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
+            "timeout_in_minutes": 15,
+            "retry": _retry,
+            "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
+        })
+
     return {
-        "label": f":bazel: {package}",
-        "key": key,
-        "command": cmd,
-        "timeout_in_minutes": 20,
-        "retry": {
-            "automatic": [
-                {"exit_status": -1, "limit": 2},
-                {"exit_status": 3, "limit": 1},
-                {"exit_status": 255, "limit": 2},
-            ]
-        },
-        "plugins": [
-            _k8s_plugin(cpu=cpu, memory=memory),
-        ],
+        "group": f":bazel: {package}",
+        "key": f"pkg-{safe_key}",
+        "steps": [build_step] + test_steps,
     }
 
 
@@ -559,7 +578,7 @@ def generate_pipeline() -> dict:
     packages = sorted(ALL_PACKAGES) if affected.build_all else sorted(affected.packages)
     for pkg in packages:
         stamp = pkg in PACKAGES_WITH_IMAGES and is_release
-        steps.append(_generate_per_package_step(pkg, stamp_images=stamp))
+        steps.append(_generate_per_package_steps(pkg, stamp_images=stamp))
 
     # --- Quality & Compliance (every push) ---
     steps.append(_generate_quality_gate_step())

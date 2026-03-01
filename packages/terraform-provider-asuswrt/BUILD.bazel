@@ -1,0 +1,24 @@
+# gazelle:prefix github.com/shepherdjerred/terraform-provider-asuswrt
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+exports_files([
+    "go.mod",
+    "go.sum",
+])
+
+go_library(
+    name = "terraform-provider-asuswrt_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/shepherdjerred/terraform-provider-asuswrt",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//packages/terraform-provider-asuswrt/internal/provider",
+        "@com_github_hashicorp_terraform_plugin_framework//providerserver",
+    ],
+)
+
+go_binary(
+    name = "terraform-provider-asuswrt",
+    embed = [":terraform-provider-asuswrt_lib"],
+    visibility = ["//visibility:public"],
+)

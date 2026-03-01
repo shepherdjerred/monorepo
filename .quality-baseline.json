@@ -3,41 +3,11 @@
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
   },
-  "ts-suppressions": {
+  "ts-expect-error": {
     "packages/homelab/src/ha/src/util.ts": 1
   },
-  "ts-expect-error": {
-    "packages/homelab/scripts/check-suppressions.ts": 1,
-    "packages/homelab/src/ha/src/util.ts": 1,
-    "packages/scout-for-lol/scripts/check-suppressions.ts": 1
-  },
-  "ts-ignore": {
-    "packages/homelab/scripts/check-suppressions.ts": 2,
-    "packages/scout-for-lol/scripts/check-suppressions.ts": 2
-  },
-  "ts-nocheck": {
-    "packages/homelab/scripts/check-suppressions.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/acid.zalan.do.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/acme.cert-manager.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/actions.github.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/argoproj.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/cert-manager.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/deviceplugin.intel.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/fpga.intel.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/k8s.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/monitoring.coreos.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/monitoring.grafana.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/networking.cfargotunnel.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/nfd.k8s-sigs.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/onepassword.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/snapshot.storage.k8s.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/tailscale.com.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/velero.io.ts": 1,
-    "packages/homelab/src/cdk8s/generated/imports/zfs.openebs.io.ts": 1,
-    "packages/homelab/src/cdk8s/scripts/update-imports.ts": 2,
-    "packages/homelab/src/ha/generate-types.ts": 2,
-    "packages/scout-for-lol/scripts/check-suppressions.ts": 1
-  },
+  "ts-ignore": {},
+  "ts-nocheck": {},
   "rust-allow": {},
   "prettier-ignore": {},
   "updated": "2026-03-01"

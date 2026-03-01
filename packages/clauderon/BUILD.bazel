@@ -54,6 +54,7 @@ rust_test(
     name = "clauderon_test",
     crate = ":clauderon_lib",
     proc_macro_deps = all_crate_deps(proc_macro_dev = True),
+    tags = ["test"],
     deps = all_crate_deps(normal_dev = True),
 )
 

@@ -15,12 +15,14 @@ def build(*targets: str, config: str = "ci", stamp: bool = False, bep_file: str 
     _run(cmd)
 
 
-def test(*targets: str, config: str = "ci", bep_file: str | None = None) -> None:
+def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_tag_filters: str | None = None) -> None:
     """Run bazel test with the given targets.
 
     Exit code 4 means "no test targets found" — treated as success.
     """
     cmd = ["bazel", "test", f"--config={config}"]
+    if test_tag_filters:
+        cmd.append(f"--test_tag_filters={test_tag_filters}")
     if bep_file:
         cmd.append(f"--build_event_binary_file={bep_file}")
     cmd.extend(targets)
