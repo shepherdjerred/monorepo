@@ -35,8 +35,10 @@ packages/dpp/
 /.rustup/
 .config/
 
-# Bun install lock (used by run_npm_script.sh)
+# Bazel test runner locks (used by run_npm_script.sh)
 .bun-install.lock
+.bun-install-done
+.eslint-config-build.lock
 
 # Bazel
 bazel-bin
