@@ -10,8 +10,10 @@
       },
       "devDependencies": {
         "@dagger.io/dagger": "^0.19.0",
+        "eslint": "^9.30.1",
         "lefthook": "^2.1.1",
         "typescript": "^5.9.3",
+        "typescript-eslint": "^8.35.1",
       },
     },
     "packages/astro-opengraph-images": {
@@ -240,7 +242,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@d6v/zconf": "^0.0.4",
-        "@discord-plays-pokemon/common": "1.0.0",
+        "@discord-plays-pokemon/common": "workspace:*",
         "@sentry/node": "^10.0.0",
         "cors": "^2.8.5",
         "discord.js": "^14.18.0",
@@ -296,7 +298,7 @@
       "name": "@discord-plays-pokemon/frontend",
       "version": "1.0.0",
       "dependencies": {
-        "@discord-plays-pokemon/common": "1.0.0",
+        "@discord-plays-pokemon/common": "workspace:*",
         "@sentry/react": "^10.0.0",
         "@tailwindcss/vite": "^4.0.17",
         "@tanstack/react-query": "^5.70.0",
@@ -806,7 +808,7 @@
         "gray-matter": "^4",
         "hono": "^4",
         "prom-client": "^15",
-        "tasknotes-types": "file:../tasknotes-types",
+        "tasknotes-types": "workspace:*",
         "yaml": "^2",
         "zod": "^3.24",
       },
@@ -856,7 +858,7 @@
         "react-native-screens": "4.19.0",
         "react-native-sound": "^0.13.0",
         "react-native-vector-icons": "^10.3.0",
-        "tasknotes-types": "file:../tasknotes-types",
+        "tasknotes-types": "workspace:*",
         "ts-pattern": "^5.7.1",
         "zeego": "^3.0.6",
         "zod": "^3.25.3",
