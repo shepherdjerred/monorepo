@@ -13,4 +13,4 @@ if [ -n "${BUILDKITE_PUBLISH_PACKAGES:-}" ]; then
     ARGS="--packages ${BUILDKITE_PUBLISH_PACKAGES}"
 fi
 # shellcheck disable=SC2086
-cd scripts/ci && uv run python -m ci.publish ${ARGS}
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.publish ${ARGS}

@@ -17,4 +17,4 @@ fi
 git fetch origin main --depth=100 2>/dev/null || true
 
 echo "+++ :pipeline: Generating dynamic pipeline"
-cd scripts/ci && uv run python -m ci.pipeline_generator | buildkite-agent pipeline upload
+cd scripts/ci && PYTHONPATH=src uv run python -m ci.pipeline_generator | buildkite-agent pipeline upload
