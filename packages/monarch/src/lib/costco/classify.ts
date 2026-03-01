@@ -69,7 +69,7 @@ export async function classifyCostco(
   categories: MonarchCategory[],
   costcoTransactions: MonarchTransaction[],
 ): Promise<{ changes: ProposedChange[]; matchResult: CostcoMatchResult }> {
-  const orders = loadCostcoOrders();
+  const orders = await loadCostcoOrders();
   log.info(`Loaded ${String(orders.length)} Costco orders`);
 
   const matchResult = matchCostcoTransactions(costcoTransactions, orders);

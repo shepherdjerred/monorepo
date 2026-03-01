@@ -9,10 +9,10 @@ export type CostcoEnrichResult = {
   matchRate: { matched: number; total: number };
 };
 
-export function enrichCostco(
+export async function enrichCostco(
   costcoTransactions: MonarchTransaction[],
-): CostcoEnrichResult {
-  const orders = loadCostcoOrders();
+): Promise<CostcoEnrichResult> {
+  const orders = await loadCostcoOrders();
   log.info(`Loaded ${String(orders.length)} Costco orders`);
 
   const matchResult = matchCostcoTransactions(costcoTransactions, orders);

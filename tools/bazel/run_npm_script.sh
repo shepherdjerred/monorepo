@@ -74,21 +74,47 @@ if [ ! -f "${INSTALL_DONE}" ]; then
   fi
 fi
 
-# Build eslint-config if needed (other packages import from its dist/)
-if [ ! -d "${REPO_ROOT}/packages/eslint-config/dist" ]; then
-  ESLINT_LOCKDIR="${REPO_ROOT}/.eslint-config-build.lock"
-  if mkdir "${ESLINT_LOCKDIR}" 2>/dev/null; then
-    trap 'rmdir "${ESLINT_LOCKDIR}" 2>/dev/null' EXIT
-    echo "Building eslint-config..." >&2
-    (cd "${REPO_ROOT}/packages/eslint-config" && "${BUN}" run build) >&2
-    rmdir "${ESLINT_LOCKDIR}" 2>/dev/null
-    trap - EXIT
-  else
-    while [ ! -d "${REPO_ROOT}/packages/eslint-config/dist" ] && [ -d "${ESLINT_LOCKDIR}" ]; do
-      sleep 1
-    done
+# Build a workspace package if its output directory doesn't exist.
+# Uses mkdir-based locking to avoid duplicate builds from parallel Bazel tests.
+# Usage: build_if_missing <marker_dir> <package_dir> <build_command...>
+build_if_missing() {
+  local marker_dir="$1"
+  local pkg_dir="$2"
+  shift 2
+  local lock_name
+  lock_name="$(echo "${pkg_dir}" | tr '/' '-')"
+
+  if [ ! -d "${marker_dir}" ]; then
+    local lockdir="${REPO_ROOT}/.build-${lock_name}.lock"
+    if mkdir "${lockdir}" 2>/dev/null; then
+      trap 'rmdir "${lockdir}" 2>/dev/null' EXIT
+      echo "Building ${pkg_dir}..." >&2
+      (cd "${REPO_ROOT}/${pkg_dir}" && "$@") >&2
+      rmdir "${lockdir}" 2>/dev/null
+      trap - EXIT
+    else
+      while [ ! -d "${marker_dir}" ] && [ -d "${lockdir}" ]; do
+        sleep 1
+      done
+    fi
   fi
-fi
+}
+
+# Build workspace packages that other packages depend on (import from dist/).
+# eslint-config must be built first since all packages use it for linting.
+build_if_missing "${REPO_ROOT}/packages/eslint-config/dist" \
+  "packages/eslint-config" "${BUN}" run build
+
+build_if_missing "${REPO_ROOT}/packages/webring/dist" \
+  "packages/webring" "${BUN}" run build
+
+build_if_missing "${REPO_ROOT}/packages/discord-plays-pokemon/packages/common/dist" \
+  "packages/discord-plays-pokemon/packages/common" "${BUN}" run build
+
+# Generate Prisma client for scout-for-lol (typecheck/test need it).
+# Uses the full generate script: prisma generate + brand-types + test-template-db.
+build_if_missing "${REPO_ROOT}/packages/scout-for-lol/packages/backend/generated" \
+  "packages/scout-for-lol/packages/backend" "${BUN}" run generate
 
 cd "${SOURCE_DIR}"
 exec "${BUN}" run "${SCRIPT_NAME}"

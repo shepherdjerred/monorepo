@@ -102,10 +102,11 @@ async function runDeepPathEnrichments(
     ));
   }
 
-  // Costco is sync
   if (!config.skipCostco && separated.costcoTransactions.length > 0) {
-    const r = enrichCostco(separated.costcoTransactions);
-    tasks.push(Promise.resolve({ ...r, key: "costco" as const }));
+    tasks.push(enrichWithKey(
+      enrichCostco(separated.costcoTransactions),
+      "costco",
+    ));
   }
 
   return Promise.all(tasks);
