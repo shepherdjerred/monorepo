@@ -5,6 +5,7 @@ source "$(dirname "$0")/setup-tools.sh"
 install_base
 install_bazel
 install_uv
+install_ripgrep
 
 echo "+++ :bazel: Build & Test"
 ARGS=""

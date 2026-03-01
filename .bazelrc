@@ -33,8 +33,9 @@ build --@aspect_rules_ts//ts:skipLibCheck=always
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 # CI-specific settings
-build:ci --remote_cache=http://bazel-remote.bazel-remote.svc.cluster.local:8080
-build:ci --remote_upload_local_results=true
+# Remote cache via bazel-remote (enable after deploying bazel-remote service)
+# build:ci --remote_cache=http://bazel-remote.bazel-remote.svc.cluster.local:8080
+# build:ci --remote_upload_local_results=true
 build:ci --disk_cache=/tmp/bazel-disk-cache
 build:ci --color=yes
 test:ci --test_output=all
