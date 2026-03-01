@@ -46,6 +46,7 @@ def _k8s_plugin(
                 "containers": [
                     {
                         "name": "container-0",
+                        "image": "debian:bookworm-slim",
                         "resources": {"requests": {"cpu": cpu, "memory": memory}},
                         "envFrom": secret_refs,
                     }
