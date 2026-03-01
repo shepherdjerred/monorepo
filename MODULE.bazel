@@ -24,6 +24,19 @@ bazel_dep(name = "rules_rust", version = "0.69.0")
 bazel_dep(name = "rules_oci", version = "2.2.7")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
 
+# Python (transitive dep of rules_pkg; configured here for CI root-user support)
+bazel_dep(name = "rules_python", version = "1.0.0")
+
+##############################################################################
+# Python toolchain (used transitively by rules_pkg)
+##############################################################################
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.11",
+    ignore_root_user_error = True,
+)
+
 ##############################################################################
 # Rust toolchain
 ##############################################################################
