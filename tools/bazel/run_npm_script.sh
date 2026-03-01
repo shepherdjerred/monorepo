@@ -53,19 +53,38 @@ export PATH="${HOME}/.local/share/mise/shims:${HOME}/.local/share/mise/installs/
 # Trust all mise configs in the monorepo to avoid interactive prompts
 export MISE_TRUSTED_CONFIG_PATHS="${REPO_ROOT}"
 
-# Ensure dependencies are installed (critical for CI where node_modules don't exist)
-if [ ! -d "${REPO_ROOT}/node_modules" ]; then
+# Ensure dependencies are installed (critical for CI where node_modules don't exist).
+# Uses a marker file to signal completion since node_modules/ appears before install finishes.
+INSTALL_DONE="${REPO_ROOT}/.bun-install-done"
+if [ ! -f "${INSTALL_DONE}" ]; then
   LOCKDIR="${REPO_ROOT}/.bun-install.lock"
   # Use mkdir as a portable atomic lock (works on macOS and Linux)
   if mkdir "${LOCKDIR}" 2>/dev/null; then
     trap 'rmdir "${LOCKDIR}" 2>/dev/null' EXIT
     echo "Installing dependencies with bun install..." >&2
     (cd "${REPO_ROOT}" && "${BUN}" install --frozen-lockfile) >&2
+    touch "${INSTALL_DONE}"
     rmdir "${LOCKDIR}" 2>/dev/null
     trap - EXIT
   else
     # Another process is installing; wait for it to finish
-    while [ ! -d "${REPO_ROOT}/node_modules" ] && [ -d "${LOCKDIR}" ]; do
+    while [ ! -f "${INSTALL_DONE}" ] && [ -d "${LOCKDIR}" ]; do
+      sleep 1
+    done
+  fi
+fi
+
+# Build eslint-config if needed (other packages import from its dist/)
+if [ ! -d "${REPO_ROOT}/packages/eslint-config/dist" ]; then
+  ESLINT_LOCKDIR="${REPO_ROOT}/.eslint-config-build.lock"
+  if mkdir "${ESLINT_LOCKDIR}" 2>/dev/null; then
+    trap 'rmdir "${ESLINT_LOCKDIR}" 2>/dev/null' EXIT
+    echo "Building eslint-config..." >&2
+    (cd "${REPO_ROOT}/packages/eslint-config" && "${BUN}" run build) >&2
+    rmdir "${ESLINT_LOCKDIR}" 2>/dev/null
+    trap - EXIT
+  else
+    while [ ! -d "${REPO_ROOT}/packages/eslint-config/dist" ] && [ -d "${ESLINT_LOCKDIR}" ]; do
       sleep 1
     done
   fi
