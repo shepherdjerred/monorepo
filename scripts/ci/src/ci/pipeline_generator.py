@@ -16,6 +16,8 @@ import json
 import os
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from dataclasses import dataclass, field
 
 from ci.lib import bazel
@@ -53,6 +55,10 @@ def _k8s_plugin(
             },
         }
     }
+
+
+# Minimum number of :bazel: jobs a build must have to qualify as "fully tested"
+MIN_GREEN_BAZEL_JOBS = 10
 
 
 # Files that, if changed, should trigger a full build
@@ -126,6 +132,72 @@ class AffectedPackages:
     has_site_packages: set[str] = field(default_factory=set)
 
 
+def _get_last_green_commit() -> str | None:
+    """Find the commit of the last fully-passing main build via Buildkite API.
+
+    A build qualifies as "green" only if it passed and had at least
+    MIN_GREEN_BAZEL_JOBS jobs with ':bazel:' in the name, ensuring we don't
+    treat minimal pipelines as fully tested.
+
+    Returns the commit SHA, or None if unavailable.
+    """
+    token = os.environ.get("BUILDKITE_API_TOKEN") or os.environ.get(
+        "BUILDKITE_AGENT_ACCESS_TOKEN"
+    )
+    if not token:
+        print("No Buildkite API token available, skipping green commit lookup", flush=True)
+        return None
+
+    org = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "")
+    pipeline = os.environ.get("BUILDKITE_PIPELINE_SLUG", "")
+    current_build = os.environ.get("BUILDKITE_BUILD_NUMBER", "")
+
+    if not org or not pipeline:
+        print("Missing org/pipeline slug, skipping green commit lookup", flush=True)
+        return None
+
+    url = (
+        f"https://api.buildkite.com/v2/organizations/{org}"
+        f"/pipelines/{pipeline}/builds"
+        f"?branch=main&state=passed&per_page=10"
+    )
+
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            builds = json.loads(resp.read().decode())
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        print(f"Buildkite API request failed: {e}", flush=True)
+        return None
+
+    for build in builds:
+        # Skip the current build
+        if str(build.get("number")) == current_build:
+            continue
+
+        jobs = build.get("jobs", [])
+        bazel_jobs = [j for j in jobs if ":bazel:" in (j.get("name") or "")]
+
+        if len(bazel_jobs) >= MIN_GREEN_BAZEL_JOBS:
+            commit = build.get("commit")
+            print(
+                f"Last green build: #{build.get('number')} "
+                f"({len(bazel_jobs)} bazel jobs, commit {commit[:10]})",
+                flush=True,
+            )
+            return commit
+
+        print(
+            f"Build #{build.get('number')} skipped: "
+            f"only {len(bazel_jobs)} bazel jobs (need {MIN_GREEN_BAZEL_JOBS})",
+            flush=True,
+        )
+
+    print("No qualifying green build found", flush=True)
+    return None
+
+
 def _get_base_revision() -> str:
     """Determine the base revision for target-determinator."""
     branch = os.environ.get("BUILDKITE_BRANCH", "")
@@ -142,7 +214,10 @@ def _get_base_revision() -> str:
         return result.stdout.strip()
 
     if branch == "main":
-        # Main branch: compare against previous commit
+        # Main branch: compare against last fully-passing build
+        green_commit = _get_last_green_commit()
+        if green_commit:
+            return green_commit
         return "HEAD~1"
 
     # Feature branch without PR: compare against main
