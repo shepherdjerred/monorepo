@@ -1,8 +1,28 @@
 # Shared Bazel macros for the monorepo
 
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+
 exports_files([
     "eslint_entry.js",
     "bun_test_entry.js",
     "typecheck_entry.js",
     "workspace_status.sh",
 ])
+
+js_library(
+    name = "bun_test_entry",
+    srcs = ["bun_test_entry.js"],
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "eslint_entry",
+    srcs = ["eslint_entry.js"],
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "typecheck_entry",
+    srcs = ["typecheck_entry.js"],
+    visibility = ["//visibility:public"],
+)

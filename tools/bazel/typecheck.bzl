@@ -27,7 +27,9 @@ def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [],
             "package.json",
             "//:tsconfig_base",
             ":node_modules/typescript",
+            "//tools/bazel:typecheck_entry",
         ],
+        no_copy_to_bin = ["//tools/bazel:typecheck_entry.js"],
         tags = ["typecheck"],
         **kwargs
     )

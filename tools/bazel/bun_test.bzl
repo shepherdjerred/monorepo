@@ -21,7 +21,9 @@ def bun_test(name, srcs, deps = [], data = [], **kwargs):
         data = srcs + deps + data + [
             "package.json",
             "tsconfig.json",
+            "//tools/bazel:bun_test_entry",
         ],
+        no_copy_to_bin = ["//tools/bazel:bun_test_entry.js"],
         tags = ["test"],
         **kwargs
     )
