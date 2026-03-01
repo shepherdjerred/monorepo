@@ -19,7 +19,7 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], *
     """
     js_test(
         name = name,
-        entry_point = "//tools/bazel:eslint_entry.js",
+        entry_point = "//tools/bazel:eslint_entry.cjs",
         data = srcs + deps + data + [
             config,
             "tsconfig.json",
@@ -30,7 +30,7 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], *
             "//packages/eslint-config:pkg",
             "//tools/bazel:eslint_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:eslint_entry.js"],
+        no_copy_to_bin = ["//tools/bazel:eslint_entry.cjs"],
         tags = ["lint"],
         **kwargs
     )

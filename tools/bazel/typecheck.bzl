@@ -21,7 +21,7 @@ def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [],
     """
     js_test(
         name = name,
-        entry_point = "//tools/bazel:typecheck_entry.js",
+        entry_point = "//tools/bazel:typecheck_entry.cjs",
         data = srcs + deps + data + [
             tsconfig,
             "package.json",
@@ -29,7 +29,7 @@ def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [],
             "//:node_modules/typescript",
             "//tools/bazel:typecheck_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:typecheck_entry.js"],
+        no_copy_to_bin = ["//tools/bazel:typecheck_entry.cjs"],
         tags = ["typecheck"],
         **kwargs
     )
