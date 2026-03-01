@@ -35,6 +35,9 @@ packages/dpp/
 /.rustup/
 .config/
 
+# Bun install lock (used by run_npm_script.sh)
+.bun-install.lock
+
 # Bazel
 bazel-bin
 bazel-out
