@@ -10,6 +10,19 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+from pathlib import Path
+
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+_REPO_ROOT = _repo_root()
 
 LINUX_TARGETS = [
     {"target": "x86_64-unknown-linux-gnu", "filename": "clauderon-linux-x86_64"},
@@ -56,12 +69,12 @@ def main() -> None:
                 "--target",
                 target,
                 "--manifest-path",
-                "packages/clauderon/Cargo.toml",
+                str(_REPO_ROOT / "packages/clauderon/Cargo.toml"),
             ],
             check=True,
         )
 
-        src = f"packages/clauderon/target/{target}/release/clauderon"
+        src = str(_REPO_ROOT / f"packages/clauderon/target/{target}/release/clauderon")
         dst = f"/tmp/{filename}"
         subprocess.run(["cp", src, dst], check=True)
         binaries.append((filename, dst))

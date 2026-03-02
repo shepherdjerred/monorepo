@@ -23,9 +23,22 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from ci.lib import bazel, ghcr, npm
 from ci.lib.config import ReleaseConfig
+
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+_REPO_ROOT = _repo_root()
 
 # Map from push target to version key in versions.ts
 PUSH_TARGET_TO_VERSION_KEY = {
@@ -54,18 +67,18 @@ PUSH_TARGETS = [
 
 # NPM packages to publish
 NPM_PACKAGES = [
-    "packages/bun-decompile",
-    "packages/astro-opengraph-images",
-    "packages/webring",
-    "packages/homelab/src/helm-types",
+    str(_REPO_ROOT / "packages/bun-decompile"),
+    str(_REPO_ROOT / "packages/astro-opengraph-images"),
+    str(_REPO_ROOT / "packages/webring"),
+    str(_REPO_ROOT / "packages/homelab/src/helm-types"),
 ]
 
 # Docker-built images (not using Bazel oci_push)
 DOCKER_IMAGES = [
     {
         "name": "obsidian-headless",
-        "dockerfile": "tools/oci/obsidian-headless/Dockerfile",
-        "context": "tools/oci/obsidian-headless",
+        "dockerfile": str(_REPO_ROOT / "tools/oci/obsidian-headless/Dockerfile"),
+        "context": str(_REPO_ROOT / "tools/oci/obsidian-headless"),
         "repository": "ghcr.io/shepherdjerred/obsidian-headless",
         "version_key": "shepherdjerred/obsidian-headless",
     },

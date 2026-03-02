@@ -32,6 +32,18 @@ from pathlib import Path
 from ci.lib import argocd, ghcr, helm, tofu
 from ci.lib.config import ReleaseConfig
 
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+REPO_ROOT = _repo_root()
+
 # Helm charts to package and push (matches HELM_CHARTS in .dagger/src/homelab-helm.ts)
 HELM_CHARTS = [
     "ddns",
@@ -70,26 +82,26 @@ HELM_CHARTS = [
 DOCKER_IMAGES = [
     {
         "name": "homelab",
-        "dockerfile": "packages/homelab/src/ha/Dockerfile",
-        "context": "packages/homelab",
+        "dockerfile": str(REPO_ROOT / "packages/homelab/src/ha/Dockerfile"),
+        "context": str(REPO_ROOT / "packages/homelab"),
         "repository": "ghcr.io/shepherdjerred/homelab",
     },
     {
         "name": "dependency-summary",
-        "dockerfile": "packages/homelab/src/deps-email/Dockerfile",
-        "context": "packages/homelab",
+        "dockerfile": str(REPO_ROOT / "packages/homelab/src/deps-email/Dockerfile"),
+        "context": str(REPO_ROOT / "packages/homelab"),
         "repository": "ghcr.io/shepherdjerred/dependency-summary",
     },
     {
         "name": "dns-audit",
-        "dockerfile": "packages/homelab/src/dns-audit/Dockerfile",
-        "context": "packages/homelab/src/dns-audit",
+        "dockerfile": str(REPO_ROOT / "packages/homelab/src/dns-audit/Dockerfile"),
+        "context": str(REPO_ROOT / "packages/homelab/src/dns-audit"),
         "repository": "ghcr.io/shepherdjerred/dns-audit",
     },
     {
         "name": "caddy-s3proxy",
-        "dockerfile": "packages/homelab/src/caddy-s3proxy/Dockerfile",
-        "context": "packages/homelab/src/caddy-s3proxy",
+        "dockerfile": str(REPO_ROOT / "packages/homelab/src/caddy-s3proxy/Dockerfile"),
+        "context": str(REPO_ROOT / "packages/homelab/src/caddy-s3proxy"),
         "repository": "ghcr.io/shepherdjerred/caddy-s3proxy",
     },
 ]
@@ -156,7 +168,7 @@ def main() -> None:
     print("\n--- Build cdk8s manifests ---", flush=True)
     subprocess.run(
         ["bunx", "cdk8s", "synth"],
-        cwd="packages/homelab/src/cdk8s",
+        cwd=str(REPO_ROOT / "packages/homelab/src/cdk8s"),
         check=True,
     )
 
@@ -168,7 +180,7 @@ def main() -> None:
         sys.exit(1)
 
     print("\n--- Package and push Helm charts ---", flush=True)
-    helm_dir = Path("packages/homelab/src/cdk8s/helm")
+    helm_dir = REPO_ROOT / "packages/homelab/src/cdk8s/helm"
     for chart_name in HELM_CHARTS:
         chart_dir = str(helm_dir / chart_name)
         if not Path(chart_dir).exists():
