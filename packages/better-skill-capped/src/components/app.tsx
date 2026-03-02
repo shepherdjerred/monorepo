@@ -9,6 +9,13 @@ import type { Watchable, WatchStatus } from "#src/model/watch-status";
 import { LocalStorageWatchStatusDatastore } from "#src/datastore/local-storage-watch-status-datastore";
 import * as Sentry from "@sentry/react";
 import { Color, Hero, Size } from "./hero.tsx";
+
+// Workaround: @sentry/react ErrorBoundary types are incompatible with React 19's
+// stricter class component typing. The component works at runtime.
+// eslint-disable-next-line custom-rules/no-type-assertions -- Sentry ErrorBoundary class types incompatible with React 19
+const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
+  React.PropsWithChildren<{ fallback: React.ReactNode; showDialog?: boolean }>
+>;
 import { ManifestLoader } from "#src/manifest-loader";
 import { Parser } from "#src/parser/parser";
 
@@ -159,7 +166,7 @@ export default class App extends React.Component<unknown, AppState> {
   render(): React.ReactNode {
     return (
       <React.Fragment>
-        <Sentry.ErrorBoundary
+        <ErrorBoundary
           fallback={
             <Hero
               title="Something went wrong"
@@ -185,7 +192,7 @@ export default class App extends React.Component<unknown, AppState> {
             isTipsModalVisible={this.state.isTipsModalVisible}
             onToggleTipsModal={this.onToggleTipsModal.bind(this)}
           />
-        </Sentry.ErrorBoundary>
+        </ErrorBoundary>
       </React.Fragment>
     );
   }

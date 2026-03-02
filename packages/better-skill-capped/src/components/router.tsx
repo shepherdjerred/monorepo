@@ -7,6 +7,13 @@ import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
 import type { Watchable, WatchStatus } from "#src/model/watch-status";
 import * as Sentry from "@sentry/react";
 import type { Content } from "#src/model/content";
+
+// Workaround: @sentry/react ErrorBoundary types are incompatible with React 19's
+// stricter class component typing. The component works at runtime.
+// eslint-disable-next-line custom-rules/no-type-assertions -- Sentry ErrorBoundary class types incompatible with React 19
+const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
+  React.PropsWithChildren<{ fallback: React.ReactNode; showDialog?: boolean }>
+>;
 import { OmniSearch } from "./omnisearch/omni-search.tsx";
 import type OmniSearchable from "./omnisearch/omni-searchable.tsx";
 
@@ -48,7 +55,7 @@ export function Router(props: RouterProps): React.ReactElement {
       <div className="page-wrapper">
         <div className="content-wrapper">
           <BrowserRouter>
-            <Sentry.ErrorBoundary
+            <ErrorBoundary
               fallback={
                 <Hero
                   title="Something went wrong"
@@ -88,7 +95,7 @@ export function Router(props: RouterProps): React.ReactElement {
                   />
                 </Routes>
               </div>
-            </Sentry.ErrorBoundary>
+            </ErrorBoundary>
           </BrowserRouter>
         </div>
         <Footer />

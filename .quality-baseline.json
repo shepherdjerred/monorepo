@@ -1,5 +1,8 @@
 {
   "eslint-disable": {
+    "packages/better-skill-capped/src/components/app.tsx": 1,
+    "packages/better-skill-capped/src/components/router.tsx": 1,
+    "packages/clauderon/web/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1
   },
