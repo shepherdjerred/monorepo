@@ -61,11 +61,14 @@ js_binary(
     entry_point = "src/index.ts",
 )
 
+# Requires prisma generate + @scout-for-lol/data workspace package resolution.
+# Workspace packages using pnpm link: protocol aren't resolved by tsc in sandbox.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     data = ["package.json"],
     extends = "//packages/scout-for-lol:tsconfig_base",
+    tags = ["manual"],
     deps = [
         ":node_modules/@aws-sdk/client-s3",
         ":node_modules/@discordjs/voice",
@@ -103,9 +106,12 @@ typecheck_test(
     ],
 )
 
+# Requires prisma generate for #generated/prisma/client subpath imports.
 bun_test(
     name = "test",
+    size = "large",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["manual"],
     deps = [
         ":node_modules/@aws-sdk/client-s3",
         ":node_modules/@discordjs/voice",

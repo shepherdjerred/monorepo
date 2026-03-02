@@ -12,7 +12,7 @@ const { join } = require("path");
 function findSourceFiles(dir) {
   const results = [];
   try {
-    for (const entry of readdirSync(dir)) {
+    for (const entry of readdirSync(dir).sort()) {
       if (entry === "node_modules" || entry === "dist" || entry === "generated") continue;
       const full = join(dir, entry);
       try {

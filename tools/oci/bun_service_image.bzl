@@ -184,7 +184,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
                 mkdir -p $$TARDIR/workspace/{pkg_dir} && \
                 cp -a {pkg_dir}/node_modules $$TARDIR/workspace/{pkg_dir}/node_modules; \
             fi && \
-            tar -cf $$OUTPUT_TAR -C $$TARDIR workspace && \
+            (tar --sort=name --mtime='1970-01-01 00:00:00' --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
             tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules" >&2; exit 1; }}
         """.format(

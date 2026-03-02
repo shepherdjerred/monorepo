@@ -30,6 +30,7 @@ js_binary(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
     deps = [
         ":node_modules/@types/bun",

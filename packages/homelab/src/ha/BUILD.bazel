@@ -33,13 +33,17 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
 )
 
+# Requires @digital-alchemy/type-writer generated entity types from a running
+# Home Assistant instance. Type checking works locally but not in Bazel sandbox.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     extends = "//packages/homelab:tsconfig_base",
+    tags = ["manual"],
     deps = [
         ":node_modules/@digital-alchemy/automation",
         ":node_modules/@digital-alchemy/core",

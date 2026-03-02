@@ -19,6 +19,7 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
 )
 

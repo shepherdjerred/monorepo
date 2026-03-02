@@ -42,6 +42,7 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
     deps = ["//packages/clauderon/web/shared:pkg"],
 )
@@ -57,6 +58,7 @@ typecheck_test(
 
 bun_test(
     name = "test",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
     deps = [
         ":node_modules/@types/bun",

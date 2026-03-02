@@ -14,7 +14,7 @@ const { join } = require("path");
 function findTestFiles(dir) {
   const results = [];
   try {
-    for (const entry of readdirSync(dir)) {
+    for (const entry of readdirSync(dir).sort()) {
       if (entry === "node_modules") continue;
       const full = join(dir, entry);
       try {

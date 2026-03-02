@@ -24,6 +24,8 @@ build --experimental_remote_merkle_tree_cache
 build --color=yes
 test --color=yes
 
+build --remote_local_fallback
+
 # Remote cache (bazel-remote -> SeaweedFS S3)
 # Local dev uses Tailscale ingress (read-only); CI uses in-cluster gRPC (read-write).
 build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
