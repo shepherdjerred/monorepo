@@ -356,15 +356,13 @@ ALL_PACKAGES = [
 ]
 
 
-def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> dict:
+def _generate_per_package_steps(package: str) -> dict:
     """Generate a Buildkite group with build + lint/typecheck/test steps for a package."""
     safe_key = package.replace(".", "-")
     build_key = f"build-{safe_key}"
     cpu, memory = PACKAGE_RESOURCES.get(package, _LIGHT)
 
     build_cmd = f".buildkite/scripts/bazel-phase.sh //packages/{package}/... build"
-    if stamp_images:
-        build_cmd += " --stamp-images"
 
     _retry = {
         "automatic": [
@@ -593,11 +591,9 @@ def generate_pipeline() -> dict:
         return {"agents": {"queue": "default"}, "steps": steps}
 
     # --- Per-package build & test steps (every push) ---
-    is_release = os.environ.get("BUILDKITE_BRANCH", "") == "main"
     packages = sorted(ALL_PACKAGES) if affected.build_all else sorted(affected.packages)
     for pkg in packages:
-        stamp = pkg in PACKAGES_WITH_IMAGES and is_release
-        steps.append(_generate_per_package_steps(pkg, stamp_images=stamp))
+        steps.append(_generate_per_package_steps(pkg))
 
     # --- Quality & Compliance (every push) ---
     steps.append(_generate_quality_gate_step())
