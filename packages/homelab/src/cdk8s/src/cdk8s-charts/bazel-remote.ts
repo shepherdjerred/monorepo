@@ -57,7 +57,7 @@ export function createBazelRemoteChart(app: App) {
               name: "bazel-remote",
               image: "buchgr/bazel-remote-cache:v2.6.1",
               args: [
-                "--s3.endpoint=seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+                "--s3.endpoint=http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
                 "--s3.bucket=bazel-cache",
                 "--s3.auth_method=access_key",
                 "--max_size=50",
