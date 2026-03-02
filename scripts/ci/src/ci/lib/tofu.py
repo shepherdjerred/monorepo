@@ -7,6 +7,19 @@ from __future__ import annotations
 
 import os
 import subprocess
+from pathlib import Path
+
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+_REPO_ROOT = _repo_root()
 
 TOFU_STACKS = ["argocd", "cloudflare", "github", "seaweedfs"]
 
@@ -26,8 +39,10 @@ def apply(stack_dir: str) -> str:
     return result.stdout
 
 
-def plan_and_apply(stack_name: str, base_dir: str = "packages/homelab/src/tofu") -> str:
+def plan_and_apply(stack_name: str, base_dir: str | None = None) -> str:
     """Init and apply a single tofu stack."""
+    if base_dir is None:
+        base_dir = str(_REPO_ROOT / "packages/homelab/src/tofu")
     stack_dir = os.path.join(base_dir, stack_name)
     init(stack_dir)
     return apply(stack_dir)

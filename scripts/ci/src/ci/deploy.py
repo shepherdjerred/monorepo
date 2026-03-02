@@ -23,16 +23,29 @@ import argparse
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from ci.lib import argocd, s3
 from ci.lib.config import ReleaseConfig
 
+
+def _repo_root() -> Path:
+    """Get the git repository root directory."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+_REPO_ROOT = _repo_root()
+
 # Unified site configuration: bucket_name -> (build_dir, build_cmd, dist_dir)
 SITES = [
-    {"bucket": "sjer-red", "build_dir": "packages/sjer.red", "build_cmd": ["bunx", "astro", "build"], "dist_dir": "packages/sjer.red/dist"},
-    {"bucket": "webring", "build_dir": "packages/webring", "build_cmd": ["bunx", "astro", "build"], "dist_dir": "packages/webring/dist"},
-    {"bucket": "clauderon-docs", "build_dir": "packages/clauderon/docs", "build_cmd": ["bunx", "astro", "build"], "dist_dir": "packages/clauderon/docs/dist"},
-    {"bucket": "resume", "build_dir": "packages/resume", "build_cmd": ["bun", "run", "build"], "dist_dir": "packages/resume/dist"},
+    {"bucket": "sjer-red", "build_dir": str(_REPO_ROOT / "packages/sjer.red"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/sjer.red/dist")},
+    {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
+    {"bucket": "clauderon-docs", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
+    {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/resume/dist")},
 ]
 
 
@@ -59,7 +72,7 @@ def main() -> None:
     # --- Build static sites ---
     print("\n--- Build static sites ---", flush=True)
     # Install dependencies first
-    subprocess.run(["bun", "install"], check=True)
+    subprocess.run(["bun", "install"], cwd=str(_REPO_ROOT), check=True)
     for site in sites:
         try:
             print(f"\nBuilding {site['build_dir']}", flush=True)
