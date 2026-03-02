@@ -9,7 +9,7 @@ install_gh
 
 # Install cogapp
 echo "--- :python: Installing cogapp"
-pip install cogapp
+uv pip install --system cogapp
 
 # Validate required env vars
 : "${GH_TOKEN:?Required}"

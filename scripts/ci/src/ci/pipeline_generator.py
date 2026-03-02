@@ -531,6 +531,7 @@ def _generate_update_readmes_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/update-readmes.sh",
         "timeout_in_minutes": 30,
+        "soft_fail": True,
         "plugins": [_k8s_plugin(secrets=[])],
     }
 
