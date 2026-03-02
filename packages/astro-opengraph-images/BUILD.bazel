@@ -23,8 +23,6 @@ js_library(
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@resvg/resvg-js",
-        ":node_modules/@types/jsdom",
-        ":node_modules/@types/react",
         ":node_modules/jsdom",
         ":node_modules/react",
         ":node_modules/satori",

@@ -45,6 +45,7 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(
         [
             "src/**/*.ts",
@@ -54,6 +55,8 @@ eslint_test(
     ),
 )
 
+# Astro uses virtual modules (astro:content) only resolvable in its build pipeline.
+# Type checking is done via `astro check` in local dev; tsc can't resolve these.
 typecheck_test(
     name = "typecheck",
     srcs = glob(
@@ -63,6 +66,7 @@ typecheck_test(
         ],
         allow_empty = True,
     ),
+    tags = ["manual"],
     deps = [
         ":node_modules/@astrojs/check",
         ":node_modules/@astrojs/starlight",

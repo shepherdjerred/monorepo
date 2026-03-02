@@ -47,6 +47,7 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
 )
 
@@ -78,6 +79,7 @@ typecheck_test(
 
 bun_test(
     name = "test",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
     deps = [
         ":node_modules/@eslint-community/eslint-plugin-eslint-comments",

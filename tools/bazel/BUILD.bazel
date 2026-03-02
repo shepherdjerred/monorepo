@@ -6,7 +6,6 @@ exports_files([
     "eslint_entry.cjs",
     "bun_test_entry.cjs",
     "bun_test_runner.sh",
-    "typecheck_entry.cjs",
     "workspace_status.sh",
 ])
 
@@ -22,8 +21,3 @@ js_library(
     visibility = ["//visibility:public"],
 )
 
-js_library(
-    name = "typecheck_entry",
-    srcs = ["typecheck_entry.cjs"],
-    visibility = ["//visibility:public"],
-)

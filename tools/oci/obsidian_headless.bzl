@@ -24,14 +24,14 @@ def obsidian_headless_image(name, visibility = None):
     native.genrule(
         name = name + "_npm_layer",
         outs = [name + "_npm_layer.tar"],
-        cmd = """\\\r
-            EXECROOT=$$PWD && \\\r
-            OUTPUT_TAR=$$EXECROOT/$@ && \\\r
-            TMPDIR=$$(mktemp -d) && \\\r
-            trap 'rm -rf $$TMPDIR' EXIT && \\\r
-            cd $$TMPDIR && \\\r
-            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless && \\\r
-            tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local \\\r
+        cmd = """
+            EXECROOT=$$PWD && \
+            OUTPUT_TAR=$$EXECROOT/$@ && \
+            TMPDIR=$$(mktemp -d) && \
+            trap 'rm -rf $$TMPDIR' EXIT && \
+            cd $$TMPDIR && \
+            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless@0.0.4 && \
+            (tar --sort=name --mtime='1970-01-01 00:00:00' --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
         """,
         tags = ["requires-network", "manual"],
     )

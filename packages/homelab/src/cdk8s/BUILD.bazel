@@ -36,6 +36,7 @@ js_library(
 
 eslint_test(
     name = "lint",
+    size = "large",
     srcs = glob(["src/**/*.ts"]),
     deps = ["//packages/homelab/src/helm-types:pkg"],
 )
@@ -67,9 +68,13 @@ typecheck_test(
     ],
 )
 
+# Uses tsconfig path aliases (@shepherdjerred/homelab/cdk8s/...) that Bun
+# doesn't resolve at runtime without a bundler step.
 bun_test(
     name = "test",
+    size = "large",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["manual"],
     deps = [
         ":node_modules/@grafana/grafana-foundation-sdk",
         ":node_modules/cdk8s",

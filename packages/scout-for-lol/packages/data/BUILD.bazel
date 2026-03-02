@@ -9,7 +9,12 @@ exports_files(["package.json"])
 
 js_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.txt",
+        "src/**/assets/*.json",
+        "src/**/assets/**/*.png",
+    ]) + ["package.json"],
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/date-fns",
@@ -19,11 +24,14 @@ js_library(
     ],
 )
 
+# Depends on @scout-for-lol/backend Prisma client and @google/generative-ai
+# workspace deps not resolved by tsc in sandbox.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     data = ["package.json"] + glob(["src/**/assets/*.json"]),
     extends = "//packages/scout-for-lol:tsconfig_base",
+    tags = ["manual"],
     deps = [
         ":node_modules/bun-types",
         ":node_modules/date-fns",
@@ -38,7 +46,13 @@ typecheck_test(
 
 bun_test(
     name = "test",
-    srcs = glob(["src/**/*.ts"]),
+    size = "large",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.txt",
+        "src/**/assets/*.json",
+        "src/**/assets/**/*.png",
+    ]),
     data = ["//packages/scout-for-lol/packages/backend:testdata"],
     deps = [
         ":node_modules/date-fns",

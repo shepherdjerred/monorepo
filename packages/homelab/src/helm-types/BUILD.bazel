@@ -30,6 +30,7 @@ js_binary(
 
 eslint_test(
     name = "lint",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
 )
 
@@ -47,6 +48,7 @@ typecheck_test(
 
 bun_test(
     name = "test",
+    size = "small",
     srcs = glob(["src/**/*.ts"]),
     deps = [
         ":node_modules/yaml",

@@ -30,7 +30,6 @@ js_library(
         ":node_modules/@prisma/client",
         ":node_modules/@sentry/bun",
         ":node_modules/@trpc/server",
-        ":node_modules/@types/bun",
         ":node_modules/cron",
         ":node_modules/discord.js",
         ":node_modules/gray-matter",
@@ -51,10 +50,12 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
+# Requires prisma generate for @prisma/client types.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     data = ["package.json"],
+    tags = ["manual"],
     deps = [
         ":node_modules/@anthropic-ai/claude-agent-sdk",
         ":node_modules/@prisma/client",

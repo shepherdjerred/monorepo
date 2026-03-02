@@ -30,9 +30,10 @@ def _bun_repo_impl(repository_ctx):
     archive_name = "bun-%s-%s" % (os_name, arch)
     url = "https://github.com/oven-sh/bun/releases/download/bun-v%s/%s.zip" % (version, archive_name)
 
-    # Look up sha256 from known checksums, fall back to attr (which defaults to "")
     sha256_key = "%s-%s" % (version, platform)
-    sha256 = _BUN_SHA256.get(sha256_key, repository_ctx.attr.sha256)
+    sha256 = _BUN_SHA256.get(sha256_key)
+    if not sha256:
+        fail("No SHA256 for Bun %s on %s. Add to _BUN_SHA256." % (version, platform))
 
     repository_ctx.download_and_extract(
         url = url,
@@ -61,35 +62,35 @@ def _bun_repo_impl(repository_ctx):
     repository_ctx.file(
         "BUILD.bazel",
         content = """\
-load("@rules_nodejs//nodejs:toolchain.bzl", "nodejs_toolchain")\r
-\r
-package(default_visibility = ["//visibility:public"])\r
-\r
-exports_files(["bun"])\r
-\r
-filegroup(\r
-    name = "node_files",\r
-    srcs = glob(["bin/**"]) + ["bun"],\r
-)\r
-\r
-nodejs_toolchain(\r
-    name = "bun_toolchain_impl",\r
-    node = "bin/nodejs/bin/node",\r
-)\r
-\r
-toolchain(\r
-    name = "bun_toolchain",\r
-    toolchain = ":bun_toolchain_impl",\r
-    toolchain_type = "@rules_nodejs//nodejs:toolchain_type",\r
-    exec_compatible_with = {exec_constraints},\r
-)\r
-\r
-toolchain(\r
-    name = "bun_runtime_toolchain",\r
-    toolchain = ":bun_toolchain_impl",\r
-    toolchain_type = "@rules_nodejs//nodejs:runtime_toolchain_type",\r
-    exec_compatible_with = {exec_constraints},\r
-)\r
+load("@rules_nodejs//nodejs:toolchain.bzl", "nodejs_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["bun"])
+
+filegroup(
+    name = "node_files",
+    srcs = glob(["bin/**"]) + ["bun"],
+)
+
+nodejs_toolchain(
+    name = "bun_toolchain_impl",
+    node = "bin/nodejs/bin/node",
+)
+
+toolchain(
+    name = "bun_toolchain",
+    toolchain = ":bun_toolchain_impl",
+    toolchain_type = "@rules_nodejs//nodejs:toolchain_type",
+    exec_compatible_with = {exec_constraints},
+)
+
+toolchain(
+    name = "bun_runtime_toolchain",
+    toolchain = ":bun_toolchain_impl",
+    toolchain_type = "@rules_nodejs//nodejs:runtime_toolchain_type",
+    exec_compatible_with = {exec_constraints},
+)
 """.format(
             exec_constraints = _platform_constraints(platform),
         ),
@@ -100,7 +101,7 @@ bun_repo = repository_rule(
     attrs = {
         "bun_version": attr.string(mandatory = True),
         "platform": attr.string(mandatory = True),
-        "sha256": attr.string(default = ""),
+        "sha256": attr.string(),
     },
 )
 
