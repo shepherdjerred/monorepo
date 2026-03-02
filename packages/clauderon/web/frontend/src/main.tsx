@@ -1,10 +1,19 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import type { PropsWithChildren, ReactNode } from "react";
 import * as Sentry from "@sentry/react";
 import "./index.css";
 import "./assets/fonts.css";
 import { App } from "./app.tsx";
 import { getSentryDsn } from "./config.ts";
+
+// Workaround: @sentry/react ErrorBoundary types are incompatible with React 19's
+// stricter class component typing. The component works at runtime; this cast
+// satisfies the type checker.
+// eslint-disable-next-line custom-rules/no-type-assertions -- Sentry ErrorBoundary class types incompatible with React 19
+const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
+  PropsWithChildren<{ fallback: ReactNode }>
+>;
 
 // Initialize Sentry for error reporting (DSN is configured at build time)
 const sentryDsn = getSentryDsn();
@@ -23,8 +32,8 @@ if (root == null) {
 
 createRoot(root).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>An error occurred.</p>}>
+    <ErrorBoundary fallback={<p>An error occurred.</p>}>
       <App />
-    </Sentry.ErrorBoundary>
+    </ErrorBoundary>
   </StrictMode>,
 );
