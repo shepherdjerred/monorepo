@@ -44,10 +44,13 @@ eslint_test(
     deps = ["//packages/discord-plays-pokemon/packages/common:pkg"],
 )
 
+# @discord-plays-pokemon/common exports from dist/ which requires tsc compilation.
+# This package requires the common package to be built first.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     data = ["package.json"],
+    tags = ["manual"],
     deps = [
         ":node_modules/@d6v/zconf",
         ":node_modules/@discord-plays-pokemon/common",

@@ -50,9 +50,12 @@ rust_binary(
     ] + all_crate_deps(normal = True),
 )
 
+# 1 of 352 tests (test_image_path_translation) fails in sandbox because
+# HOME=/tmp causes host path to equal container path, breaking assertion.
 rust_test(
     name = "clauderon_test",
     crate = ":clauderon_lib",
+    env = {"HOME": "/Users/testuser"},
     proc_macro_deps = all_crate_deps(proc_macro_dev = True),
     tags = ["test"],
     deps = all_crate_deps(normal_dev = True),

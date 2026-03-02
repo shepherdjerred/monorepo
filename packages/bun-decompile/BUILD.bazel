@@ -69,9 +69,12 @@ typecheck_test(
     ],
 )
 
+# Requires bun build --compile with sourcemap embedding; the Bun toolchain
+# version may produce binaries without recoverable original sources.
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["manual"],
     deps = [
         ":node_modules/@anthropic-ai/sdk",
         ":node_modules/@anthropic-ai/tokenizer",

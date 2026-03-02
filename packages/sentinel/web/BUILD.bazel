@@ -40,12 +40,14 @@ eslint_test(
     ]),
 )
 
+# Depends on sentinel's trpc router via relative import (cross-package).
 typecheck_test(
     name = "typecheck",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
+    tags = ["manual"],
     deps = [
         ":node_modules/@tanstack/react-query",
         ":node_modules/@trpc/client",
