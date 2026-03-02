@@ -31,7 +31,7 @@ def obsidian_headless_image(name, visibility = None):
             trap 'rm -rf $$TMPDIR' EXIT && \
             cd $$TMPDIR && \
             npm install --global --prefix $$TMPDIR/usr/local obsidian-headless@0.0.4 && \
-            (tar --sort=name --mtime='1970-01-01 00:00:00' --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
+            (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
         """,
         tags = ["requires-network", "manual"],
     )

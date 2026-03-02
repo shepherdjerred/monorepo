@@ -25,11 +25,7 @@ BASELINE_FILE = _REPO_ROOT / ".quality-baseline.json"
 PATTERNS = [
     {"name": "eslint-disable", "pattern": r"^\s*(//|/\*)\s*eslint-disable", "glob": "*.{ts,tsx,js,jsx}",
      "paths": ["packages/"], "exclude_path_patterns": ["/generated/"]},
-    {"name": "ts-expect-error", "pattern": r"^\s*//\s*@ts-expect-error", "glob": "*.{ts,tsx}",
-     "paths": ["packages/"], "exclude_path_patterns": ["/generated/"]},
-    {"name": "ts-ignore", "pattern": r"^\s*//\s*@ts-ignore", "glob": "*.{ts,tsx}",
-     "paths": ["packages/"], "exclude_path_patterns": ["/generated/"]},
-    {"name": "ts-nocheck", "pattern": r"^\s*//\s*@ts-nocheck", "glob": "*.{ts,tsx}",
+    {"name": "ts-suppressions", "pattern": r"^\s*//\s*@ts-(expect-error|ignore|nocheck)", "glob": "*.{ts,tsx}",
      "paths": ["packages/"], "exclude_path_patterns": ["/generated/"]},
     {"name": "rust-allow", "pattern": "#\\[allow\\(", "glob": "*.rs",
      "paths": ["packages/clauderon/src/"], "exclude_path_patterns": []},

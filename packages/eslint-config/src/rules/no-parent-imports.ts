@@ -11,7 +11,7 @@
  * "custom-rules/no-parent-imports": ["error", { "packagePrefix": "@myorg" }]
  */
 
-import { dirname, resolve } from "node:path";
+import path from "node:path";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 type Options = [{ packagePrefix?: string }?];
@@ -59,30 +59,36 @@ export const noParentImports: TSESLint.RuleModule<MessageIds, Options> = {
             node: node.source,
             messageId: "noParentImports",
             fix(fixer) {
-              // Resolve the absolute path of the imported file
-              const currentDir = dirname(currentFilePath);
-              const resolvedImportPath = resolve(currentDir, importPath);
-
-              // Determine which package the resolved import belongs to
-              // Match: /packages/{packageName}/src/{path} or /packages/{packageName}/{path}
-              const packageRegex = /\/packages\/([^/]+)\/(?:src\/)?(.+)$/;
-              const packageMatch = packageRegex.exec(resolvedImportPath);
-              if (!packageMatch) {
-                // Can't determine package, skip auto-fix
+              // Extract the current file's package and relative path from filename.
+              // Match the LAST /packages/ segment to handle Bazel sandbox paths.
+              const packageRegex = /.*\/packages\/([^/]+)\/(?:src\/)?(.+)$/;
+              const fileMatch = packageRegex.exec(currentFilePath);
+              if (!fileMatch) {
                 return null;
               }
 
-              const packageName = packageMatch[1];
-              const packageRelativePath = packageMatch[2];
-
-              if (!packageName || !packageRelativePath) {
+              const currentPackage = fileMatch[1];
+              const fileRelativePath = fileMatch[2];
+              if (
+                currentPackage === undefined ||
+                fileRelativePath === undefined
+              ) {
                 return null;
               }
 
-              // Construct the package import path
-              const fixedImportPath = `${packagePrefix}/${packageName}/${packageRelativePath}`;
+              // Compute the target path relative to the package src/ dir.
+              // join the file's dir (relative to package) with the import path,
+              // then normalize to remove ../ segments.
+              const fileDir = path.dirname(fileRelativePath);
+              const targetPath = path.normalize(path.join(fileDir, importPath));
 
-              // Replace the import path, preserving quotes
+              // If the normalized path still starts with "..", the import
+              // escapes the package — skip auto-fix.
+              if (targetPath.startsWith("..")) {
+                return null;
+              }
+
+              const fixedImportPath = `${packagePrefix}/${currentPackage}/${targetPath}`;
               return fixer.replaceText(node.source, `"${fixedImportPath}"`);
             },
           });
