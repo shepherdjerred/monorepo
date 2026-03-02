@@ -1,5 +1,5 @@
 import type { Player, PlayerConfigEntry } from "@scout-for-lol/data";
-import { getRanks } from "@scout-for-lol/backend/league/model/rank";
+import { getRanks } from "#src/league/model/rank.ts";
 
 export async function getPlayer(
   playerConfig: PlayerConfigEntry,

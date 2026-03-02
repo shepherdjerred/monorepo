@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { GenerationProgress } from "@scout-for-lol/frontend/lib/review-tool/generator";
+import type { GenerationProgress } from "#src/lib/review-tool/generator.ts";
 
 export const ErrorSchema = z.object({ message: z.string() });
 

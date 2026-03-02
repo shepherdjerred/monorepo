@@ -5,16 +5,16 @@ import {
   CompetitionIdSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionById } from "#src/database/competition/queries.ts";
 import {
   addParticipant,
   removeParticipant,
   getParticipantStatus,
-} from "@scout-for-lol/backend/database/competition/participants.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/database/competition/participants.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("debug-manage-participant");
 

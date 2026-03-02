@@ -24,6 +24,15 @@ js_library(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":node_modules/@sentry/node",
+        ":node_modules/@tsconfig/node-lts",
+        ":node_modules/@tsconfig/recommended",
+        ":node_modules/@tsconfig/strictest",
+        ":node_modules/@types/bun",
+        ":node_modules/firebase",
+        "//:node_modules/undici-types",
+    ],
 )
 
 # Container image for scheduled fetcher job

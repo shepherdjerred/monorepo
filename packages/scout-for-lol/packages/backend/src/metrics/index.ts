@@ -1,6 +1,6 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import configuration from "#src/configuration.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("metrics");
 

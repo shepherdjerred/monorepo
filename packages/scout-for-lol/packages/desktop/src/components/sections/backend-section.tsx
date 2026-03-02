@@ -4,10 +4,10 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@scout-for-lol/desktop/components/ui/card.tsx";
-import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
-import { Input } from "@scout-for-lol/desktop/components/ui/input.tsx";
-import { Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+} from "#src/components/ui/card.tsx";
+import { Button } from "#src/components/ui/button.tsx";
+import { Input } from "#src/components/ui/input.tsx";
+import { Badge } from "#src/components/ui/badge.tsx";
 
 type BackendStatus = {
   connected: boolean;

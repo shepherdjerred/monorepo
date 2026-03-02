@@ -3,11 +3,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@scout-for-lol/frontend/components/review-tool/ui/card";
-import { Input } from "@scout-for-lol/frontend/components/review-tool/ui/input";
-import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
-import { Switch } from "@scout-for-lol/frontend/components/review-tool/ui/switch";
-import type { ImageGenerationStageConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/components/review-tool/ui/card.tsx";
+import { Input } from "#src/components/review-tool/ui/input.tsx";
+import { Label } from "#src/components/review-tool/ui/label.tsx";
+import { Switch } from "#src/components/review-tool/ui/switch.tsx";
+import type { ImageGenerationStageConfig } from "#src/lib/review-tool/config/schema.ts";
 import { IMAGE_GENERATION_USER_PROMPT } from "@scout-for-lol/data";
 import { PromptEditor } from "./prompt-editor.tsx";
 

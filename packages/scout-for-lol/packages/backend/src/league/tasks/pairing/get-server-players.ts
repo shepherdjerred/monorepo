@@ -1,6 +1,6 @@
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import type { DiscordGuildId } from "@scout-for-lol/data/index";
+import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("pairing-get-server-players");
 

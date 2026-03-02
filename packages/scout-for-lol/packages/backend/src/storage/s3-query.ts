@@ -3,12 +3,12 @@ import {
   ListObjectsV2Command,
   type S3Client,
 } from "@aws-sdk/client-s3";
-import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index";
+import { createS3Client } from "#src/storage/s3-client.ts";
+import configuration from "#src/configuration.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 // Timeout for individual S3 operations (30 seconds)
 const S3_REQUEST_TIMEOUT_MS = 30_000;

@@ -9,8 +9,8 @@ import type {
   RawTimeline,
   RawTimelineFrame,
   RawTimelineEvent,
-} from "@scout-for-lol/data/league/raw-timeline.schema";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
+} from "#src/league/raw-timeline.schema.ts";
+import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import {
   type ParticipantLookup,
   buildParticipantLookup,

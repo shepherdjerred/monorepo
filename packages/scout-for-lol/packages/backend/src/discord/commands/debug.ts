@@ -4,13 +4,13 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { formatDistanceToNow } from "date-fns";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { getAccountsWithState } from "@scout-for-lol/backend/database/index.ts";
+import configuration from "#src/configuration.ts";
+import { getAccountsWithState } from "#src/database/index.ts";
 import {
   calculatePollingInterval,
   shouldCheckPlayer,
-} from "@scout-for-lol/backend/utils/polling-intervals.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/utils/polling-intervals.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("commands-debug");
 

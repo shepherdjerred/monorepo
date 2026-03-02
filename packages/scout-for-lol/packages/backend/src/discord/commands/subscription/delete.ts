@@ -3,11 +3,11 @@ import { z } from "zod";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("subscription-delete");
 

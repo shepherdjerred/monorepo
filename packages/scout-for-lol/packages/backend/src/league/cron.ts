@@ -1,19 +1,16 @@
-import { checkPostMatch } from "@scout-for-lol/backend/league/tasks/postmatch/index.ts";
-import { runLifecycleCheck } from "@scout-for-lol/backend/league/tasks/competition/lifecycle.ts";
-import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.ts";
-import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
-import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.ts";
-import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.ts";
-import { refreshMatchTimes } from "@scout-for-lol/backend/league/tasks/maintenance/refresh-match-times.ts";
-import { runWeeklyPairingUpdate } from "@scout-for-lol/backend/league/tasks/pairing/index.ts";
-import { client } from "@scout-for-lol/backend/discord/client.ts";
-import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import {
-  getFlag,
-  MY_SERVER,
-} from "@scout-for-lol/backend/configuration/flags.ts";
-import { runStartupRecovery } from "@scout-for-lol/backend/league/tasks/recovery/startup-recovery.ts";
+import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
+import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
+import { runDailyLeaderboardUpdate } from "#src/league/tasks/competition/daily-update.ts";
+import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
+import { checkAbandonedGuilds } from "#src/league/tasks/cleanup/abandoned-guilds.ts";
+import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
+import { refreshMatchTimes } from "#src/league/tasks/maintenance/refresh-match-times.ts";
+import { runWeeklyPairingUpdate } from "#src/league/tasks/pairing/index.ts";
+import { client } from "#src/discord/client.ts";
+import { createCronJob } from "#src/league/cron/helpers.ts";
+import { createLogger } from "#src/logger.ts";
+import { getFlag, MY_SERVER } from "#src/configuration/flags.ts";
+import { runStartupRecovery } from "#src/league/tasks/recovery/startup-recovery.ts";
 
 const logger = createLogger("league-cron");
 

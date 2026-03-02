@@ -103,7 +103,7 @@ def bun_service_image(
         name = name,
         base = base,
         tars = all_tars,
-        entrypoint = ["bun", "run", entry_point],
+        entrypoint = ["/usr/local/bin/bun", "run", entry_point],
         workdir = workdir,
         visibility = visibility,
         **_kwargs
@@ -151,12 +151,18 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
     for ws_dir in workspace_packages.keys():
         ws_copies += "mkdir -p $$TMPDIR/{ws_dir} && cp $(location //{ws_dir}:package.json) $$TMPDIR/{ws_dir}/package.json && ".format(ws_dir = ws_dir)
 
+    # Build a comma-separated list of workspace dirs for the root package.json.
+    # This prevents bun install from failing on missing workspace directories.
+    workspace_dirs = [pkg_dir] + list(workspace_packages.keys())
+    workspace_csv = ",".join(workspace_dirs)
+
     native.genrule(
         name = name,
         srcs = srcs,
         outs = [name + ".tar"],
         cmd = """
             EXECROOT=$$PWD && \
+            BUN=$$EXECROOT/$(location //tools/bun) && \
             OUTPUT_TAR=$$EXECROOT/$@ && \
             TMPDIR=$$(mktemp -d) && \
             trap 'rm -rf $$TMPDIR' EXIT && \
@@ -166,18 +172,28 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cp $(location {package_json}) $$TMPDIR/{pkg_dir}/package.json && \
             {ws_copies} \
             cd $$TMPDIR && \
-            bun install --frozen-lockfile 2>/dev/null || bun install 2>/dev/null || true && \
-            tar -cf $$OUTPUT_TAR \
-                -C $$TMPDIR \
-                --transform 's,^,workspace/,' \
-                {pkg_dir}/node_modules \
-                node_modules \
-                2>/dev/null || \
-            tar -cf $$OUTPUT_TAR --files-from=/dev/null
+            $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));p.workspaces="{workspace_csv}".split(",");delete p.patchedDependencies;f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
+            for pj in {pkg_dir}/package.json {ws_package_jsons}; do \
+                $$BUN -e "var f=require('fs'),p=JSON.parse(f.readFileSync('$$pj','utf8'));delete p.patchedDependencies;f.writeFileSync('$$pj',JSON.stringify(p,null,2))" ; \
+            done && \
+            $$BUN install --ignore-scripts && \
+            TARDIR=$$(mktemp -d) && \
+            mkdir -p $$TARDIR/workspace && \
+            cp -a node_modules $$TARDIR/workspace/node_modules && \
+            if [ -d {pkg_dir}/node_modules ]; then \
+                mkdir -p $$TARDIR/workspace/{pkg_dir} && \
+                cp -a {pkg_dir}/node_modules $$TARDIR/workspace/{pkg_dir}/node_modules; \
+            fi && \
+            tar -cf $$OUTPUT_TAR -C $$TARDIR workspace && \
+            rm -rf $$TARDIR && \
+            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules" >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
             ws_copies = ws_copies if ws_copies else "true && ",
+            workspace_csv = workspace_csv,
+            ws_package_jsons = " ".join([d + "/package.json" for d in workspace_packages.keys()]),
         ),
+        tools = ["//tools/bun"],
         tags = ["requires-network"],
     )

@@ -3,14 +3,14 @@ import { match } from "ts-pattern";
 import {
   createCompetition,
   getCompetitionById,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
-import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+} from "#src/database/competition/queries.ts";
+import type { CreateCompetitionInput } from "#src/database/competition/queries.ts";
+import { addParticipant } from "#src/database/competition/participants.ts";
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   ChampionIdSchema,
   getCompetitionStatus,
@@ -20,11 +20,11 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
   type PlayerId,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-view-test");

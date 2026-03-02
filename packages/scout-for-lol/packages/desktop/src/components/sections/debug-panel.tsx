@@ -7,8 +7,8 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { Button } from "#src/components/ui/button.tsx";
+import { cn } from "#src/lib/utils.ts";
 
 type LogEntry = {
   timestamp: string;

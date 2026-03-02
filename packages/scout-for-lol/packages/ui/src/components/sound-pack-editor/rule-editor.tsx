@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import type { SoundRule, SoundEntry, SoundSource } from "@scout-for-lol/data";
-import type { Champion, CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
+import type { Champion, CacheStatus } from "#src/types/adapter.ts";
 import { ConditionBuilder } from "./condition-builder.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 

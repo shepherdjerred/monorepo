@@ -74,5 +74,8 @@
   "homepage": "https://github.com/shepherdjerred/scout-for-lol",
   "bugs": {
     "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  },
+  "imports": {
+    "#src/*": "./src/*"
   }
 }

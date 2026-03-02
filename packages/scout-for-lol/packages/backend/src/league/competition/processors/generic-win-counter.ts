@@ -6,12 +6,12 @@ import type {
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 import {
   getPlayerParticipant,
   isWin,
   matchesQueue,
-} from "@scout-for-lol/backend/league/competition/processors/helpers.ts";
+} from "#src/league/competition/processors/helpers.ts";
 
 /**
  * Win and game counts for a player

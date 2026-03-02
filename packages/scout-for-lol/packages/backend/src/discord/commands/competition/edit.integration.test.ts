@@ -3,16 +3,16 @@ import {
   createCompetition,
   getCompetitionById,
   updateCompetition,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
 import type {
   CreateCompetitionInput,
   UpdateCompetitionInput,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   CompetitionIdSchema,
   getCompetitionStatus,
@@ -24,7 +24,7 @@ import {
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-edit-test");

@@ -1,4 +1,4 @@
-import { Stat } from "@scout-for-lol/report/html/champion/shared/stat.tsx";
+import { Stat } from "#src/html/champion/shared/stat.tsx";
 
 export function CreepScore({
   value,

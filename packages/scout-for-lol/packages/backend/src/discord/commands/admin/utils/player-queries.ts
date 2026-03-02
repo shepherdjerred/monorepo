@@ -1,8 +1,8 @@
-import type { Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import type { Prisma } from "#generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { type ChatInputCommandInteraction } from "discord.js";
 import { type DiscordGuildId } from "@scout-for-lol/data";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("utils-player-queries");
 

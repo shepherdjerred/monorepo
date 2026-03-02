@@ -3,16 +3,16 @@ import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("admin-player-merge");
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
+} from "#src/discord/commands/admin/utils/validation.ts";
 
 const ArgsSchema = z.object({
   sourceAlias: z.string().min(1).max(100),

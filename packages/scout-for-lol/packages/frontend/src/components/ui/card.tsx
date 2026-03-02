@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
+import { cn } from "#src/lib/utils.ts";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

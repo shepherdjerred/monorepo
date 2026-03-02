@@ -5,7 +5,7 @@
  * The image description is generated in a previous step (Step 3) from the review text.
  */
 
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories";
+import type { ArtStyle } from "#src/review/art-categories.ts";
 import IMAGE_GENERATION_PROMPT_TEMPLATE from "./prompts/user/4-image-generation.txt";
 
 /**

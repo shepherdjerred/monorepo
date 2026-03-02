@@ -12,9 +12,6 @@ build --workspace_status_command=tools/bazel/workspace_status.sh
 # Allow empty globs (many packages may or may not have .tsx, .astro, etc.)
 build --noincompatible_disallow_empty_glob
 
-# Pass HOME through for local tests (sh_test scripts need it to find bun/mise)
-test --test_env=HOME
-
 # Test output
 test --test_output=errors
 

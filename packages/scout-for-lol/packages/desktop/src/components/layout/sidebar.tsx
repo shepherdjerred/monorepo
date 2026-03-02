@@ -1,5 +1,5 @@
 import { Gamepad2, Server, Activity, Bug, Swords } from "lucide-react";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { cn } from "#src/lib/utils.ts";
 
 type SidebarProps = {
   lcuConnected: boolean;

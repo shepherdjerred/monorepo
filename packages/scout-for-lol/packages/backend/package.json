@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*",
+    "./generated/*": "./generated/*"
+  },
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
@@ -81,5 +86,9 @@
   "homepage": "https://github.com/shepherdjerred/scout-for-lol",
   "bugs": {
     "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  },
+  "imports": {
+    "#src/*": "./src/*",
+    "#generated/*": "./generated/*"
   }
 }

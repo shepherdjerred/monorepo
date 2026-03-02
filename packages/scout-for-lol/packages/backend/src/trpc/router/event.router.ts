@@ -6,17 +6,14 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  router,
-  desktopClientProcedure,
-} from "@scout-for-lol/backend/trpc/trpc.ts";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { router, desktopClientProcedure } from "#src/trpc/trpc.ts";
+import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   selectSoundForEvent,
   type EventContext,
-} from "@scout-for-lol/backend/sound-engine/index.ts";
-import { voiceManager } from "@scout-for-lol/backend/voice/index.ts";
+} from "#src/sound-engine/index.ts";
+import { voiceManager } from "#src/voice/index.ts";
 import {
   SoundPackSettingsSchema,
   DefaultSoundsSchema,

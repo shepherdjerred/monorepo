@@ -1,9 +1,9 @@
-import { getLastSuccessfulPollAt } from "@scout-for-lol/backend/league/tasks/recovery/app-state.ts";
-import { detectDowntime } from "@scout-for-lol/backend/league/tasks/recovery/detect-downtime.ts";
-import { sendOfflineNotification } from "@scout-for-lol/backend/league/tasks/recovery/offline-notification.ts";
-import { backfillMatchesToS3 } from "@scout-for-lol/backend/league/tasks/recovery/backfill-to-s3.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { downtimeDetectedTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { getLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
+import { detectDowntime } from "#src/league/tasks/recovery/detect-downtime.ts";
+import { sendOfflineNotification } from "#src/league/tasks/recovery/offline-notification.ts";
+import { backfillMatchesToS3 } from "#src/league/tasks/recovery/backfill-to-s3.ts";
+import { createLogger } from "#src/logger.ts";
+import { downtimeDetectedTotal } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("startup-recovery");

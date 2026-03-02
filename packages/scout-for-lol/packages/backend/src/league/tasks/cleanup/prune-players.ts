@@ -3,12 +3,12 @@ import type {
   Subscription,
   CompetitionParticipant,
   Account,
-} from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+} from "#generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-prune-players");
 

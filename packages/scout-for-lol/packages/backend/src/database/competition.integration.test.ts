@@ -3,20 +3,20 @@ import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import {
   createCompetition,
   type CreateCompetitionInput,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
 import {
   addParticipant,
   getParticipantStatus,
-} from "@scout-for-lol/backend/database/competition/participants.ts";
+} from "#src/database/competition/participants.ts";
 import {
   validateOwnerLimit,
   validateServerLimit,
-} from "@scout-for-lol/backend/database/competition/validation.ts";
+} from "#src/database/competition/validation.ts";
 import {
   canCreateCompetition,
   grantPermission,
-} from "@scout-for-lol/backend/database/competition/permissions.ts";
-import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+} from "#src/database/competition/permissions.ts";
+import { clearAllRateLimits } from "#src/database/competition/rate-limit.ts";
 import type {
   CompetitionId,
   DiscordAccountId,
@@ -28,11 +28,11 @@ import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // ============================================================================
 // Test Database Setup

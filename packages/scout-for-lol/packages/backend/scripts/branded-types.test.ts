@@ -12,7 +12,7 @@ import type {
   Account,
   Competition,
   CompetitionParticipant,
-} from "packages/backend/generated/prisma/client/index.js";
+} from "#generated/prisma/client/index.js";
 import type {
   PlayerId,
   CompetitionId,

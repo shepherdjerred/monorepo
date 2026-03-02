@@ -5,11 +5,11 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
-import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
-import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { executeCommand } from "#src/discord/commands/utils/command-wrapper.ts";
+import { findPlayerByAliasWithAccounts } from "#src/discord/commands/admin/utils/player-queries.ts";
+import { resolvePuuidFromRiotId } from "#src/discord/commands/admin/utils/riot-api.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("admin-account-transfer");
 import {
@@ -17,7 +17,7 @@ import {
   buildPlayerNotFoundError,
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
+} from "#src/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,

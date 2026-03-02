@@ -2,7 +2,7 @@
  * Analytics view showing rating statistics
  */
 import { useMemo, useSyncExternalStore } from "react";
-import { loadHistory } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
+import { loadHistory } from "#src/lib/review-tool/history-manager.ts";
 
 // Store for history data
 let historyData: Awaited<ReturnType<typeof loadHistory>> = [];

@@ -1,6 +1,6 @@
 import { type Augment } from "@scout-for-lol/data";
-import { renderAugment } from "@scout-for-lol/report/html/arena/augment.tsx";
-import { filterDisplayAugments } from "@scout-for-lol/report/html/arena/utils.ts";
+import { renderAugment } from "#src/html/arena/augment.tsx";
+import { filterDisplayAugments } from "#src/html/arena/utils.ts";
 
 export function AugmentsDisplay({ augments }: { augments: Augment[] }) {
   const displayAugments = filterDisplayAugments(augments);

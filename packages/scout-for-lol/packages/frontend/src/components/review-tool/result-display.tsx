@@ -1,7 +1,7 @@
 /**
  * Result display component (review text and image)
  */
-import type { GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { GenerationResult } from "#src/lib/review-tool/config/schema.ts";
 
 type ResultDisplayProps = {
   result: GenerationResult;

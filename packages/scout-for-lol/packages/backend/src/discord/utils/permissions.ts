@@ -1,12 +1,12 @@
 import type { Channel, Client, User } from "discord.js";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import {
   discordPermissionErrorsTotal,
   discordOwnerNotificationsTotal,
-} from "@scout-for-lol/backend/metrics/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/metrics/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("permissions");
 

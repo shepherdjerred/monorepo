@@ -4,7 +4,7 @@ import {
   calculatePollingInterval,
   shouldCheckPlayer,
   getPollingReferenceTime,
-} from "@scout-for-lol/backend/utils/polling-intervals.ts";
+} from "#src/utils/polling-intervals.ts";
 import {
   POLLING_INTERVALS,
   MAX_PLAYERS_PER_RUN,

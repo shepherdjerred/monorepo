@@ -11,32 +11,32 @@ import {
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.ts";
+import { prisma } from "#src/database/index.ts";
+import { canCreateCompetition } from "#src/database/competition/permissions.ts";
 import {
   type CreateCompetitionInput,
   createCompetition,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
-import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+} from "#src/database/competition/queries.ts";
+import { recordCreation } from "#src/database/competition/rate-limit.ts";
 import {
   validateOwnerLimit,
   validateServerLimit,
-} from "@scout-for-lol/backend/database/competition/validation.ts";
-import { getChampionId } from "@scout-for-lol/backend/utils/champion.ts";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/database/competition/validation.ts";
+import { getChampionId } from "#src/utils/champion.ts";
+import { addParticipant } from "#src/database/competition/participants.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-create");
 import {
   formatCriteriaType,
   getStatusEmoji,
   formatDateInfo,
-} from "@scout-for-lol/backend/discord/commands/competition/helpers.ts";
+} from "#src/discord/commands/competition/helpers.ts";
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithSuccess,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
+} from "#src/discord/commands/competition/utils/replies.ts";
 import {
   CommonArgsSchema,
   FixedDatesArgsSchema,
@@ -47,7 +47,7 @@ import {
   MostWinsPlayerArgsSchema,
   MostWinsChampionArgsSchema,
   HighestWinRateArgsSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/schemas.ts";
+} from "#src/discord/commands/competition/schemas.ts";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions

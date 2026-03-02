@@ -4,13 +4,10 @@ import {
   checkSendMessagePermission,
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
-} from "@scout-for-lol/backend/discord/utils/permissions";
+} from "#src/discord/utils/permissions.ts";
 import { PermissionFlagsBits } from "discord.js";
-import {
-  mockUser,
-  mockTextChannel,
-} from "@scout-for-lol/backend/testing/discord-mocks";
-import { testAccountId } from "@scout-for-lol/backend/testing/test-ids";
+import { mockUser, mockTextChannel } from "#src/testing/discord-mocks.ts";
+import { testAccountId } from "#src/testing/test-ids.ts";
 
 // Mock bot user for tests
 const mockBotUser = mockUser({ id: testAccountId("999"), username: "TestBot" });

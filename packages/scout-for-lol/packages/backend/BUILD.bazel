@@ -1,11 +1,24 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:prisma.bzl", "prisma_generate")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
+
+filegroup(
+    name = "testdata",
+    srcs = glob(["src/league/model/__tests__/testdata/**"]),
+    visibility = ["//packages/scout-for-lol/packages/data:__pkg__"],
+)
+
+# Prisma client generation (run explicitly: bazel build //packages/scout-for-lol/packages/backend:prisma_generate)
+prisma_generate(
+    name = "prisma_generate",
+    schema = "prisma/schema.prisma",
+)
 
 js_library(
     name = "pkg",
@@ -51,8 +64,40 @@ js_binary(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    data = ["package.json"],
+    extends = "//packages/scout-for-lol:tsconfig_base",
     deps = [
-        ":pkg",
+        ":node_modules/@aws-sdk/client-s3",
+        ":node_modules/@discordjs/voice",
+        ":node_modules/@google/generative-ai",
+        ":node_modules/@prisma/client",
+        ":node_modules/@scout-for-lol/data",
+        ":node_modules/@scout-for-lol/report",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@trpc/server",
+        ":node_modules/bun-types",
+        ":node_modules/cron",
+        ":node_modules/date-fns",
+        ":node_modules/discord.js",
+        ":node_modules/dotenv",
+        ":node_modules/env-var",
+        ":node_modules/openai",
+        ":node_modules/prism-media",
+        ":node_modules/prisma",
+        ":node_modules/prom-client",
+        ":node_modules/react",
+        ":node_modules/remeda",
+        ":node_modules/sodium-native",
+        ":node_modules/ts-pattern",
+        ":node_modules/tslog",
+        ":node_modules/twisted",
+        ":node_modules/uuid",
+        ":node_modules/yoga-wasm-web",
+        ":node_modules/zod",
+        ":node_modules/zod-validation-error",
+        "//:node_modules/@types/bun",
+        "//:node_modules/@types/node",
+        "//:node_modules/undici-types",
         "//packages/scout-for-lol/packages/data:pkg",
         "//packages/scout-for-lol/packages/report:pkg",
     ],
@@ -62,7 +107,32 @@ bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
     deps = [
-        ":pkg",
+        ":node_modules/@aws-sdk/client-s3",
+        ":node_modules/@discordjs/voice",
+        ":node_modules/@google/generative-ai",
+        ":node_modules/@prisma/client",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@trpc/server",
+        ":node_modules/cron",
+        ":node_modules/date-fns",
+        ":node_modules/discord.js",
+        ":node_modules/dotenv",
+        ":node_modules/env-var",
+        ":node_modules/openai",
+        ":node_modules/prism-media",
+        ":node_modules/prisma",
+        ":node_modules/prom-client",
+        ":node_modules/react",
+        ":node_modules/remeda",
+        ":node_modules/sodium-native",
+        ":node_modules/ts-pattern",
+        ":node_modules/tslog",
+        ":node_modules/twisted",
+        ":node_modules/uuid",
+        ":node_modules/yoga-wasm-web",
+        ":node_modules/zod",
+        ":node_modules/zod-validation-error",
+        "//:node_modules/@types/bun",
         "//packages/scout-for-lol/packages/data:pkg",
         "//packages/scout-for-lol/packages/report:pkg",
     ],

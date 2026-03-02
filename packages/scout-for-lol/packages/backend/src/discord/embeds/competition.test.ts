@@ -5,18 +5,18 @@ import {
   PlayerIdSchema,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
-import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
 import {
   generateLeaderboardEmbed,
   generateCompetitionDetailsEmbed,
-} from "@scout-for-lol/backend/discord/embeds/competition.ts";
-import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition-format-helpers.ts";
+} from "#src/discord/embeds/competition.ts";
+import { formatScore } from "#src/discord/embeds/competition-format-helpers.ts";
 
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 // ============================================================================
 // Test Data Factories
 // ============================================================================

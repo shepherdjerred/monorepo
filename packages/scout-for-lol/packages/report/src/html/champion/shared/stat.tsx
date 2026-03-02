@@ -1,5 +1,5 @@
 import { round } from "remeda";
-import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { palette } from "#src/assets/colors.ts";
 
 type StatProps = {
   mainValue: string;

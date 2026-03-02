@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LaneSchema } from "@scout-for-lol/data/model/lane";
+import { LaneSchema } from "#src/model/lane.ts";
 
 export const RuneSchema = z.object({
   id: z.number(),

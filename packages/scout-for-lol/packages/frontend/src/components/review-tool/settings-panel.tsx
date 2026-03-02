@@ -6,14 +6,14 @@ import { z } from "zod";
 import type {
   TabConfig,
   Personality,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import {
   createDefaultTabConfig,
   createDefaultPipelineStages,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
+} from "#src/lib/review-tool/config/schema.ts";
+import { BUILTIN_PERSONALITIES } from "#src/lib/review-tool/prompts.ts";
 import { ConfigImportModal } from "./config-import-modal.tsx";
-import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
+import { downloadConfigBundle } from "#src/lib/review-tool/config-export.ts";
 import { PromptSettings } from "./prompt-settings.tsx";
 import { ConfigActions } from "./config-actions.tsx";
 
@@ -24,7 +24,7 @@ import {
   updateCustomPersonality,
   deleteCustomPersonality,
   generatePersonalityId,
-} from "@scout-for-lol/frontend/lib/review-tool/personality-storage";
+} from "#src/lib/review-tool/personality-storage.ts";
 import { StageConfigSections } from "./stage-config/stage-config-sections.tsx";
 
 type SettingsPanelProps = {

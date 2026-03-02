@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { createCompetition } from "#src/database/competition/queries.ts";
+import { addParticipant } from "#src/database/competition/participants.ts";
 import {
   type DiscordGuildId,
   type DiscordAccountId,
@@ -10,11 +10,11 @@ import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("add-all-members-test");

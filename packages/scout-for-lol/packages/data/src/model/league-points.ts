@@ -1,8 +1,8 @@
 import { match, P } from "ts-pattern";
 import { z } from "zod";
-import { numberOfDivisions } from "@scout-for-lol/data/model/division";
-import type { Rank } from "@scout-for-lol/data/model/rank";
-import type { Tier } from "@scout-for-lol/data/model/tier";
+import { numberOfDivisions } from "#src/model/division.ts";
+import type { Rank } from "#src/model/rank.ts";
+import type { Tier } from "#src/model/tier.ts";
 
 export type LeaguePoints = z.infer<typeof LeaguePointsSchema>;
 export const LeaguePointsSchema = z.number().brand("League Points");

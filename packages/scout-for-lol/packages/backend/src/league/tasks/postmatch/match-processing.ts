@@ -3,9 +3,9 @@ import type {
   PlayerConfigEntry,
   MatchId,
 } from "@scout-for-lol/data/index.ts";
-import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/match-data-fetcher.ts";
+import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("postmatch-match-processing");
 

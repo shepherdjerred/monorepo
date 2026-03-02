@@ -6,6 +6,9 @@
   "exports": {
     "./lib/*": "./src/lib/*"
   },
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "bin": {
     "tools": "./src/index.ts"
   },

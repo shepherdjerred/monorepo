@@ -2,7 +2,7 @@
  * S3 match browser for selecting real match data
  */
 import Fuse from "fuse.js";
-import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { ApiSettings } from "#src/lib/review-tool/config/schema.ts";
 import type {
   CompletedMatch,
   ArenaMatch,

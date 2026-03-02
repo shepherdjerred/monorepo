@@ -1,7 +1,7 @@
-import { getIssues } from "@shepherdjerred/tools/lib/bugsink/issues.ts";
-import type { BugsinkIssue } from "@shepherdjerred/tools/lib/bugsink/types.ts";
-import { getLevelEmoji } from "@shepherdjerred/tools/lib/bugsink/format.ts";
-import { formatJson } from "@shepherdjerred/tools/lib/output/formatter.ts";
+import { getIssues } from "#lib/bugsink/issues.ts";
+import type { BugsinkIssue } from "#lib/bugsink/types.ts";
+import { getLevelEmoji } from "#lib/bugsink/format.ts";
+import { formatJson } from "#lib/output/formatter.ts";
 
 export type IssuesOptions = {
   json?: boolean | undefined;

@@ -2,3 +2,49 @@
 # This package provides a custom Bun toolchain that registers Bun as the
 # Node.js runtime for rules_js / rules_ts. Since Bun is Node-compatible,
 # it works as a drop-in replacement.
+#
+# The ":bun" alias below provides a platform-aware reference to the Bun
+# binary for use in genrules: tools = ["//tools/bun"], cmd = "$(location //tools/bun) ..."
+
+config_setting(
+    name = "macos_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+config_setting(
+    name = "macos_x86_64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+config_setting(
+    name = "linux_arm64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+alias(
+    name = "bun",
+    actual = select({
+        ":macos_arm64": "@bun_darwin_arm64//:bun",
+        ":macos_x86_64": "@bun_darwin_amd64//:bun",
+        ":linux_arm64": "@bun_linux_arm64//:bun",
+        ":linux_x86_64": "@bun_linux_amd64//:bun",
+    }),
+    visibility = ["//visibility:public"],
+)

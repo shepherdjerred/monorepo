@@ -18,9 +18,9 @@ import type {
   PipelineContext,
   StageTrace,
   ImageGenerationTrace,
-} from "@scout-for-lol/data/index";
-import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "@scout-for-lol/data/index.ts";
+import { saveToS3 } from "#src/storage/s3-helpers.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("pipeline-s3");
 

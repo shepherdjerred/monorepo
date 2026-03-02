@@ -2,8 +2,8 @@
  * Cost tracking display component
  */
 import { useSyncExternalStore } from "react";
-import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
+import type { CostTracker } from "#src/lib/review-tool/costs.ts";
+import { formatCost } from "#src/lib/review-tool/costs.ts";
 
 type CostDisplayProps = {
   costTracker: CostTracker;

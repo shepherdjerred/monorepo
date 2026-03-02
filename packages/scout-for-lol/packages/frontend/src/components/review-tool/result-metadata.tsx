@@ -6,13 +6,13 @@ import type {
   CostBreakdown,
   PipelineTraces,
   StageTrace,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import {
   formatCost,
   calculatePipelineCosts,
   type PipelineCostBreakdown,
   type StageCost,
-} from "@scout-for-lol/frontend/lib/review-tool/costs";
+} from "#src/lib/review-tool/costs.ts";
 import { useMemo } from "react";
 
 type ResultMetadataProps = {

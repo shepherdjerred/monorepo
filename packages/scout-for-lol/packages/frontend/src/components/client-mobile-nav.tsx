@@ -2,8 +2,8 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
-} from "@scout-for-lol/frontend/components/ui/sheet";
-import { Button } from "@scout-for-lol/frontend/components/ui/button";
+} from "#src/components/ui/sheet.tsx";
+import { Button } from "#src/components/ui/button.tsx";
 
 type MobileNavItem = {
   href: string;

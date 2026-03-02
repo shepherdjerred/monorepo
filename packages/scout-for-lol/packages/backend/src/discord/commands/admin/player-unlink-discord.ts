@@ -1,18 +1,18 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
-import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
-import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.ts";
-import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { executeCommand } from "#src/discord/commands/utils/command-wrapper.ts";
+import { findPlayerByAliasWithSubscriptions } from "#src/discord/commands/admin/utils/player-queries.ts";
+import { buildPlayerUpdateResponse } from "#src/discord/commands/admin/utils/player-responses.ts";
+import { updatePlayerDiscordId } from "#src/discord/commands/admin/utils/player-updates.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("admin-player-unlink-discord");
 import {
   validateDiscordUnlink,
   executeDiscordLinkOperation,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.ts";
+} from "#src/discord/commands/admin/utils/discord-link-helpers.ts";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),

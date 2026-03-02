@@ -6,15 +6,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  router,
-  publicProcedure,
-  protectedProcedure,
-} from "@scout-for-lol/backend/trpc/trpc.ts";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { generateApiToken } from "@scout-for-lol/backend/trpc/context.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import configuration from "@scout-for-lol/backend/configuration.ts";
+import { router, publicProcedure, protectedProcedure } from "#src/trpc/trpc.ts";
+import { prisma } from "#src/database/index.ts";
+import { generateApiToken } from "#src/trpc/context.ts";
+import { createLogger } from "#src/logger.ts";
+import configuration from "#src/configuration.ts";
 import { DiscordAccountIdSchema, ApiTokenIdSchema } from "@scout-for-lol/data";
 
 const logger = createLogger("auth-router");

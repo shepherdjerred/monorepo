@@ -2,29 +2,29 @@ import {
   getCompetitionStatus,
   type CachedLeaderboard,
   type CompetitionWithCriteria,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getActiveCompetitions } from "#src/database/competition/queries.ts";
 import {
   calculateLeaderboard,
   type RankedLeaderboardEntry,
-} from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+} from "#src/league/competition/leaderboard.ts";
+import { generateLeaderboardEmbed } from "#src/discord/embeds/competition.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,
-} from "@scout-for-lol/backend/league/discord/channel.ts";
-import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.ts";
+} from "#src/league/discord/channel.ts";
+import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
 import {
   createSnapshot,
   getSnapshot,
-} from "@scout-for-lol/backend/league/competition/snapshots.ts";
-import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
+} from "#src/league/competition/snapshots.ts";
+import { getParticipants } from "#src/database/competition/participants.ts";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
-import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { logNotification } from "#src/utils/notification-logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-daily-update");
 

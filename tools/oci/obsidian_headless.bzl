@@ -1,10 +1,9 @@
 """OCI image for obsidian-headless: installs the npm package on node:22-slim.
 
-TODO(Phase 6): This genrule needs a real Node.js npm binary (not Bun).
-Currently the node toolchain is Bun which doesn't include npm. Options:
-1. Register a separate node toolchain for this one rule
-2. Use a Docker-based build approach
-3. Pre-build the layer outside Bazel
+The genrule uses bare `npm` because the monorepo's Node.js toolchain is Bun
+(which doesn't include npm). This target is tagged `manual` so it only runs
+when explicitly requested. The container's own node:22-slim base provides npm
+at runtime, and the genrule relies on a system npm during the build step.
 """
 
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
@@ -22,7 +21,6 @@ def obsidian_headless_image(name, visibility = None):
     """
 
     # Layer with globally-installed obsidian-headless.
-    # TODO: Needs real npm, not Bun's node compatibility shim.
     native.genrule(
         name = name + "_npm_layer",
         outs = [name + "_npm_layer.tar"],
@@ -32,7 +30,7 @@ def obsidian_headless_image(name, visibility = None):
             TMPDIR=$$(mktemp -d) && \\\r
             trap 'rm -rf $$TMPDIR' EXIT && \\\r
             cd $$TMPDIR && \\\r
-            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless 2>/dev/null && \\\r
+            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless && \\\r
             tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local \\\r
         """,
         tags = ["requires-network", "manual"],

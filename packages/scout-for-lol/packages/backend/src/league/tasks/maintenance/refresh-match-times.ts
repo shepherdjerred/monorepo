@@ -5,14 +5,14 @@
  * have accurate lastMatchTime values for proper polling intervals.
  */
 
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
+import { prisma } from "#src/database/index.ts";
+import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
 import {
   LeagueAccountSchema,
   LeaguePuuidSchema,
   type PlayerConfigEntry,
 } from "@scout-for-lol/data/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("refresh-match-times");
 

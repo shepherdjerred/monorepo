@@ -25,12 +25,12 @@ import {
   parseCompetition,
   participantStatusToString,
   visibilityToString,
-} from "@scout-for-lol/data/model/competition";
+} from "#src/model/competition.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-} from "@scout-for-lol/data/model/discord";
+} from "#src/model/discord.ts";
 import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {

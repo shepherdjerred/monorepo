@@ -1,6 +1,6 @@
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
-import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import type { PlayerWithSubscriptions } from "#src/discord/commands/admin/utils/player-queries.ts";
 
 /**
  * Update a player's Discord ID

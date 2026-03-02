@@ -40,7 +40,16 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    data = ["package.json"],
     deps = [
+        ":node_modules/@types/bun",
+        ":node_modules/gray-matter",
+        ":node_modules/hono",
+        ":node_modules/prom-client",
+        ":node_modules/tasknotes-types",
+        ":node_modules/yaml",
+        ":node_modules/zod",
+        "//:node_modules/undici-types",
         "//packages/tasknotes-types:pkg",
     ],
 )
@@ -49,6 +58,11 @@ bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
     deps = [
+        ":node_modules/gray-matter",
+        ":node_modules/hono",
+        ":node_modules/prom-client",
+        ":node_modules/yaml",
+        ":node_modules/zod",
         "//packages/tasknotes-types:pkg",
     ],
 )

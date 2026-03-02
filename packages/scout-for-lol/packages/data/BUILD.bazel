@@ -22,11 +22,29 @@ js_library(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    data = ["package.json"] + glob(["src/**/assets/*.json"]),
+    extends = "//packages/scout-for-lol:tsconfig_base",
+    deps = [
+        ":node_modules/bun-types",
+        ":node_modules/date-fns",
+        ":node_modules/remeda",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/@types/node",
+        "//:node_modules/undici-types",
+    ],
 )
 
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    data = ["//packages/scout-for-lol/packages/backend:testdata"],
+    deps = [
+        ":node_modules/date-fns",
+        ":node_modules/remeda",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+    ],
 )

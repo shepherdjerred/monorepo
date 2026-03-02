@@ -9,10 +9,7 @@ import {
   type RawTimeline,
 } from "@scout-for-lol/data";
 
-import {
-  testAccountId,
-  testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+import { testAccountId, testPuuid } from "#src/testing/test-ids.ts";
 
 // Test match ID for all tests
 const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
@@ -78,7 +75,7 @@ void mock.module("../../../configuration.js", () => ({
   },
 }));
 
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
+import { generateMatchReview } from "#src/league/review/generator.ts";
 describe("generateMatchReview", () => {
   describe("when API keys are not configured", () => {
     test("returns undefined for regular match", async () => {

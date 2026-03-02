@@ -9,17 +9,17 @@ import {
   TierSchema,
   RawSummonerLeagueSchema,
 } from "@scout-for-lol/data";
-import { api } from "@scout-for-lol/backend/league/api/api";
+import { api } from "#src/league/api/api.ts";
 import { filter, first, pipe } from "remeda";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
+import { mapRegionToEnum } from "#src/league/model/region.ts";
 import { z } from "zod";
 import {
   riotApiErrorsTotal,
   riotApiRequestsTotal,
   updateRiotApiHealth,
-} from "@scout-for-lol/backend/metrics/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+} from "#src/metrics/index.ts";
+import { createLogger } from "#src/logger.ts";
+import { withTimeout } from "#src/utils/timeout.ts";
 
 const logger = createLogger("model-rank");
 

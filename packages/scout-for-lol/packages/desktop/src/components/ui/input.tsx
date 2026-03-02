@@ -6,7 +6,7 @@ import {
   type ComponentPropsWithoutRef,
 } from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { cn } from "#src/lib/utils.ts";
 
 // Label component
 const Label = forwardRef<

@@ -3,13 +3,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@scout-for-lol/frontend/components/review-tool/ui/card";
-import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
-import { Switch } from "@scout-for-lol/frontend/components/review-tool/ui/switch";
+} from "#src/components/review-tool/ui/card.tsx";
+import { Label } from "#src/components/review-tool/ui/label.tsx";
+import { Switch } from "#src/components/review-tool/ui/switch.tsx";
 import type {
   ReviewTextStageConfig,
   StageConfig,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import {
   TIMELINE_SUMMARY_SYSTEM_PROMPT,
   MATCH_SUMMARY_SYSTEM_PROMPT,

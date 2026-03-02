@@ -5,9 +5,9 @@ import {
   ParticipantStatusSchema,
   type PlayerId,
 } from "@scout-for-lol/data";
-import type { CompetitionParticipant } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { isCompetitionActive } from "@scout-for-lol/backend/database/competition/validation.ts";
+import type { CompetitionParticipant } from "#generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { isCompetitionActive } from "#src/database/competition/validation.ts";
 import { match } from "ts-pattern";
 
 // ============================================================================

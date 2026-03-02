@@ -39,5 +39,22 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    extends = "//packages/homelab:tsconfig_base",
+    deps = [
+        ":node_modules/@digital-alchemy/automation",
+        ":node_modules/@digital-alchemy/core",
+        ":node_modules/@digital-alchemy/hass",
+        ":node_modules/@digital-alchemy/synapse",
+        ":node_modules/@digital-alchemy/type-writer",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@total-typescript/ts-reset",
+        ":node_modules/openai",
+        ":node_modules/prom-client",
+        ":node_modules/remeda",
+        ":node_modules/simple-git",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
+    ],
 )

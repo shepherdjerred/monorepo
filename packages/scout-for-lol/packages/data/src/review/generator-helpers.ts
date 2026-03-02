@@ -1,22 +1,19 @@
 import { match as matchPattern } from "ts-pattern";
-import type {
-  ArenaMatch,
-  CompletedMatch,
-} from "@scout-for-lol/data/model/index.ts";
+import type { ArenaMatch, CompletedMatch } from "#src/model/index.ts";
 import {
   selectRandomBehaviors,
   type Personality,
-} from "@scout-for-lol/data/review/prompts.ts";
+} from "#src/review/prompts.ts";
 import {
   wasPromoted,
   wasDemoted,
   rankToSimpleString,
   tierToPercentileString,
-} from "@scout-for-lol/data/model/rank.ts";
+} from "#src/model/rank.ts";
 import {
   lpDiffToString,
   rankToLeaguePoints,
-} from "@scout-for-lol/data/model/league-points.ts";
+} from "#src/model/league-points.ts";
 
 /**
  * Extract match data from a match object

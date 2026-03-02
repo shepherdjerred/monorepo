@@ -4,7 +4,7 @@ import type {
   RawTimeline,
 } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
-import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
+import { saveToS3 } from "#src/storage/s3-helpers.ts";
 
 /**
  * Save a League of Legends match to S3 storage

@@ -10,17 +10,17 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionsByChannelId } from "#src/database/competition/queries.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
 import {
   discordSubscriptionsCleanedTotal,
   guildDataCleanupTotal,
-} from "@scout-for-lol/backend/metrics/index.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+} from "#src/metrics/index.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-validate-data");
 

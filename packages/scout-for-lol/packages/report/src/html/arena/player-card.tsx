@@ -1,6 +1,6 @@
 import { type ArenaChampion } from "@scout-for-lol/data";
-import { ChampionInfo } from "@scout-for-lol/report/html/arena/champion-info.tsx";
-import { AugmentsDisplay } from "@scout-for-lol/report/html/arena/augments-display.tsx";
+import { ChampionInfo } from "#src/html/arena/champion-info.tsx";
+import { AugmentsDisplay } from "#src/html/arena/augments-display.tsx";
 import { round } from "remeda";
 
 export function PlayerCard({

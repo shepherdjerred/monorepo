@@ -1,5 +1,5 @@
-import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { getItemImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
+import { palette } from "#src/assets/colors.ts";
+import { getItemImage } from "#src/dataDragon/image-cache.ts";
 import { map } from "remeda";
 
 const dimension = "7.5rem";

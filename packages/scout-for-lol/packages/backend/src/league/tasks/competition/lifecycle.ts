@@ -1,20 +1,20 @@
-import type { CompetitionWithCriteria } from "@scout-for-lol/data/index";
-import { parseCompetition } from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.ts";
+import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
+import { parseCompetition } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
 import {
   calculateLeaderboard,
   type RankedLeaderboardEntry,
-} from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+} from "#src/league/competition/leaderboard.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,
-} from "@scout-for-lol/backend/league/discord/channel.ts";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+} from "#src/league/discord/channel.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { z } from "zod";
-import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
+import { logNotification } from "#src/utils/notification-logger.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-lifecycle");
 

@@ -6,28 +6,28 @@ import {
   DiscordGuildIdSchema,
   RegionSchema,
   RiotIdSchema,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import { fromError } from "zod-validation-error";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import type {
   Account,
   Player,
   Subscription,
-} from "@scout-for-lol/backend/generated/prisma/client/index.js";
+} from "#generated/prisma/client/index.js";
 
 const logger = createLogger("subscription-add");
 import {
   checkSubscriptionLimit,
   checkAccountLimit,
   resolveRiotIdToPuuid,
-} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers.ts";
+} from "#src/discord/commands/subscription/add-helpers.ts";
 import {
   buildSubscriptionResponse,
   createSubscriptionRecords,
   handleWelcomeMatch,
   validateSubscriptionArgs,
-} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers-internal.ts";
+} from "#src/discord/commands/subscription/add-helpers-internal.ts";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,

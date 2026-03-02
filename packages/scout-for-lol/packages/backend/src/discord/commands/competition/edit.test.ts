@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
-import type { Competition } from "@scout-for-lol/backend/generated/prisma/client";
+import type { Competition } from "#generated/prisma/client/index.js";
 
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 /**
  * These tests verify the validation logic patterns used in edit.ts
  * They test the same patterns without needing Discord.js mocks

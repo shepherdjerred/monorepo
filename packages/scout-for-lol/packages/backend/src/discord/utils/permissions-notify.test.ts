@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { notifyServerOwnerAboutPermissionError } from "@scout-for-lol/backend/discord/utils/permissions";
-import { mockClient } from "@scout-for-lol/backend/testing/discord-mocks";
+import { notifyServerOwnerAboutPermissionError } from "#src/discord/utils/permissions.ts";
+import { mockClient } from "#src/testing/discord-mocks.ts";
 
 describe("notifyServerOwnerAboutPermissionError", () => {
   test("sends DM to server owner with permission error details", async () => {

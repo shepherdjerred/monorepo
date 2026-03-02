@@ -1,13 +1,13 @@
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   CachedLeaderboardSchema,
   type CachedLeaderboard,
-} from "@scout-for-lol/data/index";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+} from "@scout-for-lol/data/index.ts";
+import configuration from "#src/configuration.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
 
 // Schema for AWS S3 "not found" errors

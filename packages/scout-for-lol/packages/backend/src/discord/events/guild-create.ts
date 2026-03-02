@@ -5,9 +5,9 @@
  */
 
 import { type Guild, ChannelType } from "discord.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-create");
 

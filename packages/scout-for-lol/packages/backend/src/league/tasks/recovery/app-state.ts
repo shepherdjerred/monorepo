@@ -1,4 +1,4 @@
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { prisma } from "#src/database/index.ts";
 
 const BOT_STATE_ID = 1;
 

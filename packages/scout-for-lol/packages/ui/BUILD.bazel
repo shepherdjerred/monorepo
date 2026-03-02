@@ -25,8 +25,17 @@ typecheck_test(
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
+    args = ["--preserveSymlinks"],
+    data = ["package.json"],
+    extends = "//packages/scout-for-lol:tsconfig_base",
     deps = [
-        ":pkg",
+        ":node_modules/@scout-for-lol/data",
+        ":node_modules/@types/react",
+        ":node_modules/bun-types",
+        ":node_modules/react",
+        "//:node_modules/@types/bun",
+        "//:node_modules/@types/node",
+        "//:node_modules/undici-types",
         "//packages/scout-for-lol/packages/data:pkg",
     ],
 )

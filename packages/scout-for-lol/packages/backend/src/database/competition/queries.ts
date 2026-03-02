@@ -9,8 +9,8 @@ import {
   parseCompetition,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { type CompetitionDates } from "@scout-for-lol/backend/database/competition/validation.ts";
+import { type ExtendedPrismaClient } from "#src/database/index.ts";
+import { type CompetitionDates } from "#src/database/competition/validation.ts";
 
 // ============================================================================
 // Types

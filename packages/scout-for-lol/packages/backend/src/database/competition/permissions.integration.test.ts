@@ -5,17 +5,14 @@ import {
   grantPermission,
   hasPermission,
   revokePermission,
-} from "@scout-for-lol/backend/database/competition/permissions.ts";
+} from "#src/database/competition/permissions.ts";
 import {
   clearAllRateLimits,
   recordCreation,
-} from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+} from "#src/database/competition/rate-limit.ts";
 
-import {
-  testGuildId,
-  testAccountId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
+import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("permissions-test");

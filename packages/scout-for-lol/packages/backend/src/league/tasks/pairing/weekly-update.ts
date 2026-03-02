@@ -1,12 +1,12 @@
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { MY_SERVER } from "@scout-for-lol/backend/configuration/flags.ts";
-import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.ts";
-import { splitMessageIntoChunks } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { createLogger } from "#src/logger.ts";
+import { MY_SERVER } from "#src/configuration/flags.ts";
+import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   type ServerPairingStats,
   type PairingStatsEntry,
   DiscordChannelIdSchema,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import {
   getServerPlayers,
   createAliasToDiscordIdMap,

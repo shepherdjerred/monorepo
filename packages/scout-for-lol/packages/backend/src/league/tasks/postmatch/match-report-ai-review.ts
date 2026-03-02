@@ -8,10 +8,10 @@ import type {
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import { MIN_GAME_DURATION_SECONDS } from "@scout-for-lol/data/index.ts";
-import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
+import { getFlag } from "#src/configuration/flags.ts";
+import { generateMatchReview } from "#src/league/review/generator.ts";
 import { isExceptionalGame } from "./exceptional-game.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("postmatch-match-report-ai-review");

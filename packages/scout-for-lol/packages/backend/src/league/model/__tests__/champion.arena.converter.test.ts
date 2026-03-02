@@ -1,9 +1,9 @@
 import { describe, it, expect } from "bun:test";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
+import { participantToArenaChampion } from "#src/league/model/champion.ts";
 import {
   makeTestParticipant,
   makeTestChallenges,
-} from "@scout-for-lol/backend/testing/riot-mocks.ts";
+} from "#src/testing/riot-mocks.ts";
 
 const baseParticipant = () =>
   makeTestParticipant({

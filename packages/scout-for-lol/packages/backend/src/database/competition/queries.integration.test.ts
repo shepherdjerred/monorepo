@@ -3,7 +3,7 @@ import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   type CreateCompetitionInput,
   cancelCompetition,
@@ -11,12 +11,12 @@ import {
   getActiveCompetitions,
   getCompetitionById,
   getCompetitionsByServer,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("competition-queries-test");

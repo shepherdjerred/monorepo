@@ -18,7 +18,7 @@ import {
   type InterfaceDeclaration,
   type PropertySignature,
 } from "ts-morph";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("brand-prisma-types");
 

@@ -1,6 +1,6 @@
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { send } from "#src/league/discord/channel.ts";
+import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("offline-notification");

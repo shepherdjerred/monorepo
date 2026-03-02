@@ -4,12 +4,9 @@
  * Creates the context for each tRPC request, including authentication state.
  */
 
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import type {
-  ApiToken,
-  User,
-} from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
+import type { ApiToken, User } from "#generated/prisma/client/index.js";
 
 const logger = createLogger("trpc-context");
 

@@ -11,7 +11,7 @@ import type {
   ImageGenerationStageConfig,
   ReviewTextStageConfig,
 } from "./pipeline-types.ts";
-import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
+import { selectRandomStyle } from "#src/review/art-styles.ts";
 
 // Import system prompts from TXT files (using ?raw for Vite to return content, not URL)
 import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";

@@ -1,4 +1,4 @@
-import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
+import { useSoundPackEditor } from "#src/hooks/use-sound-pack-editor.tsx";
 import { VolumeSlider } from "./volume-slider.tsx";
 
 export function SettingsTab() {

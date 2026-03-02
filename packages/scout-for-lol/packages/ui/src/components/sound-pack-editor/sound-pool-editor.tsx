@@ -12,7 +12,7 @@ import type {
   SoundSource,
 } from "@scout-for-lol/data";
 import { SoundEntryCard } from "./sound-entry-card.tsx";
-import type { CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
+import type { CacheStatus } from "#src/types/adapter.ts";
 
 type SoundPoolEditorProps = {
   /** The sound pool to edit */

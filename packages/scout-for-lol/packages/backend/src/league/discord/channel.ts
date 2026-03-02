@@ -1,25 +1,25 @@
 import type { MessageCreateOptions, MessagePayload, Message } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
-import { client } from "@scout-for-lol/backend/discord/client.ts";
-import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.ts";
+import { client } from "#src/discord/client.ts";
+import { asTextChannel } from "#src/discord/utils/channel.ts";
 import {
   checkSendMessagePermission,
   isPermissionError,
   formatPermissionErrorForLog,
   notifyServerOwnerAboutPermissionError,
-} from "@scout-for-lol/backend/discord/utils/permissions.ts";
-import { discordPermissionErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+} from "#src/discord/utils/permissions.ts";
+import { discordPermissionErrorsTotal } from "#src/metrics/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   recordPermissionError,
   recordSuccessfulSend,
-} from "@scout-for-lol/backend/database/guild-permission-errors.ts";
+} from "#src/database/guild-permission-errors.ts";
 import type {
   DiscordChannelId,
   DiscordGuildId,
-} from "@scout-for-lol/data/index";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "@scout-for-lol/data/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-channel");
 

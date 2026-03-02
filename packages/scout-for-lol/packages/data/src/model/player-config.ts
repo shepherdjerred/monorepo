@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { LeagueAccountSchema } from "@scout-for-lol/data/model/league-account";
-import { DiscordSchema } from "@scout-for-lol/data/model/discord";
+import { LeagueAccountSchema } from "#src/model/league-account.ts";
+import { DiscordSchema } from "#src/model/discord.ts";
 
 export type PlayerConfigEntry = z.infer<typeof PlayerConfigEntrySchema>;
 export const PlayerConfigEntrySchema = z.strictObject({

@@ -1,15 +1,12 @@
 import satori from "satori";
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { ArenaReport } from "@scout-for-lol/report/html/arena/report.tsx";
-import {
-  bunBeaufortFonts,
-  bunSpiegelFonts,
-} from "@scout-for-lol/report/assets/index.ts";
-import { svgToPng } from "@scout-for-lol/report/html/index.tsx";
+import { ArenaReport } from "#src/html/arena/report.tsx";
+import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import { svgToPng } from "#src/html/index.tsx";
 import {
   preloadChampionImages,
   preloadAugmentIcons,
-} from "@scout-for-lol/report/dataDragon/image-cache.ts";
+} from "#src/dataDragon/image-cache.ts";
 
 export async function arenaMatchToSvg(match: ArenaMatch) {
   // Collect all champion names that need pre-loading

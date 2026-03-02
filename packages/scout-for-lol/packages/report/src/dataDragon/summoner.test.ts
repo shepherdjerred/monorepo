@@ -1,4 +1,4 @@
-import { summoner } from "@scout-for-lol/data/data-dragon/summoner";
+import { summoner } from "@scout-for-lol/data/data-dragon/summoner.ts";
 import { test, expect } from "bun:test";
 
 test("should be able to get champion data", () => {

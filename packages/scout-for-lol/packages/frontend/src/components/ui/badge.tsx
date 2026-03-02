@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
+import { cn } from "#src/lib/utils.ts";
 
 // Define the badge variants using cva
 const badgeVariants = cva(

@@ -1,11 +1,14 @@
-import { api } from "@scout-for-lol/backend/league/api/api.ts";
+import { api } from "#src/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
-import type { PlayerConfigEntry, LeaguePuuid } from "@scout-for-lol/data/index";
-import { updateLastMatchTime } from "@scout-for-lol/backend/database/index.ts";
-import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+import { mapRegionToEnum } from "#src/league/model/region.ts";
+import type {
+  PlayerConfigEntry,
+  LeaguePuuid,
+} from "@scout-for-lol/data/index.ts";
+import { updateLastMatchTime } from "#src/database/index.ts";
+import { getRecentMatchIds } from "#src/league/api/match-history.ts";
+import { createLogger } from "#src/logger.ts";
+import { withTimeout } from "#src/utils/timeout.ts";
 
 const logger = createLogger("api-backfill-match-history");
 

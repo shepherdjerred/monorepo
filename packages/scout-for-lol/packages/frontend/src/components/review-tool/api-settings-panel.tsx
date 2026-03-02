@@ -3,11 +3,11 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { GlobalConfig } from "#src/lib/review-tool/config/schema.ts";
 import {
   exportGlobalConfigAsBlob,
   importGlobalConfigFromBlob,
-} from "@scout-for-lol/frontend/lib/review-tool/config-manager";
+} from "#src/lib/review-tool/config-manager.ts";
 
 const ErrorSchema = z.object({ message: z.string() });
 

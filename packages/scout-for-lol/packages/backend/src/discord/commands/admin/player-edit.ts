@@ -1,23 +1,23 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
-import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/discord/commands/admin/utils/validation.ts";
+import { findPlayerByAliasWithSubscriptions } from "#src/discord/commands/admin/utils/player-queries.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("admin-player-edit");
 import {
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
+} from "#src/discord/commands/admin/utils/responses.ts";
 import {
   formatPlayerAccountsList,
   formatPlayerSubscriptionsList,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.ts";
+} from "#src/discord/commands/admin/utils/player-responses.ts";
 
 const ArgsSchema = z.object({
   currentAlias: z.string().min(1).max(100),

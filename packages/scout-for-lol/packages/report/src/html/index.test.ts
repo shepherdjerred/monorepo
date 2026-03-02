@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.tsx";
+import { matchToSvg, svgToPng } from "#src/html/index.tsx";
 import { test, expect } from "bun:test";
 
 function hashSvg(svg: string): string {

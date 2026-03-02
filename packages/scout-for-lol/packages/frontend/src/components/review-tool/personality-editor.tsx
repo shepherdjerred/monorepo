@@ -6,8 +6,8 @@ import { z } from "zod";
 import type {
   Personality,
   PersonalityMetadata,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { PersonalitySchema } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
+import { PersonalitySchema } from "#src/lib/review-tool/config/schema.ts";
 
 const ErrorSchema = z.object({ message: z.string() });
 

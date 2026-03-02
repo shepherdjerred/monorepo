@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, test, mock } from "bun:test";
 import {
   createCompetition,
   type CreateCompetitionInput,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
 import type {
   CompetitionCriteria,
   CompetitionId,
@@ -19,8 +19,8 @@ import {
   testAccountId,
   testChannelId,
   testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-ids.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
   content: z.string(),

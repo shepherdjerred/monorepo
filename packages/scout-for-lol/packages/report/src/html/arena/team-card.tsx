@@ -1,7 +1,7 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { TeamHeader } from "@scout-for-lol/report/html/arena/team-header.tsx";
-import { PlayerCard } from "@scout-for-lol/report/html/arena/player-card.tsx";
-import { getTeamStyling } from "@scout-for-lol/report/html/arena/utils.ts";
+import { TeamHeader } from "#src/html/arena/team-header.tsx";
+import { PlayerCard } from "#src/html/arena/player-card.tsx";
+import { getTeamStyling } from "#src/html/arena/utils.ts";
 
 export function TeamCard({
   team,

@@ -4,10 +4,10 @@ import {
   groupArenaTeams,
   getArenaTeammate,
   toArenaSubteams,
-} from "@scout-for-lol/backend/league/model/match.ts";
+} from "#src/league/model/match.ts";
 
-import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { makeTestParticipant } from "@scout-for-lol/backend/testing/riot-mocks.ts";
+import { testPuuid } from "#src/testing/test-ids.ts";
+import { makeTestParticipant } from "#src/testing/riot-mocks.ts";
 
 function makeParticipant(extra: Partial<RawParticipant> = {}): RawParticipant {
   return makeTestParticipant(extra);

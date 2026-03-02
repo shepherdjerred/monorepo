@@ -7,16 +7,16 @@ import {
   type DiscordGuildId,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionById } from "#src/database/competition/queries.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("utils-command-helpers");
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithNoLinkedAccount,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
+} from "#src/discord/commands/competition/utils/replies.ts";
 
 /**
  * Extract competition ID from interaction

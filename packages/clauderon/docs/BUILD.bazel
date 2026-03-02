@@ -63,5 +63,10 @@ typecheck_test(
         ],
         allow_empty = True,
     ),
-    deps = [":pkg"],
+    deps = [
+        ":node_modules/@astrojs/check",
+        ":node_modules/@astrojs/starlight",
+        ":node_modules/astro",
+        "//:node_modules/@types/bun",
+    ],
 )

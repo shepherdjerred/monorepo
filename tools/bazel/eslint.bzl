@@ -1,36 +1,33 @@
-"""ESLint test macro - delegates to the package's lint npm script.
+"""ESLint test macro using js_test for sandboxed execution.
 
-Runs `bun run lint` in the actual source tree for full compatibility
-with the development environment (generated types, resolved deps, etc.).
+Runs ESLint programmatically via the ESLint Node API inside the
+Bazel sandbox. The eslint.config.ts in each package is auto-detected.
 """
 
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+
 def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], tags = [], **kwargs):
-    """ESLint test that delegates to the package's lint npm script.
+    """ESLint test via js_test.
 
     Args:
         name: Target name (conventionally "lint")
-        srcs: Source files to lint (used for change detection / caching)
+        srcs: Source files to lint
         config: ESLint config file (default: eslint.config.ts)
         deps: Additional dependencies
         data: Additional data files
-        tags: Additional tags (merged with default tags)
-        **kwargs: Additional args passed to native.sh_test
+        tags: Additional tags
+        **kwargs: Additional args passed to js_test
     """
-
-
-    # buildifier: disable=native-sh-test
-    native.sh_test(
+    js_test(
         name = name,
-        srcs = ["//tools/bazel:run_npm_script.sh"],
-        args = ["lint"],
+        entry_point = "//tools/bazel:eslint_entry.cjs",
         data = srcs + deps + data + [
             config,
             "tsconfig.json",
             "package.json",
+            "//tools/bazel:eslint_entry",
         ],
-        env = {
-            "MONOREPO_PACKAGE": native.package_name(),
-        },
-        tags = ["lint", "local"] + tags,
+        no_copy_to_bin = ["//tools/bazel:eslint_entry.cjs"],
+        tags = ["lint"] + tags,
         **kwargs
     )

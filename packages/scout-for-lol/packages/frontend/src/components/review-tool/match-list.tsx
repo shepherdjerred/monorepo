@@ -1,7 +1,7 @@
 /**
  * Match list display component
  */
-import type { MatchMetadata } from "@scout-for-lol/frontend/lib/review-tool/match-converter";
+import type { MatchMetadata } from "#src/lib/review-tool/match-converter.ts";
 
 type MatchListProps = {
   matches: MatchMetadata[];

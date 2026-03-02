@@ -36,7 +36,7 @@ packages/dpp/
 /.rustup/
 .config/
 
-# Bazel test runner locks (used by run_npm_script.sh)
+# Legacy Bazel marker/lock files
 .bun-install.lock
 .bun-install-done
 .build-*.lock
@@ -61,6 +61,9 @@ coverage/
 
 # Monarch hardcoded order data (contains personal purchase history)
 packages/monarch/src/lib/costco/costco-orders.json
+
+# Local-only packages (not yet integrated)
+packages/cooklang-for-obsidian/
 
 # Obsidian plugin bundles (may contain embedded secrets)
 obsidian/.obsidian/plugins/*/main.js

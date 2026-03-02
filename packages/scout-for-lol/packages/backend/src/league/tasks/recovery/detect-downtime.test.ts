@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { detectDowntime } from "@scout-for-lol/backend/league/tasks/recovery/detect-downtime.ts";
+import { detectDowntime } from "#src/league/tasks/recovery/detect-downtime.ts";
 
 describe("detectDowntime", () => {
   const now = new Date("2026-02-22T12:00:00Z");

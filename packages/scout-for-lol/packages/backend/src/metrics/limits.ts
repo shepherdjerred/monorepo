@@ -3,17 +3,17 @@
  * This persists state to Prometheus by querying current database state
  */
 
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   serversAtSubscriptionLimit,
   serversApproachingSubscriptionLimit,
   serversAtAccountLimit,
   serversApproachingAccountLimit,
-} from "@scout-for-lol/backend/metrics/index.ts";
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
-import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/metrics/index.ts";
+import { getLimit } from "#src/configuration/flags.ts";
+import { LIMIT_WARNING_THRESHOLD } from "#src/configuration/subscription-limits.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("metrics-limits");
 

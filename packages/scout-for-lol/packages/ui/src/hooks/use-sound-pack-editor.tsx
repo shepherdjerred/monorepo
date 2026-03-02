@@ -27,9 +27,9 @@ import type {
   SoundPackAdapter,
   Champion,
   LocalPlayer,
-} from "@scout-for-lol/ui/types/adapter.ts";
-import type { SoundPackEditorContextValue } from "@scout-for-lol/ui/hooks/sound-pack-editor-types.ts";
-import { useRuleOperations } from "@scout-for-lol/ui/hooks/use-sound-pack-editor-rules.ts";
+} from "#src/types/adapter.ts";
+import type { SoundPackEditorContextValue } from "#src/hooks/sound-pack-editor-types.ts";
+import { useRuleOperations } from "#src/hooks/use-sound-pack-editor-rules.ts";
 
 // =============================================================================
 // Context

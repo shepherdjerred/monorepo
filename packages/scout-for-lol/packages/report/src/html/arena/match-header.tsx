@@ -1,5 +1,5 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { formatDuration } from "@scout-for-lol/report/html/arena/utils.ts";
+import { formatDuration } from "#src/html/arena/utils.ts";
 
 export function MatchHeader({
   match,

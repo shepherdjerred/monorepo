@@ -4,14 +4,14 @@ import {
   LeaguePuuidSchema,
   RegionSchema,
   type RiotId,
-} from "@scout-for-lol/data/index";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
-import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.ts";
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
+import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-match.ts";
 import type { ArgsSchema } from "./add.ts";
 import type { z } from "zod";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("subscription-add-helpers-internal");
 

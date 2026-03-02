@@ -12,6 +12,11 @@ fi
 for dir in packages/*/; do
   PKG=$(basename "$dir")
 
+  # Skip directories that are gitignored (local-only, not part of the repo)
+  if git check-ignore -q "$dir" 2>/dev/null; then
+    continue
+  fi
+
   if [ ! -f "$dir/package.json" ]; then
     echo "  INFO: $PKG has no package.json (non-Bun package)"
     continue

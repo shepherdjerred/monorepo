@@ -10,7 +10,7 @@ import type {
   PipelineIntermediateResults,
   StageTrace,
   TimelineChunkTrace,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 
 type CollapsibleSectionProps = {
   title: string;

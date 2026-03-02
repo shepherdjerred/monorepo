@@ -25,4 +25,7 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":node_modules/zod",
+    ],
 )

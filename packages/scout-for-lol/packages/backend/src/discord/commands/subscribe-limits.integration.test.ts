@@ -5,11 +5,11 @@ import {
   testAccountId,
   testChannelId,
   testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   addLimitOverride,
   clearLimitOverrides,
-} from "@scout-for-lol/backend/configuration/flags.ts";
+} from "#src/configuration/flags.ts";
 import {
   type DiscordGuildId,
   type DiscordAccountId,
@@ -18,7 +18,7 @@ import {
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;

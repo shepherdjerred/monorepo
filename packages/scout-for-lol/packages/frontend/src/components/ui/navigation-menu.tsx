@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
 
-import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
+import { cn } from "#src/lib/utils.ts";
 
 const NavigationMenu = React.forwardRef<
   React.ComponentRef<typeof NavigationMenuPrimitive.Root>,

@@ -1,9 +1,9 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionById } from "#src/database/competition/queries.ts";
+import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("debug-force-snapshot");
 

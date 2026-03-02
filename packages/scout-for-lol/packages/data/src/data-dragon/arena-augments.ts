@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   FullAugmentSchema,
   type FullAugment,
-} from "@scout-for-lol/data/model/arena/augment.ts";
+} from "#src/model/arena/augment.ts";
 import arenaAugmentsData from "./assets/arena-augments.json" with { type: "json" };
 
 const ArenaAugmentCacheSchema = z.record(z.string(), FullAugmentSchema);

@@ -1,6 +1,6 @@
-import { getChampionImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
-import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
-import { Damage } from "@scout-for-lol/report/html/arena/damage.tsx";
+import { getChampionImage } from "#src/dataDragon/image-cache.ts";
+import { renderItems } from "#src/html/champion/item.tsx";
+import { Damage } from "#src/html/arena/damage.tsx";
 
 export function ChampionInfo({
   playerName,

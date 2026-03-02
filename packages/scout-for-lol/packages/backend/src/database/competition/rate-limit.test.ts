@@ -5,9 +5,9 @@ import {
   clearRateLimit,
   getTimeRemaining,
   recordCreation,
-} from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+} from "#src/database/competition/rate-limit.ts";
 
-import { testAccountId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { testAccountId } from "#src/testing/test-ids.ts";
 // Clean up before each test
 beforeEach(() => {
   clearAllRateLimits();

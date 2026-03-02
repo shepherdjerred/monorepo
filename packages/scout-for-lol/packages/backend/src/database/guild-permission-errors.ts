@@ -2,7 +2,7 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { subDays } from "date-fns";
 
 /**
