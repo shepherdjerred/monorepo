@@ -489,6 +489,7 @@ def _generate_deploy_step(sites: set[str] | None) -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/deploy.sh",
         "timeout_in_minutes": 30,
+        "soft_fail": True,
         "plugins": [_k8s_plugin(secrets=["buildkite-argocd-token"])],
     }
     if sites:
@@ -504,6 +505,7 @@ def _generate_homelab_release_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/homelab-release.sh",
         "timeout_in_minutes": 45,
+        "soft_fail": True,
         "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=["buildkite-argocd-token"])],
     }
 
