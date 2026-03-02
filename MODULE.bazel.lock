@@ -206,7 +206,7 @@
   "moduleExtensions": {
     "//tools/bun:extensions.bzl%bun": {
       "general": {
-        "bzlTransitiveDigest": "8dwz+5y6FOxhcoCFFdEDAcp/r/qbfjmgcvIfme+yx9E=",
+        "bzlTransitiveDigest": "Mx5lQAvEfWJA8Kscir+4Xj/wscKMdCVaN8A9mMVHJOM=",
         "usagesDigest": "BB07BruV4yPwWcuwSfFYocOus/nngpiUeETPffsteBY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
