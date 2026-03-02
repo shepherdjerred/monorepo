@@ -5,34 +5,34 @@ import type {
   LeaguePuuid,
   Ranks,
   RawMatch,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
   LeaguePuuidSchema,
   RawSummonerLeagueSchema,
-} from "@scout-for-lol/data/index";
-import { assignRanks } from "@scout-for-lol/backend/league/competition/leaderboard-ranking.ts";
+} from "@scout-for-lol/data/index.ts";
+import { assignRanks } from "#src/league/competition/leaderboard-ranking.ts";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { queryMatchesByDateRange } from "#src/storage/s3-query.ts";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 import {
   processCriteria,
   type SnapshotData,
-} from "@scout-for-lol/backend/league/competition/processors/index.ts";
-import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.ts";
-import { api } from "@scout-for-lol/backend/league/api/api.ts";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
-import { getRank } from "@scout-for-lol/backend/league/model/rank.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+} from "#src/league/competition/processors/index.ts";
+import { getSnapshot } from "#src/league/competition/snapshots.ts";
+import { api } from "#src/league/api/api.ts";
+import { mapRegionToEnum } from "#src/league/model/region.ts";
+import { getRank } from "#src/league/model/rank.ts";
+import { createLogger } from "#src/logger.ts";
+import { withTimeout } from "#src/utils/timeout.ts";
 
 const logger = createLogger("competition-leaderboard");
 

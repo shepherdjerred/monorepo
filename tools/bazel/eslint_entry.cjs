@@ -1,34 +1,58 @@
 /**
  * ESLint entry point for Bazel sandboxed execution.
  *
- * Runs ESLint programmatically using the ESLint API. The eslint.config.ts
- * in the package directory is auto-detected. Files to lint are discovered
- * from the src/ directory.
+ * Runs ESLint via child_process since the ESLint module lives in the
+ * package's node_modules, not in the entry script's directory.
+ * Uses process.execPath (Bun) to run eslint with --max-warnings=0.
  */
-const { ESLint } = require("eslint");
+const { execFileSync } = require("child_process");
+const { readdirSync, statSync } = require("fs");
+const { join } = require("path");
 
-async function main() {
-  const eslint = new ESLint({
-    // ESLint auto-detects eslint.config.ts in cwd
-  });
-
-  const results = await eslint.lintFiles(["src/**/*.ts", "src/**/*.tsx"]);
-  const formatter = await eslint.loadFormatter("stylish");
-  const output = await formatter.format(results);
-
-  if (output) {
-    console.log(output);
+function findSourceFiles(dir) {
+  const results = [];
+  try {
+    for (const entry of readdirSync(dir)) {
+      if (entry === "node_modules" || entry === "dist" || entry === "generated") continue;
+      const full = join(dir, entry);
+      try {
+        const stat = statSync(full);
+        if (stat.isDirectory()) {
+          results.push(...findSourceFiles(full));
+        } else if (/\.(ts|tsx|js|jsx|mts|cts)$/.test(entry)) {
+          results.push(full);
+        }
+      } catch (_) {
+        // skip inaccessible files
+      }
+    }
+  } catch (_) {
+    // skip inaccessible dirs
   }
-
-  const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
-  const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0);
-
-  if (errorCount > 0 || warningCount > 0) {
-    process.exitCode = 1;
-  }
+  return results;
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exitCode = 1;
-});
+// Find the package directory — the entry point runs from tools/bazel/
+// but the package is wherever eslint.config.ts is, which is in the
+// RUNFILES_DIR. The CWD is set to the package directory by js_test.
+const cwd = process.cwd();
+const srcDir = join(cwd, "src");
+
+const sourceFiles = findSourceFiles(srcDir);
+if (sourceFiles.length === 0) {
+  console.log("No source files found to lint, skipping.");
+  process.exit(0);
+}
+
+try {
+  execFileSync(
+    process.execPath,
+    ["x", "eslint", "--no-cache", "--max-warnings=0", ...sourceFiles],
+    {
+      stdio: "inherit",
+      cwd: cwd,
+    },
+  );
+} catch (err) {
+  process.exitCode = err.status || 1;
+}

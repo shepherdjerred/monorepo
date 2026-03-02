@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { SummonerSchema } from "@scout-for-lol/data/data-dragon/summoner.ts";
-import type { RuneTreeSchema } from "@scout-for-lol/data/data-dragon/runes.ts";
+import type { SummonerSchema } from "#src/data-dragon/summoner.ts";
+import type { RuneTreeSchema } from "#src/data-dragon/runes.ts";
 
 export type SummonerData = z.infer<typeof SummonerSchema>;
 

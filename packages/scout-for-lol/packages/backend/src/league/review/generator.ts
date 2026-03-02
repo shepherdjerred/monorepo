@@ -18,15 +18,15 @@ import {
   generateFullMatchReview,
   getDefaultStageConfigs,
   type ReviewPipelineOutput,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
 import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";
 import {
   savePipelineTracesToS3,
   savePipelineDebugToS3,
-} from "@scout-for-lol/backend/storage/pipeline-s3.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/storage/pipeline-s3.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("generator");
 

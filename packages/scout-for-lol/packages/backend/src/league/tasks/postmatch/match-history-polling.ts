@@ -8,7 +8,7 @@ import type {
 import {
   getRecentMatchIds,
   filterNewMatches,
-} from "@scout-for-lol/backend/league/api/match-history.ts";
+} from "#src/league/api/match-history.ts";
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
@@ -16,30 +16,27 @@ import {
   getLastProcessedMatch,
   updateLastMatchTime,
   updateLastCheckedAt,
-} from "@scout-for-lol/backend/database/index.ts";
+} from "#src/database/index.ts";
 import {
   MatchIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-import {
-  send,
-  ChannelSendError,
-} from "@scout-for-lol/backend/league/discord/channel.ts";
+import { send, ChannelSendError } from "#src/league/discord/channel.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
-} from "@scout-for-lol/backend/utils/polling-intervals.ts";
+} from "#src/utils/polling-intervals.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
-import { generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   processMatchForPlayer,
   type PlayerWithMatchIds,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-processing.ts";
+} from "#src/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
-import { matchHistoryPollingSkipsTotal } from "@scout-for-lol/backend/metrics/index.ts";
-import { setLastSuccessfulPollAt } from "@scout-for-lol/backend/league/tasks/recovery/app-state.ts";
+import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
+import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 

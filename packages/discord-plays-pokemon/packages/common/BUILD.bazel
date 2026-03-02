@@ -1,4 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
@@ -21,6 +22,28 @@ js_library(
     ],
 )
 
+# Compile TypeScript to dist/ with declarations for downstream consumers.
+ts_project(
+    name = "build",
+    srcs = glob(["src/**/*.ts"]),
+    declaration = True,
+    declaration_map = True,
+    extends = "//:tsconfig_base",
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    validate = False,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@tsconfig/recommended",
+        ":node_modules/@types/lodash",
+        ":node_modules/@types/node",
+        ":node_modules/lodash",
+        ":node_modules/ts-pattern",
+        ":node_modules/zod",
+    ],
+)
+
 eslint_test(
     name = "lint",
     srcs = glob(["src/**/*.ts"]),
@@ -29,5 +52,9 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    deps = [
+        ":node_modules/@tsconfig/recommended",
+        ":pkg",
+        "//:node_modules/@types/bun",
+    ],
 )

@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:prisma.bzl", "prisma_generate")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
@@ -10,6 +11,12 @@ exports_files([
     "package.json",
     "tsconfig.json",
 ])
+
+# Prisma client generation (run explicitly: bazel build //packages/sentinel:prisma_generate)
+prisma_generate(
+    name = "prisma_generate",
+    schema = "prisma/schema.prisma",
+)
 
 # Bun-native: TypeScript executed directly by Bun, no transpilation needed.
 js_library(
@@ -42,13 +49,26 @@ js_binary(
 eslint_test(
     name = "lint",
     srcs = glob(["src/**/*.ts"]),
-    tags = ["exclusive"],
 )
 
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    tags = ["exclusive"],
+    data = ["package.json"],
+    deps = [
+        ":node_modules/@anthropic-ai/claude-agent-sdk",
+        ":node_modules/@prisma/client",
+        ":node_modules/@sentry/bun",
+        ":node_modules/@trpc/server",
+        ":node_modules/@types/bun",
+        ":node_modules/cron",
+        ":node_modules/discord.js",
+        ":node_modules/gray-matter",
+        ":node_modules/hono",
+        ":node_modules/pino",
+        ":node_modules/zod",
+        "//:node_modules/undici-types",
+    ],
 )
 
 # Container image for K8s deployment

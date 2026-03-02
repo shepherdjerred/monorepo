@@ -3,15 +3,15 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { z } from "zod";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { grantPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { prisma } from "#src/database/index.ts";
+import { grantPermission } from "#src/database/competition/permissions.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-grant-permission");
 

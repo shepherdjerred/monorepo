@@ -19,12 +19,12 @@ import {
   getOutcome,
   getTeams,
   PlayerConfigEntrySchema,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import { strict as assert } from "node:assert";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
-import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { participantMismatchTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { participantToArenaChampion } from "#src/league/model/champion.ts";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers.ts";
+import { createLogger } from "#src/logger.ts";
+import { participantMismatchTotal } from "#src/metrics/index.ts";
 
 const logger = createLogger("model-match");
 

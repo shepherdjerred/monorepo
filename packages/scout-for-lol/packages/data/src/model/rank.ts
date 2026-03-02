@@ -1,14 +1,8 @@
 import { z } from "zod";
-import {
-  DivisionSchema,
-  divisionToString,
-} from "@scout-for-lol/data/model/division.ts";
-import { TierSchema, type Tier } from "@scout-for-lol/data/model/tier.ts";
-import {
-  rankToLeaguePoints,
-  tierToOrdinal,
-} from "@scout-for-lol/data/model/league-points.ts";
-import { startCase } from "@scout-for-lol/data/util.ts";
+import { DivisionSchema, divisionToString } from "#src/model/division.ts";
+import { TierSchema, type Tier } from "#src/model/tier.ts";
+import { rankToLeaguePoints, tierToOrdinal } from "#src/model/league-points.ts";
+import { startCase } from "#src/util.ts";
 
 export type Rank = z.infer<typeof RankSchema>;
 export const RankSchema = z.strictObject({

@@ -6,11 +6,11 @@ import type {
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 import {
   countWinsAndGames,
   buildWinBasedLeaderboard,
-} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.ts";
+} from "#src/league/competition/processors/generic-win-counter.ts";
 
 /**
  * Configuration for creating a win-based processor

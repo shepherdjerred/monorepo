@@ -3,7 +3,7 @@ import { rankToLeaguePoints } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 
 /**
  * Process "Highest Rank" criteria

@@ -1,8 +1,8 @@
 import {
   PersonalityMetadataSchema,
   type Personality,
-} from "@scout-for-lol/data/index";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "@scout-for-lol/data/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 // Static imports for lane context files
 import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt";

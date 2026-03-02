@@ -8,7 +8,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { cn } from "#src/lib/utils.ts";
 
 const alertVariants = cva(
   "relative flex items-start gap-4 rounded-lg border p-5 animate-fade-in",

@@ -1,6 +1,6 @@
-import { Button } from "@scout-for-lol/frontend/components/review-tool/ui/button";
-import { Dialog } from "@scout-for-lol/frontend/components/review-tool/ui/dialog";
-import { Textarea } from "@scout-for-lol/frontend/components/review-tool/ui/textarea";
+import { Button } from "#src/components/review-tool/ui/button.tsx";
+import { Dialog } from "#src/components/review-tool/ui/dialog.tsx";
+import { Textarea } from "#src/components/review-tool/ui/textarea.tsx";
 import { useState } from "react";
 import {
   PromptVariablesInfo,

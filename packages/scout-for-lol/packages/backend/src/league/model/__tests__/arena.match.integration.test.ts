@@ -5,15 +5,12 @@ import {
   ArenaTeamSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
-import {
-  toArenaMatch,
-  toArenaSubteams,
-} from "@scout-for-lol/backend/league/model/match.ts";
+import { participantToArenaChampion } from "#src/league/model/champion.ts";
+import { toArenaMatch, toArenaSubteams } from "#src/league/model/match.ts";
 import {
   makeTestParticipant,
   makeTestChallenges,
-} from "@scout-for-lol/backend/testing/riot-mocks.ts";
+} from "#src/testing/riot-mocks.ts";
 
 function makeParticipant(
   overrides: Partial<RawParticipant> & {

@@ -5,23 +5,23 @@ import { useState, useSyncExternalStore } from "react";
 import type {
   ReviewConfig,
   GenerationResult,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import type {
   CompletedMatch,
   ArenaMatch,
   RawMatch,
   RawTimeline,
 } from "@scout-for-lol/data";
-import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import type { GenerationProgress as GenerationProgressType } from "@scout-for-lol/frontend/lib/review-tool/generator";
+import type { CostTracker } from "#src/lib/review-tool/costs.ts";
+import { calculateCost } from "#src/lib/review-tool/costs.ts";
+import type { GenerationProgress as GenerationProgressType } from "#src/lib/review-tool/generator.ts";
 import { CostDisplay } from "./cost-display.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
 import {
   createPendingEntry,
   updateHistoryRating,
   type HistoryEntry,
-} from "@scout-for-lol/frontend/lib/review-tool/history-manager";
+} from "#src/lib/review-tool/history-manager.ts";
 import { ActiveGenerationsPanel } from "./active-generations-panel.tsx";
 import { GenerationProgress } from "./generation-progress.tsx";
 import { ResultDisplay } from "./result-display.tsx";

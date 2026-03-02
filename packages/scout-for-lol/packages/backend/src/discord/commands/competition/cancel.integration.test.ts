@@ -2,13 +2,13 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   createCompetition,
   getCompetitionById,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
-import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+} from "#src/database/competition/queries.ts";
+import type { CreateCompetitionInput } from "#src/database/competition/queries.ts";
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   type DiscordAccountId,
   type DiscordGuildId,
@@ -16,7 +16,7 @@ import {
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 function getCompetitionStatus(competition: {
   isCancelled: boolean;

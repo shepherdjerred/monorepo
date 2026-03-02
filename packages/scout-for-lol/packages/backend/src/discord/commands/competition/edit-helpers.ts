@@ -6,15 +6,15 @@ import {
   type CompetitionWithCriteria,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionById } from "#src/database/competition/queries.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   FixedDatesEditArgsSchema,
   SeasonEditArgsSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/schemas.ts";
+} from "#src/discord/commands/competition/schemas.ts";
 
 const logger = createLogger("competition-edit-helpers");
 

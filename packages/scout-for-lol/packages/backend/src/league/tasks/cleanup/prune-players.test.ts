@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { pruneOrphanedPlayers } from "#src/league/tasks/cleanup/prune-players.ts";
 import {
   testGuildId,
   testAccountId,
   testChannelId,
   testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.

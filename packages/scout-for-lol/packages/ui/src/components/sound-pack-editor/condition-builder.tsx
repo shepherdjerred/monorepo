@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import type { RuleCondition } from "@scout-for-lol/data";
-import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
+import type { Champion } from "#src/types/adapter.ts";
 import {
   PlayerConditionEditor,
   ChampionConditionEditor,

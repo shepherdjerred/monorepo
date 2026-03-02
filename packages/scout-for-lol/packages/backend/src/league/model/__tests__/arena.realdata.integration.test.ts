@@ -5,7 +5,7 @@ import {
   LeaguePuuidSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
-import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
+import { toArenaMatch } from "#src/league/model/match.ts";
 
 const currentDir = new URL(".", import.meta.url).pathname;
 

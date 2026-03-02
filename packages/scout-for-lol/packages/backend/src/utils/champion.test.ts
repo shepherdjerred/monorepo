@@ -4,7 +4,7 @@ import {
   getChampionDisplayName,
   searchChampions,
   getAllChampions,
-} from "@scout-for-lol/backend/utils/champion.ts";
+} from "#src/utils/champion.ts";
 
 describe("Champion utilities", () => {
   describe("getChampionId", () => {

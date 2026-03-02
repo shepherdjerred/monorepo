@@ -16,6 +16,7 @@ bazel_dep(name = "aspect_rules_ts", version = "3.8.5")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_nodejs", version = "6.7.3")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 
 # Rust (for clauderon)
 bazel_dep(name = "rules_rust", version = "0.69.0")
@@ -180,6 +181,13 @@ npm.npm_translate_lock(
         "//packages/webring:package.json",
     ],
     pnpm_lock = "//:pnpm-lock.yaml",
+    public_hoist_packages = {
+        # bun-types does import("undici-types") but doesn't declare it as a
+        # direct dependency. In pnpm-strict layout (used by rules_js), this
+        # causes TypeScript resolution failures. Hoisting undici-types makes
+        # it available at node_modules/undici-types for all packages.
+        "undici-types@6.21.0": [""],
+    },
 )
 use_repo(npm, "npm")
 

@@ -1,6 +1,6 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { runWeeklyPairingUpdate } from "@scout-for-lol/backend/league/tasks/pairing/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { runWeeklyPairingUpdate } from "#src/league/tasks/pairing/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("debug-force-pairing-update");
 

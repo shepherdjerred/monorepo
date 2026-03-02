@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
-import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.ts";
-import { makeTestParticipant } from "@scout-for-lol/backend/testing/riot-mocks.ts";
+import { getArenaPlacement } from "#src/league/model/match.ts";
+import { makeTestParticipant } from "#src/testing/riot-mocks.ts";
 
 function makeParticipant(extra: Partial<RawParticipant> = {}): RawParticipant {
   return makeTestParticipant(extra);

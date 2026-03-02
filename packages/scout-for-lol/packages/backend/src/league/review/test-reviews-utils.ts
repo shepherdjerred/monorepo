@@ -2,9 +2,9 @@ import {
   getOrdinalSuffix,
   type ArenaMatch,
   type CompletedMatch,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("review-test-reviews");
 

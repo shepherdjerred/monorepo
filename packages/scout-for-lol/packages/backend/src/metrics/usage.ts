@@ -13,8 +13,8 @@ import {
   competitionParticipantsTotal,
   avgPlayersPerServer,
   avgAccountsPerPlayer,
-} from "@scout-for-lol/backend/metrics/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/metrics/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("metrics-usage");
 

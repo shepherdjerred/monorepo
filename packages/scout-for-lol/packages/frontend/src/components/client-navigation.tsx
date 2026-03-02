@@ -4,7 +4,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "@scout-for-lol/frontend/components/ui/navigation-menu";
+} from "#src/components/ui/navigation-menu.tsx";
 
 type NavItem = {
   href: string;

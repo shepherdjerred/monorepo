@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
-import type { LeaderboardEntry } from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import type { LeaderboardEntry } from "#src/league/competition/processors/types.ts";
 
 // ============================================================================
 // Test Helpers

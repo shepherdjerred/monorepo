@@ -1,6 +1,6 @@
-import configuration from "@scout-for-lol/backend/configuration.ts";
+import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("app");
 
@@ -31,13 +31,13 @@ import "@scout-for-lol/backend/metrics/index.ts";
 
 // Initialize HTTP server for health checks and metrics
 logger.info("🌐 Starting HTTP server for health checks and metrics");
-import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.ts";
+import { shutdownHttpServer } from "#src/http-server.ts";
 
 logger.info("🔌 Starting Discord bot initialization");
 import "@scout-for-lol/backend/discord/index.ts";
 
 logger.info("⏰ Starting cron job scheduler");
-import { startCronJobs } from "@scout-for-lol/backend/league/cron.ts";
+import { startCronJobs } from "#src/league/cron.ts";
 void startCronJobs();
 
 logger.info("✅ Backend application startup complete");

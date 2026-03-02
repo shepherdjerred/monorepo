@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { cn } from "#src/lib/utils.ts";
 
 const badgeVariants = cva(
   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",

@@ -11,20 +11,8 @@
     "checkJs": false,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    // Workspace path mappings
-    "baseUrl": ".",
-    "paths": {
-      "@scout-for-lol/backend/generated/*": ["./packages/backend/generated/*"],
-      "@scout-for-lol/backend/*": ["./packages/backend/src/*"],
-      "@scout-for-lol/frontend/*": ["./packages/frontend/src/*"],
-      "@scout-for-lol/data/*": ["./packages/data/src/*"],
-      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
-      "@scout-for-lol/report/*": ["./packages/report/src/*"],
-      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
-      "@scout-for-lol/desktop/*": ["./packages/desktop/src/*"],
-      "@scout-for-lol/ui/*": ["./packages/ui/src/*"],
-      "@scout-for-lol/ui": ["./packages/ui/src/index.ts"]
-    },
+    // Cross-package imports resolve via exports in package.json
+    // Self-referencing imports resolve via imports (#src/*) in package.json
     "types": ["bun-types", "node"],
     // Best practices
     "strict": true,

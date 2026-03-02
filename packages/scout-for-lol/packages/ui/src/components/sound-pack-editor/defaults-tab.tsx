@@ -5,7 +5,7 @@ import {
   createEmptySoundPool,
   type EventType,
 } from "@scout-for-lol/data";
-import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
+import { useSoundPackEditor } from "#src/hooks/use-sound-pack-editor.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 
 export function DefaultsTab() {

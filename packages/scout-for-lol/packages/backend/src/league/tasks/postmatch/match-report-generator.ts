@@ -15,32 +15,25 @@ import {
   MatchIdSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data/index.ts";
-import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
+import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import {
-  saveMatchToS3,
-  saveImageToS3,
-  saveSvgToS3,
-} from "@scout-for-lol/backend/storage/s3.ts";
-import {
-  toMatch,
-  toArenaMatch,
-} from "@scout-for-lol/backend/league/model/match.ts";
+import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
+import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
 import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   saveMatchRankHistory,
   getLatestRankBefore,
-} from "@scout-for-lol/backend/league/model/rank-history.ts";
+} from "#src/league/model/rank-history.ts";
 import {
   reportsGeneratedTotal,
   reportsFailedTotal,
-} from "@scout-for-lol/backend/metrics/index.ts";
+} from "#src/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 

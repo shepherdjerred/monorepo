@@ -1,4 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
@@ -8,11 +9,33 @@ npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
+# Produce .d.ts declarations so downstream ts_project deps can type-check.
+ts_project(
+    name = "types",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/**/*.test.ts"],
+    ),
+    declaration = True,
+    emit_declaration_only = True,
+    extends = "//:tsconfig_base",
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = "tsconfig.json",
+    validate = False,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@clauderon/shared",
+        ":node_modules/@types/bun",
+    ],
+)
+
 js_library(
     name = "pkg",
     srcs = glob(["src/**/*.ts"]) + ["package.json"],
     visibility = ["//visibility:public"],
     deps = [
+        ":types",
         "//packages/clauderon/web/shared:pkg",
     ],
 )
@@ -27,8 +50,8 @@ typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
     deps = [
-        ":pkg",
-        "//packages/clauderon/web/shared:pkg",
+        ":node_modules/@clauderon/shared",
+        ":node_modules/@types/bun",
     ],
 )
 
@@ -36,7 +59,7 @@ bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
     deps = [
-        ":pkg",
+        ":node_modules/@types/bun",
         "//packages/clauderon/web/shared:pkg",
     ],
 )

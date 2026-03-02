@@ -1,7 +1,4 @@
-import type {
-  HealthReport,
-  HealthStatus,
-} from "@shepherdjerred/tools/lib/github/types.ts";
+import type { HealthReport, HealthStatus } from "#lib/github/types.ts";
 
 function getStatusEmoji(status: HealthStatus): string {
   switch (status) {

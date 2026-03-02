@@ -11,7 +11,7 @@ import type {
   ObjectiveType,
   DragonType,
 } from "@scout-for-lol/data";
-import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
+import type { Champion } from "#src/types/adapter.ts";
 
 const MULTIKILL_TYPES: { value: MultikillType; label: string }[] = [
   { value: "double", label: "Double Kill" },

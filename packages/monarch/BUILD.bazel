@@ -35,9 +35,27 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":node_modules/@anthropic-ai/sdk",
+        ":node_modules/bun-types",
+        ":node_modules/monarch-money-api",
+        ":node_modules/pdfjs-dist",
+        ":node_modules/playwright",
+        ":node_modules/zod",
+        "//:node_modules/undici-types",
+    ],
 )
 
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
+    tags = ["no-sandbox"],
+    deps = [
+        ":node_modules/@anthropic-ai/sdk",
+        ":node_modules/bun-types",
+        ":node_modules/monarch-money-api",
+        ":node_modules/pdfjs-dist",
+        ":node_modules/playwright",
+        ":node_modules/zod",
+    ],
 )

@@ -16,9 +16,9 @@ import {
   type AudioPlayer,
 } from "@discordjs/voice";
 import type { Client } from "discord.js";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import type { SoundSource } from "@scout-for-lol/data";
-import { getAudioStream } from "@scout-for-lol/backend/voice/audio-player.ts";
+import { getAudioStream } from "#src/voice/audio-player.ts";
 
 const logger = createLogger("voice-manager");
 

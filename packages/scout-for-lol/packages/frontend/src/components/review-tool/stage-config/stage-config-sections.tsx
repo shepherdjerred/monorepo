@@ -1,5 +1,5 @@
-import { Accordion } from "@scout-for-lol/frontend/components/review-tool/ui/accordion";
-import type { PipelineStagesConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { Accordion } from "#src/components/review-tool/ui/accordion.tsx";
+import type { PipelineStagesConfig } from "#src/lib/review-tool/config/schema.ts";
 import { ImageGenerationPanel } from "./image-generation-panel.tsx";
 import { StageConfigPanel } from "./stage-config-panel.tsx";
 

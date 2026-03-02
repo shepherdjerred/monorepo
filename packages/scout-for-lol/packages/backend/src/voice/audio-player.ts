@@ -10,10 +10,10 @@ import {
   HeadObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
 import type { SoundSource } from "@scout-for-lol/data";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import configuration from "#src/configuration.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("audio-player");
 

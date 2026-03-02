@@ -9,7 +9,7 @@ import type {
   SoundPackAdapter,
   Champion,
   LocalPlayer,
-} from "@scout-for-lol/ui/types/adapter.ts";
+} from "#src/types/adapter.ts";
 
 // =============================================================================
 // Context Types

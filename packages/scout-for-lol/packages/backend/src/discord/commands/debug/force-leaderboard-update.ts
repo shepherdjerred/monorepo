@@ -1,11 +1,11 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.ts";
-import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.ts";
-import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { getCompetitionById } from "#src/database/competition/queries.ts";
+import { runDailyLeaderboardUpdate } from "#src/league/tasks/competition/daily-update.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import { generateLeaderboardEmbed } from "#src/discord/embeds/competition.ts";
+import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("debug-force-leaderboard-update");
 

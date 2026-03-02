@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import config from "@scout-for-lol/backend/configuration.ts";
+import config from "#src/configuration.ts";
 
 /**
  * Initialize OpenAI client if API key is configured

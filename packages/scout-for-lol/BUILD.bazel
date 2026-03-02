@@ -1,9 +1,19 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
 npm_link_all_packages(name = "node_modules")
 
-exports_files(["package.json"])
+exports_files([
+    "package.json",
+    "tsconfig.base.json",
+])
+
+ts_config(
+    name = "tsconfig_base",
+    src = "tsconfig.base.json",
+    visibility = ["//packages/scout-for-lol:__subpackages__"],
+)
 
 # Backend container image for the Discord bot service.
 # Includes backend + data + report workspace packages.

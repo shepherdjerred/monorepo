@@ -1,13 +1,10 @@
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import {
-  getMetrics,
-  getRiotApiHealth,
-} from "@scout-for-lol/backend/metrics/index.ts";
+import configuration from "#src/configuration.ts";
+import { getMetrics, getRiotApiHealth } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
-import { createContext } from "@scout-for-lol/backend/trpc/context.ts";
+import { appRouter } from "#src/trpc/router/index.ts";
+import { createContext } from "#src/trpc/context.ts";
 
 const logger = createLogger("http-server");
 

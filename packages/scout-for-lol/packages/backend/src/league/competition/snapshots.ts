@@ -7,11 +7,11 @@ import {
   type RankSnapshotData,
   type SnapshotType,
   type WinsSnapshotData,
-} from "@scout-for-lol/data/index";
-import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "@scout-for-lol/data/index.ts";
+import { getParticipants } from "#src/database/competition/participants.ts";
+import { fetchSnapshotData } from "#src/league/competition/leaderboard.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-snapshots");
 

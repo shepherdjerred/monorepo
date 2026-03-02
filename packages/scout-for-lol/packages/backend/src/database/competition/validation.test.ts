@@ -3,13 +3,13 @@ import {
   CompetitionCreationSchema,
   CompetitionDatesSchema,
   isCompetitionActive,
-} from "@scout-for-lol/backend/database/competition/validation.ts";
+} from "#src/database/competition/validation.ts";
 
 import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 // ============================================================================
 // isCompetitionActive
 // ============================================================================

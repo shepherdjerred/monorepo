@@ -3,7 +3,7 @@
  *
  * Shows a dynamic pill progress bar that adapts to the number of pipeline stages.
  */
-import type { GenerationProgress as GenerationProgressType } from "@scout-for-lol/frontend/lib/review-tool/generator";
+import type { GenerationProgress as GenerationProgressType } from "#src/lib/review-tool/generator.ts";
 
 type GenerationProgressProps = {
   progress: GenerationProgressType;

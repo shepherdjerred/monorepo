@@ -5,8 +5,8 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 exports_files([
     "eslint_entry.cjs",
     "bun_test_entry.cjs",
+    "bun_test_runner.sh",
     "typecheck_entry.cjs",
-    "run_npm_script.sh",
     "workspace_status.sh",
 ])
 

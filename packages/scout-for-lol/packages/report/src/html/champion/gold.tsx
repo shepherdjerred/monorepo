@@ -1,4 +1,4 @@
-import { Stat } from "@scout-for-lol/report/html/champion/shared/stat.tsx";
+import { Stat } from "#src/html/champion/shared/stat.tsx";
 
 // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/183): Add gold coin icon for better visual hierarchy
 export function Gold({

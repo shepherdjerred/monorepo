@@ -5,7 +5,7 @@ import type {
   RawParticipant,
 } from "@scout-for-lol/data";
 import { parseQueueType } from "@scout-for-lol/data";
-import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import type { PlayerWithAccounts } from "#src/league/competition/processors/types.ts";
 
 /**
  * Check if a player participated in a match based on their account PUUIDs

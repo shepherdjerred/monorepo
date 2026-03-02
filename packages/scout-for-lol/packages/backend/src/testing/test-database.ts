@@ -1,5 +1,5 @@
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import type { ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import { PrismaClient } from "#generated/prisma/client/index.js";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 /**
  * Path to the pre-generated template database.

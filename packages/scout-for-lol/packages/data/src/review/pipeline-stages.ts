@@ -5,11 +5,8 @@
  * All JSON data is minified before being sent to reduce token usage.
  */
 
-import type {
-  ArenaMatch,
-  CompletedMatch,
-} from "@scout-for-lol/data/model/index";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
+import type { ArenaMatch, CompletedMatch } from "#src/model/index.ts";
+import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import type {
   OpenAIClient,
   ModelConfig,

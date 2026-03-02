@@ -38,6 +38,21 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    data = ["package.json"],
+    deps = [
+        ":node_modules/@sentry/bun",
+        ":node_modules/@types/bun",
+        ":node_modules/@types/lodash",
+        ":node_modules/bun-types",
+        ":node_modules/discord.js",
+        ":node_modules/dotenv",
+        ":node_modules/env-var",
+        ":node_modules/lodash",
+        ":node_modules/reflect-metadata",
+        ":node_modules/sqlite3",
+        ":node_modules/typeorm",
+        "//:node_modules/undici-types",
+    ],
 )
 
 # Container image for K8s deployment

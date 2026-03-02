@@ -1,13 +1,13 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
+import { createLogger } from "#src/logger.ts";
+import configuration from "#src/configuration.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import {
   type ServerPairingStats,
   type WeeklyPairingCache,
   WeeklyPairingCacheSchema,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import {
   getISOWeek,
   getISOWeekYear,

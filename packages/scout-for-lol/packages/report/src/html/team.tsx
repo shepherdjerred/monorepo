@@ -1,6 +1,6 @@
-import { renderChampion } from "@scout-for-lol/report/html/champion/champion.tsx";
-import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { font } from "@scout-for-lol/report/assets/index.ts";
+import { renderChampion } from "#src/html/champion/champion.tsx";
+import { palette } from "#src/assets/colors.ts";
+import { font } from "#src/assets/index.ts";
 import type { Roster, Team } from "@scout-for-lol/data";
 import { sumBy } from "remeda";
 

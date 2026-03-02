@@ -8,8 +8,8 @@
  * Extracted from pipeline-stages.ts to reduce file size.
  */
 
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
+import type { RawTimeline } from "#src/league/raw-timeline.schema.ts";
+import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import type {
   OpenAIClient,
   ModelConfig,

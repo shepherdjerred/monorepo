@@ -3,16 +3,16 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { cancelCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.ts";
+import { prisma } from "#src/database/index.ts";
+import { cancelCompetition } from "#src/database/competition/queries.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { asTextChannel } from "#src/discord/utils/channel.ts";
 import {
   extractCompetitionId,
   fetchCompetitionWithErrorHandling,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.ts";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/discord/commands/competition/utils/command-helpers.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("competition-cancel");
 

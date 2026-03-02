@@ -4,23 +4,23 @@
 import type {
   ReviewConfig,
   GenerationResult,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import type {
   CompletedMatch,
   ArenaMatch,
   RawMatch,
   RawTimeline,
 } from "@scout-for-lol/data";
-import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
+import type { CostTracker } from "#src/lib/review-tool/costs.ts";
+import { calculateCost } from "#src/lib/review-tool/costs.ts";
 import {
   generateMatchReview,
   type GenerationProgress as GenerationProgressType,
-} from "@scout-for-lol/frontend/lib/review-tool/generator";
+} from "#src/lib/review-tool/generator.ts";
 import {
   saveCompletedEntry,
   type HistoryEntry,
-} from "@scout-for-lol/frontend/lib/review-tool/history-manager";
+} from "#src/lib/review-tool/history-manager.ts";
 import { ErrorSchema } from "./results-panel-timer.ts";
 
 export function handleCancelPending(id: string) {

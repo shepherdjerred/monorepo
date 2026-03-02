@@ -4,13 +4,13 @@ export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     projectService: {
-      allowDefaultProject: ["eslint.config.ts"],
+      allowDefaultProject: ["eslint.config.ts", "local.ts"],
     },
     ignores: ["dist/**/*"],
   }),
-  // Library entry point uses re-exports and .js extensions by design
+  // Library entry points use re-exports and .js extensions by design
   {
-    files: ["src/index.ts"],
+    files: ["src/index.ts", "local.ts"],
     rules: {
       "custom-rules/no-re-exports": "off",
       "custom-rules/require-ts-extensions": "off",

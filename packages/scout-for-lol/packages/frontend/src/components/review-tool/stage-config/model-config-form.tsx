@@ -1,6 +1,6 @@
-import { Input } from "@scout-for-lol/frontend/components/review-tool/ui/input";
-import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
-import type { ModelConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { Input } from "#src/components/review-tool/ui/input.tsx";
+import { Label } from "#src/components/review-tool/ui/label.tsx";
+import type { ModelConfig } from "#src/lib/review-tool/config/schema.ts";
 import { modelSupportsParameter } from "@scout-for-lol/data";
 import type { ChangeEvent } from "react";
 

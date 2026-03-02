@@ -5,7 +5,7 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
-import type { Context } from "@scout-for-lol/backend/trpc/context.ts";
+import type { Context } from "#src/trpc/context.ts";
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {

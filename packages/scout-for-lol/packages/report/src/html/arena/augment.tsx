@@ -1,5 +1,5 @@
 import { type Augment } from "@scout-for-lol/data";
-import { getAugmentIcon } from "@scout-for-lol/report/dataDragon/image-cache.ts";
+import { getAugmentIcon } from "#src/dataDragon/image-cache.ts";
 
 const augmentIconSize = "2rem";
 

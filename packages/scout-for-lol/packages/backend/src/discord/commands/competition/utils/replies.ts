@@ -2,8 +2,8 @@ import type {
   ChatInputCommandInteraction,
   InteractionReplyOptions,
 } from "discord.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
 
 /**

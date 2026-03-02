@@ -10,15 +10,15 @@ import {
   type GenerationResult,
   type GlobalConfig,
   type TabConfig,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+} from "#src/lib/review-tool/config/schema.ts";
 import {
   loadCurrentConfig,
   saveCurrentConfig,
   loadGlobalConfig,
   saveGlobalConfig,
-} from "@scout-for-lol/frontend/lib/review-tool/config-manager";
-import { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import { migrateFromLocalStorage } from "@scout-for-lol/frontend/lib/review-tool/storage";
+} from "#src/lib/review-tool/config-manager.ts";
+import { CostTracker } from "#src/lib/review-tool/costs.ts";
+import { migrateFromLocalStorage } from "#src/lib/review-tool/storage.ts";
 import { AppHeader } from "./app-header.tsx";
 import { ConfigModal } from "./config-modal.tsx";
 import { SettingsPanel } from "./settings-panel.tsx";

@@ -1,7 +1,7 @@
 import type { MatchId, LeaguePuuid, Rank } from "@scout-for-lol/data";
 import { RankSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("rank-history");
 

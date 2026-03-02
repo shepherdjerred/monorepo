@@ -1,5 +1,5 @@
-import { checkMatchHistory } from "@scout-for-lol/backend/league/tasks/postmatch/match-history-polling.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("tasks-postmatch");
 

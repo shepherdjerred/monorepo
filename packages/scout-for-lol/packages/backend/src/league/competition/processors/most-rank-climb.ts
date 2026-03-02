@@ -1,12 +1,12 @@
 import type { MostRankClimbCriteria, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("processors-most-rank-climb");
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 
 /**
  * Process "Most Rank Climb" criteria

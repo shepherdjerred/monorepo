@@ -1,10 +1,7 @@
 import satori from "satori";
 import type { CompletedMatch } from "@scout-for-lol/data";
-import { Report } from "@scout-for-lol/report/html/report.tsx";
-import {
-  bunBeaufortFonts,
-  bunSpiegelFonts,
-} from "@scout-for-lol/report/assets/index.ts";
+import { Report } from "#src/html/report.tsx";
+import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
 
 export async function matchToImage(match: CompletedMatch) {
   const svg = await matchToSvg(match);

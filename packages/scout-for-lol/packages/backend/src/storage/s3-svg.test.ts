@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
-import { saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.ts";
+import { saveSvgToS3 } from "#src/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock

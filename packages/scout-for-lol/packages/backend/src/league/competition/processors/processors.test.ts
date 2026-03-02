@@ -13,13 +13,10 @@ import {
   PlayerIdSchema,
   rankToLeaguePoints,
 } from "@scout-for-lol/data";
-import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.ts";
-import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import { processCriteria } from "#src/league/competition/processors/index.ts";
+import type { PlayerWithAccounts } from "#src/league/competition/processors/types.ts";
 
-import {
-  testAccountId,
-  testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+import { testAccountId, testPuuid } from "#src/testing/test-ids.ts";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================

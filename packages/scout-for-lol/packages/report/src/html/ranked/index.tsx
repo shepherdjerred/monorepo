@@ -5,7 +5,7 @@ import {
   wasPromoted,
 } from "@scout-for-lol/data";
 import type { Rank, Tier } from "@scout-for-lol/data";
-import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { palette } from "#src/assets/colors.ts";
 import { z } from "zod";
 import { match } from "ts-pattern";
 

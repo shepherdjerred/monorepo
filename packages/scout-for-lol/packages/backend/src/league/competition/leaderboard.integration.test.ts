@@ -1,8 +1,8 @@
 import { describe, expect, test, afterAll, beforeEach } from "bun:test";
 import { z } from "zod";
-import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import { createCompetition } from "#src/database/competition/queries.ts";
+import { addParticipant } from "#src/database/competition/participants.ts";
 import {
   PlayerIdSchema,
   parseCompetition,
@@ -21,8 +21,8 @@ import {
   testAccountId,
   testChannelId,
   testPuuid,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-ids.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 
 // ============================================================================
 // S3 Mock Setup

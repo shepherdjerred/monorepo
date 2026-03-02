@@ -3,10 +3,10 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { GlobalConfig } from "#src/lib/review-tool/config/schema.ts";
 import { ApiSettingsPanel } from "./api-settings-panel.tsx";
-import type { getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
-import { resetToDefaults } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
+import type { getResetPreview } from "#src/lib/review-tool/reset-defaults.ts";
+import { resetToDefaults } from "#src/lib/review-tool/reset-defaults.ts";
 
 const ErrorSchema = z.object({ message: z.string() });
 

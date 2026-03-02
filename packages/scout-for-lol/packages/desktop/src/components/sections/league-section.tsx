@@ -1,16 +1,13 @@
 import { Link2, Unlink, User } from "lucide-react";
-import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
+import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from "@scout-for-lol/desktop/components/ui/card.tsx";
-import {
-  StatusIndicator,
-  Badge,
-} from "@scout-for-lol/desktop/components/ui/badge.tsx";
+} from "#src/components/ui/card.tsx";
+import { StatusIndicator, Badge } from "#src/components/ui/badge.tsx";
 
 type LcuStatus = {
   connected: boolean;

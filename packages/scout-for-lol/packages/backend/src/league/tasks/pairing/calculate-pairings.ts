@@ -1,5 +1,5 @@
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
+import { createLogger } from "#src/logger.ts";
+import { queryMatchesByDateRange } from "#src/storage/s3-query.ts";
 import {
   type RawMatch,
   parseQueueType,
@@ -9,7 +9,7 @@ import {
   type IndividualPlayerStats,
   type ServerPairingStats,
   type QueueType,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import type { ServerPlayer } from "./get-server-players.ts";
 import { createPuuidToAliasMap } from "./get-server-players.ts";
 

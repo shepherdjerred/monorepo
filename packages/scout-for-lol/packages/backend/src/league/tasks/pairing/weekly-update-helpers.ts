@@ -1,7 +1,7 @@
 import type {
   ServerPairingStats,
   IndividualPlayerStats,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import { calculatePairingStats } from "./calculate-pairings.ts";
 import type { ServerPlayer } from "./get-server-players.ts";
 

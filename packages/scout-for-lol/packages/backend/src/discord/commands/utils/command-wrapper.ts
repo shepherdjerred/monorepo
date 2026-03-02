@@ -3,7 +3,7 @@ import type { z } from "zod";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
+} from "#src/discord/commands/admin/utils/validation.ts";
 
 /**
  * Higher-order function that combines validation and timing execution

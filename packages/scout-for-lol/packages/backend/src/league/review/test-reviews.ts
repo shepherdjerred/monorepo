@@ -4,7 +4,7 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
+import { generateMatchReview } from "#src/league/review/generator.ts";
 import {
   MatchIdSchema,
   LeaguePuuidSchema,
@@ -17,22 +17,19 @@ import {
   type RawMatch,
   type RawTimeline,
   type MatchId,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
 import { ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
-import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
 import { LolApi, Constants } from "twisted";
-import configuration from "@scout-for-lol/backend/configuration.ts";
-import {
-  toMatch,
-  toArenaMatch,
-} from "@scout-for-lol/backend/league/model/match.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import configuration from "#src/configuration.ts";
+import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   parseArgs,
   getMatchSummary,
   generateDatePrefixes,
   type MatchType,
-} from "@scout-for-lol/backend/league/review/test-reviews-utils.ts";
+} from "#src/league/review/test-reviews-utils.ts";
 
 // Initialize Riot API client for timeline fetching
 const api = new LolApi({ key: configuration.riotApiToken });

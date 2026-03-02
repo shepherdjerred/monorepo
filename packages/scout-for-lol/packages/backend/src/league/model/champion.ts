@@ -3,8 +3,8 @@ import {
   type Augment,
   type RawParticipant,
 } from "@scout-for-lol/data";
-import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
-import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers.ts";
+import { mapAugmentIdsToUnion } from "#src/league/arena/augment.ts";
 
 // Arena champion conversion with arena-specific fields
 export function participantToArenaChampion(dto: RawParticipant): ArenaChampion {

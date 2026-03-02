@@ -1,4 +1,4 @@
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
+import { PrismaClient } from "#generated/prisma/client/index.js";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
@@ -9,8 +9,8 @@ import {
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { databaseQueriesTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { createLogger } from "#src/logger.ts";
+import { databaseQueriesTotal } from "#src/metrics/index.ts";
 
 const logger = createLogger("database");
 

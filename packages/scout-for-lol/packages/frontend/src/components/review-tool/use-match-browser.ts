@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 import type Fuse from "fuse.js";
 import type { FuseResult } from "fuse.js";
-import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { ApiSettings } from "#src/lib/review-tool/config/schema.ts";
 import type {
   CompletedMatch,
   ArenaMatch,
@@ -14,16 +14,16 @@ import {
   fetchMatchFromS3,
   fetchTimelineFromS3,
   type S3Config,
-} from "@scout-for-lol/frontend/lib/review-tool/s3";
+} from "#src/lib/review-tool/s3.ts";
 import {
   convertRawMatchToInternalFormat,
   extractMatchMetadataFromRawMatch,
   type MatchMetadata,
-} from "@scout-for-lol/frontend/lib/review-tool/match-converter";
+} from "#src/lib/review-tool/match-converter.ts";
 import {
   getCachedDataAsync,
   setCachedData,
-} from "@scout-for-lol/frontend/lib/review-tool/cache";
+} from "#src/lib/review-tool/cache.ts";
 
 const ErrorSchema = z.object({ message: z.string() });
 const MatchMetadataArraySchema = z.array(

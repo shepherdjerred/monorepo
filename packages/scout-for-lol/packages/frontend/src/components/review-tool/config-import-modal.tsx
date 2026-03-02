@@ -3,13 +3,13 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { ConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
-import type { TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { ConfigBundle } from "#src/lib/review-tool/config-export.ts";
+import type { TabConfig } from "#src/lib/review-tool/config/schema.ts";
 import {
   importAllConfigFromJSON,
   applyConfigBundle,
   getConfigBundleSummary,
-} from "@scout-for-lol/frontend/lib/review-tool/config-export";
+} from "#src/lib/review-tool/config-export.ts";
 
 const ErrorSchema = z.object({ message: z.string() });
 

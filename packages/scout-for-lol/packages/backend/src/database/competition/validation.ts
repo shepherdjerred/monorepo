@@ -1,4 +1,4 @@
-import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,
@@ -12,7 +12,7 @@ import {
 import { z } from "zod";
 import { differenceInCalendarDays } from "date-fns";
 
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
+import { getLimit } from "#src/configuration/flags.ts";
 
 // ============================================================================
 // Constants

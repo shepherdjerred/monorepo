@@ -6,7 +6,7 @@ import {
   afterEach,
   describe,
 } from "bun:test";
-import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.ts";
+import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -22,7 +22,7 @@ import {
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a temporary database for testing
 const { prisma: testPrisma } = createTestDatabase("subscriptions-test");

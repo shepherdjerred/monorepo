@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from "react";
 import { EVENT_TYPES, type SoundEntry } from "@scout-for-lol/data";
-import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
+import { useSoundPackEditor } from "#src/hooks/use-sound-pack-editor.tsx";
 import { DefaultsTab } from "./defaults-tab.tsx";
 import { RulesTab } from "./rules-tab.tsx";
 import { SettingsTab } from "./settings-tab.tsx";

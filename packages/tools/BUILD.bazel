@@ -31,9 +31,19 @@ js_binary(
 eslint_test(
     name = "lint",
     srcs = glob(["src/**/*.ts"]),
+    deps = [
+        ":node_modules/@types/bun",
+        ":node_modules/zod",
+    ],
 )
 
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
+    data = ["package.json"],
+    deps = [
+        ":node_modules/@types/bun",
+        ":node_modules/zod",
+        "//:node_modules/undici-types",
+    ],
 )

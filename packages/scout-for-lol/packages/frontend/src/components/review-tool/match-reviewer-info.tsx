@@ -2,7 +2,7 @@
  * Display selected match and reviewer info
  */
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import type { ReviewConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { ReviewConfig } from "#src/lib/review-tool/config/schema.ts";
 
 /**
  * Helper to get match display info - properly narrows types

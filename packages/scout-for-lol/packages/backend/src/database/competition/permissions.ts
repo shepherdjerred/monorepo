@@ -5,11 +5,11 @@ import {
 } from "@scout-for-lol/data";
 import type { PermissionsBitField } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { type ExtendedPrismaClient } from "@scout-for-lol/backend/database/index.ts";
+import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   checkRateLimit,
   getTimeRemaining,
-} from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+} from "#src/database/competition/rate-limit.ts";
 
 // ============================================================================
 // Permission Check Result

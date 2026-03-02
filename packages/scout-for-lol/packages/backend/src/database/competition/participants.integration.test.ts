@@ -6,12 +6,12 @@ import {
   getParticipantStatus,
   getParticipants,
   removeParticipant,
-} from "@scout-for-lol/backend/database/competition/participants.ts";
+} from "#src/database/competition/participants.ts";
 import {
   createCompetition,
   type CreateCompetitionInput,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
-import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
+} from "#src/database/competition/queries.ts";
+import { ErrorSchema } from "#src/utils/errors.ts";
 import type {
   CompetitionId,
   DiscordAccountId,
@@ -22,11 +22,11 @@ import {
   testGuildId,
   testAccountId,
   testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
+} from "#src/testing/test-ids.ts";
 import {
   createTestDatabase,
   deleteIfExists,
-} from "@scout-for-lol/backend/testing/test-database.ts";
+} from "#src/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("participants-test");

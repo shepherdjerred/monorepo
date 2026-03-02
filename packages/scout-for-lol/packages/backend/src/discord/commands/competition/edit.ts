@@ -9,20 +9,20 @@ import {
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
-import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { prisma } from "#src/database/index.ts";
 import {
   type UpdateCompetitionInput,
   updateCompetition,
-} from "@scout-for-lol/backend/database/competition/queries.ts";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import { getChampionId } from "@scout-for-lol/backend/utils/champion.ts";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+} from "#src/database/competition/queries.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { getChampionId } from "#src/utils/champion.ts";
+import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   parseDatesArgs,
   fetchAndValidateEditCompetition,
   type DatesEditSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/edit-helpers.ts";
+} from "#src/discord/commands/competition/edit-helpers.ts";
 
 const logger = createLogger("competition-edit");
 import {
@@ -34,7 +34,7 @@ import {
   MostWinsPlayerEditArgsSchema,
   MostWinsChampionEditArgsSchema,
   HighestWinRateEditArgsSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/schemas.ts";
+} from "#src/discord/commands/competition/schemas.ts";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields

@@ -1,15 +1,15 @@
 import type { CompetitionCriteria, Ranks, RawMatch } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { processMostGamesPlayed } from "@scout-for-lol/backend/league/competition/processors/most-games-played.ts";
-import { processHighestRank } from "@scout-for-lol/backend/league/competition/processors/highest-rank.ts";
-import { processMostRankClimb } from "@scout-for-lol/backend/league/competition/processors/most-rank-climb.ts";
-import { processMostWinsPlayer } from "@scout-for-lol/backend/league/competition/processors/most-wins-player.ts";
-import { processMostWinsChampion } from "@scout-for-lol/backend/league/competition/processors/most-wins-champion.ts";
-import { processHighestWinRate } from "@scout-for-lol/backend/league/competition/processors/highest-win-rate.ts";
+import { processMostGamesPlayed } from "#src/league/competition/processors/most-games-played.ts";
+import { processHighestRank } from "#src/league/competition/processors/highest-rank.ts";
+import { processMostRankClimb } from "#src/league/competition/processors/most-rank-climb.ts";
+import { processMostWinsPlayer } from "#src/league/competition/processors/most-wins-player.ts";
+import { processMostWinsChampion } from "#src/league/competition/processors/most-wins-champion.ts";
+import { processHighestWinRate } from "#src/league/competition/processors/highest-win-rate.ts";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+} from "#src/league/competition/processors/types.ts";
 
 /**
  * Snapshot data that may be needed for rank-based criteria

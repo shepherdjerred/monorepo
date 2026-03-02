@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import { z } from "zod";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("league-util");
 

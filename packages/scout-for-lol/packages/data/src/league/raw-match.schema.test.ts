@@ -6,10 +6,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import {
-  RawMatchSchema,
-  type RawMatch,
-} from "@scout-for-lol/data/league/raw-match.schema";
+import { RawMatchSchema, type RawMatch } from "#src/league/raw-match.schema.ts";
 
 // Use Bun's path joining to find test data files relative to this test file
 // This works both locally and in CI containers

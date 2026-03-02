@@ -2,14 +2,14 @@ import {
   getIncident,
   getIncidentNotes,
   getIncidentLogEntries,
-} from "@shepherdjerred/tools/lib/pagerduty/incidents.ts";
+} from "#lib/pagerduty/incidents.ts";
 import type {
   PagerDutyIncident,
   PagerDutyNote,
   PagerDutyLogEntry,
-} from "@shepherdjerred/tools/lib/pagerduty/types.ts";
-import { getStatusEmoji } from "@shepherdjerred/tools/lib/pagerduty/format.ts";
-import { formatJson } from "@shepherdjerred/tools/lib/output/formatter.ts";
+} from "#lib/pagerduty/types.ts";
+import { getStatusEmoji } from "#lib/pagerduty/format.ts";
+import { formatJson } from "#lib/output/formatter.ts";
 
 export type IncidentOptions = {
   json?: boolean | undefined;

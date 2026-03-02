@@ -2,14 +2,14 @@ import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import { getCompetitionStatus } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import { match } from "ts-pattern";
-import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard.ts";
 import {
   formatCriteriaDescription,
   formatScore,
   getStatusColor,
   getStatusText,
   getMedalEmoji,
-} from "@scout-for-lol/backend/discord/embeds/competition-format-helpers.ts";
+} from "#src/discord/embeds/competition-format-helpers.ts";
 
 // ============================================================================
 // Main Embed Generation Functions

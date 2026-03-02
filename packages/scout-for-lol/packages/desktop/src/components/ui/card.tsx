@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { cn } from "@scout-for-lol/desktop/lib/utils";
+import { cn } from "#src/lib/utils.ts";
 
 type CardProps = HTMLAttributes<HTMLDivElement> & {
   variant?: "default" | "glass" | "bordered";

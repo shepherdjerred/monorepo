@@ -1,15 +1,15 @@
-import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
-import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { renderItems } from "#src/html/champion/item.tsx";
+import { palette } from "#src/assets/colors.ts";
 import type { Champion } from "@scout-for-lol/data";
-import { summoner } from "@scout-for-lol/data/index";
-import { getSpellImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
-import { CreepScore } from "@scout-for-lol/report/html/champion/creep-score.tsx";
-import { Gold } from "@scout-for-lol/report/html/champion/gold.tsx";
-import { Damage } from "@scout-for-lol/report/html/champion/damage.tsx";
-import { Kda } from "@scout-for-lol/report/html/champion/kda.tsx";
-import { Names } from "@scout-for-lol/report/html/champion/names.tsx";
-import { Lane } from "@scout-for-lol/report/html/lane/index.tsx";
-import { Runes } from "@scout-for-lol/report/html/champion/runes.tsx";
+import { summoner } from "@scout-for-lol/data/index.ts";
+import { getSpellImage } from "#src/dataDragon/image-cache.ts";
+import { CreepScore } from "#src/html/champion/creep-score.tsx";
+import { Gold } from "#src/html/champion/gold.tsx";
+import { Damage } from "#src/html/champion/damage.tsx";
+import { Kda } from "#src/html/champion/kda.tsx";
+import { Names } from "#src/html/champion/names.tsx";
+import { Lane } from "#src/html/lane/index.tsx";
+import { Runes } from "#src/html/champion/runes.tsx";
 import { first, keys, map, pickBy, round } from "remeda";
 
 // highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)

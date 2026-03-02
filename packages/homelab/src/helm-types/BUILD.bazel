@@ -36,11 +36,21 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    extends = "//packages/homelab:tsconfig_base",
+    deps = [
+        ":node_modules/yaml",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
+    ],
 )
 
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    deps = [
+        ":node_modules/yaml",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+    ],
 )

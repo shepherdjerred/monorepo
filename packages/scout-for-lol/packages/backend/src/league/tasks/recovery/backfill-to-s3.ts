@@ -1,22 +1,22 @@
-import { api } from "@scout-for-lol/backend/league/api/api.ts";
+import { api } from "#src/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
-import { getAccountsWithState } from "@scout-for-lol/backend/database/index.ts";
-import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/match-data-fetcher.ts";
-import { saveMatchToS3 } from "@scout-for-lol/backend/storage/s3.ts";
+import { mapRegionToEnum } from "#src/league/model/region.ts";
+import { getAccountsWithState } from "#src/database/index.ts";
+import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import type { MatchId, Region } from "@scout-for-lol/data/index.ts";
-import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { createLogger } from "#src/logger.ts";
 import {
   backfillMatchesTotal,
   downtimeDetectedTotal,
-} from "@scout-for-lol/backend/metrics/index.ts";
+} from "#src/metrics/index.ts";
 import {
   riotApiRequestsTotal,
   updateRiotApiHealth,
-} from "@scout-for-lol/backend/metrics/index.ts";
+} from "#src/metrics/index.ts";
 import { z } from "zod";
-import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+import { withTimeout } from "#src/utils/timeout.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("backfill-to-s3");

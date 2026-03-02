@@ -5,16 +5,13 @@ import {
   getAbandonedGuilds,
   markGuildAsNotified,
   cleanupOldErrorRecords,
-} from "@scout-for-lol/backend/database/guild-permission-errors.ts";
+} from "#src/database/guild-permission-errors.ts";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import {
-  testGuildId,
-  testChannelId,
-} from "@scout-for-lol/backend/testing/test-ids.ts";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
+import { testGuildId, testChannelId } from "#src/testing/test-ids.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("guild-errors-test");

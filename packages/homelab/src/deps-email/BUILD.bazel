@@ -30,5 +30,13 @@ eslint_test(
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    deps = [":pkg"],
+    extends = "//packages/homelab:tsconfig_base",
+    deps = [
+        ":node_modules/openai",
+        ":node_modules/simple-git",
+        ":node_modules/yaml",
+        ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
+    ],
 )

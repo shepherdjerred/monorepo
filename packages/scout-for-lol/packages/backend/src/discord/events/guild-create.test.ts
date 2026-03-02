@@ -4,16 +4,10 @@
 
 import { describe, it, expect, mock } from "bun:test";
 import { z } from "zod";
-import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create";
+import { handleGuildCreate } from "#src/discord/events/guild-create.ts";
 import { ChannelType } from "discord.js";
-import {
-  mockGuild,
-  mockTextChannel,
-} from "@scout-for-lol/backend/testing/discord-mocks";
-import {
-  testGuildId,
-  testAccountId,
-} from "@scout-for-lol/backend/testing/test-ids";
+import { mockGuild, mockTextChannel } from "#src/testing/discord-mocks.ts";
+import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 
 describe("handleGuildCreate", () => {
   it("should send welcome message to system channel when available", async () => {

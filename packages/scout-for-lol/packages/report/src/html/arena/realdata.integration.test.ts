@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
-import { arenaMatchToSvg } from "@scout-for-lol/report/html/arena/index.tsx";
+import { arenaMatchToSvg } from "#src/html/arena/index.tsx";
 import { ArenaMatchSchema } from "@scout-for-lol/data";
-import { svgToPng } from "@scout-for-lol/report/html/index.tsx";
+import { svgToPng } from "#src/html/index.tsx";
 
 function hashSvg(svg: string): string {
   const hasher = new Bun.CryptoHasher("sha256");
