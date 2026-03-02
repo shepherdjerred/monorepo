@@ -369,6 +369,9 @@ def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> 
     _retry = {
         "automatic": [
             {"exit_status": -1, "limit": 2},
+            {"exit_status": 1, "limit": 2},
+            {"exit_status": 3, "limit": 2},
+            {"exit_status": 34, "limit": 2},
             {"exit_status": 255, "limit": 2},
         ]
     }
@@ -379,6 +382,8 @@ def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> 
         "command": build_cmd,
         "timeout_in_minutes": 15,
         "retry": _retry,
+        "concurrency": 6,
+        "concurrency_group": "bazel-builds",
         "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
     }
 
@@ -392,6 +397,8 @@ def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> 
             "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
             "timeout_in_minutes": 15,
             "retry": _retry,
+            "concurrency": 6,
+            "concurrency_group": "bazel-builds",
             "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
         })
 
