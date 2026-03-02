@@ -20,5 +20,5 @@ def prisma_generate(name, schema, deps = []):
         outs = [name + "_out"],
         cmd = "$(location //tools/bun) x prisma generate --schema=$(location %s) && touch $@" % schema,
         tools = ["//tools/bun"],
-        tags = ["requires-network"],
+        tags = ["manual", "requires-network"],
     )
