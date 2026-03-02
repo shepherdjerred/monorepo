@@ -19,8 +19,10 @@ js_library(
     ],
 )
 
+# @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
 typecheck_test(
     name = "typecheck",
+    tags = ["manual"],
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",

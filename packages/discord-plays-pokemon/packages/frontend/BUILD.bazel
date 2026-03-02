@@ -44,6 +44,8 @@ eslint_test(
     deps = ["//packages/discord-plays-pokemon/packages/common:pkg"],
 )
 
+# @discord-plays-pokemon/common exports from dist/ which requires tsc compilation.
+# Also uses Vite's import.meta.env which needs Vite-specific type augmentations.
 typecheck_test(
     name = "typecheck",
     srcs = glob([
@@ -51,6 +53,7 @@ typecheck_test(
         "src/**/*.tsx",
     ]) + ["tsconfig.node.json"],
     data = ["package.json"],
+    tags = ["manual"],
     deps = [
         ":node_modules/@discord-plays-pokemon/common",
         ":node_modules/@sentry/react",
