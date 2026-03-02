@@ -28,8 +28,8 @@ CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:latest"
 # Kubernetes pod spec shared across all steps
 def _k8s_plugin(
     *,
-    cpu: str = "2",
-    memory: str = "4Gi",
+    cpu: str = "1",
+    memory: str = "2Gi",
     secrets: list[str] | None = None,
 ) -> dict:
     """Build the kubernetes plugin config for a Buildkite step."""
@@ -93,10 +93,10 @@ PACKAGE_TO_SITE = {
     "clauderon": "clauderon-docs",
 }
 
-# Resource tiers for per-package build steps
-_HEAVY = ("4", "8Gi")
-_MEDIUM = ("2", "4Gi")
-_LIGHT = ("1", "2Gi")
+# Resource tiers for per-package build steps (requests only; pods burst above these)
+_HEAVY = ("2", "4Gi")
+_MEDIUM = ("1", "2Gi")
+_LIGHT = ("500m", "1Gi")
 
 PACKAGE_RESOURCES: dict[str, tuple[str, str]] = {
     "clauderon": _HEAVY,
@@ -399,7 +399,7 @@ def _generate_per_package_steps(package: str, *, stamp_images: bool = False) -> 
             "retry": _retry,
             "concurrency": 6,
             "concurrency_group": "bazel-builds",
-            "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
+            "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
         })
 
     return {
@@ -475,7 +475,7 @@ def _generate_clauderon_release_step() -> dict:
         "timeout_in_minutes": 30,
         "soft_fail": True,
         "depends_on": "release",
-        "plugins": [_k8s_plugin(cpu="4", memory="8Gi", secrets=[])],
+        "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=[])],
     }
 
 
@@ -506,7 +506,7 @@ def _generate_homelab_release_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/homelab-release.sh",
         "timeout_in_minutes": 45,
-        "plugins": [_k8s_plugin(cpu="4", memory="8Gi", secrets=["buildkite-argocd-token"])],
+        "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=["buildkite-argocd-token"])],
     }
 
 
