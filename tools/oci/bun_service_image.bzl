@@ -61,6 +61,7 @@ def bun_service_image(
         srcs = srcs,
         strip_prefix = ".",
         package_dir = "/workspace/" + pkg_dir,
+        tags = ["manual"],
     )
 
     # Workspace dependency source layers
@@ -72,6 +73,7 @@ def bun_service_image(
             srcs = [ws_label],
             strip_prefix = ws_dir,
             package_dir = "/workspace/" + ws_dir,
+            tags = ["manual"],
         )
         ws_tar_names.append(":" + tar_name)
 
@@ -105,6 +107,7 @@ def bun_service_image(
         tars = all_tars,
         entrypoint = ["/usr/local/bin/bun", "run", entry_point],
         workdir = workdir,
+        tags = ["manual"],
         visibility = visibility,
         **_kwargs
     )
@@ -118,6 +121,7 @@ def bun_service_image(
             name = name + "_tags_tmpl",
             outs = [name + "_tags_tmpl.txt"],
             cmd = "echo '{STABLE_GIT_SHA}' > $@",
+            tags = ["manual"],
         )
 
         expand_template(
@@ -125,6 +129,7 @@ def bun_service_image(
             out = name + "_tags.txt",
             template = ":" + name + "_tags_tmpl",
             stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
+            tags = ["manual"],
         )
 
         oci_push(
@@ -132,6 +137,7 @@ def bun_service_image(
             image = ":" + name,
             repository = repository,
             remote_tags = ":" + name + "_tags",
+            tags = ["manual"],
             visibility = visibility,
         )
 
@@ -195,5 +201,5 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             ws_package_jsons = " ".join([d + "/package.json" for d in workspace_packages.keys()]),
         ),
         tools = ["//tools/bun"],
-        tags = ["requires-network"],
+        tags = ["manual", "requires-network"],
     )
