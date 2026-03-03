@@ -6,6 +6,7 @@ source "$(dirname "$0")/setup-tools.sh"
 install_base
 install_uv
 install_gh
+install_bun
 
 # Install cogapp
 echo "--- :python: Installing cogapp"
