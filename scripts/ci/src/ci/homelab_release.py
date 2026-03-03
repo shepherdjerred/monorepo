@@ -164,10 +164,10 @@ def main() -> None:
         print("GHCR credentials not set, skipping infra image build/push", flush=True)
 
     # --- Build cdk8s manifests ---
-    # cdk8s synth runs via bunx, not Bazel (generates Helm chart templates)
+    # cdk8s build runs via bun (cdk8s.yaml has app: false, so bunx cdk8s synth won't work)
     print("\n--- Build cdk8s manifests ---", flush=True)
     subprocess.run(
-        ["bunx", "cdk8s", "synth"],
+        ["bun", "run", "build"],
         cwd=str(REPO_ROOT / "packages/homelab/src/cdk8s"),
         check=True,
     )

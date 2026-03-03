@@ -44,7 +44,7 @@ _REPO_ROOT = _repo_root()
 SITES = [
     {"bucket": "sjer-red", "build_dir": str(_REPO_ROOT / "packages/sjer.red"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/sjer.red/dist")},
     {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
-    {"bucket": "clauderon-docs", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
+    {"bucket": "clauderon", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
     {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/resume/dist")},
 ]
 

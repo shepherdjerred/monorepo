@@ -90,7 +90,7 @@ PACKAGE_TO_SITE = {
     "sjer.red": "sjer-red",
     "webring": "webring",
     "resume": "resume",
-    "clauderon": "clauderon-docs",
+    "clauderon": "clauderon",
 }
 
 # Resource tiers for per-package build steps (requests only; pods burst above these)
