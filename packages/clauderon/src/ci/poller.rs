@@ -67,18 +67,17 @@ impl CIPoller {
             }
 
             // Only poll sessions with PRs
-            if let Some(ref pr_url) = session.pr_url {
-                if let Err(e) = self
+            if let Some(ref pr_url) = session.pr_url
+                && let Err(e) = self
                     .poll_pr_status(&session.id, pr_url, &session.repo_path)
                     .await
-                {
-                    tracing::debug!(
-                        session_id = %session.id,
-                        pr_url = %pr_url,
-                        error = %e,
-                        "Failed to poll CI status"
-                    );
-                }
+            {
+                tracing::debug!(
+                    session_id = %session.id,
+                    pr_url = %pr_url,
+                    error = %e,
+                    "Failed to poll CI status"
+                );
             }
         }
     }
@@ -94,18 +93,17 @@ impl CIPoller {
             }
 
             // Only discover PRs for sessions without pr_url
-            if session.pr_url.is_none() {
-                if let Err(e) = self
+            if session.pr_url.is_none()
+                && let Err(e) = self
                     .discover_pr_for_session(&session.id, &session.branch_name, &session.repo_path)
                     .await
-                {
-                    tracing::debug!(
-                        session_id = %session.id,
-                        branch = %session.branch_name,
-                        error = %e,
-                        "Failed to discover PR (expected if no PR exists yet)"
-                    );
-                }
+            {
+                tracing::debug!(
+                    session_id = %session.id,
+                    branch = %session.branch_name,
+                    error = %e,
+                    "Failed to discover PR (expected if no PR exists yet)"
+                );
             }
         }
     }
@@ -136,7 +134,7 @@ impl CIPoller {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("gh pr list failed: {}", stderr));
+            return Err(anyhow::anyhow!("gh pr list failed: {stderr}"));
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);
@@ -146,21 +144,21 @@ impl CIPoller {
         }
 
         let prs: Vec<serde_json::Value> = serde_json::from_str(&json_output)?;
-        if let Some(pr) = prs.first() {
-            if let Some(url) = pr["url"].as_str() {
-                tracing::info!(
-                    session_id = %session_id,
-                    branch = %branch_name,
-                    pr_url = %url,
-                    "Discovered PR for session"
-                );
-                self.manager.link_pr(*session_id, url.to_owned()).await?;
+        if let Some(pr) = prs.first()
+            && let Some(url) = pr["url"].as_str()
+        {
+            tracing::info!(
+                session_id = %session_id,
+                branch = %branch_name,
+                pr_url = %url,
+                "Discovered PR for session"
+            );
+            self.manager.link_pr(*session_id, url.to_owned()).await?;
 
-                // Fetch merge methods and repository settings once when PR is discovered
-                // Don't fail if merge methods fetch fails
-                if let Err(e) = self.poll_pr_merge_methods(session_id, repo_path).await {
-                    tracing::debug!(error = %e, "Failed to fetch PR merge methods");
-                }
+            // Fetch merge methods and repository settings once when PR is discovered
+            // Don't fail if merge methods fetch fails
+            if let Err(e) = self.poll_pr_merge_methods(session_id, repo_path).await {
+                tracing::debug!(error = %e, "Failed to fetch PR merge methods");
             }
         }
 
@@ -178,18 +176,17 @@ impl CIPoller {
             }
 
             // Only check sessions with PRs
-            if let Some(ref pr_url) = session.pr_url {
-                if let Err(e) = self
+            if let Some(ref pr_url) = session.pr_url
+                && let Err(e) = self
                     .check_pr_conflicts(&session.id, pr_url, &session.repo_path)
                     .await
-                {
-                    tracing::debug!(
-                        session_id = %session.id,
-                        pr_url = %pr_url,
-                        error = %e,
-                        "Failed to check PR conflicts"
-                    );
-                }
+            {
+                tracing::debug!(
+                    session_id = %session.id,
+                    pr_url = %pr_url,
+                    error = %e,
+                    "Failed to check PR conflicts"
+                );
             }
         }
     }
@@ -206,7 +203,7 @@ impl CIPoller {
             .split('/')
             .next_back()
             .and_then(|s| s.parse::<u32>().ok())
-            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
+            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {pr_url}"))?;
 
         // Use gh CLI to check if PR is mergeable
         // gh infers the repo from the git remote in the working directory
@@ -218,17 +215,14 @@ impl CIPoller {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("gh pr view failed: {}", stderr));
+            return Err(anyhow::anyhow!("gh pr view failed: {stderr}"));
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);
         let data: serde_json::Value = serde_json::from_str(&json_output)?;
 
         // GitHub mergeable values: "MERGEABLE", "CONFLICTING", "UNKNOWN"
-        let has_conflict = match data["mergeable"].as_str() {
-            Some("CONFLICTING") => true,
-            Some("MERGEABLE" | "UNKNOWN") | None | _ => false,
-        };
+        let has_conflict = matches!(data["mergeable"].as_str(), Some("CONFLICTING"));
 
         // Update session if conflict status changed
         self.manager
@@ -250,7 +244,7 @@ impl CIPoller {
             .split('/')
             .next_back()
             .and_then(|s| s.parse::<u32>().ok())
-            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
+            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {pr_url}"))?;
 
         // First, get PR review status (from incoming merge button feature)
         // Don't fail if review status fetch fails
@@ -360,12 +354,12 @@ impl CIPoller {
             }
 
             // Update review decision if changed
-            if let Some(decision) = new_review_decision {
-                if session.pr_review_decision != Some(decision) {
-                    self.manager
-                        .update_pr_review_decision(*session_id, decision)
-                        .await?;
-                }
+            if let Some(decision) = new_review_decision
+                && session.pr_review_decision != Some(decision)
+            {
+                self.manager
+                    .update_pr_review_decision(*session_id, decision)
+                    .await?;
             }
         }
 
@@ -394,7 +388,7 @@ impl CIPoller {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("gh pr view failed: {}", stderr));
+            return Err(anyhow::anyhow!("gh pr view failed: {stderr}"));
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);
@@ -410,12 +404,12 @@ impl CIPoller {
 
         // Update session if review status changed
         let current_session = self.manager.get_session(&session_id.to_string()).await;
-        if let Some(session) = current_session {
-            if session.pr_review_status != Some(review_status) {
-                self.manager
-                    .update_pr_review_status(*session_id, review_status)
-                    .await?;
-            }
+        if let Some(session) = current_session
+            && session.pr_review_status != Some(review_status)
+        {
+            self.manager
+                .update_pr_review_status(*session_id, review_status)
+                .await?;
         }
 
         Ok(())
@@ -436,7 +430,7 @@ impl CIPoller {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("gh repo view failed: {}", stderr));
+            return Err(anyhow::anyhow!("gh repo view failed: {stderr}"));
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);
@@ -454,7 +448,7 @@ impl CIPoller {
             .current_dir(repo_path)
             .args([
                 "api",
-                &format!("repos/{}/{}", owner, name),
+                &format!("repos/{owner}/{name}"),
                 "--jq",
                 "{allow_merge_commit,allow_squash_merge,allow_rebase_merge,delete_branch_on_merge}",
             ])
@@ -463,7 +457,7 @@ impl CIPoller {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("gh api failed: {}", stderr));
+            return Err(anyhow::anyhow!("gh api failed: {stderr}"));
         }
 
         let json_output = String::from_utf8_lossy(&output.stdout);

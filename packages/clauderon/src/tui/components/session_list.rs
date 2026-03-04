@@ -558,7 +558,7 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
 
             // Format session name with optional warning indicator
             let name_display = if has_reconcile_error {
-                format!("⚠ {}", display_name)
+                format!("⚠ {display_name}")
             } else {
                 display_name.clone()
             };

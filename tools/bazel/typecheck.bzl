@@ -81,6 +81,7 @@ def workspace_typecheck_test(name, srcs, deps = [], data = [], tags = [], env = 
             ":" + lib_name,
             "//tools/bun",
             "//:node_modules/typescript",
+            "//:tsconfig_base",
         ] + data,
         env = dict(env, **{
             "BUN_TOOL": "$(location //tools/bun)",

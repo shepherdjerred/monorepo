@@ -2,7 +2,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
 npm_link_all_packages(name = "node_modules")
@@ -37,12 +37,12 @@ eslint_test(
     ],
 )
 
-# tasknotes-types workspace package not resolved by tsc in sandbox.
-typecheck_test(
+workspace_typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
-    tags = ["manual"],
+    data = [
+        "//packages/tasknotes-types:pkg",
+    ],
     deps = [
         ":node_modules/@types/bun",
         ":node_modules/gray-matter",
@@ -51,8 +51,10 @@ typecheck_test(
         ":node_modules/tasknotes-types",
         ":node_modules/yaml",
         ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/@types/node",
+        "//:node_modules/bun-types",
         "//:node_modules/undici-types",
-        "//packages/tasknotes-types:pkg",
     ],
 )
 

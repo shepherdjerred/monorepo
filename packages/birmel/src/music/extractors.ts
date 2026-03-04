@@ -6,7 +6,8 @@ import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 export async function registerExtractors(player: Player): Promise<void> {
   try {
     // Register YouTubei extractor with streamOptions to avoid signature decipher issues
-    await player.extractors.register(YoutubeiExtractor, {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- discord-player-youtubei types incompatible in Bazel sandbox symlink resolution
+    await player.extractors.register(YoutubeiExtractor as unknown as Parameters<typeof player.extractors.register>[0], {
       streamOptions: {
         useClient: "ANDROID",
       },

@@ -68,13 +68,32 @@ typecheck_test(
     ],
 )
 
-# Uses tsconfig path aliases (@shepherdjerred/homelab/cdk8s/...) that Bun
-# doesn't resolve at runtime without a bundler step.
+# Uses @shepherdjerred/homelab/cdk8s/* tsconfig path aliases; local execution
+# needed so Bun can resolve them from the bin tree with tsconfig.json.
 bun_test(
     name = "test",
     size = "large",
-    srcs = glob(["src/**/*.ts"]),
-    tags = ["manual"],
+    srcs = glob([
+        "src/**/*.ts",
+        "generated/**/*.ts",
+        "grafana/**/*.ts",
+    ]),
+    data = glob(
+        [
+            "config/**",
+            "helm/**",
+            "src/**/*.sh",
+            "src/**/*.py",
+            "src/**/*.yml",
+            "src/**/*.yaml",
+            "src/**/*.json",
+        ],
+        allow_empty = True,
+        exclude = ["**/node_modules/**"],
+    ) + [
+        "//packages/homelab:scripts/lint-helm.sh",
+    ],
+    local = True,
     deps = [
         ":node_modules/@grafana/grafana-foundation-sdk",
         ":node_modules/cdk8s",
@@ -84,6 +103,7 @@ bun_test(
         ":node_modules/lodash",
         ":node_modules/remeda",
         ":node_modules/ts-pattern",
+        ":node_modules/yaml",
         ":node_modules/zod",
         "//:node_modules/@types/bun",
         "//packages/homelab/src/helm-types:pkg",

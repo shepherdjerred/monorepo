@@ -59,13 +59,6 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
     (name, email)
 }
 
-/// Docker container image to use (deprecated - use DockerConfig instead)
-///
-/// This constant is kept for backward compatibility but is no longer used directly.
-/// The actual image is now loaded from DockerConfig.
-#[deprecated(note = "Use DockerConfig.image instead")]
-const DOCKER_IMAGE: &str = "ghcr.io/shepherdjerred/dotfiles";
-
 /// Shared cache volumes used across all clauderon Docker containers for faster Rust builds:
 /// - clauderon-cargo-registry: Downloaded crates from crates.io (/workspace/.cargo/registry)
 /// - clauderon-cargo-git: Git dependencies (/workspace/.cargo/git)
@@ -159,7 +152,7 @@ impl DockerBackend {
             anyhow::bail!("Mount name cannot be empty");
         }
         if mount_name.len() > 64 {
-            anyhow::bail!("Mount name cannot exceed 64 characters: {}", mount_name);
+            anyhow::bail!("Mount name cannot exceed 64 characters: {mount_name}");
         }
 
         // Check for valid characters (alphanumeric, hyphens, underscores)
@@ -168,15 +161,14 @@ impl DockerBackend {
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
         {
             anyhow::bail!(
-                "Mount name can only contain alphanumeric characters, hyphens, and underscores: {}",
-                mount_name
+                "Mount name can only contain alphanumeric characters, hyphens, and underscores: {mount_name}"
             );
         }
 
         // Check for reserved names
         let reserved = ["workspace", "clauderon", "repos"];
         if reserved.contains(&mount_name.to_lowercase().as_str()) {
-            anyhow::bail!("Mount name '{}' is reserved", mount_name);
+            anyhow::bail!("Mount name '{mount_name}' is reserved");
         }
 
         Ok(())
@@ -353,6 +345,10 @@ impl DockerBackend {
     /// # Errors
     ///
     /// Returns an error if cloning fails.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "git clone operation requires many configuration parameters"
+    )]
     #[instrument(skip(self))]
     async fn clone_into_volume(
         &self,
@@ -512,24 +508,25 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
     /// Returns an error if the docker pull command fails.
     #[instrument(skip(self))]
     pub async fn pull_image(&self) -> anyhow::Result<()> {
-        tracing::info!(image = DOCKER_IMAGE, "Pulling Docker image");
+        let image = &self.config.image.image;
+        tracing::info!(image = %image, "Pulling Docker image");
 
         let output = Command::new("docker")
-            .args(["pull", DOCKER_IMAGE])
+            .args(["pull", image])
             .output()
             .await?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             tracing::error!(
-                image = DOCKER_IMAGE,
+                image = %image,
                 stderr = %stderr,
                 "Failed to pull Docker image"
             );
             anyhow::bail!("Failed to pull Docker image: {stderr}");
         }
 
-        tracing::info!(image = DOCKER_IMAGE, "Successfully pulled Docker image");
+        tracing::info!(image = %image, "Successfully pulled Docker image");
         Ok(())
     }
 
@@ -540,9 +537,9 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
     /// # Arguments
     ///
     /// * `print_mode` - If true, run in non-interactive mode.
-    ///                  Claude Code uses `--print --verbose`, Codex uses `codex exec`.
-    ///                  The container will output the response and exit.
-    ///                  If false, run interactively for `docker attach`.
+    ///   Claude Code uses `--print --verbose`, Codex uses `codex exec`.
+    ///   The container will output the response and exit.
+    ///   If false, run interactively for `docker attach`.
     ///
     /// # Errors
     ///
@@ -874,14 +871,14 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         }
                     }
                 }
-                if !codex_config_path.exists() {
-                    if let Err(e) = std::fs::write(&codex_config_path, dummy_config_toml()) {
-                        tracing::warn!(
-                            "Failed to write Codex config.toml at {:?}: {}",
-                            codex_config_path,
-                            e
-                        );
-                    }
+                if !codex_config_path.exists()
+                    && let Err(e) = std::fs::write(&codex_config_path, dummy_config_toml())
+                {
+                    tracing::warn!(
+                        "Failed to write Codex config.toml at {:?}: {}",
+                        codex_config_path,
+                        e
+                    );
                 }
             }
 
@@ -1230,19 +1227,15 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         };
 
                         format!(
-                            r#"SESSION_ID="{session_id}"
+                            r#"SESSION_ID="{session_id_str}"
 HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
-    exec {resume_cmd}
+    exec {resume_cmd_str}
 else
     echo "Creating new session $SESSION_ID"
-    exec {create_cmd}
+    exec {create_cmd_str}
 fi"#,
-                            session_id = session_id_str,
-                            project_path = project_path,
-                            resume_cmd = resume_cmd_str,
-                            create_cmd = create_cmd_str,
                         )
                     } else {
                         // No session ID - just run the command directly
@@ -1313,13 +1306,11 @@ fi"#;
 CODEX_DIR="/workspace/.codex/sessions"
 if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
     echo "Resuming last Codex session"
-    exec {resume_cmd}
+    exec {resume_cmd_str}
 else
     echo "Creating new Codex session"
-    exec {create_cmd}
+    exec {create_cmd_str}
 fi"#,
-                            resume_cmd = resume_cmd_str,
-                            create_cmd = create_cmd_str,
                         )
                     }
                 }
@@ -1377,19 +1368,15 @@ fi"#,
                         };
 
                         format!(
-                            r#"SESSION_ID="{session_id}"
+                            r#"SESSION_ID="{session_id_str}"
 HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
-    exec {resume_cmd}
+    exec {resume_cmd_str}
 else
     echo "Creating new session $SESSION_ID"
-    exec {create_cmd}
+    exec {create_cmd_str}
 fi"#,
-                            session_id = session_id_str,
-                            project_path = project_path,
-                            resume_cmd = resume_cmd_str,
-                            create_cmd = create_cmd_str,
                         )
                     } else {
                         // No session ID - just run the command directly
@@ -1620,14 +1607,14 @@ impl ExecutionBackend for DockerBackend {
         );
 
         // Install Claude Code hooks inside the container for status tracking
-        if options.agent == AgentType::ClaudeCode {
-            if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
-                tracing::warn!(
-                    container_name = %container_name,
-                    error = %e,
-                    "Failed to install hooks in container (non-fatal), status tracking may not work"
-                );
-            }
+        if options.agent == AgentType::ClaudeCode
+            && let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await
+        {
+            tracing::warn!(
+                container_name = %container_name,
+                error = %e,
+                "Failed to install hooks in container (non-fatal), status tracking may not work"
+            );
         }
 
         Ok(container_name)

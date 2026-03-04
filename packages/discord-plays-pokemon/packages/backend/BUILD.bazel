@@ -2,7 +2,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -44,13 +44,17 @@ eslint_test(
     deps = ["//packages/discord-plays-pokemon/packages/common:pkg"],
 )
 
-# @discord-plays-pokemon/common exports from dist/ which requires tsc compilation.
-# This package requires the common package to be built first.
-typecheck_test(
+# @discord-plays-pokemon/common exports from dist/ — common:build provides
+# compiled .js + .d.ts files that tsc needs to resolve workspace imports.
+workspace_typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
-    tags = ["manual"],
+    data = [
+        "//packages/discord-plays-pokemon/packages/common:build",
+        "//packages/discord-plays-pokemon/packages/common:build_types",
+        "//packages/discord-plays-pokemon/packages/common:pkg",
+    ],
+    env = {"NO_PRESERVE_SYMLINKS": "1"},
     deps = [
         ":node_modules/@d6v/zconf",
         ":node_modules/@discord-plays-pokemon/common",
@@ -72,8 +76,10 @@ typecheck_test(
         ":node_modules/ts-pattern",
         ":node_modules/winston",
         ":node_modules/zod",
+        "//:node_modules/@types/bun",
+        "//:node_modules/@types/node",
+        "//:node_modules/bun-types",
         "//:node_modules/undici-types",
-        "//packages/discord-plays-pokemon/packages/common:pkg",
     ],
 )
 

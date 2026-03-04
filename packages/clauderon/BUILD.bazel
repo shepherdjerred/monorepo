@@ -65,10 +65,7 @@ rust_test(
 
 rust_clippy(
     name = "clippy",
-    # Excluded from //... builds — has 164 pre-existing errors (123 uninlined_format_args,
-    # unused imports, unfulfilled lint expectations, etc.)
-    # Run explicitly: bazel build //packages/clauderon:clippy
-    tags = ["manual"],
+    tags = ["lint"],
     deps = [":clauderon_lib"],
 )
 
@@ -78,8 +75,7 @@ rustfmt_test(
     targets = [":clauderon_lib"],
 )
 
-# Requires --test_env=PATH --test_env=RUSTUP_HOME for sandbox access to cargo-deny.
-# Run explicitly: bazel test //packages/clauderon:cargo_deny --test_env=PATH --test_env=RUSTUP_HOME
+# Requires cargo-deny binary from host PATH.
 cargo_deny_test(
     name = "cargo_deny",
     srcs = [
@@ -87,7 +83,7 @@ cargo_deny_test(
         "Cargo.toml",
         "deny.toml",
     ],
-    tags = ["manual"],
+    local = True,
 )
 
 # Code coverage via cargo-llvm-cov. Manual: requires cargo-llvm-cov installed

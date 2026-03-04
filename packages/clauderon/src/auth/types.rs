@@ -150,6 +150,10 @@ impl From<UserRow> for AuthUser {
 
 /// Passkey row from database
 #[derive(Debug, Clone)]
+#[expect(
+    dead_code,
+    reason = "fields populated by sqlx FromRow, read via positional access"
+)]
 pub(super) struct PasskeyRow {
     pub id: String,
     pub user_id: String,
@@ -172,6 +176,10 @@ pub(super) struct AuthSessionRow {
 
 /// WebAuthn challenge row from database
 #[derive(Debug, Clone)]
+#[expect(
+    dead_code,
+    reason = "fields populated by sqlx FromRow, read via positional access"
+)]
 pub(super) struct WebAuthnChallengeRow {
     pub id: String,
     pub username: String,

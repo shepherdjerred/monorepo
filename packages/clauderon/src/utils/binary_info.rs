@@ -140,7 +140,6 @@ pub fn kill_daemon() -> anyhow::Result<()> {
     // Send SIGTERM to the daemon process
     #[cfg(unix)]
     {
-        use std::os::unix::process::CommandExt;
         let status = std::process::Command::new("kill")
             .arg("-TERM")
             .arg(info.pid.to_string())

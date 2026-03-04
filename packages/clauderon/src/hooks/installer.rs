@@ -154,8 +154,7 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
             "bash",
             "-c",
             &format!(
-                "cat > /workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{}\nOUTER_EOF",
-                SEND_STATUS_SCRIPT
+                "cat > /workspace/.clauderon/hooks/send_status.sh << 'OUTER_EOF'\n{SEND_STATUS_SCRIPT}\nOUTER_EOF"
             ),
         ])
         .output()
@@ -217,8 +216,7 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
             "bash",
             "-c",
             &format!(
-                "cat > /workspace/.claude/settings.json << 'EOF'\n{}\nEOF",
-                SETTINGS_JSON_CONTENT
+                "cat > /workspace/.claude/settings.json << 'EOF'\n{SETTINGS_JSON_CONTENT}\nEOF"
             ),
         ])
         .output()
@@ -291,9 +289,7 @@ curl -s -X POST \
     >/dev/null 2>&1 || true
 
 exit 0
-"#,
-        daemon_address = daemon_address,
-        http_port = http_port
+"#
     )
 }
 

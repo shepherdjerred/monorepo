@@ -4,7 +4,7 @@
 //! so containers can access Kubernetes and Talos without credentials.
 
 use anyhow::Context;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::plugins::PluginManifest;
 use crate::proxy::{dummy_auth_json_string, dummy_config_toml};
@@ -80,18 +80,18 @@ fn transform_marketplace_paths_for_container(host_config: &serde_json::Value) ->
 
     if let Some(obj) = container_config.as_object_mut() {
         for (_marketplace_name, marketplace_data) in obj.iter_mut() {
-            if let Some(install_location) = marketplace_data.get_mut("installLocation") {
-                if let Some(path_str) = install_location.as_str() {
-                    // Transform the path to container location
-                    // The plugins will be mounted at /workspace/.claude/plugins/marketplaces
-                    // regardless of where they are on the host
-                    if path_str.contains(".claude/plugins/marketplaces") {
-                        // Extract just the marketplace-specific portion
-                        if let Some(idx) = path_str.find(".claude/plugins/marketplaces") {
-                            let marketplace_relative = &path_str[idx..];
-                            let container_path = format!("/workspace/{}", marketplace_relative);
-                            *install_location = serde_json::Value::String(container_path);
-                        }
+            if let Some(install_location) = marketplace_data.get_mut("installLocation")
+                && let Some(path_str) = install_location.as_str()
+            {
+                // Transform the path to container location
+                // The plugins will be mounted at /workspace/.claude/plugins/marketplaces
+                // regardless of where they are on the host
+                if path_str.contains(".claude/plugins/marketplaces") {
+                    // Extract just the marketplace-specific portion
+                    if let Some(idx) = path_str.find(".claude/plugins/marketplaces") {
+                        let marketplace_relative = &path_str[idx..];
+                        let container_path = format!("/workspace/{marketplace_relative}");
+                        *install_location = serde_json::Value::String(container_path);
                     }
                 }
             }
@@ -171,6 +171,8 @@ users:
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
     use tempfile::tempdir;
 

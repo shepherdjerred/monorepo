@@ -495,14 +495,14 @@ impl KubernetesBackend {
                 .join(".claude"),
         );
 
-        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins() {
-            if !plugin_manifest.installed_plugins.is_empty() {
-                tracing::warn!(
-                    plugin_count = plugin_manifest.installed_plugins.len(),
-                    "Plugins discovered but cannot be mounted in Kubernetes pods. \
+        if let Ok(plugin_manifest) = plugin_discovery.discover_plugins()
+            && !plugin_manifest.installed_plugins.is_empty()
+        {
+            tracing::warn!(
+                plugin_count = plugin_manifest.installed_plugins.len(),
+                "Plugins discovered but cannot be mounted in Kubernetes pods. \
                      Plugin functionality will be limited. Future enhancement: use PersistentVolumes for plugin support."
-                );
-            }
+            );
         }
 
         // Create minimal .claude.json config
@@ -1052,11 +1052,10 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         // Build resume command
                         let resume_cmd = if options.dangerous_skip_checks {
                             format!(
-                                "claude --dangerously-skip-permissions --resume {} --fork-session",
-                                session_id_str
+                                "claude --dangerously-skip-permissions --resume {session_id_str} --fork-session"
                             )
                         } else {
-                            format!("claude --resume {} --fork-session", session_id_str)
+                            format!("claude --resume {session_id_str} --fork-session")
                         };
 
                         // Generate wrapper script
@@ -1074,7 +1073,7 @@ echo "Git setup complete: branch ${BRANCH_NAME}"
                         };
 
                         format!(
-                            r#"SESSION_ID="{session_id}"
+                            r#"SESSION_ID="{session_id_str}"
 HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
@@ -1083,10 +1082,6 @@ else
     echo "Creating new session $SESSION_ID"
     exec {create_cmd}
 fi"#,
-                            session_id = session_id_str,
-                            project_path = project_path,
-                            resume_cmd = resume_cmd,
-                            create_cmd = create_cmd,
                         )
                     } else {
                         // No session ID - just run the command directly
@@ -1170,8 +1165,6 @@ else
     echo "Creating new Codex session"
     exec {create_cmd}
 fi"#,
-                            resume_cmd = resume_cmd,
-                            create_cmd = create_cmd,
                         )
                     }
                 }
@@ -1211,11 +1204,10 @@ fi"#,
                         // Build resume command
                         let resume_cmd = if options.dangerous_skip_checks {
                             format!(
-                                "gemini --dangerously-skip-permissions --resume {} --fork-session",
-                                session_id_str
+                                "gemini --dangerously-skip-permissions --resume {session_id_str} --fork-session"
                             )
                         } else {
-                            format!("gemini --resume {} --fork-session", session_id_str)
+                            format!("gemini --resume {session_id_str} --fork-session")
                         };
 
                         // Generate wrapper script
@@ -1233,7 +1225,7 @@ fi"#,
                         };
 
                         format!(
-                            r#"SESSION_ID="{session_id}"
+                            r#"SESSION_ID="{session_id_str}"
 HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
@@ -1242,10 +1234,6 @@ else
     echo "Creating new session $SESSION_ID"
     exec {create_cmd}
 fi"#,
-                            session_id = session_id_str,
-                            project_path = project_path,
-                            resume_cmd = resume_cmd,
-                            create_cmd = create_cmd,
                         )
                     } else {
                         // No session ID - just run the command directly
@@ -1294,41 +1282,40 @@ fi"#,
         ];
 
         // Add proxy CA mount if enabled
-        if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled {
-                volume_mounts.push(VolumeMount {
-                    name: "proxy-ca".to_owned(),
-                    mount_path: "/etc/clauderon/proxy-ca.pem".to_owned(),
-                    sub_path: Some("proxy-ca.pem".to_owned()),
-                    read_only: Some(true),
-                    ..Default::default()
-                });
-            }
+        if let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volume_mounts.push(VolumeMount {
+                name: "proxy-ca".to_owned(),
+                mount_path: "/etc/clauderon/proxy-ca.pem".to_owned(),
+                sub_path: Some("proxy-ca.pem".to_owned()),
+                read_only: Some(true),
+                ..Default::default()
+            });
         }
-        if options.agent == AgentType::Codex {
-            if let Some(ref proxy_config) = self.proxy_config {
-                if proxy_config.enabled {
-                    volume_mounts.push(VolumeMount {
-                        name: "codex-config".to_owned(),
-                        mount_path: "/etc/clauderon/codex".to_owned(),
-                        read_only: Some(true),
-                        ..Default::default()
-                    });
-                }
-            }
+        if options.agent == AgentType::Codex
+            && let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volume_mounts.push(VolumeMount {
+                name: "codex-config".to_owned(),
+                mount_path: "/etc/clauderon/codex".to_owned(),
+                read_only: Some(true),
+                ..Default::default()
+            });
         }
 
         // Add managed settings mount if proxy is enabled
-        if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled {
-                volume_mounts.push(VolumeMount {
-                    name: "managed-settings".to_owned(),
-                    mount_path: "/etc/claude-code/managed-settings.json".to_owned(),
-                    sub_path: Some("managed-settings.json".to_owned()),
-                    read_only: Some(true),
-                    ..Default::default()
-                });
-            }
+        if let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volume_mounts.push(VolumeMount {
+                name: "managed-settings".to_owned(),
+                mount_path: "/etc/claude-code/managed-settings.json".to_owned(),
+                sub_path: Some("managed-settings.json".to_owned()),
+                read_only: Some(true),
+                ..Default::default()
+            });
         }
 
         // Add kubeconfig mount for kubectl access
@@ -1513,45 +1500,44 @@ fi"#,
         ];
 
         // Add proxy CA volume if enabled
-        if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled {
-                volumes.push(Volume {
-                    name: "proxy-ca".to_owned(),
-                    config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                        name: "clauderon-proxy-ca".to_owned(),
-                        ..Default::default()
-                    }),
+        if let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volumes.push(Volume {
+                name: "proxy-ca".to_owned(),
+                config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                    name: "clauderon-proxy-ca".to_owned(),
                     ..Default::default()
-                });
-            }
+                }),
+                ..Default::default()
+            });
         }
-        if options.agent == AgentType::Codex {
-            if let Some(ref proxy_config) = self.proxy_config {
-                if proxy_config.enabled {
-                    volumes.push(Volume {
-                        name: "codex-config".to_owned(),
-                        config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                            name: format!("{pod_name}-codex-config"),
-                            ..Default::default()
-                        }),
-                        ..Default::default()
-                    });
-                }
-            }
+        if options.agent == AgentType::Codex
+            && let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volumes.push(Volume {
+                name: "codex-config".to_owned(),
+                config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                    name: format!("{pod_name}-codex-config"),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            });
         }
 
         // Add managed settings volume if proxy is enabled
-        if let Some(ref proxy_config) = self.proxy_config {
-            if proxy_config.enabled {
-                volumes.push(Volume {
-                    name: "managed-settings".to_owned(),
-                    config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
-                        name: format!("{pod_name}-managed-settings"),
-                        ..Default::default()
-                    }),
+        if let Some(ref proxy_config) = self.proxy_config
+            && proxy_config.enabled
+        {
+            volumes.push(Volume {
+                name: "managed-settings".to_owned(),
+                config_map: Some(k8s_openapi::api::core::v1::ConfigMapVolumeSource {
+                    name: format!("{pod_name}-managed-settings"),
                     ..Default::default()
-                });
-            }
+                }),
+                ..Default::default()
+            });
         }
 
         // Add kubeconfig volume for kubectl access
@@ -1673,21 +1659,21 @@ fi"#,
             loop {
                 match pods.get(pod_name).await {
                     Ok(pod) => {
-                        if let Some(status) = pod.status {
-                            if let Some(phase) = status.phase {
-                                match phase.as_str() {
-                                    "Running" => return Ok(()),
-                                    "Failed" | "Unknown" => {
-                                        let events = self.get_pod_events(pod_name)?;
-                                        anyhow::bail!(
-                                            "Pod failed to start (phase: {phase})\nEvents:\n{}",
-                                            events.join("\n")
-                                        );
-                                    }
-                                    _ => {
-                                        // Still pending or initializing
-                                        tokio::time::sleep(Duration::from_secs(2)).await;
-                                    }
+                        if let Some(status) = pod.status
+                            && let Some(phase) = status.phase
+                        {
+                            match phase.as_str() {
+                                "Running" => return Ok(()),
+                                "Failed" | "Unknown" => {
+                                    let events = self.get_pod_events(pod_name)?;
+                                    anyhow::bail!(
+                                        "Pod failed to start (phase: {phase})\nEvents:\n{}",
+                                        events.join("\n")
+                                    );
+                                }
+                                _ => {
+                                    // Still pending or initializing
+                                    tokio::time::sleep(Duration::from_secs(2)).await;
                                 }
                             }
                         }
@@ -1962,10 +1948,10 @@ impl ExecutionBackend for KubernetesBackend {
                 if let Some(container_statuses) = status.and_then(|s| s.container_statuses.as_ref())
                 {
                     for cs in container_statuses {
-                        if let Some(waiting) = cs.state.as_ref().and_then(|s| s.waiting.as_ref()) {
-                            if waiting.reason.as_deref() == Some("CrashLoopBackOff") {
-                                return Ok(BackendResourceHealth::CrashLoop);
-                            }
+                        if let Some(waiting) = cs.state.as_ref().and_then(|s| s.waiting.as_ref())
+                            && waiting.reason.as_deref() == Some("CrashLoopBackOff")
+                        {
+                            return Ok(BackendResourceHealth::CrashLoop);
                         }
                     }
                 }

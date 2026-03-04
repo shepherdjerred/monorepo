@@ -57,17 +57,15 @@ pub fn cleanup_old_logs(
         }
 
         // Check file age
-        if let Ok(metadata) = entry.metadata() {
-            if let Ok(modified) = metadata.modified() {
-                if let Ok(age) = now.duration_since(modified) {
-                    if age > max_age {
-                        if std::fs::remove_file(&path).is_ok() {
-                            result.removed += 1;
-                        } else {
-                            result.failed.push(name.to_owned());
-                        }
-                    }
-                }
+        if let Ok(metadata) = entry.metadata()
+            && let Ok(modified) = metadata.modified()
+            && let Ok(age) = now.duration_since(modified)
+            && age > max_age
+        {
+            if std::fs::remove_file(&path).is_ok() {
+                result.removed += 1;
+            } else {
+                result.failed.push(name.to_owned());
             }
         }
     }

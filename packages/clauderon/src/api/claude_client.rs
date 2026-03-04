@@ -112,7 +112,7 @@ impl ClaudeApiClient {
                     }
 
                     if attempts >= max_attempts {
-                        return Err(e.context(format!("Failed after {} attempts", attempts)));
+                        return Err(e.context(format!("Failed after {attempts} attempts")));
                     }
 
                     tracing::debug!(
@@ -165,7 +165,7 @@ impl ClaudeApiClient {
         let response = self
             .http_client
             .get(&url)
-            .header("Authorization", format!("Bearer {}", oauth_token))
+            .header("Authorization", format!("Bearer {oauth_token}"))
             .header(
                 "User-Agent",
                 format!("Clauderon/{}", env!("CARGO_PKG_VERSION")),
@@ -177,7 +177,7 @@ impl ClaudeApiClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_else(|_| String::new());
-            anyhow::bail!("Claude.ai API returned error: {} - {}", status, body);
+            anyhow::bail!("Claude.ai API returned error: {status} - {body}");
         }
 
         let account: CurrentAccountResponse = response
@@ -214,19 +214,19 @@ impl ClaudeApiClient {
         let response = self
             .http_client
             .get(&url)
-            .header("Authorization", format!("Bearer {}", oauth_token))
+            .header("Authorization", format!("Bearer {oauth_token}"))
             .header(
                 "User-Agent",
                 format!("Clauderon/{}", env!("CARGO_PKG_VERSION")),
             )
             .send()
             .await
-            .with_context(|| format!("Failed to fetch usage from Claude.ai for org {}", org_id))?;
+            .with_context(|| format!("Failed to fetch usage from Claude.ai for org {org_id}"))?;
 
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_else(|_| String::new());
-            anyhow::bail!("Claude.ai API returned error: {} - {}", status, body);
+            anyhow::bail!("Claude.ai API returned error: {status} - {body}");
         }
 
         let usage_response: ClaudeUsageResponse = response

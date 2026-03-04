@@ -5,7 +5,6 @@
 
 use std::sync::Arc;
 use tracing::instrument;
-use uuid::Uuid;
 
 use crate::backends::{BackendResourceHealth, ExecutionBackend, GitOperations};
 use crate::core::session::{
@@ -399,6 +398,7 @@ mod tests {
     };
     use chrono::Utc;
     use std::path::PathBuf;
+    use uuid::Uuid;
 
     fn create_test_session(name: &str, backend: BackendType, status: SessionStatus) -> Session {
         Session {

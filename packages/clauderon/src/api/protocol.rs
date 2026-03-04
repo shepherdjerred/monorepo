@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
 use crate::core::session::{
-    AccessMode, AgentType, AvailableAction, BackendType, HealthCheckResult, ResourceState, Session,
-    SessionHealthReport, SessionModel, SessionStatus,
+    AccessMode, AgentType, BackendType, HealthCheckResult, Session, SessionHealthReport,
+    SessionModel, SessionStatus,
 };
 
 use super::types::ReconcileReportDto;
@@ -341,14 +341,14 @@ impl CreateSessionRequest {
         feature_flags: &crate::feature_flags::FeatureFlags,
     ) -> anyhow::Result<()> {
         // Existing model compatibility check
-        if let Some(model) = &self.model {
-            if !model.is_compatible_with(self.agent) {
-                anyhow::bail!(
-                    "Model {:?} is not compatible with agent {:?}",
-                    model,
-                    self.agent
-                );
-            }
+        if let Some(model) = &self.model
+            && !model.is_compatible_with(self.agent)
+        {
+            anyhow::bail!(
+                "Model {:?} is not compatible with agent {:?}",
+                model,
+                self.agent
+            );
         }
 
         // Experimental models check

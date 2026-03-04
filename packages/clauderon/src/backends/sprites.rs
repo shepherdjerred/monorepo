@@ -64,8 +64,7 @@ impl SpritesBackend {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to run 'sprite create' command: {}. Is the sprite CLI installed?",
-                    e
+                    "Failed to run 'sprite create' command: {e}. Is the sprite CLI installed?"
                 )
             })?;
 
@@ -73,14 +72,14 @@ impl SpritesBackend {
             use std::fmt::Write;
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let mut error_msg = format!("Failed to create sprite '{}'", name);
+            let mut error_msg = format!("Failed to create sprite '{name}'");
             if !stderr.is_empty() {
                 let _ = write!(error_msg, "\nstderr: {}", stderr.trim());
             }
             if !stdout.is_empty() {
                 let _ = write!(error_msg, "\nstdout: {}", stdout.trim());
             }
-            anyhow::bail!("{}", error_msg);
+            anyhow::bail!("{error_msg}");
         }
 
         tracing::info!(sprite_name = %name, "Sprite created successfully");
@@ -111,8 +110,7 @@ impl SpritesBackend {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to run 'sprite exec' command: {}. Is the sprite CLI installed?",
-                    e
+                    "Failed to run 'sprite exec' command: {e}. Is the sprite CLI installed?"
                 )
             })?;
 
@@ -172,7 +170,7 @@ impl SpritesBackend {
         }
 
         let url = String::from_utf8(output.stdout)
-            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in git remote URL: {}", e))?
+            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in git remote URL: {e}"))?
             .trim()
             .to_owned();
 
@@ -215,7 +213,7 @@ impl SpritesBackend {
         }
 
         let branch = String::from_utf8(output.stdout)
-            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in branch name: {}", e))?
+            .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in branch name: {e}"))?
             .trim()
             .to_owned();
 
@@ -243,7 +241,7 @@ impl SpritesBackend {
         let result = self
             .sprite_run(sprite_name, &["mkdir", "-p", "/home/sprite/repos"])
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to create repos directory in sprite: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to create repos directory in sprite: {e}"))?;
 
         if result.exit_code != 0 {
             anyhow::bail!(
@@ -581,7 +579,7 @@ impl SpritesBackend {
         // Build the agent command
         let agent_cmd = match agent {
             AgentType::ClaudeCode => {
-                let mut cmd = format!("claude '{}'", escaped_prompt);
+                let mut cmd = format!("claude '{escaped_prompt}'");
                 if dangerous_skip_checks {
                     cmd.push_str(" --bypass-permissions");
                 }
@@ -592,10 +590,10 @@ impl SpritesBackend {
                 cmd
             }
             AgentType::Codex => {
-                format!("codex '{}'", escaped_prompt)
+                format!("codex '{escaped_prompt}'")
             }
             AgentType::Gemini => {
-                format!("gemini '{}'", escaped_prompt)
+                format!("gemini '{escaped_prompt}'")
             }
         };
 
@@ -611,8 +609,7 @@ impl SpritesBackend {
         // script -q -f captures terminal output to a log file for later retrieval
         let escaped_agent_cmd = agent_cmd.replace('\'', "'\\''");
         let abduco_cmd = format!(
-            "cd '{}' && abduco -n clauderon script -q -f /tmp/clauderon.log -c '{}'",
-            work_path, escaped_agent_cmd
+            "cd '{work_path}' && abduco -n clauderon script -q -f /tmp/clauderon.log -c '{escaped_agent_cmd}'"
         );
 
         let result = self.sprite_shell_run(sprite_name, &abduco_cmd).await?;
@@ -643,7 +640,7 @@ impl SpritesBackend {
     ///
     /// Follows Docker convention: clauderon-{session-name}
     fn sprite_name_from_session(session_name: &str) -> String {
-        format!("clauderon-{}", session_name)
+        format!("clauderon-{session_name}")
     }
 }
 
@@ -669,7 +666,7 @@ impl ExecutionBackend for SpritesBackend {
         // Step 1: Create the sprite (CLI blocks until ready)
         self.create_sprite(&sprite_name)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to create sprite '{}': {}", sprite_name, e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to create sprite '{sprite_name}': {e}"))?;
 
         // Step 2: Setup repositories
         let repositories = if options.repositories.is_empty() {
@@ -699,11 +696,7 @@ impl ExecutionBackend for SpritesBackend {
         self.setup_repositories(&sprite_name, &repositories)
             .await
             .map_err(|e| {
-                anyhow::anyhow!(
-                    "Failed to setup repositories in sprite '{}': {}",
-                    sprite_name,
-                    e
-                )
+                anyhow::anyhow!("Failed to setup repositories in sprite '{sprite_name}': {e}")
             })?;
 
         // Step 3: Install Claude Code if needed
@@ -716,11 +709,7 @@ impl ExecutionBackend for SpritesBackend {
             if !claude_installed {
                 tracing::info!(sprite_name = %sprite_name, "Claude Code not found, installing");
                 self.install_claude(&sprite_name).await.map_err(|e| {
-                    anyhow::anyhow!(
-                        "Failed to install Claude Code in sprite '{}': {}",
-                        sprite_name,
-                        e
-                    )
+                    anyhow::anyhow!("Failed to install Claude Code in sprite '{sprite_name}': {e}")
                 })?;
             } else {
                 tracing::info!(sprite_name = %sprite_name, "Claude Code already installed");
@@ -736,11 +725,7 @@ impl ExecutionBackend for SpritesBackend {
         if !abduco_installed {
             tracing::info!(sprite_name = %sprite_name, "abduco not found, installing");
             self.install_abduco(&sprite_name).await.map_err(|e| {
-                anyhow::anyhow!(
-                    "Failed to install abduco in sprite '{}': {}",
-                    sprite_name,
-                    e
-                )
+                anyhow::anyhow!("Failed to install abduco in sprite '{sprite_name}': {e}")
             })?;
         } else {
             tracing::info!(sprite_name = %sprite_name, "abduco already installed");
@@ -756,7 +741,7 @@ impl ExecutionBackend for SpritesBackend {
             &options.images,
         )
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to start agent in sprite '{}': {}", sprite_name, e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to start agent in sprite '{sprite_name}': {e}"))?;
 
         tracing::info!(
             session_name = %name,
@@ -777,8 +762,7 @@ impl ExecutionBackend for SpritesBackend {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to run 'sprite list' command: {}. Is the sprite CLI installed?",
-                    e
+                    "Failed to run 'sprite list' command: {e}. Is the sprite CLI installed?"
                 )
             })?;
 
@@ -827,8 +811,7 @@ impl ExecutionBackend for SpritesBackend {
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to run 'sprite destroy' command: {}. Is the sprite CLI installed?",
-                    e
+                    "Failed to run 'sprite destroy' command: {e}. Is the sprite CLI installed?"
                 )
             })?;
 
@@ -844,7 +827,7 @@ impl ExecutionBackend for SpritesBackend {
                 error = %error_msg,
                 "Failed to destroy sprite"
             );
-            anyhow::bail!("Failed to destroy sprite '{}': {}", id, error_msg);
+            anyhow::bail!("Failed to destroy sprite '{id}': {error_msg}");
         }
 
         tracing::info!(sprite_name = %id, "Sprite destroyed successfully");
@@ -868,15 +851,12 @@ impl ExecutionBackend for SpritesBackend {
         tracing::debug!(sprite_name = %id, lines = lines, "Getting output from sprite");
 
         // Get the last N lines from the script log file
-        let tail_cmd = format!(
-            "tail -n {} /tmp/clauderon.log 2>/dev/null || echo ''",
-            lines
-        );
+        let tail_cmd = format!("tail -n {lines} /tmp/clauderon.log 2>/dev/null || echo ''");
 
         let result = self
             .sprite_shell_run(id, &tail_cmd)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to get output from sprite '{}': {}", id, e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to get output from sprite '{id}': {e}"))?;
 
         if result.exit_code != 0 {
             tracing::warn!(

@@ -34,6 +34,10 @@ const EXCLUDED_FILES = [
   "packages/clauderon/web/frontend/src/main.tsx",
   "packages/better-skill-capped/src/components/app.tsx",
   "packages/better-skill-capped/src/components/router.tsx",
+  // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks
+  "packages/birmel/src/music/extractors.ts",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
+  "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
 ];
 
 type Finding = {

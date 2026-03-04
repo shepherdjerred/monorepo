@@ -68,8 +68,8 @@ eslint_test(
     config = "//packages/scout-for-lol:eslint.config.ts",
 )
 
-# Blocked: prisma generate fails (Prisma v7 migration needed) + workspace packages
-# (@scout-for-lol/data, @scout-for-lol/report) not resolved by tsc in sandbox.
+# Blocked: workspace packages (@scout-for-lol/data, @scout-for-lol/report) + #generated/prisma/client
+# not resolved by tsc in sandbox.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
@@ -113,7 +113,9 @@ typecheck_test(
     ],
 )
 
-# Blocked: prisma generate fails (Prisma v7 migration needed).
+# Blocked: tests use #generated/prisma/client (custom output path) which
+# requires prisma generate with output to ./generated/prisma/client/ plus
+# workspace packages (@scout-for-lol/data, @scout-for-lol/report).
 bun_test(
     name = "test",
     size = "large",

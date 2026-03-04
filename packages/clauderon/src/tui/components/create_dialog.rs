@@ -638,6 +638,10 @@ fn render_images_field(frame: &mut Frame<'_>, images: &[String], area: Rect) {
     frame.render_widget(paragraph, area);
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "render function needs all field state for display"
+)]
 fn render_multiline_field(
     frame: &mut Frame<'_>,
     label: &str,

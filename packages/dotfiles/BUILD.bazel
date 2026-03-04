@@ -2,8 +2,6 @@
 
 load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
 
-# Pre-existing shellcheck warnings in dotfiles shell scripts.
-# Run explicitly: bazel test //packages/dotfiles:shellcheck
 shellcheck_test(
     name = "shellcheck",
     srcs = glob(
@@ -14,5 +12,4 @@ shellcheck_test(
             "node_modules/**",
         ],
     ),
-    tags = ["manual"],
 )

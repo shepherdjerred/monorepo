@@ -39,8 +39,7 @@ impl std::str::FromStr for ImagePullPolicy {
             "if-not-present" | "ifnotpresent" | "missing" => Ok(Self::IfNotPresent),
             "never" => Ok(Self::Never),
             _ => Err(anyhow::anyhow!(
-                "Invalid pull policy: '{}'. Expected: always, if-not-present, or never",
-                s
+                "Invalid pull policy: '{s}'. Expected: always, if-not-present, or never"
             )),
         }
     }
@@ -158,7 +157,7 @@ fn validate_cpu_limit(cpu: &str) -> anyhow::Result<()> {
         })
         .and_then(|val| {
             if val <= 0.0 {
-                Err(anyhow::anyhow!("CPU limit must be positive, got: {}", cpu))
+                Err(anyhow::anyhow!("CPU limit must be positive, got: {cpu}"))
             } else {
                 Ok(())
             }
@@ -176,8 +175,7 @@ fn validate_memory_limit(memory: &str) -> anyhow::Result<()> {
 
     if !has_valid_suffix {
         return Err(anyhow::anyhow!(
-            "Invalid memory limit: '{}'. Must include suffix: k, m, g, K, M, G, Ki, Mi, Gi, Ti",
-            memory
+            "Invalid memory limit: '{memory}'. Must include suffix: k, m, g, K, M, G, Ki, Mi, Gi, Ti"
         ));
     }
 
@@ -185,7 +183,7 @@ fn validate_memory_limit(memory: &str) -> anyhow::Result<()> {
     let numeric_part = valid_suffixes
         .iter()
         .find_map(|suffix| memory.strip_suffix(suffix))
-        .ok_or_else(|| anyhow::anyhow!("Failed to parse memory limit: {}", memory))?;
+        .ok_or_else(|| anyhow::anyhow!("Failed to parse memory limit: {memory}"))?;
 
     // Validate numeric part
     numeric_part
@@ -198,8 +196,7 @@ fn validate_memory_limit(memory: &str) -> anyhow::Result<()> {
         .and_then(|val| {
             if val <= 0.0 {
                 Err(anyhow::anyhow!(
-                    "Memory limit must be positive, got: {}",
-                    memory
+                    "Memory limit must be positive, got: {memory}"
                 ))
             } else {
                 Ok(())
@@ -302,8 +299,7 @@ fn validate_image_name(image: &str) -> anyhow::Result<()> {
 
     if !valid_chars {
         return Err(anyhow::anyhow!(
-            "Image name '{}' contains invalid characters",
-            image
+            "Image name '{image}' contains invalid characters"
         ));
     }
 

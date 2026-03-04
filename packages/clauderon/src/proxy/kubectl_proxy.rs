@@ -74,7 +74,7 @@ impl KubectlProxy {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
-            .map_err(|e| anyhow::anyhow!("Failed to start kubectl proxy: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to start kubectl proxy: {e}"))?;
 
         self.process = Some(child);
 

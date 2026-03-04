@@ -372,7 +372,7 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
         if repo.contains('/') && !repo.is_empty() {
             return Ok(repo.to_owned());
         }
-        anyhow::bail!("Invalid GitHub SSH URL format: {}", url);
+        anyhow::bail!("Invalid GitHub SSH URL format: {url}");
     }
 
     // Handle HTTPS format: https://github.com/owner/repo.git or https://github.com/owner/repo
@@ -384,12 +384,11 @@ pub fn parse_github_repo_from_url(url: &str) -> anyhow::Result<String> {
         if repo.contains('/') && !repo.is_empty() {
             return Ok(repo.to_owned());
         }
-        anyhow::bail!("Invalid GitHub HTTPS URL format: {}", url);
+        anyhow::bail!("Invalid GitHub HTTPS URL format: {url}");
     }
 
     anyhow::bail!(
-        "URL is not a GitHub repository URL: {}. Expected format: git@github.com:owner/repo.git or https://github.com/owner/repo",
-        url
+        "URL is not a GitHub repository URL: {url}. Expected format: git@github.com:owner/repo.git or https://github.com/owner/repo"
     )
 }
 
@@ -450,7 +449,7 @@ pub async fn check_worktree_dirty(worktree_path: &Path) -> anyhow::Result<bool> 
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git status failed: {}", stderr);
+        anyhow::bail!("git status failed: {stderr}");
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -505,7 +504,7 @@ pub async fn get_worktree_changed_files(worktree_path: &Path) -> anyhow::Result<
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("git status failed: {}", stderr);
+        anyhow::bail!("git status failed: {stderr}");
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);

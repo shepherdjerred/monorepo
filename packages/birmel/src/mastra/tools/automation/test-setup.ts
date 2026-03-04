@@ -3,7 +3,7 @@
  * This must be loaded before the test file to ensure Prisma Client
  * is initialized with the correct database URL
  */
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -32,25 +32,34 @@ const screenshotsDir =
 await mkdir(screenshotsDir, { recursive: true });
 Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??= screenshotsDir;
 
-// Ensure database directory exists if it's a file-based database
-const dbPath = Bun.env["DATABASE_PATH"] ?? "";
-const normalizedDbPath = dbPath.startsWith("file:")
-  ? dbPath.replace("file:", "")
-  : dbPath;
+// Resolve database path to absolute (Prisma 6.x ignores relative SQLite paths)
+const rawDbPath = Bun.env["DATABASE_PATH"] ?? "";
+const strippedPath = rawDbPath.startsWith("file:")
+  ? rawDbPath.replace("file:", "")
+  : rawDbPath;
+const normalizedDbPath = strippedPath
+  ? path.resolve(process.cwd(), strippedPath)
+  : "";
 if (normalizedDbPath) {
+  Bun.env["DATABASE_PATH"] = normalizedDbPath;
   await mkdir(path.dirname(normalizedDbPath), { recursive: true });
+  // Remove stale test database so tests start with a clean slate
+  await rm(normalizedDbPath, { force: true });
 }
 
 // Push database schema (creates tables if they don't exist)
 // Uses spawnSync with explicit args to avoid shell injection
+// Remove CLAUDECODE env var: Prisma v6+ blocks db push when it detects
+// an AI agent environment. This is a local test database, not production.
+const { CLAUDECODE: _, CLAUDE_CODE_ENTRYPOINT: _2, ...cleanEnv } = Bun.env;
 spawnSync(
   "bunx",
   ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
   {
     stdio: "pipe",
     env: {
-      ...Bun.env,
-      DATABASE_URL: dbPath.startsWith("file:") ? dbPath : `file:${dbPath}`,
+      ...cleanEnv,
+      DATABASE_URL: `file:${normalizedDbPath}`,
     },
   },
 );

@@ -7,7 +7,7 @@
 
 use anyhow::{Context, Result};
 use std::path::PathBuf;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 /// Maximum file size for uploads (10MB)
@@ -39,11 +39,7 @@ pub fn upload_dir_for_session(session_id: Uuid) -> PathBuf {
 pub fn validate_image_file(file_name: &str, content_type: Option<&str>, size: usize) -> Result<()> {
     // Check size
     if size > MAX_FILE_SIZE {
-        anyhow::bail!(
-            "File size {} exceeds maximum of {} bytes",
-            size,
-            MAX_FILE_SIZE
-        );
+        anyhow::bail!("File size {size} exceeds maximum of {MAX_FILE_SIZE} bytes");
     }
 
     // Check extension
@@ -63,10 +59,10 @@ pub fn validate_image_file(file_name: &str, content_type: Option<&str>, size: us
     }
 
     // Check MIME type if provided
-    if let Some(content_type) = content_type {
-        if !content_type.starts_with("image/") {
-            anyhow::bail!("Content-Type '{}' is not an image type", content_type);
-        }
+    if let Some(content_type) = content_type
+        && !content_type.starts_with("image/")
+    {
+        anyhow::bail!("Content-Type '{content_type}' is not an image type");
     }
 
     debug!(
