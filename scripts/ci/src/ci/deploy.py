@@ -103,7 +103,7 @@ def main() -> None:
     else:
         print("S3 credentials not set, skipping static site deploy", flush=True)
 
-    # --- ArgoCD sync ---
+    # --- ArgoCD sync (best-effort) ---
     argocd_token = os.environ.get("ARGOCD_TOKEN", "")
     if argocd_token:
         print("\n--- Trigger ArgoCD sync ---", flush=True)
@@ -111,7 +111,7 @@ def main() -> None:
             result = argocd.sync("apps", argocd_token)
             print(result, flush=True)
         except Exception as e:
-            errors.append(f"ArgoCD sync failed: {e}")
+            print(f"WARNING: ArgoCD sync failed (non-fatal): {e}", flush=True)
     else:
         print("ARGOCD_TOKEN not set, skipping ArgoCD sync", flush=True)
 
