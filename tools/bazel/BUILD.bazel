@@ -1,12 +1,22 @@
 # Shared Bazel macros for the monorepo
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
 
 exports_files([
     "eslint_entry.cjs",
     "bun_test_entry.cjs",
     "bun_test_runner.sh",
+    "cargo_deny_runner.sh",
+    "golangci_lint_runner.sh",
+    "llvm_cov_runner.sh",
+    "typecheck_runner.sh",
     "workspace_status.sh",
+    "shellcheck_runner.sh",
+    "trivy_runner.sh",
+    "semgrep_runner.sh",
+    "knip_runner.sh",
+    "jscpd_runner.sh",
 ])
 
 js_library(
@@ -14,8 +24,29 @@ js_library(
     srcs = ["bun_test_entry.cjs"],
     visibility = ["//visibility:public"],
 )
+
 js_library(
     name = "eslint_entry",
     srcs = ["eslint_entry.cjs"],
     visibility = ["//visibility:public"],
+)
+
+# Pre-existing shellcheck warnings in bun_test_runner.sh (SC2295 info-level).
+# Run explicitly: bazel test //tools/bazel:shellcheck
+shellcheck_test(
+    name = "shellcheck",
+    srcs = [
+        "bun_test_runner.sh",
+        "cargo_deny_runner.sh",
+        "golangci_lint_runner.sh",
+        "jscpd_runner.sh",
+        "knip_runner.sh",
+        "llvm_cov_runner.sh",
+        "semgrep_runner.sh",
+        "shellcheck_runner.sh",
+        "trivy_runner.sh",
+        "typecheck_runner.sh",
+        "workspace_status.sh",
+    ],
+    tags = ["manual"],
 )

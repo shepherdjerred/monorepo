@@ -27,6 +27,28 @@ SKIP_PACKAGES = {
 }
 
 
+def _check_package(pkg_dir: Path, display_name: str) -> list[str]:
+    """Check a single package directory for compliance. Returns list of violations."""
+    violations = []
+    pkg_json = pkg_dir / "package.json"
+    if not pkg_json.exists():
+        return []
+
+    with open(pkg_json) as f:
+        pkg = json.load(f)
+
+    scripts = pkg.get("scripts", {})
+    for script_name in REQUIRED_SCRIPTS:
+        if script_name not in scripts:
+            violations.append(f"{display_name}: missing '{script_name}' script")
+
+    for filename in REQUIRED_FILES:
+        if not (pkg_dir / filename).exists():
+            violations.append(f"{display_name}: missing {filename}")
+
+    return violations
+
+
 def check() -> tuple[bool, str]:
     """Run compliance check. Returns (passed, message)."""
     violations = []
@@ -43,18 +65,18 @@ def check() -> tuple[bool, str]:
         if not pkg_json.exists():
             continue
 
+        # Check top-level package
         checked += 1
-        with open(pkg_json) as f:
-            pkg = json.load(f)
+        violations.extend(_check_package(pkg_dir, name))
 
-        scripts = pkg.get("scripts", {})
-        for script_name in REQUIRED_SCRIPTS:
-            if script_name not in scripts:
-                violations.append(f"{name}: missing '{script_name}' script")
-
-        for filename in REQUIRED_FILES:
-            if not (pkg_dir / filename).exists():
-                violations.append(f"{name}: missing {filename}")
+        # Check sub-packages (directories with their own package.json)
+        for sub_dir in sorted(pkg_dir.iterdir()):
+            if not sub_dir.is_dir() or sub_dir.name.startswith(".") or sub_dir.name == "node_modules":
+                continue
+            if (sub_dir / "package.json").exists():
+                sub_name = f"{name}/{sub_dir.name}"
+                checked += 1
+                violations.extend(_check_package(sub_dir, sub_name))
 
     summary = f"Compliance check: {checked} packages checked"
     if violations:

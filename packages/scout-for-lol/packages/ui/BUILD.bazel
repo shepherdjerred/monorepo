@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:typecheck.bzl", "typecheck_test", "workspace_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -19,16 +20,27 @@ js_library(
     ],
 )
 
-# @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
-typecheck_test(
+eslint_test(
+    name = "lint",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    config = "//packages/scout-for-lol:eslint.config.ts",
+)
+
+# Uses workspace_typecheck_test for workspace:* dep resolution in sandbox.
+# Blocked: @scout-for-lol/data has undeclared transitive deps (@google/generative-ai,
+# @scout-for-lol/backend). Fix data package deps to unblock.
+workspace_typecheck_test(
     name = "typecheck",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
-    args = ["--preserveSymlinks"],
-    data = ["package.json"],
-    extends = "//packages/scout-for-lol:tsconfig_base",
+    data = [
+        "//packages/scout-for-lol:tsconfig_base",
+    ],
     tags = ["manual"],
     deps = [
         ":node_modules/@scout-for-lol/data",

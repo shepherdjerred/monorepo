@@ -63,8 +63,9 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
-# Requires prisma generate output — not yet integrated with Bazel sandbox.
-# Run explicitly after prisma_generate: bazel build //packages/birmel:typecheck
+# Blocked: @prisma/client types require `prisma generate` which fails in sandbox
+# (Prisma v7 requires prisma.config.ts instead of datasource url in schema).
+# Unblock by migrating schema to Prisma v7 format, then fixing prisma.bzl.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
@@ -97,7 +98,7 @@ typecheck_test(
     ],
 )
 
-# Requires prisma generate + .env.test — not yet integrated with Bazel sandbox.
+# Blocked: same as typecheck — prisma generate fails with Prisma v7.
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),

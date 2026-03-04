@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -140,8 +141,7 @@ rm -rf /tmp/monorepo-versions
     result = subprocess.run(["bash", "-c", script], env=env, check=False)
     if result.returncode != 0:
         print(f"Version commit-back failed (exit code {result.returncode})", flush=True)
-        # Non-fatal -- don't exit with error
-        return
+        sys.exit(1)
 
     print("Version commit-back completed", flush=True)
 

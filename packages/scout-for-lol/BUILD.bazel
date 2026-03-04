@@ -1,10 +1,12 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files([
+    "eslint.config.ts",
     "package.json",
     "tsconfig.base.json",
 ])
@@ -38,4 +40,21 @@ bun_service_image(
         "packages/scout-for-lol/packages/data": "//packages/scout-for-lol/packages/data:pkg",
         "packages/scout-for-lol/packages/report": "//packages/scout-for-lol/packages/report:pkg",
     },
+)
+
+sh_test(
+    name = "jscpd",
+    srcs = ["//tools/bazel:jscpd_runner.sh"],
+    data = [
+        ".jscpd.json",
+        "//tools/bun",
+    ],
+    env = {
+        "BUN_TOOL": "$(location //tools/bun)",
+        "PKG_DIR": "packages/scout-for-lol",
+    },
+    tags = [
+        "lint",
+        "manual",
+    ],
 )

@@ -29,7 +29,9 @@ def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_ta
     print(f"+ {' '.join(cmd)}", flush=True)
     result = subprocess.run(cmd, check=False)
     if result.returncode == 4:
-        print("No test targets found, skipping.", flush=True)
+        target_str = " ".join(targets)
+        phase = test_tag_filters or "test"
+        print(f"WARNING: No {phase} targets found for {target_str}", flush=True)
     elif result.returncode != 0:
         sys.exit(result.returncode)
 
