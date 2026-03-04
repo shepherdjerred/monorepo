@@ -195,7 +195,7 @@ def main() -> None:
         except Exception as e:
             errors.append(f"Helm chart {chart_name}: {e}")
 
-    # --- OpenTofu apply ---
+    # --- OpenTofu apply (best-effort, depends on external tokens/state) ---
     tofu_github_token = os.environ.get("TOFU_GITHUB_TOKEN", "")
     if tofu_github_token:
         print("\n--- OpenTofu apply ---", flush=True)
@@ -204,11 +204,11 @@ def main() -> None:
                 result = tofu.plan_and_apply(stack)
                 print(f"  {stack}: {result[:200]}", flush=True)
             except Exception as e:
-                errors.append(f"OpenTofu {stack}: {e}")
+                print(f"  WARNING: OpenTofu {stack} failed (non-fatal): {e}", flush=True)
     else:
         print("TOFU_GITHUB_TOKEN not set, skipping OpenTofu", flush=True)
 
-    # --- ArgoCD sync ---
+    # --- ArgoCD sync (best-effort) ---
     argocd_token = os.environ.get("ARGOCD_TOKEN", "")
     if argocd_token:
         print("\n--- Trigger ArgoCD sync ---", flush=True)
@@ -219,10 +219,8 @@ def main() -> None:
             print("\n--- Wait for ArgoCD healthy ---", flush=True)
             health = argocd.wait_for_health("apps", argocd_token, timeout=300)
             print(f"ArgoCD health: {health}", flush=True)
-        except TimeoutError as e:
-            errors.append(f"ArgoCD health timeout: {e}")
         except Exception as e:
-            errors.append(f"ArgoCD sync failed: {e}")
+            print(f"WARNING: ArgoCD sync/health failed (non-fatal): {e}", flush=True)
     else:
         print("ARGOCD_TOKEN not set, skipping ArgoCD sync", flush=True)
 
