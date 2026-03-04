@@ -73,8 +73,9 @@ def main() -> None:
     # Install dependencies first
     subprocess.run(["bun", "install"], cwd=str(_REPO_ROOT), check=True)
     # Build workspace dependencies that export from dist/
-    print("\nBuilding workspace dependency: astro-opengraph-images", flush=True)
-    subprocess.run(["bun", "run", "build"], cwd=str(_REPO_ROOT / "packages/astro-opengraph-images"), check=True)
+    for dep in ["astro-opengraph-images", "webring"]:
+        print(f"\nBuilding workspace dependency: {dep}", flush=True)
+        subprocess.run(["bun", "run", "build"], cwd=str(_REPO_ROOT / f"packages/{dep}"), check=True)
     # Install Playwright chromium for rehype-mermaid (used by sjer.red)
     print("\nInstalling Playwright chromium", flush=True)
     subprocess.run(["bunx", "playwright", "install", "--with-deps", "chromium"], check=True)
