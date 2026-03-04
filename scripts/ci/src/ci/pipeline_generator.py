@@ -88,7 +88,6 @@ INFRA_DIRS = {
 # Package -> static site bucket mapping for deploy filtering
 PACKAGE_TO_SITE = {
     "sjer.red": "sjer-red",
-    "webring": "webring",
     "resume": "resume",
     "clauderon": "clauderon",
 }

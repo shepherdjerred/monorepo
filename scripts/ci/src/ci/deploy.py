@@ -42,10 +42,9 @@ _REPO_ROOT = _repo_root()
 
 # Unified site configuration: bucket_name -> (build_dir, build_cmd, dist_dir)
 SITES = [
-    {"bucket": "sjer-red", "build_dir": str(_REPO_ROOT / "packages/sjer.red"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/sjer.red/dist")},
-    {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
-    {"bucket": "clauderon", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bunx", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
-    {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/resume/dist")},
+    {"bucket": "sjer-red", "build_dir": str(_REPO_ROOT / "packages/sjer.red"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/sjer.red/dist")},
+    {"bucket": "clauderon", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
+    {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": None, "dist_dir": str(_REPO_ROOT / "packages/resume")},
 ]
 
 
@@ -74,6 +73,9 @@ def main() -> None:
     # Install dependencies first
     subprocess.run(["bun", "install"], cwd=str(_REPO_ROOT), check=True)
     for site in sites:
+        if site["build_cmd"] is None:
+            print(f"\nSkipping build for {site['build_dir']} (static files)", flush=True)
+            continue
         try:
             print(f"\nBuilding {site['build_dir']}", flush=True)
             subprocess.run(site["build_cmd"], cwd=site["build_dir"], check=True)
