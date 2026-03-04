@@ -1,6 +1,6 @@
 import { getIssues } from "#lib/bugsink/issues.ts";
 import type { BugsinkIssue } from "#lib/bugsink/types.ts";
-import { getLevelEmoji } from "#lib/bugsink/format.ts";
+import { getIssueStatusLabel } from "#lib/bugsink/format.ts";
 import { formatJson } from "#lib/output/formatter.ts";
 
 export type IssuesOptions = {
@@ -11,21 +11,17 @@ export type IssuesOptions = {
 
 function formatIssue(issue: BugsinkIssue): string {
   const lines: string[] = [];
+  const status = getIssueStatusLabel(issue);
 
-  const levelEmoji = getLevelEmoji(issue.level);
-
-  lines.push(`- ${levelEmoji} **${issue.short_id}**: ${issue.title}`);
-  lines.push(`  - Project: ${issue.project.name}`);
+  lines.push(`- **${issue.calculated_type}**: ${issue.calculated_value}`);
+  lines.push(`  - ID: ${issue.id}`);
+  lines.push(`  - Status: ${status}`);
   lines.push(
-    `  - Events: ${String(issue.count)} (${String(issue.user_count)} users)`,
+    `  - Events: ${String(issue.digested_event_count)} digested, ${String(issue.stored_event_count)} stored`,
   );
-
-  if (issue.culprit != null && issue.culprit.length > 0) {
-    lines.push(`  - Culprit: \`${issue.culprit}\``);
-  }
-
-  const lastSeen = new Date(issue.last_seen);
-  lines.push(`  - Last seen: ${lastSeen.toLocaleString()}`);
+  lines.push(
+    `  - Last seen: ${new Date(issue.last_seen).toLocaleString()}`,
+  );
 
   return lines.join("\n");
 }
@@ -37,49 +33,38 @@ function formatIssuesMarkdown(issues: BugsinkIssue[]): string {
   lines.push("");
 
   if (issues.length === 0) {
-    lines.push("No unresolved issues found.");
+    lines.push("No issues found.");
     return lines.join("\n");
   }
 
-  // Group by level
-  const fatal = issues.filter((i) => i.level === "fatal");
-  const errors = issues.filter((i) => i.level === "error");
-  const warnings = issues.filter((i) => i.level === "warning");
-  const other = issues.filter(
-    (i) => i.level !== "fatal" && i.level !== "error" && i.level !== "warning",
+  const unresolved = issues.filter(
+    (i) => !i.is_resolved && !i.is_muted,
   );
+  const resolved = issues.filter((i) => i.is_resolved);
+  const muted = issues.filter((i) => i.is_muted);
 
-  if (fatal.length > 0) {
-    lines.push(`### \uD83D\uDCA5 Fatal (${String(fatal.length)})`);
+  if (unresolved.length > 0) {
+    lines.push(`### Unresolved (${String(unresolved.length)})`);
     lines.push("");
-    for (const issue of fatal) {
+    for (const issue of unresolved) {
       lines.push(formatIssue(issue));
       lines.push("");
     }
   }
 
-  if (errors.length > 0) {
-    lines.push(`### \uD83D\uDD34 Errors (${String(errors.length)})`);
+  if (resolved.length > 0) {
+    lines.push(`### Resolved (${String(resolved.length)})`);
     lines.push("");
-    for (const issue of errors) {
+    for (const issue of resolved) {
       lines.push(formatIssue(issue));
       lines.push("");
     }
   }
 
-  if (warnings.length > 0) {
-    lines.push(`### \uD83D\uDFE1 Warnings (${String(warnings.length)})`);
+  if (muted.length > 0) {
+    lines.push(`### Muted (${String(muted.length)})`);
     lines.push("");
-    for (const issue of warnings) {
-      lines.push(formatIssue(issue));
-      lines.push("");
-    }
-  }
-
-  if (other.length > 0) {
-    lines.push(`### Other (${String(other.length)})`);
-    lines.push("");
-    for (const issue of other) {
+    for (const issue of muted) {
       lines.push(formatIssue(issue));
       lines.push("");
     }

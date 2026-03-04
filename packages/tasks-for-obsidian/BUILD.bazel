@@ -36,11 +36,11 @@ eslint_test(
 # Missing React Native and other native module type declarations in Bazel sandbox.
 typecheck_test(
     name = "typecheck",
-    tags = ["manual"],
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
+    tags = ["manual"],
     deps = [
         ":node_modules/@types/react",
         ":node_modules/@types/react-native-vector-icons",
