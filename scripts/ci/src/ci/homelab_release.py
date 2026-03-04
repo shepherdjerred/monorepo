@@ -166,6 +166,7 @@ def main() -> None:
     # --- Build cdk8s manifests ---
     # cdk8s build runs via bun (cdk8s.yaml has app: false, so bunx cdk8s synth won't work)
     print("\n--- Build cdk8s manifests ---", flush=True)
+    subprocess.run(["bun", "install"], cwd=str(REPO_ROOT), check=True)
     subprocess.run(
         ["bun", "run", "build"],
         cwd=str(REPO_ROOT / "packages/homelab/src/cdk8s"),
