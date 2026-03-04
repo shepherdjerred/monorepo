@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:prisma.bzl", "prisma_generate")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
 
@@ -61,8 +62,14 @@ js_binary(
     entry_point = "src/index.ts",
 )
 
-# Requires prisma generate + @scout-for-lol/data workspace package resolution.
-# Workspace packages using pnpm link: protocol aren't resolved by tsc in sandbox.
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+    config = "//packages/scout-for-lol:eslint.config.ts",
+)
+
+# Blocked: prisma generate fails (Prisma v7 migration needed) + workspace packages
+# (@scout-for-lol/data, @scout-for-lol/report) not resolved by tsc in sandbox.
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
@@ -106,7 +113,7 @@ typecheck_test(
     ],
 )
 
-# Requires prisma generate for #generated/prisma/client subpath imports.
+# Blocked: prisma generate fails (Prisma v7 migration needed).
 bun_test(
     name = "test",
     size = "large",

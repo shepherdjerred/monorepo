@@ -50,7 +50,8 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
-# Requires prisma generate for @prisma/client types.
+# Blocked: @prisma/client types require `prisma generate` which fails in sandbox
+# (Prisma v7 requires prisma.config.ts instead of datasource url in schema).
 typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),

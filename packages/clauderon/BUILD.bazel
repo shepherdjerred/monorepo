@@ -1,5 +1,7 @@
 load("@crates//:defs.bzl", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_clippy", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_clippy", "rust_library", "rust_test", "rustfmt_test")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("//tools/bazel:cargo_deny.bzl", "cargo_deny_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -63,10 +65,45 @@ rust_test(
 
 rust_clippy(
     name = "clippy",
-    # Excluded from //... builds — has 117 pre-existing restriction lint warnings.
+    # Excluded from //... builds — has 164 pre-existing errors (123 uninlined_format_args,
+    # unused imports, unfulfilled lint expectations, etc.)
     # Run explicitly: bazel build //packages/clauderon:clippy
     tags = ["manual"],
     deps = [":clauderon_lib"],
+)
+
+rustfmt_test(
+    name = "rustfmt",
+    tags = ["lint"],
+    targets = [":clauderon_lib"],
+)
+
+# Requires --test_env=PATH --test_env=RUSTUP_HOME for sandbox access to cargo-deny.
+# Run explicitly: bazel test //packages/clauderon:cargo_deny --test_env=PATH --test_env=RUSTUP_HOME
+cargo_deny_test(
+    name = "cargo_deny",
+    srcs = [
+        "Cargo.lock",
+        "Cargo.toml",
+        "deny.toml",
+    ],
+    tags = ["manual"],
+)
+
+# Code coverage via cargo-llvm-cov. Manual: requires cargo-llvm-cov installed
+# and is slow (full test suite instrumented). Run explicitly:
+#   bazel test //packages/clauderon:llvm_cov --test_env=PATH --test_env=RUSTUP_HOME
+sh_test(
+    name = "llvm_cov",
+    srcs = ["//tools/bazel:llvm_cov_runner.sh"],
+    data = glob(["src/**/*.rs"]) + [
+        "Cargo.lock",
+        "Cargo.toml",
+    ],
+    env = {
+        "PKG_DIR": "packages/clauderon",
+    },
+    tags = ["manual"],
 )
 
 # TODO: OCI image for clauderon.

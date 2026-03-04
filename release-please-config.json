@@ -24,6 +24,11 @@
       "package-name": "clauderon",
       "component": "clauderon"
     },
+    "packages/cooklang-for-obsidian": {
+      "release-type": "node",
+      "package-name": "cooklang-for-obsidian",
+      "component": "cooklang-for-obsidian"
+    },
     "packages/astro-opengraph-images": {
       "release-type": "node",
       "package-name": "astro-opengraph-images"

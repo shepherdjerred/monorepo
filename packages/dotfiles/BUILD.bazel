@@ -1,0 +1,18 @@
+# Dotfiles and shell configuration (chezmoi-managed).
+
+load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
+
+# Pre-existing shellcheck warnings in dotfiles shell scripts.
+# Run explicitly: bazel test //packages/dotfiles:shellcheck
+shellcheck_test(
+    name = "shellcheck",
+    srcs = glob(
+        [
+            "**/*.sh",
+        ],
+        exclude = [
+            "node_modules/**",
+        ],
+    ),
+    tags = ["manual"],
+)

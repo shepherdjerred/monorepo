@@ -18,6 +18,12 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], t
         tags: Additional tags
         **kwargs: Additional args passed to js_test
     """
+
+    # Cross-package configs (labels starting with //) can't be copied to bin
+    no_copy = ["//tools/bazel:eslint_entry.cjs"]
+    if config.startswith("//"):
+        no_copy.append(config)
+
     js_test(
         name = name,
         entry_point = "//tools/bazel:eslint_entry.cjs",
@@ -27,7 +33,7 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], t
             "package.json",
             "//tools/bazel:eslint_entry",
         ],
-        no_copy_to_bin = ["//tools/bazel:eslint_entry.cjs"],
+        no_copy_to_bin = no_copy,
         tags = ["lint"] + tags,
         **kwargs
     )

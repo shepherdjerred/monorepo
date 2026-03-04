@@ -95,5 +95,6 @@ def _parse_sync_response(body: str) -> str:
         conditions = status.get("conditions", [])
         message = conditions[0].get("message", "") if conditions else data.get("message", "Sync completed")
         return f"Phase: {phase}, Health: {health}, Revision: {revision}, Resources: {resources_count}\n{message}"
-    except Exception:
+    except Exception as e:
+        print(f"WARNING: Failed to parse ArgoCD sync response: {e}", flush=True)
         return body

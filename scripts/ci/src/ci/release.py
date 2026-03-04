@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 
 REPO_URL = "shepherdjerred/monorepo"
 
@@ -87,7 +88,21 @@ def main() -> None:
         _set_metadata("clauderon_version", clauderon_version)
         print(f"Detected clauderon release: v{clauderon_version}", flush=True)
 
-    # release-please failures are non-fatal (it may just have nothing to do)
+    # Detect cooklang-for-obsidian release
+    cooklang_match = re.search(r"cooklang-for-obsidian-v([\d.]+)", release_output)
+    if cooklang_match:
+        cooklang_version = cooklang_match.group(1)
+        _set_metadata("cooklang_for_obsidian_version", cooklang_version)
+        print(f"Detected cooklang-for-obsidian release: v{cooklang_version}", flush=True)
+
+    # If github-release failed but there appear to be pending changes, that's a real error
+    if not release_success and (
+        "release" in release_output.lower()
+        or "github.com" in release_output.lower()
+    ):
+        print("\nRelease step failed: github-release had errors with pending changes", flush=True)
+        sys.exit(1)
+
     print("\nRelease step completed", flush=True)
 
 

@@ -1,0 +1,9 @@
+load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
+
+# Pre-existing shellcheck warnings in Buildkite scripts.
+# Run explicitly: bazel test //.buildkite:shellcheck
+shellcheck_test(
+    name = "shellcheck",
+    srcs = glob(["scripts/*.sh"]),
+    tags = ["manual"],
+)

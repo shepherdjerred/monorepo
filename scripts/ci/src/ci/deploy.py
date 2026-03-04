@@ -45,6 +45,7 @@ SITES = [
     {"bucket": "sjer-red", "build_dir": str(_REPO_ROOT / "packages/sjer.red"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/sjer.red/dist")},
     {"bucket": "clauderon", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
     {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": None, "dist_dir": str(_REPO_ROOT / "packages/resume")},
+    {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
 ]
 
 
@@ -103,7 +104,7 @@ def main() -> None:
     else:
         print("S3 credentials not set, skipping static site deploy", flush=True)
 
-    # --- ArgoCD sync (best-effort) ---
+    # --- ArgoCD sync ---
     argocd_token = os.environ.get("ARGOCD_TOKEN", "")
     if argocd_token:
         print("\n--- Trigger ArgoCD sync ---", flush=True)
@@ -111,7 +112,7 @@ def main() -> None:
             result = argocd.sync("apps", argocd_token)
             print(result, flush=True)
         except Exception as e:
-            print(f"WARNING: ArgoCD sync failed (non-fatal): {e}", flush=True)
+            errors.append(f"ArgoCD sync failed: {e}")
     else:
         print("ARGOCD_TOKEN not set, skipping ArgoCD sync", flush=True)
 

@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
+load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -22,6 +23,12 @@ js_library(
         ":node_modules/ts-pattern",
         ":node_modules/zod",
     ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+    config = "//packages/scout-for-lol:eslint.config.ts",
 )
 
 # Depends on @scout-for-lol/backend Prisma client and @google/generative-ai

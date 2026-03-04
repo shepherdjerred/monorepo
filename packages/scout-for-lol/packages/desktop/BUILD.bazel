@@ -1,5 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -24,6 +25,15 @@ js_library(
         "//packages/scout-for-lol/packages/data:pkg",
         "//packages/scout-for-lol/packages/ui:pkg",
     ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ]),
+    config = "//packages/scout-for-lol:eslint.config.ts",
 )
 
 # @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.

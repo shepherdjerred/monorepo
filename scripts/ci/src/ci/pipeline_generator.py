@@ -90,6 +90,7 @@ PACKAGE_TO_SITE = {
     "sjer.red": "sjer-red",
     "resume": "resume",
     "clauderon": "clauderon",
+    "webring": "webring",
 }
 
 # Resource tiers for per-package build steps (requests only; pods burst above these)
@@ -130,6 +131,7 @@ class AffectedPackages:
     build_all: bool = False
     homelab_changed: bool = False
     clauderon_changed: bool = False
+    cooklang_changed: bool = False
     docs_changed: bool = False
     has_image_packages: set[str] = field(default_factory=set)
     has_site_packages: set[str] = field(default_factory=set)
@@ -321,6 +323,8 @@ def _analyze_targets(targets: list[str]) -> AffectedPackages:
             result.homelab_changed = True
         if pkg == "clauderon":
             result.clauderon_changed = True
+        if pkg == "cooklang-for-obsidian":
+            result.cooklang_changed = True
         if pkg == "docs":
             result.docs_changed = True
         if pkg in PACKAGES_WITH_IMAGES:
@@ -333,14 +337,21 @@ def _analyze_targets(targets: list[str]) -> AffectedPackages:
 
 # All top-level packages with BUILD.bazel files (used when build_all=True)
 ALL_PACKAGES = [
+    "anki",
     "astro-opengraph-images",
     "better-skill-capped",
     "birmel",
     "bun-decompile",
+    "castle-casters",
     "clauderon",
+    "cooklang-for-obsidian",
     "discord-plays-pokemon",
+    "docs",
+    "dotfiles",
     "eslint-config",
+    "fonts",
     "homelab",
+    "macos-cross-compiler",
     "monarch",
     "resume",
     "scout-for-lol",
@@ -350,6 +361,7 @@ ALL_PACKAGES = [
     "tasknotes-server",
     "tasknotes-types",
     "tasks-for-obsidian",
+    "terraform-provider-asuswrt",
     "tools",
     "webring",
 ]
@@ -417,6 +429,23 @@ def _generate_quality_gate_step() -> dict:
     }
 
 
+def _generate_security_step() -> dict:
+    """Generate the root-level security & quality scanning step.
+
+    Shellcheck targets are tagged 'manual' due to pre-existing warnings.
+    They can be explicitly run via 'bazel test //tools/bazel:shellcheck' etc.
+    This step is a placeholder for when shellcheck violations are fixed.
+    """
+    return {
+        "label": ":shield: Shellcheck",
+        "key": "shellcheck",
+        "command": ".buildkite/scripts/bazel-test-targets.sh //tools/bazel:shellcheck //.buildkite:shellcheck //packages/dotfiles:shellcheck",
+        "timeout_in_minutes": 10,
+        "soft_fail": True,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+    }
+
+
 def _generate_code_review_step() -> dict:
     """Generate the Code Review step (PRs only)."""
     return {
@@ -470,9 +499,21 @@ def _generate_clauderon_release_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/clauderon-release.sh",
         "timeout_in_minutes": 30,
-        "soft_fail": True,
         "depends_on": "release",
         "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=[])],
+    }
+
+
+def _generate_cooklang_release_step() -> dict:
+    """Generate the Cooklang-for-Obsidian Release step."""
+    return {
+        "label": ":cook: Cooklang Release",
+        "key": "cooklang-release",
+        "if": "build.branch == pipeline.default_branch",
+        "command": ".buildkite/scripts/cooklang-release.sh",
+        "timeout_in_minutes": 15,
+        "depends_on": "release",
+        "plugins": [_k8s_plugin(secrets=[])],
     }
 
 
@@ -488,7 +529,6 @@ def _generate_deploy_step(sites: set[str] | None) -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/deploy.sh",
         "timeout_in_minutes": 30,
-        "soft_fail": True,
         "plugins": [_k8s_plugin(secrets=["buildkite-argocd-token"])],
     }
     if sites:
@@ -504,7 +544,6 @@ def _generate_homelab_release_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/homelab-release.sh",
         "timeout_in_minutes": 45,
-        "soft_fail": True,
         "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=["buildkite-argocd-token"])],
     }
 
@@ -517,7 +556,6 @@ def _generate_version_commit_back_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/version-commit-back.sh",
         "timeout_in_minutes": 10,
-        "soft_fail": True,
         "plugins": [_k8s_plugin(secrets=[])],
     }
 
@@ -530,7 +568,6 @@ def _generate_update_readmes_step() -> dict:
         "if": "build.branch == pipeline.default_branch",
         "command": ".buildkite/scripts/update-readmes.sh",
         "timeout_in_minutes": 30,
-        "soft_fail": True,
         "plugins": [_k8s_plugin(secrets=[])],
     }
 
@@ -553,6 +590,7 @@ def generate_pipeline() -> dict:
         affected.build_all = True
         affected.homelab_changed = True
         affected.clauderon_changed = True
+        affected.cooklang_changed = True
         affected.docs_changed = True
     else:
         try:
@@ -570,6 +608,7 @@ def generate_pipeline() -> dict:
                 affected.build_all = True
                 affected.homelab_changed = True
                 affected.clauderon_changed = True
+                affected.cooklang_changed = True
                 affected.docs_changed = True
             elif len(targets) == 0:
                 print("No affected targets detected", flush=True)
@@ -581,6 +620,7 @@ def generate_pipeline() -> dict:
             affected.build_all = True
             affected.homelab_changed = True
             affected.clauderon_changed = True
+            affected.cooklang_changed = True
             affected.docs_changed = True
 
     # If nothing changed at all, emit a minimal pipeline
@@ -600,6 +640,9 @@ def generate_pipeline() -> dict:
     # --- Quality & Compliance (every push) ---
     steps.append(_generate_quality_gate_step())
 
+    # --- Security & Quality (every push) ---
+    steps.append(_generate_security_step())
+
     # --- Code Review (PRs only) ---
     pr_number = os.environ.get("BUILDKITE_PULL_REQUEST", "false")
     if pr_number not in ("false", "", None):
@@ -612,6 +655,7 @@ def generate_pipeline() -> dict:
         or affected.has_site_packages
         or affected.homelab_changed
         or affected.clauderon_changed
+        or affected.cooklang_changed
     )
 
     if has_main_steps:
@@ -631,6 +675,10 @@ def generate_pipeline() -> dict:
         # Clauderon Release (only if clauderon changed)
         if affected.build_all or affected.clauderon_changed:
             steps.append(_generate_clauderon_release_step())
+
+        # Cooklang Release (only if cooklang-for-obsidian changed)
+        if affected.build_all or affected.cooklang_changed:
+            steps.append(_generate_cooklang_release_step())
 
         steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
 
