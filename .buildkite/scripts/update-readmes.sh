@@ -8,9 +8,10 @@ install_uv
 install_gh
 install_bun
 
-# Install cogapp
+# Install cogapp (uv tool creates an isolated venv, adds `cog` to PATH)
 echo "--- :python: Installing cogapp"
-uv pip install --system cogapp
+uv tool install cogapp
+export PATH="$HOME/.local/bin:$PATH"
 
 # Validate required env vars
 : "${GH_TOKEN:?Required}"
@@ -30,7 +31,7 @@ git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}
 
 # Regenerate README content (cog blocks call Codex CLI).
 # Existing _summary.md files are reused as cache; Codex is only called for missing ones.
-python3 -m cogapp -r README.md practice/README.md archive/README.md
+cog -r README.md practice/README.md archive/README.md
 
 if git diff --quiet; then
   echo "No README changes detected."
