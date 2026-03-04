@@ -72,6 +72,9 @@ def main() -> None:
     print("\n--- Build static sites ---", flush=True)
     # Install dependencies first
     subprocess.run(["bun", "install"], cwd=str(_REPO_ROOT), check=True)
+    # Build workspace dependencies that export from dist/
+    print("\nBuilding workspace dependency: astro-opengraph-images", flush=True)
+    subprocess.run(["bun", "run", "build"], cwd=str(_REPO_ROOT / "packages/astro-opengraph-images"), check=True)
     for site in sites:
         if site["build_cmd"] is None:
             print(f"\nSkipping build for {site['build_dir']} (static files)", flush=True)

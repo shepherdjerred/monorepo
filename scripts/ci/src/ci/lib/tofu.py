@@ -45,7 +45,11 @@ def apply(stack_dir: str) -> str:
     """Run tofu apply -auto-approve in the given directory."""
     cmd = ["tofu", "apply", "-auto-approve", "-input=false"]
     print(f"+ {' '.join(cmd)} (in {stack_dir})", flush=True)
-    result = subprocess.run(cmd, cwd=stack_dir, capture_output=True, text=True, env=_env_with_aws_creds(), check=True)
+    result = subprocess.run(cmd, cwd=stack_dir, capture_output=True, text=True, env=_env_with_aws_creds())
+    if result.returncode != 0:
+        print(result.stdout, flush=True)
+        print(result.stderr, flush=True)
+        result.check_returncode()
     return result.stdout
 
 
