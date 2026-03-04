@@ -286,8 +286,8 @@ async function processJob(job: Job): Promise<void> {
           break;
         }
         case "result": {
-          totalInputTokens = message.usage.input_tokens;
-          totalOutputTokens = message.usage.output_tokens;
+          totalInputTokens = message.usage["input_tokens"];
+          totalOutputTokens = message.usage["output_tokens"];
           await handleResult(
             message,
             { job, sessionId, conversationLog, prisma, systemPrompt },

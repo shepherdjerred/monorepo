@@ -179,6 +179,10 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "session manager requires many backend and configuration dependencies"
+    )]
     pub async fn new(
         store: Arc<dyn Store>,
         git: Arc<dyn GitOperations>,
@@ -446,7 +450,7 @@ impl SessionManager {
         let session = sessions
             .iter()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?
             .clone();
         drop(sessions);
 
@@ -502,7 +506,7 @@ impl SessionManager {
         let session = sessions
             .iter()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         let backend = self.get_backend(session.backend);
         let capabilities = backend.capabilities();
@@ -577,7 +581,7 @@ impl SessionManager {
         let session = sessions
             .iter()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         if session.backend != BackendType::Sprites {
             anyhow::bail!("Wake is only supported for Sprites sessions");
@@ -771,15 +775,15 @@ impl SessionManager {
         // Try to delete the backend resource if it still exists
         if let Some(ref backend_id) = session.backend_id {
             let backend = self.get_backend(session.backend);
-            if matches!(backend.exists(backend_id).await, Ok(true)) {
-                if let Err(e) = backend.delete(backend_id).await {
-                    tracing::warn!(
-                        session_id = %session_id,
-                        backend_id = %backend_id,
-                        error = %e,
-                        "Failed to delete backend resource during cleanup (continuing anyway)"
-                    );
-                }
+            if matches!(backend.exists(backend_id).await, Ok(true))
+                && let Err(e) = backend.delete(backend_id).await
+            {
+                tracing::warn!(
+                    session_id = %session_id,
+                    backend_id = %backend_id,
+                    error = %e,
+                    "Failed to delete backend resource during cleanup (continuing anyway)"
+                );
             }
         }
 
@@ -879,7 +883,7 @@ impl SessionManager {
                 let occurrence = seen.entry(base_name.clone()).or_insert(0);
                 *occurrence += 1;
                 if *occurrence > 1 {
-                    *mount_name = format!("{}-{}", base_name, occurrence);
+                    *mount_name = format!("{base_name}-{occurrence}");
                 }
             }
         }
@@ -962,7 +966,7 @@ impl SessionManager {
             model.as_ref(),
             self.feature_flags.enable_experimental_models,
         )
-        .with_context(|| format!("Cannot create session with agent {:?}", agent))?;
+        .with_context(|| format!("Cannot create session with agent {agent:?}"))?;
 
         // Validate read-only mode is enabled if requested
         self.validate_readonly_mode_allowed(access_mode)?;
@@ -981,8 +985,7 @@ impl SessionManager {
             let primary_count = repos.iter().filter(|r| r.is_primary).count();
             if primary_count != 1 {
                 anyhow::bail!(
-                    "Exactly one repository must be marked as primary (got {})",
-                    primary_count
+                    "Exactly one repository must be marked as primary (got {primary_count})"
                 );
             }
 
@@ -1294,8 +1297,7 @@ impl SessionManager {
                 .map(
                     |(git_root, _subdirectory, mount_name, _is_primary, _base_branch)| {
                         let worktree_path = crate::utils::paths::worktree_path(&format!(
-                            "{}-{}",
-                            full_name, mount_name
+                            "{full_name}-{mount_name}"
                         ));
                         let git_root = git_root.clone();
                         let branch_name = full_name.clone();
@@ -1327,7 +1329,7 @@ impl SessionManager {
             for (idx, result) in worktree_results.into_iter().enumerate() {
                 let (worktree_path, _warning) = result.with_context(|| {
                     let (_, _, mount_name, _, _) = &repos_for_task[idx];
-                    format!("Failed to create worktree for repository '{}'", mount_name)
+                    format!("Failed to create worktree for repository '{mount_name}'")
                 })?;
                 created_worktrees.push(worktree_path);
             }
@@ -1345,15 +1347,15 @@ impl SessionManager {
                 &session_id,
                 &subdirectory,
             );
-            if let Some(parent_dir) = history_path.parent() {
-                if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
-                    tracing::warn!(
-                        session_id = %session_id,
-                        history_dir = %parent_dir.display(),
-                        error = %e,
-                        "Failed to create history directory"
-                    );
-                }
+            if let Some(parent_dir) = history_path.parent()
+                && let Err(e) = tokio::fs::create_dir_all(parent_dir).await
+            {
+                tracing::warn!(
+                    session_id = %session_id,
+                    history_dir = %parent_dir.display(),
+                    error = %e,
+                    "Failed to create history directory"
+                );
             }
 
             // Build SessionRepository entries from created worktrees
@@ -1472,9 +1474,9 @@ impl SessionManager {
             // Parse container image configuration from request
             let container_image_config = if let Some(image) = container_image {
                 let policy = if let Some(policy_str) = pull_policy {
-                    policy_str.parse::<ImagePullPolicy>().map_err(|e| {
-                        anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e)
-                    })?
+                    policy_str
+                        .parse::<ImagePullPolicy>()
+                        .map_err(|e| anyhow::anyhow!("Invalid pull policy '{policy_str}': {e}"))?
                 } else {
                     ImagePullPolicy::default()
                 };
@@ -1618,18 +1620,18 @@ impl SessionManager {
             #[cfg(not(target_os = "macos"))]
             let is_container_backend = backend == BackendType::Docker;
 
-            if is_container_backend && !print_mode {
-                if let Err(err) = self
+            if is_container_backend
+                && !print_mode
+                && let Err(err) = self
                     .console_manager
                     .ensure_session(session_id, backend, &backend_id)
                     .await
-                {
-                    tracing::warn!(
-                        session_id = %session_id,
-                        error = %err,
-                        "Failed to start console session"
-                    );
-                }
+            {
+                tracing::warn!(
+                    session_id = %session_id,
+                    error = %err,
+                    "Failed to start console session"
+                );
             }
 
             // Record backend ID event
@@ -1694,7 +1696,7 @@ impl SessionManager {
             }
             Err(e) => {
                 // Mark session as failed
-                let error_msg = format!("{:#}", e);
+                let error_msg = format!("{e:#}");
                 let mut sessions = self.sessions.write().await;
                 if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
                     session.set_error(SessionStatus::Failed, error_msg.clone());
@@ -1725,10 +1727,8 @@ impl SessionManager {
                 #[cfg(not(target_os = "macos"))]
                 let needs_proxy_cleanup = backend == BackendType::Docker;
 
-                if needs_proxy_cleanup {
-                    if let Some(ref proxy_manager) = self.proxy_manager {
-                        let _ = proxy_manager.destroy_session_proxy(session_id).await;
-                    }
+                if needs_proxy_cleanup && let Some(ref proxy_manager) = self.proxy_manager {
+                    let _ = proxy_manager.destroy_session_proxy(session_id).await;
                 }
 
                 // Remove worktree if created
@@ -1856,7 +1856,7 @@ impl SessionManager {
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
         let git_info = crate::utils::git::find_git_root(&repo_path_buf)
-            .with_context(|| format!("Failed to find git repository for path: {}", repo_path))?;
+            .with_context(|| format!("Failed to find git repository for path: {repo_path}"))?;
 
         // Use git root for worktree creation
         let repo_path = git_info.git_root.to_string_lossy().to_string();
@@ -1952,22 +1952,22 @@ impl SessionManager {
             .await?;
 
         // Now that worktree exists, create the history directory
-        if let Some(ref history_path) = session.history_file_path {
-            if let Some(parent_dir) = history_path.parent() {
-                if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
-                    tracing::warn!(
-                        session_id = %session.id,
-                        history_dir = %parent_dir.display(),
-                        error = %e,
-                        "Failed to create history directory"
-                    );
-                } else {
-                    tracing::debug!(
-                        session_id = %session.id,
-                        history_dir = %parent_dir.display(),
-                        "Created history directory"
-                    );
-                }
+        if let Some(ref history_path) = session.history_file_path
+            && let Some(parent_dir) = history_path.parent()
+        {
+            if let Err(e) = tokio::fs::create_dir_all(parent_dir).await {
+                tracing::warn!(
+                    session_id = %session.id,
+                    history_dir = %parent_dir.display(),
+                    error = %e,
+                    "Failed to create history directory"
+                );
+            } else {
+                tracing::debug!(
+                    session_id = %session.id,
+                    history_dir = %parent_dir.display(),
+                    "Created history directory"
+                );
             }
         }
 
@@ -2016,7 +2016,7 @@ impl SessionManager {
             let policy = if let Some(policy_str) = pull_policy {
                 policy_str
                     .parse::<ImagePullPolicy>()
-                    .map_err(|e| anyhow::anyhow!("Invalid pull policy '{}': {}", policy_str, e))?
+                    .map_err(|e| anyhow::anyhow!("Invalid pull policy '{policy_str}': {e}"))?
             } else {
                 ImagePullPolicy::default()
             };
@@ -2133,18 +2133,18 @@ impl SessionManager {
         #[cfg(not(target_os = "macos"))]
         let is_container_backend = backend == BackendType::Docker;
 
-        if is_container_backend && !print_mode {
-            if let Err(err) = self
+        if is_container_backend
+            && !print_mode
+            && let Err(err) = self
                 .console_manager
                 .ensure_session(session.id, backend, &backend_id)
                 .await
-            {
-                tracing::warn!(
-                    session_id = %session.id,
-                    error = %err,
-                    "Failed to start console session"
-                );
-            }
+        {
+            tracing::warn!(
+                session_id = %session.id,
+                error = %err,
+                "Failed to start console session"
+            );
         }
 
         // Record backend ID event
@@ -2315,16 +2315,15 @@ impl SessionManager {
         #[cfg(not(target_os = "macos"))]
         let needs_proxy_cleanup = backend == BackendType::Docker;
 
-        if needs_proxy_cleanup {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                if let Err(e) = proxy_manager.destroy_session_proxy(session_id).await {
-                    tracing::warn!(
-                        session_id = %session_id,
-                        error = %e,
-                        "Failed to destroy proxy during archive"
-                    );
-                }
-            }
+        if needs_proxy_cleanup
+            && let Some(ref proxy_manager) = self.proxy_manager
+            && let Err(e) = proxy_manager.destroy_session_proxy(session_id).await
+        {
+            tracing::warn!(
+                session_id = %session_id,
+                error = %e,
+                "Failed to destroy proxy during archive"
+            );
         }
 
         // Clear backend_id and set status to Archived
@@ -2755,17 +2754,16 @@ impl SessionManager {
             #[cfg(not(target_os = "macos"))]
             let needs_proxy_cleanup = backend == BackendType::Docker;
 
-            if needs_proxy_cleanup {
-                if let Some(ref proxy_manager) = self.proxy_manager {
-                    if let Err(e) = proxy_manager.destroy_session_proxy(session_id).await {
-                        tracing::warn!(
-                            session_id = %session_id,
-                            name = %session_name,
-                            error = %e,
-                            "Failed to destroy session proxy"
-                        );
-                    }
-                }
+            if needs_proxy_cleanup
+                && let Some(ref proxy_manager) = self.proxy_manager
+                && let Err(e) = proxy_manager.destroy_session_proxy(session_id).await
+            {
+                tracing::warn!(
+                    session_id = %session_id,
+                    name = %session_name,
+                    error = %e,
+                    "Failed to destroy session proxy"
+                );
             }
 
             update_progress(3, "Removing git worktree".to_owned()).await;
@@ -2810,7 +2808,7 @@ impl SessionManager {
             }
             Err(e) => {
                 // Mark session as failed but keep in list for inspection
-                let error_msg = format!("{:#}", e);
+                let error_msg = format!("{e:#}");
                 let mut sessions = self.sessions.write().await;
                 if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
                     session.set_error(SessionStatus::Failed, error_msg.clone());
@@ -2878,17 +2876,16 @@ impl SessionManager {
         #[cfg(not(target_os = "macos"))]
         let needs_proxy_cleanup = session.backend == BackendType::Docker;
 
-        if needs_proxy_cleanup {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                if let Err(e) = proxy_manager.destroy_session_proxy(session.id).await {
-                    tracing::warn!(
-                        session_id = %session.id,
-                        name = %session.name,
-                        error = %e,
-                        "Failed to destroy session proxy"
-                    );
-                }
-            }
+        if needs_proxy_cleanup
+            && let Some(ref proxy_manager) = self.proxy_manager
+            && let Err(e) = proxy_manager.destroy_session_proxy(session.id).await
+        {
+            tracing::warn!(
+                session_id = %session.id,
+                name = %session.name,
+                error = %e,
+                "Failed to destroy session proxy"
+            );
         }
 
         // Delete git worktrees for all repositories
@@ -3111,7 +3108,7 @@ impl SessionManager {
             }
             Err(e) => {
                 // Mark as failed
-                let error_msg = format!("{:#}", e);
+                let error_msg = format!("{e:#}");
                 let mut sessions = self.sessions.write().await;
                 if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
                     session.set_error(SessionStatus::Failed, error_msg.clone());
@@ -3246,15 +3243,13 @@ impl SessionManager {
                         #[cfg(not(target_os = "macos"))]
                         let needs_proxy_cleanup = session.backend == BackendType::Docker;
 
-                        if needs_proxy_cleanup {
-                            if let Some(ref proxy_manager) = self.proxy_manager {
-                                tracing::info!(
-                                    session_id = %session.id,
-                                    name = %session.name,
-                                    "Destroying proxy for session with missing container"
-                                );
-                                let _ = proxy_manager.destroy_session_proxy(session.id).await;
-                            }
+                        if needs_proxy_cleanup && let Some(ref proxy_manager) = self.proxy_manager {
+                            tracing::info!(
+                                session_id = %session.id,
+                                name = %session.name,
+                                "Destroying proxy for session with missing container"
+                            );
+                            let _ = proxy_manager.destroy_session_proxy(session.id).await;
                         }
                     }
                 } else {
@@ -3306,26 +3301,25 @@ impl SessionManager {
                     let needs_proxy_check = session.backend == BackendType::Docker
                         && session.status == SessionStatus::Running;
 
-                    if needs_proxy_check {
-                        if let Some(ref proxy_manager) = self.proxy_manager {
-                            if let Some(port) = session.proxy_port {
-                                // Check if proxy is actually listening
-                                if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
-                                    .await
-                                    .is_err()
-                                {
-                                    tracing::warn!(
-                                        session_id = %session.id,
-                                        name = %session.name,
-                                        port = port,
-                                        "Session proxy not responding - attempting recreation"
-                                    );
-                                    // Attempt auto-recreation
-                                    let _ = proxy_manager
-                                        .restore_session_proxies(std::slice::from_ref(session))
-                                        .await;
-                                }
-                            }
+                    if needs_proxy_check
+                        && let Some(ref proxy_manager) = self.proxy_manager
+                        && let Some(port) = session.proxy_port
+                    {
+                        // Check if proxy is actually listening
+                        if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
+                            .await
+                            .is_err()
+                        {
+                            tracing::warn!(
+                                session_id = %session.id,
+                                name = %session.name,
+                                port = port,
+                                "Session proxy not responding - attempting recreation"
+                            );
+                            // Attempt auto-recreation
+                            let _ = proxy_manager
+                                .restore_session_proxies(std::slice::from_ref(session))
+                                .await;
                         }
                     }
                 }
@@ -3351,7 +3345,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Cannot recreate archived sessions - use unarchive instead
         if session.status == SessionStatus::Archived {
@@ -3515,15 +3509,13 @@ impl SessionManager {
         #[cfg(not(target_os = "macos"))]
         let needs_proxy = backend == BackendType::Docker;
 
-        if needs_proxy {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                // Only update proxy if session actually has a proxy port allocated
-                // (proxy creation can fail gracefully, leaving session without proxy)
-                if session_clone.proxy_port.is_some() {
-                    proxy_manager
-                        .update_session_access_mode(session_id, new_mode)
-                        .await?;
-                }
+        if needs_proxy && let Some(ref proxy_manager) = self.proxy_manager {
+            // Only update proxy if session actually has a proxy port allocated
+            // (proxy creation can fail gracefully, leaving session without proxy)
+            if session_clone.proxy_port.is_some() {
+                proxy_manager
+                    .update_session_access_mode(session_id, new_mode)
+                    .await?;
             }
         }
 
@@ -3601,7 +3593,7 @@ impl SessionManager {
         let session = sessions
             .iter()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         let repo_path = session.repo_path.clone();
         let initial_prompt = session.initial_prompt.clone();
@@ -3635,7 +3627,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         session.set_title(Some(metadata.title.clone()));
         session.set_description(Some(metadata.description.clone()));
@@ -3675,7 +3667,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         let old_status = session.claude_status;
 
@@ -3730,7 +3722,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         let old_status = session.pr_check_status;
         session.set_check_status(new_status);
@@ -3779,7 +3771,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         let old_decision = session.pr_review_decision;
         session.set_pr_review_decision(new_decision);
@@ -3814,7 +3806,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Don't update if PR is already linked
         if session.pr_url.is_some() {
@@ -3865,7 +3857,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Don't update if status hasn't changed
         if session.merge_conflict == has_conflict {
@@ -3915,7 +3907,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Don't update if status hasn't changed
         if session.pr_review_status == Some(status) {
@@ -3960,7 +3952,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         session.set_pr_merge_methods(methods.clone(), default, delete_branch);
         let session_clone = session.clone();
@@ -4004,7 +3996,7 @@ impl SessionManager {
         let session = self
             .get_session(&session_id.to_string())
             .await
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Validate merge requirements
         if !session.can_merge_pr {
@@ -4026,7 +4018,7 @@ impl SessionManager {
             .split('/')
             .next_back()
             .and_then(|s| s.parse::<u32>().ok())
-            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {}", pr_url))?;
+            .ok_or_else(|| anyhow::anyhow!("Invalid PR URL: {pr_url}"))?;
 
         // Get primary repository path for gh command
         let repo_path = if let Some(repos) = &session.repositories {
@@ -4059,7 +4051,7 @@ impl SessionManager {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("gh pr merge failed: {}", stderr);
+            anyhow::bail!("gh pr merge failed: {stderr}");
         }
 
         tracing::info!(
@@ -4093,7 +4085,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         // Don't update if status hasn't changed
         if session.worktree_dirty == is_dirty && session.worktree_changed_files == changed_files {
@@ -4149,7 +4141,7 @@ impl SessionManager {
         let session = sessions
             .iter_mut()
             .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", session_id))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
 
         session.history_file_path = Some(path.to_path_buf());
         session.updated_at = chrono::Utc::now();
@@ -4182,7 +4174,7 @@ impl SessionManager {
         let session = self
             .get_session(id_or_name)
             .await
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {}", id_or_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
 
         if session.status == SessionStatus::Archived {
             anyhow::bail!("Cannot send prompt to archived session - unarchive it first");
@@ -4707,8 +4699,7 @@ impl SessionManager {
                                 error_type: "missing_org_id".to_owned(),
                                 message: "Failed to get organization ID".to_owned(),
                                 details: Some(format!(
-                                    "API error: {}. No org_id in config or CLAUDE_ORG_ID env var set.",
-                                    error_str
+                                    "API error: {error_str}. No org_id in config or CLAUDE_ORG_ID env var set."
                                 )),
                                 suggestion: Some(
                                     "Set org_id in config.toml, or CLAUDE_ORG_ID environment variable, or use --org-id CLI flag".to_owned(),
@@ -4737,7 +4728,7 @@ impl SessionManager {
                 } else if error_str.contains("404") {
                     return Err(UsageError {
                         error_type: "not_found".to_owned(),
-                        message: format!("Organization {} not found", org_id),
+                        message: format!("Organization {org_id} not found"),
                         details: Some(error_str),
                         suggestion: Some("Verify CLAUDE_ORG_ID is correct".to_owned()),
                     });
@@ -4793,9 +4784,7 @@ impl SessionManager {
         // Check if credential is from environment (readonly)
         if std::env::var(env_var).is_ok() {
             anyhow::bail!(
-                "Credential for {} is set via environment variable {} and cannot be updated via API",
-                service_id,
-                env_var
+                "Credential for {service_id} is set via environment variable {env_var} and cannot be updated via API"
             );
         }
 

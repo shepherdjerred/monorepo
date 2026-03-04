@@ -101,10 +101,10 @@ impl GitOperations for MockGitBackend {
         }
 
         // Delete the actual directory
-        if worktree_path.exists() {
-            if let Err(e) = std::fs::remove_dir_all(worktree_path) {
-                tracing::warn!("Mock failed to delete worktree directory: {}", e);
-            }
+        if worktree_path.exists()
+            && let Err(e) = std::fs::remove_dir_all(worktree_path)
+        {
+            tracing::warn!("Mock failed to delete worktree directory: {}", e);
         }
 
         self.worktrees.write().await.remove(worktree_path);

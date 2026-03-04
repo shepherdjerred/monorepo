@@ -10,17 +10,17 @@ use std::time::SystemTime;
 #[must_use]
 pub fn get_editor() -> String {
     // Check VISUAL first (preferred for full-screen editors)
-    if let Ok(visual) = std::env::var("VISUAL") {
-        if !visual.is_empty() {
-            return visual;
-        }
+    if let Ok(visual) = std::env::var("VISUAL")
+        && !visual.is_empty()
+    {
+        return visual;
     }
 
     // Check EDITOR
-    if let Ok(editor) = std::env::var("EDITOR") {
-        if !editor.is_empty() {
-            return editor;
-        }
+    if let Ok(editor) = std::env::var("EDITOR")
+        && !editor.is_empty()
+    {
+        return editor;
     }
 
     // Platform-specific fallbacks

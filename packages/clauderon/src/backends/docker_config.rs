@@ -110,8 +110,7 @@ impl DockerConfig {
         for flag in &self.extra_flags {
             if flag.contains(';') || flag.contains('&') || flag.contains('|') {
                 return Err(anyhow::anyhow!(
-                    "Extra flag contains dangerous characters: '{}'",
-                    flag
+                    "Extra flag contains dangerous characters: '{flag}'"
                 ));
             }
         }

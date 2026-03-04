@@ -56,13 +56,14 @@ pub fn render_terminal(buffer: &TerminalBuffer, area: Rect, buf: &mut Buffer) {
         let cursor_x = area.x + cursor_pos.1;
         let cursor_y = area.y + cursor_pos.0;
 
-        if cursor_x < area.right() && cursor_y < area.bottom() {
-            if let Some(buf_cell) = buf.cell_mut((cursor_x, cursor_y)) {
-                // Invert the cursor cell for visibility
-                let current_style = buf_cell.style();
-                let cursor_style = current_style.add_modifier(Modifier::REVERSED);
-                buf_cell.set_style(cursor_style);
-            }
+        if cursor_x < area.right()
+            && cursor_y < area.bottom()
+            && let Some(buf_cell) = buf.cell_mut((cursor_x, cursor_y))
+        {
+            // Invert the cursor cell for visibility
+            let current_style = buf_cell.style();
+            let cursor_style = current_style.add_modifier(Modifier::REVERSED);
+            buf_cell.set_style(cursor_style);
         }
     }
 }

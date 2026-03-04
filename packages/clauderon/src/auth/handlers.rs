@@ -84,7 +84,7 @@ impl IntoResponse for AuthError {
                 tracing::error!("Database error: {}", err);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Internal error: {}", err),
+                    format!("Internal error: {err}"),
                 )
             }
             Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
@@ -519,11 +519,11 @@ pub async fn logout(
     jar: CookieJar,
 ) -> Result<(CookieJar, StatusCode), AuthError> {
     // Get session cookie
-    if let Some(session_cookie) = jar.get("clauderon_session") {
-        if let Ok(session_id) = Uuid::parse_str(session_cookie.value()) {
-            // Delete session from database
-            state.session_store.delete_session(session_id).await?;
-        }
+    if let Some(session_cookie) = jar.get("clauderon_session")
+        && let Ok(session_id) = Uuid::parse_str(session_cookie.value())
+    {
+        // Delete session from database
+        state.session_store.delete_session(session_id).await?;
     }
 
     // Remove cookie

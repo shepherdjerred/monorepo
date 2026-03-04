@@ -1,7 +1,5 @@
 use std::time::{Duration, Instant};
 
-use serde::{Deserialize, Serialize};
-
 use super::traits::AgentState;
 
 /// Patterns that indicate the agent is actively working

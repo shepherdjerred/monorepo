@@ -599,7 +599,7 @@ async fn regenerate_metadata(
 ) -> Result<Json<serde_json::Value>, AppError> {
     validate_session_id(&id)?;
     let session_id = Uuid::parse_str(&id)
-        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
 
     // Regenerate metadata
     state
@@ -632,7 +632,7 @@ async fn merge_pr(
 ) -> Result<StatusCode, AppError> {
     validate_session_id(&id)?;
     let session_id = Uuid::parse_str(&id)
-        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {}", e)))?;
+        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
 
     // Merge the PR
     state
@@ -752,7 +752,7 @@ async fn get_storage_classes(
     let storage_classes = k8s_backend
         .list_storage_classes()
         .await
-        .map_err(|e| AppError::BadRequest(format!("Failed to list storage classes: {}", e)))?;
+        .map_err(|e| AppError::BadRequest(format!("Failed to list storage classes: {e}")))?;
 
     Ok(Json(json!({ "storage_classes": storage_classes })))
 }

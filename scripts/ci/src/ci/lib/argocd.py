@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import time
 
+import json
+
 import httpx
 
 ARGOCD_SERVER = "https://argocd.tailnet-1a49.ts.net"
@@ -84,8 +86,6 @@ def wait_for_health(app_name: str, token: str, *, server: str = ARGOCD_SERVER, t
 def _parse_sync_response(body: str) -> str:
     """Parse ArgoCD sync response JSON into a human-readable message."""
     try:
-        import json
-
         data = json.loads(body)
         status = data.get("status", {})
         phase = status.get("sync", {}).get("status", "Unknown")
@@ -95,6 +95,6 @@ def _parse_sync_response(body: str) -> str:
         conditions = status.get("conditions", [])
         message = conditions[0].get("message", "") if conditions else data.get("message", "Sync completed")
         return f"Phase: {phase}, Health: {health}, Revision: {revision}, Resources: {resources_count}\n{message}"
-    except Exception as e:
+    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
         print(f"WARNING: Failed to parse ArgoCD sync response: {e}", flush=True)
         return body

@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 use crate::api::Client;
 use crate::api::console_protocol::SignalType;
 use crate::api::protocol::CreateSessionRequest;
-use crate::core::{AgentType, BackendType};
+use crate::core::BackendType;
 
 use super::app::{App, AppMode, CreateDialogFocus, CreateProgress};
 use super::events_copy_mode::handle_copy_mode_key;
@@ -106,63 +106,59 @@ pub async fn handle_paste_event(app: &mut App, text: &str) -> anyhow::Result<()>
                 return Ok(());
             }
 
-            match app.create_dialog.focus {
-                CreateDialogFocus::Prompt => {
-                    // Check if pasted text is an image file path (drag-and-drop support)
-                    let trimmed = text.trim();
-                    if is_image_path(trimmed) {
-                        app.create_dialog.images.push(trimmed.to_owned());
-                        app.status_message = Some(format!("Image attached: {}", trimmed));
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
+                // Check if pasted text is an image file path (drag-and-drop support)
+                let trimmed = text.trim();
+                if is_image_path(trimmed) {
+                    app.create_dialog.images.push(trimmed.to_owned());
+                    app.status_message = Some(format!("Image attached: {trimmed}"));
+                    return Ok(());
+                }
+
+                // Handle multiple lines (e.g., multiple files pasted)
+                let lines: Vec<&str> = text.lines().collect();
+                if lines.len() > 1 {
+                    let mut added_images = 0;
+                    for line in lines {
+                        let line = line.trim();
+                        if is_image_path(line) {
+                            app.create_dialog.images.push(line.to_owned());
+                            added_images += 1;
+                        }
+                    }
+                    if added_images > 0 {
+                        app.status_message = Some(format!("Added {added_images} image(s)"));
                         return Ok(());
                     }
-
-                    // Handle multiple lines (e.g., multiple files pasted)
-                    let lines: Vec<&str> = text.lines().collect();
-                    if lines.len() > 1 {
-                        let mut added_images = 0;
-                        for line in lines {
-                            let line = line.trim();
-                            if is_image_path(line) {
-                                app.create_dialog.images.push(line.to_owned());
-                                added_images += 1;
-                            }
-                        }
-                        if added_images > 0 {
-                            app.status_message = Some(format!("Added {} image(s)", added_images));
-                            return Ok(());
-                        }
-                    }
-
-                    // For prompt field, normalize line endings to \n
-                    let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
-
-                    // Insert each character at cursor position
-                    for ch in normalized_text.chars() {
-                        if ch == '\n' {
-                            (
-                                app.create_dialog.prompt_cursor_line,
-                                app.create_dialog.prompt_cursor_col,
-                            ) = super::text_input::insert_newline_at_cursor(
-                                &mut app.create_dialog.prompt,
-                                app.create_dialog.prompt_cursor_line,
-                                app.create_dialog.prompt_cursor_col,
-                            );
-                        } else {
-                            (
-                                app.create_dialog.prompt_cursor_line,
-                                app.create_dialog.prompt_cursor_col,
-                            ) = super::text_input::insert_char_at_cursor_multiline(
-                                &mut app.create_dialog.prompt,
-                                app.create_dialog.prompt_cursor_line,
-                                app.create_dialog.prompt_cursor_col,
-                                ch,
-                            );
-                        }
-                    }
-                    app.create_dialog.ensure_cursor_visible();
                 }
-                // RepoPath doesn't accept typed/pasted input
-                _ => {}
+
+                // For prompt field, normalize line endings to \n
+                let normalized_text = text.replace("\r\n", "\n").replace('\r', "\n");
+
+                // Insert each character at cursor position
+                for ch in normalized_text.chars() {
+                    if ch == '\n' {
+                        (
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                        ) = super::text_input::insert_newline_at_cursor(
+                            &mut app.create_dialog.prompt,
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                        );
+                    } else {
+                        (
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                        ) = super::text_input::insert_char_at_cursor_multiline(
+                            &mut app.create_dialog.prompt,
+                            app.create_dialog.prompt_cursor_line,
+                            app.create_dialog.prompt_cursor_col,
+                            ch,
+                        );
+                    }
+                }
+                app.create_dialog.ensure_cursor_visible();
             }
         }
         AppMode::CopyMode
@@ -316,8 +312,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 app.create_dialog.scroll_prompt_down(visible_lines);
             }
         }
-        KeyCode::Home => match app.create_dialog.focus {
-            CreateDialogFocus::Prompt => {
+        KeyCode::Home => {
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
                 (
                     app.create_dialog.prompt_cursor_line,
                     app.create_dialog.prompt_cursor_col,
@@ -325,10 +321,9 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.prompt_cursor_line,
                 );
             }
-            _ => {}
-        },
-        KeyCode::End => match app.create_dialog.focus {
-            CreateDialogFocus::Prompt => {
+        }
+        KeyCode::End => {
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
                 (
                     app.create_dialog.prompt_cursor_line,
                     app.create_dialog.prompt_cursor_col,
@@ -337,8 +332,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     app.create_dialog.prompt_cursor_line,
                 );
             }
-            _ => {}
-        },
+        }
         KeyCode::Tab => {
             // Cycle through fields (K8s-specific fields only shown when K8s backend selected)
             let is_k8s = app.create_dialog.backend == crate::core::BackendType::Kubernetes;
@@ -806,8 +800,8 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             _ => {}
         },
-        KeyCode::Delete => match app.create_dialog.focus {
-            CreateDialogFocus::Prompt => {
+        KeyCode::Delete => {
+            if app.create_dialog.focus == CreateDialogFocus::Prompt {
                 (
                     app.create_dialog.prompt_cursor_line,
                     app.create_dialog.prompt_cursor_col,
@@ -818,8 +812,7 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 );
                 app.create_dialog.ensure_cursor_visible();
             }
-            _ => {}
-        },
+        }
         _ => {}
     }
     Ok(())
@@ -1021,101 +1014,92 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
         }
         KeyCode::Char('s' | 'S') => {
             // Start action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health.available_actions.contains(&AvailableAction::Start) {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.start_session(id).await {
-                            app.status_message = Some(format!("Start failed: {e}"));
-                        } else {
-                            app.status_message = Some("Session started".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health.available_actions.contains(&AvailableAction::Start)
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.start_session(id).await {
+                    app.status_message = Some(format!("Start failed: {e}"));
+                } else {
+                    app.status_message = Some("Session started".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         KeyCode::Char('w' | 'W') => {
             // Wake action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health.available_actions.contains(&AvailableAction::Wake) {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.wake_session(id).await {
-                            app.status_message = Some(format!("Wake failed: {e}"));
-                        } else {
-                            app.status_message = Some("Session woken".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health.available_actions.contains(&AvailableAction::Wake)
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.wake_session(id).await {
+                    app.status_message = Some(format!("Wake failed: {e}"));
+                } else {
+                    app.status_message = Some("Session woken".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         KeyCode::Char('r' | 'R') => {
             // Recreate action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health
                     .available_actions
                     .contains(&AvailableAction::Recreate)
-                {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.recreate_session(id).await {
-                            app.status_message = Some(format!("Recreate failed: {e}"));
-                        } else {
-                            app.status_message = Some("Session recreating...".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.recreate_session(id).await {
+                    app.status_message = Some(format!("Recreate failed: {e}"));
+                } else {
+                    app.status_message = Some("Session recreating...".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         KeyCode::Char('f' | 'F') => {
             // Recreate Fresh action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health
                     .available_actions
                     .contains(&AvailableAction::RecreateFresh)
-                {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.recreate_session_fresh(id).await {
-                            app.status_message = Some(format!("Recreate fresh failed: {e}"));
-                        } else {
-                            app.status_message = Some("Session recreating fresh...".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.recreate_session_fresh(id).await {
+                    app.status_message = Some(format!("Recreate fresh failed: {e}"));
+                } else {
+                    app.status_message = Some("Session recreating fresh...".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         KeyCode::Char('u' | 'U') => {
             // Update Image action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health
                     .available_actions
                     .contains(&AvailableAction::UpdateImage)
-                {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.update_session_image(id).await {
-                            app.status_message = Some(format!("Update image failed: {e}"));
-                        } else {
-                            app.status_message = Some("Updating image...".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.update_session_image(id).await {
+                    app.status_message = Some(format!("Update image failed: {e}"));
+                } else {
+                    app.status_message = Some("Updating image...".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         KeyCode::Char('c' | 'C') => {
             // Cleanup action
-            if let Some(health) = app.get_recreate_session_health().cloned() {
-                if health.available_actions.contains(&AvailableAction::Cleanup) {
-                    if let Some(id) = app.recreate_confirm_session_id {
-                        if let Err(e) = app.cleanup_session(id).await {
-                            app.status_message = Some(format!("Cleanup failed: {e}"));
-                        } else {
-                            app.status_message = Some("Session cleaned up".to_owned());
-                        }
-                        app.close_recreate_dialog();
-                    }
+            if let Some(health) = app.get_recreate_session_health().cloned()
+                && health.available_actions.contains(&AvailableAction::Cleanup)
+                && let Some(id) = app.recreate_confirm_session_id
+            {
+                if let Err(e) = app.cleanup_session(id).await {
+                    app.status_message = Some(format!("Cleanup failed: {e}"));
+                } else {
+                    app.status_message = Some("Session cleaned up".to_owned());
                 }
+                app.close_recreate_dialog();
             }
         }
         _ => {}
@@ -1183,11 +1167,9 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     }
 
     // Ctrl+Q: instant detach (no double-tap delay)
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if key.code == KeyCode::Char('q') {
-            app.detach();
-            return Ok(());
-        }
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('q') {
+        app.detach();
+        return Ok(());
     }
 
     // Copy mode hotkey has been disabled to allow ESC to forward to applications.
@@ -1203,19 +1185,15 @@ async fn handle_attached_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()>
     // }
 
     // Toggle locked mode with Ctrl+L
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if key.code == KeyCode::Char('l') {
-            app.toggle_locked_mode();
-            return Ok(());
-        }
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('l') {
+        app.toggle_locked_mode();
+        return Ok(());
     }
 
     // Enter scroll mode with Ctrl+S
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if key.code == KeyCode::Char('s') {
-            app.enter_scroll_mode();
-            return Ok(());
-        }
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('s') {
+        app.enter_scroll_mode();
+        return Ok(());
     }
 
     // Session switching with Ctrl+P/Ctrl+N
@@ -1269,11 +1247,9 @@ async fn handle_locked_key(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
     use crate::tui::attached::encode_key;
 
     // Ctrl+L: unlock and return to Attached mode
-    if key.modifiers.contains(KeyModifiers::CONTROL) {
-        if key.code == KeyCode::Char('l') {
-            app.exit_locked_mode();
-            return Ok(());
-        }
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('l') {
+        app.exit_locked_mode();
+        return Ok(());
     }
 
     // Signal forwarding (same as attached mode)

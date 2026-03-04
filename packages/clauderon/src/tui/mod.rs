@@ -344,11 +344,11 @@ async fn run_main_loop(
         // Poll for PTY events when attached (non-blocking)
         // Collect events first to avoid borrow issues
         let mut pty_events = Vec::new();
-        if app.mode == AppMode::Attached {
-            if let Some(pty_session) = app.attached_pty_session_mut() {
-                while let Some(event) = pty_session.try_recv_event() {
-                    pty_events.push(event);
-                }
+        if app.mode == AppMode::Attached
+            && let Some(pty_session) = app.attached_pty_session_mut()
+        {
+            while let Some(event) = pty_session.try_recv_event() {
+                pty_events.push(event);
             }
         }
 

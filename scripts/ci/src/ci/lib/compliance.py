@@ -58,7 +58,14 @@ def check() -> tuple[bool, str]:
         if not pkg_dir.is_dir():
             continue
         name = pkg_dir.name
-        if name in SKIP_PACKAGES or name.startswith("."):
+        if name.startswith("."):
+            continue
+
+        # BUILD.bazel is required for ALL packages (including SKIP_PACKAGES)
+        if not (pkg_dir / "BUILD.bazel").exists():
+            violations.append(f"{name}: missing BUILD.bazel")
+
+        if name in SKIP_PACKAGES:
             continue
 
         pkg_json = pkg_dir / "package.json"

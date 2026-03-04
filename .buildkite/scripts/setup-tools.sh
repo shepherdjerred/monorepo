@@ -143,6 +143,7 @@ install_rust() {
     fi
     echo "--- :rust: Installing Rust toolchain"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # shellcheck disable=SC1091 # runtime path, not available at lint time
     source "$HOME/.cargo/env"
     rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
     apt-get install -y -qq gcc-aarch64-linux-gnu > /dev/null

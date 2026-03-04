@@ -1275,7 +1275,7 @@ fn print_credential_row(
         ("missing", "-".to_owned())
     };
 
-    println!("{:<20} {:<12} {:<30}", service, status, source);
+    println!("{service:<20} {status:<12} {source:<30}");
 }
 
 fn codex_auth_json_path() -> std::path::PathBuf {

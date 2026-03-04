@@ -104,8 +104,7 @@ pub(super) async fn handle_copy_mode_key(app: &mut App, key: KeyEvent) -> anyhow
             if state.visual_mode {
                 if let Err(e) = copy_selection_to_clipboard(app) {
                     app.status_message = Some(format!(
-                        "Copy failed: {}. Press v to cancel selection or q to exit.",
-                        e
+                        "Copy failed: {e}. Press v to cancel selection or q to exit."
                     ));
                     // Don't exit copy mode on error - user can retry or cancel
                 } else {

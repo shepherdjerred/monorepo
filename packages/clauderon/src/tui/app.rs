@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
-use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
+use crate::backends::{ImagePullPolicy, SpritesConfig};
 use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
 use crate::core::{AccessMode, AgentType, BackendType, MergeMethod, Session, SessionStatus};
 use crate::tui::attached::PtySession;
@@ -847,7 +847,7 @@ impl CreateDialogState {
                     Some(SessionModel::Claude(ClaudeModel::Sonnet4))
                 }
                 Some(SessionModel::Claude(ClaudeModel::Sonnet4)) => None,
-                None | _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
+                _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
             },
             AgentType::Codex => match &self.model {
                 Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)) => {
@@ -878,7 +878,7 @@ impl CreateDialogState {
                     Some(SessionModel::Codex(CodexModel::O3Mini))
                 }
                 Some(SessionModel::Codex(CodexModel::O3Mini)) => None,
-                None | _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
+                _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
             },
             AgentType::Gemini => match &self.model {
                 Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)) => {
@@ -891,7 +891,7 @@ impl CreateDialogState {
                     Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash))
                 }
                 Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash)) => None,
-                None | _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
+                _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
             },
         };
     }
@@ -1482,22 +1482,22 @@ impl App {
 
     /// Open merge confirmation dialog
     pub fn open_merge_confirm(&mut self) {
-        if let Some(session) = self.selected_session() {
-            if let (Some(pr_url), Some(methods), Some(default), Some(delete_branch)) = (
+        if let Some(session) = self.selected_session()
+            && let (Some(pr_url), Some(methods), Some(default), Some(delete_branch)) = (
                 &session.pr_url,
                 &session.pr_merge_methods,
                 session.pr_default_merge_method,
                 session.pr_delete_branch_on_merge,
-            ) {
-                self.confirm_merge = Some(ConfirmMergeState::new(
-                    session.id.to_string(),
-                    pr_url.clone(),
-                    methods.clone(),
-                    default,
-                    delete_branch,
-                ));
-                self.mode = AppMode::ConfirmMerge;
-            }
+            )
+        {
+            self.confirm_merge = Some(ConfirmMergeState::new(
+                session.id.to_string(),
+                pr_url.clone(),
+                methods.clone(),
+                default,
+                delete_branch,
+            ));
+            self.mode = AppMode::ConfirmMerge;
         }
     }
 
@@ -1705,7 +1705,7 @@ impl App {
     /// Returns an error if session creation fails.
     pub async fn create_session_from_dialog(&mut self) -> anyhow::Result<()> {
         use crate::api::protocol::CreateSessionRequest;
-        use crate::core::{AgentType, BackendType};
+        use crate::core::BackendType;
 
         // Only pass K8s-specific options when using K8s backend
         let (container_image, pull_policy, storage_class) =
@@ -1860,12 +1860,13 @@ impl App {
     ///
     /// Returns true if the dialog was shown, false otherwise
     pub fn try_show_selected_reconcile_error(&mut self) -> bool {
-        if let Some(session) = self.selected_session() {
-            if session.reconcile_attempts > 0 && session.last_reconcile_error.is_some() {
-                let session_id = session.id;
-                self.show_reconcile_error(session_id);
-                return true;
-            }
+        if let Some(session) = self.selected_session()
+            && session.reconcile_attempts > 0
+            && session.last_reconcile_error.is_some()
+        {
+            let session_id = session.id;
+            self.show_reconcile_error(session_id);
+            return true;
         }
         false
     }

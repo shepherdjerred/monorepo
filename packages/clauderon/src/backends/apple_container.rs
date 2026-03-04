@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
 use tracing::instrument;
@@ -280,8 +280,8 @@ impl AppleContainerBackend {
     /// # Arguments
     ///
     /// * `print_mode` - If true, run in non-interactive mode.
-    ///                  The container will output the response and exit.
-    ///                  If false, run interactively for attachment.
+    ///   The container will output the response and exit.
+    ///   If false, run interactively for attachment.
     ///
     /// # Errors
     ///
@@ -503,10 +503,10 @@ impl AppleContainerBackend {
                     e
                 );
             } else {
-                if !codex_auth_path.exists() {
-                    if let Ok(contents) = dummy_auth_json_string(None) {
-                        let _ = std::fs::write(&codex_auth_path, contents);
-                    }
+                if !codex_auth_path.exists()
+                    && let Ok(contents) = dummy_auth_json_string(None)
+                {
+                    let _ = std::fs::write(&codex_auth_path, contents);
                 }
                 if !codex_config_path.exists() {
                     let _ = std::fs::write(&codex_config_path, dummy_config_toml());
@@ -799,19 +799,15 @@ impl AppleContainerBackend {
                         };
 
                         format!(
-                            r#"SESSION_ID="{session_id}"
+                            r#"SESSION_ID="{session_id_str}"
 HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
 if [ -f "$HISTORY_FILE" ]; then
     echo "Resuming existing session $SESSION_ID"
-    exec {resume_cmd}
+    exec {resume_cmd_str}
 else
     echo "Creating new session $SESSION_ID"
-    exec {create_cmd}
+    exec {create_cmd_str}
 fi"#,
-                            session_id = session_id_str,
-                            project_path = project_path,
-                            resume_cmd = resume_cmd_str,
-                            create_cmd = create_cmd_str,
                         )
                     } else {
                         cmd_vec
@@ -1012,14 +1008,14 @@ impl ExecutionBackend for AppleContainerBackend {
         );
 
         // Install hooks for Claude Code
-        if options.agent == AgentType::ClaudeCode {
-            if let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await {
-                tracing::warn!(
-                    container_name = %container_name,
-                    error = %e,
-                    "Failed to install hooks in container (non-fatal)"
-                );
-            }
+        if options.agent == AgentType::ClaudeCode
+            && let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await
+        {
+            tracing::warn!(
+                container_name = %container_name,
+                error = %e,
+                "Failed to install hooks in container (non-fatal)"
+            );
         }
 
         Ok(container_name)

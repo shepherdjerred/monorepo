@@ -138,11 +138,7 @@ async fn generate_with_timeout(
             error = %e,
             "Claude CLI call timed out"
         );
-        anyhow::anyhow!(
-            "Claude CLI call timed out after {} seconds: {}",
-            TIMEOUT_SECS,
-            e
-        )
+        anyhow::anyhow!("Claude CLI call timed out after {TIMEOUT_SECS} seconds: {e}")
     })?
 }
 
@@ -206,11 +202,7 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
             "Claude CLI failed with non-zero exit code"
         );
 
-        anyhow::bail!(
-            "Claude CLI failed with exit code {:?}: {}",
-            exit_code,
-            stderr
-        );
+        anyhow::bail!("Claude CLI failed with exit code {exit_code:?}: {stderr}");
     }
 
     // Parse JSON output with debug logging
@@ -246,10 +238,7 @@ async fn call_claude_cli(repo_path: &str, initial_prompt: &str) -> anyhow::Resul
         }
 
         // Generic error for other non-success subtypes
-        anyhow::bail!(
-            "Claude CLI returned non-success response with subtype: {}",
-            subtype
-        );
+        anyhow::bail!("Claude CLI returned non-success response with subtype: {subtype}");
     }
 
     // Extract the structured_output field (CLI returns wrapper object)

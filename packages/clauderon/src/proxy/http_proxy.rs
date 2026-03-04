@@ -438,13 +438,12 @@ impl HttpHandler for AuthInjector {
                 }
             }
 
-            if is_chatgpt_host(&host_match) {
-                if let Some(account_id) = credentials.codex_account_id() {
-                    if let Ok(value) = account_id.parse() {
-                        req.headers_mut().insert("ChatGPT-Account-ID", value);
-                        auth_injected_for_async.store(true, Ordering::SeqCst);
-                    }
-                }
+            if is_chatgpt_host(&host_match)
+                && let Some(account_id) = credentials.codex_account_id()
+                && let Ok(value) = account_id.parse()
+            {
+                req.headers_mut().insert("ChatGPT-Account-ID", value);
+                auth_injected_for_async.store(true, Ordering::SeqCst);
             }
 
             RequestOrResponse::Request(req)
@@ -746,13 +745,12 @@ impl HttpHandler for FilteringHandler {
                 }
             }
 
-            if is_chatgpt_host(&host_match) {
-                if let Some(account_id) = credentials.codex_account_id() {
-                    if let Ok(value) = account_id.parse() {
-                        req.headers_mut().insert("ChatGPT-Account-ID", value);
-                        auth_injected_for_async.store(true, Ordering::SeqCst);
-                    }
-                }
+            if is_chatgpt_host(&host_match)
+                && let Some(account_id) = credentials.codex_account_id()
+                && let Ok(value) = account_id.parse()
+            {
+                req.headers_mut().insert("ChatGPT-Account-ID", value);
+                auth_injected_for_async.store(true, Ordering::SeqCst);
             }
 
             RequestOrResponse::Request(req)

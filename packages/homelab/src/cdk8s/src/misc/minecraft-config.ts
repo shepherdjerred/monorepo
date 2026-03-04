@@ -36,7 +36,7 @@ async function loadServerConfigs(
 
   try {
     const glob = new Glob("**/*.{yml,yaml,properties,json,conf,txt}");
-    for await (const entry of glob.scan(configDir)) {
+    for await (const entry of glob.scan({ cwd: configDir, followSymlinks: true })) {
       // Validate no __ in filenames (would conflict with path encoding)
       if (entry.includes("__")) {
         throw new Error(

@@ -135,12 +135,11 @@ impl CodexTokens {
     }
 
     fn fill_account_id_from_id_token(&mut self) {
-        if self.account_id.is_none() {
-            if let Some(id_token) = self.id_token.as_deref() {
-                if let Some(account_id) = extract_chatgpt_account_id(id_token) {
-                    self.account_id = Some(account_id);
-                }
-            }
+        if self.account_id.is_none()
+            && let Some(id_token) = self.id_token.as_deref()
+            && let Some(account_id) = extract_chatgpt_account_id(id_token)
+        {
+            self.account_id = Some(account_id);
         }
     }
 }
@@ -412,12 +411,11 @@ impl Credentials {
         ];
 
         for (env_key, credential_key) in env_mappings {
-            if let Ok(value) = std::env::var(env_key) {
-                if Self::is_op_reference(&value) {
-                    if let Ok(op_ref) = OpReference::parse(&value) {
-                        references.insert(credential_key.to_owned(), op_ref);
-                    }
-                }
+            if let Ok(value) = std::env::var(env_key)
+                && Self::is_op_reference(&value)
+                && let Ok(op_ref) = OpReference::parse(&value)
+            {
+                references.insert(credential_key.to_owned(), op_ref);
             }
         }
 

@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@types/bun"]
+    "types": ["@types/bun"],
+    "paths": {
+      "@shepherdjerred/birmel/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*", "tests/**/*", "eslint.config.ts"],
   "exclude": ["node_modules", "dist"]

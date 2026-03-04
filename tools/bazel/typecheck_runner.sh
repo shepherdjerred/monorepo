@@ -29,8 +29,8 @@ if [ -n "$FIRST_LINK" ]; then
   REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
   if [ -n "$REAL_PATH" ]; then
     REL_SUFFIX="${FIRST_LINK#./}"
-    BIN_PKG_DIR="${REAL_PATH%/$REL_SUFFIX}"
-    BIN_ROOT="${BIN_PKG_DIR%/$PKG_DIR}"
+    BIN_PKG_DIR="${REAL_PATH%/"$REL_SUFFIX"}"
+    BIN_ROOT="${BIN_PKG_DIR%/"$PKG_DIR"}"
   fi
 fi
 
@@ -124,6 +124,92 @@ if [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_ROOT" ]; then
       fi
     done
   fi
+  # Mirror root-level files (e.g. tsconfig.base.json) from runfiles to bin tree
+  # so that relative extends paths like "../../tsconfig.base.json" resolve.
+  for rf_file in "$RUNFILES_PKG"/tsconfig*.json; do
+    [ -e "$rf_file" ] || continue
+    file_rel="${rf_file#"$RUNFILES_PKG"/}"
+    bin_target="$BIN_ROOT/$file_rel"
+    if [ ! -e "$bin_target" ]; then
+      ln -sf "$rf_file" "$bin_target" 2>/dev/null || true
+    fi
+  done
+fi
+
+# Generate Prisma client if PRISMA_SCHEMA is set.
+# Prisma's @prisma/client exports model types (PrismaClient, etc.) only after
+# `prisma generate`. We generate in a writable temp directory, then symlink
+# the output into the bin tree where tsc can find it.
+if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DIR" ]; then
+  SCHEMA_PATH="$BIN_PKG_DIR/$PRISMA_SCHEMA"
+  if [ -f "$SCHEMA_PATH" ]; then
+    PRISMA_CLI=$(find "$BIN_PKG_DIR/node_modules" -path '*/prisma/build/index.js' 2>/dev/null | head -1)
+    if [ -z "$PRISMA_CLI" ]; then
+      PRISMA_CLI=$(find "$BIN_ROOT/node_modules/.aspect_rules_js" -path '*/node_modules/prisma/build/index.js' 2>/dev/null | head -1)
+    fi
+    if [ -n "$PRISMA_CLI" ]; then
+      PRISMA_TMPDIR=$(mktemp -d)
+      mkdir -p "$PRISMA_TMPDIR/prisma"
+      cp "$SCHEMA_PATH" "$PRISMA_TMPDIR/prisma/schema.prisma"
+      echo '{"name":"prisma-gen-tmp"}' > "$PRISMA_TMPDIR/package.json"
+
+      PRISMA_VER="${PRISMA_CLI##*prisma@}"
+      PRISMA_VER="${PRISMA_VER%%_*}"
+      PRISMA_VER="${PRISMA_VER%%/*}"
+      [ -z "$PRISMA_VER" ] && PRISMA_VER="6.19.2"
+
+      (cd "$PRISMA_TMPDIR" && \
+        HOME="$PRISMA_TMPDIR" \
+        "$BUN_BINARY" add "@prisma/client@$PRISMA_VER" 2>/dev/null) || true
+
+      (cd "$PRISMA_TMPDIR" && \
+        HOME="$PRISMA_TMPDIR" \
+        PRISMA_GENERATE_SKIP_AUTOINSTALL=1 \
+        "$BUN_BINARY" x --bun "prisma@$PRISMA_VER" generate \
+          --schema=prisma/schema.prisma --no-engine --no-hints 2>/dev/null) || true
+
+      GENERATED=$(find "$PRISMA_TMPDIR" -path '*/.prisma/client' -type d 2>/dev/null | head -1)
+      if [ -n "$GENERATED" ] && [ -d "$GENERATED" ]; then
+        # Copy generated .prisma/client into all node_modules locations where
+        # tsc might resolve it. We use cp -R instead of symlinks because the
+        # sandbox may not follow symlinks to temp directories.
+
+        # 1. Bin tree's @prisma/client sibling
+        PRISMA_CLIENT_PKG_FILE=$(find "$BIN_ROOT/node_modules/.aspect_rules_js" -path '*/@prisma+client@*/node_modules/@prisma/client/default.js' 2>/dev/null | head -1)
+        if [ -n "$PRISMA_CLIENT_PKG_FILE" ]; then
+          NM_DIR="$(dirname "$(dirname "$(dirname "$PRISMA_CLIENT_PKG_FILE")")")"
+          rm -rf "$NM_DIR/.prisma/client" 2>/dev/null || true
+          mkdir -p "$NM_DIR/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$NM_DIR/.prisma/client" 2>/dev/null || true
+        fi
+
+        # 2. Package-level node_modules in bin tree
+        if [ -d "$BIN_PKG_DIR/node_modules" ]; then
+          rm -rf "$BIN_PKG_DIR/node_modules/.prisma/client" 2>/dev/null || true
+          mkdir -p "$BIN_PKG_DIR/node_modules/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$BIN_PKG_DIR/node_modules/.prisma/client" 2>/dev/null || true
+        fi
+
+        # 3. Runfiles-level package node_modules (tsc cwd)
+        RUNFILES_NM="$RUNFILES/$WS/$PKG_DIR/node_modules"
+        if [ -d "$RUNFILES_NM" ]; then
+          rm -rf "$RUNFILES_NM/.prisma/client" 2>/dev/null || true
+          mkdir -p "$RUNFILES_NM/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$RUNFILES_NM/.prisma/client" 2>/dev/null || true
+        fi
+
+        # 4. Root runfiles node_modules (aspect_rules_js @prisma/client sibling)
+        RUNFILES_ROOT_NM="$RUNFILES/$WS/node_modules/.aspect_rules_js"
+        PRISMA_CLIENT_ASPECT=$(find "$RUNFILES_ROOT_NM" -maxdepth 5 -path '*/@prisma+client@*/node_modules/@prisma/client' -type d 2>/dev/null | head -1)
+        if [ -n "$PRISMA_CLIENT_ASPECT" ]; then
+          ASPECT_NM_DIR="$(dirname "$(dirname "$PRISMA_CLIENT_ASPECT")")"
+          rm -rf "$ASPECT_NM_DIR/.prisma/client" 2>/dev/null || true
+          mkdir -p "$ASPECT_NM_DIR/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$ASPECT_NM_DIR/.prisma/client" 2>/dev/null || true
+        fi
+      fi
+    fi
+  fi
 fi
 
 # Find tsc.js from node_modules (typescript/lib/tsc.js)
@@ -135,4 +221,10 @@ if [ ! -f "$TSC_JS" ]; then
 fi
 
 # Run tsc via Bun (Bun is our Node.js replacement in the sandbox)
-exec "$BUN_BINARY" "$TSC_JS" --noEmit --skipLibCheck --preserveSymlinks --project tsconfig.json "$@"
+# --preserveSymlinks is needed for workspace symlink resolution but breaks
+# packages with complex export maps (e.g. discord.js). Controlled via env var.
+TSC_ARGS=(--noEmit --skipLibCheck --project tsconfig.json)
+if [ "${NO_PRESERVE_SYMLINKS:-}" != "1" ]; then
+  TSC_ARGS+=(--preserveSymlinks)
+fi
+exec "$BUN_BINARY" "$TSC_JS" "${TSC_ARGS[@]}" "$@"

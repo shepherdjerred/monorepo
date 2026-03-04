@@ -4,5 +4,19 @@ npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# LaTeX resume -- build and deploy handled by Dagger, not Bazel.
-# No sources to expose; this is a stub for workspace consistency.
+# LaTeX resume PDF build via xelatex.
+# Runs locally (not sandboxed) because xelatex needs system fonts and TeX packages.
+genrule(
+    name = "resume",
+    srcs = ["resume.tex"],
+    outs = ["resume.pdf"],
+    cmd = """
+        export PATH="$$PATH:/opt/homebrew/bin:/usr/local/bin:/usr/bin"
+        OUTPATH="$$(pwd)/$@"
+        cd $$(dirname $(location resume.tex))
+        xelatex -interaction=nonstopmode -halt-on-error resume.tex >/dev/null
+        cp resume.pdf "$$OUTPATH"
+    """,
+    local = True,
+    tags = ["manual"],
+)

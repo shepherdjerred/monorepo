@@ -161,8 +161,7 @@ fn render_normal_status(app: &App) -> Line<'static> {
             let total_count = app.sessions.len();
             let filter_name = app.session_filter.display_name();
             format!(
-                "Filter: {} ({}/{} sessions) | Press 1-5 to change filter",
-                filter_name, filtered_count, total_count
+                "Filter: {filter_name} ({filtered_count}/{total_count} sessions) | Press 1-5 to change filter"
             )
         } else {
             "Disconnected".to_owned()

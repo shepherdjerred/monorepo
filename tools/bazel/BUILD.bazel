@@ -31,8 +31,6 @@ js_library(
     visibility = ["//visibility:public"],
 )
 
-# Pre-existing shellcheck warnings in bun_test_runner.sh (SC2295 info-level).
-# Run explicitly: bazel test //tools/bazel:shellcheck
 shellcheck_test(
     name = "shellcheck",
     srcs = [
@@ -48,5 +46,4 @@ shellcheck_test(
         "typecheck_runner.sh",
         "workspace_status.sh",
     ],
-    tags = ["manual"],
 )

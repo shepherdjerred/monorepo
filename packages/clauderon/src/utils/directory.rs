@@ -40,15 +40,15 @@ pub fn read_directories(path: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
 /// Expand tilde (~) in paths to home directory
 #[must_use]
 pub fn expand_tilde(path: &str) -> PathBuf {
-    if path.starts_with('~') {
-        if let Some(home) = dirs::home_dir() {
-            // Handle "~/foo" -> join "foo" to home
-            if path.len() > 1 && path.starts_with("~/") {
-                return home.join(&path[2..]);
-            }
-            // Handle just "~" -> return home
-            return home;
+    if path.starts_with('~')
+        && let Some(home) = dirs::home_dir()
+    {
+        // Handle "~/foo" -> join "foo" to home
+        if path.len() > 1 && path.starts_with("~/") {
+            return home.join(&path[2..]);
         }
+        // Handle just "~" -> return home
+        return home;
     }
     PathBuf::from(path)
 }

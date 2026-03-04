@@ -38,8 +38,8 @@ if [ -n "$FIRST_LINK" ]; then
   REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
   if [ -n "$REAL_PATH" ]; then
     REL_SUFFIX="${FIRST_LINK#./}"
-    BIN_PKG_DIR="${REAL_PATH%/$REL_SUFFIX}"
-    BIN_ROOT="${BIN_PKG_DIR%/$PKG_DIR}"
+    BIN_PKG_DIR="${REAL_PATH%/"$REL_SUFFIX"}"
+    BIN_ROOT="${BIN_PKG_DIR%/"$PKG_DIR"}"
   fi
 fi
 
@@ -138,6 +138,74 @@ if [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_ROOT" ]; then
         ln -sf "$rf_file" "$bin_target" 2>/dev/null || true
       fi
     done
+  fi
+fi
+
+# Make snapshot files writable so Bun's toMatchSnapshot() can open them.
+# Bazel outputs are read-only by default, but Bun opens .snap files in r/w mode.
+if [ -n "${BIN_PKG_DIR:-}" ]; then
+  find "$BIN_PKG_DIR" -name '__snapshots__' -type d 2>/dev/null | while IFS= read -r snap_dir; do
+    chmod -R u+w "$snap_dir" 2>/dev/null || true
+  done
+fi
+
+# Generate Prisma client if PRISMA_SCHEMA is set.
+# Prisma's @prisma/client/default.js requires .prisma/client/default which
+# is only present after `prisma generate`. We generate in a writable temp
+# directory, then symlink the output into the bin tree where Bun can find it.
+if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DIR" ]; then
+  SCHEMA_PATH="$BIN_PKG_DIR/$PRISMA_SCHEMA"
+  if [ -f "$SCHEMA_PATH" ]; then
+    # Find the local prisma CLI from node_modules (not bunx which may fetch latest)
+    PRISMA_CLI=$(find "$BIN_PKG_DIR/node_modules" -path '*/prisma/build/index.js' 2>/dev/null | head -1)
+    if [ -z "$PRISMA_CLI" ]; then
+      PRISMA_CLI=$(find "$BIN_ROOT/node_modules/.aspect_rules_js" -path '*/node_modules/prisma/build/index.js' 2>/dev/null | head -1)
+    fi
+    if [ -n "$PRISMA_CLI" ]; then
+      # Run prisma generate in a writable temp directory using bunx.
+      # We use bunx to run the exact prisma version from our lockfile.
+      # bunx handles all dependency resolution in a writable cache.
+      PRISMA_TMPDIR=$(mktemp -d)
+      mkdir -p "$PRISMA_TMPDIR/prisma"
+      cp "$SCHEMA_PATH" "$PRISMA_TMPDIR/prisma/schema.prisma"
+      echo '{"name":"prisma-gen-tmp"}' > "$PRISMA_TMPDIR/package.json"
+
+      # Extract prisma version from the CLI path (e.g., prisma@6.19.2_typescript_5.9.3)
+      PRISMA_VER="${PRISMA_CLI##*prisma@}"
+      PRISMA_VER="${PRISMA_VER%%_*}"
+      PRISMA_VER="${PRISMA_VER%%/*}"
+      [ -z "$PRISMA_VER" ] && PRISMA_VER="6.19.2"
+
+      # Install @prisma/client so prisma generate can find its output target
+      (cd "$PRISMA_TMPDIR" && \
+        HOME="$PRISMA_TMPDIR" \
+        "$BUN_BINARY" add "@prisma/client@$PRISMA_VER" 2>/dev/null) || true
+
+      (cd "$PRISMA_TMPDIR" && \
+        HOME="$PRISMA_TMPDIR" \
+        PRISMA_GENERATE_SKIP_AUTOINSTALL=1 \
+        "$BUN_BINARY" x --bun "prisma@$PRISMA_VER" generate --schema=prisma/schema.prisma --no-engine --no-hints 2>/dev/null) || true
+
+      # Find where prisma generated the .prisma/client output and copy it
+      # (cp -R instead of symlinks — sandbox may not follow symlinks to temp dirs)
+      GENERATED=$(find "$PRISMA_TMPDIR" -path '*/.prisma/client' -type d 2>/dev/null | head -1)
+      if [ -n "$GENERATED" ] && [ -d "$GENERATED" ]; then
+        PRISMA_CLIENT_PKG_FILE=$(find "$BIN_ROOT/node_modules/.aspect_rules_js" -path '*/@prisma+client@*/node_modules/@prisma/client/default.js' 2>/dev/null | head -1)
+        if [ -n "$PRISMA_CLIENT_PKG_FILE" ]; then
+          NM_DIR="$(dirname "$(dirname "$(dirname "$PRISMA_CLIENT_PKG_FILE")")")"
+          rm -rf "$NM_DIR/.prisma/client" 2>/dev/null || true
+          mkdir -p "$NM_DIR/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$NM_DIR/.prisma/client" 2>/dev/null || true
+        fi
+
+        # Also copy into package-level and runfiles node_modules
+        if [ -d "$BIN_PKG_DIR/node_modules" ]; then
+          rm -rf "$BIN_PKG_DIR/node_modules/.prisma/client" 2>/dev/null || true
+          mkdir -p "$BIN_PKG_DIR/node_modules/.prisma" 2>/dev/null || true
+          cp -R "$GENERATED" "$BIN_PKG_DIR/node_modules/.prisma/client" 2>/dev/null || true
+        fi
+      fi
+    fi
   fi
 fi
 

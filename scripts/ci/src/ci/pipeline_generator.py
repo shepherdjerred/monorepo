@@ -430,18 +430,12 @@ def _generate_quality_gate_step() -> dict:
 
 
 def _generate_security_step() -> dict:
-    """Generate the root-level security & quality scanning step.
-
-    Shellcheck targets are tagged 'manual' due to pre-existing warnings.
-    They can be explicitly run via 'bazel test //tools/bazel:shellcheck' etc.
-    This step is a placeholder for when shellcheck violations are fixed.
-    """
+    """Generate the root-level shellcheck linting step."""
     return {
         "label": ":shield: Shellcheck",
         "key": "shellcheck",
         "command": ".buildkite/scripts/bazel-test-targets.sh //tools/bazel:shellcheck //.buildkite:shellcheck //packages/dotfiles:shellcheck",
         "timeout_in_minutes": 10,
-        "soft_fail": True,
         "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
     }
 

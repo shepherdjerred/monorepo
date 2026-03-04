@@ -388,7 +388,7 @@ async fn handle_talos_connection(
         let host = &endpoint[..colon_idx];
         let port: u16 = endpoint[colon_idx + 1..]
             .parse()
-            .map_err(|e| anyhow::anyhow!("invalid port in endpoint '{}': {}", endpoint, e))?;
+            .map_err(|e| anyhow::anyhow!("invalid port in endpoint '{endpoint}': {e}"))?;
         (host.to_owned(), port)
     } else {
         (endpoint.clone(), 50000)

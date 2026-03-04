@@ -64,7 +64,7 @@ typecheck_test(
     ],
 )
 
-# Tests write snapshot outputs to import.meta.url paths (read-only in sandbox).
+# Snapshot tests open .snap files in read-write mode; requires local execution.
 bun_test(
     name = "test",
     srcs = glob([
@@ -76,7 +76,7 @@ bun_test(
         "src/**/*.json",
         "src/**/*.snap",
     ]),
-    tags = ["manual"],
+    local = True,
     deps = [
         ":node_modules/@resvg/resvg-js",
         ":node_modules/react",

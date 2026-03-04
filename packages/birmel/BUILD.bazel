@@ -3,7 +3,7 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:prisma.bzl", "prisma_generate")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
 npm_link_all_packages(name = "node_modules")
@@ -63,14 +63,16 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
-# Blocked: @prisma/client types require `prisma generate` which fails in sandbox
-# (Prisma v7 requires prisma.config.ts instead of datasource url in schema).
-# Unblock by migrating schema to Prisma v7 format, then fixing prisma.bzl.
-typecheck_test(
+# Prisma types require prisma generate — uses workspace_typecheck_test + typecheck_runner.sh.
+workspace_typecheck_test(
     name = "typecheck",
     srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
-    tags = ["manual"],
+    data = ["prisma/schema.prisma"],
+    env = {
+        "NO_PRESERVE_SYMLINKS": "1",
+        "PRISMA_SCHEMA": "prisma/schema.prisma",
+    },
+    tags = ["requires-network"],  # prisma generate needs network for bunx
     deps = [
         ":node_modules/@ai-sdk/openai",
         ":node_modules/@opentelemetry/api",
@@ -92,16 +94,21 @@ typecheck_test(
         ":node_modules/hono",
         ":node_modules/mediaplex",
         ":node_modules/playwright",
+        ":node_modules/prisma",
         ":node_modules/youtubei.js",
         ":node_modules/zod",
         "//:node_modules/undici-types",
     ],
 )
 
-# Blocked: same as typecheck — prisma generate fails with Prisma v7.
+# Prisma is resolved via PRISMA_SCHEMA env + bun_test_runner.sh.
+# Still manual: integration tests need many transitive deps not yet available
+# in sandbox (e.g., @opentelemetry/context-async-hooks, database setup).
 bun_test(
     name = "test",
     srcs = glob(["src/**/*.ts"]),
+    data = ["prisma/schema.prisma"],
+    env = {"PRISMA_SCHEMA": "prisma/schema.prisma"},
     tags = ["manual"],
     deps = [
         ":node_modules/@ai-sdk/openai",
@@ -124,6 +131,7 @@ bun_test(
         ":node_modules/hono",
         ":node_modules/mediaplex",
         ":node_modules/playwright",
+        ":node_modules/prisma",
         ":node_modules/youtubei.js",
         ":node_modules/zod",
     ],

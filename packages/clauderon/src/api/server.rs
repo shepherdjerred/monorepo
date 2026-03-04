@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -6,7 +5,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use uuid::Uuid;
 
-use crate::backends::{DockerBackend, DockerProxyConfig};
+use crate::backends::DockerBackend;
 use crate::core::SessionManager;
 use crate::proxy::{ProxyConfig, ProxyManager};
 use crate::store::{SqliteStore, Store};
@@ -181,11 +180,9 @@ pub async fn run_daemon_with_http(
             };
 
             // Restore session proxies only if port allocations were successful
-            if port_allocation_success {
-                if let Err(e) = pm.restore_session_proxies(&sessions).await {
-                    tracing::error!("Failed to restore session proxies: {}", e);
-                    tracing::warn!("Existing sessions may not have network connectivity");
-                }
+            if port_allocation_success && let Err(e) = pm.restore_session_proxies(&sessions).await {
+                tracing::error!("Failed to restore session proxies: {}", e);
+                tracing::warn!("Existing sessions may not have network connectivity");
             }
         }
 
@@ -298,6 +295,10 @@ async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<
 }
 
 /// Run the HTTP server
+#[expect(
+    clippy::too_many_arguments,
+    reason = "server startup requires many configuration parameters"
+)]
 async fn run_http_server(
     manager: Arc<SessionManager>,
     port: u16,
@@ -348,7 +349,7 @@ async fn run_http_server(
                     \n\
                     WebAuthn authentication requires a valid origin URL that clients will use.\n\
                     \n\
-                    Current binding: {}\n\
+                    Current binding: {bind_addr}\n\
                     \n\
                     Configure via CLI:\n\
                       clauderon daemon --origin http://192.168.1.100:3030\n\
@@ -364,8 +365,7 @@ async fn run_http_server(
                       --origin https://clauderon.example.com\n\
                     \n\
                     Or disable authentication (not recommended for production):\n\
-                      --disable-auth",
-                    bind_addr
+                      --disable-auth"
                 );
             }
         };
@@ -375,14 +375,11 @@ async fn run_http_server(
             anyhow::bail!(
                 "CLAUDERON_ORIGIN must be a full URL with scheme (http:// or https://)\n\
                 \n\
-                Received: {}\n\
-                Expected: https://{}\n\
+                Received: {rp_origin}\n\
+                Expected: https://{rp_origin}\n\
                 \n\
                 Example:\n\
-                  CLAUDERON_ORIGIN=https://{}:3030 clauderon daemon",
-                rp_origin,
-                rp_origin,
-                rp_origin
+                  CLAUDERON_ORIGIN=https://{rp_origin}:3030 clauderon daemon"
             );
         }
 
@@ -407,11 +404,10 @@ async fn run_http_server(
         let webauthn = WebAuthnHandler::new(&rp_origin, &rp_id).with_context(|| {
             format!(
                 "Failed to initialize WebAuthn.\n\
-                Origin: {}\n\
-                RP ID: {}\n\
+                Origin: {rp_origin}\n\
+                RP ID: {rp_id}\n\
                 \n\
-                The RP ID must match or be a registrable suffix of the origin's hostname.",
-                rp_origin, rp_id
+                The RP ID must match or be a registrable suffix of the origin's hostname."
             )
         })?;
 
@@ -457,7 +453,7 @@ async fn run_http_server(
     let needs_localhost_listener = !is_localhost && !is_all_interfaces;
 
     // Parse and bind primary address
-    let primary_addr: std::net::SocketAddr = format!("{}:{}", bind_addr, port).parse()?;
+    let primary_addr: std::net::SocketAddr = format!("{bind_addr}:{port}").parse()?;
     let primary_listener = tokio::net::TcpListener::bind(primary_addr).await?;
 
     tracing::info!(
@@ -472,7 +468,7 @@ async fn run_http_server(
 
     // Create localhost listener for container access if needed
     let localhost_listener = if needs_localhost_listener {
-        let localhost_addr: std::net::SocketAddr = format!("127.0.0.1:{}", port).parse()?;
+        let localhost_addr: std::net::SocketAddr = format!("127.0.0.1:{port}").parse()?;
         match tokio::net::TcpListener::bind(localhost_addr).await {
             Ok(listener) => {
                 tracing::info!(

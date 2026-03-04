@@ -594,11 +594,12 @@ impl AgentType {
 
 /// Model selection for Claude Code agent
 #[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ClaudeModel {
     /// Claude Opus 4.5 (most capable, best for complex workflows)
     Opus4_5,
     /// Claude Sonnet 4.5 (default, balanced performance for agents and coding)
+    #[default]
     Sonnet4_5,
     /// Claude Haiku 4.5 (fastest, optimized for low latency)
     Haiku4_5,
@@ -622,16 +623,6 @@ impl ClaudeModel {
             Self::Opus4 => "opus-4",
             Self::Sonnet4 => "sonnet-4",
         }
-    }
-}
-
-#[expect(
-    clippy::derivable_impls,
-    reason = "explicit default makes the chosen default variant clear"
-)]
-impl Default for ClaudeModel {
-    fn default() -> Self {
-        Self::Sonnet4_5
     }
 }
 
@@ -773,7 +764,7 @@ pub fn validate_experimental_agent(
 ) -> anyhow::Result<()> {
     if agent.is_experimental() && !enable_experimental {
         anyhow::bail!(
-            "Agent {:?} is experimental and requires the enable_experimental_models feature flag.\n\
+            "Agent {agent:?} is experimental and requires the enable_experimental_models feature flag.\n\
             \n\
             Enable via:\n\
             - CLI: clauderon daemon --enable-experimental-models\n\
@@ -782,18 +773,17 @@ pub fn validate_experimental_agent(
               [feature_flags]\n\
               enable_experimental_models = true\n\
             \n\
-            Restart the daemon after changing configuration.",
-            agent
+            Restart the daemon after changing configuration."
         );
     }
 
-    if let Some(m) = model {
-        if m.is_experimental() && !enable_experimental {
-            anyhow::bail!(
-                "Model {:?} is experimental and requires the enable_experimental_models feature flag",
-                m
-            );
-        }
+    if let Some(m) = model
+        && m.is_experimental()
+        && !enable_experimental
+    {
+        anyhow::bail!(
+            "Model {m:?} is experimental and requires the enable_experimental_models feature flag"
+        );
     }
 
     Ok(())
@@ -975,7 +965,7 @@ impl std::str::FromStr for AccessMode {
         match s.to_lowercase().as_str() {
             "readonly" | "read-only" | "ro" => Ok(Self::ReadOnly),
             "readwrite" | "read-write" | "rw" => Ok(Self::ReadWrite),
-            _ => Err(anyhow::anyhow!("Invalid access mode: {}", s)),
+            _ => Err(anyhow::anyhow!("Invalid access mode: {s}")),
         }
     }
 }
@@ -1362,19 +1352,17 @@ pub fn find_codex_history_file(worktree_path: &Path, _session_id: &Uuid) -> Opti
         .filter_map(Result::ok)
     {
         let path = entry.path();
-        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-            if filename.to_lowercase().ends_with(".jsonl") {
-                if let Ok(metadata) = path.metadata() {
-                    if let Ok(modified) = metadata.modified() {
-                        match &most_recent {
-                            None => most_recent = Some((path.to_path_buf(), modified)),
-                            Some((_, prev_time)) if modified > *prev_time => {
-                                most_recent = Some((path.to_path_buf(), modified));
-                            }
-                            _ => {}
-                        }
-                    }
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str())
+            && filename.to_lowercase().ends_with(".jsonl")
+            && let Ok(metadata) = path.metadata()
+            && let Ok(modified) = metadata.modified()
+        {
+            match &most_recent {
+                None => most_recent = Some((path.to_path_buf(), modified)),
+                Some((_, prev_time)) if modified > *prev_time => {
+                    most_recent = Some((path.to_path_buf(), modified));
                 }
+                _ => {}
             }
         }
     }
