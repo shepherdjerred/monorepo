@@ -75,6 +75,9 @@ def main() -> None:
     # Build workspace dependencies that export from dist/
     print("\nBuilding workspace dependency: astro-opengraph-images", flush=True)
     subprocess.run(["bun", "run", "build"], cwd=str(_REPO_ROOT / "packages/astro-opengraph-images"), check=True)
+    # Install Playwright chromium for rehype-mermaid (used by sjer.red)
+    print("\nInstalling Playwright chromium", flush=True)
+    subprocess.run(["bunx", "playwright", "install", "--with-deps", "chromium"], check=True)
     for site in sites:
         if site["build_cmd"] is None:
             print(f"\nSkipping build for {site['build_dir']} (static files)", flush=True)
