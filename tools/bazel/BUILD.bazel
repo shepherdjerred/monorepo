@@ -14,10 +14,8 @@ js_library(
     srcs = ["bun_test_entry.cjs"],
     visibility = ["//visibility:public"],
 )
-
 js_library(
     name = "eslint_entry",
     srcs = ["eslint_entry.cjs"],
     visibility = ["//visibility:public"],
 )
-

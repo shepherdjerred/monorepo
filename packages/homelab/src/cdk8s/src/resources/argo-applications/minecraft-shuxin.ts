@@ -119,6 +119,10 @@ export function createMinecraftShuxinApp(chart: Chart) {
         "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/1zP2p3m2/LevelledMobs-4.5.1%20b143.jar",
         // Death chests - items saved at death location instead of scattering
         "https://cdn.modrinth.com/data/vCFaodCy/versions/S0aPOt1V/GravesX-4.9.10.10.jar",
+        // GriefPrevention - prevents creeper block damage, crop trampling, and provides claims system
+        "https://cdn.modrinth.com/data/O4o4mKaq/versions/4RqY8Kfl/GriefPrevention.jar",
+        // WanderingTrades - custom trades for Wandering Traders
+        "https://cdn.modrinth.com/data/ZfddU72x/versions/hyDtQvok/WanderingTrades-1.9.0.jar",
       ],
       rcon: {
         enabled: true,

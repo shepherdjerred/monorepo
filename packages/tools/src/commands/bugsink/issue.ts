@@ -1,150 +1,62 @@
-import { getIssue, getLatestEvent } from "#lib/bugsink/issues.ts";
-import type { BugsinkIssue, BugsinkEvent } from "#lib/bugsink/types.ts";
-import { getLevelEmoji } from "#lib/bugsink/format.ts";
+import { getIssue } from "#lib/bugsink/issues.ts";
+import type { BugsinkIssue } from "#lib/bugsink/types.ts";
+import { getIssueStatusLabel } from "#lib/bugsink/format.ts";
 import { formatJson } from "#lib/output/formatter.ts";
 
 export type IssueOptions = {
   json?: boolean | undefined;
 };
 
-function formatStacktrace(event: BugsinkEvent): string[] {
+function formatIssueDetails(issue: BugsinkIssue): string {
   const lines: string[] = [];
+  const status = getIssueStatusLabel(issue);
 
-  if (event.exception?.values == null) {
-    return lines;
-  }
-
-  for (const exception of event.exception.values) {
-    lines.push(`**${exception.type}:** ${exception.value}`);
-    lines.push("");
-
-    if (
-      exception.stacktrace != null &&
-      exception.stacktrace.frames.length > 0
-    ) {
-      lines.push("```");
-      // Show frames in reverse order (most recent first)
-      const frames = [...exception.stacktrace.frames].reverse().slice(0, 10);
-      for (const frame of frames) {
-        const location =
-          frame.lineno == null
-            ? frame.filename
-            : `${frame.filename}:${String(frame.lineno)}`;
-        const inApp = frame.in_app ? "" : " (library)";
-        lines.push(`  at ${frame.function} (${location})${inApp}`);
-      }
-      if (exception.stacktrace.frames.length > 10) {
-        lines.push(
-          `  ... ${String(exception.stacktrace.frames.length - 10)} more frames`,
-        );
-      }
-      lines.push("```");
-    }
-  }
-
-  return lines;
-}
-
-function formatMetadata(issue: BugsinkIssue): string[] {
-  const lines: string[] = [];
-  if (
-    (issue.metadata.type != null && issue.metadata.type.length > 0) ||
-    (issue.metadata.value != null && issue.metadata.value.length > 0)
-  ) {
-    lines.push("### Error Info");
-    lines.push("");
-    if (issue.metadata.type != null && issue.metadata.type.length > 0) {
-      lines.push(`- **Type:** ${issue.metadata.type}`);
-    }
-    if (issue.metadata.value != null && issue.metadata.value.length > 0) {
-      lines.push(`- **Value:** ${issue.metadata.value}`);
-    }
-    if (issue.metadata.filename != null && issue.metadata.filename.length > 0) {
-      lines.push(`- **File:** ${issue.metadata.filename}`);
-    }
-    if (issue.metadata.function != null && issue.metadata.function.length > 0) {
-      lines.push(`- **Function:** ${issue.metadata.function}`);
-    }
-    lines.push("");
-  }
-  return lines;
-}
-
-function formatLatestEvent(latestEvent: BugsinkEvent): string[] {
-  const lines: string[] = [];
-  lines.push("### Latest Event");
-  lines.push("");
-  lines.push(`- **Event ID:** ${latestEvent.event_id}`);
-  lines.push(
-    `- **Occurred:** ${new Date(latestEvent.timestamp).toLocaleString()}`,
-  );
-
-  if (latestEvent.user != null) {
-    const user = latestEvent.user;
-    const userInfo =
-      user.email ?? user.username ?? user.id ?? user.ip_address ?? "anonymous";
-    lines.push(`- **User:** ${userInfo}`);
-  }
-  lines.push("");
-
-  if (latestEvent.tags.length > 0) {
-    lines.push("#### Tags");
-    lines.push("");
-    for (const tag of latestEvent.tags.slice(0, 10)) {
-      lines.push(`- **${tag.key}:** ${tag.value}`);
-    }
-    lines.push("");
-  }
-
-  if (latestEvent.exception?.values != null) {
-    lines.push("#### Stacktrace");
-    lines.push("");
-    const stackLines = formatStacktrace(latestEvent);
-    lines.push(...stackLines);
-    lines.push("");
-  }
-
-  return lines;
-}
-
-function formatIssueDetails(
-  issue: BugsinkIssue,
-  latestEvent: BugsinkEvent | null,
-): string {
-  const lines: string[] = [];
-
-  lines.push(`## Issue ${issue.short_id}: ${issue.title}`);
-  lines.push("");
-
-  lines.push(
-    `### Level: ${getLevelEmoji(issue.level)} ${issue.level.toUpperCase()}`,
-  );
+  lines.push(`## Issue: ${issue.calculated_type}`);
   lines.push("");
 
   lines.push("### Details");
   lines.push("");
   lines.push(`- **ID:** ${issue.id}`);
-  lines.push(`- **Short ID:** ${issue.short_id}`);
-  lines.push(`- **Project:** ${issue.project.name}`);
-  lines.push(`- **Status:** ${issue.status}`);
-
-  if (issue.culprit != null && issue.culprit.length > 0) {
-    lines.push(`- **Culprit:** \`${issue.culprit}\``);
+  lines.push(`- **Type:** ${issue.calculated_type}`);
+  lines.push(`- **Status:** ${status}`);
+  if (issue.is_resolved_by_next_release) {
+    lines.push("- **Resolved by:** next release");
   }
+  lines.push(`- **Project ID:** ${String(issue.project)}`);
+  lines.push("");
 
-  lines.push(`- **Events:** ${String(issue.count)}`);
-  lines.push(`- **Users affected:** ${String(issue.user_count)}`);
+  lines.push("### Value");
+  lines.push("");
+  lines.push("```");
+  lines.push(issue.calculated_value);
+  lines.push("```");
+  lines.push("");
+
+  lines.push("### Event Counts");
+  lines.push("");
+  lines.push(`- **Digested:** ${String(issue.digested_event_count)}`);
+  lines.push(`- **Stored:** ${String(issue.stored_event_count)}`);
+  lines.push("");
+
+  lines.push("### Timeline");
+  lines.push("");
   lines.push(
     `- **First seen:** ${new Date(issue.first_seen).toLocaleString()}`,
   );
-  lines.push(`- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`);
+  lines.push(
+    `- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`,
+  );
   lines.push("");
 
-  lines.push(...formatMetadata(issue));
-
-  if (latestEvent != null) {
-    lines.push(...formatLatestEvent(latestEvent));
+  if (issue.transaction.length > 0) {
+    lines.push(`- **Transaction:** ${issue.transaction}`);
+    lines.push("");
   }
+
+  lines.push("To view events for this issue:");
+  lines.push("```bash");
+  lines.push(`tools bugsink events ${issue.id}`);
+  lines.push("```");
 
   return lines.join("\n");
 }
@@ -162,11 +74,9 @@ export async function issueCommand(
     }
 
     if (options.json === true) {
-      const latestEvent = await getLatestEvent(issueId);
-      console.log(formatJson({ issue, latestEvent }));
+      console.log(formatJson(issue));
     } else {
-      const latestEvent = await getLatestEvent(issueId);
-      console.log(formatIssueDetails(issue, latestEvent));
+      console.log(formatIssueDetails(issue));
     }
   } catch (error) {
     const message =
