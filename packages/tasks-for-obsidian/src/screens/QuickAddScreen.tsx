@@ -1,5 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Pressable, Text, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
+import {
+  View,
+  Pressable,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import { useTasks } from "../hooks/use-tasks";
@@ -56,7 +63,11 @@ export function QuickAddScreen({ route, navigation }: Props) {
       <Pressable
         style={[
           styles.createButton,
-          { backgroundColor: parsed.title.trim() ? colors.primary : colors.border },
+          {
+            backgroundColor: parsed.title.trim()
+              ? colors.primary
+              : colors.border,
+          },
         ]}
         onPress={handleCreate}
         disabled={!parsed.title.trim()}

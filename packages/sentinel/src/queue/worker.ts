@@ -57,7 +57,10 @@ export async function stopWorker(): Promise<void> {
 
   // Wait for all active jobs to finish
   while (activeJobs.size > 0) {
-    workerLogger.info({ activeJobs: activeJobs.size }, "Waiting for active jobs to finish");
+    workerLogger.info(
+      { activeJobs: activeJobs.size },
+      "Waiting for active jobs to finish",
+    );
     await Promise.race(activeJobs.values()).catch(() => {
       // Ignore errors — they're handled inside processJob
     });
@@ -129,7 +132,15 @@ type TurnContext = {
 };
 
 async function logAssistantTurn(
-  betaMessage: { content: { type: string; text?: string; name?: string; input?: unknown; id?: string }[] },
+  betaMessage: {
+    content: {
+      type: string;
+      text?: string;
+      name?: string;
+      input?: unknown;
+      id?: string;
+    }[];
+  },
   conversationLog: ConversationLogger,
   ctx: TurnContext,
 ): Promise<void> {
@@ -198,7 +209,11 @@ async function processJob(job: Job): Promise<void> {
     data: { id: sessionId, agent: job.agent, jobId: job.id },
   });
 
-  const conversationLog = createConversationLogger(job.agent, job.id, sessionId);
+  const conversationLog = createConversationLogger(
+    job.agent,
+    job.id,
+    sessionId,
+  );
 
   const abortController = new AbortController();
   const timeout = setTimeout(() => {
@@ -211,9 +226,10 @@ async function processJob(job: Job): Promise<void> {
 
   try {
     const memoryContext = await buildMemoryContext(agentDef, job.prompt);
-    const systemPrompt = memoryContext.length > 0
-      ? `${agentDef.systemPrompt}\n\n${memoryContext}`
-      : agentDef.systemPrompt;
+    const systemPrompt =
+      memoryContext.length > 0
+        ? `${agentDef.systemPrompt}\n\n${memoryContext}`
+        : agentDef.systemPrompt;
 
     // Log the system prompt as the first conversation entry
     await conversationLog.appendEntry({
@@ -228,10 +244,13 @@ async function processJob(job: Job): Promise<void> {
     });
 
     const metadata: unknown = JSON.parse(job.triggerMetadata);
-    const metadataObj = metadata != null && typeof metadata === "object" ? metadata : {};
-    const resumeSessionId = "resumeSessionId" in metadataObj
-      && typeof metadataObj.resumeSessionId === "string"
-      ? metadataObj.resumeSessionId : undefined;
+    const metadataObj =
+      metadata != null && typeof metadata === "object" ? metadata : {};
+    const resumeSessionId =
+      "resumeSessionId" in metadataObj &&
+      typeof metadataObj.resumeSessionId === "string"
+        ? metadataObj.resumeSessionId
+        : undefined;
 
     const agentQuery = query({
       prompt: job.prompt,
@@ -246,7 +265,10 @@ async function processJob(job: Job): Promise<void> {
         env: buildAgentEnv(config.anthropic.apiKey),
         permissionMode: "dontAsk",
         stderr: (data: string) => {
-          workerLogger.debug({ jobId: job.id, stderr: data.trim() }, "Agent stderr");
+          workerLogger.debug(
+            { jobId: job.id, stderr: data.trim() },
+            "Agent stderr",
+          );
         },
         ...(resumeSessionId == null ? {} : { resume: resumeSessionId }),
       },
@@ -261,8 +283,15 @@ async function processJob(job: Job): Promise<void> {
           const turnModel = betaMessage.model;
 
           await logAssistantTurn(betaMessage, conversationLog, {
-            sessionId, agent: job.agent, jobId: job.id, turnNumber: turnCount, model: turnModel,
-            tokenUsage: { input: turnUsage.input_tokens, output: turnUsage.output_tokens },
+            sessionId,
+            agent: job.agent,
+            jobId: job.id,
+            turnNumber: turnCount,
+            model: turnModel,
+            tokenUsage: {
+              input: turnUsage.input_tokens,
+              output: turnUsage.output_tokens,
+            },
           });
 
           // Live progress: update DB (also bumps updatedAt) and emit SSE
@@ -270,7 +299,13 @@ async function processJob(job: Job): Promise<void> {
             where: { id: sessionId },
             data: { turnsUsed: turnCount },
           });
-          emitSSE({ type: "job:progress", jobId: job.id, sessionId, agent: job.agent, turnsUsed: turnCount });
+          emitSSE({
+            type: "job:progress",
+            jobId: job.id,
+            sessionId,
+            agent: job.agent,
+            turnsUsed: turnCount,
+          });
           break;
         }
         case "user": {

@@ -54,7 +54,13 @@ export function Jobs({ onNavigate }: JobsProps) {
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
           Jobs
         </h1>
-        <Button onClick={() => { setDialogOpen(true); }}>Create Job</Button>
+        <Button
+          onClick={() => {
+            setDialogOpen(true);
+          }}
+        >
+          Create Job
+        </Button>
       </div>
 
       <div className="flex gap-4">
@@ -63,7 +69,15 @@ export function Jobs({ onNavigate }: JobsProps) {
           value={statusFilter}
           onChange={(e) => {
             const val = e.target.value;
-            if (val === "" || val === "pending" || val === "running" || val === "completed" || val === "failed" || val === "cancelled" || val === "awaiting_approval") {
+            if (
+              val === "" ||
+              val === "pending" ||
+              val === "running" ||
+              val === "completed" ||
+              val === "failed" ||
+              val === "cancelled" ||
+              val === "awaiting_approval"
+            ) {
               setStatusFilter(val);
             }
           }}
@@ -71,7 +85,9 @@ export function Jobs({ onNavigate }: JobsProps) {
         <Select
           options={agentOptions}
           value={agentFilter}
-          onChange={(e) => { setAgentFilter(e.target.value); }}
+          onChange={(e) => {
+            setAgentFilter(e.target.value);
+          }}
         />
       </div>
 
@@ -89,7 +105,12 @@ export function Jobs({ onNavigate }: JobsProps) {
         </div>
       )}
 
-      <CreateJobDialog open={dialogOpen} onClose={() => { setDialogOpen(false); }} />
+      <CreateJobDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

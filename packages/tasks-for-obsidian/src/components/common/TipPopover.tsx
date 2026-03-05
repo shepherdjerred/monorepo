@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 
@@ -12,7 +16,13 @@ type TipPopoverProps = {
   position?: "above" | "below" | undefined;
 };
 
-export function TipPopover({ visible, title, message, onDismiss, position = "below" }: TipPopoverProps) {
+export function TipPopover({
+  visible,
+  title,
+  message,
+  onDismiss,
+  position = "below",
+}: TipPopoverProps) {
   const { colors } = useSettings();
   const opacity = useSharedValue(0);
 
@@ -46,8 +56,16 @@ export function TipPopover({ visible, title, message, onDismiss, position = "bel
           },
         ]}
       />
-      <Text style={[typography.subheading, { color: colors.text }]}>{title}</Text>
-      <Text style={[typography.bodySmall, styles.message, { color: colors.textSecondary }]}>
+      <Text style={[typography.subheading, { color: colors.text }]}>
+        {title}
+      </Text>
+      <Text
+        style={[
+          typography.bodySmall,
+          styles.message,
+          { color: colors.textSecondary },
+        ]}
+      >
         {message}
       </Text>
       <Pressable

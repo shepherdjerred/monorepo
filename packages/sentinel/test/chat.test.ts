@@ -1,6 +1,9 @@
 import { describe, it } from "bun:test";
 import "./helpers.ts";
-import { sendChatReply, updateUserSession } from "@shepherdjerred/sentinel/discord/chat.ts";
+import {
+  sendChatReply,
+  updateUserSession,
+} from "@shepherdjerred/sentinel/discord/chat.ts";
 import type { Job } from "@prisma/client";
 
 // Access the private userSessions map via the exported helpers

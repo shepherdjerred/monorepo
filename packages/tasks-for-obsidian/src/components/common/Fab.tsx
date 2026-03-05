@@ -1,6 +1,10 @@
 import React from "react";
 import { Pressable, Text, StyleSheet } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../hooks/use-settings";
 import { feedbackButtonPress } from "../../lib/feedback";
@@ -31,7 +35,11 @@ export function Fab({ onPress }: FabProps) {
 
   return (
     <AnimatedPressable
-      style={[styles.fab, { backgroundColor: colors.primary, bottom: 20 + insets.bottom }, animatedStyle]}
+      style={[
+        styles.fab,
+        { backgroundColor: colors.primary, bottom: 20 + insets.bottom },
+        animatedStyle,
+      ]}
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}

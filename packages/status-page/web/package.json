@@ -1,0 +1,40 @@
+{
+  "name": "@shepherdjerred/status-page-web",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Multi-site status page",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "lint": "bunx eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.3.1",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.4",
+    "@radix-ui/react-separator": "^1.1.4",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tailwindcss/postcss": "^4.1.11",
+    "astro": "^5.0.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.563.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.3"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  }
+}

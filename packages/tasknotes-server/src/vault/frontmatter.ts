@@ -21,5 +21,7 @@ export function serializeFrontmatter(
   data: Record<string, unknown>,
   content: string,
 ): string {
-  return matter.stringify(content ? `\n${content}\n` : "\n", data).trim() + "\n";
+  return (
+    matter.stringify(content ? `\n${content}\n` : "\n", data).trim() + "\n"
+  );
 }

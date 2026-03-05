@@ -121,7 +121,10 @@ export function SessionTable({ sessions, onNavigate }: SessionTableProps) {
                 <td className={cellClass}>
                   <button
                     onClick={() => {
-                      onNavigate({ name: "conversation", sessionId: session.id });
+                      onNavigate({
+                        name: "conversation",
+                        sessionId: session.id,
+                      });
                     }}
                     className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                     title="View Conversation"

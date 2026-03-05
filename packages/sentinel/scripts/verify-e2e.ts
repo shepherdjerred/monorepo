@@ -37,8 +37,14 @@ void mock.module("@shepherdjerred/sentinel/sse/index.ts", () => ({
 
 // --- Now import app modules ---
 import { createApp } from "@shepherdjerred/sentinel/adapters/webhook.ts";
-import { enqueueJob, getQueueStats } from "@shepherdjerred/sentinel/queue/index.ts";
-import { startCronJobs, stopCronJobs } from "@shepherdjerred/sentinel/adapters/cron.ts";
+import {
+  enqueueJob,
+  getQueueStats,
+} from "@shepherdjerred/sentinel/queue/index.ts";
+import {
+  startCronJobs,
+  stopCronJobs,
+} from "@shepherdjerred/sentinel/adapters/cron.ts";
 import { agentRegistry } from "@shepherdjerred/sentinel/agents/registry.ts";
 import { appRouter } from "@shepherdjerred/sentinel/trpc/router/index.ts";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
@@ -154,7 +160,9 @@ function assert(condition: boolean, message: string): void {
 
 function assertEqual(actual: unknown, expected: unknown, label: string): void {
   if (actual !== expected) {
-    throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    throw new Error(
+      `${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
   }
 }
 
@@ -169,7 +177,9 @@ async function runTest(name: string, fn: () => Promise<void>): Promise<void> {
     passed++;
   } catch (error) {
     console.error(`  FAIL ${name}`);
-    console.error(`    ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `    ${error instanceof Error ? error.message : String(error)}`,
+    );
     failed++;
   }
 }
@@ -213,142 +223,175 @@ async function main(): Promise<void> {
   // ===== GitHub webhook =====
   console.log("\nGitHub webhook:");
 
-  await runTest("POST /webhook/github with valid HMAC enqueues job", async () => {
-    await cleanupTables();
-    const body = JSON.stringify({
-      action: "completed",
-      workflow_run: {
-        conclusion: "failure",
-        name: "CI",
-        head_branch: "main",
-        html_url: "https://github.com/test/repo/actions/runs/1",
-        repository: { full_name: "test/repo" },
-      },
-    });
-    const signature = `sha256=${createHmac("sha256", testConfig.webhooks.githubSecret!).update(body).digest("hex")}`;
-    const res = await app.fetch(
-      new Request("http://localhost/webhook/github", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Hub-Signature-256": signature,
-          "X-GitHub-Event": "workflow_run",
-          "X-GitHub-Delivery": crypto.randomUUID(),
+  await runTest(
+    "POST /webhook/github with valid HMAC enqueues job",
+    async () => {
+      await cleanupTables();
+      const body = JSON.stringify({
+        action: "completed",
+        workflow_run: {
+          conclusion: "failure",
+          name: "CI",
+          head_branch: "main",
+          html_url: "https://github.com/test/repo/actions/runs/1",
+          repository: { full_name: "test/repo" },
         },
-        body,
-      }),
-    );
-    assertEqual(res.status, 200, "status");
-    const json = (await res.json()) as Record<string, unknown>;
-    assertEqual(json["status"], "enqueued", "response status");
-    assert(typeof json["jobId"] === "string" && json["jobId"].length > 0, "jobId should be a non-empty string");
-  });
+      });
+      const signature = `sha256=${createHmac("sha256", testConfig.webhooks.githubSecret!).update(body).digest("hex")}`;
+      const res = await app.fetch(
+        new Request("http://localhost/webhook/github", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Hub-Signature-256": signature,
+            "X-GitHub-Event": "workflow_run",
+            "X-GitHub-Delivery": crypto.randomUUID(),
+          },
+          body,
+        }),
+      );
+      assertEqual(res.status, 200, "status");
+      const json = (await res.json()) as Record<string, unknown>;
+      assertEqual(json["status"], "enqueued", "response status");
+      assert(
+        typeof json["jobId"] === "string" && json["jobId"].length > 0,
+        "jobId should be a non-empty string",
+      );
+    },
+  );
 
-  await runTest("POST /webhook/github with invalid signature returns 401", async () => {
-    const body = JSON.stringify({ action: "completed", workflow_run: { conclusion: "failure" } });
-    const res = await app.fetch(
-      new Request("http://localhost/webhook/github", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Hub-Signature-256": "sha256=invalid",
-          "X-GitHub-Event": "workflow_run",
-          "X-GitHub-Delivery": crypto.randomUUID(),
-        },
-        body,
-      }),
-    );
-    assertEqual(res.status, 401, "status");
-  });
+  await runTest(
+    "POST /webhook/github with invalid signature returns 401",
+    async () => {
+      const body = JSON.stringify({
+        action: "completed",
+        workflow_run: { conclusion: "failure" },
+      });
+      const res = await app.fetch(
+        new Request("http://localhost/webhook/github", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Hub-Signature-256": "sha256=invalid",
+            "X-GitHub-Event": "workflow_run",
+            "X-GitHub-Delivery": crypto.randomUUID(),
+          },
+          body,
+        }),
+      );
+      assertEqual(res.status, 401, "status");
+    },
+  );
 
   // ===== PagerDuty webhook =====
   console.log("\nPagerDuty webhook:");
 
-  await runTest("POST /webhook/pagerduty with valid signature enqueues job", async () => {
-    await cleanupTables();
-    const body = JSON.stringify({
-      event: {
-        id: "evt-1",
-        event_type: "incident.triggered",
-        data: {
-          title: "Test Alert",
-          urgency: "high",
-          html_url: "https://pagerduty.com/incidents/1",
-          service: { summary: "test-service" },
+  await runTest(
+    "POST /webhook/pagerduty with valid signature enqueues job",
+    async () => {
+      await cleanupTables();
+      const body = JSON.stringify({
+        event: {
+          id: "evt-1",
+          event_type: "incident.triggered",
+          data: {
+            title: "Test Alert",
+            urgency: "high",
+            html_url: "https://pagerduty.com/incidents/1",
+            service: { summary: "test-service" },
+          },
         },
-      },
-    });
-    const signature = `v1=${createHmac("sha256", testConfig.webhooks.pagerdutySecret!).update(body).digest("hex")}`;
-    const res = await app.fetch(
-      new Request("http://localhost/webhook/pagerduty", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-PagerDuty-Signature": signature,
-        },
-        body,
-      }),
-    );
-    assertEqual(res.status, 200, "status");
-    const json = (await res.json()) as Record<string, unknown>;
-    assertEqual(json["status"], "enqueued", "response status");
-    assert(typeof json["jobId"] === "string" && json["jobId"].length > 0, "jobId should be a non-empty string");
-  });
+      });
+      const signature = `v1=${createHmac("sha256", testConfig.webhooks.pagerdutySecret!).update(body).digest("hex")}`;
+      const res = await app.fetch(
+        new Request("http://localhost/webhook/pagerduty", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-PagerDuty-Signature": signature,
+          },
+          body,
+        }),
+      );
+      assertEqual(res.status, 200, "status");
+      const json = (await res.json()) as Record<string, unknown>;
+      assertEqual(json["status"], "enqueued", "response status");
+      assert(
+        typeof json["jobId"] === "string" && json["jobId"].length > 0,
+        "jobId should be a non-empty string",
+      );
+    },
+  );
 
   // ===== Buildkite webhook =====
   console.log("\nBuildkite webhook:");
 
-  await runTest("POST /webhook/buildkite with valid token enqueues job", async () => {
-    await cleanupTables();
-    const body = JSON.stringify({
-      build: {
-        id: "build-1",
-        state: "failed",
-        branch: "main",
-        web_url: "https://buildkite.com/org/pipe/builds/1",
-        message: "Test commit",
-      },
-      pipeline: { name: "test-pipeline" },
-    });
-    const res = await app.fetch(
-      new Request("http://localhost/webhook/buildkite", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Buildkite-Token": testConfig.webhooks.buildkiteToken!,
-          "X-Buildkite-Event": "build.finished",
+  await runTest(
+    "POST /webhook/buildkite with valid token enqueues job",
+    async () => {
+      await cleanupTables();
+      const body = JSON.stringify({
+        build: {
+          id: "build-1",
+          state: "failed",
+          branch: "main",
+          web_url: "https://buildkite.com/org/pipe/builds/1",
+          message: "Test commit",
         },
-        body,
-      }),
-    );
-    assertEqual(res.status, 200, "status");
-    const json = (await res.json()) as Record<string, unknown>;
-    assertEqual(json["status"], "enqueued", "response status");
-    assert(typeof json["jobId"] === "string" && json["jobId"].length > 0, "jobId should be a non-empty string");
-  });
+        pipeline: { name: "test-pipeline" },
+      });
+      const res = await app.fetch(
+        new Request("http://localhost/webhook/buildkite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Buildkite-Token": testConfig.webhooks.buildkiteToken!,
+            "X-Buildkite-Event": "build.finished",
+          },
+          body,
+        }),
+      );
+      assertEqual(res.status, 200, "status");
+      const json = (await res.json()) as Record<string, unknown>;
+      assertEqual(json["status"], "enqueued", "response status");
+      assert(
+        typeof json["jobId"] === "string" && json["jobId"].length > 0,
+        "jobId should be a non-empty string",
+      );
+    },
+  );
 
   // ===== Bugsink webhook =====
   console.log("\nBugsink webhook:");
 
-  await runTest("POST /webhook/bugsink/:token with correct token enqueues job", async () => {
-    await cleanupTables();
-    const body = JSON.stringify({
-      title: "Test Error",
-      project: "test-project",
-      url: "https://bugsink.example.com/issues/1",
-    });
-    const res = await app.fetch(
-      new Request(`http://localhost/webhook/bugsink/${testConfig.webhooks.bugsinkSecret}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
-      }),
-    );
-    assertEqual(res.status, 200, "status");
-    const json = (await res.json()) as Record<string, unknown>;
-    assertEqual(json["status"], "enqueued", "response status");
-    assert(typeof json["jobId"] === "string" && json["jobId"].length > 0, "jobId should be a non-empty string");
-  });
+  await runTest(
+    "POST /webhook/bugsink/:token with correct token enqueues job",
+    async () => {
+      await cleanupTables();
+      const body = JSON.stringify({
+        title: "Test Error",
+        project: "test-project",
+        url: "https://bugsink.example.com/issues/1",
+      });
+      const res = await app.fetch(
+        new Request(
+          `http://localhost/webhook/bugsink/${testConfig.webhooks.bugsinkSecret}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body,
+          },
+        ),
+      );
+      assertEqual(res.status, 200, "status");
+      const json = (await res.json()) as Record<string, unknown>;
+      assertEqual(json["status"], "enqueued", "response status");
+      assert(
+        typeof json["jobId"] === "string" && json["jobId"].length > 0,
+        "jobId should be a non-empty string",
+      );
+    },
+  );
 
   // ===== tRPC =====
   console.log("\ntRPC:");
@@ -371,7 +414,10 @@ async function main(): Promise<void> {
       prompt: "Test job from tRPC",
       priority: "normal",
     });
-    assert(typeof job.id === "string" && job.id.length > 0, "job id should be a non-empty string");
+    assert(
+      typeof job.id === "string" && job.id.length > 0,
+      "job id should be a non-empty string",
+    );
     assertEqual(job.agent, "ci-fixer", "agent");
     assertEqual(job.status, "pending", "status");
 
@@ -383,38 +429,50 @@ async function main(): Promise<void> {
   // ===== Queue =====
   console.log("\nQueue:");
 
-  await runTest("enqueueJob creates a job and getQueueStats reflects it", async () => {
-    await cleanupTables();
-    const job = await enqueueJob({
-      agent: "health-checker",
-      prompt: "Test direct enqueue",
-      triggerType: "manual",
-      triggerSource: "e2e-test",
-    });
-    assert(typeof job.id === "string" && job.id.length > 0, "job id should be a non-empty string");
+  await runTest(
+    "enqueueJob creates a job and getQueueStats reflects it",
+    async () => {
+      await cleanupTables();
+      const job = await enqueueJob({
+        agent: "health-checker",
+        prompt: "Test direct enqueue",
+        triggerType: "manual",
+        triggerSource: "e2e-test",
+      });
+      assert(
+        typeof job.id === "string" && job.id.length > 0,
+        "job id should be a non-empty string",
+      );
 
-    const stats = await getQueueStats();
-    assertEqual(stats.pending, 1, "pending count");
-  });
+      const stats = await getQueueStats();
+      assertEqual(stats.pending, 1, "pending count");
+    },
+  );
 
   // ===== Cron triggers =====
   console.log("\nCron triggers:");
 
-  await runTest("startCronJobs registers cron jobs for agents with cron triggers", async () => {
-    // Count how many cron triggers exist in the registry
-    let expectedCronCount = 0;
-    for (const [, agent] of agentRegistry) {
-      for (const trigger of agent.triggers) {
-        if (trigger.type === "cron") {
-          expectedCronCount++;
+  await runTest(
+    "startCronJobs registers cron jobs for agents with cron triggers",
+    async () => {
+      // Count how many cron triggers exist in the registry
+      let expectedCronCount = 0;
+      for (const [, agent] of agentRegistry) {
+        for (const trigger of agent.triggers) {
+          if (trigger.type === "cron") {
+            expectedCronCount++;
+          }
         }
       }
-    }
-    assert(expectedCronCount >= 2, `expected at least 2 cron triggers, got ${expectedCronCount}`);
+      assert(
+        expectedCronCount >= 2,
+        `expected at least 2 cron triggers, got ${expectedCronCount}`,
+      );
 
-    // Start cron jobs -- should not throw
-    startCronJobs(agentRegistry);
-  });
+      // Start cron jobs -- should not throw
+      startCronJobs(agentRegistry);
+    },
+  );
 
   await runTest("stopCronJobs cleans up without error", async () => {
     // Should not throw

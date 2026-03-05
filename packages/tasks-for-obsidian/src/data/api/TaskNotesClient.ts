@@ -59,7 +59,11 @@ export class TaskNotesClient {
   }
 
   async listTasks(): Promise<Result<Task[], AppError>> {
-    const result = await this.request("GET", `${PATHS.TASKS}?limit=1000`, TaskListSchema);
+    const result = await this.request(
+      "GET",
+      `${PATHS.TASKS}?limit=1000`,
+      TaskListSchema,
+    );
     if (!result.ok) return result;
     return ok(result.value.tasks);
   }
@@ -68,35 +72,62 @@ export class TaskNotesClient {
     return this.request("GET", PATHS.TASK(id), TaskResponseSchema);
   }
 
-  async createTask(request: CreateTaskRequest): Promise<Result<Task, AppError>> {
+  async createTask(
+    request: CreateTaskRequest,
+  ): Promise<Result<Task, AppError>> {
     return this.request("POST", PATHS.TASKS, CreateTaskResponseSchema, request);
   }
 
-  async updateTask(id: TaskId, request: UpdateTaskRequest): Promise<Result<Task, AppError>> {
+  async updateTask(
+    id: TaskId,
+    request: UpdateTaskRequest,
+  ): Promise<Result<Task, AppError>> {
     return this.request("PUT", PATHS.TASK(id), TaskResponseSchema, request);
   }
 
   async deleteTask(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("DELETE", PATHS.TASK(id), DeleteResponseSchema);
+    const result = await this.request(
+      "DELETE",
+      PATHS.TASK(id),
+      DeleteResponseSchema,
+    );
     if (!result.ok) return result;
     return OK_VOID;
   }
 
-  async toggleTaskStatus(id: TaskId, newStatus: TaskStatus): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASK_TOGGLE_STATUS(id), TaskResponseSchema, { status: newStatus });
+  async toggleTaskStatus(
+    id: TaskId,
+    newStatus: TaskStatus,
+  ): Promise<Result<Task, AppError>> {
+    return this.request(
+      "POST",
+      PATHS.TASK_TOGGLE_STATUS(id),
+      TaskResponseSchema,
+      { status: newStatus },
+    );
   }
 
   async archiveTask(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TASK_ARCHIVE(id), DeleteResponseSchema);
+    const result = await this.request(
+      "POST",
+      PATHS.TASK_ARCHIVE(id),
+      DeleteResponseSchema,
+    );
     if (!result.ok) return result;
     return OK_VOID;
   }
 
   async completeRecurringInstance(id: TaskId): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASK_COMPLETE_INSTANCE(id), TaskResponseSchema);
+    return this.request(
+      "POST",
+      PATHS.TASK_COMPLETE_INSTANCE(id),
+      TaskResponseSchema,
+    );
   }
 
-  async queryTasks(filter: TaskQueryFilter): Promise<Result<{ tasks: Task[]; total: number }, AppError>> {
+  async queryTasks(
+    filter: TaskQueryFilter,
+  ): Promise<Result<{ tasks: Task[]; total: number }, AppError>> {
     return this.request("POST", PATHS.TASKS_QUERY, QueryResponseSchema, filter);
   }
 
@@ -108,22 +139,36 @@ export class TaskNotesClient {
     return this.request("GET", PATHS.STATS, TaskStatsSchema);
   }
 
-  async parseNaturalLanguage(text: string): Promise<Result<NlpParseResult, AppError>> {
-    return this.request("POST", PATHS.NLP_PARSE, NlpParseResultSchema, { text });
+  async parseNaturalLanguage(
+    text: string,
+  ): Promise<Result<NlpParseResult, AppError>> {
+    return this.request("POST", PATHS.NLP_PARSE, NlpParseResultSchema, {
+      text,
+    });
   }
 
-  async createFromNaturalLanguage(text: string): Promise<Result<Task, AppError>> {
+  async createFromNaturalLanguage(
+    text: string,
+  ): Promise<Result<Task, AppError>> {
     return this.request("POST", PATHS.NLP_CREATE, TaskSchema, { text });
   }
 
   async startTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TIME_START(id), DeleteResponseSchema);
+    const result = await this.request(
+      "POST",
+      PATHS.TIME_START(id),
+      DeleteResponseSchema,
+    );
     if (!result.ok) return result;
     return OK_VOID;
   }
 
   async stopTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
-    const result = await this.request("POST", PATHS.TIME_STOP(id), DeleteResponseSchema);
+    const result = await this.request(
+      "POST",
+      PATHS.TIME_STOP(id),
+      DeleteResponseSchema,
+    );
     if (!result.ok) return result;
     return OK_VOID;
   }
@@ -136,8 +181,15 @@ export class TaskNotesClient {
     return this.request("GET", PATHS.TIME_SUMMARY, TimeSummarySchema);
   }
 
-  async startPomodoro(pomodoroTaskId?: TaskId): Promise<Result<PomodoroStatus, AppError>> {
-    return this.request("POST", PATHS.POMODORO_START, PomodoroStatusSchema, pomodoroTaskId ? { taskId: pomodoroTaskId } : undefined);
+  async startPomodoro(
+    pomodoroTaskId?: TaskId,
+  ): Promise<Result<PomodoroStatus, AppError>> {
+    return this.request(
+      "POST",
+      PATHS.POMODORO_START,
+      PomodoroStatusSchema,
+      pomodoroTaskId ? { taskId: pomodoroTaskId } : undefined,
+    );
   }
 
   async stopPomodoro(): Promise<Result<PomodoroStatus, AppError>> {
@@ -152,7 +204,10 @@ export class TaskNotesClient {
     return this.request("GET", PATHS.POMODORO_STATUS, PomodoroStatusSchema);
   }
 
-  async getCalendarEvents(start?: string, end?: string): Promise<Result<CalendarEvent[], AppError>> {
+  async getCalendarEvents(
+    start?: string,
+    end?: string,
+  ): Promise<Result<CalendarEvent[], AppError>> {
     const parts: string[] = [];
     if (start) parts.push(`start=${encodeURIComponent(start)}`);
     if (end) parts.push(`end=${encodeURIComponent(end)}`);
@@ -180,7 +235,9 @@ export class TaskNotesClient {
     if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, 15_000);
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 15_000);
 
     let response: Response;
     try {
@@ -192,13 +249,15 @@ export class TaskNotesClient {
       });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        return err(new ConnectionError(
-          `Request to ${this.baseUrl} timed out after 15s`,
-        ));
+        return err(
+          new ConnectionError(`Request to ${this.baseUrl} timed out after 15s`),
+        );
       }
-      return err(new ConnectionError(
-        `Failed to connect to ${this.baseUrl}: ${error instanceof Error ? error.message : String(error)}`,
-      ));
+      return err(
+        new ConnectionError(
+          `Failed to connect to ${this.baseUrl}: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
     } finally {
       clearTimeout(timeoutId);
     }
@@ -213,37 +272,45 @@ export class TaskNotesClient {
       } catch {
         responseBody = await response.text().catch(() => "");
       }
-      return err(new ApiError(
-        `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        responseBody,
-      ));
+      return err(
+        new ApiError(
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          responseBody,
+        ),
+      );
     }
 
     let json: unknown;
     try {
       json = await response.json();
     } catch (error) {
-      return err(new ValidationError(
-        `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`,
-      ));
+      return err(
+        new ValidationError(
+          `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
     }
 
     // Unwrap the API envelope: { success, data, error }
     const envelope = ApiResponseSchema(z.unknown()).safeParse(json);
     if (envelope.success) {
       if (!envelope.data.success) {
-        return err(new ApiError(envelope.data.error ?? "API returned success=false", 0));
+        return err(
+          new ApiError(envelope.data.error ?? "API returned success=false", 0),
+        );
       }
       json = envelope.data.data;
     }
 
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
-      return err(new ValidationError(
-        `Response validation failed: ${parsed.error.message}`,
-        parsed.error.issues,
-      ));
+      return err(
+        new ValidationError(
+          `Response validation failed: ${parsed.error.message}`,
+          parsed.error.issues,
+        ),
+      );
     }
 
     return ok(parsed.data);

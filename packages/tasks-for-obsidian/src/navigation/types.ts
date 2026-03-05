@@ -1,4 +1,9 @@
-import type { TaskId, ProjectName, ContextName, TagName } from "../domain/types";
+import type {
+  TaskId,
+  ProjectName,
+  ContextName,
+  TagName,
+} from "../domain/types";
 
 export type RootStackParamList = {
   Main: undefined;

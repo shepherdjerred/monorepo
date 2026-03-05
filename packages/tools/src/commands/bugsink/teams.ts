@@ -57,9 +57,7 @@ function formatTeamDetails(team: BugsinkTeam): string {
   return lines.join("\n");
 }
 
-export async function teamsCommand(
-  options: TeamsOptions = {},
-): Promise<void> {
+export async function teamsCommand(options: TeamsOptions = {}): Promise<void> {
   try {
     const teams = await getTeams();
 

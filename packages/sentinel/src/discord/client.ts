@@ -41,10 +41,7 @@ export async function startDiscord(config: Config): Promise<void> {
   });
 
   newClient.once(Events.ClientReady, (readyClient) => {
-    discordLogger.info(
-      { user: readyClient.user.tag },
-      "Discord client ready",
-    );
+    discordLogger.info({ user: readyClient.user.tag }, "Discord client ready");
     // Register slash commands after ready — client.application is guaranteed non-null here
     void registerCommands(readyClient, discordConfig.guildId);
   });

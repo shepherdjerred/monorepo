@@ -65,7 +65,11 @@ describe("webhook-to-queue integration", () => {
       },
     };
     const bodyString = JSON.stringify(payload);
-    const signature = generateHmacSignature("test-github-secret", bodyString, "sha256=");
+    const signature = generateHmacSignature(
+      "test-github-secret",
+      bodyString,
+      "sha256=",
+    );
 
     const res = await app.request("/webhook/github", {
       method: "POST",

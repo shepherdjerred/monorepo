@@ -60,7 +60,11 @@ function formatTimestamp(ts: string): string {
   return new Date(ts).toLocaleTimeString();
 }
 
-function CollapsibleCode({ content, defaultExpanded = false, maxLines = 20 }: {
+function CollapsibleCode({
+  content,
+  defaultExpanded = false,
+  maxLines = 20,
+}: {
   content: string;
   defaultExpanded?: boolean;
   maxLines?: number;
@@ -72,11 +76,15 @@ function CollapsibleCode({ content, defaultExpanded = false, maxLines = 20 }: {
   return (
     <div>
       <pre className="max-h-80 overflow-auto rounded bg-zinc-100 p-3 text-xs dark:bg-zinc-800">
-        <code>{expanded ? content : lines.slice(0, maxLines).join("\n") + "\n..."}</code>
+        <code>
+          {expanded ? content : lines.slice(0, maxLines).join("\n") + "\n..."}
+        </code>
       </pre>
       {isLong && (
         <button
-          onClick={() => { setExpanded(!expanded); }}
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
           className="mt-1 flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
         >
           {expanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
@@ -92,12 +100,14 @@ function PermissionBadge({ decision }: { decision: string | undefined }) {
   const variant = decision === "allow" ? "success" : "error";
   const label = decision === "allow" ? "auto-allowed" : "denied";
   return (
-    <span className={cn(
-      "rounded px-1.5 py-0.5 text-xs",
-      variant === "success"
-        ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-        : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-    )}>
+    <span
+      className={cn(
+        "rounded px-1.5 py-0.5 text-xs",
+        variant === "success"
+          ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+          : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+      )}
+    >
       {label}
     </span>
   );
@@ -107,7 +117,9 @@ function AssistantContent({ content }: { content: string }) {
   // The content is now plain text (extracted from BetaMessage content blocks)
   // No longer raw JSON, so render directly
   if (content.length === 0) {
-    return <span className="text-xs italic text-zinc-400">(no text content)</span>;
+    return (
+      <span className="text-xs italic text-zinc-400">(no text content)</span>
+    );
   }
   return <div className="whitespace-pre-wrap text-sm">{content}</div>;
 }
@@ -134,7 +146,9 @@ function ToolUseContent({ entry }: { entry: ConversationEntry }) {
       {formattedInput.length > 0 && (
         <div>
           <button
-            onClick={() => { setShowInput(!showInput); }}
+            onClick={() => {
+              setShowInput(!showInput);
+            }}
             className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
           >
             {showInput ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
@@ -159,8 +173,9 @@ function ToolResultContent({ entry }: { entry: ConversationEntry }) {
   try {
     const parsed: unknown = JSON.parse(content);
     if (parsed != null && typeof parsed === "object") {
-      isError = ("is_error" in parsed && parsed.is_error === true)
-        || ("type" in parsed && parsed.type === "error");
+      isError =
+        ("is_error" in parsed && parsed.is_error === true) ||
+        ("type" in parsed && parsed.type === "error");
     }
   } catch {
     // Not JSON
@@ -207,12 +222,16 @@ function SystemContent({ entry }: { entry: ConversationEntry }) {
         return (
           <div className="space-y-2 text-xs">
             {model != null && (
-              <div><span className="font-medium">Model:</span> {model}</div>
+              <div>
+                <span className="font-medium">Model:</span> {model}
+              </div>
             )}
             {tools != null && (
               <div>
                 <span className="font-medium">Tools:</span>{" "}
-                <span className="text-zinc-500">{String(tools.length)} available</span>
+                <span className="text-zinc-500">
+                  {String(tools.length)} available
+                </span>
               </div>
             )}
             {mcpServers != null && mcpServers.length > 0 && (
@@ -248,21 +267,26 @@ export function MessageBubble({ entry }: MessageBubbleProps) {
             {entry.model}
           </span>
         )}
-        {entry.toolName != null && entry.role !== "tool_use" && entry.role !== "tool_result" && (
-          <span className="rounded bg-zinc-200 px-1.5 py-0.5 font-mono dark:bg-zinc-700">
-            {entry.toolName}
-          </span>
-        )}
+        {entry.toolName != null &&
+          entry.role !== "tool_use" &&
+          entry.role !== "tool_result" && (
+            <span className="rounded bg-zinc-200 px-1.5 py-0.5 font-mono dark:bg-zinc-700">
+              {entry.toolName}
+            </span>
+          )}
         <span>{formatTimestamp(entry.timestamp)}</span>
         <span>Turn #{entry.turnNumber}</span>
         {entry.tokenUsage != null && (
           <span className="font-mono text-zinc-400">
-            {entry.tokenUsage.input.toLocaleString()} in / {entry.tokenUsage.output.toLocaleString()} out
+            {entry.tokenUsage.input.toLocaleString()} in /{" "}
+            {entry.tokenUsage.output.toLocaleString()} out
           </span>
         )}
       </div>
 
-      {entry.role === "assistant" && <AssistantContent content={entry.content} />}
+      {entry.role === "assistant" && (
+        <AssistantContent content={entry.content} />
+      )}
       {entry.role === "tool_use" && <ToolUseContent entry={entry} />}
       {entry.role === "tool_result" && <ToolResultContent entry={entry} />}
       {entry.role === "system" && <SystemContent entry={entry} />}

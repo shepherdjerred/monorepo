@@ -43,9 +43,7 @@ function formatIssueDetails(issue: BugsinkIssue): string {
   lines.push(
     `- **First seen:** ${new Date(issue.first_seen).toLocaleString()}`,
   );
-  lines.push(
-    `- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`,
-  );
+  lines.push(`- **Last seen:** ${new Date(issue.last_seen).toLocaleString()}`);
   lines.push("");
 
   if (issue.transaction.length > 0) {

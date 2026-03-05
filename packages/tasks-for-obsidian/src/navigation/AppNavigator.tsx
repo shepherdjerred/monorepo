@@ -88,10 +88,20 @@ export function AppNavigator() {
             title: "Tasks",
             headerRight: () => (
               <View style={{ flexDirection: "row", gap: 12 }}>
-                <Pressable onPress={() => { nav.navigate("Search"); }} hitSlop={8}>
+                <Pressable
+                  onPress={() => {
+                    nav.navigate("Search");
+                  }}
+                  hitSlop={8}
+                >
                   <AppIcon name="search" size={22} color={colors.text} />
                 </Pressable>
-                <Pressable onPress={() => { nav.navigate("Settings"); }} hitSlop={8}>
+                <Pressable
+                  onPress={() => {
+                    nav.navigate("Settings");
+                  }}
+                  hitSlop={8}
+                >
                   <AppIcon name="settings" size={22} color={colors.text} />
                 </Pressable>
               </View>

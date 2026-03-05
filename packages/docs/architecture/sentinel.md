@@ -6,11 +6,11 @@ Sentinel is an always-on autonomous agent system that automates operational task
 
 ## Agents
 
-| Agent | Trigger | Purpose |
-|-------|---------|---------|
-| `ci-fixer` | Cron (30min) / GitHub webhook | Investigate CI failures on main and release branches |
-| `health-checker` | Cron (15min) | Check cluster health, ArgoCD sync, pod status |
-| `pd-triager` | PagerDuty webhook | Triage incidents, identify root cause, suggest remediation |
+| Agent            | Trigger                       | Purpose                                                    |
+| ---------------- | ----------------------------- | ---------------------------------------------------------- |
+| `ci-fixer`       | Cron (30min) / GitHub webhook | Investigate CI failures on main and release branches       |
+| `health-checker` | Cron (15min)                  | Check cluster health, ArgoCD sync, pod status              |
+| `pd-triager`     | PagerDuty webhook             | Triage incidents, identify root cause, suggest remediation |
 
 Agents are defined in `src/agents/` as `AgentDefinition` objects with system prompts, allowed tools, permission tiers, and triggers.
 

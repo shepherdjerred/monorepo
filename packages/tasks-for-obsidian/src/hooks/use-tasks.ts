@@ -40,12 +40,18 @@ export function useTasks() {
   const taskList = useMemo(() => [...ctx.tasks.values()], [ctx.tasks]);
 
   const inboxTasks = useMemo(
-    () => taskList.filter((t) => t.projects.length === 0 && isActiveStatus(t.status)),
+    () =>
+      taskList.filter(
+        (t) => t.projects.length === 0 && isActiveStatus(t.status),
+      ),
     [taskList],
   );
 
   const todayTasks = useMemo(
-    () => taskList.filter((t) => isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due))),
+    () =>
+      taskList.filter(
+        (t) => isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due)),
+      ),
     [taskList],
   );
 
@@ -90,10 +96,7 @@ export function useTasks() {
     return [...names].toSorted();
   }, [taskList]);
 
-  const toggleTask = useCallback(
-    (id: TaskId) => ctx.toggleStatus(id),
-    [ctx],
-  );
+  const toggleTask = useCallback((id: TaskId) => ctx.toggleStatus(id), [ctx]);
 
   const getTask = useCallback(
     (id: TaskId) => ctx.tasks.get(id) ?? null,

@@ -10,9 +10,7 @@ export type DashboardsOptions = {
   limit?: number | undefined;
 };
 
-function formatDashboardsMarkdown(
-  dashboards: DashboardSearchResult[],
-): string {
+function formatDashboardsMarkdown(dashboards: DashboardSearchResult[]): string {
   const lines: string[] = [];
 
   lines.push("## Grafana Dashboards");

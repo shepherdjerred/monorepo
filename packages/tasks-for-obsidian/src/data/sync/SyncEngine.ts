@@ -33,7 +33,10 @@ export class SyncEngine {
     return OK_VOID;
   }
 
-  applyOptimistic(mutation: Mutation, tasks: Map<TaskId, Task>): Map<TaskId, Task> {
+  applyOptimistic(
+    mutation: Mutation,
+    tasks: Map<TaskId, Task>,
+  ): Map<TaskId, Task> {
     const next = new Map(tasks);
 
     switch (mutation.type) {

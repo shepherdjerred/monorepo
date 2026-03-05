@@ -36,8 +36,13 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
         {PRESETS.map((preset) => (
           <Pressable
             key={preset.label}
-            style={[styles.preset, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => { handlePreset(preset.offset); }}
+            style={[
+              styles.preset,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+            onPress={() => {
+              handlePreset(preset.offset);
+            }}
           >
             <Text style={[styles.presetText, { color: colors.text }]}>
               {preset.label}
@@ -45,8 +50,13 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
           </Pressable>
         ))}
         <Pressable
-          style={[styles.preset, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => { onChange(); }}
+          style={[
+            styles.preset,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+          onPress={() => {
+            onChange();
+          }}
         >
           <Text style={[styles.presetText, { color: colors.textSecondary }]}>
             None

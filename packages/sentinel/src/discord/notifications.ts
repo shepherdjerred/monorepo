@@ -52,7 +52,11 @@ export async function sendJobNotification(
       { name: "Job ID", value: job.id, inline: true },
       { name: "Agent", value: job.agent, inline: true },
       { name: "Status", value: job.status, inline: true },
-      { name: "Trigger", value: `${job.triggerType} / ${job.triggerSource}`, inline: true },
+      {
+        name: "Trigger",
+        value: `${job.triggerType} / ${job.triggerSource}`,
+        inline: true,
+      },
     )
     .setTimestamp();
 

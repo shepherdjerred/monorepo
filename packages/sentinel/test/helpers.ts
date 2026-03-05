@@ -137,13 +137,27 @@ export const testAgent: AgentDefinition = {
   name: "test-agent",
   description: "Test agent",
   systemPrompt: "You are a test agent.",
-  tools: ["Read", "Glob", "Grep", "Bash", "Edit", "Write", "Task", "WebSearch", "WebFetch"],
+  tools: [
+    "Read",
+    "Glob",
+    "Grep",
+    "Bash",
+    "Edit",
+    "Write",
+    "Task",
+    "WebSearch",
+    "WebFetch",
+  ],
   maxTurns: 10,
   permissionTier: "write-with-approval",
   triggers: [],
   memory: { private: "test", shared: [] },
 };
 
-export function generateHmacSignature(secret: string, body: string, prefix: string): string {
+export function generateHmacSignature(
+  secret: string,
+  body: string,
+  prefix: string,
+): string {
   return `${prefix}${createHmac("sha256", secret).update(body).digest("hex")}`;
 }

@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  setupTestDatabase,
-  testPrisma,
-  cleanupAllTables,
-} from "./helpers.ts";
+import { setupTestDatabase, testPrisma, cleanupAllTables } from "./helpers.ts";
 import {
   requestApproval,
   waitForDecision,
@@ -27,12 +23,16 @@ describe("requestApproval", () => {
   it("should create a DB record with pending status", async () => {
     const id = await requestApproval({ ...approvalParams });
 
-    const record = await testPrisma.approvalRequest.findUnique({ where: { id } });
+    const record = await testPrisma.approvalRequest.findUnique({
+      where: { id },
+    });
     expect(record).not.toBeNull();
     expect(record!.status).toBe("pending");
     expect(record!.agent).toBe("test-agent");
     expect(record!.toolName).toBe("Edit");
-    expect(record!.toolInput).toBe(JSON.stringify({ file_path: "/tmp/test.ts" }));
+    expect(record!.toolInput).toBe(
+      JSON.stringify({ file_path: "/tmp/test.ts" }),
+    );
   });
 
   it("should return a valid approval ID", async () => {

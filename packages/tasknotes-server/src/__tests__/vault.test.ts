@@ -4,7 +4,12 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 
 import { scanVault } from "../vault/reader.ts";
-import { writeTaskFile, deleteTaskFile, taskFilePath, generateId } from "../vault/writer.ts";
+import {
+  writeTaskFile,
+  deleteTaskFile,
+  taskFilePath,
+  generateId,
+} from "../vault/writer.ts";
 import type { Task } from "../domain/types.ts";
 
 let tempDir: string;
@@ -82,7 +87,10 @@ describe("vault reader/writer", () => {
 
   test("skips files without task frontmatter", async () => {
     const notesDir = tempDir;
-    await Bun.write(path.join(notesDir, "readme.md"), "# Just a readme\nNo frontmatter here.");
+    await Bun.write(
+      path.join(notesDir, "readme.md"),
+      "# Just a readme\nNo frontmatter here.",
+    );
     const tasks = await scanVault(notesDir, "");
     expect(tasks.size).toBe(0);
   });

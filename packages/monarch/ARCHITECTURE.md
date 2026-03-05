@@ -19,15 +19,15 @@ Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www
 
 `src/index.ts` fetches all transactions from the past 365 days (paginated, 4-hour cache) and all active categories from Monarch Money. Transactions are then separated by merchant name into **deep paths**:
 
-| Deep Path | Merchant Patterns | Data Source |
-|-----------|-------------------|-------------|
-| Amazon | `amazon`, `amzn`, `amzn mktp` | Playwright scraper + 1Password |
-| Venmo | `venmo` (excludes credit card/cash back) | CSV export |
-| Bilt | `bilt` (excludes cash back) | Conservice PDFs or API |
-| USAA | `usaa` | PDF statements |
-| SCL | `seattle city light`, `scl` | CSV export |
-| Apple | `apple services`, `apple.com` | MailMate email parsing |
-| Costco | `costco`, `costco whse` | Hardcoded JSON / receipt parser |
+| Deep Path | Merchant Patterns                        | Data Source                     |
+| --------- | ---------------------------------------- | ------------------------------- |
+| Amazon    | `amazon`, `amzn`, `amzn mktp`            | Playwright scraper + 1Password  |
+| Venmo     | `venmo` (excludes credit card/cash back) | CSV export                      |
+| Bilt      | `bilt` (excludes cash back)              | Conservice PDFs or API          |
+| USAA      | `usaa`                                   | PDF statements                  |
+| SCL       | `seattle city light`, `scl`              | CSV export                      |
+| Apple     | `apple services`, `apple.com`            | MailMate email parsing          |
+| Costco    | `costco`, `costco whse`                  | Hardcoded JSON / receipt parser |
 
 Everything else goes to **regular transactions** for week-based classification.
 
@@ -40,18 +40,19 @@ Each produces `ProposedChange[]` -- either recategorizations, splits, or flags.
 #### Matching
 
 All matchers share a common pattern:
+
 1. Filter out existing split transactions
 2. Track used IDs to prevent double-matching
 3. Match by date window + amount tolerance
 4. Return `{ matched[], unmatchedTransactions[], unmatchedOrders[] }`
 
-| Matcher | Date Window | Amount Tolerance | Special Logic |
-|---------|-------------|-----------------|---------------|
-| Amazon | +/-3 days | $0.02 or single-item price | Flexible: total OR first item |
-| Venmo | +/-2 days | $0.02 | Filters Transfer category |
-| Costco | +/-5 days | $1.00 | Loose tolerance for tax |
-| Apple | +/-3 days | $0.01 | Stricter for digital purchases |
-| Bilt | Same month | $1.00 | Groups charges by category |
+| Matcher | Date Window | Amount Tolerance           | Special Logic                  |
+| ------- | ----------- | -------------------------- | ------------------------------ |
+| Amazon  | +/-3 days   | $0.02 or single-item price | Flexible: total OR first item  |
+| Venmo   | +/-2 days   | $0.02                      | Filters Transfer category      |
+| Costco  | +/-5 days   | $1.00                      | Loose tolerance for tax        |
+| Apple   | +/-3 days   | $0.01                      | Stricter for digital purchases |
+| Bilt    | Same month  | $1.00                      | Groups charges by category     |
 
 #### Classification Strategies
 
@@ -88,6 +89,7 @@ When `--skip-research` is NOT set (default), `callClaude()` passes the Anthropic
 ### Phase 5: Apply
 
 Three output modes:
+
 - **Dry run** (default): Display proposed changes
 - **`--output <path>`**: Save changes as JSON
 - **`--apply`**: Apply via Monarch API with optional `--interactive` per-transaction approval
@@ -182,15 +184,15 @@ type ProposedSplit = {
   amount: number;
   categoryId: string;
   categoryName: string;
-  date?: string;  // Date override for sub-transactions (e.g., SCL bimonthly)
+  date?: string; // Date override for sub-transactions (e.g., SCL bimonthly)
 };
 
 // Monarch API types (Zod-validated)
 type MonarchTransaction = {
   id: string;
-  amount: number;           // Negative = expense, positive = income
-  date: string;             // YYYY-MM-DD
-  plaidName: string;        // Bank's raw merchant name
+  amount: number; // Negative = expense, positive = income
+  date: string; // YYYY-MM-DD
+  plaidName: string; // Bank's raw merchant name
   isSplitTransaction: boolean;
   category: { id: string; name: string };
   merchant: { id: string; name: string; transactionsCount: number };
@@ -203,16 +205,17 @@ type MonarchTransaction = {
 
 All caches live in `~/.monarch-cache/`:
 
-| File | Contents | TTL |
-|------|----------|-----|
-| `transactions-{start}-{end}.json` | Raw Monarch transactions | 4 hours |
-| `classifications.json` | Amazon/Costco order classifications by orderId | Permanent |
-| `week-classifications.json` | Week classification results by `weekKey:txnIds` | Until txn set changes |
-| `venmo.json` | Parsed Venmo CSV data | Permanent |
+| File                              | Contents                                        | TTL                   |
+| --------------------------------- | ----------------------------------------------- | --------------------- |
+| `transactions-{start}-{end}.json` | Raw Monarch transactions                        | 4 hours               |
+| `classifications.json`            | Amazon/Costco order classifications by orderId  | Permanent             |
+| `week-classifications.json`       | Week classification results by `weekKey:txnIds` | Until txn set changes |
+| `venmo.json`                      | Parsed Venmo CSV data                           | Permanent             |
 
 ## Claude Integration
 
 All Claude calls go through `callClaude()` in `src/lib/classifier/claude.ts`:
+
 - Model: `claude-sonnet-4-20250514` (configurable via `--model`)
 - Max tokens: 16,384
 - API retries: 5 attempts with jittered exponential backoff (429, 529, 5xx)
@@ -258,6 +261,7 @@ groupByWeek() ---> buildWeekWindows() ---> classifyWeek() ---> ProposedChange[]
 ## Testing
 
 15 test files using `bun:test`. Key coverage areas:
+
 - **Matchers**: Date window/amount tolerance logic for all deep paths
 - **Parsers**: Apple EML, Conservice .NET dates, Venmo CSV
 - **Prompts**: Week/Amazon/Venmo prompt construction, transaction formatting

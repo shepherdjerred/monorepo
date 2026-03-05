@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  setupTestDatabase,
-  createTestApp,
-} from "./helpers.ts";
+import { setupTestDatabase, createTestApp } from "./helpers.ts";
 
 beforeEach(async () => {
   await setupTestDatabase();

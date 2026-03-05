@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import type { AppError } from "../domain/errors";
 import { ConnectionError } from "../domain/errors";
@@ -45,7 +52,9 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     [client],
   );
 
-  const stopPomodoro = useCallback(async (): Promise<Result<void, AppError>> => {
+  const stopPomodoro = useCallback(async (): Promise<
+    Result<void, AppError>
+  > => {
     if (!client) return err(new ConnectionError("API URL not configured"));
     const result = await client.stopPomodoro();
     if (result.ok) {
@@ -54,7 +63,9 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     return result.ok ? { ok: true, value: undefined } : result;
   }, [client]);
 
-  const pausePomodoro = useCallback(async (): Promise<Result<void, AppError>> => {
+  const pausePomodoro = useCallback(async (): Promise<
+    Result<void, AppError>
+  > => {
     if (!client) return err(new ConnectionError("API URL not configured"));
     const result = await client.pausePomodoro();
     if (result.ok) {
@@ -74,11 +85,16 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     [status, startPomodoro, stopPomodoro, pausePomodoro, refreshStatus],
   );
 
-  return <PomodoroContext.Provider value={value}>{children}</PomodoroContext.Provider>;
+  return (
+    <PomodoroContext.Provider value={value}>
+      {children}
+    </PomodoroContext.Provider>
+  );
 }
 
 export function usePomodoroContext(): PomodoroContextValue {
   const context = useContext(PomodoroContext);
-  if (!context) throw new Error("usePomodoroContext must be used within PomodoroProvider");
+  if (!context)
+    throw new Error("usePomodoroContext must be used within PomodoroProvider");
   return context;
 }

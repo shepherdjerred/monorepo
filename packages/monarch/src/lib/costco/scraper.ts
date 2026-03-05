@@ -23,7 +23,10 @@ const CostcoCacheSchema = z.object({
   ),
 });
 
-const ORDERS_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), "costco-orders.json");
+const ORDERS_PATH = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "costco-orders.json",
+);
 
 export async function loadCostcoOrders(): Promise<CostcoOrder[]> {
   const file = Bun.file(ORDERS_PATH);

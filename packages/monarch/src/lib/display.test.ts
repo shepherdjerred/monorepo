@@ -29,7 +29,12 @@ describe("displaySummary", () => {
       tier2Changes: 10,
       tier3Changes: 2,
       flagged: 0,
-      enrichmentStats: { ...defaultStats, tier1Count: 20, tier2Count: 70, tier3Count: 10 },
+      enrichmentStats: {
+        ...defaultStats,
+        tier1Count: 20,
+        tier2Count: 70,
+        tier3Count: 10,
+      },
     });
 
     console.log = originalLog;
@@ -73,7 +78,12 @@ describe("displaySummary", () => {
       tier2Changes: 0,
       tier3Changes: 0,
       flagged: 0,
-      enrichmentStats: { ...defaultStats, tier1Count: 30, tier2Count: 60, tier3Count: 10 },
+      enrichmentStats: {
+        ...defaultStats,
+        tier1Count: 30,
+        tier2Count: 60,
+        tier3Count: 10,
+      },
     });
 
     console.log = originalLog;

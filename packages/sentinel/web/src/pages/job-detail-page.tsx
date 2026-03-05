@@ -14,7 +14,9 @@ export function JobDetailPage({ jobId, onNavigate }: JobDetailPageProps) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => { onNavigate({ name: "jobs" }); }}
+        onClick={() => {
+          onNavigate({ name: "jobs" });
+        }}
       >
         <ArrowLeft size={16} className="mr-1" />
         Back to Jobs

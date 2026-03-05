@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Site {
+  id         String      @id
+  name       String
+  url        String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  components Component[]
+  incidents  Incident[]
+}
+
+model Component {
+  id           String        @id @default(cuid())
+  name         String
+  status       String        @default("operational")
+  order        Int           @default(0)
+  monitorUrl   String?
+  siteId       String
+  site         Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  uptimeChecks UptimeCheck[]
+}
+
+model Incident {
+  id         String           @id @default(cuid())
+  title      String
+  status     String           @default("investigating")
+  siteId     String
+  site       Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+  resolvedAt DateTime?
+  updatedAt  DateTime         @updatedAt
+  updates    IncidentUpdate[]
+}
+
+model IncidentUpdate {
+  id         String   @id @default(cuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  status     String
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model UptimeCheck {
+  id             String    @id @default(cuid())
+  componentId    String
+  component      Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  isUp           Boolean
+  responseTimeMs Int?
+  checkedAt      DateTime  @default(now())
+}

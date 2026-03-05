@@ -36,7 +36,11 @@ export function App() {
       case "sessions":
         return <Sessions onNavigate={navigate} />;
       case "conversation":
-        return <Conversation initialSessionId={"sessionId" in page ? page.sessionId : undefined} />;
+        return (
+          <Conversation
+            initialSessionId={"sessionId" in page ? page.sessionId : undefined}
+          />
+        );
     }
   }
 

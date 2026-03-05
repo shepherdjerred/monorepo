@@ -43,12 +43,38 @@ export function KanbanColumn({
         renderItem={({ item }) => (
           <KanbanCard
             task={item}
-            onPress={() => { onTaskPress(item.id); }}
-            onToggle={onTaskToggle ? () => { onTaskToggle(item.id); } : undefined}
-            onEdit={onTaskEdit ? () => { onTaskEdit(item.id); } : undefined}
-            onDelete={onTaskDelete ? () => { onTaskDelete(item.id); } : undefined}
+            onPress={() => {
+              onTaskPress(item.id);
+            }}
+            onToggle={
+              onTaskToggle
+                ? () => {
+                    onTaskToggle(item.id);
+                  }
+                : undefined
+            }
+            onEdit={
+              onTaskEdit
+                ? () => {
+                    onTaskEdit(item.id);
+                  }
+                : undefined
+            }
+            onDelete={
+              onTaskDelete
+                ? () => {
+                    onTaskDelete(item.id);
+                  }
+                : undefined
+            }
             moveTargets={getMoveTargets ? getMoveTargets(item.id) : undefined}
-            onMoveTo={onTaskMoveTo ? (columnKey) => { onTaskMoveTo(item.id, columnKey); } : undefined}
+            onMoveTo={
+              onTaskMoveTo
+                ? (columnKey) => {
+                    onTaskMoveTo(item.id, columnKey);
+                  }
+                : undefined
+            }
           />
         )}
         contentContainerStyle={styles.list}

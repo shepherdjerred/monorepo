@@ -2,10 +2,7 @@ import type { Context, Next } from "hono";
 
 const SKIP_PATHS = new Set(["/metrics", "/api/health"]);
 
-export async function loggerMiddleware(
-  c: Context,
-  next: Next,
-): Promise<void> {
+export async function loggerMiddleware(c: Context, next: Next): Promise<void> {
   if (SKIP_PATHS.has(c.req.path)) {
     await next();
     return;

@@ -1,10 +1,20 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { type Colors, colors as lightColors } from "../styles/colors";
 import { darkColors } from "../styles/dark-colors";
 import { setFeedbackGlobalEnabled } from "../lib/feedback";
-import { getAuthToken, setAuthToken as setSecureAuthToken } from "../lib/secure-storage";
+import {
+  getAuthToken,
+  setAuthToken as setSecureAuthToken,
+} from "../lib/secure-storage";
 
 const STORAGE_KEYS = {
   apiUrl: "@tasknotes/api-url",
@@ -27,7 +37,9 @@ type SettingsContextValue = {
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [apiUrl, setApiUrlState] = useState("https://tasknotes.tailnet-1a49.ts.net");
+  const [apiUrl, setApiUrlState] = useState(
+    "https://tasknotes.tailnet-1a49.ts.net",
+  );
   const [authToken, setAuthTokenState] = useState("");
   const [isDarkMode, setIsDarkModeState] = useState(false);
   const [feedbackEnabled, setFeedbackEnabledState] = useState(true);
@@ -35,12 +47,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function load() {
-      const [savedUrl, savedToken, savedDark, savedFeedback] = await Promise.all([
-        AsyncStorage.getItem(STORAGE_KEYS.apiUrl),
-        getAuthToken(),
-        AsyncStorage.getItem(STORAGE_KEYS.isDarkMode),
-        AsyncStorage.getItem(STORAGE_KEYS.feedbackEnabled),
-      ]);
+      const [savedUrl, savedToken, savedDark, savedFeedback] =
+        await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.apiUrl),
+          getAuthToken(),
+          AsyncStorage.getItem(STORAGE_KEYS.isDarkMode),
+          AsyncStorage.getItem(STORAGE_KEYS.feedbackEnabled),
+        ]);
       if (savedUrl) setApiUrlState(savedUrl);
       if (savedToken) setAuthTokenState(savedToken);
       if (savedDark !== null) setIsDarkModeState(savedDark === "true");
@@ -75,7 +88,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(STORAGE_KEYS.feedbackEnabled, String(enabled));
   }, []);
 
-  const theColors = useMemo(() => (isDarkMode ? darkColors : lightColors), [isDarkMode]);
+  const theColors = useMemo(
+    () => (isDarkMode ? darkColors : lightColors),
+    [isDarkMode],
+  );
 
   const value = useMemo<SettingsContextValue>(
     () => ({
@@ -89,16 +105,31 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setFeedbackEnabled,
       colors: theColors,
     }),
-    [apiUrl, setApiUrl, authToken, setAuthToken, isDarkMode, setIsDarkMode, feedbackEnabled, setFeedbackEnabled, theColors],
+    [
+      apiUrl,
+      setApiUrl,
+      authToken,
+      setAuthToken,
+      isDarkMode,
+      setIsDarkMode,
+      feedbackEnabled,
+      setFeedbackEnabled,
+      theColors,
+    ],
   );
 
   if (!loaded) return null;
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+  return (
+    <SettingsContext.Provider value={value}>
+      {children}
+    </SettingsContext.Provider>
+  );
 }
 
 export function useSettingsContext(): SettingsContextValue {
   const context = useContext(SettingsContext);
-  if (!context) throw new Error("useSettingsContext must be used within SettingsProvider");
+  if (!context)
+    throw new Error("useSettingsContext must be used within SettingsProvider");
   return context;
 }

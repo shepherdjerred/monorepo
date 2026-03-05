@@ -1,6 +1,9 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import Animated, { useAnimatedStyle, interpolate } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+} from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { AppIcon } from "../common/AppIcon";
 import { useSettings } from "../../hooks/use-settings";

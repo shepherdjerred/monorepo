@@ -12,8 +12,13 @@ beforeEach(async () => {
   await testPrisma.$executeRawUnsafe("DELETE FROM Job");
 });
 
-function signedPagerDutyRequest(body: string, overrides?: { signature?: string }) {
-  const signature = overrides?.signature ?? generateHmacSignature("test-pagerduty-secret", body, "v1=");
+function signedPagerDutyRequest(
+  body: string,
+  overrides?: { signature?: string },
+) {
+  const signature =
+    overrides?.signature ??
+    generateHmacSignature("test-pagerduty-secret", body, "v1=");
   return {
     method: "POST" as const,
     headers: {
@@ -40,7 +45,10 @@ describe("PagerDuty webhook", () => {
       },
     });
 
-    const res = await app.request("/webhook/pagerduty", signedPagerDutyRequest(body));
+    const res = await app.request(
+      "/webhook/pagerduty",
+      signedPagerDutyRequest(body),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("enqueued");
@@ -69,7 +77,10 @@ describe("PagerDuty webhook", () => {
       },
     });
 
-    const res = await app.request("/webhook/pagerduty", signedPagerDutyRequest(body));
+    const res = await app.request(
+      "/webhook/pagerduty",
+      signedPagerDutyRequest(body),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("ignored");
@@ -79,7 +90,10 @@ describe("PagerDuty webhook", () => {
     const app = createTestApp();
     const body = JSON.stringify({ data: { title: "no event field" } });
 
-    const res = await app.request("/webhook/pagerduty", signedPagerDutyRequest(body));
+    const res = await app.request(
+      "/webhook/pagerduty",
+      signedPagerDutyRequest(body),
+    );
     expect(res.status).toBe(500);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("error");
@@ -93,7 +107,10 @@ describe("PagerDuty webhook", () => {
 
     const res = await app.request(
       "/webhook/pagerduty",
-      signedPagerDutyRequest(body, { signature: "v1=invalidsignature0000000000000000000000000000000000000000000000" }),
+      signedPagerDutyRequest(body, {
+        signature:
+          "v1=invalidsignature0000000000000000000000000000000000000000000000",
+      }),
     );
     expect(res.status).toBe(401);
   });

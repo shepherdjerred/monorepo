@@ -47,17 +47,17 @@ Bun HTTP server serving a single-page labeling app optimized for speed (~500 tra
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `Enter` | Confirm current selection and advance to next |
-| `Tab` | Advance without labeling (skip) |
-| `k` | Toggle "keep current category" |
-| `s` | Toggle "needs split" |
-| `/` | Focus the category search box |
-| `Escape` | Clear search / unfocus |
-| `Left` / `Right` | Previous / Next transaction |
-| `u` | Jump to next unlabeled transaction |
-| `1`-`9` | Quick-assign the Nth quick-pick category |
+| Key              | Action                                        |
+| ---------------- | --------------------------------------------- |
+| `Enter`          | Confirm current selection and advance to next |
+| `Tab`            | Advance without labeling (skip)               |
+| `k`              | Toggle "keep current category"                |
+| `s`              | Toggle "needs split"                          |
+| `/`              | Focus the category search box                 |
+| `Escape`         | Clear search / unfocus                        |
+| `Left` / `Right` | Previous / Next transaction                   |
+| `u`              | Jump to next unlabeled transaction            |
+| `1`-`9`          | Quick-assign the Nth quick-pick category      |
 
 ### Features
 
@@ -99,25 +99,47 @@ Output: ANSI-colored console summary + `accuracy-report.json`.
 
 ```typescript
 type SampledTransaction = {
-  id: string; date: string; amount: number;
-  merchantName: string; plaidName: string; accountName: string;
-  currentCategory: string; currentCategoryId: string;
-  notes: string; isRecurring: boolean;
-  deepPath: "amazon" | "venmo" | "bilt" | "usaa" | "scl" | "apple" | "costco" | "regular";
+  id: string;
+  date: string;
+  amount: number;
+  merchantName: string;
+  plaidName: string;
+  accountName: string;
+  currentCategory: string;
+  currentCategoryId: string;
+  notes: string;
+  isRecurring: boolean;
+  deepPath:
+    | "amazon"
+    | "venmo"
+    | "bilt"
+    | "usaa"
+    | "scl"
+    | "apple"
+    | "costco"
+    | "regular";
 };
 
 type GroundTruthLabel = {
   transactionId: string;
-  correctCategory: string; correctCategoryId: string;
-  shouldSplit: boolean; labelNotes?: string; labeledAt: string;
+  correctCategory: string;
+  correctCategoryId: string;
+  shouldSplit: boolean;
+  labelNotes?: string;
+  labeledAt: string;
 };
 
 type ComparisonResult = {
-  transactionId: string; merchantName: string; amount: number; date: string;
+  transactionId: string;
+  merchantName: string;
+  amount: number;
+  date: string;
   deepPath: string;
-  groundTruthCategory: string; toolCategory: string;
+  groundTruthCategory: string;
+  toolCategory: string;
   toolConfidence: "high" | "medium" | "low" | "agreed";
-  isCorrect: boolean; monarchWasCorrect: boolean;
+  isCorrect: boolean;
+  monarchWasCorrect: boolean;
 };
 ```
 

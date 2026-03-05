@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "cd .. && bunx eslint web",
     "typecheck": "cd .. && prisma generate && cd web && tsc --noEmit"
   },
   "dependencies": {

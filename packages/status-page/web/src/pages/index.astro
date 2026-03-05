@@ -1,0 +1,21 @@
+---
+import Layout from "#src/layouts/Layout.astro";
+import { SiteListing } from "#src/components/site-listing.tsx";
+---
+
+<Layout title="Status">
+  <main class="mx-auto max-w-3xl px-4 py-8 space-y-8">
+    <header class="text-center">
+      <h1 class="text-3xl font-bold">Status</h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        System status pages
+      </p>
+    </header>
+
+    <SiteListing client:only="react" />
+
+    <footer class="text-center text-xs text-gray-500 dark:text-gray-400 py-4">
+      <a href="/admin" class="hover:underline">Admin</a>
+    </footer>
+  </main>
+</Layout>

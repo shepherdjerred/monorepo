@@ -1,7 +1,4 @@
-import {
-  SlashCommandBuilder,
-  type Client,
-} from "discord.js";
+import { SlashCommandBuilder, type Client } from "discord.js";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 import { enqueueJob } from "@shepherdjerred/sentinel/queue/index.ts";
@@ -21,8 +18,10 @@ export type CommandInteraction = {
   };
   deferReply: () => Promise<unknown>;
   editReply: (content: string) => Promise<unknown>;
-  reply: (content: string | { content: string; ephemeral?: boolean }) => Promise<unknown>;
-}
+  reply: (
+    content: string | { content: string; ephemeral?: boolean },
+  ) => Promise<unknown>;
+};
 
 const commandLogger = logger.child({ module: "discord:commands" });
 
@@ -30,7 +29,9 @@ const sentinelCommand = new SlashCommandBuilder()
   .setName("sentinel")
   .setDescription("Sentinel agent management")
   .addSubcommand((sub) =>
-    sub.setName("status").setDescription("List running, pending, and recent jobs"),
+    sub
+      .setName("status")
+      .setDescription("List running, pending, and recent jobs"),
   )
   .addSubcommand((sub) =>
     sub
@@ -65,10 +66,7 @@ const sentinelCommand = new SlashCommandBuilder()
       .setName("ask")
       .setDescription("Ask the personal assistant a question")
       .addStringOption((opt) =>
-        opt
-          .setName("prompt")
-          .setDescription("Your question")
-          .setRequired(true),
+        opt.setName("prompt").setDescription("Your question").setRequired(true),
       ),
   );
 
@@ -129,9 +127,7 @@ function formatJob(job: { id: string; agent: string; status: string }): string {
   return `\`${job.id.slice(0, 8)}\` **${job.agent}** (${job.status})`;
 }
 
-async function handleStatus(
-  interaction: CommandInteraction,
-): Promise<void> {
+async function handleStatus(interaction: CommandInteraction): Promise<void> {
   await interaction.deferReply();
 
   const prisma = getPrisma();
@@ -157,29 +153,34 @@ async function handleStatus(
   const sections: string[] = [];
 
   if (running.length > 0) {
-    sections.push(`**Running (${String(running.length)})**\n${running.map((job) => formatJob(job)).join("\n")}`);
+    sections.push(
+      `**Running (${String(running.length)})**\n${running.map((job) => formatJob(job)).join("\n")}`,
+    );
   }
   if (pending.length > 0) {
-    sections.push(`**Pending (${String(pending.length)})**\n${pending.map((job) => formatJob(job)).join("\n")}`);
+    sections.push(
+      `**Pending (${String(pending.length)})**\n${pending.map((job) => formatJob(job)).join("\n")}`,
+    );
   }
   if (recent.length > 0) {
-    sections.push(`**Recent (${String(recent.length)})**\n${recent.map((job) => formatJob(job)).join("\n")}`);
+    sections.push(
+      `**Recent (${String(recent.length)})**\n${recent.map((job) => formatJob(job)).join("\n")}`,
+    );
   }
 
   const content =
-    sections.length > 0
-      ? sections.join("\n\n")
-      : "No jobs found.";
+    sections.length > 0 ? sections.join("\n\n") : "No jobs found.";
 
   await interaction.editReply(content);
 }
 
-async function handleAsk(
-  interaction: CommandInteraction,
-): Promise<void> {
+async function handleAsk(interaction: CommandInteraction): Promise<void> {
   const prompt = interaction.options.getString("prompt");
   if (prompt == null) {
-    await interaction.reply({ content: "Prompt is required.", ephemeral: true });
+    await interaction.reply({
+      content: "Prompt is required.",
+      ephemeral: true,
+    });
     return;
   }
 
@@ -241,9 +242,7 @@ async function handleDecision(
   if (approverRoleIds.length > 0) {
     const roles = getMemberRoleIds(interaction.member);
 
-    const hasRole = approverRoleIds.some((roleId) =>
-      roles.includes(roleId),
-    );
+    const hasRole = approverRoleIds.some((roleId) => roles.includes(roleId));
 
     if (!hasRole) {
       await interaction.reply({
@@ -264,7 +263,9 @@ async function handleDecision(
         status,
         decidedBy: interaction.user.id,
         decidedAt: new Date(),
-        reason: reason ?? `${status} via /sentinel ${action} by ${interaction.user.tag}`,
+        reason:
+          reason ??
+          `${status} via /sentinel ${action} by ${interaction.user.tag}`,
       },
     });
 

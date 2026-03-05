@@ -1,7 +1,11 @@
 import React from "react";
 import { View, Pressable, Text, StyleSheet } from "react-native";
 import type { Priority } from "../../domain/priority";
-import { ALL_PRIORITIES, PRIORITY_COLORS, PRIORITY_LABELS } from "../../domain/priority";
+import {
+  ALL_PRIORITIES,
+  PRIORITY_COLORS,
+  PRIORITY_LABELS,
+} from "../../domain/priority";
 import { feedbackSelection } from "../../lib/feedback";
 
 type PriorityPickerProps = {
@@ -29,10 +33,7 @@ export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
             }}
           >
             <Text
-              style={[
-                styles.label,
-                { color: selected ? "#ffffff" : color },
-              ]}
+              style={[styles.label, { color: selected ? "#ffffff" : color }]}
             >
               {PRIORITY_LABELS[p]}
             </Text>

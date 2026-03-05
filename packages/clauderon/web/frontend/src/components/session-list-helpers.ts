@@ -1,4 +1,9 @@
-export type FilterStatus = "all" | "running" | "idle" | "completed" | "archived";
+export type FilterStatus =
+  | "all"
+  | "running"
+  | "idle"
+  | "completed"
+  | "archived";
 
 const FILTER_STATUS_MAP: Record<string, FilterStatus> = {
   all: "all",
@@ -25,7 +30,10 @@ export function getConfirmDialogTitle(type: string): string {
   }
 }
 
-export function getConfirmDialogDescription(type: string, name: string): string {
+export function getConfirmDialogDescription(
+  type: string,
+  name: string,
+): string {
   switch (type) {
     case "archive":
       return `Are you sure you want to archive "${name}"?`;

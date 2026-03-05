@@ -25,7 +25,9 @@ export function BrowseItem({ icon, name, count, onPress }: Props) {
       <View style={styles.right}>
         {count > 0 ? (
           <View style={[styles.badge, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>{count}</Text>
+            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
+              {count}
+            </Text>
           </View>
         ) : null}
         <AppIcon name="chevron-right" size={18} color={colors.textTertiary} />

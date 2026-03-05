@@ -53,13 +53,20 @@ export function TimeReportScreen(_props: Props) {
   }, [summary, taskList]);
 
   if (items.length === 0) {
-    return <EmptyState title="No time data" subtitle="Start tracking time on tasks to see a report" />;
+    return (
+      <EmptyState
+        title="No time data"
+        subtitle="Start tracking time on tasks to see a report"
+      />
+    );
   }
 
   return (
     <View style={styles.container}>
       <View style={[styles.totalRow, { backgroundColor: colors.surface }]}>
-        <Text style={[typography.subheading, { color: colors.text }]}>Total</Text>
+        <Text style={[typography.subheading, { color: colors.text }]}>
+          Total
+        </Text>
         <Text style={[typography.subheading, { color: colors.primary }]}>
           {formatDuration(summary?.totalTime ?? 0)}
         </Text>
@@ -70,12 +77,18 @@ export function TimeReportScreen(_props: Props) {
         renderItem={({ item }) => (
           <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
             <Text
-              style={[typography.body, { color: colors.text }, styles.taskTitle]}
+              style={[
+                typography.body,
+                { color: colors.text },
+                styles.taskTitle,
+              ]}
               numberOfLines={1}
             >
               {item.taskTitle}
             </Text>
-            <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
+            <Text
+              style={[typography.bodySmall, { color: colors.textSecondary }]}
+            >
               {formatDuration(item.totalMinutes)}
             </Text>
           </View>

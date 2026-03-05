@@ -116,6 +116,13 @@ def main() -> None:
         print("Not on main branch, skipping publish", flush=True)
         return
 
+    # Validate required credentials on main
+    ghcr_username = os.environ.get("GHCR_USERNAME", "")
+    ghcr_password = os.environ.get("GHCR_PASSWORD", "")
+    if not ghcr_username or not ghcr_password:
+        print("GHCR credentials not set on main branch, failing", flush=True)
+        sys.exit(1)
+
     if args.packages:
         print(f"Filtering to packages: {', '.join(args.packages)}", flush=True)
 
@@ -123,55 +130,49 @@ def main() -> None:
 
     # --- Container image publishing (always on main) ---
     digests: dict[str, str] = {}
-    ghcr_username = os.environ.get("GHCR_USERNAME", "")
-    ghcr_password = os.environ.get("GHCR_PASSWORD", "")
     push_targets = _filter_by_packages(PUSH_TARGETS, args.packages)
-    if ghcr_username and ghcr_password:
-        print("\n--- Publish container images to GHCR ---", flush=True)
-        ghcr.login(ghcr_username, ghcr_password)
-        for target in push_targets:
-            try:
-                print(f"\nPushing {target}", flush=True)
-                output = bazel.run_capture(target, stamp=True, embed_label=config.version)
-                version_key = PUSH_TARGET_TO_VERSION_KEY.get(target)
-                if version_key:
-                    versioned = ghcr.format_version_with_digest(config.version, output)
-                    digests[version_key] = versioned
-                    print(f"  Digest: {versioned}", flush=True)
-            except Exception:
-                errors.append(f"Failed to push {target}")
-    else:
-        print("GHCR credentials not set, skipping container publish", flush=True)
+    print("\n--- Publish container images to GHCR ---", flush=True)
+    ghcr.login(ghcr_username, ghcr_password)
+    for target in push_targets:
+        try:
+            print(f"\nPushing {target}", flush=True)
+            output = bazel.run_capture(target, stamp=True, embed_label=config.version)
+            version_key = PUSH_TARGET_TO_VERSION_KEY.get(target)
+            if version_key:
+                versioned = ghcr.format_version_with_digest(config.version, output)
+                digests[version_key] = versioned
+                print(f"  Digest: {versioned}", flush=True)
+        except Exception as e:
+            errors.append(f"Failed to push {target}: {e}")
 
     # --- Docker-built images ---
     docker_images = DOCKER_IMAGES if not args.packages else [
         img for img in DOCKER_IMAGES
         if any(p in img["name"] for p in args.packages)
     ]
-    if ghcr_username and ghcr_password:
-        for img in docker_images:
-            try:
-                tag = f"{img['repository']}:{config.version}"
-                print(f"\nBuilding Docker image {img['name']} ({tag})", flush=True)
-                subprocess.run(
-                    ["docker", "build", "-t", tag, "-f", img["dockerfile"], img["context"]],
-                    check=True,
-                )
-                print(f"Pushing {tag}", flush=True)
-                result = subprocess.run(
-                    ["docker", "push", tag],
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                version_key = img.get("version_key")
-                if version_key:
-                    # Try to get digest from push output
-                    versioned = ghcr.format_version_with_digest(config.version, result.stdout)
-                    digests[version_key] = versioned
-                    print(f"  Digest: {versioned}", flush=True)
-            except Exception:
-                errors.append(f"Failed to build/push Docker image {img['name']}")
+    for img in docker_images:
+        try:
+            tag = f"{img['repository']}:{config.version}"
+            print(f"\nBuilding Docker image {img['name']} ({tag})", flush=True)
+            subprocess.run(
+                ["docker", "build", "-t", tag, "-f", img["dockerfile"], img["context"]],
+                check=True,
+            )
+            print(f"Pushing {tag}", flush=True)
+            result = subprocess.run(
+                ["docker", "push", tag],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            version_key = img.get("version_key")
+            if version_key:
+                # Try to get digest from push output
+                versioned = ghcr.format_version_with_digest(config.version, result.stdout)
+                digests[version_key] = versioned
+                print(f"  Digest: {versioned}", flush=True)
+        except Exception as e:
+            errors.append(f"Failed to build/push Docker image {img['name']}: {e}")
 
     # Write digests for version_commit_back to consume (local file for same-step use)
     if digests:

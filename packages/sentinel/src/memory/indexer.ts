@@ -38,9 +38,7 @@ export class MemoryIndexer {
     const upsertMeta = this.db.prepare(
       "INSERT OR REPLACE INTO note_meta (path, mtime) VALUES (?, ?)",
     );
-    const deleteFts = this.db.prepare(
-      "DELETE FROM notes_fts WHERE path = ?",
-    );
+    const deleteFts = this.db.prepare("DELETE FROM notes_fts WHERE path = ?");
     const insertFts = this.db.prepare(
       "INSERT INTO notes_fts (path, title, tags, body) VALUES (?, ?, ?, ?)",
     );
@@ -89,9 +87,7 @@ export class MemoryIndexer {
       .replaceAll(/[*"^{}:()]/g, " ")
       .replaceAll(/\b(?:AND|OR|NOT|NEAR)\b/gi, " ");
 
-    const terms = sanitized
-      .split(/\s+/)
-      .filter((term) => term.length > 0);
+    const terms = sanitized.split(/\s+/).filter((term) => term.length > 0);
 
     if (terms.length === 0) {
       return [];
@@ -99,9 +95,7 @@ export class MemoryIndexer {
 
     // Use prefix matching with OR for better recall.
     // Each term is wrapped in double quotes to escape any remaining special chars.
-    const ftsQuery = terms
-      .map((term) => `"${term}"*`)
-      .join(" OR ");
+    const ftsQuery = terms.map((term) => `"${term}"*`).join(" OR ");
 
     const stmt = this.db.prepare<
       { path: string; title: string; tags: string; body: string; rank: number },

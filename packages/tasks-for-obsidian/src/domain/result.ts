@@ -16,14 +16,23 @@ export function unwrapOr<T, E>(result: Result<T, E>, fallback: T): T {
   return result.ok ? result.value : fallback;
 }
 
-export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
+export function map<T, U, E>(
+  result: Result<T, E>,
+  fn: (value: T) => U,
+): Result<U, E> {
   return result.ok ? ok(fn(result.value)) : result;
 }
 
-export function mapErr<T, E, F>(result: Result<T, E>, fn: (error: E) => F): Result<T, F> {
+export function mapErr<T, E, F>(
+  result: Result<T, E>,
+  fn: (error: E) => F,
+): Result<T, F> {
   return result.ok ? result : err(fn(result.error));
 }
 
-export function flatMap<T, U, E>(result: Result<T, E>, fn: (value: T) => Result<U, E>): Result<U, E> {
+export function flatMap<T, U, E>(
+  result: Result<T, E>,
+  fn: (value: T) => Result<U, E>,
+): Result<U, E> {
   return result.ok ? fn(result.value) : result;
 }

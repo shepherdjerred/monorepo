@@ -48,7 +48,8 @@ function formatFrame(frame: Frame, lines: string[]): void {
       const val = col[i];
       if (val == null) return "";
       if (typeof val === "string") return val;
-      if (typeof val === "number" || typeof val === "boolean") return String(val);
+      if (typeof val === "number" || typeof val === "boolean")
+        return String(val);
       return JSON.stringify(val);
     });
     lines.push(`| ${cells.join(" | ")} |`);

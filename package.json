@@ -10,7 +10,8 @@
     "packages/discord-plays-pokemon/packages/*",
     "packages/homelab/src/*",
     "packages/scout-for-lol/packages/*",
-    "packages/sentinel/web"
+    "packages/sentinel/web",
+    "packages/status-page/*"
   ],
   "scripts": {
     "build": "bun run scripts/run-package-script.ts build",

@@ -78,19 +78,24 @@ export function Approvals({ onNavigate }: ApprovalsProps) {
           <Input
             placeholder="Filter by agent..."
             value={agentFilter}
-            onChange={(e) => { setAgentFilter(e.target.value); }}
+            onChange={(e) => {
+              setAgentFilter(e.target.value);
+            }}
             className="h-8 w-40 text-xs"
           />
           <Input
             placeholder="Filter by tool..."
             value={toolFilter}
-            onChange={(e) => { setToolFilter(e.target.value); }}
+            onChange={(e) => {
+              setToolFilter(e.target.value);
+            }}
             className="h-8 w-40 text-xs"
           />
         </div>
         {filteredApprovals != null && (
           <span className="text-xs text-zinc-500">
-            {filteredApprovals.length} result{filteredApprovals.length === 1 ? "" : "s"}
+            {filteredApprovals.length} result
+            {filteredApprovals.length === 1 ? "" : "s"}
           </span>
         )}
       </div>

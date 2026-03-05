@@ -195,7 +195,9 @@ describe("parseTaskInput", () => {
 
   describe("combined parsing", () => {
     test("parses all fields at once", () => {
-      const result = parseTaskInput("Fix login bug !high p:Auth @work #backend tomorrow");
+      const result = parseTaskInput(
+        "Fix login bug !high p:Auth @work #backend tomorrow",
+      );
       expect(result.title).toBe("Fix login bug");
       expect(result.priority).toBe("high");
       expect(result.projects).toEqual(["Auth"]);

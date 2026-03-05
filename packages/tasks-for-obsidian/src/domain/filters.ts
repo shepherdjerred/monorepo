@@ -42,14 +42,42 @@ export function countActiveFilters(filter: FilterConfig): number {
   return count;
 }
 
-export function applyFilter(tasks: readonly Task[], filter: FilterConfig): Task[] {
+export function applyFilter(
+  tasks: readonly Task[],
+  filter: FilterConfig,
+): Task[] {
   return tasks.filter((task) => {
     const { projects, contexts, tags } = filter;
-    if (projects && projects.length > 0 && !task.projects.some((p) => projects.includes(String(p)))) return false;
-    if (contexts && contexts.length > 0 && !task.contexts.some((c) => contexts.includes(String(c)))) return false;
-    if (tags && tags.length > 0 && !task.tags.some((t) => tags.includes(String(t)))) return false;
-    if (filter.statuses && filter.statuses.length > 0 && !filter.statuses.includes(task.status)) return false;
-    if (filter.priorities && filter.priorities.length > 0 && !filter.priorities.includes(task.priority)) return false;
+    if (
+      projects &&
+      projects.length > 0 &&
+      !task.projects.some((p) => projects.includes(String(p)))
+    )
+      return false;
+    if (
+      contexts &&
+      contexts.length > 0 &&
+      !task.contexts.some((c) => contexts.includes(String(c)))
+    )
+      return false;
+    if (
+      tags &&
+      tags.length > 0 &&
+      !task.tags.some((t) => tags.includes(String(t)))
+    )
+      return false;
+    if (
+      filter.statuses &&
+      filter.statuses.length > 0 &&
+      !filter.statuses.includes(task.status)
+    )
+      return false;
+    if (
+      filter.priorities &&
+      filter.priorities.length > 0 &&
+      !filter.priorities.includes(task.priority)
+    )
+      return false;
     if (filter.hasNoDueDate && task.due !== undefined) return false;
     return true;
   });

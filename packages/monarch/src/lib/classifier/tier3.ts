@@ -3,12 +3,20 @@ import { z } from "zod";
 import type { MonarchCategory } from "../monarch/types.ts";
 import type { EnrichedTransaction } from "../enrichment/types.ts";
 import type { ProposedChange } from "./types.ts";
-import type { CategoryDefinition, MerchantKnowledge } from "../knowledge/types.ts";
+import type {
+  CategoryDefinition,
+  MerchantKnowledge,
+} from "../knowledge/types.ts";
 import { formatCategoryDefinitions } from "../knowledge/definitions.ts";
 import { TIER3_TOOLS, handleToolCall } from "./tools.ts";
 import type { ToolContext } from "./tools.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
-import { getClient, getModelId, getTracker, isWebSearchEnabled } from "./claude.ts";
+import {
+  getClient,
+  getModelId,
+  getTracker,
+  isWebSearchEnabled,
+} from "./claude.ts";
 import { log } from "../logger.ts";
 
 const Tier3ResultSchema = z.object({
@@ -151,8 +159,7 @@ function processToolUseBlocks(
 
 function extractJsonFromText(text: string): string {
   let cleaned = text.trim();
-  const fenceMatch =
-    /```(?:json)?[ \t]*\n([\s\S]*?)\n[ \t]*```/.exec(cleaned);
+  const fenceMatch = /```(?:json)?[ \t]*\n([\s\S]*?)\n[ \t]*```/.exec(cleaned);
   if (fenceMatch?.[1] !== undefined && fenceMatch[1] !== "") {
     cleaned = fenceMatch[1].trim();
   }
@@ -183,10 +190,7 @@ async function runToolLoop(
       tools,
     });
 
-    tracker?.record(
-      response.usage.input_tokens,
-      response.usage.output_tokens,
-    );
+    tracker?.record(response.usage.input_tokens, response.usage.output_tokens);
 
     const hasToolUse = response.content.some((b) => b.type === "tool_use");
 

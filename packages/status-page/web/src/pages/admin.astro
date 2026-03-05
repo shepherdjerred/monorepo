@@ -1,0 +1,17 @@
+---
+import Layout from "#src/layouts/Layout.astro";
+import { AdminPanel } from "#src/components/admin-panel.tsx";
+---
+
+<Layout title="Status - Admin">
+  <main class="mx-auto max-w-3xl px-4 py-8 space-y-6">
+    <header>
+      <h1 class="text-3xl font-bold">Admin Panel</h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <a href="/" class="hover:underline">&larr; Back to status pages</a>
+      </p>
+    </header>
+
+    <AdminPanel client:only="react" />
+  </main>
+</Layout>

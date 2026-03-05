@@ -36,7 +36,11 @@ export function ConnectionBanner() {
 
   return (
     <Animated.View
-      style={[styles.banner, { backgroundColor, paddingTop: insets.top }, animatedStyle]}
+      style={[
+        styles.banner,
+        { backgroundColor, paddingTop: insets.top },
+        animatedStyle,
+      ]}
       accessibilityRole="alert"
       accessibilityLabel={message}
       accessibilityLiveRegion="polite"

@@ -47,7 +47,10 @@ export function Conversation({ initialSessionId }: ConversationProps) {
 
   const { data: entries, isLoading: entriesLoading } =
     trpc.conversation.read.useQuery(
-      { filename: selected?.filename ?? "", agent: selected?.agent ?? "unknown" },
+      {
+        filename: selected?.filename ?? "",
+        agent: selected?.agent ?? "unknown",
+      },
       { enabled: selected != null },
     );
 
@@ -64,16 +67,20 @@ export function Conversation({ initialSessionId }: ConversationProps) {
   };
 
   const lowerSearch = search.toLowerCase();
-  const filteredGroups = groups?.map((group) => ({
-    ...group,
-    files: group.files.filter((f) =>
-      f.filename.toLowerCase().includes(lowerSearch)
-      || f.agent.toLowerCase().includes(lowerSearch)
-      || f.sessionId.toLowerCase().includes(lowerSearch),
-    ),
-  })).filter((g) => g.files.length > 0);
+  const filteredGroups = groups
+    ?.map((group) => ({
+      ...group,
+      files: group.files.filter(
+        (f) =>
+          f.filename.toLowerCase().includes(lowerSearch) ||
+          f.agent.toLowerCase().includes(lowerSearch) ||
+          f.sessionId.toLowerCase().includes(lowerSearch),
+      ),
+    }))
+    .filter((g) => g.files.length > 0);
 
-  const selectedKey = selected == null ? null : `${selected.agent}/${selected.filename}`;
+  const selectedKey =
+    selected == null ? null : `${selected.agent}/${selected.filename}`;
 
   return (
     <div className="flex h-full gap-6">
@@ -86,7 +93,9 @@ export function Conversation({ initialSessionId }: ConversationProps) {
           <Input
             placeholder="Search..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
             className="h-8 text-xs"
           />
         </div>
@@ -104,15 +113,20 @@ export function Conversation({ initialSessionId }: ConversationProps) {
               return (
                 <div key={group.agent}>
                   <button
-                    onClick={() => { toggleAgent(group.agent); }}
+                    onClick={() => {
+                      toggleAgent(group.agent);
+                    }}
                     className="flex w-full items-center gap-2 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   >
-                    {isExpanded
-                      ? <ChevronDown size={12} />
-                      : <ChevronRight size={12} />
-                    }
+                    {isExpanded ? (
+                      <ChevronDown size={12} />
+                    ) : (
+                      <ChevronRight size={12} />
+                    )}
                     {group.agent}
-                    <span className="ml-auto text-zinc-400">{group.files.length}</span>
+                    <span className="ml-auto text-zinc-400">
+                      {group.files.length}
+                    </span>
                   </button>
                   {isExpanded && (
                     <ul>

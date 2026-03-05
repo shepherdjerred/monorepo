@@ -9,8 +9,8 @@ type ImportMetaEnv = {
   readonly DEV: boolean;
   readonly SSR: boolean;
   [key: string]: string | boolean | undefined;
-}
+};
 
 type ImportMeta = {
   readonly env: ImportMetaEnv;
-}
+};

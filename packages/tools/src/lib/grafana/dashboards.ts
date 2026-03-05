@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { grafanaRequest } from "./client.ts";
-import { DashboardSearchResultSchema, DashboardDetailSchema } from "./schemas.ts";
+import {
+  DashboardSearchResultSchema,
+  DashboardDetailSchema,
+} from "./schemas.ts";
 import type { DashboardSearchResult, DashboardDetail } from "./types.ts";
 
 export type SearchDashboardsOptions = {

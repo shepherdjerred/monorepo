@@ -4,24 +4,47 @@ import type { TaskNotesClient } from "../api/TaskNotesClient";
 import { TypedStorage } from "../cache/storage";
 import type { AppError } from "../../domain/errors";
 import type { Result } from "../../domain/result";
-import type { CreateTaskRequest, TaskId, UpdateTaskRequest } from "../../domain/types";
+import type {
+  CreateTaskRequest,
+  TaskId,
+  UpdateTaskRequest,
+} from "../../domain/types";
 import { TaskIdSchema } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
 import { TaskStatusSchema } from "../../domain/schemas";
 
 type BaseMutation = { id: string; timestamp: number };
-type CreateMutation = BaseMutation & { type: "create"; payload: CreateTaskRequest };
-type UpdateMutation = BaseMutation & { type: "update"; taskId: TaskId; payload: UpdateTaskRequest };
+type CreateMutation = BaseMutation & {
+  type: "create";
+  payload: CreateTaskRequest;
+};
+type UpdateMutation = BaseMutation & {
+  type: "update";
+  taskId: TaskId;
+  payload: UpdateTaskRequest;
+};
 type DeleteMutation = BaseMutation & { type: "delete"; taskId: TaskId };
-type ToggleStatusMutation = BaseMutation & { type: "toggle_status"; taskId: TaskId; payload: { status: TaskStatus } };
+type ToggleStatusMutation = BaseMutation & {
+  type: "toggle_status";
+  taskId: TaskId;
+  payload: { status: TaskStatus };
+};
 
-export type Mutation = CreateMutation | UpdateMutation | DeleteMutation | ToggleStatusMutation;
+export type Mutation =
+  | CreateMutation
+  | UpdateMutation
+  | DeleteMutation
+  | ToggleStatusMutation;
 
 type CreateMutationInput = Omit<CreateMutation, "id" | "timestamp">;
 type UpdateMutationInput = Omit<UpdateMutation, "id" | "timestamp">;
 type DeleteMutationInput = Omit<DeleteMutation, "id" | "timestamp">;
 type ToggleStatusMutationInput = Omit<ToggleStatusMutation, "id" | "timestamp">;
-export type MutationInput = CreateMutationInput | UpdateMutationInput | DeleteMutationInput | ToggleStatusMutationInput;
+export type MutationInput =
+  | CreateMutationInput
+  | UpdateMutationInput
+  | DeleteMutationInput
+  | ToggleStatusMutationInput;
 
 const MutationSchema = z.discriminatedUnion("type", [
   z.object({
@@ -32,7 +55,9 @@ const MutationSchema = z.discriminatedUnion("type", [
       title: z.string(),
       description: z.string().optional(),
       status: TaskStatusSchema.optional(),
-      priority: z.enum(["highest", "high", "medium", "normal", "low", "none"]).optional(),
+      priority: z
+        .enum(["highest", "high", "medium", "normal", "low", "none"])
+        .optional(),
       due: z.string().optional(),
       scheduled: z.string().optional(),
       contexts: z.array(z.string()).optional(),
@@ -51,7 +76,9 @@ const MutationSchema = z.discriminatedUnion("type", [
       title: z.string().optional(),
       description: z.string().optional(),
       status: TaskStatusSchema.optional(),
-      priority: z.enum(["highest", "high", "medium", "normal", "low", "none"]).optional(),
+      priority: z
+        .enum(["highest", "high", "medium", "normal", "low", "none"])
+        .optional(),
       due: z.string().nullable().optional(),
       scheduled: z.string().nullable().optional(),
       contexts: z.array(z.string()).optional(),
@@ -91,16 +118,34 @@ export class MutationQueue {
     const base = { id: generateId(), timestamp: Date.now() };
     switch (mutation.type) {
       case "create":
-        this.queue.push({ ...base, type: mutation.type, payload: mutation.payload });
+        this.queue.push({
+          ...base,
+          type: mutation.type,
+          payload: mutation.payload,
+        });
         break;
       case "update":
-        this.queue.push({ ...base, type: mutation.type, taskId: mutation.taskId, payload: mutation.payload });
+        this.queue.push({
+          ...base,
+          type: mutation.type,
+          taskId: mutation.taskId,
+          payload: mutation.payload,
+        });
         break;
       case "delete":
-        this.queue.push({ ...base, type: mutation.type, taskId: mutation.taskId });
+        this.queue.push({
+          ...base,
+          type: mutation.type,
+          taskId: mutation.taskId,
+        });
         break;
       case "toggle_status":
-        this.queue.push({ ...base, type: mutation.type, taskId: mutation.taskId, payload: mutation.payload });
+        this.queue.push({
+          ...base,
+          type: mutation.type,
+          taskId: mutation.taskId,
+          payload: mutation.payload,
+        });
         break;
     }
     await this.persist();
@@ -171,14 +216,20 @@ export class MutationQueue {
         return result.ok ? { ok: true, value: undefined } : result;
       }
       case "update": {
-        const result = await client.updateTask(mutation.taskId, mutation.payload);
+        const result = await client.updateTask(
+          mutation.taskId,
+          mutation.payload,
+        );
         return result.ok ? { ok: true, value: undefined } : result;
       }
       case "delete": {
         return client.deleteTask(mutation.taskId);
       }
       case "toggle_status": {
-        const result = await client.toggleTaskStatus(mutation.taskId, mutation.payload.status);
+        const result = await client.toggleTaskStatus(
+          mutation.taskId,
+          mutation.payload.status,
+        );
         return result.ok ? { ok: true, value: undefined } : result;
       }
     }

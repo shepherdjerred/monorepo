@@ -27,7 +27,14 @@ type Provider = keyof typeof PROVIDERS;
 function getSecret(provider: Provider): string {
   const config = PROVIDERS[provider];
 
-  const result = Bun.spawnSync(["op", "item", "get", OP_ITEM_ID, "--fields", config.opField]);
+  const result = Bun.spawnSync([
+    "op",
+    "item",
+    "get",
+    OP_ITEM_ID,
+    "--fields",
+    config.opField,
+  ]);
   if (result.exitCode === 0) {
     const value = result.stdout.toString().trim();
     if (value.length > 0) {
@@ -42,7 +49,9 @@ function getSecret(provider: Provider): string {
     return envValue;
   }
 
-  console.error(`No secret found for ${provider}. Set ${config.envVar} or install 1Password CLI.`);
+  console.error(
+    `No secret found for ${provider}. Set ${config.envVar} or install 1Password CLI.`,
+  );
   process.exit(1);
 }
 
@@ -54,7 +63,8 @@ function makeGitHubPayload(): Record<string, unknown> {
       name: "CI",
       head_branch: "main",
       conclusion: "failure",
-      html_url: "https://github.com/shepherdjerred/monorepo/actions/runs/12345678",
+      html_url:
+        "https://github.com/shepherdjerred/monorepo/actions/runs/12345678",
       repository: {
         full_name: "shepherdjerred/monorepo",
       },

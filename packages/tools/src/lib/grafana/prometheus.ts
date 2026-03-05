@@ -1,5 +1,8 @@
 import { grafanaPost, grafanaRequest } from "./client.ts";
-import { PromQueryResultSchema, PrometheusLabelResponseSchema } from "./schemas.ts";
+import {
+  PromQueryResultSchema,
+  PrometheusLabelResponseSchema,
+} from "./schemas.ts";
 import type { PromQueryResult } from "./types.ts";
 import { parseTimeRange } from "./time.ts";
 import { findDefaultDatasource, resolveUidToId } from "./datasources.ts";
@@ -39,7 +42,11 @@ export async function queryPrometheus(
     to: String(to),
   };
 
-  const result = await grafanaPost("/api/ds/query", PromQueryResultSchema, body);
+  const result = await grafanaPost(
+    "/api/ds/query",
+    PromQueryResultSchema,
+    body,
+  );
 
   if (!result.success || result.data == null) {
     throw new Error(result.error ?? "Failed to query Prometheus");

@@ -18,7 +18,9 @@ export const sessionRouter = router({
         where,
         orderBy: [{ startedAt: "desc" }],
         take: input.limit + 1,
-        ...(input.cursor == null ? {} : { cursor: { id: input.cursor }, skip: 1 }),
+        ...(input.cursor == null
+          ? {}
+          : { cursor: { id: input.cursor }, skip: 1 }),
       });
 
       let nextCursor: string | undefined;

@@ -10,6 +10,7 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
+  { hostname: "cook.sjer.red", bucket: "cook" },
 ];
 
 export const S3_ENDPOINT = "https://seaweedfs.sjer.red";

@@ -3,7 +3,14 @@ import { View, Alert, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
-import { type FilterConfig, type SortConfig, EMPTY_FILTER, DEFAULT_SORT, applyFilter, applySort } from "../domain/filters";
+import {
+  type FilterConfig,
+  type SortConfig,
+  EMPTY_FILTER,
+  DEFAULT_SORT,
+  applyFilter,
+  applySort,
+} from "../domain/filters";
 import { useTasks } from "../hooks/use-tasks";
 import { showResultError } from "../lib/errors";
 import { feedbackTaskDelete } from "../lib/feedback";
@@ -14,7 +21,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "TagDetail">;
 
 export function TagDetailScreen({ route, navigation }: Props) {
   const { tagName } = route.params;
-  const { taskList, toggleTask, deleteTask, projectNames, contextNames, tagNames } = useTasks();
+  const {
+    taskList,
+    toggleTask,
+    deleteTask,
+    projectNames,
+    contextNames,
+    tagNames,
+  } = useTasks();
   const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
   const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
 
@@ -29,7 +43,9 @@ export function TagDetailScreen({ route, navigation }: Props) {
   );
 
   const handlePress = useCallback(
-    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
+    (id: TaskId) => {
+      navigation.navigate("TaskDetail", { taskId: id });
+    },
     [navigation],
   );
 

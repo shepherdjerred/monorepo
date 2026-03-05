@@ -89,8 +89,14 @@ function loadConfigFromEnv(): Config {
         resolveEnv("QUEUE_MAX_JOB_DURATION_MS"),
         600_000,
       ),
-      defaultMaxRetries: parseNumber(resolveEnv("QUEUE_DEFAULT_MAX_RETRIES"), 3),
-      maxConcurrentJobs: parseNumber(resolveEnv("QUEUE_MAX_CONCURRENT_JOBS"), 3),
+      defaultMaxRetries: parseNumber(
+        resolveEnv("QUEUE_DEFAULT_MAX_RETRIES"),
+        3,
+      ),
+      maxConcurrentJobs: parseNumber(
+        resolveEnv("QUEUE_MAX_CONCURRENT_JOBS"),
+        3,
+      ),
     },
     webhooks: {
       port: parseNumber(resolveEnv("WEBHOOKS_PORT"), 3000),
@@ -101,7 +107,10 @@ function loadConfigFromEnv(): Config {
       buildkiteToken: resolveEnv("BUILDKITE_WEBHOOK_TOKEN"),
     },
     permissions: {
-      approvalTimeoutMs: parseNumber(resolveEnv("APPROVAL_TIMEOUT_MS"), 1_800_000),
+      approvalTimeoutMs: parseNumber(
+        resolveEnv("APPROVAL_TIMEOUT_MS"),
+        1_800_000,
+      ),
     },
   });
 }

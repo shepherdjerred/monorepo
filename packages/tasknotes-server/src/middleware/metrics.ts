@@ -5,10 +5,7 @@ import { httpRequestDurationSeconds, httpRequestsTotal } from "../metrics.ts";
 
 const SKIP_PATHS = new Set(["/metrics", "/api/health"]);
 
-export async function metricsMiddleware(
-  c: Context,
-  next: Next,
-): Promise<void> {
+export async function metricsMiddleware(c: Context, next: Next): Promise<void> {
   if (SKIP_PATHS.has(c.req.path)) {
     await next();
     return;

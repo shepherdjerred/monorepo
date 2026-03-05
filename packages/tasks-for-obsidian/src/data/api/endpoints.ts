@@ -1,9 +1,11 @@
 export const PATHS = {
   TASKS: "/api/tasks",
   TASK: (id: string) => `/api/tasks/${encodeURIComponent(id)}`,
-  TASK_TOGGLE_STATUS: (id: string) => `/api/tasks/${encodeURIComponent(id)}/toggle-status`,
+  TASK_TOGGLE_STATUS: (id: string) =>
+    `/api/tasks/${encodeURIComponent(id)}/toggle-status`,
   TASK_ARCHIVE: (id: string) => `/api/tasks/${encodeURIComponent(id)}/archive`,
-  TASK_COMPLETE_INSTANCE: (id: string) => `/api/tasks/${encodeURIComponent(id)}/complete-instance`,
+  TASK_COMPLETE_INSTANCE: (id: string) =>
+    `/api/tasks/${encodeURIComponent(id)}/complete-instance`,
   TASKS_QUERY: "/api/tasks/query",
   FILTER_OPTIONS: "/api/filter-options",
   STATS: "/api/stats",

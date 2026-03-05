@@ -7,9 +7,7 @@ import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 const cronLogger = logger.child({ module: "cron-adapter" });
 const runningJobs: CronJob[] = [];
 
-export function startCronJobs(
-  registry: Map<string, AgentDefinition>,
-): void {
+export function startCronJobs(registry: Map<string, AgentDefinition>): void {
   for (const [name, agent] of registry) {
     for (const trigger of agent.triggers) {
       if (trigger.type !== "cron") {
@@ -37,16 +35,10 @@ export function startCronJobs(
     }
   }
 
-  cronLogger.info(
-    { totalJobs: runningJobs.length },
-    "Cron jobs started",
-  );
+  cronLogger.info({ totalJobs: runningJobs.length }, "Cron jobs started");
 }
 
-async function enqueueCronJob(
-  agent: string,
-  prompt: string,
-): Promise<void> {
+async function enqueueCronJob(agent: string, prompt: string): Promise<void> {
   try {
     const prisma = getPrisma();
     const activeJob = await prisma.job.findFirst({
@@ -144,9 +136,10 @@ export async function recoverMissedJobs(
         }
 
         const threshold = intervalMs * 2;
-        const gapMs = lastCronJob == null
-          ? threshold + 1 // No previous run, treat as missed
-          : Date.now() - lastCronJob.createdAt.getTime();
+        const gapMs =
+          lastCronJob == null
+            ? threshold + 1 // No previous run, treat as missed
+            : Date.now() - lastCronJob.createdAt.getTime();
 
         if (gapMs > threshold) {
           cronLogger.info(

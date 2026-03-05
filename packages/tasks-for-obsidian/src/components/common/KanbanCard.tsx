@@ -36,15 +36,29 @@ export const KanbanCard = React.memo(function KanbanCard({
     <ContextMenu.Root>
       <ContextMenu.Trigger>
         <Pressable
-          style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border,
+            },
+          ]}
           onPress={onPress}
           accessibilityRole="button"
           accessibilityLabel={`Task: ${task.title}${task.due ? `, due ${formatRelativeDate(task.due)}` : ""}`}
           accessibilityHint="Double tap to view details, long press for actions"
         >
           <View style={styles.header}>
-            <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLORS[task.priority] }]} />
-            <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+            <View
+              style={[
+                styles.priorityDot,
+                { backgroundColor: PRIORITY_COLORS[task.priority] },
+              ]}
+            />
+            <Text
+              style={[styles.title, { color: colors.text }]}
+              numberOfLines={2}
+            >
               {task.title}
             </Text>
           </View>
@@ -66,7 +80,9 @@ export const KanbanCard = React.memo(function KanbanCard({
               {moveTargets.map((target) => (
                 <ContextMenu.Item
                   key={`move-${target.key}`}
-                  onSelect={() => { onMoveTo(target.key); }}
+                  onSelect={() => {
+                    onMoveTo(target.key);
+                  }}
                 >
                   <ContextMenu.ItemTitle>{target.title}</ContextMenu.ItemTitle>
                 </ContextMenu.Item>

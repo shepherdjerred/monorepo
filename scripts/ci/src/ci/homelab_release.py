@@ -74,6 +74,7 @@ HELM_CHARTS = [
     "sentinel",
     "tasknotes",
     "bazel-remote",
+    "status-page",
 ]
 
 # Docker images for homelab infra (built via docker build, not Bazel).
@@ -112,6 +113,13 @@ def main() -> None:
     if not config.is_release:
         print("Not on main branch, skipping homelab release", flush=True)
         return
+
+    # Validate required credentials on main
+    required_vars = ["GHCR_USERNAME", "GHCR_PASSWORD", "CHARTMUSEUM_USERNAME", "CHARTMUSEUM_PASSWORD"]
+    missing = [v for v in required_vars if not os.environ.get(v)]
+    if missing:
+        print(f"Missing required env vars: {', '.join(missing)}", flush=True)
+        sys.exit(1)
 
     errors: list[str] = []
 

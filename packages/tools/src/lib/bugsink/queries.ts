@@ -31,10 +31,7 @@ export async function getTeams(): Promise<BugsinkTeam[]> {
 }
 
 export async function getTeam(uuid: string): Promise<BugsinkTeam | null> {
-  const result = await bugsinkRequest(
-    `/teams/${uuid}/`,
-    BugsinkTeamSchema,
-  );
+  const result = await bugsinkRequest(`/teams/${uuid}/`, BugsinkTeamSchema);
 
   if (!result.success) {
     if (result.error?.includes("404") === true) {
@@ -121,9 +118,7 @@ export async function getEvent(
 }
 
 export async function getStacktrace(eventUuid: string): Promise<string> {
-  const result = await bugsinkRequestRaw(
-    `/events/${eventUuid}/stacktrace/`,
-  );
+  const result = await bugsinkRequestRaw(`/events/${eventUuid}/stacktrace/`);
 
   if (!result.success || result.data == null) {
     throw new Error(result.error ?? "Failed to fetch stacktrace");

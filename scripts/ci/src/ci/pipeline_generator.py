@@ -91,6 +91,7 @@ PACKAGE_TO_SITE = {
     "resume": "resume",
     "clauderon": "clauderon",
     "webring": "webring",
+    "cook-preview": "cook",
 }
 
 # Resource tiers for per-package build steps (requests only; pods burst above these)
@@ -364,6 +365,7 @@ ALL_PACKAGES = [
     "terraform-provider-asuswrt",
     "tools",
     "webring",
+    "cook-preview",
 ]
 
 
@@ -426,6 +428,17 @@ def _generate_quality_gate_step() -> dict:
         "command": ".buildkite/scripts/quality-gate.sh",
         "timeout_in_minutes": 10,
         "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
+    }
+
+
+def _generate_prettier_step() -> dict:
+    """Generate the Prettier formatting check step."""
+    return {
+        "label": ":art: Prettier",
+        "key": "prettier",
+        "command": ".buildkite/scripts/prettier.sh",
+        "timeout_in_minutes": 10,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
     }
 
 
@@ -634,6 +647,9 @@ def generate_pipeline() -> dict:
     # --- Quality & Compliance (every push) ---
     steps.append(_generate_quality_gate_step())
 
+    # --- Prettier formatting check (every push) ---
+    steps.append(_generate_prettier_step())
+
     # --- Security & Quality (every push) ---
     steps.append(_generate_security_step())
 
@@ -654,7 +670,7 @@ def generate_pipeline() -> dict:
 
     if has_main_steps:
         # Wait gate for main-only steps
-        steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
+        steps.append({"wait": "", "if": "build.branch == pipeline.default_branch"})
 
         # Release (always on main when there are releasable changes)
         steps.append(_generate_release_step())
@@ -662,7 +678,8 @@ def generate_pipeline() -> dict:
         steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
 
         # Publish (only if image packages changed or building all)
-        if affected.build_all or affected.has_image_packages:
+        has_publish = affected.build_all or affected.has_image_packages
+        if has_publish:
             publish_pkgs = None if affected.build_all else affected.has_image_packages
             steps.append(_generate_publish_step(publish_pkgs))
 
@@ -681,17 +698,31 @@ def generate_pipeline() -> dict:
             deploy_sites = None if affected.build_all else {
                 PACKAGE_TO_SITE.get(p, p) for p in affected.has_site_packages
             }
-            steps.append(_generate_deploy_step(deploy_sites))
+            deploy_step = _generate_deploy_step(deploy_sites)
+            if has_publish:
+                deploy_step["depends_on"] = "publish"
+            steps.append(deploy_step)
 
         # Homelab Release (only if homelab changed)
         if affected.build_all or affected.homelab_changed:
-            steps.append(_generate_homelab_release_step())
+            homelab_step = _generate_homelab_release_step()
+            if has_publish:
+                homelab_step["depends_on"] = "publish"
+            steps.append(homelab_step)
 
         steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
 
         # Version Commit-Back (if publish or homelab ran)
         if affected.build_all or affected.has_image_packages or affected.homelab_changed:
-            steps.append(_generate_version_commit_back_step())
+            vcb_step = _generate_version_commit_back_step()
+            vcb_deps = []
+            if has_publish:
+                vcb_deps.append("publish")
+            if affected.build_all or affected.homelab_changed:
+                vcb_deps.append("homelab-release")
+            if vcb_deps:
+                vcb_step["depends_on"] = vcb_deps
+            steps.append(vcb_step)
 
         # Update READMEs (if docs changed or building all)
         if affected.build_all or affected.docs_changed:

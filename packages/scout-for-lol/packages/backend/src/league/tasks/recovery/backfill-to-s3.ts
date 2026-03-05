@@ -39,7 +39,7 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-async function fetchMatchIdsForTimeRange(
+export async function fetchMatchIdsForTimeRange(
   puuid: string,
   region: Region,
   startTimeEpochSeconds: number,

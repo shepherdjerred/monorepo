@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 import type { AppError } from "../domain/errors";
 import { ConnectionError } from "../domain/errors";
@@ -14,9 +20,15 @@ type TimeTrackingContextValue = {
   getTaskTime: (taskId: TaskId) => Promise<Result<TimeSummary, AppError>>;
 };
 
-const TimeTrackingContext = createContext<TimeTrackingContextValue | null>(null);
+const TimeTrackingContext = createContext<TimeTrackingContextValue | null>(
+  null,
+);
 
-export function TimeTrackingProvider({ children }: { children: React.ReactNode }) {
+export function TimeTrackingProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const client = useApiClient();
   const [activeEntry, setActiveEntry] = useState<TimeEntry | null>(null);
 
@@ -65,11 +77,18 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     [activeEntry, startTracking, stopTracking, getTaskTime],
   );
 
-  return <TimeTrackingContext.Provider value={value}>{children}</TimeTrackingContext.Provider>;
+  return (
+    <TimeTrackingContext.Provider value={value}>
+      {children}
+    </TimeTrackingContext.Provider>
+  );
 }
 
 export function useTimeTrackingContext(): TimeTrackingContextValue {
   const context = useContext(TimeTrackingContext);
-  if (!context) throw new Error("useTimeTrackingContext must be used within TimeTrackingProvider");
+  if (!context)
+    throw new Error(
+      "useTimeTrackingContext must be used within TimeTrackingProvider",
+    );
   return context;
 }

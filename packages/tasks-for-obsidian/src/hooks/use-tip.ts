@@ -5,7 +5,10 @@ function storageKey(tipId: string): string {
   return `@tasknotes/tip:${tipId}:dismissed`;
 }
 
-export function useTip(tipId: string): { visible: boolean; dismiss: () => void } {
+export function useTip(tipId: string): {
+  visible: boolean;
+  dismiss: () => void;
+} {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

@@ -13,13 +13,7 @@ type PermissionResult =
 type ToolInput = Record<string, unknown>;
 
 // Tier 1: tools that are always safe (read-only)
-const TIER_1_TOOLS = new Set([
-  "Read",
-  "Glob",
-  "Grep",
-  "WebSearch",
-  "WebFetch",
-]);
+const TIER_1_TOOLS = new Set(["Read", "Glob", "Grep", "WebSearch", "WebFetch"]);
 
 // Tier 3: tools that always require approval
 const TIER_3_TOOLS = new Set(["Edit", "Write", "Task"]);
@@ -27,7 +21,11 @@ const TIER_3_TOOLS = new Set(["Edit", "Write", "Task"]);
 export function buildPermissionHandler(
   agentDef: AgentDefinition,
   sessionId: string,
-): (toolName: string, toolInput: ToolInput, options?: { signal: AbortSignal }) => Promise<PermissionResult> {
+): (
+  toolName: string,
+  toolInput: ToolInput,
+  options?: { signal: AbortSignal },
+) => Promise<PermissionResult> {
   return async (
     toolName: string,
     toolInput: ToolInput,
@@ -54,7 +52,10 @@ export function buildPermissionHandler(
     }
 
     // Enforce permissionTier: read-only agents can only use tier 1 (read-only) tools
-    if (agentDef.permissionTier === "read-only" && !TIER_1_TOOLS.has(toolName)) {
+    if (
+      agentDef.permissionTier === "read-only" &&
+      !TIER_1_TOOLS.has(toolName)
+    ) {
       permLogger.warn(
         {
           tool: toolName,
@@ -211,9 +212,7 @@ async function handleApproval(
   const { toolName, toolInput, inputSummary, agentDef, sessionId } = params;
   const config = getConfig();
 
-  const expiresAt = new Date(
-    Date.now() + config.permissions.approvalTimeoutMs,
-  );
+  const expiresAt = new Date(Date.now() + config.permissions.approvalTimeoutMs);
 
   const requestId = await requestApproval({
     agentName: agentDef.name,
@@ -260,10 +259,7 @@ const TOOL_SUMMARY_KEYS: Record<string, string> = {
   Grep: "pattern",
 };
 
-function summarizeInput(
-  toolName: string,
-  toolInput: ToolInput,
-): string {
+function summarizeInput(toolName: string, toolInput: ToolInput): string {
   const key = TOOL_SUMMARY_KEYS[toolName];
   if (key != null) {
     const value = toolInput[key];

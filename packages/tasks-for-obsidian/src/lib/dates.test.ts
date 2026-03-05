@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
-import { formatDate, formatRelativeDate, getDateGroup, isOverdue, isToday, isUpcoming } from "./dates";
+import {
+  formatDate,
+  formatRelativeDate,
+  getDateGroup,
+  isOverdue,
+  isToday,
+  isUpcoming,
+} from "./dates";
 
 // Helper: format a Date as YYYY-MM-DD
 function toISO(date: Date): string {

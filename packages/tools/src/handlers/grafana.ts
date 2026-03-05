@@ -7,10 +7,7 @@ import {
 } from "#commands/grafana/datasources.ts";
 import { queryCommand } from "#commands/grafana/query.ts";
 import { metricsCommand } from "#commands/grafana/metrics.ts";
-import {
-  labelsCommand,
-  labelValuesCommand,
-} from "#commands/grafana/labels.ts";
+import { labelsCommand, labelValuesCommand } from "#commands/grafana/labels.ts";
 import { logsCommand } from "#commands/grafana/logs.ts";
 import {
   logLabelsCommand,
@@ -45,9 +42,7 @@ function requirePositional(
 }
 
 function parseLimit(raw: string | undefined): number | undefined {
-  return raw != null && raw.length > 0
-    ? Number.parseInt(raw, 10)
-    : undefined;
+  return raw != null && raw.length > 0 ? Number.parseInt(raw, 10) : undefined;
 }
 
 function parseTags(raw: string | undefined): string[] | undefined {
@@ -77,7 +72,11 @@ async function handleDashboards(args: string[]): Promise<void> {
 
 async function handleDashboard(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uid = requirePositional(positionals, "Dashboard UID", "tools grafana dashboard <uid> [--json]");
+  const uid = requirePositional(
+    positionals,
+    "Dashboard UID",
+    "tools grafana dashboard <uid> [--json]",
+  );
   await dashboardCommand(uid, { json: values.json });
 }
 
@@ -88,7 +87,11 @@ async function handleDatasources(args: string[]): Promise<void> {
 
 async function handleDatasource(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uid = requirePositional(positionals, "Datasource UID", "tools grafana datasource <uid> [--json]");
+  const uid = requirePositional(
+    positionals,
+    "Datasource UID",
+    "tools grafana datasource <uid> [--json]",
+  );
   await datasourceCommand(uid, { json: values.json });
 }
 
@@ -239,7 +242,11 @@ async function handleAlerts(args: string[]): Promise<void> {
 
 async function handleAlert(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uid = requirePositional(positionals, "Alert rule UID", "tools grafana alert <uid> [--json]");
+  const uid = requirePositional(
+    positionals,
+    "Alert rule UID",
+    "tools grafana alert <uid> [--json]",
+  );
   await alertCommand(uid, { json: values.json });
 }
 

@@ -25,9 +25,7 @@ function formatDatasourcesMarkdown(datasources: Datasource[]): string {
   for (const ds of datasources) {
     const emoji = getDatasourceTypeEmoji(ds.type);
     const defaultLabel = ds.isDefault ? " **(default)**" : "";
-    lines.push(
-      `- ${emoji} **${ds.name}** (\`${ds.uid}\`)${defaultLabel}`,
-    );
+    lines.push(`- ${emoji} **${ds.name}** (\`${ds.uid}\`)${defaultLabel}`);
     lines.push(`  - Type: ${ds.type}`);
     lines.push(`  - URL: ${ds.url}`);
   }

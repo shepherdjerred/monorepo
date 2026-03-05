@@ -1,5 +1,12 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { View, Text, FlatList, Pressable, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
@@ -39,39 +46,57 @@ export function BrowseScreen({ navigation }: Props) {
     return counts;
   }, [activeTasks]);
 
-  const items = segment === "projects"
-    ? projectNames
-    : segment === "labels"
-      ? tagNames
-      : contextNames;
+  const items =
+    segment === "projects"
+      ? projectNames
+      : segment === "labels"
+        ? tagNames
+        : contextNames;
 
   const handlePress = useCallback(
     (name: string) => {
       if (segment === "projects") {
-        navigation.navigate("ProjectDetail", { projectName: projectName(name) });
+        navigation.navigate("ProjectDetail", {
+          projectName: projectName(name),
+        });
       } else if (segment === "labels") {
         navigation.navigate("TagDetail", { tagName: tagName(name) });
       } else {
-        navigation.navigate("ContextDetail", { contextName: contextName(name) });
+        navigation.navigate("ContextDetail", {
+          contextName: contextName(name),
+        });
       }
     },
     [navigation, segment],
   );
 
-  const emptyState = segment === "projects"
-    ? { title: "No projects", subtitle: "Create tasks with a project to see them here" }
-    : segment === "labels"
-      ? { title: "No labels", subtitle: "Add tags to tasks to see them here" }
-      : { title: "No contexts", subtitle: "Add contexts to tasks to see them here" };
+  const emptyState =
+    segment === "projects"
+      ? {
+          title: "No projects",
+          subtitle: "Create tasks with a project to see them here",
+        }
+      : segment === "labels"
+        ? { title: "No labels", subtitle: "Add tags to tasks to see them here" }
+        : {
+            title: "No contexts",
+            subtitle: "Add contexts to tasks to see them here",
+          };
 
   const renderItem = useCallback(
     ({ item }: { item: string }) => (
       <Pressable
         style={[styles.item, { borderBottomColor: colors.borderLight }]}
-        onPress={() => { handlePress(item); }}
+        onPress={() => {
+          handlePress(item);
+        }}
       >
         <Text style={[typography.body, { color: colors.text }]}>
-          {segment === "labels" ? `#${item}` : segment === "contexts" ? `@${item}` : item}
+          {segment === "labels"
+            ? `#${item}`
+            : segment === "contexts"
+              ? `@${item}`
+              : item}
         </Text>
       </Pressable>
     ),
@@ -84,9 +109,14 @@ export function BrowseScreen({ navigation }: Props) {
         key={key}
         style={[
           styles.segment,
-          segment === key && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
+          segment === key && {
+            borderBottomColor: colors.primary,
+            borderBottomWidth: 2,
+          },
         ]}
-        onPress={() => { setSegment(key); }}
+        onPress={() => {
+          setSegment(key);
+        }}
       >
         <Text
           style={[
@@ -103,7 +133,12 @@ export function BrowseScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.savedViewsRow} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedViewsContent}>
+      <ScrollView
+        style={styles.savedViewsRow}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.savedViewsContent}
+      >
         {DEFAULT_SAVED_VIEWS.map((view) => (
           <View key={view.id} style={styles.savedViewCardWrapper}>
             <SavedViewCard
@@ -111,12 +146,16 @@ export function BrowseScreen({ navigation }: Props) {
               icon={view.icon}
               count={savedViewCounts.get(view.id) ?? 0}
               color={view.color}
-              onPress={() => { navigation.navigate("SavedView", { viewId: view.id }); }}
+              onPress={() => {
+                navigation.navigate("SavedView", { viewId: view.id });
+              }}
             />
           </View>
         ))}
       </ScrollView>
-      <View style={[styles.segmentContainer, { borderBottomColor: colors.border }]}>
+      <View
+        style={[styles.segmentContainer, { borderBottomColor: colors.border }]}
+      >
         {renderSegmentTab("projects", "Projects")}
         {renderSegmentTab("labels", "Labels")}
         {renderSegmentTab("contexts", "Contexts")}

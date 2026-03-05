@@ -47,7 +47,15 @@ describe("isFilterActive", () => {
   });
 
   test("returns false for filter with empty arrays", () => {
-    expect(isFilterActive({ projects: [], contexts: [], tags: [], statuses: [], priorities: [] })).toBe(false);
+    expect(
+      isFilterActive({
+        projects: [],
+        contexts: [],
+        tags: [],
+        statuses: [],
+        priorities: [],
+      }),
+    ).toBe(false);
   });
 
   test("returns true when projects is set", () => {
@@ -187,7 +195,10 @@ describe("applyFilter", () => {
   });
 
   test("combines multiple filters (AND logic)", () => {
-    const result = applyFilter(tasks, { statuses: ["open"], projects: ["Work"] });
+    const result = applyFilter(tasks, {
+      statuses: ["open"],
+      projects: ["Work"],
+    });
     expect(result).toHaveLength(1);
     expect(result[0]!.title).toBe("Work task");
   });
@@ -205,8 +216,18 @@ describe("applyFilter", () => {
 
 describe("applySort", () => {
   const tasks: Task[] = [
-    makeTask({ id: taskId("1"), title: "Banana", priority: "low", due: "2026-03-15" }),
-    makeTask({ id: taskId("2"), title: "Apple", priority: "high", due: "2026-01-01" }),
+    makeTask({
+      id: taskId("1"),
+      title: "Banana",
+      priority: "low",
+      due: "2026-03-15",
+    }),
+    makeTask({
+      id: taskId("2"),
+      title: "Apple",
+      priority: "high",
+      due: "2026-01-01",
+    }),
     makeTask({ id: taskId("3"), title: "Cherry", priority: "medium" }),
   ];
 
@@ -259,7 +280,10 @@ describe("applySort", () => {
       makeTask({ id: taskId("a"), title: "A" }),
       makeTask({ id: taskId("b"), title: "B" }),
     ];
-    const sorted = applySort(noDueTasks, { field: "dueDate", direction: "asc" });
+    const sorted = applySort(noDueTasks, {
+      field: "dueDate",
+      direction: "asc",
+    });
     expect(sorted).toHaveLength(2);
   });
 });

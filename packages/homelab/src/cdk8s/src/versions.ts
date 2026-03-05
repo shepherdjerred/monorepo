@@ -218,6 +218,10 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
     "1.1.137@sha256:03e72664f23779e5711635077e7fe2895d54c93b3d1c86bbd97711e4906f5d3c",
+  // Custom status-page-api image - Status page API
+  // not managed by renovate
+  "shepherdjerred/status-page-api":
+    "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];

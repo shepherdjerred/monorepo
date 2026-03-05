@@ -10,21 +10,21 @@ Sentinel's CI/CD pipeline is fully wired — image build, Helm chart, ArgoCD app
 
 Create a new item named "Sentinel" in the Kubernetes vault with these fields:
 
-| Field | Description |
-|-------|-------------|
-| `anthropic-api-key` | Claude API key for Agent SDK |
-| `discord-token` | Discord bot token for sentinel |
-| `discord-channel-id` | Channel ID for notifications |
-| `discord-guild-id` | Guild ID for slash commands |
-| `github-token` | GitHub token (scopes: `repo:status`, `public_repo`, `actions:read`, `contents:read`) |
-| `github-webhook-secret` | Secret for GitHub webhook signature verification |
-| `pagerduty-webhook-secret` | Secret for PagerDuty webhook signature verification |
-| `bugsink-webhook-secret` | Token for Bugsink webhook URL path authentication |
-| `buildkite-webhook-token` | Token for Buildkite webhook `X-Buildkite-Token` verification |
-| `buildkite-api-token` | Buildkite API token for agents to read build logs |
-| `pagerduty-api-token` | PagerDuty API token for agents to triage/acknowledge incidents |
-| `bugsink-api-token` | Bugsink API token for agents to query error details |
-| `sentry-dsn` | Sentry DSN for error tracking |
+| Field                      | Description                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `anthropic-api-key`        | Claude API key for Agent SDK                                                         |
+| `discord-token`            | Discord bot token for sentinel                                                       |
+| `discord-channel-id`       | Channel ID for notifications                                                         |
+| `discord-guild-id`         | Guild ID for slash commands                                                          |
+| `github-token`             | GitHub token (scopes: `repo:status`, `public_repo`, `actions:read`, `contents:read`) |
+| `github-webhook-secret`    | Secret for GitHub webhook signature verification                                     |
+| `pagerduty-webhook-secret` | Secret for PagerDuty webhook signature verification                                  |
+| `bugsink-webhook-secret`   | Token for Bugsink webhook URL path authentication                                    |
+| `buildkite-webhook-token`  | Token for Buildkite webhook `X-Buildkite-Token` verification                         |
+| `buildkite-api-token`      | Buildkite API token for agents to read build logs                                    |
+| `pagerduty-api-token`      | PagerDuty API token for agents to triage/acknowledge incidents                       |
+| `bugsink-api-token`        | Bugsink API token for agents to query error details                                  |
+| `sentry-dsn`               | Sentry DSN for error tracking                                                        |
 
 ### 2. Update 1Password UUID
 
@@ -47,12 +47,12 @@ itemPath: vaultItemPath("abc123defghijklmnop"),
 
 After deployment, sentinel exposes webhooks via TailscaleIngress with funnel at `sentinel-webhooks`:
 
-| Provider | URL | Auth Method |
-|----------|-----|-------------|
-| GitHub | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/github` | `X-Hub-Signature-256` (HMAC sha256) |
-| PagerDuty | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/pagerduty` | `X-PagerDuty-Signature` (HMAC v1) |
-| Buildkite | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/buildkite` | `X-Buildkite-Token` (plain token) |
-| Bugsink | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/bugsink/<token>` | Token in URL path |
+| Provider  | URL                                                                     | Auth Method                         |
+| --------- | ----------------------------------------------------------------------- | ----------------------------------- |
+| GitHub    | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/github`          | `X-Hub-Signature-256` (HMAC sha256) |
+| PagerDuty | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/pagerduty`       | `X-PagerDuty-Signature` (HMAC v1)   |
+| Buildkite | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/buildkite`       | `X-Buildkite-Token` (plain token)   |
+| Bugsink   | `https://sentinel-webhooks.tailnet-1a49.ts.net/webhook/bugsink/<token>` | Token in URL path                   |
 
 Configure each provider to send webhooks to the corresponding URL.
 

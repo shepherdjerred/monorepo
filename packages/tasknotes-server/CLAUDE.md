@@ -53,12 +53,12 @@ All responses use envelope: `{ success: boolean, data: T, error?: string }`
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `VAULT_PATH` | Yes | — | Path to synced vault directory |
-| `TASKS_DIR` | No | `""` | Subfolder within vault for task files |
-| `AUTH_TOKEN` | Yes | — | Bearer token for API auth |
-| `PORT` | No | `3000` | Server port |
+| Variable     | Required | Default | Description                           |
+| ------------ | -------- | ------- | ------------------------------------- |
+| `VAULT_PATH` | Yes      | —       | Path to synced vault directory        |
+| `TASKS_DIR`  | No       | `""`    | Subfolder within vault for task files |
+| `AUTH_TOKEN` | Yes      | —       | Bearer token for API auth             |
+| `PORT`       | No       | `3000`  | Server port                           |
 
 ## Shared Types
 

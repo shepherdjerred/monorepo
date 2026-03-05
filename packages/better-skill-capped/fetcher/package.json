@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "fetch": "bun run src/index.ts"
+    "fetch": "bun run src/index.ts",
+    "lint": "cd .. && bunx eslint fetcher",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.0",

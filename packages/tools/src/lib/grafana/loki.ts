@@ -1,5 +1,8 @@
 import { grafanaPost, grafanaRequest } from "./client.ts";
-import { PromQueryResultSchema, PrometheusLabelResponseSchema } from "./schemas.ts";
+import {
+  PromQueryResultSchema,
+  PrometheusLabelResponseSchema,
+} from "./schemas.ts";
 import type { PromQueryResult } from "./types.ts";
 import { parseTimeRange } from "./time.ts";
 import { findDefaultDatasource, resolveUidToId } from "./datasources.ts";
@@ -42,7 +45,11 @@ export async function queryLoki(
     to: String(to),
   };
 
-  const result = await grafanaPost("/api/ds/query", PromQueryResultSchema, body);
+  const result = await grafanaPost(
+    "/api/ds/query",
+    PromQueryResultSchema,
+    body,
+  );
 
   if (!result.success || result.data == null) {
     throw new Error(result.error ?? "Failed to query Loki");
@@ -51,9 +58,7 @@ export async function queryLoki(
   return result.data;
 }
 
-export async function getLokiLabels(
-  datasourceUid?: string,
-): Promise<string[]> {
+export async function getLokiLabels(datasourceUid?: string): Promise<string[]> {
   const ds = await resolveLokiDatasource(datasourceUid);
 
   const result = await grafanaRequest(

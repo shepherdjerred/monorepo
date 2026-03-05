@@ -8,8 +8,14 @@ import {
   generateHmacSignature,
 } from "./helpers.ts";
 
-function signedGitHubRequest(body: string, event: string, overrides?: { signature?: string; delivery?: string }) {
-  const signature = overrides?.signature ?? generateHmacSignature("test-github-secret", body, "sha256=");
+function signedGitHubRequest(
+  body: string,
+  event: string,
+  overrides?: { signature?: string; delivery?: string },
+) {
+  const signature =
+    overrides?.signature ??
+    generateHmacSignature("test-github-secret", body, "sha256=");
   return {
     method: "POST" as const,
     headers: {
@@ -40,7 +46,10 @@ describe("GitHub webhook", () => {
         repository: { full_name: "org/repo" },
       },
     });
-    const res = await app.request("/webhook/github", signedGitHubRequest(body, "workflow_run"));
+    const res = await app.request(
+      "/webhook/github",
+      signedGitHubRequest(body, "workflow_run"),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("enqueued");
@@ -64,7 +73,10 @@ describe("GitHub webhook", () => {
         repository: { full_name: "org/repo" },
       },
     });
-    const res = await app.request("/webhook/github", signedGitHubRequest(body, "workflow_run"));
+    const res = await app.request(
+      "/webhook/github",
+      signedGitHubRequest(body, "workflow_run"),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("ignored");
@@ -81,7 +93,10 @@ describe("GitHub webhook", () => {
       },
       repository: { full_name: "org/repo" },
     });
-    const res = await app.request("/webhook/github", signedGitHubRequest(body, "check_suite"));
+    const res = await app.request(
+      "/webhook/github",
+      signedGitHubRequest(body, "check_suite"),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("enqueued");
@@ -112,13 +127,18 @@ describe("GitHub webhook", () => {
     const body = JSON.stringify({ action: "completed" });
     const res = await app.request(
       "/webhook/github",
-      signedGitHubRequest(body, "workflow_run", { signature: "sha256=invalid0000000000000000000000000000000000000000000000000000000000" }),
+      signedGitHubRequest(body, "workflow_run", {
+        signature:
+          "sha256=invalid0000000000000000000000000000000000000000000000000000000000",
+      }),
     );
     expect(res.status).toBe(401);
   });
 
   it("returns 500 when githubSecret is not configured", async () => {
-    const app = createTestApp({ webhooks: { ...testConfig.webhooks, githubSecret: undefined } });
+    const app = createTestApp({
+      webhooks: { ...testConfig.webhooks, githubSecret: undefined },
+    });
     const body = JSON.stringify({ action: "completed" });
     const res = await app.request("/webhook/github", {
       method: "POST",
@@ -136,7 +156,10 @@ describe("GitHub webhook", () => {
   it("ignores non-handled event types", async () => {
     const app = createTestApp();
     const body = JSON.stringify({ action: "completed" });
-    const res = await app.request("/webhook/github", signedGitHubRequest(body, "push"));
+    const res = await app.request(
+      "/webhook/github",
+      signedGitHubRequest(body, "push"),
+    );
     expect(res.status).toBe(200);
     const parsed = await parseResponse(res);
     expect(parsed.status).toBe("ignored");
@@ -145,7 +168,10 @@ describe("GitHub webhook", () => {
   it("returns 400 when workflow_run field is missing", async () => {
     const app = createTestApp();
     const body = JSON.stringify({ action: "completed" });
-    const res = await app.request("/webhook/github", signedGitHubRequest(body, "workflow_run"));
+    const res = await app.request(
+      "/webhook/github",
+      signedGitHubRequest(body, "workflow_run"),
+    );
     expect(res.status).toBe(400);
   });
 });

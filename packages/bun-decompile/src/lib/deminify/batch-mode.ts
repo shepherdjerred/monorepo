@@ -460,7 +460,9 @@ export class BatchModeProcessor {
     // Get results using appropriate client
     const client = isOpenAI ? this.openAIBatchClient : this.batchClient;
     if (!client) {
-      throw new Error(`${isOpenAI ? "OpenAI" : "Anthropic"} batch client not initialized`);
+      throw new Error(
+        `${isOpenAI ? "OpenAI" : "Anthropic"} batch client not initialized`,
+      );
     }
     const results = await client.getResults(batchId, contexts);
 

@@ -11,6 +11,8 @@ export function useAppState(onForeground: () => void) {
       }
       appState.current = next;
     });
-    return () => { sub.remove(); };
+    return () => {
+      sub.remove();
+    };
   }, [onForeground]);
 }

@@ -12,7 +12,10 @@ type ErrorBoundaryState = {
   error: Error | null;
 };
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -23,7 +26,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+    Sentry.captureException(error, {
+      extra: { componentStack: info.componentStack },
+    });
   }
 
   handleRetry = () => {
@@ -34,16 +39,38 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       const isDark = Appearance.getColorScheme() === "dark";
       const themeColors = isDark
-        ? { background: "#111827", title: "#f9fafb", message: "#9ca3af", button: "#6366f1" }
-        : { background: "#ffffff", title: "#111827", message: "#6b7280", button: "#6366f1" };
+        ? {
+            background: "#111827",
+            title: "#f9fafb",
+            message: "#9ca3af",
+            button: "#6366f1",
+          }
+        : {
+            background: "#ffffff",
+            title: "#111827",
+            message: "#6b7280",
+            button: "#6366f1",
+          };
 
       return (
-        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-          <Text style={[styles.title, { color: themeColors.title }]}>Something went wrong</Text>
+        <View
+          style={[
+            styles.container,
+            { backgroundColor: themeColors.background },
+          ]}
+        >
+          <Text style={[styles.title, { color: themeColors.title }]}>
+            Something went wrong
+          </Text>
           <Text style={[styles.message, { color: themeColors.message }]}>
             {this.state.error?.message ?? "An unexpected error occurred"}
           </Text>
-          <Pressable style={[styles.button, { backgroundColor: themeColors.button }]} onPress={this.handleRetry} accessibilityRole="button" accessibilityLabel="Try again">
+          <Pressable
+            style={[styles.button, { backgroundColor: themeColors.button }]}
+            onPress={this.handleRetry}
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
+          >
             <Text style={styles.buttonText}>Try Again</Text>
           </Pressable>
         </View>

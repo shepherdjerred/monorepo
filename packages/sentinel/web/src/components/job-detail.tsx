@@ -82,7 +82,9 @@ export function JobDetail({ jobId, onNavigate }: JobDetailProps) {
             variant="danger"
             size="sm"
             disabled={cancelJob.isPending}
-            onClick={() => { cancelJob.mutate({ id: jobId }); }}
+            onClick={() => {
+              cancelJob.mutate({ id: jobId });
+            }}
           >
             {cancelJob.isPending ? "Cancelling..." : "Cancel Job"}
           </Button>
@@ -110,7 +112,9 @@ export function JobDetail({ jobId, onNavigate }: JobDetailProps) {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-500 dark:text-zinc-400">Trigger Source</span>
+              <span className="text-zinc-500 dark:text-zinc-400">
+                Trigger Source
+              </span>
               <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {data.triggerSource}
               </span>
@@ -144,7 +148,9 @@ export function JobDetail({ jobId, onNavigate }: JobDetailProps) {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-500 dark:text-zinc-400">Completed</span>
+              <span className="text-zinc-500 dark:text-zinc-400">
+                Completed
+              </span>
               <span className="font-medium text-zinc-900 dark:text-zinc-100">
                 {formatTimestamp(data.completedAt)}
               </span>
@@ -170,7 +176,9 @@ export function JobDetail({ jobId, onNavigate }: JobDetailProps) {
 
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Prompt</h2>
+          <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+            Prompt
+          </h2>
         </CardHeader>
         <CardContent>
           <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-zinc-100 p-4 text-sm dark:bg-zinc-800">
@@ -225,7 +233,9 @@ export function JobDetail({ jobId, onNavigate }: JobDetailProps) {
 
       <Button
         variant="ghost"
-        onClick={() => { onNavigate({ name: "jobs" }); }}
+        onClick={() => {
+          onNavigate({ name: "jobs" });
+        }}
       >
         Back to Jobs
       </Button>

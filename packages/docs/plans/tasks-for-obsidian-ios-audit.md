@@ -9,7 +9,9 @@ Last updated: 2026-02-25
 ## Completed Work
 
 ### Phase A — Foundations
+
 All items done:
+
 1. Accessibility — labels/roles/states on all interactive elements
 2. Keyboard/SafeArea — KeyboardAvoidingView + SafeAreaView consumption
 3. Performance — memo TaskRow/TaskCheckbox, fix toggleStatus closure, list perf props
@@ -20,16 +22,15 @@ All items done:
 8. iOS config — useAppState for foreground refresh, splash screen
 
 ### Phase B — Modern iOS UX
-All items done:
-9. Swipe actions — swipe-to-delete/complete on TaskRow via ReanimatedSwipeable
-10. TipKit-style onboarding — JS tooltip component (`TipPopover`) for feature discovery
+
+All items done: 9. Swipe actions — swipe-to-delete/complete on TaskRow via ReanimatedSwipeable 10. TipKit-style onboarding — JS tooltip component (`TipPopover`) for feature discovery
 
 ### Phase C — Native iOS features (JS deps)
-All items done:
-12. Context menus — zeego on TaskRow and KanbanCard
-13. SF Symbols — `AppIcon` wrapper created with icon map, currently using Feather fallback (native module not in Xcode project)
+
+All items done: 12. Context menus — zeego on TaskRow and KanbanCard 13. SF Symbols — `AppIcon` wrapper created with icon map, currently using Feather fallback (native module not in Xcode project)
 
 ### Phase D — Platform extensions (Swift files written, NOT wired into Xcode)
+
 See "Remaining Work" below.
 
 14. Home Screen widgets — Swift files on disk, JS bridge done
@@ -38,20 +39,18 @@ See "Remaining Work" below.
 17. Control Center — Swift file on disk
 
 ### Phase E — Code quality
-All items done:
-18. Tests — 172 tests across 7 files (result, status, priority, filters, dates, nlp, utils)
-19. Type safety — Zod `.transform()` on all schemas for branded type inference, eliminated `as unknown as T` casts
-20. Dedup — shared `useTaskListScreen` hook, single `ApiClientProvider` context
+
+All items done: 18. Tests — 172 tests across 7 files (result, status, priority, filters, dates, nlp, utils) 19. Type safety — Zod `.transform()` on all schemas for branded type inference, eliminated `as unknown as T` casts 20. Dedup — shared `useTaskListScreen` hook, single `ApiClientProvider` context
 
 ---
 
 ## Bugs Found Post-Implementation
 
-| Bug | Root Cause | Fix |
-|-----|-----------|-----|
-| App crashes on load | `.toSorted()` is ES2023, not available in Hermes | Replaced with `.sort()` across 10 files |
-| "Failed to connect" to API | Agent changed `NSAllowsArbitraryLoads` to `NSAllowsLocalNetworking` in Info.plist, blocking HTTP to Tailscale hostname | Reverted to `NSAllowsArbitraryLoads` |
-| Icons showing as triangles | `requireNativeComponent("SFSymbolView")` crashes when native module isn't registered | Simplified AppIcon to always use Feather icons |
+| Bug                        | Root Cause                                                                                                             | Fix                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| App crashes on load        | `.toSorted()` is ES2023, not available in Hermes                                                                       | Replaced with `.sort()` across 10 files        |
+| "Failed to connect" to API | Agent changed `NSAllowsArbitraryLoads` to `NSAllowsLocalNetworking` in Info.plist, blocking HTTP to Tailscale hostname | Reverted to `NSAllowsArbitraryLoads`           |
+| Icons showing as triangles | `requireNativeComponent("SFSymbolView")` crashes when native module isn't registered                                   | Simplified AppIcon to always use Feather icons |
 
 ---
 
@@ -62,6 +61,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 ### What exists on disk
 
 **Main app target files (need to be added to TasksForObsidian target):**
+
 - `ios/TasksForObsidian/WidgetBridge.swift` + `.m` — RN native module for widget data
 - `ios/TasksForObsidian/LiveActivityBridge.swift` + `.m` — RN native module for Live Activities
 - `ios/TasksForObsidian/SFSymbolView.swift` + `SFSymbolViewManager.m` — SF Symbol native view
@@ -71,6 +71,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - `ios/TasksForObsidian/TasksForObsidian.entitlements` — App Group capability
 
 **Widget Extension files (need entirely new Xcode target):**
+
 - `ios/TasksWidget/TasksWidgetBundle.swift` — Widget extension entry point
 - `ios/TasksWidget/WidgetTaskData.swift` — Codable models
 - `ios/TasksWidget/TodayTasksProvider.swift` — TimelineProvider
@@ -81,6 +82,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - `ios/TasksWidget/TasksWidget.entitlements` — App Group capability
 
 **JS bridges (done, in src/native/):**
+
 - `src/native/widget-bridge.ts` — Zod-validated bridge to WidgetBridge native module
 - `src/native/live-activity-bridge.ts` — Zod-validated bridge to LiveActivityBridge native module
 - `src/native/sync-widget.ts` — Computes widget data from task state
@@ -117,17 +119,18 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 
 ## New Dependencies Added
 
-| Package | Purpose |
-|---------|---------|
-| `zeego` + `react-native-ios-context-menu` + `react-native-ios-utilities` + `@react-native-menu/menu` | Native context menus on TaskRow and KanbanCard |
-| `react-native-keychain` | Secure auth token storage (migrated from AsyncStorage) |
-| `@sentry/react-native` | Crash reporting (DSN not configured, disabled in dev) |
+| Package                                                                                              | Purpose                                                |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `zeego` + `react-native-ios-context-menu` + `react-native-ios-utilities` + `@react-native-menu/menu` | Native context menus on TaskRow and KanbanCard         |
+| `react-native-keychain`                                                                              | Secure auth token storage (migrated from AsyncStorage) |
+| `@sentry/react-native`                                                                               | Crash reporting (DSN not configured, disabled in dev)  |
 
 ---
 
 ## New Files Created
 
 ### Domain/Lib
+
 - `src/domain/filters.ts` — Filter/sort logic
 - `src/domain/saved-views.ts` — Saved view definitions
 - `src/lib/errors.ts` — Error types
@@ -135,6 +138,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - `src/lib/icon-map.ts` — Feather → SF Symbol name mapping
 
 ### Components
+
 - `src/components/common/AppIcon.tsx` — Platform icon wrapper (currently Feather-only)
 - `src/components/common/TipPopover.tsx` — Animated onboarding tooltip
 - `src/components/task/SwipeActions.tsx` — Swipe-to-delete/complete render functions
@@ -143,19 +147,23 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - `src/components/input/SortPicker.tsx` — Sort option picker
 
 ### Hooks
+
 - `src/hooks/use-tip.ts` — Persisted tip dismissal state
 - `src/hooks/use-task-list-screen.ts` — Shared hook for filter/sort/delete across screens
 
 ### State
+
 - `src/state/ApiClientContext.tsx` — Single shared TaskNotesClient provider
 
 ### Screens
+
 - `src/screens/ContextDetailScreen.tsx`
 - `src/screens/TagDetailScreen.tsx`
 - `src/screens/SavedViewScreen.tsx`
 - `src/screens/JobSearchKanbanScreen.tsx`
 
 ### Tests (172 tests total)
+
 - `src/domain/result.test.ts`
 - `src/domain/status.test.ts`
 - `src/domain/priority.test.ts`
@@ -165,6 +173,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - `src/lib/utils.test.ts`
 
 ### Native (Swift/ObjC — on disk, not in Xcode project)
+
 - See "Remaining Work" section above
 
 ---
@@ -172,6 +181,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 ## Original Audit Plan
 
 ### Critical Findings (all addressed)
+
 1. Zero test coverage → 172 tests
 2. Zero accessibility markup → labels/roles/states added
 3. No KeyboardAvoidingView → added to all input screens
@@ -184,6 +194,7 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 10. Auth token in plaintext → migrated to Keychain
 
 ### High Findings (all addressed)
+
 - SectionList perf props, inline closures, search debouncing, memo wrappers
 - Navigation fixes, deep link validation
 - Request timeouts, crash reporting, concurrency guards
@@ -192,9 +203,10 @@ The Swift source files and JS bridges exist on disk but are **not functional** b
 - Type casts eliminated, dedup, single client provider
 
 ### Modern iOS Features (5-8 partially done)
-| # | Feature | JS Side | Swift Files | Xcode Config |
-|---|---------|---------|-------------|-------------|
-| 5 | Home Screen Widgets | Done | Written | NOT DONE |
-| 6 | Live Activities | Done | Written | NOT DONE |
-| 7 | Siri Shortcuts | N/A | Written | NOT DONE |
-| 8 | Control Center | N/A | Written | NOT DONE |
+
+| #   | Feature             | JS Side | Swift Files | Xcode Config |
+| --- | ------------------- | ------- | ----------- | ------------ |
+| 5   | Home Screen Widgets | Done    | Written     | NOT DONE     |
+| 6   | Live Activities     | Done    | Written     | NOT DONE     |
+| 7   | Siri Shortcuts      | N/A     | Written     | NOT DONE     |
+| 8   | Control Center      | N/A     | Written     | NOT DONE     |

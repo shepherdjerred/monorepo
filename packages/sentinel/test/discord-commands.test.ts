@@ -33,17 +33,19 @@ void mock.module("@shepherdjerred/sentinel/discord/client.ts", () => ({
 // dynamically-imported modules get testPrisma.
 void mock.module("@shepherdjerred/sentinel/database/index.ts", () => ({
   getPrisma: () => testPrisma,
-  initDatabase: async () => { /* no-op */ },
-  disconnectPrisma: async () => { /* no-op */ },
+  initDatabase: async () => {
+    /* no-op */
+  },
+  disconnectPrisma: async () => {
+    /* no-op */
+  },
 }));
 
 // Import modules under test AFTER mocks
-const { handleInteraction } = await import(
-  "@shepherdjerred/sentinel/discord/commands.ts"
-);
-const { handleDirectMessage, updateUserSession } = await import(
-  "@shepherdjerred/sentinel/discord/chat.ts"
-);
+const { handleInteraction } =
+  await import("@shepherdjerred/sentinel/discord/commands.ts");
+const { handleDirectMessage, updateUserSession } =
+  await import("@shepherdjerred/sentinel/discord/chat.ts");
 
 await setupTestDatabase();
 
@@ -72,8 +74,7 @@ function makeMockInteraction(
     channelId: "channel-123",
     options: {
       getSubcommand: () => subcommand,
-      getString: (name: string, _required?: boolean) =>
-        options[name] ?? null,
+      getString: (name: string, _required?: boolean) => options[name] ?? null,
     },
     deferReply: async () => {
       // no-op mock

@@ -4,7 +4,14 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { type FilterConfig, type SortConfig, EMPTY_FILTER, DEFAULT_SORT, applyFilter, applySort } from "../domain/filters";
+import {
+  type FilterConfig,
+  type SortConfig,
+  EMPTY_FILTER,
+  DEFAULT_SORT,
+  applyFilter,
+  applySort,
+} from "../domain/filters";
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { getDateGroup } from "../lib/dates";
 import { TaskList } from "../components/task/TaskList";
@@ -17,8 +24,18 @@ type Props = CompositeScreenProps<
 >;
 
 export function UpcomingScreen({ navigation }: Props) {
-  const { upcomingTasks, projectNames, contextNames, tagNames, refreshing, handlePress, handleToggle, handleDelete, handleRefresh, handleFabPress } =
-    useTaskListScreen(navigation);
+  const {
+    upcomingTasks,
+    projectNames,
+    contextNames,
+    tagNames,
+    refreshing,
+    handlePress,
+    handleToggle,
+    handleDelete,
+    handleRefresh,
+    handleFabPress,
+  } = useTaskListScreen(navigation);
   const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
   const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
 
@@ -28,7 +45,8 @@ export function UpcomingScreen({ navigation }: Props) {
   );
 
   const sectionBy = useCallback(
-    (task: { due?: string | undefined }) => (task.due ? getDateGroup(task.due) : "No Date"),
+    (task: { due?: string | undefined }) =>
+      task.due ? getDateGroup(task.due) : "No Date",
     [],
   );
 

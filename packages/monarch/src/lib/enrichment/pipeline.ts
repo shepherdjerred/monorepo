@@ -47,7 +47,10 @@ type EnrichResult = {
 };
 
 async function enrichWithKey(
-  promise: Promise<{ enrichments: Map<string, TransactionEnrichment>; matchRate: { matched: number; total: number } }>,
+  promise: Promise<{
+    enrichments: Map<string, TransactionEnrichment>;
+    matchRate: { matched: number; total: number };
+  }>,
   key: DeepPathKey,
 ): Promise<EnrichResult> {
   const r = await promise;
@@ -61,52 +64,63 @@ async function runDeepPathEnrichments(
   const tasks: Promise<EnrichResult>[] = [];
 
   if (!config.skipAmazon && separated.amazonTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichAmazon(config.amazonYears, config.forceScrape, separated.amazonTransactions),
-      "amazon",
-    ));
+    tasks.push(
+      enrichWithKey(
+        enrichAmazon(
+          config.amazonYears,
+          config.forceScrape,
+          separated.amazonTransactions,
+        ),
+        "amazon",
+      ),
+    );
   }
 
-  if (!config.skipVenmo && config.venmoCsv !== undefined && separated.venmoTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichVenmo(config, separated.venmoTransactions),
-      "venmo",
-    ));
+  if (
+    !config.skipVenmo &&
+    config.venmoCsv !== undefined &&
+    separated.venmoTransactions.length > 0
+  ) {
+    tasks.push(
+      enrichWithKey(enrichVenmo(config, separated.venmoTransactions), "venmo"),
+    );
   }
 
   if (!config.skipBilt && separated.biltTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichBilt(separated.biltTransactions),
-      "bilt",
-    ));
+    tasks.push(enrichWithKey(enrichBilt(separated.biltTransactions), "bilt"));
   }
 
   if (!config.skipUsaa && separated.usaaTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichUsaa(separated.usaaTransactions),
-      "usaa",
-    ));
+    tasks.push(enrichWithKey(enrichUsaa(separated.usaaTransactions), "usaa"));
   }
 
-  if (!config.skipScl && config.sclCsv !== undefined && separated.sclTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichScl(config.sclCsv, separated.sclTransactions),
-      "scl",
-    ));
+  if (
+    !config.skipScl &&
+    config.sclCsv !== undefined &&
+    separated.sclTransactions.length > 0
+  ) {
+    tasks.push(
+      enrichWithKey(enrichScl(config.sclCsv, separated.sclTransactions), "scl"),
+    );
   }
 
-  if (!config.skipApple && config.appleMailDir !== undefined && separated.appleTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichApple(config.appleMailDir, separated.appleTransactions),
-      "apple",
-    ));
+  if (
+    !config.skipApple &&
+    config.appleMailDir !== undefined &&
+    separated.appleTransactions.length > 0
+  ) {
+    tasks.push(
+      enrichWithKey(
+        enrichApple(config.appleMailDir, separated.appleTransactions),
+        "apple",
+      ),
+    );
   }
 
   if (!config.skipCostco && separated.costcoTransactions.length > 0) {
-    tasks.push(enrichWithKey(
-      enrichCostco(separated.costcoTransactions),
-      "costco",
-    ));
+    tasks.push(
+      enrichWithKey(enrichCostco(separated.costcoTransactions), "costco"),
+    );
   }
 
   return Promise.all(tasks);
@@ -133,14 +147,24 @@ function buildEnrichedList(
     for (const txn of transactions) {
       const enrichment = allEnrichments.get(txn.id);
       const tier = assignTier(txn, enrichment, knowledgeBase);
-      enrichedTransactions.push({ transaction: txn, enrichment, tier, deepPath });
+      enrichedTransactions.push({
+        transaction: txn,
+        enrichment,
+        tier,
+        deepPath,
+      });
     }
   }
 
   for (const txn of separated.regularTransactions) {
     const enrichment = allEnrichments.get(txn.id);
     const tier = assignTier(txn, enrichment, knowledgeBase);
-    enrichedTransactions.push({ transaction: txn, enrichment, tier, deepPath: "regular" });
+    enrichedTransactions.push({
+      transaction: txn,
+      enrichment,
+      tier,
+      deepPath: "regular",
+    });
   }
 
   return enrichedTransactions;
@@ -174,9 +198,15 @@ export async function runEnrichmentPipeline(
     stats[result.key] = result.matchRate;
   }
 
-  log.info(`Enriched ${String(allEnrichments.size)} transactions from deep paths`);
+  log.info(
+    `Enriched ${String(allEnrichments.size)} transactions from deep paths`,
+  );
 
-  const enrichedTransactions = buildEnrichedList(separated, allEnrichments, knowledgeBase);
+  const enrichedTransactions = buildEnrichedList(
+    separated,
+    allEnrichments,
+    knowledgeBase,
+  );
 
   stats.tier1Count = enrichedTransactions.filter((t) => t.tier === 1).length;
   stats.tier2Count = enrichedTransactions.filter((t) => t.tier === 2).length;

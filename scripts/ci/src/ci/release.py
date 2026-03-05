@@ -50,7 +50,7 @@ def _set_metadata(key: str, value: str) -> None:
         return
     subprocess.run(
         ["buildkite-agent", "meta-data", "set", key, value],
-        check=False,
+        check=True,
     )
 
 
@@ -65,6 +65,10 @@ def main() -> None:
     print("\n--- release-please release-pr ---", flush=True)
     pr_success, pr_output = _run_release_please("release-pr", token)
     print(f"Release PR (success={pr_success})", flush=True)
+    if not pr_success:
+        print("\n⚠ WARNING: release-please release-pr failed. "
+              "This is non-critical (PRs are for future releases) but may indicate "
+              "a token or network issue.", flush=True)
 
     # Phase 2: github-release
     print("\n--- release-please github-release ---", flush=True)
@@ -95,12 +99,8 @@ def main() -> None:
         _set_metadata("cooklang_for_obsidian_version", cooklang_version)
         print(f"Detected cooklang-for-obsidian release: v{cooklang_version}", flush=True)
 
-    # If github-release failed but there appear to be pending changes, that's a real error
-    if not release_success and (
-        "release" in release_output.lower()
-        or "github.com" in release_output.lower()
-    ):
-        print("\nRelease step failed: github-release had errors with pending changes", flush=True)
+    if not release_success:
+        print("\nRelease step failed: github-release exited non-zero", flush=True)
         sys.exit(1)
 
     print("\nRelease step completed", flush=True)
