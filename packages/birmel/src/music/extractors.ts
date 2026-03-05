@@ -7,17 +7,11 @@ export async function registerExtractors(player: Player): Promise<void> {
   try {
     // Register YouTubei extractor with streamOptions to avoid signature decipher issues
      
-    await player.extractors.register(
-      // eslint-disable-next-line custom-rules/no-type-assertions -- discord-player-youtubei type mismatch in Bazel sandbox
-      YoutubeiExtractor as unknown as Parameters<
-        typeof player.extractors.register
-      >[0],
-      {
-        streamOptions: {
-          useClient: "ANDROID",
-        },
+    await player.extractors.register(YoutubeiExtractor, {
+      streamOptions: {
+        useClient: "ANDROID",
       },
-    );
+    });
     logger.info("Registered YouTubei extractor");
   } catch (error) {
     logger.error("Failed to register extractors", toError(error));
