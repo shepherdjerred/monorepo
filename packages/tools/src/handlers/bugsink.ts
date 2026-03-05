@@ -2,16 +2,10 @@ import { parseArgs } from "node:util";
 import { issuesCommand } from "#commands/bugsink/issues.ts";
 import { issueCommand } from "#commands/bugsink/issue.ts";
 import { teamsCommand, teamCommand } from "#commands/bugsink/teams.ts";
-import {
-  projectsCommand,
-  projectCommand,
-} from "#commands/bugsink/projects.ts";
+import { projectsCommand, projectCommand } from "#commands/bugsink/projects.ts";
 import { eventsCommand, eventCommand } from "#commands/bugsink/events.ts";
 import { stacktraceCommand } from "#commands/bugsink/stacktrace.ts";
-import {
-  releasesCommand,
-  releaseCommand,
-} from "#commands/bugsink/releases.ts";
+import { releasesCommand, releaseCommand } from "#commands/bugsink/releases.ts";
 
 function parseJsonFlag(args: string[]) {
   return parseArgs({
@@ -54,7 +48,11 @@ async function handleIssues(args: string[]): Promise<void> {
 
 async function handleIssue(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const id = requirePositional(positionals, "Issue ID", "tools bugsink issue <issue-id> [--json]");
+  const id = requirePositional(
+    positionals,
+    "Issue ID",
+    "tools bugsink issue <issue-id> [--json]",
+  );
   await issueCommand(id, { json: values.json });
 }
 
@@ -65,7 +63,11 @@ async function handleTeams(args: string[]): Promise<void> {
 
 async function handleTeam(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uuid = requirePositional(positionals, "Team UUID", "tools bugsink team <uuid> [--json]");
+  const uuid = requirePositional(
+    positionals,
+    "Team UUID",
+    "tools bugsink team <uuid> [--json]",
+  );
   await teamCommand(uuid, { json: values.json });
 }
 
@@ -83,25 +85,41 @@ async function handleProjects(args: string[]): Promise<void> {
 
 async function handleProject(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const id = requirePositional(positionals, "Project ID", "tools bugsink project <id> [--json]");
+  const id = requirePositional(
+    positionals,
+    "Project ID",
+    "tools bugsink project <id> [--json]",
+  );
   await projectCommand(Number.parseInt(id, 10), { json: values.json });
 }
 
 async function handleEvents(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uuid = requirePositional(positionals, "Issue UUID", "tools bugsink events <issue-uuid> [--json]");
+  const uuid = requirePositional(
+    positionals,
+    "Issue UUID",
+    "tools bugsink events <issue-uuid> [--json]",
+  );
   await eventsCommand(uuid, { json: values.json });
 }
 
 async function handleEvent(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uuid = requirePositional(positionals, "Event UUID", "tools bugsink event <uuid> [--json]");
+  const uuid = requirePositional(
+    positionals,
+    "Event UUID",
+    "tools bugsink event <uuid> [--json]",
+  );
   await eventCommand(uuid, { json: values.json });
 }
 
 async function handleStacktrace(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uuid = requirePositional(positionals, "Event UUID", "tools bugsink stacktrace <event-uuid> [--json]");
+  const uuid = requirePositional(
+    positionals,
+    "Event UUID",
+    "tools bugsink stacktrace <event-uuid> [--json]",
+  );
   await stacktraceCommand(uuid, { json: values.json });
 }
 
@@ -123,7 +141,11 @@ async function handleReleases(args: string[]): Promise<void> {
 
 async function handleRelease(args: string[]): Promise<void> {
   const { values, positionals } = parseJsonFlag(args);
-  const uuid = requirePositional(positionals, "Release UUID", "tools bugsink release <uuid> [--json]");
+  const uuid = requirePositional(
+    positionals,
+    "Release UUID",
+    "tools bugsink release <uuid> [--json]",
+  );
   await releaseCommand(uuid, { json: values.json });
 }
 

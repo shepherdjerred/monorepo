@@ -28,6 +28,7 @@ bun run ios
 ```
 
 If `pod install` fails, check prerequisites:
+
 - Xcode installed with iOS simulator runtimes
 - CocoaPods installed (`gem install cocoapods`)
 - `ios/.xcode.env.local` must point to a valid Node binary — currently hardcoded to mise-managed Node. Update with `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local` if the path is wrong.
@@ -55,24 +56,29 @@ Try these in order (least to most destructive):
 The human will typically be running the app and hit a problem. Ask them to run one of these in a terminal and then give you the log file:
 
 **Build failures** — captures the full xcodebuild output:
+
 ```bash
 bun run ios 2>&1 | tee /tmp/ios-build.log
 ```
 
 **JS runtime logs** — Metro console output (console.log, console.warn, console.error, React errors):
+
 ```bash
 bun run start 2>&1 | tee /tmp/metro.log
 ```
 
 **Native device logs** — Swift print() statements, native crashes, system messages from the simulator:
+
 ```bash
 xcrun simctl spawn booted log stream --predicate 'process == "TasksForObsidian"' --level debug 2>&1 | tee /tmp/device.log
 ```
 
 **Physical device logs** — if the app is running on a real iPhone connected via USB:
+
 ```bash
 idevicesyslog --process TasksForObsidian 2>&1 | tee /tmp/device.log
 ```
+
 (Requires `brew install libimobiledevice`)
 
 Then the human tells you: "read /tmp/ios-build.log" or "read /tmp/metro.log" etc.
@@ -86,6 +92,7 @@ Then the human tells you: "read /tmp/ios-build.log" or "read /tmp/metro.log" etc
 ### MCP servers (optional, for full "closing the loop")
 
 These let you directly build, see screenshots, and interact with the simulator:
+
 - **XcodeBuildMCP** (`github.com/getsentry/XcodeBuildMCP`): Structured JSON build/test output instead of raw xcodebuild logs. Prevents context overflow.
 - **ios-simulator-mcp** (`github.com/joshuayoes/ios-simulator-mcp`): Take screenshots, tap elements, read accessibility tree from the simulator.
 

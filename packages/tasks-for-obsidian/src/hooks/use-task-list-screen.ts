@@ -13,12 +13,16 @@ export function useTaskListScreen(navigation: NavigateFn) {
   const tasks = useTasks();
 
   const handlePress = useCallback(
-    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
+    (id: TaskId) => {
+      navigation.navigate("TaskDetail", { taskId: id });
+    },
     [navigation],
   );
 
   const handleToggle = useCallback(
-    (id: TaskId) => { void tasks.toggleTask(id); },
+    (id: TaskId) => {
+      void tasks.toggleTask(id);
+    },
     [tasks.toggleTask],
   );
 
@@ -39,9 +43,13 @@ export function useTaskListScreen(navigation: NavigateFn) {
     [tasks.deleteTask],
   );
 
-  const handleRefresh = useCallback(() => { void tasks.refresh(); }, [tasks.refresh]);
+  const handleRefresh = useCallback(() => {
+    void tasks.refresh();
+  }, [tasks.refresh]);
 
-  const handleFabPress = useCallback(() => { navigation.navigate("QuickAdd"); }, [navigation]);
+  const handleFabPress = useCallback(() => {
+    navigation.navigate("QuickAdd");
+  }, [navigation]);
 
   return {
     ...tasks,

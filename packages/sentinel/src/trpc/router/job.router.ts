@@ -31,7 +31,9 @@ export const jobRouter = router({
         where,
         orderBy: [{ createdAt: "desc" }],
         take: input.limit + 1,
-        ...(input.cursor == null ? {} : { cursor: { id: input.cursor }, skip: 1 }),
+        ...(input.cursor == null
+          ? {}
+          : { cursor: { id: input.cursor }, skip: 1 }),
       });
 
       let nextCursor: string | undefined;
@@ -78,15 +80,18 @@ export const jobRouter = router({
       });
       return {
         ...job,
-        session: session == null ? null : {
-          id: session.id,
-          turnsUsed: session.turnsUsed,
-          status: session.status,
-          startedAt: session.startedAt,
-          updatedAt: session.updatedAt,
-          inputTokens: session.inputTokens,
-          outputTokens: session.outputTokens,
-        },
+        session:
+          session == null
+            ? null
+            : {
+                id: session.id,
+                turnsUsed: session.turnsUsed,
+                status: session.status,
+                startedAt: session.startedAt,
+                updatedAt: session.updatedAt,
+                inputTokens: session.inputTokens,
+                outputTokens: session.outputTokens,
+              },
       };
     }),
 

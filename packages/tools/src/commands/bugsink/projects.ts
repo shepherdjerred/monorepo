@@ -25,7 +25,9 @@ function formatProjectsMarkdown(projects: BugsinkProjectDetail[]): string {
   for (const project of projects) {
     lines.push(`- **${project.name}** (\`${project.slug}\`)`);
     lines.push(`  - ID: ${String(project.id)}`);
-    lines.push(`  - Events: ${String(project.digested_event_count)} digested, ${String(project.stored_event_count)} stored`);
+    lines.push(
+      `  - Events: ${String(project.digested_event_count)} digested, ${String(project.stored_event_count)} stored`,
+    );
     lines.push(`  - Visibility: ${project.visibility}`);
     lines.push("");
   }
@@ -66,7 +68,9 @@ function formatProjectDetails(project: BugsinkProjectDetail): string {
   lines.push("### Alert Settings");
   lines.push("");
   lines.push(`- **Alert on new issue:** ${String(project.alert_on_new_issue)}`);
-  lines.push(`- **Alert on regression:** ${String(project.alert_on_regression)}`);
+  lines.push(
+    `- **Alert on regression:** ${String(project.alert_on_regression)}`,
+  );
   lines.push(`- **Alert on unmute:** ${String(project.alert_on_unmute)}`);
   lines.push("");
 

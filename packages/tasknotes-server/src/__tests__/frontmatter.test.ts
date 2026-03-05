@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseFrontmatter, serializeFrontmatter } from "../vault/frontmatter.ts";
+import {
+  parseFrontmatter,
+  serializeFrontmatter,
+} from "../vault/frontmatter.ts";
 import { frontmatterToTask, taskToFrontmatter } from "../vault/task-mapper.ts";
 import type { Task } from "../domain/types.ts";
 
@@ -205,17 +208,29 @@ describe("frontmatterToTask", () => {
   });
 
   test("returns undefined for invalid status", () => {
-    const task = frontmatterToTask({ id: "abc", title: "Bad", status: "invalid" }, "", "test.md");
+    const task = frontmatterToTask(
+      { id: "abc", title: "Bad", status: "invalid" },
+      "",
+      "test.md",
+    );
     expect(task).toBeUndefined();
   });
 
   test("returns undefined for invalid priority", () => {
-    const task = frontmatterToTask({ id: "abc", title: "Bad", priority: "invalid" }, "", "test.md");
+    const task = frontmatterToTask(
+      { id: "abc", title: "Bad", priority: "invalid" },
+      "",
+      "test.md",
+    );
     expect(task).toBeUndefined();
   });
 
   test("sets details to undefined for empty body", () => {
-    const task = frontmatterToTask({ id: "abc", title: "No body" }, "", "test.md");
+    const task = frontmatterToTask(
+      { id: "abc", title: "No body" },
+      "",
+      "test.md",
+    );
     expect(task?.details).toBeUndefined();
   });
 });

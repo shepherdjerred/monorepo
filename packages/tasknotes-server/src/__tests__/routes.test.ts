@@ -37,7 +37,11 @@ afterEach(async () => {
   await rm(tempDir, { recursive: true, force: true });
 });
 
-async function makeRequest(method: string, url: string, body?: unknown): Promise<Response> {
+async function makeRequest(
+  method: string,
+  url: string,
+  body?: unknown,
+): Promise<Response> {
   const init: RequestInit = { method };
   if (body !== undefined) {
     init.headers = { "Content-Type": "application/json" };
@@ -46,7 +50,9 @@ async function makeRequest(method: string, url: string, body?: unknown): Promise
   return app.request(url, init);
 }
 
-async function createTask(body: Record<string, unknown>): Promise<{ id: string; [key: string]: unknown }> {
+async function createTask(
+  body: Record<string, unknown>,
+): Promise<{ id: string; [key: string]: unknown }> {
   const res = await makeRequest("POST", "/api/tasks", body);
   return res.json();
 }
@@ -129,7 +135,10 @@ describe("tasks CRUD", () => {
       title: "Recurring",
       recurrence: "every week",
     });
-    const res = await makeRequest("POST", `/api/tasks/${created.id}/complete-instance`);
+    const res = await makeRequest(
+      "POST",
+      `/api/tasks/${created.id}/complete-instance`,
+    );
     expect(res.status).toBe(200);
     const task = await res.json();
     expect(task.status).toBe("done");
@@ -246,7 +255,10 @@ describe("calendar", () => {
     await createTask({ title: "Mid", due: "2026-06-15" });
     await createTask({ title: "Late", due: "2026-12-31" });
 
-    const res = await makeRequest("GET", "/api/calendar/events?start=2026-06-01&end=2026-07-01");
+    const res = await makeRequest(
+      "GET",
+      "/api/calendar/events?start=2026-06-01&end=2026-07-01",
+    );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.events.length).toBe(1);

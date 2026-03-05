@@ -5,7 +5,10 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
-import { enqueueJob, getQueueStats } from "@shepherdjerred/sentinel/queue/index.ts";
+import {
+  enqueueJob,
+  getQueueStats,
+} from "@shepherdjerred/sentinel/queue/index.ts";
 import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 import { appRouter } from "@shepherdjerred/sentinel/trpc/router/index.ts";
@@ -18,24 +21,39 @@ let server: ReturnType<typeof Bun.serve> | null = null;
 
 const RecordSchema = z.record(z.string(), z.unknown());
 
-function verifySignature(payload: string, signature: string, secret: string, prefix: string): boolean {
+function verifySignature(
+  payload: string,
+  signature: string,
+  secret: string,
+  prefix: string,
+): boolean {
   const expected = `${prefix}${createHmac("sha256", secret).update(payload).digest("hex")}`;
   const a = Buffer.from(signature);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function getString(obj: Record<string, unknown>, key: string): string | undefined {
+function getString(
+  obj: Record<string, unknown>,
+  key: string,
+): string | undefined {
   const value = obj[key];
   return typeof value === "string" ? value : undefined;
 }
 
-function getRecord(obj: Record<string, unknown>, key: string): Record<string, unknown> | undefined {
+function getRecord(
+  obj: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
   const result = RecordSchema.safeParse(obj[key]);
   return result.success ? result.data : undefined;
 }
 
-function extractNestedString(obj: Record<string, unknown>, key: string, nestedKey: string): string | undefined {
+function extractNestedString(
+  obj: Record<string, unknown>,
+  key: string,
+  nestedKey: string,
+): string | undefined {
   const nested = getRecord(obj, key);
   return nested == null ? undefined : getString(nested, nestedKey);
 }
@@ -44,7 +62,10 @@ function sanitizeForPrompt(value: string): string {
   return value.replaceAll(/[\n\r]/g, " ").slice(0, 500);
 }
 
-function buildPromptBlock(header: string, fields: Record<string, string>): string {
+function buildPromptBlock(
+  header: string,
+  fields: Record<string, string>,
+): string {
   const lines = [header, "", "--- BEGIN WEBHOOK DATA ---"];
   for (const [key, value] of Object.entries(fields)) {
     lines.push(`${key}: ${sanitizeForPrompt(value)}`);
@@ -68,7 +89,10 @@ const MAX_BODY_BYTES = 1_048_576; // 1 MB
 
 async function readBody(c: Context): Promise<string | null> {
   const contentLength = c.req.header("Content-Length");
-  if (contentLength != null && Number.parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+  if (
+    contentLength != null &&
+    Number.parseInt(contentLength, 10) > MAX_BODY_BYTES
+  ) {
     return null;
   }
   try {
@@ -88,7 +112,12 @@ type SigVerifyOptions = {
   provider: string;
 };
 
-function verifyMultiSignature(payload: string, header: string, secret: string, prefix: string): boolean {
+function verifyMultiSignature(
+  payload: string,
+  header: string,
+  secret: string,
+  prefix: string,
+): boolean {
   const hmac = createHmac("sha256", secret);
   hmac.update(payload);
   const expected = `${prefix}${hmac.digest("hex")}`;
@@ -100,7 +129,10 @@ function verifyMultiSignature(payload: string, header: string, secret: string, p
   });
 }
 
-function verifyWebhookSignature(c: Context, options: SigVerifyOptions): Response | null {
+function verifyWebhookSignature(
+  c: Context,
+  options: SigVerifyOptions,
+): Response | null {
   if (options.secret == null) {
     webhookLogger.warn(`${options.provider} webhook secret not configured`);
     return c.json({ error: "webhook not configured" }, 500);
@@ -114,13 +146,20 @@ function verifyWebhookSignature(c: Context, options: SigVerifyOptions): Response
     ? verifyMultiSignature(options.rawBody, sig, options.secret, options.prefix)
     : verifySignature(options.rawBody, sig, options.secret, options.prefix);
   if (!valid) {
-    webhookLogger.warn(`${options.provider} webhook signature verification failed`);
+    webhookLogger.warn(
+      `${options.provider} webhook signature verification failed`,
+    );
     return c.json({ error: "invalid signature" }, 401);
   }
   return null;
 }
 
-type WebhookResult = { status: string; jobId?: string; reason?: string; error?: string };
+type WebhookResult = {
+  status: string;
+  jobId?: string;
+  reason?: string;
+  error?: string;
+};
 
 async function handleWorkflowRun(
   workflowRun: Record<string, unknown>,
@@ -132,24 +171,37 @@ async function handleWorkflowRun(
     return { status: "ignored", reason: "not a failure" };
   }
 
-  const repo = extractNestedString(workflowRun, "repository", "full_name") ?? "unknown";
+  const repo =
+    extractNestedString(workflowRun, "repository", "full_name") ?? "unknown";
   const branch = getString(workflowRun, "head_branch") ?? "unknown";
   const workflowName = getString(workflowRun, "name") ?? "unknown";
   const failureUrl = getString(workflowRun, "html_url") ?? "unknown";
 
-  const prompt = buildPromptBlock("A GitHub CI workflow has failed. Investigate the failure and propose a fix.", {
-    Repository: repo, Branch: branch, Workflow: workflowName, Event: "workflow_run", "Failure URL": failureUrl,
-  });
+  const prompt = buildPromptBlock(
+    "A GitHub CI workflow has failed. Investigate the failure and propose a fix.",
+    {
+      Repository: repo,
+      Branch: branch,
+      Workflow: workflowName,
+      Event: "workflow_run",
+      "Failure URL": failureUrl,
+    },
+  );
   try {
     const job = await enqueueJob({
       agent: "ci-fixer",
       prompt,
       triggerType: "webhook",
       triggerSource: "github",
-      ...(deliveryId == null ? {} : { deduplicationKey: `github:${deliveryId}` }),
+      ...(deliveryId == null
+        ? {}
+        : { deduplicationKey: `github:${deliveryId}` }),
       triggerMetadata: { event, deliveryId, repo, branch, workflowName },
     });
-    webhookLogger.info({ jobId: job.id, repo, workflowName }, "GitHub workflow_run failure enqueued");
+    webhookLogger.info(
+      { jobId: job.id, repo, workflowName },
+      "GitHub workflow_run failure enqueued",
+    );
     return { status: "enqueued", jobId: job.id };
   } catch (error: unknown) {
     webhookLogger.error({ error }, "Failed to enqueue GitHub workflow_run job");
@@ -192,14 +244,21 @@ async function handleBuildkiteBuild(
   }
 
   const pipeline = getRecord(payload, "pipeline");
-  const pipelineName = (pipeline == null ? undefined : getString(pipeline, "name")) ?? "unknown";
+  const pipelineName =
+    (pipeline == null ? undefined : getString(pipeline, "name")) ?? "unknown";
   const buildUrl = getString(build, "web_url") ?? "unknown";
   const buildId = getString(build, "id") ?? "unknown";
   const message = getString(build, "message") ?? "unknown";
 
-  const prompt = buildPromptBlock("A Buildkite CI build has failed on main. Investigate the failure and propose a fix.", {
-    Pipeline: pipelineName, Branch: branch, "Build URL": buildUrl, "Commit message": message,
-  });
+  const prompt = buildPromptBlock(
+    "A Buildkite CI build has failed on main. Investigate the failure and propose a fix.",
+    {
+      Pipeline: pipelineName,
+      Branch: branch,
+      "Build URL": buildUrl,
+      "Commit message": message,
+    },
+  );
   try {
     const job = await enqueueJob({
       agent: "ci-fixer",
@@ -220,29 +279,50 @@ async function handleBuildkiteBuild(
   }
 }
 
-async function handleCheckSuite(options: GitHubEventOptions): Promise<WebhookResult> {
+async function handleCheckSuite(
+  options: GitHubEventOptions,
+): Promise<WebhookResult> {
   const conclusion = getString(options.data, "conclusion");
   if (conclusion !== "failure") {
     return { status: "ignored", reason: "not a failure" };
   }
 
-  const repo = extractNestedString(options.payload, "repository", "full_name") ?? "unknown";
+  const repo =
+    extractNestedString(options.payload, "repository", "full_name") ??
+    "unknown";
   const branch = getString(options.data, "head_branch") ?? "unknown";
   const failureUrl = getString(options.data, "url") ?? "unknown";
 
-  const prompt = buildPromptBlock("A GitHub CI workflow has failed. Investigate the failure and propose a fix.", {
-    Repository: repo, Branch: branch, Workflow: "check_suite", Event: "check_suite", "Failure URL": failureUrl,
-  });
+  const prompt = buildPromptBlock(
+    "A GitHub CI workflow has failed. Investigate the failure and propose a fix.",
+    {
+      Repository: repo,
+      Branch: branch,
+      Workflow: "check_suite",
+      Event: "check_suite",
+      "Failure URL": failureUrl,
+    },
+  );
   try {
     const job = await enqueueJob({
       agent: "ci-fixer",
       prompt,
       triggerType: "webhook",
       triggerSource: "github",
-      ...(options.deliveryId == null ? {} : { deduplicationKey: `github:${options.deliveryId}` }),
-      triggerMetadata: { event: options.event, deliveryId: options.deliveryId, repo, branch },
+      ...(options.deliveryId == null
+        ? {}
+        : { deduplicationKey: `github:${options.deliveryId}` }),
+      triggerMetadata: {
+        event: options.event,
+        deliveryId: options.deliveryId,
+        repo,
+        branch,
+      },
     });
-    webhookLogger.info({ jobId: job.id, repo }, "GitHub check_suite failure enqueued");
+    webhookLogger.info(
+      { jobId: job.id, repo },
+      "GitHub check_suite failure enqueued",
+    );
     return { status: "enqueued", jobId: job.id };
   } catch (error: unknown) {
     webhookLogger.error({ error }, "Failed to enqueue GitHub check_suite job");
@@ -263,14 +343,29 @@ async function handlePagerDutyEvent(
 
   const eventId = getString(event, "id");
   const eventData = getRecord(event, "data");
-  const title = (eventData == null ? undefined : getString(eventData, "title")) ?? "unknown";
-  const urgency = (eventData == null ? undefined : getString(eventData, "urgency")) ?? "unknown";
-  const htmlUrl = (eventData == null ? undefined : getString(eventData, "html_url")) ?? "unknown";
-  const service = eventData == null ? undefined : extractNestedString(eventData, "service", "summary");
+  const title =
+    (eventData == null ? undefined : getString(eventData, "title")) ??
+    "unknown";
+  const urgency =
+    (eventData == null ? undefined : getString(eventData, "urgency")) ??
+    "unknown";
+  const htmlUrl =
+    (eventData == null ? undefined : getString(eventData, "html_url")) ??
+    "unknown";
+  const service =
+    eventData == null
+      ? undefined
+      : extractNestedString(eventData, "service", "summary");
 
-  const prompt = buildPromptBlock("A PagerDuty incident has been triggered. Investigate and triage this alert.", {
-    Title: title, Service: service ?? "unknown", Urgency: urgency, URL: htmlUrl,
-  });
+  const prompt = buildPromptBlock(
+    "A PagerDuty incident has been triggered. Investigate and triage this alert.",
+    {
+      Title: title,
+      Service: service ?? "unknown",
+      Urgency: urgency,
+      URL: htmlUrl,
+    },
+  );
 
   try {
     const job = await enqueueJob({
@@ -281,7 +376,10 @@ async function handlePagerDutyEvent(
       ...(eventId == null ? {} : { deduplicationKey: `pagerduty:${eventId}` }),
       triggerMetadata: { eventType, eventId, title, service, urgency },
     });
-    webhookLogger.info({ jobId: job.id, title, service }, "PagerDuty incident enqueued");
+    webhookLogger.info(
+      { jobId: job.id, title, service },
+      "PagerDuty incident enqueued",
+    );
     return { status: "enqueued", jobId: job.id };
   } catch (error: unknown) {
     webhookLogger.error({ error }, "Failed to enqueue PagerDuty job");
@@ -298,9 +396,14 @@ async function handleBugsinkEvent(rawBody: string): Promise<WebhookResult> {
   const project = getString(p, "project") ?? "unknown";
   const url = getString(p, "url") ?? "unknown";
 
-  const prompt = buildPromptBlock("A new error has been reported in Bugsink. Investigate and triage this error.", {
-    Title: title, Project: project, URL: url,
-  });
+  const prompt = buildPromptBlock(
+    "A new error has been reported in Bugsink. Investigate and triage this error.",
+    {
+      Title: title,
+      Project: project,
+      URL: url,
+    },
+  );
   try {
     const job = await enqueueJob({
       agent: "personal-assistant",
@@ -310,7 +413,10 @@ async function handleBugsinkEvent(rawBody: string): Promise<WebhookResult> {
       deduplicationKey: `bugsink:${bodyHash}`,
       triggerMetadata: { title, project, url },
     });
-    webhookLogger.info({ jobId: job.id, title, project }, "Bugsink error enqueued");
+    webhookLogger.info(
+      { jobId: job.id, title, project },
+      "Bugsink error enqueued",
+    );
     return { status: "enqueued", jobId: job.id };
   } catch (error: unknown) {
     webhookLogger.error({ error }, "Failed to enqueue Bugsink job");
@@ -340,15 +446,24 @@ export function createApp(config: Config): Hono {
   });
 
   app.all("/trpc/*", (c) =>
-    fetchRequestHandler({ endpoint: "/trpc", req: c.req.raw, router: appRouter, createContext }),
+    fetchRequestHandler({
+      endpoint: "/trpc",
+      req: c.req.raw,
+      router: appRouter,
+      createContext,
+    }),
   );
 
   app.get("/api/events", (c) => {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       start(controller) {
-        const send = (data: string) => { controller.enqueue(encoder.encode(`data: ${data}\n\n`)); };
-        const heartbeat = setInterval(() => { send(JSON.stringify({ type: "heartbeat" })); }, 30_000);
+        const send = (data: string) => {
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        };
+        const heartbeat = setInterval(() => {
+          send(JSON.stringify({ type: "heartbeat" }));
+        }, 30_000);
         const removeListener = addSSEListener(send);
         c.req.raw.signal.addEventListener("abort", () => {
           clearInterval(heartbeat);
@@ -358,7 +473,11 @@ export function createApp(config: Config): Hono {
       },
     });
     return new Response(stream, {
-      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
     });
   });
 
@@ -400,7 +519,12 @@ export function createApp(config: Config): Hono {
       if (checkSuite == null) {
         return c.json({ error: "missing check_suite" }, 400);
       }
-      const result = await handleCheckSuite({ data: checkSuite, payload: p, deliveryId, event });
+      const result = await handleCheckSuite({
+        data: checkSuite,
+        payload: p,
+        deliveryId,
+        event,
+      });
       return c.json(result, result.error == null ? 200 : 500);
     }
 
@@ -453,7 +577,10 @@ export function createApp(config: Config): Hono {
     }
 
     const buildkiteToken = c.req.header("X-Buildkite-Token");
-    if (buildkiteToken == null || !verifyTokenEqual(buildkiteToken, config.webhooks.buildkiteToken)) {
+    if (
+      buildkiteToken == null ||
+      !verifyTokenEqual(buildkiteToken, config.webhooks.buildkiteToken)
+    ) {
       webhookLogger.warn("Buildkite webhook token verification failed");
       return c.json({ error: "invalid token" }, 401);
     }
@@ -464,7 +591,10 @@ export function createApp(config: Config): Hono {
     const p = parseJsonBody(rawBody);
     if (p == null) return c.json({ error: "invalid JSON" }, 400);
 
-    const result = await handleBuildkiteBuild(p, c.req.header("X-Buildkite-Event"));
+    const result = await handleBuildkiteBuild(
+      p,
+      c.req.header("X-Buildkite-Event"),
+    );
     return c.json(result, result.error == null ? 200 : 500);
   });
 

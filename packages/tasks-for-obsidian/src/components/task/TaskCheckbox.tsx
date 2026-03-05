@@ -12,7 +12,10 @@ import type { TaskStatus } from "../../domain/status";
 import { isCompletedStatus } from "../../domain/status";
 import type { Priority } from "../../domain/priority";
 import { PRIORITY_COLORS } from "../../domain/priority";
-import { feedbackTaskComplete, feedbackTaskUncomplete } from "../../lib/feedback";
+import {
+  feedbackTaskComplete,
+  feedbackTaskUncomplete,
+} from "../../lib/feedback";
 
 type TaskCheckboxProps = {
   status: TaskStatus;
@@ -20,7 +23,11 @@ type TaskCheckboxProps = {
   onToggle: () => void;
 };
 
-export const TaskCheckbox = React.memo(function TaskCheckbox({ status, priority, onToggle }: TaskCheckboxProps) {
+export const TaskCheckbox = React.memo(function TaskCheckbox({
+  status,
+  priority,
+  onToggle,
+}: TaskCheckboxProps) {
   const completed = isCompletedStatus(status);
   const borderColor = PRIORITY_COLORS[priority];
 
@@ -52,7 +59,11 @@ export const TaskCheckbox = React.memo(function TaskCheckbox({ status, priority,
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    backgroundColor: interpolateColor(fillProgress.value, [0, 1], ["transparent", borderColor]),
+    backgroundColor: interpolateColor(
+      fillProgress.value,
+      [0, 1],
+      ["transparent", borderColor],
+    ),
   }));
 
   return (

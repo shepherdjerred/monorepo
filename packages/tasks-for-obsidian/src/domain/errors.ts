@@ -50,4 +50,9 @@ export class ConnectionError extends TaskNotesError {
   }
 }
 
-export type AppError = NetworkError | ApiError | ValidationError | NotFoundError | ConnectionError;
+export type AppError =
+  | NetworkError
+  | ApiError
+  | ValidationError
+  | NotFoundError
+  | ConnectionError;

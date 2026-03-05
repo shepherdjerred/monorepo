@@ -2,7 +2,10 @@ import type { Context, Next } from "hono";
 
 import { config } from "../config.ts";
 
-export async function authMiddleware(c: Context, next: Next): Promise<Response | undefined> {
+export async function authMiddleware(
+  c: Context,
+  next: Next,
+): Promise<Response | undefined> {
   if (c.req.path === "/api/health" || c.req.path === "/metrics") {
     await next();
     return undefined;
@@ -15,7 +18,10 @@ export async function authMiddleware(c: Context, next: Next): Promise<Response |
 
   const authHeader = c.req.header("Authorization");
   if (authHeader === undefined) {
-    return c.json({ success: false, error: "Missing Authorization header" }, 401);
+    return c.json(
+      { success: false, error: "Missing Authorization header" },
+      401,
+    );
   }
 
   const token = authHeader.replace("Bearer ", "");

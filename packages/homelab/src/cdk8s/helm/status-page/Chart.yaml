@@ -1,0 +1,6 @@
+apiVersion: v2
+name: status-page
+description: Status page API
+type: application
+version: "$version"
+appVersion: "$appVersion"

@@ -6,11 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from "bun:test";
-import {
-  setupTestDatabase,
-  testPrisma,
-  cleanupAllTables,
-} from "./helpers.ts";
+import { setupTestDatabase, testPrisma, cleanupAllTables } from "./helpers.ts";
 import { ConversationLogger } from "@shepherdjerred/sentinel/history/index.ts";
 import { appRouter } from "@shepherdjerred/sentinel/trpc/router/index.ts";
 import { rm } from "node:fs/promises";

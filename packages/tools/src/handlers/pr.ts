@@ -28,7 +28,9 @@ async function handleLogs(args: string[]): Promise<void> {
   const runId = positionals[0];
   if (runId == null || runId.length === 0) {
     console.error("Error: Run ID is required");
-    console.error("Usage: tools pr logs <run-id> [--failed-only] [--job <name>]");
+    console.error(
+      "Usage: tools pr logs <run-id> [--failed-only] [--job <name>]",
+    );
     process.exit(1);
   }
   await logsCommand(runId, {

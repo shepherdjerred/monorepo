@@ -63,7 +63,10 @@ export const TIER3_TOOLS: Anthropic.Messages.Tool[] = [
 ];
 
 const MerchantHistoryInput = z.object({ merchant_name: z.string() });
-const NearbyTransactionsInput = z.object({ date: z.string(), days_range: z.number().optional() });
+const NearbyTransactionsInput = z.object({
+  date: z.string(),
+  days_range: z.number().optional(),
+});
 const CategoryInfoInput = z.object({ category_name: z.string() });
 
 export function handleToolCall(
@@ -80,7 +83,11 @@ export function handleToolCall(
     case "nearby_transactions": {
       const parsed = NearbyTransactionsInput.safeParse(input);
       if (!parsed.success) return `Invalid input: ${parsed.error.message}`;
-      return handleNearbyTransactions(parsed.data.date, parsed.data.days_range ?? 3, context);
+      return handleNearbyTransactions(
+        parsed.data.date,
+        parsed.data.days_range ?? 3,
+        context,
+      );
     }
     case "category_info": {
       const parsed = CategoryInfoInput.safeParse(input);

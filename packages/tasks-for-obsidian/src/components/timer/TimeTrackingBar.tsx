@@ -9,7 +9,11 @@ type TimeTrackingBarProps = {
   onStop: () => void;
 };
 
-export function TimeTrackingBar({ taskTitle, duration, onStop }: TimeTrackingBarProps) {
+export function TimeTrackingBar({
+  taskTitle,
+  duration,
+  onStop,
+}: TimeTrackingBarProps) {
   const { colors } = useSettings();
 
   return (

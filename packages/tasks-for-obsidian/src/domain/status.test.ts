@@ -39,7 +39,12 @@ describe("STATUS_ICONS", () => {
 
 describe("ACTIVE_STATUSES", () => {
   test("contains correct active statuses", () => {
-    expect(ACTIVE_STATUSES).toEqual(["open", "in-progress", "waiting", "delegated"]);
+    expect(ACTIVE_STATUSES).toEqual([
+      "open",
+      "in-progress",
+      "waiting",
+      "delegated",
+    ]);
   });
 });
 
@@ -127,7 +132,14 @@ describe("getNextStatus", () => {
   });
 
   test("toggling twice returns to completed for active statuses", () => {
-    const allStatuses: TaskStatus[] = ["open", "in-progress", "done", "cancelled", "waiting", "delegated"];
+    const allStatuses: TaskStatus[] = [
+      "open",
+      "in-progress",
+      "done",
+      "cancelled",
+      "waiting",
+      "delegated",
+    ];
     for (const status of allStatuses) {
       const next = getNextStatus(status);
       const backAgain = getNextStatus(next);

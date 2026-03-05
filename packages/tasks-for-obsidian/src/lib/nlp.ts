@@ -13,7 +13,15 @@ const PRIORITY_MAP: Record<string, Priority> = {
   "!4": "low",
 };
 
-const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const DAY_NAMES = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
 
 function resolveDate(word: string): string | undefined {
   const lower = word.toLowerCase();
@@ -67,7 +75,10 @@ export function parseTaskInput(input: string): NlpParseResult {
     if (!word) continue;
 
     // "next week" as a two-word date phrase
-    if (word.toLowerCase() === "next" && words[i + 1]?.toLowerCase() === "week") {
+    if (
+      word.toLowerCase() === "next" &&
+      words[i + 1]?.toLowerCase() === "week"
+    ) {
       const d = new Date();
       d.setDate(d.getDate() + 7);
       due = toISODate(d);

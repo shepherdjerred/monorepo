@@ -126,7 +126,10 @@ const CATEGORY_METADATA: Record<
   Rent: {
     description: "Rent payments for primary residence.",
     examples: ["Monthly rent", "Bilt rent payment"],
-    notThisCategory: ["Mortgage payments", "Utility bills (use appropriate utility category)"],
+    notThisCategory: [
+      "Mortgage payments",
+      "Utility bills (use appropriate utility category)",
+    ],
   },
   Insurance: {
     description:
@@ -149,7 +152,8 @@ const CATEGORY_METADATA: Record<
     ],
   },
   Pets: {
-    description: "All pet-related expenses including food, supplies, insurance, and vet visits.",
+    description:
+      "All pet-related expenses including food, supplies, insurance, and vet visits.",
     examples: [
       "Embrace Pet Insurance",
       "Whisker",
@@ -173,13 +177,7 @@ const CATEGORY_METADATA: Record<
   "Furniture & Housewares": {
     description:
       "Furniture, home decor, housewares, candles, and home fragrances.",
-    examples: [
-      "Room & Board",
-      "Apotheke Co",
-      "IKEA",
-      "West Elm",
-      "home decor",
-    ],
+    examples: ["Room & Board", "Apotheke Co", "IKEA", "West Elm", "home decor"],
     notThisCategory: ["Electronics for home (use Electronics)"],
   },
   "Dividends & Capital Gains": {
@@ -203,7 +201,8 @@ const CATEGORY_METADATA: Record<
     notThisCategory: ["Investment income (use Dividends & Capital Gains)"],
   },
   "Moving Expenses": {
-    description: "Costs related to moving homes including movers, truck rental, and packing supplies.",
+    description:
+      "Costs related to moving homes including movers, truck rental, and packing supplies.",
     examples: ["Gentle Giant West", "U-Haul", "packing supplies"],
     notThisCategory: [],
   },

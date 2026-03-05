@@ -31,7 +31,10 @@ import {
 } from "./lib/knowledge/store.ts";
 import type { MerchantKnowledge } from "./lib/knowledge/types.ts";
 import { buildCategoryDefinitions } from "./lib/knowledge/definitions.ts";
-import { buildMerchantStats, statsToKBEntries } from "./lib/knowledge/history.ts";
+import {
+  buildMerchantStats,
+  statsToKBEntries,
+} from "./lib/knowledge/history.ts";
 import {
   displayTierBreakdown,
   displayEnrichmentStats,
@@ -207,8 +210,11 @@ async function main(): Promise<void> {
 
   // === Phase 3: Verification ===
   log.info("\n--- Verification Phase ---");
-  const { changes: verifiedChanges, flagged, suggestions } =
-    verifyClassifications(allChanges, enrichedTransactions, knowledgeBase);
+  const {
+    changes: verifiedChanges,
+    flagged,
+    suggestions,
+  } = verifyClassifications(allChanges, enrichedTransactions, knowledgeBase);
 
   const finalChanges = [...verifiedChanges, ...flagged];
 

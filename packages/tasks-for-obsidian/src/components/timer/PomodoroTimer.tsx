@@ -14,13 +14,22 @@ function formatTime(seconds: number): string {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
-export function PomodoroTimer({ timeRemaining, type, active }: PomodoroTimerProps) {
+export function PomodoroTimer({
+  timeRemaining,
+  type,
+  active,
+}: PomodoroTimerProps) {
   const { colors } = useSettings();
   const ringColor = type === "work" ? colors.primary : colors.success;
 
   return (
     <View style={styles.container}>
-      <View style={[styles.ring, { borderColor: active ? ringColor : colors.border }]}>
+      <View
+        style={[
+          styles.ring,
+          { borderColor: active ? ringColor : colors.border },
+        ]}
+      >
         <Text style={[styles.time, { color: colors.text }]}>
           {formatTime(timeRemaining)}
         </Text>

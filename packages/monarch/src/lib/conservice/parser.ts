@@ -135,7 +135,8 @@ const CHARGE_WITH_DATE =
   /^(\S+(?:\s\S+)*)\s{2,}\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}\/\d{2}\/\d{4}\s{2,}(-?\$[\d,]+\.\d{2})$/;
 
 // Pattern: "ServiceType  description  $amount" (e.g. Service Fee with description)
-const CHARGE_WITH_DESC = /^(Service Fee)\s{2,}\S+(?:\s\S+)*\s{2,}(-?\$[\d,]+\.\d{2})$/;
+const CHARGE_WITH_DESC =
+  /^(Service Fee)\s{2,}\S+(?:\s\S+)*\s{2,}(-?\$[\d,]+\.\d{2})$/;
 
 function parseChargeLine(line: string): ParsedCharge | undefined {
   // Try charge with date range first

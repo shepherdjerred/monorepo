@@ -12,6 +12,15 @@ const logger = createLogger("postmatch-match-processing");
 export type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
   matchIds: MatchId[];
+  backfillMatchIds: MatchId[];
+};
+
+export type ProcessMatchUpdateOptions = {
+  matchData: RawMatch;
+  allPlayerConfigs: PlayerConfigEntry[];
+  processedMatchIds: Set<MatchId>;
+  matchId: MatchId;
+  silent?: boolean;
 };
 
 export type ProcessMatchForPlayerOptions = {
@@ -20,11 +29,9 @@ export type ProcessMatchForPlayerOptions = {
   allPlayerConfigs: PlayerConfigEntry[];
   processedMatchIds: Set<MatchId>;
   processMatchAndUpdatePlayers: (
-    matchData: RawMatch,
-    allPlayerConfigs: PlayerConfigEntry[],
-    processedMatchIds: Set<MatchId>,
-    matchId: MatchId,
+    options: ProcessMatchUpdateOptions,
   ) => Promise<void>;
+  silent?: boolean;
 };
 
 /**
@@ -40,6 +47,7 @@ export async function processMatchForPlayer(
     allPlayerConfigs,
     processedMatchIds,
     processMatchAndUpdatePlayers,
+    silent,
   } = options;
   try {
     // Skip if we've already processed this match in this run
@@ -64,12 +72,13 @@ export async function processMatchForPlayer(
     }
 
     // Process the match with all tracked players
-    await processMatchAndUpdatePlayers(
+    await processMatchAndUpdatePlayers({
       matchData,
       allPlayerConfigs,
       processedMatchIds,
       matchId,
-    );
+      ...(silent === undefined ? {} : { silent }),
+    });
   } catch (error) {
     logger.error(
       `[${player.alias}] ❌ Error processing match ${matchId}:`,

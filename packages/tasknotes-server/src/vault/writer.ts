@@ -6,9 +6,11 @@ import type { Task } from "../domain/types.ts";
 import { serializeFrontmatter } from "./frontmatter.ts";
 import { taskToFrontmatter } from "./task-mapper.ts";
 
-const NodeErrorSchema = z.object({
-  code: z.string(),
-}).passthrough();
+const NodeErrorSchema = z
+  .object({
+    code: z.string(),
+  })
+  .passthrough();
 
 function slugify(title: string): string {
   return title

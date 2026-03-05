@@ -29,7 +29,14 @@ type TaskRowProps = {
   onSetPriority?: ((priority: Priority) => void) | undefined;
 };
 
-export const TaskRow = React.memo(function TaskRow({ task, onPress, onToggle, onEdit, onDelete, onSetPriority }: TaskRowProps) {
+export const TaskRow = React.memo(function TaskRow({
+  task,
+  onPress,
+  onToggle,
+  onEdit,
+  onDelete,
+  onSetPriority,
+}: TaskRowProps) {
   const { colors } = useSettings();
   const completed = isCompletedStatus(task.status);
   const overdue = isOverdue(task.due);
@@ -81,8 +88,16 @@ export const TaskRow = React.memo(function TaskRow({ task, onPress, onToggle, on
       </ContextMenu.Trigger>
       <ContextMenu.Content>
         <ContextMenu.Item key="toggle" onSelect={onToggle}>
-          <ContextMenu.ItemTitle>{completed ? "Uncomplete" : "Complete"}</ContextMenu.ItemTitle>
-          <ContextMenu.ItemIcon ios={{ name: completed ? "arrow.uturn.backward.circle" : "checkmark.circle" }} />
+          <ContextMenu.ItemTitle>
+            {completed ? "Uncomplete" : "Complete"}
+          </ContextMenu.ItemTitle>
+          <ContextMenu.ItemIcon
+            ios={{
+              name: completed
+                ? "arrow.uturn.backward.circle"
+                : "checkmark.circle",
+            }}
+          />
         </ContextMenu.Item>
         {onEdit ? (
           <ContextMenu.Item key="edit" onSelect={onEdit}>
@@ -100,9 +115,13 @@ export const TaskRow = React.memo(function TaskRow({ task, onPress, onToggle, on
               {ALL_PRIORITIES.map((p) => (
                 <ContextMenu.Item
                   key={`priority-${p}`}
-                  onSelect={() => { onSetPriority(p); }}
+                  onSelect={() => {
+                    onSetPriority(p);
+                  }}
                 >
-                  <ContextMenu.ItemTitle>{PRIORITY_LABELS[p]}</ContextMenu.ItemTitle>
+                  <ContextMenu.ItemTitle>
+                    {PRIORITY_LABELS[p]}
+                  </ContextMenu.ItemTitle>
                   <ContextMenu.ItemIcon ios={{ name: PRIORITY_SF_ICONS[p] }} />
                 </ContextMenu.Item>
               ))}

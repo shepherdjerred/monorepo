@@ -31,45 +31,33 @@ import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-ge
 import {
   processMatchForPlayer,
   type PlayerWithMatchIds,
+  type ProcessMatchUpdateOptions,
 } from "#src/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
-import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
+import {
+  setLastSuccessfulPollAt,
+  getLastSuccessfulPollAt,
+} from "#src/league/tasks/recovery/app-state.ts";
+import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
+import { saveMatchToS3 } from "#src/storage/s3.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
-// Mutex to prevent concurrent match history polling runs
-// This prevents race conditions where two cron runs process the same match
 let isPollingInProgress = false;
 let pollingStartTime: number | undefined;
-
-// Timeout after 5 minutes to prevent indefinite lock if a run gets stuck
 const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
 
-/**
- * Check if polling is currently in progress.
- * Exposed for testing purposes.
- */
 export function isMatchHistoryPollingInProgress(): boolean {
   return isPollingInProgress;
 }
 
-/**
- * Reset the polling in progress flag.
- * WARNING: Only use this in tests to reset state between test cases.
- */
 export function resetPollingState(): void {
   isPollingInProgress = false;
   pollingStartTime = undefined;
 }
-
-/**
- * Check if we should skip this polling run due to concurrent execution.
- * Returns true if we should skip (another run is in progress and not timed out).
- * Handles timeout detection and lock reset when a run appears stuck.
- */
 function shouldSkipPollingRun(): boolean {
   if (!isPollingInProgress) {
     return false;
@@ -111,143 +99,245 @@ async function processMatch(
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(`[processMatch] 🎮 Processing match ${matchId}`);
 
-  try {
-    // Determine which tracked players are in this match
-    const playersInMatch = trackedPlayers.filter((player) =>
-      matchData.metadata.participants.includes(
-        player.league.leagueAccount.puuid,
-      ),
-    );
+  const playersInMatch = trackedPlayers.filter((player) =>
+    matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
+  );
 
-    // Get channels to notify FIRST - we need guild IDs for feature flag checks
-    const puuids: LeaguePuuid[] = playersInMatch.map(
-      (p) => p.league.leagueAccount.puuid,
-    );
-    const channels = await getChannelsSubscribedToPlayers(puuids);
+  const puuids: LeaguePuuid[] = playersInMatch.map(
+    (p) => p.league.leagueAccount.puuid,
+  );
+  const channels = await getChannelsSubscribedToPlayers(puuids);
 
-    if (channels.length === 0) {
-      logger.info(
-        `[processMatch] ⚠️  No channels subscribed to players in match ${matchId}`,
-      );
-      return;
-    }
-
-    // Extract unique guild IDs for feature flag checks
-    const targetGuildIds: DiscordGuildId[] = uniqueBy(
-      channels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
-      (id) => id,
-    );
-
+  if (channels.length === 0) {
     logger.info(
-      `[processMatch] 🎯 Target guilds: ${targetGuildIds.join(", ")}`,
+      `[processMatch] ⚠️  No channels subscribed for match ${matchId}`,
     );
-
-    // Generate the match report message with guild context for feature flags
-    const message = await generateMatchReport(matchData, trackedPlayers, {
-      targetGuildIds,
-    });
-
-    if (!message) {
-      logger.info(
-        `[processMatch] ⚠️  No message generated for match ${matchId}`,
-      );
-      return;
-    }
-
-    logger.info(
-      `[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`,
-    );
-
-    // Send to all subscribed channels
-    for (const { channel } of channels) {
-      try {
-        await send(message, channel);
-        logger.info(
-          `[processMatch] ✅ Sent notification to channel ${channel}`,
-        );
-      } catch (error) {
-        if (error instanceof ChannelSendError && error.permissionError) {
-          logger.warn(
-            `[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`,
-          );
-          continue;
-        }
-
-        logger.error(
-          `[processMatch] ❌ Failed to send notification to channel ${channel}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "discord-notification",
-            matchId,
-            channel,
-          },
-        });
-      }
-    }
-
-    logger.info(`[processMatch] ✅ Successfully processed match ${matchId}`);
-  } catch (error) {
-    logger.error(`[processMatch] ❌ Error processing match ${matchId}:`, error);
-    Sentry.captureException(error, {
-      tags: {
-        source: "process-match",
-        matchId,
-      },
-    });
-    throw error;
+    return;
   }
+
+  const targetGuildIds: DiscordGuildId[] = uniqueBy(
+    channels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+    (id) => id,
+  );
+
+  const message = await generateMatchReport(matchData, trackedPlayers, {
+    targetGuildIds,
+  });
+
+  if (!message) {
+    logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
+    return;
+  }
+
+  for (const { channel } of channels) {
+    try {
+      await send(message, channel);
+    } catch (error) {
+      if (error instanceof ChannelSendError && error.permissionError) {
+        logger.warn(
+          `[processMatch] ⚠️  Permission error for channel ${channel}: ${error.message}`,
+        );
+        continue;
+      }
+      logger.error(
+        `[processMatch] ❌ Failed to send to channel ${channel}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "discord-notification", matchId, channel },
+      });
+    }
+  }
+
+  logger.info(`[processMatch] ✅ Processed match ${matchId}`);
 }
 
 /**
  * Process match and update all tracked players who participated
  */
 async function processMatchAndUpdatePlayers(
-  matchData: RawMatch,
-  allPlayerConfigs: PlayerConfigEntry[],
-  processedMatchIds: Set<string>,
-  matchId: string,
+  options: ProcessMatchUpdateOptions,
 ): Promise<void> {
+  const {
+    matchData,
+    allPlayerConfigs,
+    processedMatchIds,
+    matchId,
+    silent = false,
+  } = options;
+
   // Get all tracked players in this match
   const allTrackedPlayers = allPlayerConfigs.filter((p) =>
     matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
   );
 
-  // Debug: Log which tracked players were found in this match
   logger.info(
-    `[processMatch] 🔍 Match has ${matchData.metadata.participants.length.toString()} participants, ` +
-      `we track ${allPlayerConfigs.length.toString()} accounts, ` +
-      `found ${allTrackedPlayers.length.toString()} tracked players in match`,
+    `[processMatch] 🔍 ${allTrackedPlayers.length.toString()} tracked player(s) in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`,
   );
-  if (allTrackedPlayers.length > 0) {
-    logger.info(
-      `[processMatch] 👥 Tracked players in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`,
-    );
-  }
 
-  // Process the match
-  await processMatch(matchData, allTrackedPlayers);
+  if (silent) {
+    try {
+      const aliases = allTrackedPlayers.map((p) => p.alias);
+      await saveMatchToS3(matchData, aliases);
+      logger.info(`[backfill] 📦 Saved match ${matchId} to S3`);
+    } catch (error) {
+      logger.error(`[backfill] Error saving match ${matchId} to S3:`, error);
+    }
+  } else {
+    await processMatch(matchData, allTrackedPlayers);
+  }
 
   // Mark as processed
   processedMatchIds.add(matchId);
 
-  // Get match creation time for activity tracking
-  const matchCreationTime = new Date(matchData.info.gameCreation);
-
   // Update lastProcessedMatchId and lastMatchTime for all players in this match
-  logger.info(
-    `[processMatch] ⏰ Updating lastMatchTime to ${matchCreationTime.toISOString()} for ${allTrackedPlayers.length.toString()} player(s)`,
-  );
+  const matchCreationTime = new Date(matchData.info.gameCreation);
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
     const brandedMatchId = MatchIdSchema.parse(matchId);
     await updateLastProcessedMatch(playerPuuid, brandedMatchId);
     await updateLastMatchTime(playerPuuid, matchCreationTime);
-    logger.info(
-      `[processMatch] ✅ Updated ${trackedPlayer.alias} lastMatchTime`,
-    );
   }
+}
+
+type AccountWithState = {
+  config: PlayerConfigEntry;
+  lastMatchTime: Date | undefined;
+  lastCheckedAt: Date | undefined;
+};
+
+/**
+ * Collect new matches for each player, handling gap detection and backfill recovery.
+ */
+async function collectNewMatches(
+  playersToCheck: AccountWithState[],
+  currentTime: Date,
+): Promise<PlayerWithMatchIds[]> {
+  const playersWithMatches: PlayerWithMatchIds[] = [];
+
+  for (const {
+    config: player,
+    lastMatchTime,
+    lastCheckedAt,
+  } of playersToCheck) {
+    const puuid = player.league.leagueAccount.puuid;
+    const interval = calculatePollingInterval(lastMatchTime, currentTime);
+
+    logger.info(
+      `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime ? lastMatchTime.toISOString() : "never"}, last checked: ${lastCheckedAt ? lastCheckedAt.toISOString() : "never"})`,
+    );
+
+    try {
+      const lastProcessedMatchId = await getLastProcessedMatch(puuid);
+      const recentMatchIds = await getRecentMatchIds(player, 5);
+      await updateLastCheckedAt(puuid, currentTime);
+
+      if (!recentMatchIds || recentMatchIds.length === 0) {
+        logger.info(`[${player.alias}] ℹ️  No recent matches found`);
+        continue;
+      }
+
+      const { matchIds: newMatchIds, gapDetected } = filterNewMatches(
+        recentMatchIds,
+        lastProcessedMatchId,
+      );
+
+      if (newMatchIds.length === 0) {
+        logger.info(`[${player.alias}] ✅ No new matches to process`);
+        continue;
+      }
+
+      let discordMatchIds: MatchId[];
+      let backfillMatchIds: MatchId[] = [];
+
+      if (gapDetected) {
+        const recovered = await recoverMissedMatches(player, newMatchIds);
+        discordMatchIds = recovered.discordMatchIds;
+        backfillMatchIds = recovered.backfillMatchIds;
+      } else {
+        discordMatchIds = newMatchIds;
+      }
+
+      logger.info(
+        `[${player.alias}] 🆕 Found ${discordMatchIds.length.toString()} new match(es) for Discord: ${discordMatchIds.join(", ")}`,
+      );
+      playersWithMatches.push({
+        player,
+        matchIds: discordMatchIds,
+        backfillMatchIds,
+      });
+    } catch (error) {
+      logger.error(`[${player.alias}] ❌ Error checking match history:`, error);
+      Sentry.captureException(error, {
+        tags: {
+          source: "match-history-check",
+          playerAlias: player.alias,
+          puuid,
+        },
+      });
+    }
+  }
+
+  return playersWithMatches;
+}
+
+type GapRecoveryResult = {
+  discordMatchIds: MatchId[];
+  backfillMatchIds: MatchId[];
+};
+
+/**
+ * When a gap is detected (lastProcessedMatchId not in recent history),
+ * fetch all missed matches via paginated time-range API and split into
+ * Discord (most recent) and backfill (rest, oldest first) buckets.
+ */
+async function recoverMissedMatches(
+  player: PlayerConfigEntry,
+  fallbackMatchIds: MatchId[],
+): Promise<GapRecoveryResult> {
+  const puuid = player.league.leagueAccount.puuid;
+  const lastPollAt = await getLastSuccessfulPollAt();
+
+  if (!lastPollAt) {
+    // No lastPollAt — first startup, just process the most recent
+    return {
+      discordMatchIds: fallbackMatchIds.slice(0, 1),
+      backfillMatchIds: [],
+    };
+  }
+
+  const startEpoch = Math.floor(lastPollAt.getTime() / 1000);
+  const endEpoch = Math.floor(Date.now() / 1000);
+
+  logger.info(
+    `[${player.alias}] 🔄 Gap detected, fetching all missed matches since ${lastPollAt.toISOString()}`,
+  );
+
+  const allMissedMatchIds = await fetchMatchIdsForTimeRange(
+    puuid,
+    player.league.leagueAccount.region,
+    startEpoch,
+    endEpoch,
+  );
+
+  const mostRecent = allMissedMatchIds[0];
+  if (!mostRecent) {
+    return {
+      discordMatchIds: fallbackMatchIds.slice(0, 1),
+      backfillMatchIds: [],
+    };
+  }
+
+  // Most recent match (index 0) gets Discord notification
+  const discordMatchIds = [mostRecent];
+  // Rest are backfill-only (reversed to process oldest first)
+  const backfillMatchIds = allMissedMatchIds.slice(1).reverse();
+
+  logger.info(
+    `[${player.alias}] 📦 ${discordMatchIds.length.toString()} match(es) for Discord, ${backfillMatchIds.length.toString()} for backfill`,
+  );
+
+  return { discordMatchIds, backfillMatchIds };
 }
 
 /**
@@ -280,24 +370,6 @@ export async function checkMatchHistory(): Promise<void> {
 
     const currentTime = new Date();
 
-    // Track distribution of players across polling intervals for monitoring
-    const intervalDistribution = new Map<number, number>();
-    for (const { lastMatchTime } of accountsWithState) {
-      const interval = calculatePollingInterval(lastMatchTime, currentTime);
-      intervalDistribution.set(
-        interval,
-        (intervalDistribution.get(interval) ?? 0) + 1,
-      );
-    }
-
-    // Log interval distribution
-    for (const [interval, count] of intervalDistribution.entries()) {
-      logger.info(
-        `📊 Polling interval ${interval.toString()}min: ${count.toString()} account(s)`,
-      );
-    }
-
-    // Filter to only players that should be checked this cycle
     const eligiblePlayers = accountsWithState.filter(
       ({ lastMatchTime, lastCheckedAt }) =>
         shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
@@ -343,65 +415,10 @@ export async function checkMatchHistory(): Promise<void> {
       return;
     }
 
-    // Fetch recent match IDs for each player
-    const playersWithMatches: PlayerWithMatchIds[] = [];
-
-    for (const {
-      config: player,
-      lastMatchTime,
-      lastCheckedAt,
-    } of playersToCheck) {
-      const puuid = player.league.leagueAccount.puuid;
-      const interval = calculatePollingInterval(lastMatchTime, currentTime);
-
-      logger.info(
-        `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime ? lastMatchTime.toISOString() : "never"}, last checked: ${lastCheckedAt ? lastCheckedAt.toISOString() : "never"})`,
-      );
-
-      try {
-        // Query the last processed match ID from the database
-        const lastProcessedMatchId = await getLastProcessedMatch(puuid);
-
-        const recentMatchIds = await getRecentMatchIds(player, 5);
-
-        // Update lastCheckedAt regardless of whether we found matches
-        await updateLastCheckedAt(puuid, currentTime);
-
-        if (!recentMatchIds || recentMatchIds.length === 0) {
-          logger.info(`[${player.alias}] ℹ️  No recent matches found`);
-          continue;
-        }
-
-        // Filter to only new matches
-        const newMatchIds = filterNewMatches(
-          recentMatchIds,
-          lastProcessedMatchId,
-        );
-
-        if (newMatchIds.length === 0) {
-          logger.info(`[${player.alias}] ✅ No new matches to process`);
-          continue;
-        }
-
-        logger.info(
-          `[${player.alias}] 🆕 Found ${newMatchIds.length.toString()} new match(es): ${newMatchIds.join(", ")}`,
-        );
-        playersWithMatches.push({ player, matchIds: newMatchIds });
-      } catch (error) {
-        logger.error(
-          `[${player.alias}] ❌ Error checking match history:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "match-history-check",
-            playerAlias: player.alias,
-            puuid,
-          },
-        });
-        // Continue with next player even if this one fails
-      }
-    }
+    const playersWithMatches = await collectNewMatches(
+      playersToCheck,
+      currentTime,
+    );
 
     if (playersWithMatches.length === 0) {
       logger.info("✅ No new matches found for any players");
@@ -413,8 +430,16 @@ export async function checkMatchHistory(): Promise<void> {
       return;
     }
 
+    const totalDiscord = playersWithMatches.reduce(
+      (sum, p) => sum + p.matchIds.length,
+      0,
+    );
+    const totalBackfill = playersWithMatches.reduce(
+      (sum, p) => sum + p.backfillMatchIds.length,
+      0,
+    );
     logger.info(
-      `🎮 Processing ${playersWithMatches.reduce((sum, p) => sum + p.matchIds.length, 0).toString()} new match(es) from ${playersWithMatches.length.toString()} player(s)`,
+      `🎮 Processing ${totalDiscord.toString()} Discord match(es) + ${totalBackfill.toString()} backfill match(es) from ${playersWithMatches.length.toString()} player(s)`,
     );
 
     // Get all player configs for match processing (we need all configs, not just the ones we checked)
@@ -424,6 +449,21 @@ export async function checkMatchHistory(): Promise<void> {
     // We need to deduplicate matches since multiple tracked players might be in the same game
     const processedMatchIds = new Set<MatchId>();
 
+    // Phase 1: Backfill matches (S3 only, oldest first)
+    for (const { player, backfillMatchIds } of playersWithMatches) {
+      for (const matchId of backfillMatchIds) {
+        await processMatchForPlayer({
+          player,
+          matchId,
+          allPlayerConfigs,
+          processedMatchIds,
+          processMatchAndUpdatePlayers,
+          silent: true,
+        });
+      }
+    }
+
+    // Phase 2: Discord matches (full processing)
     for (const { player, matchIds } of playersWithMatches) {
       for (const matchId of matchIds) {
         await processMatchForPlayer({
@@ -432,6 +472,7 @@ export async function checkMatchHistory(): Promise<void> {
           allPlayerConfigs,
           processedMatchIds,
           processMatchAndUpdatePlayers,
+          silent: false,
         });
       }
     }

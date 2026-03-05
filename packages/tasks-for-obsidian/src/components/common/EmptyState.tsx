@@ -17,7 +17,13 @@ export function EmptyState({ title, subtitle }: EmptyStateProps) {
         {title}
       </Text>
       {subtitle ? (
-        <Text style={[typography.bodySmall, styles.subtitle, { color: colors.textTertiary }]}>
+        <Text
+          style={[
+            typography.bodySmall,
+            styles.subtitle,
+            { color: colors.textTertiary },
+          ]}
+        >
           {subtitle}
         </Text>
       ) : null}

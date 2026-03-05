@@ -1,11 +1,23 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import type { AppError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { err } from "../domain/result";
 import { ConnectionError } from "../domain/errors";
 import { getNextStatus } from "../domain/status";
-import type { CreateTaskRequest, Task, TaskId, UpdateTaskRequest } from "../domain/types";
+import type {
+  CreateTaskRequest,
+  Task,
+  TaskId,
+  UpdateTaskRequest,
+} from "../domain/types";
 import { syncWidgetData } from "../native/sync-widget";
 import { useApiClient } from "./ApiClientContext";
 
@@ -14,7 +26,10 @@ type TaskContextValue = {
   isLoading: boolean;
   error: AppError | null;
   createTask: (req: CreateTaskRequest) => Promise<Result<Task, AppError>>;
-  updateTask: (id: TaskId, req: UpdateTaskRequest) => Promise<Result<Task, AppError>>;
+  updateTask: (
+    id: TaskId,
+    req: UpdateTaskRequest,
+  ) => Promise<Result<Task, AppError>>;
   deleteTask: (id: TaskId) => Promise<Result<void, AppError>>;
   toggleStatus: (id: TaskId) => Promise<Result<Task, AppError>>;
   refreshTasks: () => Promise<void>;
@@ -70,7 +85,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateTask = useCallback(
-    async (id: TaskId, req: UpdateTaskRequest): Promise<Result<Task, AppError>> => {
+    async (
+      id: TaskId,
+      req: UpdateTaskRequest,
+    ): Promise<Result<Task, AppError>> => {
       if (!client) return err(new ConnectionError("API URL not configured"));
       const result = await client.updateTask(id, req);
       if (result.ok) {
@@ -148,7 +166,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       toggleStatus,
       refreshTasks,
     }),
-    [tasks, isLoading, error, createTask, updateTask, deleteTask, toggleStatus, refreshTasks],
+    [
+      tasks,
+      isLoading,
+      error,
+      createTask,
+      updateTask,
+      deleteTask,
+      toggleStatus,
+      refreshTasks,
+    ],
   );
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
@@ -156,6 +183,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
 export function useTaskContext(): TaskContextValue {
   const context = useContext(TaskContext);
-  if (!context) throw new Error("useTaskContext must be used within TaskProvider");
+  if (!context)
+    throw new Error("useTaskContext must be used within TaskProvider");
   return context;
 }

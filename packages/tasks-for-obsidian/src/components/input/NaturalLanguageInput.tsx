@@ -19,7 +19,8 @@ export function NaturalLanguageInput({
 
   const badges: string[] = [];
   if (parsedResult?.due) badges.push(parsedResult.due);
-  if (parsedResult?.priority) badges.push(PRIORITY_LABELS[parsedResult.priority]);
+  if (parsedResult?.priority)
+    badges.push(PRIORITY_LABELS[parsedResult.priority]);
   if (parsedResult?.projects) {
     for (const p of parsedResult.projects) badges.push(p);
   }

@@ -205,7 +205,9 @@ describe("parseTaskInput - 'next week'", () => {
 
 describe("parseTaskInput - combined metadata", () => {
   test("extracts all metadata types at once", () => {
-    const result = parseTaskInput("Write tests !high p:Backend @work #urgent today");
+    const result = parseTaskInput(
+      "Write tests !high p:Backend @work #urgent today",
+    );
     expect(result.title).toBe("Write tests");
     expect(result.priority).toBe("high");
     expect(result.projects).toEqual(["Backend"]);

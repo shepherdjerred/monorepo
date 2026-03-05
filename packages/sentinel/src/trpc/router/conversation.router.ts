@@ -4,7 +4,10 @@ import path from "node:path";
 import { router, publicProcedure } from "@shepherdjerred/sentinel/trpc/trpc.ts";
 import type { ConversationEntry } from "@shepherdjerred/sentinel/types/history.ts";
 
-const CONVERSATIONS_DIR = path.join(import.meta.dirname, "../../../data/conversations");
+const CONVERSATIONS_DIR = path.join(
+  import.meta.dirname,
+  "../../../data/conversations",
+);
 
 type ConversationFile = {
   filename: string;
@@ -18,10 +21,15 @@ type AgentGroup = {
   files: ConversationFile[];
 };
 
-function parseFilename(filename: string, agent: string): ConversationFile | null {
+function parseFilename(
+  filename: string,
+  agent: string,
+): ConversationFile | null {
   // Format: {date}T{time}_{sessionId}.jsonl where time uses dashes instead of colons
   // Example: 2026-02-23T04-53-57.131Z_uuid.jsonl
-  const match = /^(\d{4}-\d{2}-\d{2}T)([\d-]+\.\d+Z)_([^_]+)\.jsonl$/.exec(filename);
+  const match = /^(\d{4}-\d{2}-\d{2}T)([\d-]+\.\d+Z)_([^_]+)\.jsonl$/.exec(
+    filename,
+  );
   if (match == null) return null;
   const datePart = match[1];
   const timePart = match[2];
@@ -39,7 +47,9 @@ async function getAllConversationFiles(): Promise<ConversationFile[]> {
     const entries = await readdir(CONVERSATIONS_DIR, { withFileTypes: true });
 
     const dirEntries = entries.filter((e) => e.isDirectory());
-    const flatFiles = entries.filter((e) => !e.isDirectory() && e.name.endsWith(".jsonl"));
+    const flatFiles = entries.filter(
+      (e) => !e.isDirectory() && e.name.endsWith(".jsonl"),
+    );
 
     for (const dir of dirEntries) {
       const agentDir = path.join(CONVERSATIONS_DIR, dir.name);
@@ -62,10 +72,14 @@ async function getAllConversationFiles(): Promise<ConversationFile[]> {
   return files.toSorted((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
-async function readConversationFile(agent: string, filename: string): Promise<ConversationEntry[]> {
-  const filePath = agent === "unknown"
-    ? path.join(CONVERSATIONS_DIR, filename)
-    : path.join(CONVERSATIONS_DIR, agent, filename);
+async function readConversationFile(
+  agent: string,
+  filename: string,
+): Promise<ConversationEntry[]> {
+  const filePath =
+    agent === "unknown"
+      ? path.join(CONVERSATIONS_DIR, filename)
+      : path.join(CONVERSATIONS_DIR, agent, filename);
 
   const content = await readFile(filePath, "utf8");
   const entries: ConversationEntry[] = [];
@@ -103,10 +117,12 @@ export const conversationRouter = router({
   }),
 
   read: publicProcedure
-    .input(z.object({
-      filename: z.string().min(1),
-      agent: z.string().default("unknown"),
-    }))
+    .input(
+      z.object({
+        filename: z.string().min(1),
+        agent: z.string().default("unknown"),
+      }),
+    )
     .query(async ({ input }) => {
       if (input.filename.includes("..") || input.filename.includes("/")) {
         throw new Error("Invalid filename");
@@ -135,9 +151,10 @@ export const conversationRouter = router({
       const files = await getAllConversationFiles();
 
       for (const file of files) {
-        const filePath = file.agent === "unknown"
-          ? path.join(CONVERSATIONS_DIR, file.filename)
-          : path.join(CONVERSATIONS_DIR, file.agent, file.filename);
+        const filePath =
+          file.agent === "unknown"
+            ? path.join(CONVERSATIONS_DIR, file.filename)
+            : path.join(CONVERSATIONS_DIR, file.agent, file.filename);
 
         try {
           const content = await readFile(filePath, "utf8");

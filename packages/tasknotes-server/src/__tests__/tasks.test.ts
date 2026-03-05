@@ -309,9 +309,24 @@ describe("TaskStore.query", () => {
   });
 
   test("combines multiple filters", async () => {
-    await store.create({ title: "Match", status: "open", priority: "high", projects: ["Alpha"] });
-    await store.create({ title: "Wrong status", status: "done", priority: "high", projects: ["Alpha"] });
-    await store.create({ title: "Wrong priority", status: "open", priority: "low", projects: ["Alpha"] });
+    await store.create({
+      title: "Match",
+      status: "open",
+      priority: "high",
+      projects: ["Alpha"],
+    });
+    await store.create({
+      title: "Wrong status",
+      status: "done",
+      priority: "high",
+      projects: ["Alpha"],
+    });
+    await store.create({
+      title: "Wrong priority",
+      status: "open",
+      priority: "low",
+      projects: ["Alpha"],
+    });
 
     const { tasks } = store.query({
       status: ["open"],
@@ -362,7 +377,11 @@ describe("TaskStore.getStats", () => {
   });
 
   test("does not count done tasks as overdue", async () => {
-    await store.create({ title: "Done overdue", due: "2020-01-01", status: "done" });
+    await store.create({
+      title: "Done overdue",
+      due: "2020-01-01",
+      status: "done",
+    });
     const stats = store.getStats();
     expect(stats.overdue).toBe(0);
   });
@@ -379,8 +398,18 @@ describe("TaskStore.getFilterOptions", () => {
   });
 
   test("collects unique projects, contexts, and tags", async () => {
-    await store.create({ title: "T1", contexts: ["home", "work"], projects: ["Alpha"], tags: ["urgent"] });
-    await store.create({ title: "T2", contexts: ["work"], projects: ["Beta"], tags: ["urgent", "review"] });
+    await store.create({
+      title: "T1",
+      contexts: ["home", "work"],
+      projects: ["Alpha"],
+      tags: ["urgent"],
+    });
+    await store.create({
+      title: "T2",
+      contexts: ["work"],
+      projects: ["Beta"],
+      tags: ["urgent", "review"],
+    });
 
     const options = store.getFilterOptions();
     expect(options.projects).toEqual(["Alpha", "Beta"]);
@@ -389,8 +418,18 @@ describe("TaskStore.getFilterOptions", () => {
   });
 
   test("returns sorted filter options", async () => {
-    await store.create({ title: "T1", projects: ["Zeta"], contexts: ["zebra"], tags: ["zoo"] });
-    await store.create({ title: "T2", projects: ["Alpha"], contexts: ["apple"], tags: ["ant"] });
+    await store.create({
+      title: "T1",
+      projects: ["Zeta"],
+      contexts: ["zebra"],
+      tags: ["zoo"],
+    });
+    await store.create({
+      title: "T2",
+      projects: ["Alpha"],
+      contexts: ["apple"],
+      tags: ["ant"],
+    });
 
     const options = store.getFilterOptions();
     expect(options.projects).toEqual(["Alpha", "Zeta"]);
@@ -401,7 +440,10 @@ describe("TaskStore.getFilterOptions", () => {
 
 describe("TaskStore.completeRecurring", () => {
   test("marks task as done", async () => {
-    const created = await store.create({ title: "Weekly", recurrence: "every week" });
+    const created = await store.create({
+      title: "Weekly",
+      recurrence: "every week",
+    });
     const completed = await store.completeRecurring(created.id);
     expect(completed).toBeDefined();
     expect(completed?.status).toBe("done");

@@ -1,0 +1,152 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import ProcessStep from "../components/ProcessStep.astro";
+import CTA from "../components/CTA.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Hero
+      title="Cook Preview"
+      subtitle="Preview Cooklang .cook recipe files directly in Obsidian with rich rendering, highlighted ingredients, and step-by-step directions. Built on the Cooklang markup language."
+      ctaButtons={[
+        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-for-obsidian", variant: "primary" },
+        { text: "View on GitHub", href: "https://github.com/shepherdjerred/cooklang-for-obsidian", variant: "secondary" },
+      ]}
+    />
+
+    <!-- Source → Preview comparison -->
+    <div class="bg-gray-50 dark:bg-gray-800/50 py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Before & After"
+          title="From source to rich preview"
+          subtitle="Write recipes in Cooklang syntax. Cook Preview renders them instantly."
+        />
+        <div class="mx-auto mt-12 max-w-5xl">
+          <div class="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_auto_1fr]">
+            <div class="flex flex-col justify-center">
+              <p class="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Source</p>
+              <div class="rounded-xl bg-white dark:bg-gray-900 p-1.5 shadow-md ring-1 ring-gray-200 dark:ring-gray-700">
+                <img
+                  src="/screenshots/source-view.png"
+                  alt="Cooklang source file with YAML frontmatter and recipe syntax"
+                  class="rounded-lg"
+                />
+              </div>
+            </div>
+            <div class="hidden lg:flex items-center justify-center">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                  <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p class="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Preview</p>
+              <div class="rounded-xl bg-white dark:bg-gray-900 p-1.5 shadow-md ring-1 ring-amber-200 dark:ring-amber-800">
+                <img
+                  src="/screenshots/preview.png"
+                  alt="Rich rendered recipe preview with ingredients, directions, and metadata"
+                  class="rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Features"
+          title="Everything you need for Cooklang recipes"
+        />
+        <div class="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-x-12 gap-y-8 sm:grid-cols-2">
+          <FeatureCard
+            icon="heroicons:document-text"
+            title="Rich Recipe Rendering"
+            description="Ingredients, cookware, and timers are highlighted and formatted for easy reading."
+          />
+          <FeatureCard
+            icon="heroicons:tag"
+            title="YAML Frontmatter"
+            description="Add metadata like title, servings, and prep time with standard YAML frontmatter."
+          />
+          <FeatureCard
+            icon="heroicons:list-bullet"
+            title="Section-Aware"
+            description="Recipes organized into sections with ingredients lists and numbered steps."
+          />
+          <FeatureCard
+            icon="heroicons:paint-brush"
+            title="Syntax Highlighting"
+            description="Cooklang syntax highlighted in the editor for ingredients, cookware, and timers."
+          />
+          <FeatureCard
+            icon="heroicons:check-circle"
+            title="Checkbox Ingredients"
+            description="Check off ingredients as you gather them for your recipe."
+          />
+          <FeatureCard
+            icon="heroicons:document-duplicate"
+            title=".cook File Support"
+            description="Open and preview .cook files directly in your Obsidian vault."
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="bg-gray-50 dark:bg-gray-800/50 py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto grid max-w-5xl grid-cols-1 gap-16 lg:grid-cols-[1fr_auto]">
+          <div>
+            <SectionHeader
+              badge="Get started"
+              title="Up and running in minutes"
+            />
+            <div class="mt-10">
+              <ProcessStep number={1} title="Install the plugin">
+                <p>Open Obsidian Settings, go to Community Plugins, and search for "Cook Preview".</p>
+              </ProcessStep>
+              <ProcessStep number={2} title="Open a .cook file">
+                <p>Create or open any .cook file in your vault using <a href="https://cooklang.org" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 hover:underline">Cooklang</a> syntax.</p>
+              </ProcessStep>
+              <ProcessStep number={3} title="See the rich preview" isLast>
+                <p>Your recipe is rendered with highlighted ingredients, cookware, timers, and step numbers.</p>
+              </ProcessStep>
+            </div>
+          </div>
+          <div class="hidden lg:block">
+            <div class="sticky top-8 w-64 rounded-xl bg-white dark:bg-gray-900 p-1.5 shadow-md ring-1 ring-gray-200 dark:ring-gray-700">
+              <img
+                src="/screenshots/file-explorer.png"
+                alt="Obsidian file explorer showing .cook recipe files"
+                class="rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <CTA
+      title="Ready to preview your recipes?"
+      description="Install Cook Preview and turn your .cook files into beautifully rendered recipes."
+      buttons={[
+        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-for-obsidian", variant: "primary" },
+        { text: "View on GitHub", href: "https://github.com/shepherdjerred/cooklang-for-obsidian", variant: "secondary" },
+      ]}
+    />
+
+    <Footer />
+  </div>
+</Layout>

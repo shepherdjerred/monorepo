@@ -10,7 +10,8 @@ function handleMessage(event: MessageEvent): void {
   } catch {
     return;
   }
-  if (typeof parsed !== "object" || parsed == null || !("type" in parsed)) return;
+  if (typeof parsed !== "object" || parsed == null || !("type" in parsed))
+    return;
   const obj: Record<string, unknown> = Object.assign({}, parsed);
   const type = typeof obj.type === "string" ? obj.type : undefined;
   if (type == null) return;
@@ -47,7 +48,10 @@ function disconnect(): void {
   }
 }
 
-export function addSSEListener(eventType: string, callback: SSEListener): () => void {
+export function addSSEListener(
+  eventType: string,
+  callback: SSEListener,
+): () => void {
   let typeListeners = listeners.get(eventType);
   if (typeListeners == null) {
     typeListeners = new Set();

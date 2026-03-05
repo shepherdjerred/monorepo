@@ -30,17 +30,26 @@ const SessionSummarySchema = z.object({
   outcome: z.string(),
   totalCostUsd: z.number().optional(),
   durationApiMs: z.number().optional(),
-  modelUsage: z.record(z.string(), z.object({
-    inputTokens: z.number(),
-    outputTokens: z.number(),
-    cacheReadInputTokens: z.number(),
-    cacheCreationInputTokens: z.number(),
-    costUsd: z.number(),
-  })).optional(),
-  permissionDenials: z.array(z.object({
-    toolName: z.string(),
-    toolInput: z.string(),
-  })).optional(),
+  modelUsage: z
+    .record(
+      z.string(),
+      z.object({
+        inputTokens: z.number(),
+        outputTokens: z.number(),
+        cacheReadInputTokens: z.number(),
+        cacheCreationInputTokens: z.number(),
+        costUsd: z.number(),
+      }),
+    )
+    .optional(),
+  permissionDenials: z
+    .array(
+      z.object({
+        toolName: z.string(),
+        toolInput: z.string(),
+      }),
+    )
+    .optional(),
   systemPrompt: z.string().optional(),
 });
 
@@ -94,7 +103,8 @@ function SummaryHeader({ summary }: { summary: SessionSummary }) {
           </span>
         )}
         <span className="font-mono text-xs text-zinc-500">
-          {summary.totalInputTokens.toLocaleString()} in / {summary.totalOutputTokens.toLocaleString()} out
+          {summary.totalInputTokens.toLocaleString()} in /{" "}
+          {summary.totalOutputTokens.toLocaleString()} out
         </span>
         <span className="text-zinc-500">
           {formatDuration(summary.durationMs)}
@@ -104,38 +114,56 @@ function SummaryHeader({ summary }: { summary: SessionSummary }) {
             (API: {formatDuration(summary.durationApiMs)})
           </span>
         )}
-        {summary.permissionDenials != null && summary.permissionDenials.length > 0 && (
-          <Badge variant="warning">
-            {summary.permissionDenials.length} denied
-          </Badge>
-        )}
+        {summary.permissionDenials != null &&
+          summary.permissionDenials.length > 0 && (
+            <Badge variant="warning">
+              {summary.permissionDenials.length} denied
+            </Badge>
+          )}
       </div>
 
-      {summary.modelUsage != null && Object.keys(summary.modelUsage).length > 0 && (
-        <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-          <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Model Usage</div>
-          <div className="mt-1 space-y-1">
-            {Object.entries(summary.modelUsage).map(([model, usage]) => (
-              <div key={model} className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
-                <span className="font-mono">{model}</span>
-                <span>{usage.inputTokens.toLocaleString()} in / {usage.outputTokens.toLocaleString()} out</span>
-                {usage.cacheReadInputTokens > 0 && (
-                  <span className="text-zinc-400">({usage.cacheReadInputTokens.toLocaleString()} cached)</span>
-                )}
-                <span className="font-mono">{formatCost(usage.costUsd)}</span>
-              </div>
-            ))}
+      {summary.modelUsage != null &&
+        Object.keys(summary.modelUsage).length > 0 && (
+          <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+            <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Model Usage
+            </div>
+            <div className="mt-1 space-y-1">
+              {Object.entries(summary.modelUsage).map(([model, usage]) => (
+                <div
+                  key={model}
+                  className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400"
+                >
+                  <span className="font-mono">{model}</span>
+                  <span>
+                    {usage.inputTokens.toLocaleString()} in /{" "}
+                    {usage.outputTokens.toLocaleString()} out
+                  </span>
+                  {usage.cacheReadInputTokens > 0 && (
+                    <span className="text-zinc-400">
+                      ({usage.cacheReadInputTokens.toLocaleString()} cached)
+                    </span>
+                  )}
+                  <span className="font-mono">{formatCost(usage.costUsd)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {summary.systemPrompt != null && (
         <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <button
-            onClick={() => { setShowPrompt(!showPrompt); }}
+            onClick={() => {
+              setShowPrompt(!showPrompt);
+            }}
             className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            {showPrompt ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            {showPrompt ? (
+              <ChevronDown size={12} />
+            ) : (
+              <ChevronRight size={12} />
+            )}
             System Prompt
           </button>
           {showPrompt && (
@@ -152,12 +180,16 @@ function SummaryHeader({ summary }: { summary: SessionSummary }) {
 function SummaryFooter({ summary }: { summary: SessionSummary }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-      <Badge variant={summary.outcome === "completed" ? "success" : "error"} className="text-xs">
+      <Badge
+        variant={summary.outcome === "completed" ? "success" : "error"}
+        className="text-xs"
+      >
         {summary.outcome}
       </Badge>
       <span>{summary.totalTurns} turns</span>
       <span className="font-mono">
-        {summary.totalInputTokens.toLocaleString()} in / {summary.totalOutputTokens.toLocaleString()} out
+        {summary.totalInputTokens.toLocaleString()} in /{" "}
+        {summary.totalOutputTokens.toLocaleString()} out
       </span>
       {summary.totalCostUsd != null && (
         <span className="font-mono">{formatCost(summary.totalCostUsd)}</span>
@@ -187,7 +219,11 @@ export function ConversationViewer({ entries }: ConversationViewerProps) {
 
   // Filter out system entries from the message list (they're shown in header/footer)
   const messageEntries = entries.filter(
-    (e) => !(e.role === "system" && (e.metadata?.type === "summary" || e.metadata?.type === "system_prompt")),
+    (e) =>
+      !(
+        e.role === "system" &&
+        (e.metadata?.type === "summary" || e.metadata?.type === "system_prompt")
+      ),
   );
 
   const totalTurns = Math.max(...entries.map((e) => e.turnNumber));

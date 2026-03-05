@@ -7,9 +7,7 @@ const datasetPath = path.join(import.meta.dirname, "dataset.json");
 
 const datasetFile = Bun.file(datasetPath);
 if (!(await datasetFile.exists())) {
-  console.error(
-    "dataset.json not found. Run sample.ts first.",
-  );
+  console.error("dataset.json not found. Run sample.ts first.");
   process.exit(1);
 }
 
@@ -716,14 +714,9 @@ Bun.serve({
       return Response.json({ ok: true });
     }
 
-    if (
-      url.pathname.startsWith("/api/label/") &&
-      req.method === "DELETE"
-    ) {
+    if (url.pathname.startsWith("/api/label/") && req.method === "DELETE") {
       const id = url.pathname.slice("/api/label/".length);
-      dataset.labels = dataset.labels.filter(
-        (l) => l.transactionId !== id,
-      );
+      dataset.labels = dataset.labels.filter((l) => l.transactionId !== id);
       await saveDataset();
       return Response.json({ ok: true });
     }

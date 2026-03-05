@@ -22,41 +22,45 @@ import {
 
 export const TaskStatusSchema = _TaskStatusSchema;
 
-export const TaskSchema = z.object({
-  id: z.string(),
-  path: z.string().default(""),
-  title: z.string(),
-  status: TaskStatusSchema.default("open"),
-  priority: PrioritySchema.default("normal"),
-  due: z.string().optional(),
-  scheduled: z.string().optional(),
-  contexts: z.array(z.string()).default([]),
-  projects: z.array(z.string()).default([]),
-  tags: z.array(z.string()).default([]),
-  recurrence: z.string().optional(),
-  archived: z.boolean().default(false),
-  totalTrackedTime: z.number().default(0),
-  isBlocked: z.boolean().default(false),
-  isBlocking: z.boolean().default(false),
-  details: z.string().optional(),
-}).transform((raw): Task => ({
-  id: taskId(raw.id),
-  path: raw.path,
-  title: raw.title,
-  status: raw.status,
-  priority: raw.priority,
-  due: raw.due,
-  scheduled: raw.scheduled,
-  contexts: raw.contexts.map((c) => contextName(c)),
-  projects: raw.projects.map((p) => projectName(p)),
-  tags: raw.tags.map((t) => tagName(t)),
-  recurrence: raw.recurrence,
-  archived: raw.archived,
-  totalTrackedTime: raw.totalTrackedTime,
-  isBlocked: raw.isBlocked,
-  isBlocking: raw.isBlocking,
-  details: raw.details,
-}));
+export const TaskSchema = z
+  .object({
+    id: z.string(),
+    path: z.string().default(""),
+    title: z.string(),
+    status: TaskStatusSchema.default("open"),
+    priority: PrioritySchema.default("normal"),
+    due: z.string().optional(),
+    scheduled: z.string().optional(),
+    contexts: z.array(z.string()).default([]),
+    projects: z.array(z.string()).default([]),
+    tags: z.array(z.string()).default([]),
+    recurrence: z.string().optional(),
+    archived: z.boolean().default(false),
+    totalTrackedTime: z.number().default(0),
+    isBlocked: z.boolean().default(false),
+    isBlocking: z.boolean().default(false),
+    details: z.string().optional(),
+  })
+  .transform(
+    (raw): Task => ({
+      id: taskId(raw.id),
+      path: raw.path,
+      title: raw.title,
+      status: raw.status,
+      priority: raw.priority,
+      due: raw.due,
+      scheduled: raw.scheduled,
+      contexts: raw.contexts.map((c) => contextName(c)),
+      projects: raw.projects.map((p) => projectName(p)),
+      tags: raw.tags.map((t) => tagName(t)),
+      recurrence: raw.recurrence,
+      archived: raw.archived,
+      totalTrackedTime: raw.totalTrackedTime,
+      isBlocked: raw.isBlocked,
+      isBlocking: raw.isBlocking,
+      details: raw.details,
+    }),
+  );
 
 export const TaskListSchema = z.object({
   tasks: z.array(TaskSchema),
@@ -66,10 +70,12 @@ export const TaskListSchema = z.object({
     limit: z.number(),
     hasMore: z.boolean(),
   }),
-  vault: z.object({
-    name: z.string(),
-    path: z.string(),
-  }).optional(),
+  vault: z
+    .object({
+      name: z.string(),
+      path: z.string(),
+    })
+    .optional(),
   note: z.string().optional(),
 });
 
@@ -77,56 +83,78 @@ export const TaskListSchema = z.object({
 export const TaskResponseSchema = TaskSchema;
 export const CreateTaskResponseSchema = TaskSchema;
 
-export const TaskStatsSchema = BaseTaskStatsSchema.transform((raw): TaskStats => raw);
+export const TaskStatsSchema = BaseTaskStatsSchema.transform(
+  (raw): TaskStats => raw,
+);
 
-export const FilterOptionsSchema = BaseFilterOptionsSchema.transform((raw): FilterOptions => raw);
+export const FilterOptionsSchema = BaseFilterOptionsSchema.transform(
+  (raw): FilterOptions => raw,
+);
 
-export const NlpParseResultSchema = BaseNlpParseResultSchema.transform((raw): NlpParseResult => raw);
+export const NlpParseResultSchema = BaseNlpParseResultSchema.transform(
+  (raw): NlpParseResult => raw,
+);
 
-export const TimeEntrySchema = z.object({
-  taskId: z.string(),
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-}).transform((raw): TimeEntry => ({
-  ...raw,
-  taskId: taskId(raw.taskId),
-}));
+export const TimeEntrySchema = z
+  .object({
+    taskId: z.string(),
+    startTime: z.string(),
+    endTime: z.string().optional(),
+    duration: z.number().optional(),
+  })
+  .transform(
+    (raw): TimeEntry => ({
+      ...raw,
+      taskId: taskId(raw.taskId),
+    }),
+  );
 
-export const TimeSummarySchema = z.object({
-  totalTime: z.number(),
-  entries: z.array(TimeEntrySchema),
-}).transform((raw): TimeSummary => raw);
+export const TimeSummarySchema = z
+  .object({
+    totalTime: z.number(),
+    entries: z.array(TimeEntrySchema),
+  })
+  .transform((raw): TimeSummary => raw);
 
-export const PomodoroStatusSchema = z.object({
-  active: z.boolean(),
-  taskId: z.string().optional(),
-  timeRemaining: z.number().optional(),
-  type: z.enum(["work", "break"]).optional(),
-}).transform((raw): PomodoroStatus => ({
-  ...raw,
-  taskId: raw.taskId ? taskId(raw.taskId) : undefined,
-}));
+export const PomodoroStatusSchema = z
+  .object({
+    active: z.boolean(),
+    taskId: z.string().optional(),
+    timeRemaining: z.number().optional(),
+    type: z.enum(["work", "break"]).optional(),
+  })
+  .transform(
+    (raw): PomodoroStatus => ({
+      ...raw,
+      taskId: raw.taskId ? taskId(raw.taskId) : undefined,
+    }),
+  );
 
-export const CalendarEventSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  date: z.string(),
-  taskId: z.string().optional(),
-}).transform((raw): CalendarEvent => ({
-  ...raw,
-  taskId: raw.taskId ? taskId(raw.taskId) : undefined,
-}));
+export const CalendarEventSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    date: z.string(),
+    taskId: z.string().optional(),
+  })
+  .transform(
+    (raw): CalendarEvent => ({
+      ...raw,
+      taskId: raw.taskId ? taskId(raw.taskId) : undefined,
+    }),
+  );
 
 export const CalendarEventsSchema = z.object({
   events: z.array(CalendarEventSchema),
 });
 
-export const HealthStatusSchema = z.object({
-  status: z.enum(["ok", "error"]),
-  version: z.string().optional(),
-  uptime: z.number().optional(),
-}).transform((raw): HealthStatus => raw);
+export const HealthStatusSchema = z
+  .object({
+    status: z.enum(["ok", "error"]),
+    version: z.string().optional(),
+    uptime: z.number().optional(),
+  })
+  .transform((raw): HealthStatus => raw);
 
 export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
   z.object({

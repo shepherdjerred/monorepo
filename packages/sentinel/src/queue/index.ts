@@ -67,7 +67,12 @@ export async function enqueueJob(params: EnqueueJobParams): Promise<Job> {
       },
       "Job enqueued",
     );
-    emitSSE({ type: "job:created", jobId: job.id, agent: job.agent, status: job.status });
+    emitSSE({
+      type: "job:created",
+      jobId: job.id,
+      agent: job.agent,
+      status: job.status,
+    });
     return job;
   } catch (error) {
     // Handle P2002 unique constraint race on deduplicationKey
@@ -107,10 +112,7 @@ export async function claimJob(): Promise<Job | null> {
       data: { status: "cancelled", completedAt: now },
     });
     if (cancelled.count > 0) {
-      queueLogger.info(
-        { count: cancelled.count },
-        "Cancelled expired jobs",
-      );
+      queueLogger.info({ count: cancelled.count }, "Cancelled expired jobs");
     }
 
     // Find the highest-priority non-expired pending job

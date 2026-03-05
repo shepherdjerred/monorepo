@@ -8,7 +8,10 @@ import { isActiveStatus } from "../domain/status";
 import { applyFilter } from "../domain/filters";
 import { useTasks } from "../hooks/use-tasks";
 import { showResultError } from "../lib/errors";
-import { KanbanBoard, type KanbanColumnConfig } from "../components/common/KanbanBoard";
+import {
+  KanbanBoard,
+  type KanbanColumnConfig,
+} from "../components/common/KanbanBoard";
 
 type Props = NativeStackScreenProps<RootStackParamList, "JobSearchKanban">;
 
@@ -24,7 +27,10 @@ const TAG_COLUMN_MAP: Record<string, string> = {
   screener: "screener",
 };
 
-function getColumnKey(task: { extraFields?: Readonly<Record<string, string>> | undefined; tags: readonly string[] }): string {
+function getColumnKey(task: {
+  extraFields?: Readonly<Record<string, string>> | undefined;
+  tags: readonly string[];
+}): string {
   // First try extraFields.company_status
   const status = task.extraFields?.["company_status"]?.toLowerCase();
   if (status && COLUMN_DEFS.some((c) => c.key === status)) return status;
@@ -68,7 +74,9 @@ export function JobSearchKanbanScreen({ navigation }: Props) {
   }, [jobTasks]);
 
   const handleTaskPress = useCallback(
-    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
+    (id: TaskId) => {
+      navigation.navigate("TaskDetail", { taskId: id });
+    },
     [navigation],
   );
 
@@ -87,9 +95,10 @@ export function JobSearchKanbanScreen({ navigation }: Props) {
       const task = jobTasks.find((t) => t.id === id);
       if (!task) return [];
       const currentColumn = getColumnKey(task);
-      return COLUMN_DEFS
-        .filter((c) => c.key !== currentColumn)
-        .map((c) => ({ key: c.key, title: c.title }));
+      return COLUMN_DEFS.filter((c) => c.key !== currentColumn).map((c) => ({
+        key: c.key,
+        title: c.title,
+      }));
     },
     [jobTasks],
   );

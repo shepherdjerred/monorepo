@@ -25,7 +25,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ci.lib import argocd, s3
+from ci.lib import argocd, r2, s3
 from ci.lib.config import ReleaseConfig
 
 
@@ -46,6 +46,8 @@ SITES = [
     {"bucket": "clauderon", "build_dir": str(_REPO_ROOT / "packages/clauderon/docs"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/clauderon/docs/dist")},
     {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": None, "dist_dir": str(_REPO_ROOT / "packages/resume")},
     {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
+    {"bucket": "cook", "build_dir": str(_REPO_ROOT / "packages/cook-preview"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/cook-preview/dist")},
+    {"bucket": "status-page", "build_dir": str(_REPO_ROOT / "packages/status-page-web"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/status-page-web/dist"), "target": "r2"},
 ]
 
 
@@ -58,6 +60,13 @@ def main() -> None:
     if not config.is_release:
         print("Not on main branch, skipping deploy", flush=True)
         return
+
+    # Validate required credentials on main
+    required_vars = ["S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"]
+    missing = [v for v in required_vars if not os.environ.get(v)]
+    if missing:
+        print(f"Missing required env vars: {', '.join(missing)}", flush=True)
+        sys.exit(1)
 
     if args.sites:
         print(f"Filtering to sites: {', '.join(args.sites)}", flush=True)
@@ -90,15 +99,19 @@ def main() -> None:
         except Exception as e:
             errors.append(f"Failed to build {site['build_dir']}: {e}")
 
-    # --- S3 static site sync ---
+    # --- S3/R2 static site sync ---
     s3_key = os.environ.get("S3_ACCESS_KEY_ID", "")
     s3_secret = os.environ.get("S3_SECRET_ACCESS_KEY", "")
     if s3_key and s3_secret:
-        print("\n--- Deploy static sites to S3 ---", flush=True)
-        for bucket, local_dir in [(s["bucket"], s["dist_dir"]) for s in sites]:
+        print("\n--- Deploy static sites to S3/R2 ---", flush=True)
+        for site in sites:
+            bucket, local_dir = site["bucket"], site["dist_dir"]
             try:
                 print(f"\nSyncing {bucket} from {local_dir}", flush=True)
-                s3.sync(bucket, local_dir)
+                if site.get("target") == "r2":
+                    r2.sync(bucket, local_dir)
+                else:
+                    s3.sync(bucket, local_dir)
             except Exception as e:
                 errors.append(f"Failed to sync {bucket}: {e}")
     else:

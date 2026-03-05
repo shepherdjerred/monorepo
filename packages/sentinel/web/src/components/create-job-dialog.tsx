@@ -58,13 +58,17 @@ export function CreateJobDialog({ open, onClose }: CreateJobDialogProps) {
           label="Agent"
           options={agentOptions}
           value={agent}
-          onChange={(e) => { setAgent(e.target.value); }}
+          onChange={(e) => {
+            setAgent(e.target.value);
+          }}
         />
         <Textarea
           label="Prompt"
           placeholder="Describe what the agent should do..."
           value={prompt}
-          onChange={(e) => { setPrompt(e.target.value); }}
+          onChange={(e) => {
+            setPrompt(e.target.value);
+          }}
         />
         <Select
           label="Priority"
@@ -72,7 +76,12 @@ export function CreateJobDialog({ open, onClose }: CreateJobDialogProps) {
           value={priority}
           onChange={(e) => {
             const val = e.target.value;
-            if (val === "critical" || val === "high" || val === "normal" || val === "low") {
+            if (
+              val === "critical" ||
+              val === "high" ||
+              val === "normal" ||
+              val === "low"
+            ) {
               setPriority(val);
             }
           }}
@@ -83,7 +92,9 @@ export function CreateJobDialog({ open, onClose }: CreateJobDialogProps) {
           </Button>
           <Button
             type="submit"
-            disabled={agent === "" || prompt.trim() === "" || createJob.isPending}
+            disabled={
+              agent === "" || prompt.trim() === "" || createJob.isPending
+            }
           >
             {createJob.isPending ? "Creating..." : "Create Job"}
           </Button>

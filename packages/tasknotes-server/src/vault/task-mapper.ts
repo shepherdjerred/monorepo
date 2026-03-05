@@ -2,8 +2,22 @@ import { z } from "zod";
 
 import type { Task } from "../domain/types.ts";
 
-const PrioritySchema = z.enum(["highest", "high", "medium", "normal", "low", "none"]);
-const StatusSchema = z.enum(["open", "in-progress", "done", "cancelled", "waiting", "delegated"]);
+const PrioritySchema = z.enum([
+  "highest",
+  "high",
+  "medium",
+  "normal",
+  "low",
+  "none",
+]);
+const StatusSchema = z.enum([
+  "open",
+  "in-progress",
+  "done",
+  "cancelled",
+  "waiting",
+  "delegated",
+]);
 
 const TaskFrontmatterSchema = z.object({
   id: z.string(),
@@ -69,7 +83,8 @@ export function taskToFrontmatter(task: Task): {
   if (task.tags.length > 0) data["tags"] = [...task.tags];
   if (task.recurrence !== undefined) data["recurrence"] = task.recurrence;
   if (task.archived) data["archived"] = true;
-  if (task.totalTrackedTime > 0) data["totalTrackedTime"] = task.totalTrackedTime;
+  if (task.totalTrackedTime > 0)
+    data["totalTrackedTime"] = task.totalTrackedTime;
   if (task.isBlocked) data["isBlocked"] = true;
   if (task.isBlocking) data["isBlocking"] = true;
 

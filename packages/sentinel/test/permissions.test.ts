@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  setupTestDatabase,
-  testPrisma,
-  testAgent,
-} from "./helpers.ts";
+import { setupTestDatabase, testPrisma, testAgent } from "./helpers.ts";
 import {
   parseCommand,
   isAllowedCommand,
@@ -118,13 +114,7 @@ describe("isAllowedCommand", () => {
   });
 
   it("should allow gh run list with extra args", () => {
-    const result = isAllowedCommand([
-      "gh",
-      "run",
-      "list",
-      "--limit",
-      "10",
-    ]);
+    const result = isAllowedCommand(["gh", "run", "list", "--limit", "10"]);
     expect(result.allowed).toBe(true);
   });
 

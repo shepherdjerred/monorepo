@@ -132,7 +132,11 @@ describe("Bugsink webhook (token-in-URL)", () => {
     const res = await app.request("/webhook/bugsink/wrong-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "Error", project: "test", url: "http://example.com" }),
+      body: JSON.stringify({
+        title: "Error",
+        project: "test",
+        url: "http://example.com",
+      }),
     });
     expect(res.status).toBe(401);
   });

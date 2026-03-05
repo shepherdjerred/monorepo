@@ -16,14 +16,21 @@ export function SavedViewCard({ name, icon, count, color, onPress }: Props) {
 
   return (
     <Pressable
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      style={[
+        styles.card,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+      ]}
       onPress={onPress}
     >
       <View style={[styles.iconCircle, { backgroundColor: color + "1A" }]}>
         <AppIcon name={icon} size={20} color={color} />
       </View>
-      <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{name}</Text>
-      <Text style={[styles.count, { color: colors.textSecondary }]}>{count} tasks</Text>
+      <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={[styles.count, { color: colors.textSecondary }]}>
+        {count} tasks
+      </Text>
     </Pressable>
   );
 }

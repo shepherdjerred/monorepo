@@ -11,12 +11,14 @@ On 2026-02-24 at ~04:53 UTC, the `node_disk_written_bytes_total` alert fired for
 ### Investigation Summary
 
 **What happened:**
+
 - 10 concurrent Buildkite job pods connected to the single Dagger engine simultaneously
 - Each ran `dagger call ci`, creating separate BuildKit sessions on the shared engine
 - System load spiked to **587 on 32 cores** (18x overloaded)
 - The Dagger engine's 1 TiB ZFS-backed PVC on `zfspv-pool-nvme` (nvme1n1) absorbed all the I/O
 
 **Disk write breakdown:**
+
 - **202 GB** total raw writes to nvme1n1 in one hour
 - **43 GB** of temporary BuildKit layer data (peak usage: 888 GB, baseline: 845 GB)
 - **~43 GB** of GC deletes as sessions ended (Dagger GC cleaned up unreferenced layers)
@@ -26,34 +28,37 @@ On 2026-02-24 at ~04:53 UTC, the `node_disk_written_bytes_total` alert fired for
 **Timeline from Dagger engine metrics:**
 
 | Time (UTC) | Disk Used | Sessions | Cache Entries | Load |
-|------------|----------|----------|--------------|------|
-| 05:01 | 881 GB | 10 | 235,056 | 204 |
-| 05:04 | 874 GB | 10 | 235,129 | 397 |
-| 05:11 | 871 GB | 9 | 211,295 | 587 |
-| 05:14 | 885 GB | 9 | 211,300 | 304 |
-| 05:23 | 888 GB | 3 | 71,097 | 94 |
-| 05:24 | 886 GB | 0 | 0 | 39 |
-| 05:25 | 845 GB | 0 | 0 | 20 |
+| ---------- | --------- | -------- | ------------- | ---- |
+| 05:01      | 881 GB    | 10       | 235,056       | 204  |
+| 05:04      | 874 GB    | 10       | 235,129       | 397  |
+| 05:11      | 871 GB    | 9        | 211,295       | 587  |
+| 05:14      | 885 GB    | 9        | 211,300       | 304  |
+| 05:23      | 888 GB    | 3        | 71,097        | 94   |
+| 05:24      | 886 GB    | 0        | 0             | 39   |
+| 05:25      | 845 GB    | 0        | 0             | 20   |
 
 ### Root Cause
 
-No concurrency control on Dagger engine access. The existing plan doc (`packages/docs/plans/buildkite.md`) already identifies: *"One Dagger engine pod (K8s) means all `dagger call` must be serialized."* But serialization was never implemented.
+No concurrency control on Dagger engine access. The existing plan doc (`packages/docs/plans/buildkite.md`) already identifies: _"One Dagger engine pod (K8s) means all `dagger call` must be serialized."_ But serialization was never implemented.
 
 Additionally, the ZFS storage class has `compression=off`, meaning every byte of container layer data generates 1:1 physical writes plus ZFS copy-on-write overhead.
 
 ## Current Configuration
 
 **Dagger engine:**
+
 - Helm chart: `dagger-helm` v0.19.11 (custom patched image)
 - Storage: 1 TiB PVC on `zfs-ssd` storage class
 - GC: `maxUsedSpace=800GB`, `reservedSpace=100GB`, `minFreeSpace=15%`
 - Currently using 845 GB of 1 TiB
 
 **ZFS storage class (`zfs-ssd`):**
+
 - Pool: `zfspv-pool-nvme` (Samsung 990 PRO 4TB NVMe)
 - `compression=off`, `dedup=off`, `recordsize=128k`, `shared=yes`
 
 **Buildkite pipeline:**
+
 - No `concurrency` or `concurrency_group` settings
 - 2-3 steps per build, all calling into the same Dagger engine
 - Multiple builds can run in parallel with no limits
@@ -91,11 +96,11 @@ new KubeStorageClass(chart, "host-zfs-ssd-buildcache", {
   parameters: {
     fstype: "zfs",
     poolname: "zfspv-pool-nvme",
-    compression: "lz4",       // ~2x reduction in physical writes; ~10 GB/s, faster than NVMe
+    compression: "lz4", // ~2x reduction in physical writes; ~10 GB/s, faster than NVMe
     dedup: "off",
     recordsize: "128k",
-    sync: "disabled",         // safe for reproducible build cache; eliminates fsync overhead
-    logbias: "throughput",    // avoids ZIL double-writes
+    sync: "disabled", // safe for reproducible build cache; eliminates fsync overhead
+    logbias: "throughput", // avoids ZIL double-writes
   },
   volumeBindingMode: "WaitForFirstConsumer",
 });
@@ -110,6 +115,7 @@ storageClassName: BUILDCACHE_STORAGE_CLASS,  // was NVME_STORAGE_CLASS
 ```
 
 **Rationale for each setting:**
+
 - `compression=lz4`: Container layers (JS, binaries, JSON, package metadata) compress 1.5-3x. LZ4 is CPU-free at NVMe speeds. Incompressible data is stored uncompressed with zero penalty.
 - `sync=disabled`: BuildKit issues fsync calls that force ZIL writes. The Dagger cache is fully reproducible — losing 5 seconds of cache data in a crash just means the next build rebuilds those layers. No data durability concern.
 - `logbias=throughput`: Prevents double-writes through the ZIL. Harmless if sync is disabled, helpful if it isn't.
@@ -117,6 +123,7 @@ storageClassName: BUILDCACHE_STORAGE_CLASS,  // was NVME_STORAGE_CLASS
 **Impact:** ~2-3x reduction in physical bytes written per build
 
 **Caveat:** Storage class changes only apply to new PVCs. The existing Dagger PVC must be either:
+
 - Recreated (loses ~845 GB cache, which rebuilds over subsequent CI runs), or
 - Modified in-place on the node: `zfs set compression=lz4 sync=disabled logbias=throughput zfspv-pool-nvme/pvc-7bc7b914-4c38-44bf-a1d5-bb4800b66671`
 
@@ -155,13 +162,13 @@ Or add `atime: "off"` to the storage class parameters if OpenEBS ZFS CSI support
 
 ## Impact Summary
 
-| Fix | Effort | Write I/O Reduction | Risk |
-|-----|--------|-------------------|------|
-| Serialize Dagger sessions | Pipeline YAML change | ~10x (eliminates concurrency) | Low |
-| LZ4 compression | Storage class + zfs set | ~2-3x (fewer physical bytes) | None |
-| sync=disabled | Storage class + zfs set | ~2x on top of LZ4 | Low (cache is reproducible) |
-| Lower GC threshold | Dagger config change | Reduces churn spikes | Low |
-| atime=off | One-time node command | Moderate | None |
+| Fix                       | Effort                  | Write I/O Reduction           | Risk                        |
+| ------------------------- | ----------------------- | ----------------------------- | --------------------------- |
+| Serialize Dagger sessions | Pipeline YAML change    | ~10x (eliminates concurrency) | Low                         |
+| LZ4 compression           | Storage class + zfs set | ~2-3x (fewer physical bytes)  | None                        |
+| sync=disabled             | Storage class + zfs set | ~2x on top of LZ4             | Low (cache is reproducible) |
+| Lower GC threshold        | Dagger config change    | Reduces churn spikes          | Low                         |
+| atime=off                 | One-time node command   | Moderate                      | None                        |
 
 Combined, these changes would reduce the per-build disk write impact from ~202 GB physical / 177 MB/s peak down to roughly ~15-30 GB physical / ~15 MB/s — effectively invisible.
 

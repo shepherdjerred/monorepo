@@ -18,7 +18,11 @@ const CLAUDE_SESSION_VARS = new Set([
 function buildCleanEnv(): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
-    if (value != null && !CLAUDE_SESSION_VARS.has(key) && !value.startsWith("op://")) {
+    if (
+      value != null &&
+      !CLAUDE_SESSION_VARS.has(key) &&
+      !value.startsWith("op://")
+    ) {
       env[key] = value;
     }
   }
@@ -29,7 +33,9 @@ const apiKey = Bun.env["ANTHROPIC_API_KEY"];
 
 if (apiKey == null || apiKey.startsWith("op://")) {
   console.error("ANTHROPIC_API_KEY not set or unresolved op:// reference.");
-  console.error("Run with: ANTHROPIC_API_KEY=sk-ant-... bun run scripts/test-sdk.ts");
+  console.error(
+    "Run with: ANTHROPIC_API_KEY=sk-ant-... bun run scripts/test-sdk.ts",
+  );
   console.error("Or:       op run -- bun run scripts/test-sdk.ts");
   process.exit(1);
 }
@@ -59,7 +65,12 @@ try {
 
   for await (const message of agentQuery) {
     if (message.type === "system" && message.subtype === "init") {
-      console.log("[init] model:", message.model, "tools:", message.tools.length);
+      console.log(
+        "[init] model:",
+        message.model,
+        "tools:",
+        message.tools.length,
+      );
     } else if (message.type === "assistant") {
       const text = message.message.content
         .filter((b: { type: string }) => b.type === "text")

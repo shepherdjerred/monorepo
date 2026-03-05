@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  setupTestDatabase,
-  testPrisma,
-} from "./helpers.ts";
+import { setupTestDatabase, testPrisma } from "./helpers.ts";
 import {
   enqueueJob,
   claimJob,

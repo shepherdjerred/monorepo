@@ -14,9 +14,7 @@ type ApprovalParams = {
   expiresAt: Date;
 };
 
-export async function requestApproval(
-  params: ApprovalParams,
-): Promise<string> {
+export async function requestApproval(params: ApprovalParams): Promise<string> {
   const prisma = getPrisma();
 
   const request = await prisma.approvalRequest.create({
@@ -177,10 +175,7 @@ export async function waitForDecision(
     });
   }
 
-  approvalLogger.info(
-    { requestId },
-    "Approval request timed out, auto-denied",
-  );
+  approvalLogger.info({ requestId }, "Approval request timed out, auto-denied");
 
   return {
     approved: false,

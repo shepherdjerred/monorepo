@@ -39,7 +39,9 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task?.title ?? "");
-  const [priority, setPriority] = useState<Priority>(task?.priority ?? "normal");
+  const [priority, setPriority] = useState<Priority>(
+    task?.priority ?? "normal",
+  );
   const [due, setDue] = useState<string | undefined>(task?.due);
 
   useEffect(() => {
@@ -88,17 +90,42 @@ export function TaskDetailScreen({ route, navigation }: Props) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={[typography.label, { color: colors.textSecondary }]}>Title</Text>
+          <Text style={[typography.label, { color: colors.textSecondary }]}>
+            Title
+          </Text>
           <TextInput
-            style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+              },
+            ]}
             value={title}
             onChangeText={setTitle}
           />
 
-          <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Priority</Text>
+          <Text
+            style={[
+              typography.label,
+              { color: colors.textSecondary },
+              styles.sectionLabel,
+            ]}
+          >
+            Priority
+          </Text>
           <PriorityPicker value={priority} onChange={setPriority} />
 
-          <Text style={[typography.label, { color: colors.textSecondary }, styles.sectionLabel]}>Due Date</Text>
+          <Text
+            style={[
+              typography.label,
+              { color: colors.textSecondary },
+              styles.sectionLabel,
+            ]}
+          >
+            Due Date
+          </Text>
           <DatePicker value={due} onChange={setDue} />
 
           <View style={styles.actions}>
@@ -111,12 +138,23 @@ export function TaskDetailScreen({ route, navigation }: Props) {
               <Text style={styles.buttonText}>Save</Text>
             </Pressable>
             <Pressable
-              style={[styles.button, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
-              onPress={() => { setEditing(false); }}
+              style={[
+                styles.button,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => {
+                setEditing(false);
+              }}
               accessibilityRole="button"
               accessibilityLabel="Cancel editing"
             >
-              <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.buttonText, { color: colors.text }]}>
+                Cancel
+              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -125,20 +163,49 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-    >
-      <Text style={[typography.heading, { color: colors.text }]}>{task.title}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={[typography.heading, { color: colors.text }]}>
+        {task.title}
+      </Text>
 
       <View style={styles.meta}>
-        <MetaRow label="Status" value={STATUS_LABELS[task.status]} colors={colors} />
-        <MetaRow label="Priority" value={PRIORITY_LABELS[task.priority]} colors={colors} />
-        {task.due ? <MetaRow label="Due" value={formatRelativeDate(task.due)} colors={colors} /> : null}
-        {task.recurrence ? <MetaRow label="Recurrence" value={task.recurrence} colors={colors} /> : null}
-        {task.projects.length > 0 ? <MetaRow label="Projects" value={task.projects.join(", ")} colors={colors} /> : null}
-        {task.contexts.length > 0 ? <MetaRow label="Contexts" value={task.contexts.join(", ")} colors={colors} /> : null}
-        {task.tags.length > 0 ? <MetaRow label="Tags" value={task.tags.join(", ")} colors={colors} /> : null}
+        <MetaRow
+          label="Status"
+          value={STATUS_LABELS[task.status]}
+          colors={colors}
+        />
+        <MetaRow
+          label="Priority"
+          value={PRIORITY_LABELS[task.priority]}
+          colors={colors}
+        />
+        {task.due ? (
+          <MetaRow
+            label="Due"
+            value={formatRelativeDate(task.due)}
+            colors={colors}
+          />
+        ) : null}
+        {task.recurrence ? (
+          <MetaRow label="Recurrence" value={task.recurrence} colors={colors} />
+        ) : null}
+        {task.projects.length > 0 ? (
+          <MetaRow
+            label="Projects"
+            value={task.projects.join(", ")}
+            colors={colors}
+          />
+        ) : null}
+        {task.contexts.length > 0 ? (
+          <MetaRow
+            label="Contexts"
+            value={task.contexts.join(", ")}
+            colors={colors}
+          />
+        ) : null}
+        {task.tags.length > 0 ? (
+          <MetaRow label="Tags" value={task.tags.join(", ")} colors={colors} />
+        ) : null}
       </View>
 
       <View style={styles.actions}>
@@ -153,13 +220,26 @@ export function TaskDetailScreen({ route, navigation }: Props) {
             void toggleTask(taskId);
           }}
           accessibilityRole="button"
-          accessibilityLabel={isCompletedStatus(task.status) ? "Mark as incomplete" : "Mark as complete"}
+          accessibilityLabel={
+            isCompletedStatus(task.status)
+              ? "Mark as incomplete"
+              : "Mark as complete"
+          }
         >
           <Text style={styles.buttonText}>Toggle Status</Text>
         </Pressable>
         <Pressable
-          style={[styles.button, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}
-          onPress={() => { setEditing(true); }}
+          style={[
+            styles.button,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderWidth: 1,
+            },
+          ]}
+          onPress={() => {
+            setEditing(true);
+          }}
           accessibilityRole="button"
           accessibilityLabel="Edit task"
         >
@@ -189,8 +269,12 @@ function MetaRow({
 }) {
   return (
     <View style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}>
-      <Text style={[typography.caption, { color: colors.textSecondary }]}>{label}</Text>
-      <Text style={[typography.bodySmall, { color: colors.text }]}>{value}</Text>
+      <Text style={[typography.caption, { color: colors.textSecondary }]}>
+        {label}
+      </Text>
+      <Text style={[typography.bodySmall, { color: colors.text }]}>
+        {value}
+      </Text>
     </View>
   );
 }

@@ -49,7 +49,9 @@ export function getModelId(): string {
   return modelId;
 }
 
-export function getTracker(): ReturnType<typeof createUsageTracker> | undefined {
+export function getTracker():
+  | ReturnType<typeof createUsageTracker>
+  | undefined {
   return tracker;
 }
 

@@ -65,7 +65,9 @@ export function JobTable({ jobs, onNavigate }: JobTableProps) {
           {jobs.map((job) => (
             <tr
               key={job.id}
-              onClick={() => { onNavigate({ name: "job-detail", jobId: job.id }); }}
+              onClick={() => {
+                onNavigate({ name: "job-detail", jobId: job.id });
+              }}
               className="cursor-pointer border-b border-zinc-100 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
             >
               <td className="px-4 py-3">

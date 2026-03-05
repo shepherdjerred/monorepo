@@ -6,7 +6,10 @@ import { updateWidgetData } from "./widget-bridge";
 export function syncWidgetData(tasks: Map<TaskId, Task>): void {
   const allTasks = [...tasks.values()];
   const todayTasks = allTasks
-    .filter((t) => !isCompletedStatus(t.status) && (isToday(t.due) || isOverdue(t.due)))
+    .filter(
+      (t) =>
+        !isCompletedStatus(t.status) && (isToday(t.due) || isOverdue(t.due)),
+    )
     .slice(0, 8)
     .map((t) => ({
       id: String(t.id),
@@ -19,8 +22,12 @@ export function syncWidgetData(tasks: Map<TaskId, Task>): void {
 
   const stats = {
     total: allTasks.filter((t) => !isCompletedStatus(t.status)).length,
-    overdue: allTasks.filter((t) => !isCompletedStatus(t.status) && isOverdue(t.due)).length,
-    today: allTasks.filter((t) => !isCompletedStatus(t.status) && isToday(t.due)).length,
+    overdue: allTasks.filter(
+      (t) => !isCompletedStatus(t.status) && isOverdue(t.due),
+    ).length,
+    today: allTasks.filter(
+      (t) => !isCompletedStatus(t.status) && isToday(t.due),
+    ).length,
   };
 
   updateWidgetData({ todayTasks, stats });

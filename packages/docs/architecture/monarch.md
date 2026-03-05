@@ -29,17 +29,18 @@ Monarch categorizes personal finance transactions from the Monarch Money app. It
 
 Deep path modules produce `TransactionEnrichment` data — structured metadata about a transaction from external sources. They do NOT classify transactions.
 
-| Deep Path | Source | Enrichment Data |
-|-----------|--------|----------------|
-| Amazon | Order scraping | Items with titles and prices |
-| Venmo | CSV export | Payment note, direction, counterparty |
-| Bilt (Conservice) | Bill parsing | Service type breakdown (rent, utilities) |
-| USAA | Statement parsing | Insurance line items by policy type |
-| SCL | CSV export | Billing periods with amounts |
-| Apple | Mail receipts | Receipt items with subscription flags |
-| Costco | Receipt matching | Order items |
+| Deep Path         | Source            | Enrichment Data                          |
+| ----------------- | ----------------- | ---------------------------------------- |
+| Amazon            | Order scraping    | Items with titles and prices             |
+| Venmo             | CSV export        | Payment note, direction, counterparty    |
+| Bilt (Conservice) | Bill parsing      | Service type breakdown (rent, utilities) |
+| USAA              | Statement parsing | Insurance line items by policy type      |
+| SCL               | CSV export        | Billing periods with amounts             |
+| Apple             | Mail receipts     | Receipt items with subscription flags    |
+| Costco            | Receipt matching  | Order items                              |
 
 Key types:
+
 - `TransactionEnrichment` — enrichment payload (items, notes, breakdowns, etc.)
 - `EnrichedTransaction` — transaction + enrichment + assigned tier + deep path label
 
@@ -47,11 +48,11 @@ Key types:
 
 Each transaction is assigned a classification tier based on enrichment and KB data:
 
-| Tier | Criteria | Cost |
-|------|----------|------|
-| **Tier 1** | Single-category KB merchant, high confidence, no enrichment | Free (KB lookup) |
-| **Tier 2** | Has enrichment data or KB entry | Batch Claude calls (~8/call) |
-| **Tier 3** | Cryptic/unknown merchants (SQ *, TST*, etc.) | Agentic per-txn with tools |
+| Tier       | Criteria                                                    | Cost                         |
+| ---------- | ----------------------------------------------------------- | ---------------------------- |
+| **Tier 1** | Single-category KB merchant, high confidence, no enrichment | Free (KB lookup)             |
+| **Tier 2** | Has enrichment data or KB entry                             | Batch Claude calls (~8/call) |
+| **Tier 3** | Cryptic/unknown merchants (SQ _, TST_, etc.)                | Agentic per-txn with tools   |
 
 ### Phase 3: Classification (`src/lib/classifier/`)
 
@@ -72,13 +73,13 @@ Each transaction is assigned a classification tier based on enrichment and KB da
 - **history.ts** — Build merchant stats from transaction history, convert to KB entries
 - **types.ts** — `MerchantKnowledge` (merchant type, not category), `CategoryDefinition`, `EnrichmentSuggestion`
 
-The KB stores merchant *type* and behavior (e.g., "grocery store", "multi-category"), not a direct merchant→category mapping. Hints from `hints.txt` are parsed into KB entries with `parseHintsToKB()`.
+The KB stores merchant _type_ and behavior (e.g., "grocery store", "multi-category"), not a direct merchant→category mapping. Hints from `hints.txt` are parsed into KB entries with `parseHintsToKB()`.
 
 ## Key Design Decisions
 
 1. **Enrichment ≠ Classification**: Deep paths produce data, not decisions. The classifier uses enrichment as context.
 2. **Tiered cost optimization**: Simple merchants use free KB lookup; only cryptic merchants trigger expensive agentic classification.
-3. **Merchant type, not category**: KB stores what a merchant *is*, not what category to use. This handles multi-category merchants (e.g., Amazon sells groceries AND electronics).
+3. **Merchant type, not category**: KB stores what a merchant _is_, not what category to use. This handles multi-category merchants (e.g., Amazon sells groceries AND electronics).
 4. **Suggestions over auto-learning**: The system suggests KB improvements rather than auto-creating entries from single classifications.
 
 ## File Structure
@@ -120,10 +121,10 @@ src/
 
 ## CLI Flags
 
-| Flag | Description |
-|------|-------------|
-| `--rebuild-kb` | Rebuild knowledge base from transaction history |
-| `--skip-enrich` | Skip enrichment phase (classify with existing data only) |
-| `--suggest` | Show enrichment improvement suggestions after run |
-| `--dry-run` | Preview changes without applying |
-| `--skip-amazon`, `--skip-venmo`, etc. | Skip individual deep paths |
+| Flag                                  | Description                                              |
+| ------------------------------------- | -------------------------------------------------------- |
+| `--rebuild-kb`                        | Rebuild knowledge base from transaction history          |
+| `--skip-enrich`                       | Skip enrichment phase (classify with existing data only) |
+| `--suggest`                           | Show enrichment improvement suggestions after run        |
+| `--dry-run`                           | Preview changes without applying                         |
+| `--skip-amazon`, `--skip-venmo`, etc. | Skip individual deep paths                               |

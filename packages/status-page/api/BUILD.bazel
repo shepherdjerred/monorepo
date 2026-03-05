@@ -1,0 +1,78 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:eslint.bzl", "eslint_test")
+load("//tools/bazel:prisma.bzl", "prisma_generate")
+load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+
+npm_link_all_packages(name = "node_modules")
+
+exports_files([
+    "package.json",
+    "tsconfig.json",
+])
+
+# Prisma client generation
+prisma_generate(
+    name = "prisma_generate",
+    schema = "prisma/schema.prisma",
+)
+
+# Bun-native: TypeScript executed directly by Bun, no transpilation needed.
+js_library(
+    name = "pkg",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@prisma/client",
+        ":node_modules/@types/bun",
+        ":node_modules/hono",
+        ":node_modules/zod",
+    ],
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+# Prisma types require prisma generate — uses workspace_typecheck_test + typecheck_runner.sh.
+workspace_typecheck_test(
+    name = "typecheck",
+    srcs = glob(["src/**/*.ts"]),
+    data = ["prisma/schema.prisma"],
+    env = {
+        "PRISMA_SCHEMA": "prisma/schema.prisma",
+    },
+    tags = ["requires-network"],
+    deps = [
+        ":node_modules/@prisma/client",
+        ":node_modules/@types/bun",
+        ":node_modules/hono",
+        ":node_modules/prisma",
+        ":node_modules/zod",
+        "//:node_modules/undici-types",
+    ],
+)
+
+# Container image for K8s deployment
+bun_service_image(
+    name = "image",
+    srcs = glob(["src/**/*.ts"]) + [
+        "package.json",
+        "prisma/schema.prisma",
+    ],
+    entry_point = "src/index.ts",
+    env = {"NODE_ENV": "production"},
+    exposed_ports = ["3000"],
+    labels = {
+        "org.opencontainers.image.title": "status-page-api",
+        "org.opencontainers.image.description": "Multi-site status page API",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    repository = "ghcr.io/shepherdjerred/status-page-api",
+    visibility = ["//visibility:public"],
+)

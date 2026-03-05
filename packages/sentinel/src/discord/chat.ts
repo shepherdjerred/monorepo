@@ -12,7 +12,7 @@ export type DirectMessage = {
   channel: { sendTyping?: () => Promise<unknown> };
   react: (emoji: string) => Promise<unknown>;
   reply: (content: string) => Promise<unknown>;
-}
+};
 
 const TriggerMetadataSchema = z.object({
   userId: z.string(),
@@ -28,7 +28,9 @@ const userSessions = new Map<string, string>();
 const processedMessages = new Set<string>();
 const DEDUP_TTL_MS = 60_000;
 
-export async function handleDirectMessage(message: DirectMessage): Promise<void> {
+export async function handleDirectMessage(
+  message: DirectMessage,
+): Promise<void> {
   if (processedMessages.has(message.id)) {
     return;
   }
@@ -72,7 +74,9 @@ export async function handleDirectMessage(message: DirectMessage): Promise<void>
   } catch (error: unknown) {
     chatLogger.error(error, "Failed to enqueue DM job");
     try {
-      await message.reply("Sorry, I couldn't process your message. Please try again.");
+      await message.reply(
+        "Sorry, I couldn't process your message. Please try again.",
+      );
     } catch {
       // Ignore reply failures
     }
@@ -96,9 +100,14 @@ export async function sendChatReply(
     return;
   }
 
-  const parsed = TriggerMetadataSchema.safeParse(JSON.parse(job.triggerMetadata));
+  const parsed = TriggerMetadataSchema.safeParse(
+    JSON.parse(job.triggerMetadata),
+  );
   if (!parsed.success) {
-    chatLogger.error({ jobId: job.id, error: parsed.error.message }, "Invalid trigger metadata");
+    chatLogger.error(
+      { jobId: job.id, error: parsed.error.message },
+      "Invalid trigger metadata",
+    );
     return;
   }
 
@@ -109,9 +118,10 @@ export async function sendChatReply(
     const dmChannel = await user.createDM();
 
     const messageText = result.length === 0 ? "(No response)" : result;
-    const truncatedResult = messageText.length > MAX_DISCORD_MESSAGE_LENGTH
-      ? `${messageText.slice(0, MAX_DISCORD_MESSAGE_LENGTH - 3)}...`
-      : messageText;
+    const truncatedResult =
+      messageText.length > MAX_DISCORD_MESSAGE_LENGTH
+        ? `${messageText.slice(0, MAX_DISCORD_MESSAGE_LENGTH - 3)}...`
+        : messageText;
 
     await dmChannel.send(truncatedResult);
 

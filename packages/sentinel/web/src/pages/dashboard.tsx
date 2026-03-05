@@ -26,13 +26,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { onNavigate({ name: "jobs" }); }}
+            onClick={() => {
+              onNavigate({ name: "jobs" });
+            }}
           >
             View all jobs
           </Button>
         </CardHeader>
         <CardContent className="p-0">
-          <JobTable jobs={recentJobs.data?.jobs ?? []} onNavigate={onNavigate} />
+          <JobTable
+            jobs={recentJobs.data?.jobs ?? []}
+            onNavigate={onNavigate}
+          />
         </CardContent>
       </Card>
     </div>

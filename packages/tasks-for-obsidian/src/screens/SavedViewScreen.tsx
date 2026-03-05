@@ -4,7 +4,14 @@ import { AppIcon } from "../components/common/AppIcon";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
-import { type FilterConfig, type SortConfig, EMPTY_FILTER, DEFAULT_SORT, applyFilter, applySort } from "../domain/filters";
+import {
+  type FilterConfig,
+  type SortConfig,
+  EMPTY_FILTER,
+  DEFAULT_SORT,
+  applyFilter,
+  applySort,
+} from "../domain/filters";
 import { DEFAULT_SAVED_VIEWS } from "../domain/saved-views";
 import { isActiveStatus } from "../domain/status";
 import { useTasks } from "../hooks/use-tasks";
@@ -19,7 +26,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "SavedView">;
 export function SavedViewScreen({ route, navigation }: Props) {
   const { viewId } = route.params;
   const view = DEFAULT_SAVED_VIEWS.find((v) => v.id === viewId);
-  const { taskList, toggleTask, deleteTask, projectNames, contextNames, tagNames } = useTasks();
+  const {
+    taskList,
+    toggleTask,
+    deleteTask,
+    projectNames,
+    contextNames,
+    tagNames,
+  } = useTasks();
   const { colors } = useSettings();
   const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
   const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
@@ -30,7 +44,12 @@ export function SavedViewScreen({ route, navigation }: Props) {
         navigation.setOptions({
           title: view.name,
           headerRight: () => (
-            <Pressable onPress={() => { navigation.navigate("JobSearchKanban"); }} hitSlop={8}>
+            <Pressable
+              onPress={() => {
+                navigation.navigate("JobSearchKanban");
+              }}
+              hitSlop={8}
+            >
               <AppIcon name="columns" size={22} color={colors.text} />
             </Pressable>
           ),
@@ -55,7 +74,9 @@ export function SavedViewScreen({ route, navigation }: Props) {
   );
 
   const handlePress = useCallback(
-    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
+    (id: TaskId) => {
+      navigation.navigate("TaskDetail", { taskId: id });
+    },
     [navigation],
   );
 

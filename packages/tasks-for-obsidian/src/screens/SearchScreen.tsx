@@ -1,5 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, TextInput, KeyboardAvoidingView, Platform, Alert, StyleSheet } from "react-native";
+import {
+  View,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
@@ -30,12 +37,16 @@ export function SearchScreen({ navigation }: Props) {
   }, [taskList, debouncedQuery]);
 
   const handlePress = useCallback(
-    (id: TaskId) => { navigation.navigate("TaskDetail", { taskId: id }); },
+    (id: TaskId) => {
+      navigation.navigate("TaskDetail", { taskId: id });
+    },
     [navigation],
   );
 
   const handleToggle = useCallback(
-    (id: TaskId) => { void toggleTask(id); },
+    (id: TaskId) => {
+      void toggleTask(id);
+    },
     [toggleTask],
   );
 
@@ -86,7 +97,9 @@ export function SearchScreen({ navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
-        emptyTitle={debouncedQuery.trim() ? "No results" : "Start typing to search"}
+        emptyTitle={
+          debouncedQuery.trim() ? "No results" : "Start typing to search"
+        }
       />
     </KeyboardAvoidingView>
   );

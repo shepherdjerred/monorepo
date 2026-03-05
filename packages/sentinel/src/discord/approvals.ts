@@ -164,10 +164,7 @@ export async function handleButtonInteraction(
   }
 }
 
-function isAuthorized(
-  interaction: ButtonInteraction,
-  config: Config,
-): boolean {
+function isAuthorized(interaction: ButtonInteraction, config: Config): boolean {
   // If no discord config or no approver roles configured, allow anyone
   if (config.discord == null || config.discord.approverRoleIds.length === 0) {
     return true;
@@ -179,9 +176,8 @@ function isAuthorized(
   }
 
   // member.roles can be a GuildMemberRoleManager or an array of string IDs
-  const roles = "cache" in member.roles
-    ? [...member.roles.cache.keys()]
-    : (member.roles);
+  const roles =
+    "cache" in member.roles ? [...member.roles.cache.keys()] : member.roles;
 
   return config.discord.approverRoleIds.some((roleId) =>
     roles.includes(roleId),

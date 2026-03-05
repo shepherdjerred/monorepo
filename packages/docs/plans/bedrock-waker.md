@@ -10,11 +10,11 @@ mc-router handles Java Edition (TCP) hostname-based routing with auto-scale up/d
 
 ### Why not existing tools?
 
-| Solution | Java wake | Bedrock wake | K8s support |
-|----------|-----------|-------------|-------------|
-| mc-router | Yes | No (TCP only) | Yes |
-| Gate + LazyGate | Yes | Maybe | No (Docker/Nomad/PufferPanel only) |
-| Velocity + custom plugin | Yes | Possible | DIY |
+| Solution                 | Java wake | Bedrock wake  | K8s support                        |
+| ------------------------ | --------- | ------------- | ---------------------------------- |
+| mc-router                | Yes       | No (TCP only) | Yes                                |
+| Gate + LazyGate          | Yes       | Maybe         | No (Docker/Nomad/PufferPanel only) |
+| Velocity + custom plugin | Yes       | Possible      | DIY                                |
 
 - **mc-router** only handles TCP. Its auto-scale-up is deeply coupled to the Java Edition handshake protocol (reads `serverAddress` from the TCP handshake packet). No REST API for external wake triggers.
 - **Gate proxy** has built-in Bedrock support via Geyser, but its Lite mode (hostname routing) doesn't support Bedrock. **LazyGate** (Gate plugin for sleep/wake) only supports Docker, Nomad, and PufferPanel — no K8s.
@@ -23,6 +23,7 @@ mc-router handles Java Edition (TCP) hostname-based routing with auto-scale up/d
 ### mc-router auto-scale internals
 
 mc-router scales StatefulSets via K8s API:
+
 - `PATCH /apis/apps/v1/namespaces/{ns}/statefulsets/{name}` with `{"spec":{"replicas":1}}`
 - Only triggers on **login** handshakes (not status/ping) to avoid waking on server list refreshes
 - Uses `statefulSet.spec.serviceName` to link Services to StatefulSets
@@ -66,6 +67,7 @@ packages/bedrock-waker/
 ### Bazel BUILD
 
 Follow `packages/birmel/BUILD.bazel` pattern exactly:
+
 - `js_library` with `glob(["src/**/*.ts"])` + deps on `zod` and `@types/bun`
 - `bun_service_image` targeting `ghcr.io/shepherdjerred/bedrock-waker`
 - `eslint_test`, `typecheck_test`, `bun_test`
@@ -93,6 +95,7 @@ Remove the bedrock `extraPorts` entry that currently exposes UDP 19132 as NodePo
 **File:** `packages/homelab/src/cdk8s/src/resources/bedrock-waker/index.ts`
 
 Following the sentinel pattern (`cdk8s-plus-31` constructs):
+
 - `ServiceAccount` with `automountToken: true`
 - `Role` (namespace-scoped to `minecraft-shuxin`) with verbs `["get", "patch"]` on `statefulsets` resource — use `KubeRole`/`KubeRoleBinding` from generated K8s imports (cross-namespace binding)
 - `Deployment` (1 replica) with the bedrock-waker image, env vars, UDP port 19132

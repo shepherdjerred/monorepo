@@ -1,7 +1,4 @@
-import {
-  listAnnotations,
-  createAnnotation,
-} from "#lib/grafana/annotations.ts";
+import { listAnnotations, createAnnotation } from "#lib/grafana/annotations.ts";
 import { parseTimeRange } from "#lib/grafana/time.ts";
 import type { Annotation } from "#lib/grafana/types.ts";
 import { formatJson } from "#lib/output/formatter.ts";

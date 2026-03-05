@@ -5,10 +5,7 @@ export default [
     tsconfigRootDir: import.meta.dirname,
     reactNative: true,
     projectService: {
-      allowDefaultProject: [
-        "src/domain/*.test.ts",
-        "src/lib/*.test.ts",
-      ],
+      allowDefaultProject: ["src/domain/*.test.ts", "src/lib/*.test.ts"],
     },
     ignores: [
       "**/generated/**/*",

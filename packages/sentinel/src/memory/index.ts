@@ -55,4 +55,3 @@ export async function ensureMemoryDirs(agentNames: string[]): Promise<void> {
   }
   log.info({ agents: agentNames }, "ensured memory directories");
 }
-

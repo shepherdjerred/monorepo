@@ -30,11 +30,9 @@ export function createSentinelDeployment(chart: Chart) {
     "sentinel-view-role",
     "view",
   );
-  const binding = new ClusterRoleBinding(
-    chart,
-    "sentinel-view-binding",
-    { role: viewRole },
-  );
+  const binding = new ClusterRoleBinding(chart, "sentinel-view-binding", {
+    role: viewRole,
+  });
   binding.addSubjects(serviceAccount);
 
   const deployment = new Deployment(chart, "sentinel", {

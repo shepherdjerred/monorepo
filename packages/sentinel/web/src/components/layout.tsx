@@ -24,7 +24,11 @@ const navItems: {
   { page: { name: "jobs" }, label: "Jobs", icon: ListTodo },
   { page: { name: "approvals" }, label: "Approvals", icon: ShieldCheck },
   { page: { name: "sessions" }, label: "Sessions", icon: Activity },
-  { page: { name: "conversation" }, label: "Conversations", icon: MessageSquare },
+  {
+    page: { name: "conversation" },
+    label: "Conversations",
+    icon: MessageSquare,
+  },
 ];
 
 export function Layout({ currentPage, onNavigate, children }: LayoutProps) {
@@ -43,7 +47,9 @@ export function Layout({ currentPage, onNavigate, children }: LayoutProps) {
             return (
               <button
                 key={item.page.name}
-                onClick={() => { onNavigate(item.page); }}
+                onClick={() => {
+                  onNavigate(item.page);
+                }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive

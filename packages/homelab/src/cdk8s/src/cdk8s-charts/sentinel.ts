@@ -37,7 +37,9 @@ export function createSentinelChart(app: App) {
             },
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "cloudflare-tunnel" },
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
               },
             },
           ],

@@ -4,7 +4,11 @@ export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     projectService: {
-      allowDefaultProject: ["eslint.config.ts", "local.ts", "src/rules/*.test.ts"],
+      allowDefaultProject: [
+        "eslint.config.ts",
+        "local.ts",
+        "src/rules/*.test.ts",
+      ],
     },
     ignores: ["dist/**/*"],
   }),

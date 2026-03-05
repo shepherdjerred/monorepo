@@ -4,9 +4,7 @@ export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     projectService: {
-      allowDefaultProject: [
-        "src/__tests__/*.test.ts",
-      ],
+      allowDefaultProject: ["src/__tests__/*.test.ts"],
     },
     ignores: [
       "**/dist/**/*",

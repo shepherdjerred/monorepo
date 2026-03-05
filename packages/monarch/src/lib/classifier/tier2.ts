@@ -10,8 +10,24 @@ import { formatCategoryDefinitions } from "../knowledge/definitions.ts";
 import { log } from "../logger.ts";
 
 function buildSplitChange(
-  txn: { id: string; date: string; merchant: { name: string }; amount: number; category: { name: string; id: string } },
-  classification: { confidence: "high" | "medium" | "low"; splits?: { itemName: string; amount: number; categoryId: string; categoryName: string }[] | undefined },
+  txn: {
+    id: string;
+    date: string;
+    merchant: { name: string };
+    amount: number;
+    category: { name: string; id: string };
+  },
+  classification: {
+    confidence: "high" | "medium" | "low";
+    splits?:
+      | {
+          itemName: string;
+          amount: number;
+          categoryId: string;
+          categoryName: string;
+        }[]
+      | undefined;
+  },
   enrichmentSource: string | undefined,
 ): ProposedChange {
   const splitItems = (classification.splits ?? []).map((s) => ({
@@ -119,7 +135,10 @@ function formatEnrichmentContext(
     parts.push(`Billing periods: ${periods}`);
   }
 
-  if (enrichment.merchantDescription !== undefined && enrichment.merchantDescription !== "") {
+  if (
+    enrichment.merchantDescription !== undefined &&
+    enrichment.merchantDescription !== ""
+  ) {
     parts.push(`Merchant: ${enrichment.merchantDescription}`);
   }
 
@@ -221,7 +240,13 @@ export async function classifyTier2(
           classification.splits.length > 1;
 
         if (isSplit) {
-          changes.push(buildSplitChange(txn, classification, enriched.enrichment?.enrichmentSource));
+          changes.push(
+            buildSplitChange(
+              txn,
+              classification,
+              enriched.enrichment?.enrichmentSource,
+            ),
+          );
         } else if (classification.categoryId !== txn.category.id) {
           changes.push({
             transactionId: txn.id,

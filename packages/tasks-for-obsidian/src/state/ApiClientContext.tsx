@@ -9,11 +9,21 @@ export function ApiClientProvider({ children }: { children: React.ReactNode }) {
   const { apiUrl, authToken } = useSettingsContext();
 
   const client = useMemo(
-    () => (apiUrl ? new TaskNotesClient({ baseUrl: apiUrl, authToken: authToken || undefined }) : null),
+    () =>
+      apiUrl
+        ? new TaskNotesClient({
+            baseUrl: apiUrl,
+            authToken: authToken || undefined,
+          })
+        : null,
     [apiUrl, authToken],
   );
 
-  return <ApiClientContext.Provider value={client}>{children}</ApiClientContext.Provider>;
+  return (
+    <ApiClientContext.Provider value={client}>
+      {children}
+    </ApiClientContext.Provider>
+  );
 }
 
 export function useApiClient(): TaskNotesClient | null {

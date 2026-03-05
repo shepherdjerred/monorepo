@@ -51,7 +51,11 @@ describe("memory integration", () => {
     };
     await writeNote(sharedNote.path, sharedNote);
 
-    const result = await buildMemoryContext(testAgent, "tell me about kubernetes", tempDir);
+    const result = await buildMemoryContext(
+      testAgent,
+      "tell me about kubernetes",
+      tempDir,
+    );
 
     expect(result).toContain("## Agent Memory");
     expect(result).toContain("PRIVATE_MARKER_abc123");
@@ -78,10 +82,15 @@ describe("memory integration", () => {
     };
     await writeNote(sharedNote.path, sharedNote);
 
-    const memoryContext = await buildMemoryContext(testAgent, "tell me about kubernetes", tempDir);
-    const systemPrompt = memoryContext.length > 0
-      ? `${testAgent.systemPrompt}\n\n${memoryContext}`
-      : testAgent.systemPrompt;
+    const memoryContext = await buildMemoryContext(
+      testAgent,
+      "tell me about kubernetes",
+      tempDir,
+    );
+    const systemPrompt =
+      memoryContext.length > 0
+        ? `${testAgent.systemPrompt}\n\n${memoryContext}`
+        : testAgent.systemPrompt;
 
     expect(systemPrompt).toContain("You are a test agent.");
     expect(systemPrompt).toContain("PRIVATE_MARKER_abc123");
@@ -107,10 +116,19 @@ describe("memory integration", () => {
     };
     await writeNote(sharedNote.path, sharedNote);
 
-    const memoryContext = await buildMemoryContext(testAgent, "tell me about kubernetes", tempDir);
+    const memoryContext = await buildMemoryContext(
+      testAgent,
+      "tell me about kubernetes",
+      tempDir,
+    );
     const systemPrompt = `${testAgent.systemPrompt}\n\n${memoryContext}`;
 
-    const logger = createConversationLogger("test-agent", "job-123", "session-456", tempDir);
+    const logger = createConversationLogger(
+      "test-agent",
+      "job-123",
+      "session-456",
+      tempDir,
+    );
 
     await logger.appendEntry({
       timestamp: new Date().toISOString(),
@@ -127,10 +145,12 @@ describe("memory integration", () => {
     const firstLine = raw.split("\n").find((line) => line.trim().length > 0);
     expect(firstLine).toBeDefined();
 
-    const parsed = z.object({
-      content: z.string(),
-      metadata: z.object({ type: z.string() }),
-    }).parse(JSON.parse(firstLine ?? "{}"));
+    const parsed = z
+      .object({
+        content: z.string(),
+        metadata: z.object({ type: z.string() }),
+      })
+      .parse(JSON.parse(firstLine ?? "{}"));
     expect(parsed.content).toContain("PRIVATE_MARKER_abc123");
     expect(parsed.content).toContain("SHARED_MARKER_xyz789");
     expect(parsed.metadata.type).toBe("system_prompt");
@@ -157,12 +177,18 @@ describe("memory integration", () => {
       path: path.join(tempDir, "shared", "k8s-guide.md"),
       title: "Kubernetes Guide",
       tags: ["kubernetes"],
-      body: "kubernetes shared knowledge section with details about pods and services ".repeat(50).trim(),
+      body: "kubernetes shared knowledge section with details about pods and services "
+        .repeat(50)
+        .trim(),
       mtime: new Date(),
     };
     await writeNote(sharedNote.path, sharedNote);
 
-    const result = await buildMemoryContext(testAgent, "tell me about kubernetes", tempDir);
+    const result = await buildMemoryContext(
+      testAgent,
+      "tell me about kubernetes",
+      tempDir,
+    );
 
     const privateSection = "## Agent Memory\n" + largeBody;
     expect(result.length).toBeLessThan(privateSection.length + 4000);

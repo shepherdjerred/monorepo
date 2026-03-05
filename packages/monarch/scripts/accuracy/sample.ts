@@ -71,8 +71,7 @@ for (const t of separated.usaaTransactions) deepPathMap.set(t.id, "usaa");
 for (const t of separated.sclTransactions) deepPathMap.set(t.id, "scl");
 for (const t of separated.appleTransactions) deepPathMap.set(t.id, "apple");
 for (const t of separated.costcoTransactions) deepPathMap.set(t.id, "costco");
-for (const t of separated.regularTransactions)
-  deepPathMap.set(t.id, "regular");
+for (const t of separated.regularTransactions) deepPathMap.set(t.id, "regular");
 
 // Fisher-Yates shuffle with seeded PRNG
 function seededRandom(s: number): () => number {
@@ -91,7 +90,9 @@ for (let i = shuffled.length - 1; i > 0; i--) {
 }
 
 const sampled = shuffled.slice(0, count);
-console.log(`Sampled ${String(sampled.length)} transactions (seed=${String(seed)})`);
+console.log(
+  `Sampled ${String(sampled.length)} transactions (seed=${String(seed)})`,
+);
 
 // Fetch categories from Monarch API
 const monarchToken = Bun.env["MONARCH_TOKEN"];

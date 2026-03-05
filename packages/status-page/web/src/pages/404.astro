@@ -1,0 +1,8 @@
+---
+import Layout from "#src/layouts/Layout.astro";
+import { SiteStatusPage } from "#src/components/site-status-page.tsx";
+---
+
+<Layout title="Status">
+  <SiteStatusPage client:only="react" />
+</Layout>

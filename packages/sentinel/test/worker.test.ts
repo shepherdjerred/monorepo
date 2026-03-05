@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from "bun:test";
-import {
-  setupTestDatabase,
-  testPrisma,
-  cleanupAllTables,
-} from "./helpers.ts";
+import { setupTestDatabase, testPrisma, cleanupAllTables } from "./helpers.ts";
 import { enqueueJob } from "@shepherdjerred/sentinel/queue/index.ts";
 import { resetConfig } from "@shepherdjerred/sentinel/config/index.ts";
 
@@ -89,11 +85,16 @@ void mock.module("@shepherdjerred/sentinel/sse/index.ts", () => ({
 }));
 
 // Import worker after mocks are set up
-const { startWorker, stopWorker } = await import("@shepherdjerred/sentinel/queue/worker.ts");
+const { startWorker, stopWorker } =
+  await import("@shepherdjerred/sentinel/queue/worker.ts");
 
 await setupTestDatabase();
 
-async function waitForJobStatus(jobId: string, statuses: string[], timeoutMs = 5000): Promise<string> {
+async function waitForJobStatus(
+  jobId: string,
+  statuses: string[],
+  timeoutMs = 5000,
+): Promise<string> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const job = await testPrisma.job.findUnique({ where: { id: jobId } });
@@ -102,7 +103,9 @@ async function waitForJobStatus(jobId: string, statuses: string[], timeoutMs = 5
       setTimeout(r, 50);
     });
   }
-  throw new Error(`Job ${jobId} did not reach status ${statuses.join("|")} within ${String(timeoutMs)}ms`);
+  throw new Error(
+    `Job ${jobId} did not reach status ${statuses.join("|")} within ${String(timeoutMs)}ms`,
+  );
 }
 
 beforeEach(async () => {
@@ -127,7 +130,9 @@ describe("worker", () => {
       const status = await waitForJobStatus(job.id, ["completed"], 5000);
       expect(status).toBe("completed");
 
-      const updated = await testPrisma.job.findUnique({ where: { id: job.id } });
+      const updated = await testPrisma.job.findUnique({
+        where: { id: job.id },
+      });
       expect(updated).not.toBeNull();
       expect(updated!.status).toBe("completed");
     } finally {
@@ -149,7 +154,9 @@ describe("worker", () => {
       const status = await waitForJobStatus(job.id, ["failed"], 5000);
       expect(status).toBe("failed");
 
-      const updated = await testPrisma.job.findUnique({ where: { id: job.id } });
+      const updated = await testPrisma.job.findUnique({
+        where: { id: job.id },
+      });
       expect(updated).not.toBeNull();
       expect(updated!.result).toContain("Unknown agent");
     } finally {
@@ -192,7 +199,9 @@ describe("worker", () => {
       await waitForJobStatus(job.id, ["completed"], 5000);
 
       // Verify SSE events were emitted for each assistant turn
-      const progressEvents = sseEvents.filter((e) => e["type"] === "job:progress");
+      const progressEvents = sseEvents.filter(
+        (e) => e["type"] === "job:progress",
+      );
       expect(progressEvents).toHaveLength(3);
       expect(progressEvents[0]!["turnsUsed"]).toBe(1);
       expect(progressEvents[1]!["turnsUsed"]).toBe(2);

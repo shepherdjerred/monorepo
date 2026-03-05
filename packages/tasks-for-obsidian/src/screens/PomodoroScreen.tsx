@@ -28,9 +28,14 @@ export function PomodoroScreen({ route }: Props) {
     ({ item }: { item: Task }) => (
       <Pressable
         style={[styles.taskItem, { borderBottomColor: colors.borderLight }]}
-        onPress={() => { handleStart(item.id); }}
+        onPress={() => {
+          handleStart(item.id);
+        }}
       >
-        <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>
+        <Text
+          style={[typography.body, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {item.title}
         </Text>
       </Pressable>
@@ -69,7 +74,9 @@ export function PomodoroScreen({ route }: Props) {
         ) : (
           <Pressable
             style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={() => { if (initialTaskId) handleStart(initialTaskId); }}
+            onPress={() => {
+              if (initialTaskId) handleStart(initialTaskId);
+            }}
           >
             <Text style={styles.buttonText}>Start</Text>
           </Pressable>
@@ -78,7 +85,13 @@ export function PomodoroScreen({ route }: Props) {
 
       {isActive ? null : (
         <View style={styles.taskListContainer}>
-          <Text style={[typography.label, { color: colors.textSecondary }, styles.taskListHeader]}>
+          <Text
+            style={[
+              typography.label,
+              { color: colors.textSecondary },
+              styles.taskListHeader,
+            ]}
+          >
             Select a task
           </Text>
           <FlatList

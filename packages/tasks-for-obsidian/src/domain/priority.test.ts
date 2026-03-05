@@ -57,7 +57,14 @@ describe("ALL_PRIORITIES", () => {
   });
 
   test("is ordered from highest to none", () => {
-    expect(ALL_PRIORITIES).toEqual(["highest", "high", "medium", "normal", "low", "none"]);
+    expect(ALL_PRIORITIES).toEqual([
+      "highest",
+      "high",
+      "medium",
+      "normal",
+      "low",
+      "none",
+    ]);
   });
 });
 
@@ -71,7 +78,14 @@ describe("comparePriority", () => {
   });
 
   test("returns 0 for same priority", () => {
-    const priorities: Priority[] = ["highest", "high", "medium", "normal", "low", "none"];
+    const priorities: Priority[] = [
+      "highest",
+      "high",
+      "medium",
+      "normal",
+      "low",
+      "none",
+    ];
     for (const p of priorities) {
       expect(comparePriority(p, p)).toBe(0);
     }

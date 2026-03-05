@@ -21,7 +21,10 @@ export function initFeedback(): void {
 
 function haptic(type: HapticFeedbackTypes): void {
   if (!feedbackEnabled) return;
-  trigger(type, { enableVibrateFallback: true, ignoreAndroidSystemSettings: false });
+  trigger(type, {
+    enableVibrateFallback: true,
+    ignoreAndroidSystemSettings: false,
+  });
 }
 
 function playSound(sound: Sound | null): void {

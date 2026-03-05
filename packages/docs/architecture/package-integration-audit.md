@@ -11,17 +11,17 @@ Integration status of newer packages into monorepo infrastructure. Audited 2026-
 
 ## Integration Matrix
 
-| Area | sentinel | tasks-for-obsidian | obsidian-headless | tasknotes-server |
-|---|---|---|---|---|
-| Workspace member | Yes | No (by design) | N/A (no source) | No (by design) |
-| CLAUDE.md | Yes | Yes | N/A | Yes |
-| Package scripts (build/test/lint/typecheck) | Yes | Yes | N/A | Yes |
-| ESLint shared config | Yes | Yes (reactNative) | N/A | Yes |
-| tsconfig extends base | Yes | Yes | N/A | No (standalone) |
-| Dagger CI | Yes (tier 0) | **Missing** | Build only | Yes (tier 0) |
-| Docker/GHCR publish | Yes | N/A (RN app) | Yes | Yes |
-| Lefthook pre-commit | **Missing** | **Missing** | N/A | **Missing** |
-| Knip unused-code | Unclear | Ignored | N/A | **Missing** |
+| Area                                        | sentinel     | tasks-for-obsidian | obsidian-headless | tasknotes-server |
+| ------------------------------------------- | ------------ | ------------------ | ----------------- | ---------------- |
+| Workspace member                            | Yes          | No (by design)     | N/A (no source)   | No (by design)   |
+| CLAUDE.md                                   | Yes          | Yes                | N/A               | Yes              |
+| Package scripts (build/test/lint/typecheck) | Yes          | Yes                | N/A               | Yes              |
+| ESLint shared config                        | Yes          | Yes (reactNative)  | N/A               | Yes              |
+| tsconfig extends base                       | Yes          | Yes                | N/A               | No (standalone)  |
+| Dagger CI                                   | Yes (tier 0) | **Missing**        | Build only        | Yes (tier 0)     |
+| Docker/GHCR publish                         | Yes          | N/A (RN app)       | Yes               | Yes              |
+| Lefthook pre-commit                         | **Missing**  | **Missing**        | N/A               | **Missing**      |
+| Knip unused-code                            | Unclear      | Ignored            | N/A               | **Missing**      |
 
 ## Gaps
 

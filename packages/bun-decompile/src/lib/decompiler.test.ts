@@ -205,10 +205,7 @@ describe("bun-decompile", () => {
   });
 
   describe("without sourcemap", () => {
-    const NO_SOURCEMAP_BINARY = path.join(
-      TEST_DIR,
-      "test-binary-no-sourcemap",
-    );
+    const NO_SOURCEMAP_BINARY = path.join(TEST_DIR, "test-binary-no-sourcemap");
 
     beforeAll(async () => {
       await compileBinary(

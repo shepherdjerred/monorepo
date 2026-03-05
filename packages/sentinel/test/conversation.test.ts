@@ -5,7 +5,10 @@ import { z } from "zod";
 import "./helpers.ts";
 import { createConversationLogger } from "@shepherdjerred/sentinel/history/index.ts";
 
-const TEST_DATA_DIR = path.join(import.meta.dirname, "../data/test-conversations");
+const TEST_DATA_DIR = path.join(
+  import.meta.dirname,
+  "../data/test-conversations",
+);
 
 const ConversationEntrySchema = z.object({
   timestamp: z.string(),
@@ -38,7 +41,12 @@ function parseJsonl(content: string): ParsedEntry[] {
 
 describe("ConversationLogger", () => {
   it("creates a JSONL file with conversation entries", async () => {
-    const logger = createConversationLogger("test-agent", "job-123", "session-abc", TEST_DATA_DIR);
+    const logger = createConversationLogger(
+      "test-agent",
+      "job-123",
+      "session-abc",
+      TEST_DATA_DIR,
+    );
 
     await logger.appendEntry({
       timestamp: "2026-02-24T00:00:00.000Z",
@@ -102,7 +110,12 @@ describe("ConversationLogger", () => {
   });
 
   it("writes summary with costs and token usage", async () => {
-    const logger = createConversationLogger("ci-fixer", "job-456", "session-def", TEST_DATA_DIR);
+    const logger = createConversationLogger(
+      "ci-fixer",
+      "job-456",
+      "session-def",
+      TEST_DATA_DIR,
+    );
 
     await logger.writeSummary({
       totalTurns: 5,
@@ -137,7 +150,12 @@ describe("ConversationLogger", () => {
   });
 
   it("truncates very long content", async () => {
-    const logger = createConversationLogger("test-agent", "job-789", "session-ghi", TEST_DATA_DIR);
+    const logger = createConversationLogger(
+      "test-agent",
+      "job-789",
+      "session-ghi",
+      TEST_DATA_DIR,
+    );
     const longContent = "x".repeat(200_000);
 
     await logger.appendEntry({
@@ -158,7 +176,12 @@ describe("ConversationLogger", () => {
   });
 
   it("creates agent subdirectory automatically", async () => {
-    const logger = createConversationLogger("new-agent", "job-xyz", "session-jkl", TEST_DATA_DIR);
+    const logger = createConversationLogger(
+      "new-agent",
+      "job-xyz",
+      "session-jkl",
+      TEST_DATA_DIR,
+    );
 
     await logger.appendEntry({
       timestamp: "2026-02-24T00:00:00.000Z",
@@ -182,7 +205,10 @@ describe("multi-turn Discord conversation flow", () => {
   it("creates separate conversation files per turn", async () => {
     // Turn 1: User asks a question
     const logger1 = createConversationLogger(
-      "personal-assistant", "job-dm-1", "session-turn1", TEST_DATA_DIR,
+      "personal-assistant",
+      "job-dm-1",
+      "session-turn1",
+      TEST_DATA_DIR,
     );
 
     await logger1.appendEntry({
@@ -209,15 +235,24 @@ describe("multi-turn Discord conversation flow", () => {
     });
 
     await logger1.writeSummary({
-      totalTurns: 1, totalInputTokens: 200, totalOutputTokens: 20,
-      durationMs: 1500, outcome: "completed", totalCostUsd: 0.002,
-      durationApiMs: 1000, modelUsage: {}, permissionDenials: [],
+      totalTurns: 1,
+      totalInputTokens: 200,
+      totalOutputTokens: 20,
+      durationMs: 1500,
+      outcome: "completed",
+      totalCostUsd: 0.002,
+      durationApiMs: 1000,
+      modelUsage: {},
+      permissionDenials: [],
       systemPrompt: "You are a personal assistant.",
     });
 
     // Turn 2: User follows up (would use resume in real flow)
     const logger2 = createConversationLogger(
-      "personal-assistant", "job-dm-2", "session-turn2", TEST_DATA_DIR,
+      "personal-assistant",
+      "job-dm-2",
+      "session-turn2",
+      TEST_DATA_DIR,
     );
 
     await logger2.appendEntry({

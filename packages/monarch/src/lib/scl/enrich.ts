@@ -26,8 +26,7 @@ export async function enrichScl(
   for (const match of matched) {
     const txn = match.transaction;
     const halfAmount = Math.round((Math.abs(txn.amount) * 100) / 2) / 100;
-    const remainder =
-      Math.round(Math.abs(txn.amount) * 100) / 100 - halfAmount;
+    const remainder = Math.round(Math.abs(txn.amount) * 100) / 100 - halfAmount;
 
     enrichments.set(txn.id, {
       billingPeriods: [

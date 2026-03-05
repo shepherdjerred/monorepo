@@ -49,8 +49,9 @@ export function statsToKBEntries(
   for (const stat of stats.values()) {
     if (stat.totalCount < minTransactions) continue;
 
-    const sortedCategories = [...stat.categories.entries()]
-      .toSorted((a, b) => b[1].count - a[1].count);
+    const sortedCategories = [...stat.categories.entries()].toSorted(
+      (a, b) => b[1].count - a[1].count,
+    );
 
     const topCategory = sortedCategories[0];
     if (!topCategory) continue;

@@ -19,9 +19,7 @@ function formatIssue(issue: BugsinkIssue): string {
   lines.push(
     `  - Events: ${String(issue.digested_event_count)} digested, ${String(issue.stored_event_count)} stored`,
   );
-  lines.push(
-    `  - Last seen: ${new Date(issue.last_seen).toLocaleString()}`,
-  );
+  lines.push(`  - Last seen: ${new Date(issue.last_seen).toLocaleString()}`);
 
   return lines.join("\n");
 }
@@ -37,9 +35,7 @@ function formatIssuesMarkdown(issues: BugsinkIssue[]): string {
     return lines.join("\n");
   }
 
-  const unresolved = issues.filter(
-    (i) => !i.is_resolved && !i.is_muted,
-  );
+  const unresolved = issues.filter((i) => !i.is_resolved && !i.is_muted);
   const resolved = issues.filter((i) => i.is_resolved);
   const muted = issues.filter((i) => i.is_muted);
 

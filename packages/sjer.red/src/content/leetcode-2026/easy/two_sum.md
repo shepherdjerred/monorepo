@@ -16,34 +16,34 @@ The drawback of this approach is that it requires `n` extra space to store a sor
 
 ```typescript
 function twoSum(nums: number[], target: number): number[] {
-    const copy = [...nums];
-    nums.sort((l, r) => l - r);
-    let left = 0;
-    let right = nums.length - 1;
-    while (true) {
-        if (left === right) {
-            throw "no solution";
-        }
-        let lv = nums[left];
-        let rv = nums[right];
-        let total = lv + rv
-
-        if (total > target){
-            right -= 1;
-            continue;
-        } else if (total < target) {
-            left += 1;
-            continue;
-        } else if (total === target) {
-            const l_i = copy.findIndex((v) => v === lv)
-            copy[l_i] = -1;
-            const r_i = copy.findIndex((v) => v === rv)
-            return [l_i, r_i]
-        }
-
-        throw "not possible";
+  const copy = [...nums];
+  nums.sort((l, r) => l - r);
+  let left = 0;
+  let right = nums.length - 1;
+  while (true) {
+    if (left === right) {
+      throw "no solution";
     }
-};
+    let lv = nums[left];
+    let rv = nums[right];
+    let total = lv + rv;
+
+    if (total > target) {
+      right -= 1;
+      continue;
+    } else if (total < target) {
+      left += 1;
+      continue;
+    } else if (total === target) {
+      const l_i = copy.findIndex((v) => v === lv);
+      copy[l_i] = -1;
+      const r_i = copy.findIndex((v) => v === rv);
+      return [l_i, r_i];
+    }
+
+    throw "not possible";
+  }
+}
 ```
 
 Talking to ChatGPT, my implementation is actually rather subpar. It noted that I could easily maintain the index by using a tuple. Also `while true` is not ideal. Here was it's approach

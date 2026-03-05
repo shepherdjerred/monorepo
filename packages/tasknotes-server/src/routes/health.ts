@@ -10,8 +10,7 @@ export const healthRoutes = new Hono();
 healthRoutes.get("/api/health", (c) => {
   const authHeader = c.req.header("Authorization");
   const token = authHeader?.replace("Bearer ", "");
-  const authenticated =
-    config.authToken === "" || token === config.authToken;
+  const authenticated = config.authToken === "" || token === config.authToken;
 
   return c.json({
     status: "ok",

@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import NetInfo from "@react-native-community/netinfo";
 
 import { useApiClient } from "./ApiClientContext";
@@ -69,15 +77,22 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         void syncNow();
       }
     });
-    return () => { unsubscribe(); };
+    return () => {
+      unsubscribe();
+    };
   }, [checkHealth, syncNow]);
 
   // Poll health endpoint
   useEffect(() => {
     if (!client) return;
     void checkHealth();
-    const interval = setInterval(() => void checkHealth(), HEALTH_POLL_INTERVAL);
-    return () => { clearInterval(interval); };
+    const interval = setInterval(
+      () => void checkHealth(),
+      HEALTH_POLL_INTERVAL,
+    );
+    return () => {
+      clearInterval(interval);
+    };
   }, [client, checkHealth]);
 
   const value = useMemo<SyncContextValue>(
@@ -96,6 +111,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
 export function useSyncContext(): SyncContextValue {
   const context = useContext(SyncContext);
-  if (!context) throw new Error("useSyncContext must be used within SyncProvider");
+  if (!context)
+    throw new Error("useSyncContext must be used within SyncProvider");
   return context;
 }

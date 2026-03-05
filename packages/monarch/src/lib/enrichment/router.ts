@@ -25,7 +25,12 @@ export function assignTier(
   const kb = knowledgeBase.get(merchantLower);
 
   // Tier 1: Single-category merchant in KB with high confidence, no conflicting enrichment
-  if (kb && !kb.multiCategory && kb.defaultCategory && kb.confidence === "high") {
+  if (
+    kb &&
+    !kb.multiCategory &&
+    kb.defaultCategory &&
+    kb.confidence === "high"
+  ) {
     // If enrichment suggests something different, bump to tier 2
     if (enrichment) {
       return 2;

@@ -16,7 +16,9 @@ if (!(await datasetFile.exists())) {
 const dataset: Dataset = (await datasetFile.json()) as Dataset;
 
 if (dataset.labels.length === 0) {
-  console.error("No labels found in dataset.json. Run label-server.ts and label some transactions first.");
+  console.error(
+    "No labels found in dataset.json. Run label-server.ts and label some transactions first.",
+  );
   process.exit(1);
 }
 
@@ -85,18 +87,14 @@ function pct(n: number, d: number): string {
   return `${((n / d) * 100).toFixed(1)}%`;
 }
 
-console.log(
-  `\n${c.bold}=== Monarch Accuracy Report ===${c.reset}\n`,
-);
+console.log(`\n${c.bold}=== Monarch Accuracy Report ===${c.reset}\n`);
 console.log(`Labeled transactions: ${c.bold}${String(total)}${c.reset}`);
 console.log(
   `Tool output changes:  ${c.bold}${String(toolChanges.length)}${c.reset}`,
 );
 
 // Overall accuracy
-console.log(
-  `\n${c.bold}Overall Accuracy${c.reset}`,
-);
+console.log(`\n${c.bold}Overall Accuracy${c.reset}`);
 console.log(
   `  Tool accuracy:    ${c.bold}${pct(correct, total)}${c.reset} (${String(correct)}/${String(total)})`,
 );
@@ -110,9 +108,7 @@ console.log(
 );
 
 // By confidence
-console.log(
-  `\n${c.bold}Accuracy by Confidence${c.reset}`,
-);
+console.log(`\n${c.bold}Accuracy by Confidence${c.reset}`);
 const confidenceBuckets = ["high", "medium", "low", "agreed"] as const;
 for (const conf of confidenceBuckets) {
   const bucket = results.filter((r) => r.toolConfidence === conf);
@@ -124,9 +120,7 @@ for (const conf of confidenceBuckets) {
 }
 
 // By deep path
-console.log(
-  `\n${c.bold}Accuracy by Deep Path${c.reset}`,
-);
+console.log(`\n${c.bold}Accuracy by Deep Path${c.reset}`);
 const deepPaths = [...new Set(results.map((r) => r.deepPath))].sort();
 for (const dp of deepPaths) {
   const bucket = results.filter((r) => r.deepPath === dp);
@@ -144,23 +138,19 @@ const toolProposedChange = changesInLabeled;
 const truePositiveChanges = toolProposedChange.filter(
   (r) => r.isCorrect && !r.monarchWasCorrect,
 );
-const changePrecision = toolProposedChange.length > 0
-  ? toolProposedChange.filter((r) => r.isCorrect).length /
-    toolProposedChange.length
-  : 0;
-const changeRecall = neededChange.length > 0
-  ? truePositiveChanges.length / neededChange.length
-  : 0;
+const changePrecision =
+  toolProposedChange.length > 0
+    ? toolProposedChange.filter((r) => r.isCorrect).length /
+      toolProposedChange.length
+    : 0;
+const changeRecall =
+  neededChange.length > 0
+    ? truePositiveChanges.length / neededChange.length
+    : 0;
 
-console.log(
-  `\n${c.bold}Change Analysis${c.reset}`,
-);
-console.log(
-  `  Changes proposed: ${String(toolProposedChange.length)}`,
-);
-console.log(
-  `  Changes needed:   ${String(neededChange.length)}`,
-);
+console.log(`\n${c.bold}Change Analysis${c.reset}`);
+console.log(`  Changes proposed: ${String(toolProposedChange.length)}`);
+console.log(`  Changes needed:   ${String(neededChange.length)}`);
 console.log(
   `  Change precision: ${c.bold}${(changePrecision * 100).toFixed(1)}%${c.reset} (when tool changes, is it right?)`,
 );
@@ -169,9 +159,7 @@ console.log(
 );
 
 // By tier
-console.log(
-  `\n${c.bold}Accuracy by Tier${c.reset}`,
-);
+console.log(`\n${c.bold}Accuracy by Tier${c.reset}`);
 const tiers = [1, 2, 3, undefined] as const;
 for (const tier of tiers) {
   const tierChanges = toolChanges.filter((ch) => ch.tier === tier);
@@ -187,9 +175,7 @@ for (const tier of tiers) {
 }
 
 // By enrichment source
-console.log(
-  `\n${c.bold}Accuracy by Enrichment Source${c.reset}`,
-);
+console.log(`\n${c.bold}Accuracy by Enrichment Source${c.reset}`);
 const enrichmentSources = [
   ...new Set(
     toolChanges
@@ -221,16 +207,13 @@ const splitTP = labelsWithSplit.filter((l) =>
 ).length;
 const splitFP = [...toolSplits].filter(
   (id) =>
-    labeledIds.has(id) &&
-    !labelsWithSplit.some((l) => l.transactionId === id),
+    labeledIds.has(id) && !labelsWithSplit.some((l) => l.transactionId === id),
 ).length;
 const splitFN = labelsWithSplit.filter(
   (l) => !toolSplits.has(l.transactionId),
 ).length;
 
-console.log(
-  `\n${c.bold}Split Detection${c.reset}`,
-);
+console.log(`\n${c.bold}Split Detection${c.reset}`);
 console.log(`  Ground truth splits: ${String(labelsWithSplit.length)}`);
 console.log(`  Tool proposed splits: ${String(toolSplits.size)}`);
 console.log(
@@ -238,9 +221,7 @@ console.log(
 );
 
 // Confusion matrix (top misclassifications)
-console.log(
-  `\n${c.bold}Top Misclassifications${c.reset}`,
-);
+console.log(`\n${c.bold}Top Misclassifications${c.reset}`);
 const misses = results.filter((r) => !r.isCorrect);
 const confusionCounts = new Map<string, number>();
 for (const m of misses) {

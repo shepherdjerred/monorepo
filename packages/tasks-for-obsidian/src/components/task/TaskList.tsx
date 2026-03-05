@@ -11,7 +11,11 @@ import { typography } from "../../styles/typography";
 import { groupBy } from "../../lib/utils";
 import { TaskRow } from "./TaskRow";
 import { EmptyState } from "../common/EmptyState";
-import { LeftSwipeActions, RightSwipeActions, ACTION_WIDTH } from "./SwipeActions";
+import {
+  LeftSwipeActions,
+  RightSwipeActions,
+  ACTION_WIDTH,
+} from "./SwipeActions";
 
 type TaskListProps = {
   tasks: Task[];
@@ -55,12 +59,20 @@ export function TaskList({
     ({ item }: { item: Task }) => {
       let swipeableRef: SwipeableMethods | null = null;
 
-      const renderLeft = (progress: SharedValue<number>, _translation: SharedValue<number>, methods: SwipeableMethods) => {
+      const renderLeft = (
+        progress: SharedValue<number>,
+        _translation: SharedValue<number>,
+        methods: SwipeableMethods,
+      ) => {
         swipeableRef = methods;
         return <LeftSwipeActions progress={progress} />;
       };
 
-      const renderRight = (progress: SharedValue<number>, _translation: SharedValue<number>, methods: SwipeableMethods) => {
+      const renderRight = (
+        progress: SharedValue<number>,
+        _translation: SharedValue<number>,
+        methods: SwipeableMethods,
+      ) => {
         swipeableRef = methods;
         return <RightSwipeActions progress={progress} />;
       };
@@ -91,11 +103,29 @@ export function TaskList({
         >
           <TaskRow
             task={item}
-            onPress={() => { onTaskPress(item.id); }}
-            onToggle={() => { onTaskToggle(item.id); }}
-            onEdit={onTaskEdit ? () => { onTaskEdit(item.id); } : undefined}
-            onDelete={() => { onTaskDelete(item.id); }}
-            onSetPriority={onTaskSetPriority ? (priority) => { onTaskSetPriority(item.id, priority); } : undefined}
+            onPress={() => {
+              onTaskPress(item.id);
+            }}
+            onToggle={() => {
+              onTaskToggle(item.id);
+            }}
+            onEdit={
+              onTaskEdit
+                ? () => {
+                    onTaskEdit(item.id);
+                  }
+                : undefined
+            }
+            onDelete={() => {
+              onTaskDelete(item.id);
+            }}
+            onSetPriority={
+              onTaskSetPriority
+                ? (priority) => {
+                    onTaskSetPriority(item.id, priority);
+                  }
+                : undefined
+            }
           />
         </ReanimatedSwipeable>
       );
@@ -107,7 +137,9 @@ export function TaskList({
     ({ section }: { section: { title: string } }) => {
       if (!section.title) return null;
       return (
-        <View style={[styles.sectionHeader, { backgroundColor: colors.surface }]}>
+        <View
+          style={[styles.sectionHeader, { backgroundColor: colors.surface }]}
+        >
           <Text style={[typography.label, { color: colors.textSecondary }]}>
             {section.title}
           </Text>

@@ -31,7 +31,9 @@ function formatReleasesMarkdown(releases: BugsinkReleaseListItem[]): string {
     lines.push(`  - Project: ${String(release.project)}`);
 
     if (release.date_released != null) {
-      lines.push(`  - Released: ${new Date(release.date_released).toLocaleString()}`);
+      lines.push(
+        `  - Released: ${new Date(release.date_released).toLocaleString()}`,
+      );
     }
 
     lines.push("");
@@ -66,7 +68,9 @@ function formatReleaseDetails(release: BugsinkReleaseDetail): string {
   lines.push(`- **Sort Epoch:** ${String(release.sort_epoch)}`);
 
   if (release.date_released != null) {
-    lines.push(`- **Released:** ${new Date(release.date_released).toLocaleString()}`);
+    lines.push(
+      `- **Released:** ${new Date(release.date_released).toLocaleString()}`,
+    );
   }
 
   return lines.join("\n");

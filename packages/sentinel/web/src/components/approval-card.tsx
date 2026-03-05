@@ -108,9 +108,7 @@ export function ApprovalCard({ approval, onViewSession }: ApprovalCardProps) {
               <Badge variant={statusVariant(approval.status)}>
                 {approval.status}
               </Badge>
-              <span className="text-sm text-zinc-500">
-                {approval.agent}
-              </span>
+              <span className="text-sm text-zinc-500">{approval.agent}</span>
               <span className="text-xs text-zinc-400">
                 {formatTimestamp(approval.createdAt)}
               </span>
@@ -119,10 +117,16 @@ export function ApprovalCard({ approval, onViewSession }: ApprovalCardProps) {
             <p className="mb-1 text-sm font-semibold">{approval.toolName}</p>
 
             <button
-              onClick={() => { setShowInput(!showInput); }}
+              onClick={() => {
+                setShowInput(!showInput);
+              }}
               className="mb-1 flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
             >
-              {showInput ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+              {showInput ? (
+                <ChevronDown size={10} />
+              ) : (
+                <ChevronRight size={10} />
+              )}
               Tool Input ({formattedInput.length} chars)
             </button>
 
@@ -139,9 +143,7 @@ export function ApprovalCard({ approval, onViewSession }: ApprovalCardProps) {
                 </span>
               ) : (
                 <>
-                  <span>
-                    Decided by {approval.decidedBy ?? "unknown"}
-                  </span>
+                  <span>Decided by {approval.decidedBy ?? "unknown"}</span>
                   {approval.decidedAt != null && (
                     <span>at {formatTimestamp(approval.decidedAt)}</span>
                   )}

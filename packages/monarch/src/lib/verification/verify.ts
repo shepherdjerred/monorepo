@@ -1,6 +1,9 @@
 import type { ProposedChange } from "../classifier/types.ts";
 import type { EnrichedTransaction } from "../enrichment/types.ts";
-import type { EnrichmentSuggestion, MerchantKnowledge } from "../knowledge/types.ts";
+import type {
+  EnrichmentSuggestion,
+  MerchantKnowledge,
+} from "../knowledge/types.ts";
 import { log } from "../logger.ts";
 
 export type VerificationResult = {
@@ -33,9 +36,7 @@ export function verifyClassifications(
     const issues: string[] = [];
 
     // Cross-transaction consistency: same merchant should generally get same category
-    const samemerchant = merchantChanges.get(
-      change.merchantName.toLowerCase(),
-    );
+    const samemerchant = merchantChanges.get(change.merchantName.toLowerCase());
     if (samemerchant && samemerchant.length > 1) {
       const categories = new Set(samemerchant.map((c) => c.proposedCategory));
       if (categories.size > 1 && change.type !== "split") {
@@ -146,7 +147,8 @@ function suggestHintsForLowConfidence(
       totalAmount: stats.totalAmount,
       reason: `Classified with low/medium confidence ${String(lowCount)} times. Adding a hint would improve accuracy.`,
       suggestedAction: `Add a line to hints.txt: "- ${merchant} is a [type] -- categorize as [category]."`,
-      impact: stats.totalAmount > 500 ? "high" : stats.count > 3 ? "medium" : "low",
+      impact:
+        stats.totalAmount > 500 ? "high" : stats.count > 3 ? "medium" : "low",
     });
   }
 
@@ -159,7 +161,8 @@ function suggestDeepPathEnrichments(
   const suggestions: EnrichmentSuggestion[] = [];
 
   for (const [merchant, stats] of merchantStats) {
-    if (stats.hasEnrichment || stats.count < 3 || stats.totalAmount < 200) continue;
+    if (stats.hasEnrichment || stats.count < 3 || stats.totalAmount < 200)
+      continue;
     if (stats.deepPath === "regular") continue;
 
     suggestions.push({
@@ -180,7 +183,10 @@ function suggestKBAdditions(
   enrichedTransactions: EnrichedTransaction[],
 ): EnrichmentSuggestion[] {
   const suggestions: EnrichmentSuggestion[] = [];
-  const tier3Merchants = new Map<string, { count: number; totalAmount: number }>();
+  const tier3Merchants = new Map<
+    string,
+    { count: number; totalAmount: number }
+  >();
 
   for (const enriched of enrichedTransactions) {
     if (enriched.tier !== 3) continue;
@@ -229,5 +235,7 @@ function generateSuggestions(
 
   // Sort by impact
   const impactOrder = { high: 0, medium: 1, low: 2 };
-  return suggestions.toSorted((a, b) => impactOrder[a.impact] - impactOrder[b.impact]);
+  return suggestions.toSorted(
+    (a, b) => impactOrder[a.impact] - impactOrder[b.impact],
+  );
 }

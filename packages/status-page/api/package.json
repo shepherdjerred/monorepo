@@ -1,0 +1,26 @@
+{
+  "name": "@shepherdjerred/status-page-api",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bunx prisma db push --skip-generate && bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "lint": "prisma generate && bunx eslint . --max-warnings=0",
+    "build": "true"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "hono": "^4",
+    "zod": "^3.24"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "eslint": "^9.39.2",
+    "jiti": "^2.6.1",
+    "prisma": "^6.0.0",
+    "typescript": "^5.8",
+    "typescript-eslint": "^8.53.1"
+  }
+}

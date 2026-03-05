@@ -16,10 +16,7 @@ import {
   stopCronJobs,
   recoverMissedJobs,
 } from "./adapters/cron.ts";
-import {
-  startWebhookServer,
-  stopWebhookServer,
-} from "./adapters/webhook.ts";
+import { startWebhookServer, stopWebhookServer } from "./adapters/webhook.ts";
 import { startDiscord, stopDiscord } from "./discord/client.ts";
 
 let shuttingDown = false;

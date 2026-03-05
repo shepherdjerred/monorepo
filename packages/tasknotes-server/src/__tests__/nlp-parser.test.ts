@@ -59,7 +59,9 @@ describe("parseTaskInput", () => {
   });
 
   test("extracts multiple metadata", () => {
-    const result = parseTaskInput("Write tests !high p:Backend @work #urgent today");
+    const result = parseTaskInput(
+      "Write tests !high p:Backend @work #urgent today",
+    );
     expect(result.title).toBe("Write tests");
     expect(result.priority).toBe("high");
     expect(result.projects).toEqual(["Backend"]);

@@ -59,7 +59,8 @@ function formatLogsResult(result: PromQueryResult): string {
       const bodyValues = bodyIdx === -1 ? undefined : data.values[bodyIdx];
 
       // Get labels from the field schema
-      const labelsField = labelsIdx === -1 ? undefined : schema.fields[labelsIdx];
+      const labelsField =
+        labelsIdx === -1 ? undefined : schema.fields[labelsIdx];
       const labelsStr =
         labelsField?.labels == null
           ? ""
@@ -84,7 +85,10 @@ function formatLogsResult(result: PromQueryResult): string {
           body = "";
         } else if (typeof rawBody === "string") {
           body = rawBody;
-        } else if (typeof rawBody === "number" || typeof rawBody === "boolean") {
+        } else if (
+          typeof rawBody === "number" ||
+          typeof rawBody === "boolean"
+        ) {
           body = String(rawBody);
         } else {
           body = JSON.stringify(rawBody);

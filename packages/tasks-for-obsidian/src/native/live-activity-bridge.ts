@@ -22,7 +22,11 @@ export async function startTimeTracking(
 ): Promise<string | undefined> {
   const bridge = getBridge();
   if (!bridge) return undefined;
-  const result: unknown = await bridge.startTimeTracking(taskId, title, project ?? null);
+  const result: unknown = await bridge.startTimeTracking(
+    taskId,
+    title,
+    project ?? null,
+  );
   return typeof result === "string" ? result : undefined;
 }
 
@@ -35,9 +39,7 @@ export async function updateTimeTracking(
   await bridge.updateTimeTracking(elapsedSeconds, isPaused);
 }
 
-export async function stopTimeTracking(
-  elapsedSeconds: number,
-): Promise<void> {
+export async function stopTimeTracking(elapsedSeconds: number): Promise<void> {
   const bridge = getBridge();
   if (!bridge) return;
   await bridge.stopTimeTracking(elapsedSeconds);

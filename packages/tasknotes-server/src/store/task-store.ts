@@ -25,7 +25,12 @@ function toISODate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-const ACTIVE_STATUSES = new Set<string>(["open", "in-progress", "waiting", "delegated"]);
+const ACTIVE_STATUSES = new Set<string>([
+  "open",
+  "in-progress",
+  "waiting",
+  "delegated",
+]);
 const COMPLETED_STATUSES = new Set<string>(["done", "cancelled"]);
 
 export class TaskStore {
@@ -83,9 +88,8 @@ export class TaskStore {
 
     const absPath = taskFilePath(this.vaultPath, this.tasksDir, task);
     const filename = path.basename(absPath);
-    const relativePath = this.tasksDir === ""
-      ? filename
-      : path.join(this.tasksDir, filename);
+    const relativePath =
+      this.tasksDir === "" ? filename : path.join(this.tasksDir, filename);
 
     const storedTask: Task = { ...task, path: relativePath };
     await writeTaskFile(absPath, storedTask);
@@ -93,7 +97,10 @@ export class TaskStore {
     return storedTask;
   }
 
-  async update(id: string, request: UpdateTaskRequest): Promise<Task | undefined> {
+  async update(
+    id: string,
+    request: UpdateTaskRequest,
+  ): Promise<Task | undefined> {
     const existing = this.tasks.get(id);
     if (existing === undefined) return undefined;
 
@@ -104,11 +111,23 @@ export class TaskStore {
       status: request.status ?? existing.status,
       priority: request.priority ?? existing.priority,
       due: request.due === null ? undefined : (request.due ?? existing.due),
-      scheduled: request.scheduled === null ? undefined : (request.scheduled ?? existing.scheduled),
-      contexts: request.contexts === undefined ? existing.contexts : [...request.contexts],
-      projects: request.projects === undefined ? existing.projects : [...request.projects],
+      scheduled:
+        request.scheduled === null
+          ? undefined
+          : (request.scheduled ?? existing.scheduled),
+      contexts:
+        request.contexts === undefined
+          ? existing.contexts
+          : [...request.contexts],
+      projects:
+        request.projects === undefined
+          ? existing.projects
+          : [...request.projects],
       tags: request.tags === undefined ? existing.tags : [...request.tags],
-      recurrence: request.recurrence === null ? undefined : (request.recurrence ?? existing.recurrence),
+      recurrence:
+        request.recurrence === null
+          ? undefined
+          : (request.recurrence ?? existing.recurrence),
     };
 
     const filePath = path.resolve(this.vaultPath, existing.path);
@@ -178,14 +197,14 @@ export class TaskStore {
 
     if (filter.tags !== undefined && filter.tags.length > 0) {
       const tagSet = new Set(filter.tags);
-      results = results.filter((t) =>
-        t.tags.some((tag) => tagSet.has(tag)),
-      );
+      results = results.filter((t) => t.tags.some((tag) => tagSet.has(tag)));
     }
 
     if (filter.dueBefore !== undefined) {
       const dueBefore = filter.dueBefore;
-      results = results.filter((t) => t.due !== undefined && t.due <= dueBefore);
+      results = results.filter(
+        (t) => t.due !== undefined && t.due <= dueBefore,
+      );
     }
 
     if (filter.dueAfter !== undefined) {
@@ -229,7 +248,12 @@ export class TaskStore {
       if (ACTIVE_STATUSES.has(task.status) && !task.archived) active++;
       if (task.totalTrackedTime > 0) withTimeTracking++;
 
-      if (task.due !== undefined && task.due < today && !COMPLETED_STATUSES.has(task.status) && !task.archived) {
+      if (
+        task.due !== undefined &&
+        task.due < today &&
+        !COMPLETED_STATUSES.has(task.status) &&
+        !task.archived
+      ) {
         overdue++;
       }
     }

@@ -12,9 +12,7 @@ const MerchantKnowledgeSchema = z.object({
   merchantType: z.string(),
   description: z.string(),
   multiCategory: z.boolean(),
-  defaultCategory: z
-    .object({ id: z.string(), name: z.string() })
-    .optional(),
+  defaultCategory: z.object({ id: z.string(), name: z.string() }).optional(),
   categoryHistory: z.array(
     z.object({ categoryName: z.string(), count: z.number() }),
   ),
@@ -89,7 +87,10 @@ function parseHintLine(content: string): ParsedHint | undefined {
   if (separatorIndex === -1) return undefined;
 
   const leftPart = content.slice(0, separatorIndex).trim();
-  const rightPart = content.slice(separatorIndex).replace(/^[\s—–-]+/, "").trim();
+  const rightPart = content
+    .slice(separatorIndex)
+    .replace(/^[\s—–-]+/, "")
+    .trim();
 
   // Parse left side: "X is/are (a) Y"
   // Use indexOf to find the verb boundary instead of regex with overlapping quantifiers

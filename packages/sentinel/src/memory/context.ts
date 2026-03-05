@@ -159,10 +159,7 @@ export async function buildMemoryContext(
       sections.push(`## Agent Memory\n${privateNote.body}`);
     }
   } catch {
-    log.debug(
-      { agent: agentDef.name },
-      "no private MEMORY.md found",
-    );
+    log.debug({ agent: agentDef.name }, "no private MEMORY.md found");
   }
 
   // Search FTS5 index for relevant knowledge
@@ -176,7 +173,9 @@ export async function buildMemoryContext(
       if (results.length > 0) {
         const sectionHeader = "## Relevant Knowledge\n";
         const budgetRemaining =
-          TOTAL_BUDGET - sections.reduce((sum, s) => sum + s.length, 0) - sectionHeader.length;
+          TOTAL_BUDGET -
+          sections.reduce((sum, s) => sum + s.length, 0) -
+          sectionHeader.length;
         const snippets = buildSnippets(results, budgetRemaining);
 
         if (snippets.length > 0) {

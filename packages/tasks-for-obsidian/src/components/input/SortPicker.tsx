@@ -1,5 +1,9 @@
 import { ActionSheetIOS, Platform } from "react-native";
-import type { SortConfig, SortField, SortDirection } from "../../domain/filters";
+import type {
+  SortConfig,
+  SortField,
+  SortDirection,
+} from "../../domain/filters";
 
 const SORT_OPTIONS: { field: SortField; label: string }[] = [
   { field: "dueDate", label: "Due Date" },
@@ -13,7 +17,8 @@ export function showSortPicker(
 ): void {
   if (Platform.OS === "ios") {
     const options = SORT_OPTIONS.map((o) => {
-      const arrow = sort.field === o.field ? (sort.direction === "asc" ? " ↑" : " ↓") : "";
+      const arrow =
+        sort.field === o.field ? (sort.direction === "asc" ? " ↑" : " ↓") : "";
       return `${o.label}${arrow}`;
     });
     options.push("Cancel");
@@ -29,7 +34,8 @@ export function showSortPicker(
         const selected = SORT_OPTIONS[buttonIndex];
         if (!selected) return;
         if (sort.field === selected.field) {
-          const newDir: SortDirection = sort.direction === "asc" ? "desc" : "asc";
+          const newDir: SortDirection =
+            sort.direction === "asc" ? "desc" : "asc";
           onSortChange({ field: selected.field, direction: newDir });
         } else {
           onSortChange({ field: selected.field, direction: "asc" });

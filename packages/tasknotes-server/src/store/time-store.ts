@@ -4,12 +4,14 @@ import { z } from "zod";
 
 import type { TimeEntry, TimeSummary } from "../domain/types.ts";
 
-const TimeEntryArraySchema = z.array(z.object({
-  taskId: z.string(),
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-}));
+const TimeEntryArraySchema = z.array(
+  z.object({
+    taskId: z.string(),
+    startTime: z.string(),
+    endTime: z.string().optional(),
+    duration: z.number().optional(),
+  }),
+);
 
 export class TimeStore {
   private entries: TimeEntry[] = [];
@@ -51,13 +53,16 @@ export class TimeStore {
   }
 
   async stopTracking(taskId: string): Promise<void> {
-    const hasActive = this.entries.some((e) => e.taskId === taskId && e.endTime === undefined);
+    const hasActive = this.entries.some(
+      (e) => e.taskId === taskId && e.endTime === undefined,
+    );
     if (!hasActive) return;
 
     this.entries = this.entries.map((e) => {
       if (e.taskId === taskId && e.endTime === undefined) {
         const endTime = new Date().toISOString();
-        const duration = new Date(endTime).getTime() - new Date(e.startTime).getTime();
+        const duration =
+          new Date(endTime).getTime() - new Date(e.startTime).getTime();
         return { ...e, endTime, duration };
       }
       return e;
@@ -67,12 +72,18 @@ export class TimeStore {
 
   getTaskEntries(taskId: string): TimeSummary {
     const taskEntries = this.entries.filter((e) => e.taskId === taskId);
-    const totalTime = taskEntries.reduce((sum, e) => sum + (e.duration ?? 0), 0);
+    const totalTime = taskEntries.reduce(
+      (sum, e) => sum + (e.duration ?? 0),
+      0,
+    );
     return { totalTime, entries: taskEntries };
   }
 
   getSummary(): TimeSummary {
-    const totalTime = this.entries.reduce((sum, e) => sum + (e.duration ?? 0), 0);
+    const totalTime = this.entries.reduce(
+      (sum, e) => sum + (e.duration ?? 0),
+      0,
+    );
     return { totalTime, entries: this.entries };
   }
 }

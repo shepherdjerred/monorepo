@@ -19,15 +19,24 @@ const SAFE_COMMANDS: AllowlistEntry[] = [
   { command: ["gh", "api"], description: "GitHub API call" },
   // Kubernetes (read-only)
   { command: ["kubectl", "get"], description: "Get Kubernetes resources" },
-  { command: ["kubectl", "describe"], description: "Describe Kubernetes resources" },
+  {
+    command: ["kubectl", "describe"],
+    description: "Describe Kubernetes resources",
+  },
   { command: ["kubectl", "logs"], description: "View pod logs" },
   { command: ["kubectl", "top"], description: "View resource usage" },
   // ArgoCD (read-only)
-  { command: ["argocd", "app", "list"], description: "List ArgoCD applications" },
+  {
+    command: ["argocd", "app", "list"],
+    description: "List ArgoCD applications",
+  },
   { command: ["argocd", "app", "get"], description: "Get ArgoCD app details" },
   { command: ["argocd", "app", "diff"], description: "Diff ArgoCD app" },
   // Talos (read-only)
-  { command: ["talosctl", "health"], description: "Check Talos cluster health" },
+  {
+    command: ["talosctl", "health"],
+    description: "Check Talos cluster health",
+  },
   { command: ["talosctl", "get"], description: "Get Talos resources" },
   { command: ["talosctl", "dashboard"], description: "View Talos dashboard" },
   // Git (read-only)
@@ -106,37 +115,34 @@ export function parseCommand(cmdString: string): string[] | null {
     }
 
     switch (ch) {
-    case "'": {
-      inSingleQuote = true;
+      case "'": {
+        inSingleQuote = true;
 
-    break;
-    }
-    case '"': {
-      inDoubleQuote = true;
-
-    break;
-    }
-    case " ":
-    case "\t": {
-      if (current.length > 0) {
-        tokens.push(current);
-        current = "";
+        break;
       }
+      case '"': {
+        inDoubleQuote = true;
 
-    break;
-    }
-    default: {
-      current += ch;
-    }
+        break;
+      }
+      case " ":
+      case "\t": {
+        if (current.length > 0) {
+          tokens.push(current);
+          current = "";
+        }
+
+        break;
+      }
+      default: {
+        current += ch;
+      }
     }
   }
 
   // Unterminated quotes are also suspicious
   if (inSingleQuote || inDoubleQuote) {
-    permLogger.warn(
-      { command: cmdString },
-      "Unterminated quote in command",
-    );
+    permLogger.warn({ command: cmdString }, "Unterminated quote in command");
     return null;
   }
 

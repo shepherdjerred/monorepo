@@ -59,9 +59,7 @@ export function displayEnrichmentStats(stats: EnrichmentStats): void {
   for (const [name, rate] of sources) {
     if (rate.total === 0) continue;
     const pct =
-      rate.total > 0
-        ? ((rate.matched / rate.total) * 100).toFixed(0)
-        : "0";
+      rate.total > 0 ? ((rate.matched / rate.total) * 100).toFixed(0) : "0";
     console.log(
       `  ${padRight(name, 8)} ${String(rate.matched)}/${String(rate.total)} matched (${pct}%)`,
     );
@@ -190,15 +188,14 @@ export function displayUsageSummary(summary: UsageSummary): void {
   console.log("");
 }
 
-export function displaySuggestions(
-  suggestions: EnrichmentSuggestion[],
-): void {
+export function displaySuggestions(suggestions: EnrichmentSuggestion[]): void {
   if (suggestions.length === 0) return;
 
   console.log("\n=== Enrichment Suggestions ===\n");
 
   for (const s of suggestions.slice(0, 10)) {
-    const impactColor = s.impact === "high" ? cyan : s.impact === "medium" ? yellow : dim;
+    const impactColor =
+      s.impact === "high" ? cyan : s.impact === "medium" ? yellow : dim;
     const impactLabel = impactColor(`[${s.impact}]`);
 
     console.log(
