@@ -99,6 +99,16 @@ _HEAVY = ("2", "4Gi")
 _MEDIUM = ("1", "2Gi")
 _LIGHT = ("500m", "1Gi")
 
+_RETRY = {
+    "automatic": [
+        {"exit_status": -1, "limit": 2},
+        {"exit_status": 1, "limit": 2},
+        {"exit_status": 3, "limit": 2},
+        {"exit_status": 34, "limit": 2},
+        {"exit_status": 255, "limit": 2},
+    ]
+}
+
 PACKAGE_RESOURCES: dict[str, tuple[str, str]] = {
     "clauderon": _HEAVY,
     "homelab": _HEAVY,
@@ -378,22 +388,12 @@ def _generate_per_package_steps(package: str) -> dict:
 
     build_cmd = f".buildkite/scripts/bazel-phase.sh //packages/{package}/... build"
 
-    _retry = {
-        "automatic": [
-            {"exit_status": -1, "limit": 2},
-            {"exit_status": 1, "limit": 2},
-            {"exit_status": 3, "limit": 2},
-            {"exit_status": 34, "limit": 2},
-            {"exit_status": 255, "limit": 2},
-        ]
-    }
-
     build_step = {
         "label": ":building_construction: Build",
         "key": build_key,
         "command": build_cmd,
         "timeout_in_minutes": 15,
-        "retry": _retry,
+        "retry": _RETRY,
         "concurrency": 6,
         "concurrency_group": "bazel-builds",
         "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
@@ -413,7 +413,7 @@ def _generate_per_package_steps(package: str) -> dict:
             "depends_on": build_key,
             "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
             "timeout_in_minutes": 15,
-            "retry": _retry,
+            "retry": _RETRY,
             "concurrency": 6,
             "concurrency_group": "bazel-builds",
             "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory)],
@@ -433,6 +433,7 @@ def _generate_quality_gate_step() -> dict:
         "key": "quality-gate",
         "command": ".buildkite/scripts/quality-gate.sh",
         "timeout_in_minutes": 10,
+        "retry": _RETRY,
         "plugins": [_k8s_plugin(cpu="1", memory="2Gi")],
     }
 
@@ -444,6 +445,7 @@ def _generate_prettier_step() -> dict:
         "key": "prettier",
         "command": ".buildkite/scripts/prettier.sh",
         "timeout_in_minutes": 10,
+        "retry": _RETRY,
         "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
     }
 
@@ -455,6 +457,7 @@ def _generate_security_step() -> dict:
         "key": "shellcheck",
         "command": ".buildkite/scripts/bazel-test-targets.sh //tools/bazel:shellcheck //.buildkite:shellcheck //packages/dotfiles:shellcheck",
         "timeout_in_minutes": 10,
+        "retry": _RETRY,
         "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
     }
 
