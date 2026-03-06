@@ -125,6 +125,17 @@ install_gh() {
     apt-get update -qq && apt-get install -y -qq gh > /dev/null
 }
 
+install_shellcheck() {
+    if command -v shellcheck &>/dev/null; then
+        echo "--- :shell: shellcheck already installed, skipping"
+        return
+    fi
+    echo "--- :shell: Installing shellcheck"
+    curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.x86_64.tar.xz" | tar xJ -C /tmp
+    cp /tmp/shellcheck-v0.10.0/shellcheck /usr/local/bin/shellcheck
+    chmod +x /usr/local/bin/shellcheck
+}
+
 install_target_determinator() {
     if command -v target-determinator &>/dev/null; then
         echo "--- :bazel: target-determinator already installed, skipping"

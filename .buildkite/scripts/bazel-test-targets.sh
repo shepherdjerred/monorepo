@@ -5,6 +5,7 @@ source "$(dirname "$0")/setup-tools.sh"
 install_base
 install_bazel
 install_uv
+install_shellcheck
 
 # Usage: bazel-test-targets.sh <target1> <target2> ...
 # Runs bazel test on the specified targets directly.
