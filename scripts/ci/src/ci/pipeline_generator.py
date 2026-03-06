@@ -402,6 +402,11 @@ def _generate_per_package_steps(package: str) -> dict:
     phases = [("lint", ":eslint:"), ("typecheck", ":typescript:"), ("test", ":test_tube:")]
     test_steps = []
     for phase, emoji in phases:
+        # Use the same resources as the build step for test phases of heavy packages
+        if phase == "test" and (cpu, memory) == _HEAVY:
+            phase_cpu, phase_memory = cpu, memory
+        else:
+            phase_cpu, phase_memory = "500m", "1Gi"
         test_steps.append({
             "label": f"{emoji} {phase.title()}",
             "key": f"{phase}-{safe_key}",
@@ -411,7 +416,7 @@ def _generate_per_package_steps(package: str) -> dict:
             "retry": _retry,
             "concurrency": 6,
             "concurrency_group": "bazel-builds",
-            "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+            "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory)],
         })
 
     return {

@@ -5,6 +5,7 @@ source "$(dirname "$0")/setup-tools.sh"
 install_base
 install_bazel
 install_uv
+install_shellcheck
 
 # Usage: bazel-phase.sh //packages/birmel/... build
 TARGET="${1:?Usage: bazel-phase.sh <target-pattern> <phase>}"
