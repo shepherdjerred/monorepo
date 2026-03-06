@@ -19,6 +19,10 @@ windows/
 
 # Lock files
 *.lock
+pnpm-lock.yaml
+
+# Python virtual environments
+.venv/
 
 # Vendored
 packages/scout-for-lol/packages/frontend/public/emulatorjs/
@@ -29,6 +33,12 @@ packages/clauderon/web/shared/src/generated/
 
 # Coverage
 coverage/
+
+# Terraform state
+**/.terraform/
+
+# Generated reports
+**/playwright-report/
 
 # XML tileset files with .tsx extension (Tiled map editor)
 practice/bevy-experiment/assets/

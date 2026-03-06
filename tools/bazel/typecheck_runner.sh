@@ -111,6 +111,43 @@ if [ -f package.json ] && [ -n "$BIN_PKG_DIR" ] && [ "$IS_BIN_TREE" = true ]; th
   fi
 fi
 
+# Link devDependency-as-peer packages into their consumer's node_modules.
+# Some packages (e.g. discord-player-youtubei) import packages that are only
+# listed as devDependencies, so aspect_rules_js doesn't add them to the sandbox.
+# Without this, TypeScript can't resolve those imports via real paths when
+# --preserveSymlinks is off. Set DEV_PEER_LINKS="consumer:dep" in BUILD.bazel.
+if [ -n "${DEV_PEER_LINKS:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_ROOT" ]; then
+  ASPECT_DIR="$BIN_ROOT/node_modules/.aspect_rules_js"
+  if [ -d "$ASPECT_DIR" ]; then
+    IFS=',' read -ra PAIRS <<< "$DEV_PEER_LINKS"
+    for pair in "${PAIRS[@]}"; do
+      CONSUMER="${pair%%:*}"
+      DEP="${pair##*:}"
+      # Find the consumer's versioned dir in .aspect_rules_js
+      CONSUMER_VERSIONED=""
+      for d in "$ASPECT_DIR/${CONSUMER}@"*/; do
+        [ -d "$d" ] && CONSUMER_VERSIONED="$(basename "$d")" && break
+      done
+      if [ -n "$CONSUMER_VERSIONED" ]; then
+        CONSUMER_NM="$ASPECT_DIR/$CONSUMER_VERSIONED/node_modules"
+        if [ -d "$CONSUMER_NM" ] && [ ! -e "$CONSUMER_NM/$DEP" ]; then
+          # Find the dep's versioned dir
+          DEP_VERSIONED=""
+          for d in "$ASPECT_DIR/${DEP}@"*/; do
+            [ -d "$d" ] && DEP_VERSIONED="$(basename "$d")" && break
+          done
+          if [ -n "$DEP_VERSIONED" ]; then
+            DEP_TARGET="$ASPECT_DIR/$DEP_VERSIONED/node_modules/$DEP"
+            if [ -d "$DEP_TARGET" ]; then
+              ln -sf "$DEP_TARGET" "$CONSUMER_NM/$DEP" 2>/dev/null || true
+            fi
+          fi
+        fi
+      fi
+    done
+  fi
+fi
+
 # Mirror runfiles tree entries into bin tree for cross-package data deps
 if [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_ROOT" ]; then
   RUNFILES_PKG="$RUNFILES/$WS"

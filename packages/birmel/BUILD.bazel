@@ -71,6 +71,7 @@ workspace_typecheck_test(
     env = {
         "NO_PRESERVE_SYMLINKS": "1",
         "PRISMA_SCHEMA": "prisma/schema.prisma",
+        "DEV_PEER_LINKS": "discord-player-youtubei:discord-player",
     },
     tags = ["requires-network"],  # prisma generate needs network for bunx
     deps = [

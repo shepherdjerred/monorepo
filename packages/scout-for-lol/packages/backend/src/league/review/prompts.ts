@@ -5,12 +5,12 @@ import {
 import { createLogger } from "#src/logger.ts";
 
 // Static imports for lane context files
-import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt";
-import middleLane from "@scout-for-lol/data/src/review/prompts/lanes/middle.txt";
-import jungleLane from "@scout-for-lol/data/src/review/prompts/lanes/jungle.txt";
-import adcLane from "@scout-for-lol/data/src/review/prompts/lanes/adc.txt";
-import supportLane from "@scout-for-lol/data/src/review/prompts/lanes/support.txt";
-import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.txt";
+import topLane from "@scout-for-lol/data/review/prompts/lanes/top.txt";
+import middleLane from "@scout-for-lol/data/review/prompts/lanes/middle.txt";
+import jungleLane from "@scout-for-lol/data/review/prompts/lanes/jungle.txt";
+import adcLane from "@scout-for-lol/data/review/prompts/lanes/adc.txt";
+import supportLane from "@scout-for-lol/data/review/prompts/lanes/support.txt";
+import genericLane from "@scout-for-lol/data/review/prompts/lanes/generic.txt";
 
 const logger = createLogger("review-prompts");
 

@@ -359,6 +359,7 @@ ALL_PACKAGES = [
     "sentinel",
     "sjer.red",
     "starlight-karma-bot",
+    "status-page",
     "tasknotes-server",
     "tasknotes-types",
     "tasks-for-obsidian",

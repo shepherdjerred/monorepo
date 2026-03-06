@@ -44,6 +44,7 @@ workspace_typecheck_test(
     srcs = glob(["src/**/*.ts"]),
     data = ["prisma/schema.prisma"],
     env = {
+        "NO_PRESERVE_SYMLINKS": "1",
         "PRISMA_SCHEMA": "prisma/schema.prisma",
     },
     tags = ["requires-network"],

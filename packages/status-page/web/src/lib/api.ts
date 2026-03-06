@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-const envUrl = String(
-  import.meta.env["PUBLIC_STATUS_API_URL"] ?? "",
-);
+const envUrl = String(import.meta.env["PUBLIC_STATUS_API_URL"] ?? "");
 const BASE_URL = envUrl || "https://status-api.sjer.red";
 
 const SiteSchema = z.object({
@@ -167,14 +165,10 @@ export async function deleteSite(
   apiKey: string,
   siteId: string,
 ): Promise<ApiResult<{ success: boolean }>> {
-  return apiFetch(
-    `/api/sites/${siteId}`,
-    z.object({ success: z.boolean() }),
-    {
-      method: "DELETE",
-      headers: authHeaders(apiKey),
-    },
-  );
+  return apiFetch(`/api/sites/${siteId}`, z.object({ success: z.boolean() }), {
+    method: "DELETE",
+    headers: authHeaders(apiKey),
+  });
 }
 
 // Per-site endpoints

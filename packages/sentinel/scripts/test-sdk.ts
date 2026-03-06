@@ -73,8 +73,8 @@ try {
       );
     } else if (message.type === "assistant") {
       const text = message.message.content
-        .filter((b: { type: string }) => b.type === "text")
-        .map((b: { text?: string }) => b.text ?? "")
+        .filter((b) => b.type === "text")
+        .map((b) => ("text" in b ? b.text : ""))
         .join("");
       console.log("[assistant]", text);
     } else if (message.type === "result") {

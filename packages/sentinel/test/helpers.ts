@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createApp } from "@shepherdjerred/sentinel/adapters/webhook.ts";
 import type { Config } from "@shepherdjerred/sentinel/config/schema.ts";
 import type { AgentDefinition } from "@shepherdjerred/sentinel/types/agent.ts";
+import { setGlobalPrisma } from "@shepherdjerred/sentinel/database/index.ts";
 import { createHmac } from "node:crypto";
 
 // Set env vars once for all test files
@@ -15,6 +16,9 @@ Bun.env["DISCORD_GUILD_ID"] = "test-guild";
 export const testPrisma = new PrismaClient({
   datasourceUrl: "file::memory:?cache=shared",
 });
+
+// Inject testPrisma into the global singleton so getPrisma() returns it
+setGlobalPrisma(testPrisma);
 
 export async function setupTestDatabase(): Promise<void> {
   await testPrisma.$executeRawUnsafe(`

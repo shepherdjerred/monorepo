@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  createIncident,
-  type Component,
-  type Incident,
-} from "#src/lib/api.ts";
+import { createIncident, type Component, type Incident } from "#src/lib/api.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";

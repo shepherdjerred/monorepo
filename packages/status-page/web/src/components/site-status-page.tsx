@@ -52,9 +52,7 @@ export function SiteStatusPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-8">
       <header className="text-center">
-        <h1 className="text-3xl font-bold">
-          {siteName ?? siteId} Status
-        </h1>
+        <h1 className="text-3xl font-bold">{siteName ?? siteId} Status</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           <a href="/" className="hover:underline">
             All status pages
@@ -68,7 +66,9 @@ export function SiteStatusPage() {
       <IncidentTimeline siteId={siteId} />
 
       <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4">
-        <a href="/admin" className="hover:underline">Admin</a>
+        <a href="/admin" className="hover:underline">
+          Admin
+        </a>
       </footer>
     </main>
   );
