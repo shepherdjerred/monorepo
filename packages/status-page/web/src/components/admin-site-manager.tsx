@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  createSite,
-  updateSite,
-  deleteSite,
-  type Site,
-} from "#src/lib/api.ts";
+import { createSite, updateSite, deleteSite, type Site } from "#src/lib/api.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import {

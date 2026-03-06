@@ -325,7 +325,7 @@ describe("Competition View - ACTIVE Status", () => {
     expect(status).toBe("ACTIVE");
 
     const { calculateLeaderboard } =
-      await import("@scout-for-lol/backend/league/competition/leaderboard.js");
+      await import("@scout-for-lol/backend/league/competition/leaderboard.ts");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants
@@ -444,7 +444,7 @@ describe("Competition View - ENDED Status", () => {
 
     // Test final leaderboard for ended competition
     const { calculateLeaderboard } =
-      await import("@scout-for-lol/backend/league/competition/leaderboard.js");
+      await import("@scout-for-lol/backend/league/competition/leaderboard.ts");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants

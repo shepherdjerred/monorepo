@@ -39,7 +39,7 @@ export type ClauderonClientConfig = {
   /**
    * Custom fetch implementation (useful for testing)
    */
-  fetch?: typeof fetch;
+  fetch?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 };
 
 /**
@@ -47,7 +47,7 @@ export type ClauderonClientConfig = {
  */
 export class ClauderonClient {
   private readonly baseUrl: string;
-  private readonly fetch: typeof fetch;
+  private readonly fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
   constructor(config: ClauderonClientConfig) {
     this.baseUrl = config.baseUrl;

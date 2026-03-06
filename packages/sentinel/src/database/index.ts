@@ -15,7 +15,7 @@ function getGlobalPrisma(): PrismaClient | undefined {
   return undefined;
 }
 
-function setGlobalPrisma(client: PrismaClient): void {
+export function setGlobalPrisma(client: PrismaClient): void {
   Object.defineProperty(globalThis, PRISMA_KEY, {
     value: client,
     writable: true,

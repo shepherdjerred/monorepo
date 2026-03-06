@@ -507,6 +507,34 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/cook-preview:
+    dependencies:
+      '@iconify-json/heroicons':
+        specifier: ^1.2.1
+        version: 1.2.3
+      '@tailwindcss/postcss':
+        specifier: ^4.1.11
+        version: 4.2.1
+      astro:
+        specifier: ^5.0.9
+        version: 5.18.0(@types/node@25.3.2)(aws4fetch@1.0.20)(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.59.0)(sass@1.97.3)(terser@5.46.0)(typescript@5.9.3)(yaml@2.8.2)
+      astro-icon:
+        specifier: ^1.1.1
+        version: 1.1.5
+      autoprefixer:
+        specifier: ^10.4.21
+        version: 10.4.27(postcss@8.5.6)
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.2.1
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.4
+        version: 0.9.6(prettier@3.8.1)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/cooklang-for-obsidian:
     dependencies:
       chevrotain:
@@ -936,7 +964,7 @@ importers:
     dependencies:
       '@digital-alchemy/automation':
         specifier: ^25.11.18
-        version: 25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)
+        version: 25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)
       '@digital-alchemy/core':
         specifier: ^25.12.8
         version: 25.12.8
@@ -945,7 +973,7 @@ importers:
         version: 25.11.27(@digital-alchemy/core@25.12.8)
       '@digital-alchemy/synapse':
         specifier: ^25.12.19
-        version: 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
+        version: 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
       '@digital-alchemy/type-writer':
         specifier: ^25.11.16
         version: 25.11.16(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))
@@ -1768,7 +1796,7 @@ importers:
         version: 5.1.7
       typeorm:
         specifier: ^0.3.20
-        version: 0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@22.19.13))(sqlite3@5.1.7)
+        version: 0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@25.3.2))(sqlite3@5.1.7)
     devDependencies:
       '@commitlint/types':
         specifier: ^20.4.0
@@ -1790,6 +1818,98 @@ importers:
         version: 9.39.3(jiti@2.6.1)
       typescript:
         specifier: ^5
+        version: 5.9.3
+
+  packages/status-page/api:
+    dependencies:
+      '@prisma/client':
+        specifier: ^6.0.0
+        version: 6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3)
+      hono:
+        specifier: ^4
+        version: 4.12.3
+      zod:
+        specifier: ^3.24
+        version: 3.25.76
+    devDependencies:
+      '@types/bun':
+        specifier: ^1.3.5
+        version: 1.3.10
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.3(jiti@2.6.1)
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
+      prisma:
+        specifier: ^6.0.0
+        version: 6.19.2(typescript@5.9.3)
+      typescript:
+        specifier: ^5.8
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.53.1
+        version: 8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
+
+  packages/status-page/web:
+    dependencies:
+      '@astrojs/react':
+        specifier: ^4.3.1
+        version: 4.4.2(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(jiti@2.6.1)(lightningcss@1.31.1)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)(sass@1.97.3)(terser@5.46.0)(yaml@2.8.2)
+      '@radix-ui/react-dialog':
+        specifier: ^1.1.15
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-select':
+        specifier: ^2.2.4
+        version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-separator':
+        specifier: ^1.1.4
+        version: 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-slot':
+        specifier: ^1.2.4
+        version: 1.2.4(@types/react@19.2.14)(react@19.2.3)
+      '@tailwindcss/postcss':
+        specifier: ^4.1.11
+        version: 4.2.1
+      astro:
+        specifier: ^5.0.9
+        version: 5.18.0(@types/node@25.3.2)(aws4fetch@1.0.20)(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.59.0)(sass@1.97.3)(terser@5.46.0)(typescript@5.9.3)(yaml@2.8.2)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@19.2.3)
+      react:
+        specifier: ^19.1.1
+        version: 19.2.3
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.4(react@19.2.3)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.5.0
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.2.1
+      zod:
+        specifier: ^4.0.0
+        version: 4.3.6
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.4
+        version: 0.9.6(prettier@3.8.1)(typescript@5.9.3)
+      '@types/react':
+        specifier: ^19.1.13
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.1.9
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ^5.9.3
         version: 5.9.3
 
   packages/tasknotes-server:
@@ -6095,6 +6215,19 @@ packages:
 
   '@radix-ui/react-select@2.2.6':
     resolution: {integrity: sha512-I30RydO+bnn2PQztvo25tswPH+wFBjehVGtmagkU78yMdwTwVf12wnAOF+AeP8S2N8xD+5UPbGhkUfPyvT+mwQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@radix-ui/react-separator@1.1.8':
+    resolution: {integrity: sha512-sDvqVY4itsKwwSMEe0jtKgfTh+72Sy3gPmQpjqcQneqQ4PFmr/1I0YA+2/puilhggCe2gJcx5EBAYFkWkdpa5g==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -17790,11 +17923,11 @@ snapshots:
       http-response-object: 3.0.2
       parse-cache-control: 1.0.1
 
-  '@digital-alchemy/automation@25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)':
+  '@digital-alchemy/automation@25.11.18(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0))(dayjs@1.11.19)':
     dependencies:
       '@digital-alchemy/core': 25.12.8
       '@digital-alchemy/hass': 25.11.27(@digital-alchemy/core@25.12.8)
-      '@digital-alchemy/synapse': 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
+      '@digital-alchemy/synapse': 25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)
       dayjs: 1.11.19
 
   '@digital-alchemy/core@25.12.8':
@@ -17820,14 +17953,14 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@22.19.13)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)':
+  '@digital-alchemy/synapse@25.12.19(@digital-alchemy/core@25.12.8)(@digital-alchemy/hass@25.11.27(@digital-alchemy/core@25.12.8))(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/node@25.3.2)(@types/pg@8.15.6)(bun-types@1.3.10)(dayjs@1.11.19)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)(uuid@13.0.0)':
     dependencies:
       '@digital-alchemy/core': 25.12.8
       '@digital-alchemy/hass': 25.11.27(@digital-alchemy/core@25.12.8)
       better-sqlite3: 12.6.2
       dayjs: 1.11.19
-      drizzle-orm: 0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@22.19.13))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)
-      mysql2: 3.18.2(@types/node@22.19.13)
+      drizzle-orm: 0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@25.3.2))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7)
+      mysql2: 3.18.2(@types/node@25.3.2)
       postgres: 3.4.8
       uuid: 13.0.0
     transitivePeerDependencies:
@@ -20817,6 +20950,15 @@ snapshots:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
+  '@radix-ui/react-separator@1.1.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@radix-ui/react-primitive': 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.3))(react@19.2.3)
+      react: 19.2.3
+      react-dom: 19.2.4(react@19.2.3)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+
   '@radix-ui/react-slot@1.2.3(@types/react@19.2.14)(react@19.2.3)':
     dependencies:
       '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.14)(react@19.2.3)
@@ -21216,9 +21358,7 @@ snapshots:
       metro-runtime: 0.83.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.83.1': {}
 
@@ -25158,7 +25298,7 @@ snapshots:
 
   dotenv@17.3.1: {}
 
-  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@22.19.13))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7):
+  drizzle-orm@0.44.7(@libsql/client@0.15.15)(@opentelemetry/api@1.9.0)(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(better-sqlite3@12.6.2)(bun-types@1.3.10)(mysql2@3.18.2(@types/node@25.3.2))(postgres@3.4.8)(prisma@6.19.2(typescript@5.9.3))(sqlite3@5.1.7):
     optionalDependencies:
       '@libsql/client': 0.15.15
       '@opentelemetry/api': 1.9.0
@@ -25166,7 +25306,7 @@ snapshots:
       '@types/pg': 8.15.6
       better-sqlite3: 12.6.2
       bun-types: 1.3.10
-      mysql2: 3.18.2(@types/node@22.19.13)
+      mysql2: 3.18.2(@types/node@25.3.2)
       postgres: 3.4.8
       prisma: 6.19.2(typescript@5.9.3)
       sqlite3: 5.1.7
@@ -28841,9 +28981,9 @@ snapshots:
 
   muggle-string@0.4.1: {}
 
-  mysql2@3.18.2(@types/node@22.19.13):
+  mysql2@3.18.2(@types/node@25.3.2):
     dependencies:
-      '@types/node': 22.19.13
+      '@types/node': 25.3.2
       aws-ssl-profiles: 1.1.2
       denque: 2.1.0
       generate-function: 2.3.1
@@ -31705,7 +31845,7 @@ snapshots:
       typescript: 5.9.3
       yaml: 2.8.2
 
-  typeorm@0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@22.19.13))(sqlite3@5.1.7):
+  typeorm@0.3.28(better-sqlite3@12.6.2)(mysql2@3.18.2(@types/node@25.3.2))(sqlite3@5.1.7):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.2.0
@@ -31724,7 +31864,7 @@ snapshots:
       yargs: 17.7.2
     optionalDependencies:
       better-sqlite3: 12.6.2
-      mysql2: 3.18.2(@types/node@22.19.13)
+      mysql2: 3.18.2(@types/node@25.3.2)
       sqlite3: 5.1.7
     transitivePeerDependencies:
       - babel-plugin-macros

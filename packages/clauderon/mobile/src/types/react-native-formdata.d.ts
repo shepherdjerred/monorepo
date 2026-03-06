@@ -6,12 +6,16 @@
  * standard web FormData API that only accepts Blob/File.
  */
 
+export {};
+
 type ReactNativeFileObject = {
   uri: string;
   type: string;
   name: string;
 };
 
-type FormData = {
-  append: (name: string, value: ReactNativeFileObject) => void;
-};
+declare global {
+  interface FormData {
+    append(name: string, value: ReactNativeFileObject): void;
+  }
+}

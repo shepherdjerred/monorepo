@@ -14,7 +14,7 @@
     "dev": "op run --env-file=.env.op -- bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "build": "true",
-    "test": "bun test",
+    "test": "prisma generate && bun test",
     "typecheck": "prisma generate && tsc --noEmit",
     "lint": "prisma generate && eslint .",
     "dev:web": "cd web && bun run dev",

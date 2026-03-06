@@ -137,43 +137,40 @@ incidentRoutes.delete("/api/sites/:siteId/incidents/:id", async (c) => {
   }
 });
 
-incidentRoutes.post(
-  "/api/sites/:siteId/incidents/:id/updates",
-  async (c) => {
-    const siteId = c.req.param("siteId");
-    const parsed = CreateUpdate.safeParse(await c.req.json());
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400);
-    }
+incidentRoutes.post("/api/sites/:siteId/incidents/:id/updates", async (c) => {
+  const siteId = c.req.param("siteId");
+  const parsed = CreateUpdate.safeParse(await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.flatten() }, 400);
+  }
 
-    const incident = await prisma.incident.findFirst({
-      where: { id: c.req.param("id"), siteId },
-    });
-    if (incident === null) {
-      return c.json({ error: "Incident not found" }, 404);
-    }
+  const incident = await prisma.incident.findFirst({
+    where: { id: c.req.param("id"), siteId },
+  });
+  if (incident === null) {
+    return c.json({ error: "Incident not found" }, 404);
+  }
 
-    const updateData: Record<string, unknown> = {
-      status: parsed.data.status,
-    };
-    if (parsed.data.status === "resolved") {
-      updateData["resolvedAt"] = new Date();
-    }
+  const updateData: Record<string, unknown> = {
+    status: parsed.data.status,
+  };
+  if (parsed.data.status === "resolved") {
+    updateData["resolvedAt"] = new Date();
+  }
 
-    const [update] = await prisma.$transaction([
-      prisma.incidentUpdate.create({
-        data: {
-          incidentId: c.req.param("id"),
-          status: parsed.data.status,
-          message: parsed.data.message,
-        },
-      }),
-      prisma.incident.update({
-        where: { id: c.req.param("id") },
-        data: updateData,
-      }),
-    ]);
+  const [update] = await prisma.$transaction([
+    prisma.incidentUpdate.create({
+      data: {
+        incidentId: c.req.param("id"),
+        status: parsed.data.status,
+        message: parsed.data.message,
+      },
+    }),
+    prisma.incident.update({
+      where: { id: c.req.param("id") },
+      data: updateData,
+    }),
+  ]);
 
-    return c.json(update, 201);
-  },
-);
+  return c.json(update, 201);
+});

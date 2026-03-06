@@ -56,4 +56,15 @@ export default [
       "unicorn/prefer-add-event-listener": "off",
     },
   },
+  {
+    files: ["src/types/*.d.ts"],
+    rules: {
+      // Declaration merging requires interface, not type
+      "@typescript-eslint/consistent-type-definitions": "off",
+      // Must match built-in method signatures for declaration merging
+      "@typescript-eslint/method-signature-style": "off",
+      // `export {}` needed to make .d.ts files into modules for declare global
+      "unicorn/require-module-specifiers": "off",
+    },
+  },
 ];
