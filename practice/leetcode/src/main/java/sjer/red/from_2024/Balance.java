@@ -1,4 +1,4 @@
-package sjer.red;
+package sjer.red.from_2024;
 
 import java.util.ArrayList;
 import java.util.HashMap;
