@@ -70,3 +70,5 @@ packages/cooklang-for-obsidian/main.js
 
 # Obsidian plugin bundles (may contain embedded secrets)
 obsidian/.obsidian/plugins/*/main.js
+
+**/:memory:
