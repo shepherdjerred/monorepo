@@ -1,6 +1,10 @@
 import { addIcon, Plugin } from "obsidian";
 import { CookView, VIEW_TYPE_COOK } from "./cook-view.ts";
-import { type CooklangSettings, CooklangSettingTab, DEFAULT_SETTINGS } from "./settings.ts";
+import {
+  type CooklangSettings,
+  CooklangSettingTab,
+  DEFAULT_SETTINGS,
+} from "./settings.ts";
 
 // Chef hat SVG icon for .cook files
 const CHEF_HAT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">

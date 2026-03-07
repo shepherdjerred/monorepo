@@ -1,4 +1,9 @@
-import { setIcon, TextFileView, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
+import {
+  setIcon,
+  TextFileView,
+  type ViewStateResult,
+  type WorkspaceLeaf,
+} from "obsidian";
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
@@ -23,7 +28,9 @@ export class CookView extends TextFileView {
     this.isPreview = plugin.settings.defaultView === "preview";
 
     this.editorEl = this.contentEl.createDiv({ cls: "cook-editor-container" });
-    this.previewEl = this.contentEl.createDiv({ cls: "cook-preview-container" });
+    this.previewEl = this.contentEl.createDiv({
+      cls: "cook-preview-container",
+    });
   }
 
   getViewType(): string {
@@ -169,7 +176,10 @@ export class CookView extends TextFileView {
     return state;
   }
 
-  setState(state: Record<string, unknown>, result: ViewStateResult): Promise<void> {
+  setState(
+    state: Record<string, unknown>,
+    result: ViewStateResult,
+  ): Promise<void> {
     if (state.mode === "source") {
       this.isPreview = false;
     } else if (state.mode === "preview") {

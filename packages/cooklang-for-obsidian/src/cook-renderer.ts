@@ -123,11 +123,16 @@ function renderSection(
   const sectionEl = container.createDiv({ cls: "cook-section" });
 
   if (section.name) {
-    sectionEl.createEl("h2", { text: section.name, cls: "cook-section-header" });
+    sectionEl.createEl("h2", {
+      text: section.name,
+      cls: "cook-section-header",
+    });
   }
 
   const isIngredients = /ingredients/i.test(section.name);
-  const isDirections = /directions|instructions|steps|method/i.test(section.name);
+  const isDirections = /directions|instructions|steps|method/i.test(
+    section.name,
+  );
   const isNutrition = /nutrition/i.test(section.name);
 
   if (isNutrition && !settings.showNutrition) return;
@@ -234,8 +239,14 @@ function renderTokens(
     switch (token.type) {
       case "ingredient": {
         const span = el.createSpan({ cls: "cook-inline-ingredient" });
-        span.createSpan({ text: token.ref && "name" in token.ref ? token.ref.name : token.value });
-        if (settings.showInlineQuantities && token.ref && "quantity" in token.ref) {
+        span.createSpan({
+          text: token.ref && "name" in token.ref ? token.ref.name : token.value,
+        });
+        if (
+          settings.showInlineQuantities &&
+          token.ref &&
+          "quantity" in token.ref
+        ) {
           const ref = token.ref;
           if (ref.quantity) {
             span.createSpan({
