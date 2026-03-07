@@ -9,11 +9,11 @@ import re
 import subprocess
 
 
-def login(username: str, password: str) -> None:
-    """Authenticate with ghcr.io using docker login."""
+def login(token: str) -> None:
+    """Authenticate with ghcr.io using a GitHub token."""
     subprocess.run(
-        ["docker", "login", "ghcr.io", "-u", username, "--password-stdin"],
-        input=password,
+        ["docker", "login", "ghcr.io", "-u", "github", "--password-stdin"],
+        input=token,
         text=True,
         check=True,
     )

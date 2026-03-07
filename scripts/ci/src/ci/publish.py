@@ -10,7 +10,7 @@ Args:
               If not specified, all packages are published.
 
 Required env vars:
-  GHCR_USERNAME, GHCR_PASSWORD - GitHub Container Registry auth
+  GH_TOKEN - GitHub token for GHCR authentication
   NPM_TOKEN - NPM authentication token
   BUILDKITE_BUILD_NUMBER, BUILDKITE_BRANCH, BUILDKITE_COMMIT
 """
@@ -117,10 +117,9 @@ def main() -> None:
         return
 
     # Validate required credentials on main
-    ghcr_username = os.environ.get("GHCR_USERNAME", "")
-    ghcr_password = os.environ.get("GHCR_PASSWORD", "")
-    if not ghcr_username or not ghcr_password:
-        print("GHCR credentials not set on main branch, failing", flush=True)
+    gh_token = os.environ.get("GH_TOKEN", "")
+    if not gh_token:
+        print("GH_TOKEN not set on main branch, failing", flush=True)
         sys.exit(1)
 
     if args.packages:
@@ -132,7 +131,7 @@ def main() -> None:
     digests: dict[str, str] = {}
     push_targets = _filter_by_packages(PUSH_TARGETS, args.packages)
     print("\n--- Publish container images to GHCR ---", flush=True)
-    ghcr.login(ghcr_username, ghcr_password)
+    ghcr.login(gh_token)
     for target in push_targets:
         try:
             print(f"\nPushing {target}", flush=True)

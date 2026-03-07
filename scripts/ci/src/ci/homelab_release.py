@@ -15,7 +15,7 @@ Required env vars:
   ARGOCD_TOKEN - ArgoCD API bearer token
   CHARTMUSEUM_USERNAME, CHARTMUSEUM_PASSWORD - ChartMuseum auth
   S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY - SeaweedFS S3 credentials
-  GHCR_USERNAME, GHCR_PASSWORD - GHCR auth for infra images
+  GH_TOKEN - GitHub token for GHCR authentication
   TOFU_GITHUB_TOKEN - GitHub token for OpenTofu stacks (optional)
   BUILDKITE_BUILD_NUMBER, BUILDKITE_BRANCH, BUILDKITE_COMMIT
 """
@@ -115,7 +115,7 @@ def main() -> None:
         return
 
     # Validate required credentials on main
-    required_vars = ["GHCR_USERNAME", "GHCR_PASSWORD", "CHARTMUSEUM_USERNAME", "CHARTMUSEUM_PASSWORD"]
+    required_vars = ["GH_TOKEN", "CHARTMUSEUM_USERNAME", "CHARTMUSEUM_PASSWORD"]
     missing = [v for v in required_vars if not os.environ.get(v)]
     if missing:
         print(f"Missing required env vars: {', '.join(missing)}", flush=True)
@@ -124,12 +124,11 @@ def main() -> None:
     errors: list[str] = []
 
     # --- Build and push infra container images ---
-    ghcr_username = os.environ.get("GHCR_USERNAME", "")
-    ghcr_password = os.environ.get("GHCR_PASSWORD", "")
+    gh_token = os.environ.get("GH_TOKEN", "")
     infra_digests: dict[str, str] = {}
-    if ghcr_username and ghcr_password:
+    if gh_token:
         print("\n--- Build and push infra container images ---", flush=True)
-        ghcr.login(ghcr_username, ghcr_password)
+        ghcr.login(gh_token)
         for img in DOCKER_IMAGES:
             tag = f"{img['repository']}:{config.version}"
             latest_tag = f"{img['repository']}:latest"
@@ -169,7 +168,7 @@ def main() -> None:
             )
             print("Stored infra digests in Buildkite metadata", flush=True)
     else:
-        print("GHCR credentials not set, skipping infra image build/push", flush=True)
+        print("GH_TOKEN not set, skipping infra image build/push", flush=True)
 
     # --- Build cdk8s manifests ---
     # cdk8s build runs via bun (cdk8s.yaml has app: false, so bunx cdk8s synth won't work)
