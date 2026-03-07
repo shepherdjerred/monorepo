@@ -4,7 +4,7 @@ type CookState = {
   inFrontmatter: boolean;
   frontmatterDone: boolean;
   lineStart: boolean;
-}
+};
 
 /** StreamLanguage definition for Cooklang syntax highlighting in CodeMirror 6. */
 export const cookLanguage = StreamLanguage.define<CookState>({

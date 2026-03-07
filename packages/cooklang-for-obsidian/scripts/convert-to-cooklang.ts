@@ -27,7 +27,14 @@ function parseIngredientLine(line: string): ParsedIngredient {
 
   // Sub-headers: lines ending with ":"
   if (trimmed.endsWith(":")) {
-    return { raw: trimmed, quantity: "", unit: "", name: trimmed, extra: "", isSubheader: true };
+    return {
+      raw: trimmed,
+      quantity: "",
+      unit: "",
+      name: trimmed,
+      extra: "",
+      isSubheader: true,
+    };
   }
 
   // Short capitalized labels without numbers are sub-headers (e.g., "Dough", "Sauce", "Toppings")
@@ -39,7 +46,14 @@ function parseIngredientLine(line: string): ParsedIngredient {
     /^Remaining\s+\w+\s+\w+$/i,
   ];
   if (SUB_HEADER_PATTERNS.some((p) => p.test(trimmed))) {
-    return { raw: trimmed, quantity: "", unit: "", name: trimmed, extra: "", isSubheader: true };
+    return {
+      raw: trimmed,
+      quantity: "",
+      unit: "",
+      name: trimmed,
+      extra: "",
+      isSubheader: true,
+    };
   }
 
   // Match quantity at start: numbers, fractions, Unicode fractions, ranges
@@ -50,7 +64,14 @@ function parseIngredientLine(line: string): ParsedIngredient {
   if (!qtyMatch) {
     // No quantity — just ingredient name
     const { name, extra } = splitNameExtra(trimmed);
-    return { raw: trimmed, quantity: "", unit: "", name, extra, isSubheader: false };
+    return {
+      raw: trimmed,
+      quantity: "",
+      unit: "",
+      name,
+      extra,
+      isSubheader: false,
+    };
   }
 
   const quantity = qtyMatch[1].trim();
@@ -95,13 +116,19 @@ function splitNameExtra(text: string): { name: string; extra: string } {
   // Split on comma for modifiers: "garlic, thinly sliced" -> name: "garlic", extra: "thinly sliced"
   const commaIdx = text.indexOf(",");
   if (commaIdx !== -1) {
-    return { name: text.slice(0, commaIdx).trim(), extra: text.slice(commaIdx + 1).trim() };
+    return {
+      name: text.slice(0, commaIdx).trim(),
+      extra: text.slice(commaIdx + 1).trim(),
+    };
   }
 
   // Split on semicolon
   const semiIdx = text.indexOf(";");
   if (semiIdx !== -1) {
-    return { name: text.slice(0, semiIdx).trim(), extra: text.slice(semiIdx + 1).trim() };
+    return {
+      name: text.slice(0, semiIdx).trim(),
+      extra: text.slice(semiIdx + 1).trim(),
+    };
   }
 
   // Split on parenthetical at end: "olive oil (about 2 cups)" -> name: "olive oil", extra: "about 2 cups"
@@ -200,7 +227,9 @@ async function main() {
   const entries = await readdir(RECIPE_DIR);
   const cookFiles = entries.filter((e) => e.endsWith(".cook"));
 
-  console.log(`Found ${cookFiles.length} .cook files${dryRun ? " (DRY RUN)" : ""}`);
+  console.log(
+    `Found ${cookFiles.length} .cook files${dryRun ? " (DRY RUN)" : ""}`,
+  );
 
   let converted = 0;
   for (const file of cookFiles) {
@@ -214,7 +243,9 @@ async function main() {
     }
   }
 
-  console.log(`\nDone: ${converted}/${cookFiles.length} files would be converted`);
+  console.log(
+    `\nDone: ${converted}/${cookFiles.length} files would be converted`,
+  );
   if (dryRun && converted > 0) {
     console.log("Run without --dry-run to apply changes.");
   }

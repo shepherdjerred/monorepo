@@ -9,35 +9,35 @@ export type Ingredient = {
   name: string;
   quantity: string;
   units: string;
-}
+};
 
 export type Cookware = {
   name: string;
-}
+};
 
 export type Timer = {
   name: string;
   quantity: string;
   units: string;
-}
+};
 
 export type StepToken = {
   type: "text" | "ingredient" | "cookware" | "timer";
   value: string;
   ref?: Ingredient | Cookware | Timer;
-}
+};
 
 export type Step = {
   tokens: StepToken[];
   raw: string;
-}
+};
 
 export type Section = {
   name: string;
   steps: Step[];
-}
+};
 
-export type RecipeMetadata = Record<string, string>
+export type RecipeMetadata = Record<string, string>;
 
 export type ParsedRecipe = {
   metadata: RecipeMetadata;
@@ -46,7 +46,7 @@ export type ParsedRecipe = {
   timers: Timer[];
   sections: Section[];
   hasCooklangMarkup: boolean;
-}
+};
 
 // ── Chevrotain Lexer tokens ─────────────────────────────────────────────────
 // Order matters: sigils before Punct so @ is always AtSign, not Punct.
@@ -60,7 +60,8 @@ const Percent = createToken({ name: "Percent", pattern: /%/ });
 // \w covers [a-zA-Z0-9_]; Unicode ranges cover Latin Extended, Cyrillic, Greek,
 // Arabic, CJK, and Korean — enough for recipe names in most languages.
 // Chevrotain doesn't support the `u` flag with \p{L}, so we enumerate ranges.
-const UNICODE_LETTER_RANGES = "\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0370-\u03FF\u3000-\u9FFF\uAC00-\uD7AF";
+const UNICODE_LETTER_RANGES =
+  "\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0370-\u03FF\u3000-\u9FFF\uAC00-\uD7AF";
 const Word = createToken({
   name: "Word",
   pattern: new RegExp(String.raw`[\w${UNICODE_LETTER_RANGES}-]+`),
@@ -71,7 +72,17 @@ const Punct = createToken({
   pattern: new RegExp(String.raw`[^\w${UNICODE_LETTER_RANGES} @#~{}%\n-]`),
 });
 
-const allTokens = [AtSign, HashSign, TildeSign, LBrace, RBrace, Percent, Word, Space, Punct];
+const allTokens = [
+  AtSign,
+  HashSign,
+  TildeSign,
+  LBrace,
+  RBrace,
+  Percent,
+  Word,
+  Space,
+  Punct,
+];
 const stepLexer = new Lexer(allTokens, {
   lineTerminatorCharacters: ["\n"],
   // We tokenize single lines, so line tracking isn't needed
@@ -88,9 +99,15 @@ const stepLexer = new Lexer(allTokens, {
 function findBraceBeforeSigil(tokens: IToken[], from: number): number {
   for (let i = from; i < tokens.length; i++) {
     if (tokens[i].tokenType === LBrace) return i;
-    if (tokens[i].tokenType === AtSign || tokens[i].tokenType === HashSign) return -1;
+    if (tokens[i].tokenType === AtSign || tokens[i].tokenType === HashSign)
+      return -1;
     // ~ after a space is a timer boundary; ~ without preceding space is part of name
-    if (tokens[i].tokenType === TildeSign && i > from && tokens[i - 1].tokenType === Space) return -1;
+    if (
+      tokens[i].tokenType === TildeSign &&
+      i > from &&
+      tokens[i - 1].tokenType === Space
+    )
+      return -1;
   }
   return -1;
 }
@@ -169,7 +186,11 @@ function parseTokenStream(
           // Braced form: @name{qty%unit}
           flush();
           const name = collectImages(tokens, pos + 1, braceIdx).trim();
-          const { quantity, units } = parseQuantityBody(tokens, braceIdx + 1, rbraceIdx);
+          const { quantity, units } = parseQuantityBody(
+            tokens,
+            braceIdx + 1,
+            rbraceIdx,
+          );
           const ingredient: Ingredient = { name, quantity, units };
           ingredients.push(ingredient);
           result.push({ type: "ingredient", value: name, ref: ingredient });
@@ -235,7 +256,11 @@ function parseTokenStream(
         if (rbraceIdx !== -1) {
           flush();
           const name = collectImages(tokens, pos + 1, braceIdx).trim();
-          const { quantity, units } = parseQuantityBody(tokens, braceIdx + 1, rbraceIdx);
+          const { quantity, units } = parseQuantityBody(
+            tokens,
+            braceIdx + 1,
+            rbraceIdx,
+          );
           const timer: Timer = { name, quantity, units };
           timers.push(timer);
           result.push({
@@ -282,7 +307,10 @@ function tokenizeCooklangLine(
 // ── Line-level preprocessing (hand-written, unchanged) ──────────────────────
 
 /** Parse YAML frontmatter from a .cook file. Returns metadata + remaining body. */
-function parseFrontmatter(text: string): { metadata: RecipeMetadata; body: string } {
+function parseFrontmatter(text: string): {
+  metadata: RecipeMetadata;
+  body: string;
+} {
   const metadata: RecipeMetadata = {};
   const trimmed = text.trimStart();
   if (!trimmed.startsWith("---")) {
@@ -352,7 +380,9 @@ function hasCooklangSyntax(body: string): boolean {
 }
 
 /** Parse a recipe with Cooklang markup. */
-function parseCooklangBody(body: string): Omit<ParsedRecipe, "metadata" | "hasCooklangMarkup"> {
+function parseCooklangBody(
+  body: string,
+): Omit<ParsedRecipe, "metadata" | "hasCooklangMarkup"> {
   const ingredients: Ingredient[] = [];
   const cookware: Cookware[] = [];
   const timers: Timer[] = [];
@@ -387,7 +417,9 @@ function parseCooklangBody(body: string): Omit<ParsedRecipe, "metadata" | "hasCo
 }
 
 /** Parse a plain-text recipe (no Cooklang markup). */
-function parsePlainTextBody(body: string): Omit<ParsedRecipe, "metadata" | "hasCooklangMarkup"> {
+function parsePlainTextBody(
+  body: string,
+): Omit<ParsedRecipe, "metadata" | "hasCooklangMarkup"> {
   const ingredients: Ingredient[] = [];
   const cookware: Cookware[] = [];
   const timers: Timer[] = [];
@@ -409,15 +441,25 @@ function parsePlainTextBody(body: string): Omit<ParsedRecipe, "metadata" | "hasC
     }
 
     if (/ingredients/i.test(currentSection.name)) {
-      if ((trimmed.endsWith(":") || (trimmed === trimmed.charAt(0).toUpperCase() + trimmed.slice(1) && !/^\d/.test(trimmed) && trimmed.split(" ").length <= 4 && !trimmed.includes(","))) && trimmed.endsWith(":")) {
-          currentSection.steps.push({
-            tokens: [{ type: "text", value: trimmed }],
-            raw: trimmed,
-          });
-          continue;
-        }
+      if (
+        (trimmed.endsWith(":") ||
+          (trimmed === trimmed.charAt(0).toUpperCase() + trimmed.slice(1) &&
+            !/^\d/.test(trimmed) &&
+            trimmed.split(" ").length <= 4 &&
+            !trimmed.includes(","))) &&
+        trimmed.endsWith(":")
+      ) {
+        currentSection.steps.push({
+          tokens: [{ type: "text", value: trimmed }],
+          raw: trimmed,
+        });
+        continue;
+      }
 
-      const ingMatch = /^([\d½¼¾⅓⅔⅛⅜⅝⅞/\s.-]+)?((?:ounces?|oz|pounds?|lbs?|cups?|tablespoons?|tbsp|teaspoons?|tsp|cloves?|medium|large|small|pieces?|slices?|cans?|grams?|g|ml|liters?|pinch(?:es)?|heads?|bunche?s?|stalks?|sprigs?|inches?|dashes?)[.)]*\s+)?(.+)/i.exec(trimmed);
+      const ingMatch =
+        /^([\d½¼¾⅓⅔⅛⅜⅝⅞/\s.-]+)?((?:ounces?|oz|pounds?|lbs?|cups?|tablespoons?|tbsp|teaspoons?|tsp|cloves?|medium|large|small|pieces?|slices?|cans?|grams?|g|ml|liters?|pinch(?:es)?|heads?|bunche?s?|stalks?|sprigs?|inches?|dashes?)[.)]*\s+)?(.+)/i.exec(
+          trimmed,
+        );
       if (ingMatch) {
         const qty = (ingMatch[1] || "").trim();
         const unit = (ingMatch[2] || "").trim();
@@ -429,7 +471,11 @@ function parsePlainTextBody(body: string): Omit<ParsedRecipe, "metadata" | "hasC
           raw: trimmed,
         });
       } else {
-        const ingredient: Ingredient = { name: trimmed, quantity: "", units: "" };
+        const ingredient: Ingredient = {
+          name: trimmed,
+          quantity: "",
+          units: "",
+        };
         ingredients.push(ingredient);
         currentSection.steps.push({
           tokens: [{ type: "ingredient", value: trimmed, ref: ingredient }],
@@ -457,7 +503,9 @@ export function parseRecipe(text: string): ParsedRecipe {
   const { metadata, body } = parseFrontmatter(text);
   const isCooklang = hasCooklangSyntax(body);
 
-  const parsed = isCooklang ? parseCooklangBody(body) : parsePlainTextBody(body);
+  const parsed = isCooklang
+    ? parseCooklangBody(body)
+    : parsePlainTextBody(body);
 
   return {
     metadata,

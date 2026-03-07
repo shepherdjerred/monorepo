@@ -6,7 +6,7 @@ export type CooklangSettings = {
   defaultView: "source" | "preview";
   showNutrition: boolean;
   showCheckboxes: boolean;
-}
+};
 
 export const DEFAULT_SETTINGS: CooklangSettings = {
   showInlineQuantities: false,
@@ -49,30 +49,36 @@ export class CooklangSettingTab extends PluginSettingTab {
       .setName("Show inline quantities")
       .setDesc("Show ingredient quantities inline in the directions")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showInlineQuantities).onChange(async (value) => {
-          this.plugin.settings.showInlineQuantities = value;
-          await this.plugin.saveSettings();
-        }),
+        toggle
+          .setValue(this.plugin.settings.showInlineQuantities)
+          .onChange(async (value) => {
+            this.plugin.settings.showInlineQuantities = value;
+            await this.plugin.saveSettings();
+          }),
       );
 
     new Setting(containerEl)
       .setName("Show nutrition info")
       .setDesc("Show the nutrition section if available")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showNutrition).onChange(async (value) => {
-          this.plugin.settings.showNutrition = value;
-          await this.plugin.saveSettings();
-        }),
+        toggle
+          .setValue(this.plugin.settings.showNutrition)
+          .onChange(async (value) => {
+            this.plugin.settings.showNutrition = value;
+            await this.plugin.saveSettings();
+          }),
       );
 
     new Setting(containerEl)
       .setName("Ingredient checkboxes")
       .setDesc("Show checkboxes next to ingredients")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.showCheckboxes).onChange(async (value) => {
-          this.plugin.settings.showCheckboxes = value;
-          await this.plugin.saveSettings();
-        }),
+        toggle
+          .setValue(this.plugin.settings.showCheckboxes)
+          .onChange(async (value) => {
+            this.plugin.settings.showCheckboxes = value;
+            await this.plugin.saveSettings();
+          }),
       );
   }
 }

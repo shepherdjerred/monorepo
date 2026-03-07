@@ -4,10 +4,17 @@ declare module "@codemirror/view" {
   export class EditorView {
     state: { doc: { toString: () => string; length: number } };
     constructor(config: { state: unknown; parent: HTMLElement });
-    dispatch: (tr: { changes: { from: number; to: number; insert: string } }) => void;
+    dispatch: (tr: {
+      changes: { from: number; to: number; insert: string };
+    }) => void;
     destroy: () => void;
     static updateListener: {
-      of: (fn: (update: { docChanged: boolean; state: { doc: { toString: () => string } } }) => void) => unknown;
+      of: (
+        fn: (update: {
+          docChanged: boolean;
+          state: { doc: { toString: () => string } };
+        }) => void,
+      ) => unknown;
     };
     static lineWrapping: unknown;
   }
@@ -32,12 +39,15 @@ declare module "@codemirror/commands" {
 declare module "@codemirror/language" {
   type StreamParser<State> = {
     startState: () => State;
-    token: (stream: {
-      sol: () => boolean;
-      match: (pattern: RegExp) => RegExpMatchArray | null;
-      next: () => string | null;
-    }, state: State) => string | null;
-  }
+    token: (
+      stream: {
+        sol: () => boolean;
+        match: (pattern: RegExp) => RegExpMatchArray | null;
+        next: () => string | null;
+      },
+      state: State,
+    ) => string | null;
+  };
   export const StreamLanguage: {
     define: <State>(spec: StreamParser<State>) => unknown;
   };
