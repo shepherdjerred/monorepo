@@ -33,7 +33,7 @@ fi
 
 # Check for host PID namespace (can see/signal host processes)
 if [[ -f /proc/1/cmdline ]]; then
-    INIT_CMD=$(cat /proc/1/cmdline 2>/dev/null | tr '\0' ' ')
+    INIT_CMD=$(tr '\0' ' ' < /proc/1/cmdline 2>/dev/null)
     if [[ "$INIT_CMD" == *"systemd"* ]] || [[ "$INIT_CMD" == *"/sbin/init"* ]]; then
         warn_security "Host PID namespace detected - container can see and signal host processes"
     fi
