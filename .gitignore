@@ -65,8 +65,8 @@ coverage/
 # Monarch hardcoded order data (contains personal purchase history)
 packages/monarch/src/lib/costco/costco-orders.json
 
-# Local-only packages (not yet integrated)
-packages/cooklang-for-obsidian/
+# Cooklang plugin build output
+packages/cooklang-for-obsidian/main.js
 
 # Obsidian plugin bundles (may contain embedded secrets)
 obsidian/.obsidian/plugins/*/main.js

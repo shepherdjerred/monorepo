@@ -1,0 +1,10 @@
+{
+  "id": "cooklang-for-obsidian",
+  "name": "Cook Preview",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Preview Cooklang .cook files",
+  "author": "Jerred Shepherd",
+  "authorUrl": "https://sjer.red",
+  "isDesktopOnly": false
+}
