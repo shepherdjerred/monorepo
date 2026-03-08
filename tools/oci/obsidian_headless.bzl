@@ -30,6 +30,7 @@ def obsidian_headless_image(name, visibility = None):
             TMPDIR=$$(mktemp -d) && \
             trap 'rm -rf $$TMPDIR' EXIT && \
             cd $$TMPDIR && \
+            # renovate: datasource=npm depName=obsidian-headless
             npm install --global --prefix $$TMPDIR/usr/local obsidian-headless@0.0.4 && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
         """,

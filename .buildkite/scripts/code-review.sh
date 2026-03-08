@@ -4,14 +4,14 @@ set -euo pipefail
 source "$(dirname "$0")/setup-tools.sh"
 
 install_base
+install_node
 install_gh
 
 # Install Claude Code CLI
-# Note: Claude Code CLI requires Node.js runtime — justified Node.js exception
-echo "--- :robot_face: Installing Claude Code CLI"
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash - > /dev/null 2>&1
-apt-get install -y -qq nodejs > /dev/null
-bun add -g @anthropic-ai/claude-code > /dev/null 2>&1
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
+CLAUDE_CODE_VERSION="2.1.71"
+echo "--- :robot_face: Installing Claude Code CLI ${CLAUDE_CODE_VERSION}"
+bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" > /dev/null 2>&1
 claude --version
 
 # Validate required env vars

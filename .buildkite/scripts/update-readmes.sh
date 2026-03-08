@@ -8,9 +8,10 @@ install_uv
 install_gh
 install_bun
 
-# Install cogapp (uv tool creates an isolated venv, adds `cog` to PATH)
-echo "--- :python: Installing cogapp"
-uv tool install cogapp
+# renovate: datasource=pypi depName=cogapp
+COGAPP_VERSION="3.6.0"
+echo "--- :python: Installing cogapp ${COGAPP_VERSION}"
+uv tool install "cogapp==${COGAPP_VERSION}"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Validate required env vars

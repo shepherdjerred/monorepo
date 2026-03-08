@@ -10,6 +10,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const S3_CREDENTIALS_SECRET_NAME = "seaweedfs-s3-credentials";
 
@@ -55,7 +56,7 @@ export function createBazelRemoteChart(app: App) {
           containers: [
             {
               name: "bazel-remote",
-              image: "buchgr/bazel-remote-cache:v2.6.1",
+              image: `buchgr/bazel-remote-cache:${versions["buchgr/bazel-remote-cache"]}`,
               args: [
                 "--s3.endpoint=seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
                 "--s3.bucket=bazel-cache",

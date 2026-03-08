@@ -13,7 +13,7 @@ steps:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
               - name: container-0
-                image: "ghcr.io/shepherdjerred/ci-base:latest"
+                image: "ghcr.io/shepherdjerred/ci-base:402"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets

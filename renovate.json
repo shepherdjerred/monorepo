@@ -11,6 +11,24 @@
         "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*\"(?<depName>.+?)\":\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\"",
         "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*(?<depName>[a-zA-Z0-9_-]+):\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\""
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "CI tool versions in Buildkite scripts and Dockerfiles",
+      "managerFilePatterns": [".buildkite/**"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n(?:ARG )?\\w+=(?:\")?(?<currentValue>[v0-9][0-9.]*)(?:\")?"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Versions in Bazel .bzl and BUILD files",
+      "managerFilePatterns": ["tools/**/*.bzl", "tools/**/BUILD.bazel"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n\\s*[\\w.]+ ?=\\s*\"(?<currentValue>[^\"]+)\"",
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n\\s+\\w+=(?<currentValue>[v0-9][0-9.]*)",
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)\\n[^@]*@(?<currentValue>[0-9][0-9.]*)"
+      ]
     }
   ],
   "customDatasources": {
