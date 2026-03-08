@@ -2,6 +2,8 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -45,6 +47,42 @@ typecheck_test(
     deps = [
         ":node_modules/@types/bun",
         ":node_modules/zod",
+        "//:node_modules/undici-types",
+    ],
+)
+
+# ─── rules_bun (native Bun rules, coexisting during migration) ───
+
+bun_library(
+    name = "bun_pkg",
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@types/bun",
+        ":node_modules/zod",
+    ],
+)
+
+bun_binary(
+    name = "bun_tools",
+    entry_point = "src/index.ts",
+    deps = [":bun_pkg"],
+)
+
+bun_test(
+    name = "bun_test_new",
+    tsconfig = "tsconfig.json",
+    deps = [":bun_pkg"],
+)
+
+bun_typecheck_test(
+    name = "bun_typecheck",
+    extra_files = ["//:tsconfig.base.json"],
+    tsconfig = "tsconfig.json",
+    deps = [
+        ":bun_pkg",
+        ":node_modules/typescript",
         "//:node_modules/undici-types",
     ],
 )

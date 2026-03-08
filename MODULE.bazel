@@ -95,7 +95,7 @@ crate.annotation(
 use_repo(crate, "crates")
 
 ##############################################################################
-# Bun toolchain
+# Bun toolchain (Node.js masquerade — used by rules_js/rules_ts)
 ##############################################################################
 
 bun = use_extension("//tools/bun:extensions.bzl", "bun")
@@ -118,6 +118,28 @@ use_repo(
     "bun_darwin_arm64",
     "bun_linux_amd64",
     "bun_linux_arm64",
+)
+
+##############################################################################
+# Native Bun toolchain (rules_bun — no Node.js masquerade)
+##############################################################################
+
+rules_bun = use_extension("//tools/rules_bun/bun:extensions.bzl", "bun")
+rules_bun.toolchain(bun_version = "1.3.9")
+
+register_toolchains(
+    "@rules_bun_darwin_arm64//:bun_toolchain",
+    "@rules_bun_darwin_amd64//:bun_toolchain",
+    "@rules_bun_linux_arm64//:bun_toolchain",
+    "@rules_bun_linux_amd64//:bun_toolchain",
+)
+
+use_repo(
+    rules_bun,
+    "rules_bun_darwin_amd64",
+    "rules_bun_darwin_arm64",
+    "rules_bun_linux_amd64",
+    "rules_bun_linux_arm64",
 )
 
 ##############################################################################
