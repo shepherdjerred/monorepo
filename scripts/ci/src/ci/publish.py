@@ -20,12 +20,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from ci.lib import bazel, ghcr, npm
+from ci.lib import bazel, buildkite, ghcr, npm
 from ci.lib.config import ReleaseConfig
 
 
@@ -49,6 +48,7 @@ PUSH_TARGET_TO_VERSION_KEY = {
     "//packages/discord-plays-pokemon:image_push": "shepherdjerred/discord-plays-pokemon",
     "//packages/starlight-karma-bot:image_push": "shepherdjerred/starlight-karma-bot/beta",
     "//packages/better-skill-capped/fetcher:image_push": "shepherdjerred/better-skill-capped-fetcher",
+    "//tools/oci:obsidian_headless_push": "shepherdjerred/obsidian-headless",
 }
 
 DIGESTS_FILE = "/tmp/image-digests.json"
@@ -63,6 +63,7 @@ PUSH_TARGETS = [
     "//packages/discord-plays-pokemon:image_push",
     "//packages/starlight-karma-bot:image_push",
     "//packages/better-skill-capped/fetcher:image_push",
+    "//tools/oci:obsidian_headless_push",
 ]
 
 # NPM packages to publish
@@ -72,31 +73,6 @@ NPM_PACKAGES = [
     str(_REPO_ROOT / "packages/webring"),
     str(_REPO_ROOT / "packages/homelab/src/helm-types"),
 ]
-
-# Docker-built images (not using Bazel oci_push)
-DOCKER_IMAGES = [
-    {
-        "name": "obsidian-headless",
-        "dockerfile": str(_REPO_ROOT / "tools/oci/obsidian-headless/Dockerfile"),
-        "context": str(_REPO_ROOT / "tools/oci/obsidian-headless"),
-        "repository": "ghcr.io/shepherdjerred/obsidian-headless",
-        "version_key": "shepherdjerred/obsidian-headless",
-    },
-]
-
-
-def _get_metadata(key: str, default: str = "false") -> str:
-    """Get Buildkite metadata. Returns default if buildkite-agent is not available."""
-    if shutil.which("buildkite-agent") is None:
-        print(f"buildkite-agent not found, using default {key}={default}", flush=True)
-        return default
-    result = subprocess.run(
-        ["buildkite-agent", "meta-data", "get", key, "--default", default],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.stdout.strip() if result.returncode == 0 else default
 
 
 def _filter_by_packages(items: list[str], packages: list[str] | None) -> list[str]:
@@ -144,35 +120,6 @@ def main() -> None:
         except Exception as e:
             errors.append(f"Failed to push {target}: {e}")
 
-    # --- Docker-built images ---
-    docker_images = DOCKER_IMAGES if not args.packages else [
-        img for img in DOCKER_IMAGES
-        if any(p in img["name"] for p in args.packages)
-    ]
-    for img in docker_images:
-        try:
-            tag = f"{img['repository']}:{config.version}"
-            print(f"\nBuilding Docker image {img['name']} ({tag})", flush=True)
-            subprocess.run(
-                ["docker", "build", "-t", tag, "-f", img["dockerfile"], img["context"]],
-                check=True,
-            )
-            print(f"Pushing {tag}", flush=True)
-            result = subprocess.run(
-                ["docker", "push", tag],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            version_key = img.get("version_key")
-            if version_key:
-                # Try to get digest from push output
-                versioned = ghcr.format_version_with_digest(config.version, result.stdout)
-                digests[version_key] = versioned
-                print(f"  Digest: {versioned}", flush=True)
-        except Exception as e:
-            errors.append(f"Failed to build/push Docker image {img['name']}: {e}")
-
     # Write digests for version_commit_back to consume (local file for same-step use)
     if digests:
         with open(DIGESTS_FILE, "w") as f:
@@ -180,15 +127,12 @@ def main() -> None:
         print(f"\nWrote {len(digests)} digests to {DIGESTS_FILE}", flush=True)
 
     # Also store digests in Buildkite metadata for cross-step sharing
-    if digests and shutil.which("buildkite-agent") is not None:
-        subprocess.run(
-            ["buildkite-agent", "meta-data", "set", "image_digests", json.dumps(digests)],
-            check=False,
-        )
+    if digests:
+        buildkite.set_metadata("image_digests", json.dumps(digests))
         print("Stored digests in Buildkite metadata", flush=True)
 
     # --- NPM publishing (only when release-please created a release) ---
-    release_created = _get_metadata("release_created") == "true"
+    release_created = buildkite.get_metadata("release_created", "false") == "true"
     npm_token = os.environ.get("NPM_TOKEN", "")
     npm_packages = NPM_PACKAGES if not args.packages else [
         p for p in NPM_PACKAGES
@@ -211,6 +155,8 @@ def main() -> None:
         print(f"\n--- {len(errors)} error(s) during publish ---", flush=True)
         for i, err in enumerate(errors, 1):
             print(f"  {i}. {err}", flush=True)
+        summary = "\n".join(f"- {e}" for e in errors)
+        buildkite.annotate(f"**Publish errors:**\n{summary}", style="error", context="publish")
         sys.exit(1)
 
     print("\nAll publishes completed successfully", flush=True)

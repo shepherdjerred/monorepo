@@ -17,6 +17,12 @@ bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_nodejs", version = "6.7.3")
 bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "rules_shellcheck", version = "0.5.1")
+bazel_dep(name = "rules_multitool", version = "1.11.1")
+
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+multitool.hub(lockfile = "//:multitool.lock.json")
+use_repo(multitool, "multitool")
 
 # Rust (for clauderon)
 bazel_dep(name = "rules_rust", version = "0.69.0")
@@ -236,6 +242,28 @@ oci.pull(
         "linux/arm64/v8",
     ],
 )
+
+# Python slim — used by dns-audit
+oci.pull(
+    name = "python_slim",
+    digest = "sha256:6a27522252aef8432841f224d9baaa6e9fce07b07584154fa0b9a96603af7456",
+    image = "docker.io/library/python",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+
+# Caddy Alpine — used by caddy-s3proxy
+oci.pull(
+    name = "caddy_alpine",
+    digest = "sha256:fce4f15aad23222c0ac78a1220adf63bae7b94355d5ea28eee53910624acedfa",
+    image = "docker.io/library/caddy",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
 use_repo(
     oci,
     "bun_alpine",
@@ -244,7 +272,13 @@ use_repo(
     "bun_debian",
     "bun_debian_linux_amd64",
     "bun_debian_linux_arm64",
+    "caddy_alpine",
+    "caddy_alpine_linux_amd64",
+    "caddy_alpine_linux_arm64_v8",
     "node_slim",
     "node_slim_linux_amd64",
     "node_slim_linux_arm64_v8",
+    "python_slim",
+    "python_slim_linux_amd64",
+    "python_slim_linux_arm64_v8",
 )

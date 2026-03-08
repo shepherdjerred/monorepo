@@ -1,7 +1,10 @@
+load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/oci:bun_service_image.bzl", "bun_service_image")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -40,4 +43,61 @@ typecheck_test(
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],
+)
+
+# Container image for K8s deployment.
+# Two-stage: bun_service_image creates the base, then we add git + helm on top
+# (simple-git needs git CLI, image-extractor needs helm CLI at runtime).
+bun_service_image(
+    name = "image_base",
+    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    entry_point = "src/main.ts",
+    env = {"NODE_ENV": "production"},
+    labels = {
+        "org.opencontainers.image.title": "dependency-summary",
+        "org.opencontainers.image.description": "Dependency update email notifications",
+        "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
+    },
+    package_json = "package.json",
+    visibility = ["//visibility:public"],
+    workspace_packages = {
+        "packages/homelab/src/cdk8s": "//packages/homelab/src/cdk8s:pkg",
+        "packages/homelab/src/helm-types": "//packages/homelab/src/helm-types:pkg",
+        "packages/homelab/src/ha": "//packages/homelab/src/ha:pkg",
+    },
+)
+
+oci_image(
+    name = "image",
+    base = ":image_base",
+    tars = [
+        "//tools/oci:git_layer",
+        "//tools/oci:helm_layer",
+    ],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "image_tags_tmpl",
+    outs = ["image_tags_tmpl.txt"],
+    cmd = "echo '{STABLE_GIT_SHA}' > $@",
+    tags = ["manual"],
+)
+
+expand_template(
+    name = "image_tags",
+    out = "image_tags.txt",
+    template = ":image_tags_tmpl",
+    stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
+    tags = ["manual"],
+)
+
+oci_push(
+    name = "image_push",
+    image = ":image",
+    repository = "ghcr.io/shepherdjerred/dependency-summary",
+    remote_tags = ":image_tags",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
 )

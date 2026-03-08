@@ -8,3 +8,54 @@ obsidian_headless_image(
     name = "obsidian_headless",
     visibility = ["//visibility:public"],
 )
+
+# Git layer: installs git into a tar layer for use by service images that need
+# the git CLI at runtime (e.g. homelab HA, deps-email via simple-git).
+# On Linux (CI): downloads .deb packages via apt-get.
+# On macOS (local dev): creates an empty placeholder layer.
+genrule(
+    name = "git_layer",
+    outs = ["git_layer.tar"],
+    cmd = """
+        EXECROOT=$$PWD && \
+        OUTPUT_TAR=$$EXECROOT/$@ && \
+        TMPDIR=$$(mktemp -d) && \
+        trap 'rm -rf $$TMPDIR' EXIT && \
+        mkdir -p $$TMPDIR/root/usr/bin && \
+        if command -v apt-get >/dev/null 2>&1; then \
+            APT_STATE=$$TMPDIR/apt-state && \
+            APT_CACHE=$$TMPDIR/apt-cache && \
+            mkdir -p $$APT_STATE/lists/partial $$APT_CACHE/archives/partial && \
+            apt-get -o Dir::State=$$APT_STATE -o Dir::Cache=$$APT_CACHE update -qq 2>/dev/null && \
+            cd $$TMPDIR && \
+            apt-get -o Dir::State=$$APT_STATE -o Dir::Cache=$$APT_CACHE download git liberror-perl 2>/dev/null && \
+            for deb in *.deb; do dpkg-deb -x $$deb root; done; \
+        fi && \
+        (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR/root . 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR/root .)
+    """,
+    tags = ["manual", "requires-network"],
+    visibility = ["//visibility:public"],
+)
+
+# Helm layer: downloads the helm binary for linux/amd64 into a tar layer.
+# Helm is a statically-linked Go binary, so no shared library deps.
+genrule(
+    name = "helm_layer",
+    outs = ["helm_layer.tar"],
+    cmd = """
+        EXECROOT=$$PWD && \
+        OUTPUT_TAR=$$EXECROOT/$@ && \
+        TMPDIR=$$(mktemp -d) && \
+        trap 'rm -rf $$TMPDIR' EXIT && \
+        mkdir -p $$TMPDIR/usr/local/bin && \
+        HELM_VERSION=v3.17.3 && \
+        curl -fsSL "https://get.helm.sh/helm-$${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C $$TMPDIR && \
+        mv $$TMPDIR/linux-amd64/helm $$TMPDIR/usr/local/bin/helm && \
+        (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
+    """,
+    tags = [
+        "manual",
+        "requires-network",
+    ],
+    visibility = ["//visibility:public"],
+)
