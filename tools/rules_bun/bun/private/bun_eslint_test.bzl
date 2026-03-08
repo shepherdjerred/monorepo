@@ -1,9 +1,9 @@
-"""bun_typecheck_test rule implementation."""
+"""bun_eslint_test rule implementation."""
 
-load("//tools/rules_bun/bun:materialize.bzl", "collect_all_npm_sources", "materialize_tree")
 load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
+load("//tools/rules_bun/bun/private:materialize.bzl", "collect_all_npm_sources", "materialize_tree")
 
-def _bun_typecheck_test_impl(ctx):
+def _bun_eslint_test_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
@@ -23,7 +23,6 @@ def _bun_typecheck_test_impl(ctx):
         bun_info,
         tsconfig = ctx.file.tsconfig,
         extra_files = ctx.files.extra_files,
-        prisma_client = ctx.file.prisma_client,
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
     )
@@ -34,7 +33,7 @@ def _bun_typecheck_test_impl(ctx):
     else:
         bun_rp = ctx.workspace_name + "/" + bun_rp
 
-    launcher = ctx.actions.declare_file(ctx.label.name + "_typecheck_launcher.sh")
+    launcher = ctx.actions.declare_file(ctx.label.name + "_eslint_launcher.sh")
     ctx.actions.expand_template(
         template = ctx.file._launcher_template,
         output = launcher,
@@ -47,16 +46,15 @@ def _bun_typecheck_test_impl(ctx):
 
     return [DefaultInfo(executable = launcher, runfiles = ctx.runfiles(files = [tree, bun]))]
 
-bun_typecheck_test = rule(
-    implementation = _bun_typecheck_test_impl,
+bun_eslint_test = rule(
+    implementation = _bun_eslint_test_impl,
     attrs = {
         "deps": attr.label_list(mandatory = True),
         "tsconfig": attr.label(allow_single_file = ["tsconfig.json"]),
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
-        "prisma_client": attr.label(allow_single_file = True),
         "_launcher_template": attr.label(
-            default = "//tools/rules_bun/ts/private:bun_typecheck.sh.tpl",
+            default = "//tools/rules_bun/bun/private:bun_eslint_test.sh.tpl",
             allow_single_file = True,
         ),
     },

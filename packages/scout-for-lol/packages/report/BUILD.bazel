@@ -1,19 +1,19 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-js_library(
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@resvg/resvg-js",
@@ -37,55 +37,24 @@ eslint_test(
 )
 
 # @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    data = ["package.json"],
-    extends = "//packages/scout-for-lol:tsconfig_base",
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":node_modules/@resvg/resvg-js",
-        ":node_modules/@scout-for-lol/data",
-        ":node_modules/@types/react",
-        ":node_modules/bun-types",
-        ":node_modules/react",
-        ":node_modules/remeda",
-        ":node_modules/satori",
-        ":node_modules/ts-pattern",
-        ":node_modules/yoga-wasm-web",
-        ":node_modules/zod",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
-        "//:node_modules/@types/node",
         "//:node_modules/undici-types",
-        "//packages/scout-for-lol/packages/data:pkg",
     ],
 )
 
 # Snapshot tests open .snap files in read-write mode; requires local execution.
 bun_test(
     name = "test",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.png",
-        "src/**/*.svg",
-        "src/**/*.ttf",
-        "src/**/*.json",
-        "src/**/*.snap",
-    ]),
+    tags = ["manual"],
     local = True,
-    deps = [
-        ":node_modules/@resvg/resvg-js",
-        ":node_modules/react",
-        ":node_modules/remeda",
-        ":node_modules/satori",
-        ":node_modules/ts-pattern",
-        ":node_modules/yoga-wasm-web",
-        ":node_modules/zod",
-        "//:node_modules/@types/bun",
-        "//packages/scout-for-lol/packages/data:pkg",
-    ],
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
 )

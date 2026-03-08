@@ -251,6 +251,46 @@
         "recordedRepoMappingEntries": []
       }
     },
+    "//tools/rules_bun/bun:extensions.bzl%bun": {
+      "general": {
+        "bzlTransitiveDigest": "tqqUlYNxE1gC+vcZyKnjULtNRffdDFSbWqI34crQ+5w=",
+        "usagesDigest": "L9NhaLKZ2PdZmlUQnHHZVwOuXx43NLVwQpOkQplZplw=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "rules_bun_darwin_arm64": {
+            "repoRuleId": "@@//tools/rules_bun/bun:repositories.bzl%bun_repo",
+            "attributes": {
+              "bun_version": "1.3.9",
+              "platform": "darwin_arm64"
+            }
+          },
+          "rules_bun_darwin_amd64": {
+            "repoRuleId": "@@//tools/rules_bun/bun:repositories.bzl%bun_repo",
+            "attributes": {
+              "bun_version": "1.3.9",
+              "platform": "darwin_amd64"
+            }
+          },
+          "rules_bun_linux_arm64": {
+            "repoRuleId": "@@//tools/rules_bun/bun:repositories.bzl%bun_repo",
+            "attributes": {
+              "bun_version": "1.3.9",
+              "platform": "linux_arm64"
+            }
+          },
+          "rules_bun_linux_amd64": {
+            "repoRuleId": "@@//tools/rules_bun/bun:repositories.bzl%bun_repo",
+            "attributes": {
+              "bun_version": "1.3.9",
+              "platform": "linux_amd64"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
     "@@aspect_rules_ts+//ts:extensions.bzl%ext": {
       "general": {
         "bzlTransitiveDigest": "jrh/WHprsSSVvWjNLpDRdUl48LnV4xm2+ZssEvasHxQ=",

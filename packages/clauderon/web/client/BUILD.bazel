@@ -1,9 +1,8 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -21,6 +20,7 @@ ts_project(
     extends = "//:tsconfig_base",
     out_dir = "dist",
     root_dir = "src",
+    tags = ["manual"],
     tsconfig = "tsconfig.json",
     validate = False,
     visibility = ["//visibility:public"],
@@ -30,12 +30,12 @@ ts_project(
     ],
 )
 
-js_library(
+bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
-        ":types",
         "//packages/clauderon/web/shared:pkg",
     ],
 )
@@ -44,24 +44,26 @@ eslint_test(
     name = "lint",
     size = "small",
     srcs = glob(["src/**/*.ts"]),
-    deps = ["//packages/clauderon/web/shared:pkg"],
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
+    tags = ["manual"],
+    extra_files = ["//:tsconfig.base.json"],
+    tsconfig = "tsconfig.json",
     deps = [
+        ":pkg",
         ":node_modules/@clauderon/shared",
         ":node_modules/@types/bun",
+        ":node_modules/typescript",
     ],
 )
 
 bun_test(
     name = "test",
     size = "small",
-    srcs = glob(["src/**/*.ts"]),
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@types/bun",
-        "//packages/clauderon/web/shared:pkg",
+        ":pkg",
     ],
 )

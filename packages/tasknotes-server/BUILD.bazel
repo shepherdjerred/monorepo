@@ -1,69 +1,15 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-js_library(
-    name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":node_modules/gray-matter",
-        ":node_modules/hono",
-        ":node_modules/prom-client",
-        ":node_modules/yaml",
-        ":node_modules/zod",
-        "//packages/tasknotes-types:pkg",
-    ],
-)
-
-js_binary(
-    name = "tasknotes_server",
-    data = [":pkg"],
-    entry_point = "src/index.ts",
-)
-
-eslint_test(
-    name = "lint",
-    srcs = glob(["src/**/*.ts"]),
-    deps = [
-        "//packages/tasknotes-types:pkg",
-    ],
-)
-
-workspace_typecheck_test(
-    name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
-    data = [
-        "//packages/tasknotes-types:pkg",
-    ],
-    deps = [
-        ":node_modules/@types/bun",
-        ":node_modules/gray-matter",
-        ":node_modules/hono",
-        ":node_modules/prom-client",
-        ":node_modules/tasknotes-types",
-        ":node_modules/yaml",
-        ":node_modules/zod",
-        "//:node_modules/@types/bun",
-        "//:node_modules/@types/node",
-        "//:node_modules/bun-types",
-        "//:node_modules/undici-types",
-    ],
-)
-
-# ─── rules_bun (native Bun rules) ───
-
 bun_library(
-    name = "bun_pkg",
+    name = "pkg",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -73,15 +19,26 @@ bun_library(
         ":node_modules/prom-client",
         ":node_modules/yaml",
         ":node_modules/zod",
-        "//packages/tasknotes-types:bun_pkg",
+        "//packages/tasknotes-types:pkg",
     ],
 )
 
+bun_binary(
+    name = "tasknotes_server",
+    deps = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
 bun_typecheck_test(
-    name = "bun_typecheck",
+    name = "typecheck",
     tsconfig = "tsconfig.json",
     deps = [
-        ":bun_pkg",
+        ":pkg",
         ":node_modules/@types/bun",
         ":node_modules/typescript",
         "//:node_modules/undici-types",
@@ -90,14 +47,9 @@ bun_typecheck_test(
 
 bun_test(
     name = "test",
-    srcs = glob(["src/**/*.ts"]),
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/gray-matter",
-        ":node_modules/hono",
-        ":node_modules/prom-client",
-        ":node_modules/yaml",
-        ":node_modules/zod",
-        "//packages/tasknotes-types:pkg",
+        ":pkg",
     ],
 )
 

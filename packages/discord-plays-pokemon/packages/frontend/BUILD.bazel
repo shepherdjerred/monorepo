@@ -1,23 +1,24 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
+load("//tools/bazel:vite_build.bzl", "vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# Vite-based frontend — stub js_library for dependency tracking.
-# Full Vite build integration is not yet implemented.
-js_library(
+vite_build(name = "vite_build")
+
+# Vite-based frontend.
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-        "src/**/*.css",
-    ]) + [
-        "package.json",
-    ],
+    ]),
+    data = glob(["src/**/*.css"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@sentry/react",
@@ -41,44 +42,18 @@ eslint_test(
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
-    deps = ["//packages/discord-plays-pokemon/packages/common:pkg"],
 )
 
 # @discord-plays-pokemon/common exports from dist/ — common:build provides
 # compiled .js + .d.ts files. Also uses Vite's import.meta.env type augmentations.
-workspace_typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]) + ["tsconfig.node.json"],
-    data = [
-        "types/vite-env.d.ts",
-        "//packages/discord-plays-pokemon/packages/common:build",
-        "//packages/discord-plays-pokemon/packages/common:build_types",
-        "//packages/discord-plays-pokemon/packages/common:pkg",
-    ],
-    env = {"NO_PRESERVE_SYMLINKS": "1"},
+    tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@discord-plays-pokemon/common",
-        ":node_modules/@sentry/react",
-        ":node_modules/@tailwindcss/vite",
-        ":node_modules/@tanstack/react-query",
-        ":node_modules/@types/lodash",
-        ":node_modules/@types/react",
-        ":node_modules/@types/react-dom",
-        ":node_modules/keyboardjs",
-        ":node_modules/lodash",
-        ":node_modules/react",
-        ":node_modules/react-dom",
-        ":node_modules/react-use",
-        ":node_modules/socket.io-client",
-        ":node_modules/ts-pattern",
-        ":node_modules/unplugin-icons",
-        ":node_modules/vite",
-        ":node_modules/zod",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
-        "//:node_modules/bun-types",
         "//:node_modules/undici-types",
     ],
 )

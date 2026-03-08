@@ -1,24 +1,24 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:vite_build.bzl", "vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# Vite-based browser extension — stub js_library for dependency tracking.
-# Full Vite build integration is not yet implemented.
-js_library(
+vite_build(name = "vite_build")
+
+# Vite-based browser extension.
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-        "src/**/*.sass",
-    ]) + [
-        "package.json",
-    ],
+    ]),
+    data = glob(["src/**/*.sass"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@fortawesome/fontawesome-free",
@@ -35,7 +35,7 @@ js_library(
         ":node_modules/react-highlight-words",
         ":node_modules/react-redux",
         ":node_modules/react-router-dom",
-        ":node_modules/typescript",
+        "//:node_modules/typescript",
         ":node_modules/zod",
     ],
 )
@@ -48,60 +48,23 @@ eslint_test(
     ]),
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]) + ["tsconfig.node.json"],
+    extra_files = ["tsconfig.node.json"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@fortawesome/fontawesome-free",
-        ":node_modules/@fortawesome/fontawesome-svg-core",
-        ":node_modules/@fortawesome/free-solid-svg-icons",
-        ":node_modules/@fortawesome/react-fontawesome",
-        ":node_modules/@sentry/react",
+        ":pkg",
         ":node_modules/@types/react",
         ":node_modules/@types/react-dom",
         ":node_modules/@types/react-highlight-words",
-        ":node_modules/axios",
-        ":node_modules/bulma",
-        ":node_modules/classnames",
-        ":node_modules/fuse.js",
-        ":node_modules/react",
-        ":node_modules/react-dom",
-        ":node_modules/react-highlight-words",
-        ":node_modules/react-redux",
-        ":node_modules/react-router-dom",
-        ":node_modules/typescript",
-        ":node_modules/zod",
+        "//:node_modules/typescript",
         "//:node_modules/@types/bun",
     ],
 )
 
 bun_test(
     name = "test",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.json",
-    ]),
-    deps = [
-        ":node_modules/@fortawesome/fontawesome-free",
-        ":node_modules/@fortawesome/fontawesome-svg-core",
-        ":node_modules/@fortawesome/free-solid-svg-icons",
-        ":node_modules/@fortawesome/react-fontawesome",
-        ":node_modules/@sentry/react",
-        ":node_modules/axios",
-        ":node_modules/bulma",
-        ":node_modules/classnames",
-        ":node_modules/fuse.js",
-        ":node_modules/react",
-        ":node_modules/react-dom",
-        ":node_modules/react-highlight-words",
-        ":node_modules/react-redux",
-        ":node_modules/react-router-dom",
-        ":node_modules/typescript",
-        ":node_modules/zod",
-        "//:node_modules/@types/bun",
-    ],
+    data = glob(["src/**/fixtures/**"]),
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
 )

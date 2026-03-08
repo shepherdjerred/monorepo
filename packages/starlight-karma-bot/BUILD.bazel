@@ -1,16 +1,17 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-js_library(
+bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@sentry/bun",
@@ -24,10 +25,10 @@ js_library(
     ],
 )
 
-js_binary(
+bun_binary(
     name = "starlight_karma_bot",
-    data = [":pkg"],
     entry_point = "src/index.ts",
+    deps = [":pkg"],
 )
 
 eslint_test(
@@ -35,22 +36,14 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@sentry/bun",
-        ":node_modules/@types/bun",
+        ":pkg",
         ":node_modules/@types/lodash",
-        ":node_modules/bun-types",
-        ":node_modules/discord.js",
-        ":node_modules/dotenv",
-        ":node_modules/env-var",
-        ":node_modules/lodash",
-        ":node_modules/reflect-metadata",
-        ":node_modules/sqlite3",
-        ":node_modules/typeorm",
+        ":node_modules/typescript",
+        "//:node_modules/bun-types",
         "//:node_modules/undici-types",
     ],
 )

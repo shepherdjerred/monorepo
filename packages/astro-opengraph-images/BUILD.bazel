@@ -1,8 +1,7 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -11,7 +10,7 @@ exports_files([
     "tsconfig.json",
 ])
 
-js_library(
+bun_library(
     name = "pkg",
     srcs = glob(
         [
@@ -19,7 +18,8 @@ js_library(
             "src/**/*.tsx",
         ],
         exclude = ["src/**/*.test.ts"],
-    ) + ["package.json"],
+    ),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@resvg/resvg-js",
@@ -38,44 +38,23 @@ eslint_test(
     ]),
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    data = ["package.json"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@resvg/resvg-js",
+        ":pkg",
         ":node_modules/@tsconfig/node24",
         ":node_modules/@tsconfig/strictest",
-        ":node_modules/@types/bun",
         ":node_modules/@types/jsdom",
         ":node_modules/@types/node",
         ":node_modules/@types/react",
         ":node_modules/astro",
-        ":node_modules/jsdom",
-        ":node_modules/react",
-        ":node_modules/satori",
-        ":node_modules/tw-to-css",
-        ":node_modules/vitest",
+        ":node_modules/typescript",
     ],
 )
 
 bun_test(
     name = "test",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    deps = [
-        ":node_modules/@resvg/resvg-js",
-        ":node_modules/@types/bun",
-        ":node_modules/@types/jsdom",
-        ":node_modules/@types/react",
-        ":node_modules/jsdom",
-        ":node_modules/react",
-        ":node_modules/satori",
-        ":node_modules/tw-to-css",
-    ],
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
 )

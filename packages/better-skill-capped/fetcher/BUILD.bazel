@@ -1,18 +1,17 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
 # TypeScript library built with tsc.
-js_library(
+bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + [
-        "package.json",
-    ],
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@sentry/node",
@@ -21,16 +20,15 @@ js_library(
     ],
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@sentry/node",
+        ":pkg",
         ":node_modules/@tsconfig/node-lts",
         ":node_modules/@tsconfig/recommended",
         ":node_modules/@tsconfig/strictest",
-        ":node_modules/@types/bun",
-        ":node_modules/firebase",
+        ":node_modules/typescript",
         "//:node_modules/undici-types",
     ],
 )
