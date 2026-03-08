@@ -84,15 +84,13 @@ export const preferZodValidation = createRule({
       }
 
       // typeof comparisons (typeof x === "string")
-      if (node.type === AST_NODE_TYPES.BinaryExpression) {
-        if (
+      if (node.type === AST_NODE_TYPES.BinaryExpression && 
           (node.operator === "===" || node.operator === "!==") &&
           node.left.type === AST_NODE_TYPES.UnaryExpression &&
           node.left.operator === "typeof"
         ) {
           return true;
         }
-      }
 
       return false;
     }
@@ -110,14 +108,12 @@ export const preferZodValidation = createRule({
       }
 
       // For binary expressions that contain typeof
-      if (node.type === AST_NODE_TYPES.BinaryExpression) {
-        if (
+      if (node.type === AST_NODE_TYPES.BinaryExpression && 
           node.left.type === AST_NODE_TYPES.UnaryExpression &&
           node.left.operator === "typeof"
         ) {
           return 1;
         }
-      }
 
       return 0;
     }

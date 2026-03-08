@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { preferBunApis } from "./prefer-bun-apis";
+import { preferBunApis } from "./prefer-bun-apis.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

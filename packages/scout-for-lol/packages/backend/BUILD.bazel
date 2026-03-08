@@ -20,6 +20,7 @@ bun_prisma_generate(
 
 bun_library(
     name = "pkg",
+    package_name = "@scout-for-lol/backend",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -65,11 +66,14 @@ bun_eslint_test(
     extra_files = [
         "//packages/scout-for-lol:eslint.config.ts",
         "tsconfig.json",
-        "//:tsconfig.base.json",
+        "//packages/scout-for-lol:tsconfig.base.json",
     ],
+    prisma_client = ":prisma_generate",
     deps = [
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

@@ -37,9 +37,13 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    prisma_client = ":prisma_generate",
     deps = [
+        ":node_modules/prisma",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

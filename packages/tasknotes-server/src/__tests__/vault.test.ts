@@ -52,9 +52,10 @@ describe("vault reader/writer", () => {
     const tasks = await scanVault(tempDir, "");
     expect(tasks.size).toBe(1);
     const loaded = tasks.values().next().value;
-    expect(loaded.title).toBe("Round trip test");
-    expect(loaded.due).toBe("2026-03-01");
-    expect(loaded.status).toBe("open");
+    expect(loaded).toBeDefined();
+    expect(loaded!.title).toBe("Round trip test");
+    expect(loaded!.due).toBe("2026-03-01");
+    expect(loaded!.status).toBe("open");
   });
 
   test("scan returns empty map for non-existent directory", async () => {

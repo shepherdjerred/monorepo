@@ -9,6 +9,7 @@ exports_files(["package.json"])
 # Source-only package: no build step, consumers import TypeScript directly.
 bun_library(
     name = "pkg",
+    package_name = "tasknotes-types",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -25,6 +26,7 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
         "//packages/eslint-config:pkg",

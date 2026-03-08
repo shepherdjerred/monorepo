@@ -39,11 +39,11 @@ type KnipOutput = {
 
 export type KnipFileResult = {
   isUnusedFile: boolean;
-  unusedExports: Array<{
+  unusedExports: {
     symbol: string;
     line?: number;
     col?: number;
-  }>;
+  }[];
 };
 
 export type KnipResults = Map<string, KnipFileResult>;
@@ -182,9 +182,7 @@ export function runJscpd(projectRoot: string): JscpdResults {
     const cachedOutput = readJscpdCache(projectRoot);
     let output: string;
 
-    if (cachedOutput !== null) {
-      output = cachedOutput;
-    } else {
+    if (cachedOutput === null) {
       tempDir = mkdtempSync(resolve(tmpdir(), "jscpd-"));
 
       const result = spawnSync(
@@ -212,6 +210,8 @@ export function runJscpd(projectRoot: string): JscpdResults {
       }
 
       output = readFileSync(reportPath, "utf-8");
+    } else {
+      output = cachedOutput;
     }
 
     const parsed = JSON.parse(output) as JscpdOutput;

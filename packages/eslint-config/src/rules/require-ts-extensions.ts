@@ -27,7 +27,7 @@ export const requireTsExtensions: TSESLint.RuleModule<
         const relativeImportRegex = /^\.\.?\//u;
         if (
           typeof importPath !== "string" ||
-          !relativeImportRegex.exec(importPath)
+          !relativeImportRegex.test(importPath)
         ) {
           return;
         }

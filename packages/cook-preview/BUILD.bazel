@@ -1,7 +1,7 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:astro_build.bzl", "astro_build")
 load("//tools/bazel:astro_check.bzl", "astro_check")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -27,19 +27,7 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
-    extra_files = [
-        "eslint.config.ts",
-        "tsconfig.json",
-        "//:tsconfig.base.json",
-    ],
-    deps = [
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//packages/eslint-config:pkg",
-    ],
-)
+# No bun_eslint_test: only .astro files in src/, no TS to lint.
 
 # Astro virtual modules prevent tsc from resolving in sandbox.
 bun_typecheck_test(

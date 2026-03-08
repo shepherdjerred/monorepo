@@ -32,14 +32,7 @@
     "typescript-eslint": "^8.50.0"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./*": "./dist/*"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "dist/*"
-      ]
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*"
   }
 }

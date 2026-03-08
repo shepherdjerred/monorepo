@@ -197,15 +197,13 @@ export const preferDateFns = createRule({
 
       // Detect: Custom date helper functions (formatTimeAgo, daysUntil, formatHumanDateTime, etc.)
       FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
-        if (node.id && isCustomDateHelperName(node.id.name)) {
-          // Check if function body contains manual date calculations
-          if (containsManualDateMath(node.body)) {
+        if (node.id && isCustomDateHelperName(node.id.name) && // Check if function body contains manual date calculations
+          containsManualDateMath(node.body)) {
             context.report({
               node,
               messageId: "customDateHelper",
             });
           }
-        }
       },
     };
   },
@@ -244,8 +242,7 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
     if (!node || visited.has(node)) return;
     visited.add(node);
 
-    if (node.type === "CallExpression") {
-      if (
+    if (node.type === "CallExpression" && 
         node.callee.type === "MemberExpression" &&
         node.callee.property.type === "Identifier"
       ) {
@@ -260,7 +257,6 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
           visitor.found = true;
         }
       }
-    }
 
     // Recursively traverse child nodes
     for (const key in node) {
@@ -313,7 +309,7 @@ function containsManualDateMath(
 
     // Check for if/else chains checking milliseconds
     if (node.type === "IfStatement") {
-      const ifStmt = node as TSESTree.IfStatement;
+      const ifStmt = node;
       if (
         ifStmt.test.type === "BinaryExpression" &&
         (ifStmt.test.operator === "<" || ifStmt.test.operator === ">")
@@ -361,7 +357,7 @@ function isTimeAgoPattern(node: TSESTree.IfStatement): boolean {
   let current: TSESTree.IfStatement | TSESTree.Statement | null = node;
   let branchCount = 0;
 
-  while (current && current.type === "IfStatement") {
+  while (current?.type === "IfStatement") {
     branchCount++;
 
     // Check if test is comparing a diff variable to ms constants

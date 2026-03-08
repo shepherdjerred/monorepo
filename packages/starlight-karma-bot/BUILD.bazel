@@ -38,8 +38,11 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/@types/lodash",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

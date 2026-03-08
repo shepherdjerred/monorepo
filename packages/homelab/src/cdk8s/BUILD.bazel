@@ -19,6 +19,7 @@ bun_library(
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@grafana/grafana-foundation-sdk",
+        ":node_modules/@types/lodash",
         ":node_modules/cdk8s",
         ":node_modules/cdk8s-plus-31",
         ":node_modules/constructs",
@@ -26,6 +27,7 @@ bun_library(
         ":node_modules/lodash",
         ":node_modules/remeda",
         ":node_modules/ts-pattern",
+        ":node_modules/type-fest",
         ":node_modules/zod",
         "//packages/homelab/src/helm-types:pkg",
     ],
@@ -41,6 +43,8 @@ bun_eslint_test(
     deps = [
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

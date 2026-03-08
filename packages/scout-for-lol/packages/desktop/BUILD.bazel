@@ -39,11 +39,13 @@ bun_eslint_test(
     extra_files = [
         "//packages/scout-for-lol:eslint.config.ts",
         "tsconfig.json",
-        "//:tsconfig.base.json",
+        "//packages/scout-for-lol:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

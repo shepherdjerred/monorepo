@@ -33,6 +33,8 @@ bun_eslint_test(
     deps = [
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

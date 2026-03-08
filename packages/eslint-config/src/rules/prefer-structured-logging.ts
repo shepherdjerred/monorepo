@@ -43,7 +43,7 @@ export const preferStructuredLogging = createRule({
 
           const filename = context.filename;
           const pathParts = filename.split("/");
-          const fileBasename = pathParts[pathParts.length - 1] ?? "app";
+          const fileBasename = pathParts.at(-1) ?? "app";
           const suggestedName = fileBasename
             .replace(/\.tsx?$/, "")
             .replace(/\.test$/, "");

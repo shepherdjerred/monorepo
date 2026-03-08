@@ -42,6 +42,7 @@ def _bun_eslint_test_impl(ctx):
         bun_info,
         tsconfig = ctx.file.tsconfig,
         extra_files = ctx.files.extra_files,
+        prisma_client = ctx.file.prisma_client,
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
     )
@@ -59,6 +60,7 @@ def _bun_eslint_test_impl(ctx):
         substitutions = {
             "{{BUN_PATH}}": bun_rp,
             "{{TREE_PATH}}": ctx.workspace_name + "/" + tree.short_path,
+            "{{PKG_DIR}}": ctx.label.package,
         },
         is_executable = True,
     )
@@ -72,6 +74,7 @@ bun_eslint_test = rule(
         "tsconfig": attr.label(allow_single_file = ["tsconfig.json"]),
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
+        "prisma_client": attr.label(allow_single_file = True),
         "_launcher_template": attr.label(
             default = "//tools/rules_bun/bun/private:bun_eslint_test.sh.tpl",
             allow_single_file = True,

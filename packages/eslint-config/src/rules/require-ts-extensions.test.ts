@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { requireTsExtensions } from "./require-ts-extensions";
+import { requireTsExtensions } from "./require-ts-extensions.ts";
 
 const ruleTester = new RuleTester();
 

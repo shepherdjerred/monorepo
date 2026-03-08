@@ -82,6 +82,11 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/@types/jsdom",
+        ":node_modules/@types/markdown-it",
+        ":node_modules/@types/react",
+        ":node_modules/@types/sanitize-html",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
         "//packages/eslint-config:pkg",

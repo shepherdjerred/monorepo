@@ -53,11 +53,13 @@ bun_eslint_test(
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
+        "tsconfig.eslint.json",
         "//:tsconfig.base.json",
     ],
     deps = [
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
     ],
 )
 

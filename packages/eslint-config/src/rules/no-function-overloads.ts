@@ -31,7 +31,7 @@ export const noFunctionOverloads = createRule({
     >();
 
     function getCurrentScope(): TSESTree.Node | "module" {
-      return scopeStack[scopeStack.length - 1] ?? "module";
+      return scopeStack.at(-1) ?? "module";
     }
 
     function trackFunction(
@@ -96,9 +96,9 @@ export const noFunctionOverloads = createRule({
 
       "Program:exit"() {
         // Check for overloads in each scope
-        const allScopes = Array.from(functionDeclarationsByScope.values());
+        const allScopes = [...functionDeclarationsByScope.values()];
         for (const scopeFunctions of allScopes) {
-          const allFunctionGroups = Array.from(scopeFunctions.values());
+          const allFunctionGroups = [...scopeFunctions.values()];
           for (const declarations of allFunctionGroups) {
             // Deduplicate by node reference
             const seen = new WeakSet<
