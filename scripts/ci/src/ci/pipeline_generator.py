@@ -19,10 +19,12 @@ import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from ci.lib import bazel
 
-CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:latest"
+_CI_IMAGE_VERSION_FILE = Path(__file__).resolve().parents[4] / ".buildkite" / "ci-image" / "VERSION"
+CI_BASE_IMAGE = f"ghcr.io/shepherdjerred/ci-base:{_CI_IMAGE_VERSION_FILE.read_text().strip()}"
 
 
 # Kubernetes pod spec shared across all steps
@@ -450,12 +452,24 @@ def _generate_prettier_step() -> dict:
     }
 
 
-def _generate_security_step() -> dict:
-    """Generate the root-level shellcheck linting step."""
+def _generate_buildifier_step() -> dict:
+    """Generate the Buildifier format & lint check step."""
     return {
-        "label": ":shield: Shellcheck",
+        "label": ":bazel: Buildifier",
+        "key": "buildifier",
+        "command": ".buildkite/scripts/buildifier.sh",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+    }
+
+
+def _generate_security_step() -> dict:
+    """Generate the root-level shellcheck and hermeticity linting step."""
+    return {
+        "label": ":shield: Shellcheck & Hermeticity",
         "key": "shellcheck",
-        "command": ".buildkite/scripts/bazel-test-targets.sh //tools/bazel:shellcheck //.buildkite:shellcheck //packages/dotfiles:shellcheck",
+        "command": ".buildkite/scripts/bazel-test-targets.sh //tools/bazel:shellcheck //.buildkite:shellcheck //packages/dotfiles:shellcheck //tools/bazel:hermeticity_check",
         "timeout_in_minutes": 10,
         "retry": _RETRY,
         "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
@@ -658,6 +672,9 @@ def generate_pipeline() -> dict:
 
     # --- Prettier formatting check (every push) ---
     steps.append(_generate_prettier_step())
+
+    # --- Buildifier format & lint check (every push) ---
+    steps.append(_generate_buildifier_step())
 
     # --- Security & Quality (every push) ---
     steps.append(_generate_security_step())

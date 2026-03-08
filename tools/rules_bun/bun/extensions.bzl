@@ -2,6 +2,7 @@
 
 load(":repositories.bzl", "bun_repo")
 
+# renovate: datasource=github-releases depName=oven-sh/bun
 _DEFAULT_BUN_VERSION = "1.3.9"
 
 _PLATFORMS = [

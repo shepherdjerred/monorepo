@@ -1,6 +1,6 @@
-FROM alpine/helm:3.16.4 AS helm
+FROM alpine/helm:3.16.4@sha256:9b25e60ae264940b276e32866d37e3088e70c4e2d1784b964dc3f90346281a74 AS helm
 
-FROM oven/bun:debian AS base
+FROM oven/bun:debian@sha256:b86c67b531d87b4db11470d9b2bd0c519b1976eee6fcd71634e73abfa6230d2e AS base
 RUN apt-get update && apt-get install -y git build-essential python3 && rm -rf /var/lib/apt/lists/*
 COPY --from=helm /usr/bin/helm /usr/local/bin/helm
 WORKDIR /app

@@ -33,7 +33,10 @@ genrule(
         fi && \
         (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR/root . 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR/root .)
     """,
-    tags = ["manual", "requires-network"],
+    tags = [
+        "manual",
+        "requires-network",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -48,6 +51,7 @@ genrule(
         TMPDIR=$$(mktemp -d) && \
         trap 'rm -rf $$TMPDIR' EXIT && \
         mkdir -p $$TMPDIR/usr/local/bin && \
+        # renovate: datasource=github-releases depName=helm/helm
         HELM_VERSION=v3.17.3 && \
         curl -fsSL "https://get.helm.sh/helm-$${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C $$TMPDIR && \
         mv $$TMPDIR/linux-amd64/helm $$TMPDIR/usr/local/bin/helm && \
