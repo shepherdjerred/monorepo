@@ -11,7 +11,9 @@ import {
   getMinecraftExtraVolumes,
   getMinecraftExtraEnv,
   getMinecraftPluginConfigInitContainer,
+  getMinecraftPluginNames,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-config.ts";
+import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-drift-check.ts";
 
 const NAMESPACE = "minecraft-shuxin";
 
@@ -107,10 +109,22 @@ export function createMinecraftShuxinApp(chart: Chart) {
         "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot",
         // Floodgate - allows Bedrock players to join with Xbox accounts
         "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot",
+        // GeyserExtras - Bedrock QoL improvements for Geyser/Floodgate players
+        "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar",
+        // BedrockPlayerSupport - GUI helpers and UX for Bedrock players
+        "https://cdn.modrinth.com/data/hQnZEOj0/versions/1aczasDY/BedrockPlayerSupport-2.1.1-all.jar",
         // ProtocolLib - packet manipulation library (dependency for some plugins)
         "https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar",
         // DecentHolograms - hologram display plugin
         "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.9.9/DecentHolograms-2.9.9.jar",
+        // ChestSort API (Spigot) - intentionally commented out:
+        // Spigot download endpoint is Cloudflare-protected and returns HTTP 403 in automation.
+        // "https://www.spigotmc.org/resources/chestsort-api.59773/download",
+        // Item Chest Sorter (Spigot) - intentionally commented out:
+        // Spigot download endpoint is Cloudflare-protected and returns HTTP 403 in automation.
+        // "https://www.spigotmc.org/resources/item-chest-sorter.75964/download",
+        // mcMMO - RPG skill levelling system (Jenkins CI, Spigot is Cloudflare-protected)
+        "https://popicraft.net/jenkins/job/mcMMO/lastSuccessfulBuild/artifact/target/mcMMO.jar",
         // Core plugins (all servers)
         "https://cdn.modrinth.com/data/Vebnzrzj/versions/OrIs0S6b/LuckPerms-Bukkit-5.5.17.jar",
         "https://cdn.modrinth.com/data/Lu3KuzdV/versions/HD2IvrxS/CoreProtect-CE-23.1.jar",
@@ -151,7 +165,10 @@ export function createMinecraftShuxinApp(chart: Chart) {
     },
 
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
-    initContainers: [getMinecraftPluginConfigInitContainer("shuxin", true)],
+    initContainers: [
+      getMinecraftConfigDriftCheckInitContainer("shuxin", getMinecraftPluginNames("shuxin"), true),
+      getMinecraftPluginConfigInitContainer("shuxin", true),
+    ],
   };
 
   // DNS records are now managed by mc-router

@@ -5,12 +5,11 @@ build --enable_bzlmod
 
 # Hermetic builds
 build --incompatible_strict_action_env
+build --sandbox_default_allow_network=false
+build --incompatible_disallow_empty_glob
 
 # Workspace status for build stamping
 build --workspace_status_command=tools/bazel/workspace_status.sh
-
-# Allow empty globs (many packages may or may not have .tsx, .astro, etc.)
-build --noincompatible_disallow_empty_glob
 
 # Test output
 test --test_output=errors
@@ -42,6 +41,8 @@ build:ci --remote_upload_local_results=true
 build:ci --remote_local_fallback
 build:ci --remote_build_event_upload=minimal
 build:ci --lockfile_mode=error
+build:ci --sandbox_fake_hostname
+build:ci --sandbox_fake_username
 build:ci --color=yes
 test:ci --test_output=all
 

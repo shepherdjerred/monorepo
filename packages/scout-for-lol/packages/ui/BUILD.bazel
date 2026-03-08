@@ -1,6 +1,5 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -21,13 +20,18 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    config = "//packages/scout-for-lol:eslint.config.ts",
+    extra_files = [
+        "//packages/scout-for-lol:eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Uses workspace_typecheck_test for workspace:* dep resolution in sandbox.
@@ -35,12 +39,12 @@ eslint_test(
 # @scout-for-lol/backend). Fix data package deps to unblock.
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],

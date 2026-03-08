@@ -18,6 +18,9 @@ importers:
       '@dagger.io/dagger':
         specifier: ^0.19.0
         version: 0.19.11
+      '@shepherdjerred/eslint-config':
+        specifier: workspace:*
+        version: link:packages/eslint-config
       '@types/bun':
         specifier: ^1.3.5
         version: 1.3.9

@@ -1,7 +1,6 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -25,22 +24,31 @@ bun_library(
 
 bun_binary(
     name = "tasknotes_server",
-    deps = [":pkg"],
     entry_point = "src/index.ts",
+    deps = [":pkg"],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 bun_typecheck_test(
     name = "typecheck",
     tsconfig = "tsconfig.json",
     deps = [
-        ":pkg",
         ":node_modules/@types/bun",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/undici-types",
     ],
 )

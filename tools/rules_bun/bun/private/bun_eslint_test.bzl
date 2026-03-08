@@ -8,12 +8,31 @@ def _bun_eslint_test_impl(ctx):
     bun = bun_toolchain.bun_info.bun
 
     bun_info = None
+    extra_workspace_deps = []
     for dep in ctx.attr.deps:
         if BunInfo in dep:
-            bun_info = dep[BunInfo]
-            break
+            if bun_info == None:
+                bun_info = dep[BunInfo]
+            else:
+                # Additional BunInfo deps become workspace deps in the tree
+                extra_workspace_deps.append(dep[BunInfo])
     if not bun_info:
         fail("No dep provides BunInfo")
+
+    # Merge extra workspace deps into the main bun_info
+    if extra_workspace_deps:
+        merged_ws = depset(extra_workspace_deps, transitive = [bun_info.workspace_deps])
+        merged_npm = depset(transitive = [bun_info.npm_sources] + [d.npm_sources for d in extra_workspace_deps])
+        bun_info = BunInfo(
+            target = bun_info.target,
+            sources = bun_info.sources,
+            package_json = bun_info.package_json,
+            package_name = bun_info.package_name,
+            transitive_sources = bun_info.transitive_sources,
+            npm_sources = merged_npm,
+            npm_package_store_infos = bun_info.npm_package_store_infos,
+            workspace_deps = merged_ws,
+        )
 
     additional_npm = collect_all_npm_sources(ctx.attr.deps)
 

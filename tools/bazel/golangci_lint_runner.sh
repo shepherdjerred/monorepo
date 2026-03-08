@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 # Shell wrapper for running golangci-lint in the Bazel sandbox.
+# Uses a hermetic golangci-lint binary provided via $GOLANGCI_LINT_BIN from @multitool.
+# Note: golangci-lint requires Go on PATH to analyze Go code.
 
 set -euo pipefail
 
-# Bazel's strict action env strips PATH and HOME; restore common locations
-export HOME="${HOME:-/tmp}"
-# Include mise-managed toolchains, Go bin, and system paths
-export PATH="${HOME}/.local/share/mise/shims:${HOME}/go/bin:/usr/local/bin:/opt/homebrew/bin:${PATH:-}"
-
-if ! command -v golangci-lint &>/dev/null; then
-  echo "ERROR: golangci-lint not found in PATH" >&2
-  exit 1
-fi
-
 RUNFILES="${TEST_SRCDIR:-${BASH_SOURCE[0]}.runfiles}"
 WS="${TEST_WORKSPACE:-_main}"
+
+# Resolve hermetic binary to absolute path from runfiles
+GOLANGCI_LINT="$(cd "$RUNFILES/$WS" && pwd)/$GOLANGCI_LINT_BIN"
+
 cd "$RUNFILES/$WS/$PKG_DIR"
 
-golangci-lint run ./...
+"$GOLANGCI_LINT" run ./...

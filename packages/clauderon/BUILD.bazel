@@ -1,7 +1,7 @@
 load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_clippy", "rust_library", "rust_test", "rustfmt_test")
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//tools/bazel:cargo_deny.bzl", "cargo_deny_test")
+load("//tools/bazel:llvm_cov.bzl", "llvm_cov_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -75,7 +75,7 @@ rustfmt_test(
     targets = [":clauderon_lib"],
 )
 
-# Requires cargo-deny binary from host PATH.
+# Hermetic cargo-deny via @multitool + @rules_rust cargo.
 cargo_deny_test(
     name = "cargo_deny",
     srcs = [
@@ -84,23 +84,20 @@ cargo_deny_test(
         "deny.toml",
     ],
     local = True,
-    tags = ["lint"],
+    tags = [
+        "lint",
+        "requires-network",
+    ],
 )
 
-# Code coverage via cargo-llvm-cov. Manual: requires cargo-llvm-cov installed
-# and is slow (full test suite instrumented). Run explicitly:
-#   bazel test //packages/clauderon:llvm_cov --test_env=PATH --test_env=RUSTUP_HOME
-sh_test(
+# Code coverage via cargo-llvm-cov. Manual: requires Rust toolchain.
+# Run explicitly: bazel test //packages/clauderon:llvm_cov
+llvm_cov_test(
     name = "llvm_cov",
-    srcs = ["//tools/bazel:llvm_cov_runner.sh"],
-    data = glob(["src/**/*.rs"]) + [
+    srcs = glob(["src/**/*.rs"]) + [
         "Cargo.lock",
         "Cargo.toml",
     ],
-    env = {
-        "PKG_DIR": "packages/clauderon",
-    },
-    tags = ["manual"],
 )
 
 # TODO: OCI image for clauderon.

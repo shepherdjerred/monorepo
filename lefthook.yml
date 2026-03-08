@@ -169,7 +169,8 @@ pre-commit:
                   exclude:
                     - "node_modules/**"
                     - "**/node_modules/**"
-                  run: buildifier --lint=warn {staged_files}
+                  run: buildifier --lint=fix {staged_files}
+                  stage_fixed: true
 
                 # --- shellcheck ---
                 - name: shellcheck
@@ -205,12 +206,10 @@ pre-commit:
           - name: cargo-deny
             root: "packages/clauderon/"
             glob:
-              - "packages/clauderon/**/*.rs"
               - "packages/clauderon/Cargo.toml"
               - "packages/clauderon/Cargo.lock"
-            skip:
-              - run: "! command -v cargo-deny >/dev/null 2>&1"
-            run: cargo deny check advisories bans sources
+              - "packages/clauderon/deny.toml"
+            run: bazel test //packages/clauderon:cargo_deny --test_output=errors
 
           # --- TypeScript typecheck per package ---
           - name: birmel-typecheck

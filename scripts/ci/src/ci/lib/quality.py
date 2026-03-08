@@ -31,6 +31,8 @@ PATTERNS = [
      "paths": ["packages/clauderon/src/"], "exclude_path_patterns": []},
     {"name": "prettier-ignore", "pattern": r"^\s*(//|/\*)\s*prettier-ignore", "glob": "*.{ts,tsx,js,jsx}",
      "paths": ["packages/"], "exclude_path_patterns": []},
+    {"name": "hermeticity-exempt", "pattern": r"hermeticity-exempt:", "glob": "*.sh",
+     "paths": ["tools/bazel/"], "exclude_path_patterns": ["hermeticity_check.sh"]},
 ]
 
 

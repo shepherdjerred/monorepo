@@ -1,6 +1,5 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_prisma_generate", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prisma_generate", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -61,22 +60,30 @@ bun_binary(
     deps = [":pkg"],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob(["src/**/*.ts"]),
-    config = "//packages/scout-for-lol:eslint.config.ts",
+    extra_files = [
+        "//packages/scout-for-lol:eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Blocked: workspace packages (@scout-for-lol/data, @scout-for-lol/report) + #generated/prisma/client
 # not resolved by tsc in sandbox.
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],

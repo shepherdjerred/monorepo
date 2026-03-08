@@ -1,7 +1,6 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:vite_build.bzl", "vite_build")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -36,12 +35,18 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # @discord-plays-pokemon/common exports from dist/ — common:build provides
@@ -51,8 +56,8 @@ bun_typecheck_test(
     tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],

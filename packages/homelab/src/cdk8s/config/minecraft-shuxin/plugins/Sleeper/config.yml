@@ -1,0 +1,80 @@
+# Default config for Sleeper
+
+# Plugin settings
+CheckForUpdates: true
+
+# Available serializers:
+# minecraft - "&c&lExample Text"
+# minimessage - "<red><bold>Example Text"
+FormattingType: "minecraft"
+
+# Main settings
+UseAnimation: true
+SkipPercentage: 25
+SkipSpeed: 100
+DelaySleep: false
+DelaySeconds: 4
+ActionbarMessages: false
+PersistentSleepInfo: false
+PersistenceTime: 30
+
+# The time that should be skipped up to. 0 is 6:00am, and every 1000 is an hour added.
+DayTime: 0
+# Time after which non bed sleeping is allowed. E.g. voting and GSit
+NightTime: 12542
+
+# Other settings
+BroadcastSleepInfo: false
+
+# Voting system, a night is skipped based on yes votes minus no votes
+VoteSkip: false
+YesMultiplier: 1
+NoMultiplier: 1
+SkipVotePercent: 50
+BlockBedsAfterVoting: false
+BossbarVoteCount: true
+ActionbarVoteCount: false
+SendVotesOnStart: true
+StartWithoutSleep: false
+MaxVoteTime: 60
+LimitedVoteTime: false
+AutomaticStart: false
+
+# Plugin integrations
+# GSit
+GSitPoseToSleep: false
+# AFK plugins (Essentials)
+IgnoreAFKPlayers: true
+
+# General Messages
+SleepInfo: "&aSleep > &7%percent% (%count%) out of a minimum of %percent_needed% sleeping."
+NightSkip: 
+  - "&aSleep > &7At least %percent_needed% of online users sleeping (%count%), skipping the night."
+Ignored: "&cSleep > &7You are still being ignored for sleep calculations!"
+
+# Command messages
+SleepHelpList: "&cInvalid command, valid subcommands are: "
+NoPermission: "&cYou don't have permission for that."
+PlayerNotFound: "&c%player% not found."
+SelfIgnoreOff: "&aYou are no longer ignored from sleeping."
+SelfIgnoreOn: "&cYou are now ignored from sleeping."
+OtherIgnoreOff: "&a%player% is no longer ignored from sleeping."
+OtherIgnoreOn: "&c%player% is now ignored from sleeping."
+OtherAlreadyIgnored: "&c%player% is already ignored from sleeping."
+InvalidState: "&c%input% is not TRUE or FALSE."
+ConfigReloaded: "&aSleep config reloaded."
+OnlyPlayers: "&cThis command can only be run by players."
+
+# Voting Messages
+VoteTitle: "&aSleep > &7Vote below on skipping the night:"
+VoteYes: "&a&lYes"
+VoteNo: "&c&lNo"
+VotedYes: "&aYou voted to skip the night."
+VotedNo: "&aYou voted not to skip the night."
+NoVote: "&cYour world isn't voting on a night skip."
+AlreadyYes: "&cYou have already voted yes."
+AlreadyNo: "&cYou have already voted no."
+VoteNotEnabled: "&cVoting is not enabled."
+ListVotes: "&7Votes: &aYes: &7%yes% &cNo: &7%no%"
+SkipByVote: "&aSleep > &7The vote has decided to skip the night!"
+VoteTimedOut: "&aSleep > &cThe vote ended without skipping the night."

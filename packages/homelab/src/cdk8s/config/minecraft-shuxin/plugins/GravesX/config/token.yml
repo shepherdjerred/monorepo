@@ -1,0 +1,36 @@
+###############
+# Token Setup #
+###############
+# Define your tokens that can be used for a grave. Supported only on 1.12+.
+settings:
+  token:
+    ##############
+    # Token name #
+    ##############
+    basic:
+      # Item type used for the token (e.g., SUNFLOWER)
+      material: SUNFLOWER
+
+      # Display name of the grave token
+      name: "Grave Token"
+
+      # Can players craft this grave token
+      craft: true
+
+      # Should the grave token glow
+      glow: true
+
+      # Custom model data for the token item; -1 means none
+      model-data: -1
+
+      # Grave token lore
+      lore:
+        - "&7Keep this in your inventory and"
+        - "&7when you die a grave will be"
+        - "&7created."
+
+      # Grave token recipe; use AIR for an empty square
+      recipe:
+        - "GOLD_INGOT GOLD_INGOT GOLD_INGOT"
+        - "GOLD_INGOT EMERALD GOLD_INGOT"
+        - "GOLD_INGOT GOLD_INGOT GOLD_INGOT"

@@ -1,7 +1,8 @@
 # Shared Bazel macros for the monorepo
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("@rules_shellcheck//shellcheck:defs.bzl", "shellcheck_test")
 
 exports_files([
     "eslint_entry.cjs",
@@ -9,10 +10,10 @@ exports_files([
     "bun_test_runner.sh",
     "cargo_deny_runner.sh",
     "golangci_lint_runner.sh",
+    "hermeticity_check.sh",
     "llvm_cov_runner.sh",
     "typecheck_runner.sh",
     "workspace_status.sh",
-    "shellcheck_runner.sh",
     "trivy_runner.sh",
     "semgrep_runner.sh",
     "knip_runner.sh",
@@ -31,9 +32,19 @@ js_library(
     visibility = ["//visibility:public"],
 )
 
+sh_test(
+    name = "hermeticity_check",
+    srcs = ["hermeticity_check.sh"],
+    data = glob([
+        "*_runner.sh",
+        "*.bzl",
+    ]),
+    tags = ["lint"],
+)
+
 shellcheck_test(
     name = "shellcheck",
-    srcs = [
+    data = [
         "bun_test_runner.sh",
         "cargo_deny_runner.sh",
         "golangci_lint_runner.sh",
@@ -41,9 +52,9 @@ shellcheck_test(
         "knip_runner.sh",
         "llvm_cov_runner.sh",
         "semgrep_runner.sh",
-        "shellcheck_runner.sh",
         "trivy_runner.sh",
         "typecheck_runner.sh",
         "workspace_status.sh",
     ],
+    severity = "warning",
 )

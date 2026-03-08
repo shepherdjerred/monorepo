@@ -1,0 +1,228 @@
+# WanderingTrades 1.9.0 Vanilla Progression trade config
+
+# Enable this tradeset config
+enabled: true
+
+# the chance that a wandering trader will get the trades
+# from this config [0.01 - 1] ie 75% = 0.75
+chance: 0.65
+
+# true: randomly select from these trades
+# false: add all off these trades
+randomized: true
+
+# if the above is true, how many random
+# trades to add
+# may be a number, or a range for random selection
+#   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
+randomAmount: '3:5'
+
+# if true, a trader spawned with this config by command
+# will not take damage, except from players with the
+# wanderingtrades.damage permission
+# and will also not despawn
+invincible: false
+
+# if set, a trader spawned with this config by command
+# will display this custom name tag above their head
+#
+# set to 'NONE' to disable
+customName: 'NONE'
+
+# Enabling this option will disable villagers with this config from
+# giving gifts to players with Hero of the Village.
+disableHeroOfTheVillageGifts: false
+
+trades:
+  oak_logs_pack:
+    maxUses: 8
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 4
+    result:
+      customname: NONE
+      material: OAK_LOG
+      amount: 32
+  spruce_logs_pack:
+    maxUses: 8
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 4
+    result:
+      customname: NONE
+      material: SPRUCE_LOG
+      amount: 32
+  stone_pack:
+    maxUses: 8
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 3
+    result:
+      customname: NONE
+      material: STONE
+      amount: 32
+  cobblestone_pack:
+    maxUses: 10
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 2
+    result:
+      customname: NONE
+      material: COBBLESTONE
+      amount: 48
+  glass_pack:
+    maxUses: 6
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 4
+    result:
+      customname: NONE
+      material: GLASS
+      amount: 32
+  terracotta_pack:
+    maxUses: 6
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 5
+    result:
+      customname: NONE
+      material: TERRACOTTA
+      amount: 24
+  sand_pack:
+    maxUses: 8
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 3
+    result:
+      customname: NONE
+      material: SAND
+      amount: 48
+  lantern_bundle:
+    maxUses: 4
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 7
+    result:
+      customname: NONE
+      material: LANTERN
+      amount: 8
+  scaffolding_bundle:
+    maxUses: 5
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 6
+    result:
+      customname: NONE
+      material: SCAFFOLDING
+      amount: 24
+  packed_ice_bundle:
+    maxUses: 3
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 10
+    result:
+      customname: NONE
+      material: PACKED_ICE
+      amount: 12
+  slime_ball_bundle:
+    maxUses: 2
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 12
+    result:
+      customname: NONE
+      material: SLIME_BALL
+      amount: 6
+  saddle_trade:
+    maxUses: 2
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 14
+      2:
+        customname: NONE
+        material: LEATHER
+        amount: 8
+    result:
+      customname: NONE
+      material: SADDLE
+      amount: 1
+  name_tag_trade:
+    maxUses: 2
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 12
+    result:
+      customname: NONE
+      material: NAME_TAG
+      amount: 1
+  diamond_trade:
+    maxUses: 2
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 26
+      2:
+        customname: NONE
+        material: COAL_BLOCK
+        amount: 1
+    result:
+      customname: NONE
+      material: DIAMOND
+      amount: 1
+  diamond_pick_trade:
+    maxUses: 1
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 32
+      2:
+        customname: NONE
+        material: IRON_PICKAXE
+        amount: 1
+    result:
+      customname: NONE
+      material: DIAMOND_PICKAXE
+      amount: 1

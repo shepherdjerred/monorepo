@@ -1,28 +1,99 @@
-{{- $rules := include "dot_claude/hooks/safety-rules.json" | fromJson -}}
 {
   "model": "opus",
   "permissions": {
     "deny": [
-{{- $denyItems := list }}
-{{- range $rules.deny }}
-{{- range .globs }}
-{{- $denyItems = append $denyItems (printf "Bash(%s)" .) }}
-{{- end }}
-{{- end }}
-{{- range $i, $item := $denyItems }}
-      "{{ $item }}"{{ if ne $i (sub (len $denyItems) 1) }},{{ end }}
-{{- end }}
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -fr /*)",
+      "Bash(rm -fr ~*)",
+      "Bash(dd *)",
+      "Bash(mkfs*)",
+      "Bash(shutdown*)",
+      "Bash(reboot*)",
+      "Bash(halt*)",
+      "Bash(kubectl delete namespace *)",
+      "Bash(kubectl delete ns *)",
+      "Bash(kubectl delete node*)",
+      "Bash(kubectl delete pv *)",
+      "Bash(kubectl delete pv/*)",
+      "Bash(kubectl delete pvc *)",
+      "Bash(kubectl delete pvc/*)",
+      "Bash(kubectl delete persistentvolume*)",
+      "Bash(kubectl delete persistentvolumeclaim*)",
+      "Bash(kubectl drain *)",
+      "Bash(talosctl reset*)",
+      "Bash(talosctl wipe*)",
+      "Bash(argocd cluster rm*)",
+      "Bash(helm uninstall*)",
+      "Bash(aws s3 rb*)",
+      "Bash(aws ec2 terminate*)",
+      "Bash(aws iam delete*)",
+      "Bash(gh repo delete*)",
+      "Bash(op vault delete*)",
+      "Bash(docker system prune*)",
+      "Bash(docker volume prune*)",
+      "Bash(docker volume rm*)",
+      "Bash(velero backup delete*)",
+      "Bash(coder delete*)"
     ],
     "ask": [
-{{- $askItems := list }}
-{{- range $rules.ask }}
-{{- range .globs }}
-{{- $askItems = append $askItems (printf "Bash(%s)" .) }}
-{{- end }}
-{{- end }}
-{{- range $i, $item := $askItems }}
-      "{{ $item }}"{{ if ne $i (sub (len $askItems) 1) }},{{ end }}
-{{- end }}
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git branch -D*)",
+      "Bash(git stash drop*)",
+      "Bash(git stash clear*)",
+      "Bash(npm publish*)",
+      "Bash(bun publish*)",
+      "Bash(docker push*)",
+      "Bash(brew install*)",
+      "Bash(brew uninstall*)",
+      "Bash(npm install -g*)",
+      "Bash(bun install -g*)",
+      "Bash(kubectl delete *)",
+      "Bash(kubectl apply *)",
+      "Bash(kubectl scale *)",
+      "Bash(kubectl edit *)",
+      "Bash(kubectl rollout *)",
+      "Bash(kubectl cordon *)",
+      "Bash(kubectl uncordon *)",
+      "Bash(kubectl patch *)",
+      "Bash(kubectl label *)",
+      "Bash(kubectl annotate *)",
+      "Bash(kubectl taint *)",
+      "Bash(talosctl apply-config*)",
+      "Bash(talosctl upgrade*)",
+      "Bash(helm install*)",
+      "Bash(helm upgrade*)",
+      "Bash(helm rollback*)",
+      "Bash(argocd app delete*)",
+      "Bash(argocd app sync*)",
+      "Bash(argocd app set*)",
+      "Bash(argocd app create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr close*)",
+      "Bash(gh issue close*)",
+      "Bash(gh release create*)",
+      "Bash(gh release delete*)",
+      "Bash(op item delete*)",
+      "Bash(op item edit*)",
+      "Bash(op item create*)",
+      "Bash(docker rm *)",
+      "Bash(docker stop *)",
+      "Bash(docker kill *)",
+      "Bash(docker compose down*)",
+      "Bash(velero restore*)",
+      "Bash(velero schedule*)",
+      "Bash(aws s3 rm*)",
+      "Bash(aws s3 cp*)",
+      "Bash(aws s3 mv*)",
+      "Bash(aws s3 sync*)",
+      "Bash(coder create*)",
+      "Bash(coder stop*)",
+      "Bash(tailscale down*)"
     ],
     "allow": [
       "Bash(*)",
@@ -35,92 +106,6 @@
       "mcp__*"
     ]
   },
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/quality/session-start.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/quality/prompt-submit.sh"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Read|Edit|Write|WebFetch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/safety-hook.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/quality/pre-write.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/quality/post-write-composite.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/quality/stop-gate.sh"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "idle_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "osascript -e 'display notification \"Awaiting your input\" with title \"Claude Code\"'"
-          }
-        ]
-      },
-      {
-        "matcher": "permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "osascript -e 'display notification \"Permission required\" with title \"Claude Code\"'"
-          }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
@@ -129,7 +114,6 @@
     "pr-review-toolkit@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
     "plugin-dev@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },

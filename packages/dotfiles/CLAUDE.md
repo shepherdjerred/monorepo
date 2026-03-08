@@ -25,3 +25,10 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 - **Never dismiss failures as "pre-existing."** If CI is red, the build is broken, or lints fail, fix them — regardless of whether you introduced the issue or it existed before. The user asked you to make it pass, not to explain why it doesn't.
 - **Banned phrases / patterns:** Do not say things like "pre-existing issue", "unrelated to my changes", "not introduced by this PR", or "out of scope" as justification for leaving something broken. If you were told to make it work, make it work.
 - **If truly blocked**, explain exactly what is blocking you and what you tried, then ask for guidance — do not just declare the task done.
+
+## Code Quality Defaults
+
+- Prefer real fixes over bypasses. Do not use `as any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, or `eslint-disable` unless the user explicitly asks for it or there is no reasonable alternative.
+- Do not leave empty `catch` blocks, `test.skip`, or weak assertions like `toBeTruthy()` / `toBeFalsy()` when a stronger assertion is available.
+- When finishing a coding task, run the relevant verification commands for the area you changed and fix the failures before you stop.
+- Prefer simple, reviewable configuration over hidden automation. If a safeguard matters, document it here or in a skill instead of relying on opaque hook behavior.

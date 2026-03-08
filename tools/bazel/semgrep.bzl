@@ -1,8 +1,9 @@
 """Semgrep security scanning macro using sh_test for sandboxed execution.
 
 Runs Semgrep static analysis inside the Bazel sandbox via a shell wrapper.
-We use sh_test (same pattern as bun_test.bzl) because Semgrep is a standalone
-binary invoked via the system PATH, not a Node.js tool.
+Semgrep is not hermetic — it uses the system-installed binary because semgrep's
+architecture (OCaml binary + Python scripts) makes pip.parse() insufficient.
+Tagged manual so it only runs when explicitly invoked.
 """
 
 load("@rules_shell//shell:sh_test.bzl", "sh_test")

@@ -1,0 +1,60 @@
+# WanderingTrades 1.9.0 player heads config
+
+# Should player heads from players who have been on the server
+# be added to wandering traders
+playerHeadsFromServer: true
+
+# After this many days of not logging in, a player will
+# no longer be considered for player head trades.
+#
+# Set to -1 for all players that ever logged in to be
+# included
+days: 90
+
+# what is the chance a trader will have player head trades
+# range: [0.01 - 1] ie 0.5 for 50%
+playerHeadsFromServerChance: 0.8
+
+# how many different player heads should each trader that has them have
+# WARNING!!! THIS MUST BE EQUAL TO OR BELOW THE AMOUNT OF PLAYERS
+#     THAT HAVE EVER LOGGED INTO YOUR SERVER!
+# recommended range [1 - 4]
+# may be a number, or a range for random selection
+#   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
+playerHeadsFromServerAmount: '1'
+
+# usernames listed here will not be used for player head trades
+# for exmaple put your staff or OPs name so players cannot buy their head
+usernameBlacklist:
+- Notch
+
+# if Vault is installed and this is enabled, players must have
+# the wanderingtrades.headavailable permission for their
+# head to show up in Wandering Traders
+permissionWhitelist: false
+
+# the ingredients are fully customizable, and the second one is optional
+# for the heads the name, amount, and lore are customizable
+headTrade:
+  maxUses: 1
+  experienceReward: true
+  ingredients:
+    '1':
+      customname: NONE
+      material: EMERALD
+      amount: 1
+      # The following value was serialized from an in-game item and is not meant to be human-readable or editable. As long as it is present other options for this item will be ignored.
+      itemStackAsBytes: !!binary |-
+        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQsudgYMpMYRDMzcxLTS5KTCuxSs1NLUrMSWFmYE3OL80rYWBgYGQAAOUKxRU6AAAA
+    '2':
+      customname: NONE
+      material: IRON_INGOT
+      amount: 1
+      # The following value was serialized from an in-game item and is not meant to be human-readable or editable. As long as it is present other options for this item will be ignored.
+      itemStackAsBytes: !!binary |-
+        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQsudgYMpMYRDJzcxLTS5KTCuxyizKz4vPzEvPL2FmYE3OL80rYWBgYGQAAL8NCnE9AAAA
+  head:
+    customname: <yellow>{PLAYER}'s Head
+    amount: 1
+    lore:
+    - '  <gray><italic>Obtained from Wandering Trader'

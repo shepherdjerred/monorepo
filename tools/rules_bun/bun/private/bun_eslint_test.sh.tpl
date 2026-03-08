@@ -13,4 +13,13 @@ fi
 BUN="$RUNFILES/{{BUN_PATH}}"
 TREE="$RUNFILES/{{TREE_PATH}}"
 cd "$TREE"
-exec "$BUN" x eslint --no-cache --max-warnings=0 src/ "$@"
+
+# Fix tsconfig extends paths — the materialized tree is flat, so relative
+# parent paths (../../tsconfig.base.json) must be rewritten to local copies.
+if [ -f tsconfig.base.json ] && [ -f tsconfig.json ]; then
+    chmod u+w tsconfig.json 2>/dev/null || true
+    sed 's|"extends":[ ]*"[^"]*tsconfig\.base\.json"|"extends": "./tsconfig.base.json"|g' tsconfig.json > tsconfig.json.tmp
+    mv tsconfig.json.tmp tsconfig.json
+fi
+
+exec "$BUN" run ./node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 src/ "$@"
