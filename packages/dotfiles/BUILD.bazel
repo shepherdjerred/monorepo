@@ -1,10 +1,10 @@
 # Dotfiles and shell configuration (chezmoi-managed).
 
-load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
+load("@rules_shellcheck//shellcheck:defs.bzl", "shellcheck_test")
 
 shellcheck_test(
     name = "shellcheck",
-    srcs = glob(
+    data = glob(
         [
             "**/*.sh",
         ],
@@ -12,4 +12,5 @@ shellcheck_test(
             "node_modules/**",
         ],
     ),
+    severity = "warning",
 )

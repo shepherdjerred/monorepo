@@ -1,18 +1,19 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test", "workspace_typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-js_library(
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/react",
@@ -32,24 +33,15 @@ eslint_test(
 # Uses workspace_typecheck_test for workspace:* dep resolution in sandbox.
 # Blocked: @scout-for-lol/data has undeclared transitive deps (@google/generative-ai,
 # @scout-for-lol/backend). Fix data package deps to unblock.
-workspace_typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    data = [
-        "//packages/scout-for-lol:tsconfig_base",
-    ],
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":node_modules/@scout-for-lol/data",
-        ":node_modules/@types/react",
-        ":node_modules/bun-types",
-        ":node_modules/react",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
-        "//:node_modules/@types/node",
         "//:node_modules/undici-types",
-        "//packages/scout-for-lol/packages/data:pkg",
     ],
 )

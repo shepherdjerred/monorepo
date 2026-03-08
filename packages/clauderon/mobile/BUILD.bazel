@@ -1,16 +1,17 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 exports_files(["package.json"])
 
 # React Native app — not a pnpm workspace member, has its own node_modules.
-js_library(
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
 )
 
@@ -23,11 +24,13 @@ eslint_test(
 )
 
 # Missing React Native and other native module type declarations in Bazel sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
+    deps = [
+        ":pkg",
+        ":node_modules/typescript",
+    ],
 )

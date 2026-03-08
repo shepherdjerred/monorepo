@@ -1,6 +1,8 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/bazel:astro_build.bzl", "astro_build")
+load("//tools/bazel:astro_check.bzl", "astro_check")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -8,6 +10,10 @@ exports_files([
     "package.json",
     "tsconfig.json",
 ])
+
+astro_build(name = "astro_build")
+
+astro_check(name = "astro_check")
 
 eslint_test(
     name = "lint",
@@ -18,30 +24,11 @@ eslint_test(
     ]),
 )
 
-workspace_typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.astro",
-    ]),
     tags = ["manual"],  # Astro virtual modules not available in sandbox
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@astrojs/check",
-        ":node_modules/@astrojs/react",
-        ":node_modules/@radix-ui/react-dialog",
-        ":node_modules/@radix-ui/react-select",
-        ":node_modules/@radix-ui/react-separator",
-        ":node_modules/@radix-ui/react-slot",
-        ":node_modules/@types/react",
-        ":node_modules/@types/react-dom",
-        ":node_modules/astro",
-        ":node_modules/class-variance-authority",
-        ":node_modules/clsx",
-        ":node_modules/lucide-react",
-        ":node_modules/react",
-        ":node_modules/react-dom",
-        ":node_modules/tailwind-merge",
-        ":node_modules/tailwindcss",
+        ":node_modules/typescript",
     ],
 )

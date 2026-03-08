@@ -1,19 +1,27 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:vite_build.bzl", "vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# Tauri desktop app; this js_library wraps sources for dependency tracking.
-js_library(
+# Build only the Vite frontend portion (not the full Tauri build).
+vite_build(
+    name = "vite_build",
+    build_cmd = "bun x vite build",
+)
+
+# Tauri desktop app; this bun_library wraps sources for dependency tracking.
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@tauri-apps/api",
@@ -37,38 +45,15 @@ eslint_test(
 )
 
 # @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
-    data = ["package.json"],
-    extends = "//packages/scout-for-lol:tsconfig_base",
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":node_modules/@radix-ui/react-label",
-        ":node_modules/@radix-ui/react-slot",
-        ":node_modules/@scout-for-lol/data",
-        ":node_modules/@scout-for-lol/ui",
-        ":node_modules/@sentry/react",
-        ":node_modules/@tauri-apps/api",
-        ":node_modules/@tauri-apps/plugin-dialog",
-        ":node_modules/@tauri-apps/plugin-fs",
-        ":node_modules/@types/react",
-        ":node_modules/@types/react-dom",
-        ":node_modules/bun-types",
-        ":node_modules/class-variance-authority",
-        ":node_modules/clsx",
-        ":node_modules/lucide-react",
-        ":node_modules/react",
-        ":node_modules/react-dom",
-        ":node_modules/tailwind-merge",
-        ":node_modules/vite",
-        ":node_modules/zod",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
-        "//packages/scout-for-lol/packages/data:pkg",
-        "//packages/scout-for-lol/packages/ui:pkg",
     ],
 )

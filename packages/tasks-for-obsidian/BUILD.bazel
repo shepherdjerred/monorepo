@@ -1,20 +1,20 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# React Native app; this js_library wraps sources for dependency tracking.
-js_library(
+# React Native app; this bun_library wraps sources for dependency tracking.
+bun_library(
     name = "pkg",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.tsx",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/react",
@@ -30,41 +30,25 @@ eslint_test(
         "src/**/*.ts",
         "src/**/*.tsx",
     ]),
-    deps = ["//packages/tasknotes-types:pkg"],
 )
 
 # Missing React Native and other native module type declarations in Bazel sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":node_modules/@types/react",
-        ":node_modules/@types/react-native-vector-icons",
-        ":node_modules/react",
-        ":node_modules/react-native",
-        ":node_modules/zod",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
-        "//packages/tasknotes-types:pkg",
     ],
 )
 
 # tasknotes-types workspace package not resolvable by Bun in sandbox.
 bun_test(
     name = "test",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
     tags = ["manual"],
-    deps = [
-        ":node_modules/react",
-        ":node_modules/react-native",
-        ":node_modules/zod",
-        "//:node_modules/@types/bun",
-        "//packages/tasknotes-types:pkg",
-    ],
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
 )

@@ -1,19 +1,26 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/bazel:astro_build.bzl", "astro_build")
+load("//tools/bazel:astro_check.bzl", "astro_check")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-js_library(
+astro_build(name = "astro_build")
+
+astro_check(name = "astro_check")
+
+bun_library(
     name = "pkg",
-    srcs = glob([
-        "src/**/*.ts",
+    srcs = glob(["src/**/*.ts"]),
+    data = glob([
         "src/**/*.astro",
         "src/**/*.css",
-    ]) + ["package.json"],
+    ]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/astro",
@@ -27,14 +34,14 @@ eslint_test(
 )
 
 # Astro virtual modules prevent tsc from resolving in sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     deps = [
-        ":node_modules/astro",
-        ":node_modules/astro-icon",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
         "//:node_modules/@types/node",
         "//:node_modules/undici-types",

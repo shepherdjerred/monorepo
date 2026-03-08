@@ -84,6 +84,7 @@ cargo_deny_test(
         "deny.toml",
     ],
     local = True,
+    tags = ["lint"],
 )
 
 # Code coverage via cargo-llvm-cov. Manual: requires cargo-llvm-cov installed

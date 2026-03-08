@@ -1,7 +1,7 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -9,9 +9,10 @@ exports_files(["package.json"])
 
 # Esbuild-based Obsidian plugin — stub js_library for dependency tracking.
 # The actual build runs via `bun run build` (esbuild.config.mjs).
-js_library(
+bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/chevrotain",
@@ -24,12 +25,12 @@ eslint_test(
     srcs = glob(["src/**/*.ts"]),
 )
 
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
+    tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@types/node",
-        ":node_modules/chevrotain",
-        ":node_modules/obsidian",
+        ":pkg",
+        ":node_modules/typescript",
     ],
 )

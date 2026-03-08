@@ -1,9 +1,7 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:prisma.bzl", "prisma_generate")
-load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_prisma_generate", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -16,14 +14,15 @@ filegroup(
 )
 
 # Prisma client generation (run explicitly: bazel build //packages/scout-for-lol/packages/backend:prisma_generate)
-prisma_generate(
+bun_prisma_generate(
     name = "prisma_generate",
     schema = "prisma/schema.prisma",
 )
 
-js_library(
+bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + ["package.json"],
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
         ":node_modules/@aws-sdk/client-s3",
@@ -56,10 +55,10 @@ js_library(
     ],
 )
 
-js_binary(
+bun_binary(
     name = "backend",
-    data = [":pkg"],
     entry_point = "src/index.ts",
+    deps = [":pkg"],
 )
 
 eslint_test(
@@ -70,46 +69,16 @@ eslint_test(
 
 # Blocked: workspace packages (@scout-for-lol/data, @scout-for-lol/report) + #generated/prisma/client
 # not resolved by tsc in sandbox.
-typecheck_test(
+bun_typecheck_test(
     name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
-    data = ["package.json"],
-    extends = "//packages/scout-for-lol:tsconfig_base",
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":node_modules/@aws-sdk/client-s3",
-        ":node_modules/@discordjs/voice",
-        ":node_modules/@google/generative-ai",
-        ":node_modules/@prisma/client",
-        ":node_modules/@scout-for-lol/data",
-        ":node_modules/@scout-for-lol/report",
-        ":node_modules/@sentry/bun",
-        ":node_modules/@trpc/server",
-        ":node_modules/bun-types",
-        ":node_modules/cron",
-        ":node_modules/date-fns",
-        ":node_modules/discord.js",
-        ":node_modules/dotenv",
-        ":node_modules/env-var",
-        ":node_modules/openai",
-        ":node_modules/prism-media",
-        ":node_modules/prisma",
-        ":node_modules/prom-client",
-        ":node_modules/react",
-        ":node_modules/remeda",
-        ":node_modules/sodium-native",
-        ":node_modules/ts-pattern",
-        ":node_modules/tslog",
-        ":node_modules/twisted",
-        ":node_modules/uuid",
-        ":node_modules/yoga-wasm-web",
-        ":node_modules/zod",
-        ":node_modules/zod-validation-error",
+        ":pkg",
+        ":node_modules/typescript",
         "//:node_modules/@types/bun",
-        "//:node_modules/@types/node",
         "//:node_modules/undici-types",
-        "//packages/scout-for-lol/packages/data:pkg",
-        "//packages/scout-for-lol/packages/report:pkg",
     ],
 )
 
@@ -119,36 +88,7 @@ typecheck_test(
 bun_test(
     name = "test",
     size = "large",
-    srcs = glob(["src/**/*.ts"]),
     tags = ["manual"],
-    deps = [
-        ":node_modules/@aws-sdk/client-s3",
-        ":node_modules/@discordjs/voice",
-        ":node_modules/@google/generative-ai",
-        ":node_modules/@prisma/client",
-        ":node_modules/@sentry/bun",
-        ":node_modules/@trpc/server",
-        ":node_modules/cron",
-        ":node_modules/date-fns",
-        ":node_modules/discord.js",
-        ":node_modules/dotenv",
-        ":node_modules/env-var",
-        ":node_modules/openai",
-        ":node_modules/prism-media",
-        ":node_modules/prisma",
-        ":node_modules/prom-client",
-        ":node_modules/react",
-        ":node_modules/remeda",
-        ":node_modules/sodium-native",
-        ":node_modules/ts-pattern",
-        ":node_modules/tslog",
-        ":node_modules/twisted",
-        ":node_modules/uuid",
-        ":node_modules/yoga-wasm-web",
-        ":node_modules/zod",
-        ":node_modules/zod-validation-error",
-        "//:node_modules/@types/bun",
-        "//packages/scout-for-lol/packages/data:pkg",
-        "//packages/scout-for-lol/packages/report:pkg",
-    ],
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
 )

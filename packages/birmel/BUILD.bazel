@@ -1,11 +1,7 @@
-load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:bun_test.bzl", "bun_test")
 load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/bazel:prisma.bzl", "prisma_generate")
-load("//tools/bazel:typecheck.bzl", "workspace_typecheck_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_prisma_generate")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_library", "bun_prisma_generate", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -16,139 +12,13 @@ exports_files([
 ])
 
 # Prisma client generation (run explicitly: bazel build //packages/birmel:prisma_generate)
-prisma_generate(
+bun_prisma_generate(
     name = "prisma_generate",
     schema = "prisma/schema.prisma",
 )
 
-# Bun-native: TypeScript executed directly by Bun, no transpilation needed.
-js_library(
-    name = "pkg",
-    srcs = glob(["src/**/*.ts"]) + [
-        "package.json",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":node_modules/@ai-sdk/openai",
-        ":node_modules/@opentelemetry/api",
-        ":node_modules/@opentelemetry/exporter-trace-otlp-http",
-        ":node_modules/@opentelemetry/resources",
-        ":node_modules/@opentelemetry/sdk-node",
-        ":node_modules/@opentelemetry/semantic-conventions",
-        ":node_modules/@prisma/client",
-        ":node_modules/@sentry/node",
-        ":node_modules/@types/bun",
-        ":node_modules/@voltagent/core",
-        ":node_modules/@voltagent/libsql",
-        ":node_modules/ai",
-        ":node_modules/chrono-node",
-        ":node_modules/cron-parser",
-        ":node_modules/discord.js",
-        ":node_modules/discord-player",
-        ":node_modules/discord-player-youtubei",
-        ":node_modules/hono",
-        ":node_modules/mediaplex",
-        ":node_modules/playwright",
-        ":node_modules/youtubei.js",
-        ":node_modules/zod",
-    ],
-)
-
-js_binary(
-    name = "birmel",
-    data = [":pkg"],
-    entry_point = "src/index.ts",
-)
-
-eslint_test(
-    name = "lint",
-    srcs = glob(["src/**/*.ts"]),
-)
-
-# Prisma types require prisma generate — uses workspace_typecheck_test + typecheck_runner.sh.
-workspace_typecheck_test(
-    name = "typecheck",
-    srcs = glob(["src/**/*.ts"]),
-    data = ["prisma/schema.prisma"],
-    env = {
-        "NO_PRESERVE_SYMLINKS": "1",
-        "DEV_PEER_LINKS": "discord-player-youtubei:discord-player",
-    },
-    prisma_client = ":prisma_generate",
-    tags = ["requires-network"],
-    deps = [
-        ":node_modules/@ai-sdk/openai",
-        ":node_modules/@opentelemetry/api",
-        ":node_modules/@opentelemetry/exporter-trace-otlp-http",
-        ":node_modules/@opentelemetry/resources",
-        ":node_modules/@opentelemetry/sdk-node",
-        ":node_modules/@opentelemetry/semantic-conventions",
-        ":node_modules/@prisma/client",
-        ":node_modules/@sentry/node",
-        ":node_modules/@types/bun",
-        ":node_modules/@voltagent/core",
-        ":node_modules/@voltagent/libsql",
-        ":node_modules/ai",
-        ":node_modules/chrono-node",
-        ":node_modules/cron-parser",
-        ":node_modules/discord.js",
-        ":node_modules/discord-player",
-        ":node_modules/discord-player-youtubei",
-        ":node_modules/hono",
-        ":node_modules/mediaplex",
-        ":node_modules/playwright",
-        ":node_modules/prisma",
-        ":node_modules/youtubei.js",
-        ":node_modules/zod",
-        "//:node_modules/undici-types",
-    ],
-)
-
-# Prisma is resolved via PRISMA_SCHEMA env + bun_test_runner.sh.
-# Still manual: integration tests need many transitive deps not yet available
-# in sandbox (e.g., @opentelemetry/context-async-hooks, database setup).
-bun_test(
-    name = "test",
-    srcs = glob(["src/**/*.ts"]),
-    data = ["prisma/schema.prisma"],
-    env = {"PRISMA_SCHEMA": "prisma/schema.prisma"},
-    tags = ["manual"],
-    deps = [
-        ":node_modules/@ai-sdk/openai",
-        ":node_modules/@opentelemetry/api",
-        ":node_modules/@opentelemetry/exporter-trace-otlp-http",
-        ":node_modules/@opentelemetry/resources",
-        ":node_modules/@opentelemetry/sdk-node",
-        ":node_modules/@opentelemetry/semantic-conventions",
-        ":node_modules/@prisma/client",
-        ":node_modules/@sentry/node",
-        ":node_modules/@types/bun",
-        ":node_modules/@voltagent/core",
-        ":node_modules/@voltagent/libsql",
-        ":node_modules/ai",
-        ":node_modules/chrono-node",
-        ":node_modules/cron-parser",
-        ":node_modules/discord.js",
-        ":node_modules/discord-player",
-        ":node_modules/discord-player-youtubei",
-        ":node_modules/hono",
-        ":node_modules/mediaplex",
-        ":node_modules/playwright",
-        ":node_modules/prisma",
-        ":node_modules/youtubei.js",
-        ":node_modules/zod",
-    ],
-)
-
-# ─── rules_bun (native Bun rules) ───
-
-bun_prisma_generate(
-    name = "bun_prisma",
-    schema = "prisma/schema.prisma",
-)
-
 bun_library(
-    name = "bun_pkg",
+    name = "pkg",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -178,18 +48,43 @@ bun_library(
     ],
 )
 
+bun_binary(
+    name = "birmel",
+    deps = [":pkg"],
+    entry_point = "src/index.ts",
+)
+
+eslint_test(
+    name = "lint",
+    srcs = glob(["src/**/*.ts"]),
+)
+
 bun_typecheck_test(
-    name = "bun_typecheck",
+    name = "typecheck",
     extra_files = ["//:tsconfig.base.json"],
-    prisma_client = ":bun_prisma",
+    prisma_client = ":prisma_generate",
     tags = ["requires-network"],
     tsconfig = "tsconfig.json",
     deps = [
-        ":bun_pkg",
+        ":pkg",
         ":node_modules/@types/bun",
         ":node_modules/prisma",
         ":node_modules/typescript",
         "//:node_modules/undici-types",
+    ],
+)
+
+# Prisma is resolved via PRISMA_SCHEMA env + bun_test_runner.sh.
+# Still manual: integration tests need many transitive deps not yet available
+# in sandbox (e.g., @opentelemetry/context-async-hooks, database setup).
+bun_test(
+    name = "test",
+    data = ["prisma/schema.prisma"],
+    env = {"PRISMA_SCHEMA": "prisma/schema.prisma"},
+    tags = ["manual"],
+    tsconfig = "tsconfig.json",
+    deps = [
+        ":pkg",
     ],
 )
 
