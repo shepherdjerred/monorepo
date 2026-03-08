@@ -5,18 +5,29 @@ Ported from .dagger/src/lib-ghcr.ts.
 
 from __future__ import annotations
 
+import base64
+import json
+import os
 import re
-import subprocess
 
 
 def login(token: str) -> None:
-    """Authenticate with ghcr.io using a GitHub token."""
-    subprocess.run(
-        ["docker", "login", "ghcr.io", "-u", "github", "--password-stdin"],
-        input=token,
-        text=True,
-        check=True,
-    )
+    """Authenticate with ghcr.io by writing ~/.docker/config.json.
+
+    This avoids requiring the Docker CLI — crane (used by oci_push) and
+    other container tools read the same config file.
+    """
+    config_dir = os.path.expanduser("~/.docker")
+    os.makedirs(config_dir, exist_ok=True)
+    auth = base64.b64encode(f"github:{token}".encode()).decode()
+    config_path = os.path.join(config_dir, "config.json")
+    config: dict = {}
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            config = json.load(f)
+    config.setdefault("auths", {})["ghcr.io"] = {"auth": auth}
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
 
 
 def extract_digest_from_ref(publish_ref: str) -> str | None:

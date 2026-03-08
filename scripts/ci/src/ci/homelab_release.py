@@ -24,12 +24,11 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from ci.lib import argocd, ghcr, helm, tofu
+from ci.lib import argocd, bazel, buildkite, ghcr, helm, tofu
 from ci.lib.config import ReleaseConfig
 
 
@@ -77,35 +76,14 @@ HELM_CHARTS = [
     "status-page",
 ]
 
-# Docker images for homelab infra (built via docker build, not Bazel).
-# Ported from Dagger's homelab-ha.ts, homelab-dependency-summary.ts,
-# homelab-dns-audit.ts, homelab-caddy-s3proxy.ts.
-DOCKER_IMAGES = [
-    {
-        "name": "homelab",
-        "dockerfile": str(REPO_ROOT / "packages/homelab/src/ha/Dockerfile"),
-        "context": str(REPO_ROOT / "packages/homelab"),
-        "repository": "ghcr.io/shepherdjerred/homelab",
-    },
-    {
-        "name": "dependency-summary",
-        "dockerfile": str(REPO_ROOT / "packages/homelab/src/deps-email/Dockerfile"),
-        "context": str(REPO_ROOT / "packages/homelab"),
-        "repository": "ghcr.io/shepherdjerred/dependency-summary",
-    },
-    {
-        "name": "dns-audit",
-        "dockerfile": str(REPO_ROOT / "packages/homelab/src/dns-audit/Dockerfile"),
-        "context": str(REPO_ROOT / "packages/homelab/src/dns-audit"),
-        "repository": "ghcr.io/shepherdjerred/dns-audit",
-    },
-    {
-        "name": "caddy-s3proxy",
-        "dockerfile": str(REPO_ROOT / "packages/homelab/src/caddy-s3proxy/Dockerfile"),
-        "context": str(REPO_ROOT / "packages/homelab/src/caddy-s3proxy"),
-        "repository": "ghcr.io/shepherdjerred/caddy-s3proxy",
-    },
-]
+# Bazel push targets for homelab infra container images.
+# These replace the former Docker-built images.
+INFRA_PUSH_TARGETS = {
+    "//packages/homelab/src/ha:image_push": "shepherdjerred/homelab",
+    "//packages/homelab/src/deps-email:image_push": "shepherdjerred/dependency-summary",
+    "//packages/homelab/src/dns-audit:image_push": "shepherdjerred/dns-audit",
+    "//packages/homelab/src/caddy-s3proxy:image_push": "shepherdjerred/caddy-s3proxy",
+}
 
 
 def main() -> None:
@@ -123,50 +101,27 @@ def main() -> None:
 
     errors: list[str] = []
 
-    # --- Build and push infra container images ---
+    # --- Build and push infra container images via Bazel oci_push ---
     gh_token = os.environ.get("GH_TOKEN", "")
     infra_digests: dict[str, str] = {}
     if gh_token:
         print("\n--- Build and push infra container images ---", flush=True)
         ghcr.login(gh_token)
-        for img in DOCKER_IMAGES:
-            tag = f"{img['repository']}:{config.version}"
-            latest_tag = f"{img['repository']}:latest"
+        for target, version_key in INFRA_PUSH_TARGETS.items():
             try:
-                subprocess.run(
-                    [
-                        "docker", "build",
-                        "-t", tag,
-                        "-t", latest_tag,
-                        "-f", img["dockerfile"],
-                        img["context"],
-                    ],
-                    check=True,
-                )
-                result = subprocess.run(
-                    ["docker", "push", tag],
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                versioned = ghcr.format_version_with_digest(
-                    config.version, result.stdout
-                )
-                infra_digests[f"shepherdjerred/{img['name']}"] = versioned
-                print(f"  Pushed {img['name']}: {versioned}", flush=True)
-                subprocess.run(["docker", "push", latest_tag], check=True)
+                print(f"\nPushing {target}", flush=True)
+                output = bazel.run_capture(target, stamp=True, embed_label=config.version)
+                versioned = ghcr.format_version_with_digest(config.version, output)
+                infra_digests[version_key] = versioned
+                print(f"  Digest: {versioned}", flush=True)
             except Exception as e:
-                errors.append(f"Docker image {img['name']}: {e}")
+                errors.append(f"Infra image {target}: {e}")
 
         # Write digests for version_commit_back to consume
         Path("/tmp/infra-digests.json").write_text(json.dumps(infra_digests, indent=2))
         # Store in Buildkite metadata for cross-step sharing
-        if shutil.which("buildkite-agent") is not None:
-            subprocess.run(
-                ["buildkite-agent", "meta-data", "set", "infra_digests", json.dumps(infra_digests)],
-                check=False,
-            )
-            print("Stored infra digests in Buildkite metadata", flush=True)
+        buildkite.set_metadata("infra_digests", json.dumps(infra_digests))
+        print("Stored infra digests in Buildkite metadata", flush=True)
     else:
         print("GH_TOKEN not set, skipping infra image build/push", flush=True)
 
@@ -235,6 +190,8 @@ def main() -> None:
         print(f"\n--- {len(errors)} error(s) during homelab release ---", flush=True)
         for i, err in enumerate(errors, 1):
             print(f"  {i}. {err}", flush=True)
+        summary = "\n".join(f"- {e}" for e in errors)
+        buildkite.annotate(f"**Homelab release errors:**\n{summary}", style="error", context="homelab-release")
         sys.exit(1)
 
     print("\nHomelab release completed successfully", flush=True)
