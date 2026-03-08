@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { preferDateFns } from "./prefer-date-fns";
+import { preferDateFns } from "./prefer-date-fns.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

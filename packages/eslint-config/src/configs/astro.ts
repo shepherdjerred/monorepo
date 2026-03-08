@@ -15,7 +15,7 @@ export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
         astro: astroPlugin,
       },
       // Extend astro's recommended flat config which includes the parser
-      ...(astroPlugin.configs?.["flat/base"] ?? {}),
+      ...astroPlugin.configs?.["flat/base"],
       languageOptions: {
         parserOptions: {
           parser: "@typescript-eslint/parser",

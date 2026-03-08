@@ -10,6 +10,7 @@ exports_files(["package.json"])
 # TypeScript library built with tsc.
 bun_library(
     name = "pkg",
+    package_name = "@discord-plays-pokemon/common",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -50,6 +51,8 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/@tsconfig/recommended",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
         "//packages/eslint-config:pkg",

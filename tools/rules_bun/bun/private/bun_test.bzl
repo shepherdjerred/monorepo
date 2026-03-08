@@ -41,6 +41,7 @@ def _bun_test_impl(ctx):
         substitutions = {
             "{{BUN_PATH}}": bun_rp,
             "{{TREE_PATH}}": ctx.workspace_name + "/" + tree.short_path,
+            "{{PKG_DIR}}": ctx.label.package,
             "{{BAIL}}": "--bail" if ctx.attr.bail else "",
         },
         is_executable = True,

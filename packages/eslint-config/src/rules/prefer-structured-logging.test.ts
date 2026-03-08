@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { preferStructuredLogging } from "./prefer-structured-logging";
+import { preferStructuredLogging } from "./prefer-structured-logging.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

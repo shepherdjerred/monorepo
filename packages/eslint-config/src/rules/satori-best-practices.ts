@@ -96,8 +96,7 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       );
 
       if (
-        !styleAttr ||
-        styleAttr.type !== AST_NODE_TYPES.JSXAttribute ||
+        styleAttr?.type !== AST_NODE_TYPES.JSXAttribute ||
         !styleAttr.value
       ) {
         return null;
@@ -118,8 +117,7 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
         );
 
         if (
-          displayProp &&
-          displayProp.type === AST_NODE_TYPES.Property &&
+          displayProp?.type === AST_NODE_TYPES.Property &&
           displayProp.value.type === AST_NODE_TYPES.Literal
         ) {
           return String(displayProp.value.value);
@@ -137,17 +135,26 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       let hasTextOrExpression = false;
 
       for (const child of node.children) {
-        if (
-          child.type === AST_NODE_TYPES.JSXElement ||
-          child.type === AST_NODE_TYPES.JSXFragment
-        ) {
+        switch (child.type) {
+        case AST_NODE_TYPES.JSXElement: 
+        case AST_NODE_TYPES.JSXFragment: {
           elementCount++;
-        } else if (child.type === AST_NODE_TYPES.JSXText) {
+        
+        break;
+        }
+        case AST_NODE_TYPES.JSXText: {
           if (child.value.trim().length > 0) {
             hasTextOrExpression = true;
           }
-        } else if (child.type === AST_NODE_TYPES.JSXExpressionContainer) {
+        
+        break;
+        }
+        case AST_NODE_TYPES.JSXExpressionContainer: {
           hasTextOrExpression = true;
+        
+        break;
+        }
+        // No default
         }
       }
 
@@ -232,8 +239,7 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
 
           if (
             parentTag === "img" &&
-            attr.value &&
-            attr.value.type === AST_NODE_TYPES.Literal
+            attr.value?.type === AST_NODE_TYPES.Literal
           ) {
             const srcValue = String(attr.value.value);
             // Warn about external URLs (http://, https://, //) but allow data URLs and variables
@@ -264,15 +270,13 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       }
 
       // Also check for useXxx patterns from the callee
-      if (node.callee.type === AST_NODE_TYPES.MemberExpression) {
-        if (node.callee.property.type === AST_NODE_TYPES.Identifier) {
+      if (node.callee.type === AST_NODE_TYPES.MemberExpression && node.callee.property.type === AST_NODE_TYPES.Identifier) {
           const name = node.callee.property.name;
           return (
             name.startsWith("use") &&
             name.charAt(3).toUpperCase() === name.charAt(3)
           );
         }
-      }
 
       return false;
     }
@@ -297,15 +301,13 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           }
 
           // Check for function calls - but only if they look like hooks
-          if (expression.type === AST_NODE_TYPES.CallExpression) {
-            if (isLikelyHookCall(expression)) {
+          if (expression.type === AST_NODE_TYPES.CallExpression && isLikelyHookCall(expression)) {
               context.report({
                 node: child,
                 messageId: "noDynamicJsx",
               });
             }
             // Other function calls (like ts-pattern's match(), utility functions, etc.) are okay
-          }
         }
 
         // Check for spread children

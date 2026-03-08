@@ -169,9 +169,7 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                       // 2. Otherwise, after the PrismaClient instantiation's parent statement
                       let insertionPoint: TSESTree.Node | undefined;
 
-                      if (lastLifecycleHook !== undefined) {
-                        insertionPoint = lastLifecycleHook;
-                      } else {
+                      if (lastLifecycleHook === undefined) {
                         // Find the top-level statement containing the first PrismaClient instantiation
                         const firstPrismaNode = prismaClientNodes[0];
                         if (firstPrismaNode !== undefined) {
@@ -184,6 +182,8 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                           }
                           insertionPoint = current;
                         }
+                      } else {
+                        insertionPoint = lastLifecycleHook;
                       }
 
                       if (insertionPoint === undefined) {

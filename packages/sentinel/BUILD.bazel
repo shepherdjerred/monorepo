@@ -19,6 +19,7 @@ bun_prisma_generate(
 # Bun-native: TypeScript executed directly by Bun, no transpilation needed.
 bun_library(
     name = "pkg",
+    package_name = "@shepherdjerred/sentinel",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -49,9 +50,13 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    prisma_client = ":prisma_generate",
     deps = [
+        ":node_modules/prisma",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { noFunctionOverloads } from "./no-function-overloads";
+import { noFunctionOverloads } from "./no-function-overloads.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

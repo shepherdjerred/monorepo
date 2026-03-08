@@ -16,6 +16,8 @@ export default [
       "regexp/no-obscure-range": "off",
       "regexp/no-misleading-unicode-character": "off",
       "regexp/no-misleading-capturing-group": "off",
+      // Parser file has many token/rule definitions; hard to split further.
+      "max-lines": ["error", { max: 600 }],
     },
   },
   {

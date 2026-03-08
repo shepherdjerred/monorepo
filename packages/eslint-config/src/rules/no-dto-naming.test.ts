@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { noDtoNaming } from "./no-dto-naming";
+import { noDtoNaming } from "./no-dto-naming.ts";
 
 const ruleTester = new RuleTester();
 

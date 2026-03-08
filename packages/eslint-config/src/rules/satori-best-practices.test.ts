@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { satoriBestPractices } from "./satori-best-practices";
+import { satoriBestPractices } from "./satori-best-practices.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

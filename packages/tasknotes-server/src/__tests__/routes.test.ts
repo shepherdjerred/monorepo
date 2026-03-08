@@ -50,18 +50,21 @@ async function makeRequest(
   return app.request(url, init);
 }
 
-async function createTask(
-  body: Record<string, unknown>,
-): Promise<{ id: string; [key: string]: unknown }> {
+// JSON.parse returns any, which allows property access without type assertions
+async function jsonBody(res: Response) {
+  return JSON.parse(await res.text());
+}
+
+async function createTask(body: Record<string, unknown>) {
   const res = await makeRequest("POST", "/api/tasks", body);
-  return res.json();
+  return jsonBody(res);
 }
 
 describe("health", () => {
   test("GET /api/health returns ok", async () => {
     const res = await makeRequest("GET", "/api/health");
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await jsonBody(res);
     expect(data.status).toBe("ok");
     expect(data.version).toBe("0.1.0");
   });
@@ -71,7 +74,7 @@ describe("tasks CRUD", () => {
   test("GET /api/tasks returns empty list initially", async () => {
     const res = await makeRequest("GET", "/api/tasks");
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await jsonBody(res);
     expect(data.tasks).toEqual([]);
     expect(data.pagination.total).toBe(0);
   });
@@ -82,7 +85,7 @@ describe("tasks CRUD", () => {
       priority: "high",
     });
     expect(res.status).toBe(201);
-    const task = await res.json();
+    const task = await jsonBody(res);
     expect(task.title).toBe("New task");
     expect(task.priority).toBe("high");
     expect(task.id).toBeDefined();
@@ -90,9 +93,9 @@ describe("tasks CRUD", () => {
 
   test("GET /api/tasks/:id returns task", async () => {
     const created = await createTask({ title: "Get me" });
-    const res = await makeRequest("GET", `/api/tasks/${created.id}`);
+    const res = await makeRequest("GET", `/api/tasks/${String(created.id)}`);
     expect(res.status).toBe(200);
-    const task = await res.json();
+    const task = await jsonBody(res);
     expect(task.title).toBe("Get me");
   });
 
@@ -103,30 +106,30 @@ describe("tasks CRUD", () => {
 
   test("PUT /api/tasks/:id updates task", async () => {
     const created = await createTask({ title: "Original" });
-    const res = await makeRequest("PUT", `/api/tasks/${created.id}`, {
+    const res = await makeRequest("PUT", `/api/tasks/${String(created.id)}`, {
       title: "Updated",
     });
     expect(res.status).toBe(200);
-    const task = await res.json();
+    const task = await jsonBody(res);
     expect(task.title).toBe("Updated");
   });
 
   test("DELETE /api/tasks/:id deletes task", async () => {
     const created = await createTask({ title: "Delete me" });
-    const res = await makeRequest("DELETE", `/api/tasks/${created.id}`);
+    const res = await makeRequest("DELETE", `/api/tasks/${String(created.id)}`);
     expect(res.status).toBe(200);
 
-    const getRes = await makeRequest("GET", `/api/tasks/${created.id}`);
+    const getRes = await makeRequest("GET", `/api/tasks/${String(created.id)}`);
     expect(getRes.status).toBe(404);
   });
 
   test("POST /api/tasks/:id/archive archives task", async () => {
     const created = await createTask({ title: "Archive me" });
-    const res = await makeRequest("POST", `/api/tasks/${created.id}/archive`);
+    const res = await makeRequest("POST", `/api/tasks/${String(created.id)}/archive`);
     expect(res.status).toBe(200);
 
     const listRes = await makeRequest("GET", "/api/tasks");
-    const list = await listRes.json();
+    const list = await jsonBody(listRes);
     expect(list.tasks.length).toBe(0);
   });
 
@@ -137,10 +140,10 @@ describe("tasks CRUD", () => {
     });
     const res = await makeRequest(
       "POST",
-      `/api/tasks/${created.id}/complete-instance`,
+      `/api/tasks/${String(created.id)}/complete-instance`,
     );
     expect(res.status).toBe(200);
-    const task = await res.json();
+    const task = await jsonBody(res);
     expect(task.status).toBe("done");
   });
 });
@@ -154,7 +157,7 @@ describe("tasks query", () => {
       status: ["open"],
     });
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await jsonBody(res);
     expect(data.tasks.length).toBe(1);
     expect(data.tasks[0].title).toBe("Open task");
   });
@@ -165,7 +168,7 @@ describe("tasks query", () => {
 
     const res = await makeRequest("GET", "/api/stats");
     expect(res.status).toBe(200);
-    const stats = await res.json();
+    const stats = await jsonBody(res);
     expect(stats.total).toBe(2);
     expect(stats.active).toBe(1);
     expect(stats.completed).toBe(1);
@@ -181,7 +184,7 @@ describe("tasks query", () => {
 
     const res = await makeRequest("GET", "/api/filter-options");
     expect(res.status).toBe(200);
-    const filters = await res.json();
+    const filters = await jsonBody(res);
     expect(filters.contexts).toContain("home");
     expect(filters.projects).toContain("ProjectA");
     expect(filters.tags).toContain("urgent");
@@ -194,7 +197,7 @@ describe("NLP", () => {
       text: "Buy groceries !high @home",
     });
     expect(res.status).toBe(200);
-    const result = await res.json();
+    const result = await jsonBody(res);
     expect(result.title).toBe("Buy groceries");
     expect(result.priority).toBe("high");
     expect(result.contexts).toEqual(["home"]);
@@ -205,7 +208,7 @@ describe("NLP", () => {
       text: "Fix bug !high p:Backend",
     });
     expect(res.status).toBe(201);
-    const task = await res.json();
+    const task = await jsonBody(res);
     expect(task.title).toBe("Fix bug");
     expect(task.priority).toBe("high");
     expect(task.projects).toEqual(["Backend"]);
@@ -216,14 +219,14 @@ describe("pomodoro", () => {
   test("GET /api/pomodoro/status returns inactive initially", async () => {
     const res = await makeRequest("GET", "/api/pomodoro/status");
     expect(res.status).toBe(200);
-    const status = await res.json();
+    const status = await jsonBody(res);
     expect(status.active).toBe(false);
   });
 
   test("POST /api/pomodoro/start starts pomodoro", async () => {
     const res = await makeRequest("POST", "/api/pomodoro/start", {});
     expect(res.status).toBe(200);
-    const status = await res.json();
+    const status = await jsonBody(res);
     expect(status.active).toBe(true);
     expect(status.type).toBe("work");
   });
@@ -232,7 +235,7 @@ describe("pomodoro", () => {
     await makeRequest("POST", "/api/pomodoro/start", {});
     const res = await makeRequest("POST", "/api/pomodoro/stop");
     expect(res.status).toBe(200);
-    const status = await res.json();
+    const status = await jsonBody(res);
     expect(status.active).toBe(false);
   });
 });
@@ -244,7 +247,7 @@ describe("calendar", () => {
 
     const res = await makeRequest("GET", "/api/calendar/events");
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await jsonBody(res);
     expect(data.events.length).toBe(1);
     expect(data.events[0].title).toBe("Due task");
     expect(data.events[0].date).toBe("2026-03-01");
@@ -260,7 +263,7 @@ describe("calendar", () => {
       "/api/calendar/events?start=2026-06-01&end=2026-07-01",
     );
     expect(res.status).toBe(200);
-    const data = await res.json();
+    const data = await jsonBody(res);
     expect(data.events.length).toBe(1);
     expect(data.events[0].title).toBe("Mid");
   });

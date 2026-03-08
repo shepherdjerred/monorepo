@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { preferZodValidation } from "./prefer-zod-validation";
+import { preferZodValidation } from "./prefer-zod-validation.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

@@ -350,7 +350,12 @@ async function processJob(job: Job): Promise<void> {
           }
           break;
         }
-        default: {
+        case "stream_event":
+        case "tool_progress":
+        case "auth_status":
+        case "tool_use_summary":
+        case "rate_limit_event":
+        case "prompt_suggestion": {
           break;
         }
       }

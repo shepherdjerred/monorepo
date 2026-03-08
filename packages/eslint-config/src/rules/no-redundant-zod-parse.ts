@@ -86,9 +86,8 @@ export const noRedundantZodParse = createRule({
             test.type === AST_NODE_TYPES.MemberExpression &&
             test.property.type === AST_NODE_TYPES.Identifier &&
             test.property.name === "success"
-          ) {
-            // Check if the object is a safeParse call
-            if (
+           && // Check if the object is a safeParse call
+            
               test.object.type === AST_NODE_TYPES.CallExpression &&
               test.object.callee.type === AST_NODE_TYPES.MemberExpression &&
               test.object.callee.property.type === AST_NODE_TYPES.Identifier &&
@@ -110,7 +109,6 @@ export const noRedundantZodParse = createRule({
               // Early return to reduce nesting depth
               return isSameSchema && isSameArg;
             }
-          }
         }
         parent = parent.parent;
       }

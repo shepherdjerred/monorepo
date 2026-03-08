@@ -3,9 +3,7 @@ import { recommended } from "@shepherdjerred/eslint-config";
 export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
-    projectService: {
-      allowDefaultProject: ["src/__tests__/*.test.ts"],
-    },
+    projectService: true,
     ignores: [
       "**/dist/**/*",
       "**/node_modules/**/*",

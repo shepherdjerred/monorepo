@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { noReExports } from "./no-re-exports";
+import { noReExports } from "./no-re-exports.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

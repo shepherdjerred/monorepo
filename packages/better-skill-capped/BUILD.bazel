@@ -47,8 +47,12 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/@types/react",
+        ":node_modules/@types/react-dom",
+        ":node_modules/@types/react-highlight-words",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
         "//packages/eslint-config:pkg",
     ],
 )

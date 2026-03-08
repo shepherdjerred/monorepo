@@ -37,8 +37,16 @@ bun_eslint_test(
         "//:tsconfig.base.json",
     ],
     deps = [
+        ":node_modules/@tsconfig/node24",
+        ":node_modules/@tsconfig/strictest",
+        ":node_modules/@types/jsdom",
+        ":node_modules/@types/node",
+        ":node_modules/@types/react",
+        ":node_modules/astro",
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
 )

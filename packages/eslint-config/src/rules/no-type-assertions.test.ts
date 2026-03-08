@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { noTypeAssertions } from "./no-type-assertions";
+import { noTypeAssertions } from "./no-type-assertions.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

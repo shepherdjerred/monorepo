@@ -95,8 +95,7 @@ export const noReExports = createRule({
           if (node.declaration.type === AST_NODE_TYPES.VariableDeclaration) {
             for (const declarator of node.declaration.declarations) {
               if (
-                declarator.init &&
-                declarator.init.type === AST_NODE_TYPES.Identifier &&
+                declarator.init?.type === AST_NODE_TYPES.Identifier &&
                 importedIdentifiers.has(declarator.init.name)
               ) {
                 context.report({

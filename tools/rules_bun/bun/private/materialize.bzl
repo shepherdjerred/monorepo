@@ -8,37 +8,35 @@ load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
 
 def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_client, data_files, all_npm_sources):
-    """Write a manifest file listing all COPY/COPYDIR operations."""
+    """Write a manifest file listing all COPY/COPYDIR operations.
+
+    Files are placed at their monorepo-relative paths so that all relative
+    references (tsconfig extends, eslint config discovery, etc.) work as-is.
+    """
     lines = []
     pkg_dir = ctx.label.package
 
-    # Copy source files
+    # Copy source files — preserve monorepo-relative paths
     for f in bun_info.sources.to_list():
-        rel_path = f.short_path
-        if rel_path.startswith(pkg_dir + "/"):
-            rel_path = rel_path[len(pkg_dir) + 1:]
-        lines.append("COPY\t%s\t%s" % (f.path, rel_path))
+        lines.append("COPY\t%s\t%s" % (f.path, f.short_path))
 
-    # Copy package.json
+    # Copy package.json at its monorepo location
     if bun_info.package_json:
-        lines.append("COPY\t%s\tpackage.json" % bun_info.package_json.path)
+        lines.append("COPY\t%s\t%s/package.json" % (bun_info.package_json.path, pkg_dir))
 
-    # Copy tsconfig if provided
+    # Copy tsconfig at its monorepo location
     if tsconfig:
-        lines.append("COPY\t%s\ttsconfig.json" % tsconfig.path)
+        lines.append("COPY\t%s\t%s/tsconfig.json" % (tsconfig.path, pkg_dir))
 
-    # Copy extra files (e.g., tsconfig_base)
+    # Copy extra files at their monorepo-relative paths
     for f in extra_files:
-        lines.append("COPY\t%s\t%s" % (f.path, f.basename))
+        lines.append("COPY\t%s\t%s" % (f.path, f.short_path))
 
-    # Copy data files
+    # Copy data files — preserve monorepo-relative paths
     for f in data_files:
-        rel_path = f.short_path
-        if rel_path.startswith(pkg_dir + "/"):
-            rel_path = rel_path[len(pkg_dir) + 1:]
-        lines.append("COPY\t%s\t%s" % (f.path, rel_path))
+        lines.append("COPY\t%s\t%s" % (f.path, f.short_path))
 
-    # Copy npm package files into node_modules
+    # Copy npm package files into {pkg_dir}/node_modules
     # Deduplicate by destination path — first entry wins
     seen_npm_paths = {}
     for f in all_npm_sources:
@@ -53,7 +51,7 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
             if pkg_relative.startswith(".aspect_rules_js") or pkg_relative.startswith(".bin"):
                 continue
 
-            dest = "node_modules/%s" % pkg_relative
+            dest = "%s/node_modules/%s" % (pkg_dir, pkg_relative)
             if dest in seen_npm_paths:
                 continue
             seen_npm_paths[dest] = True
@@ -63,7 +61,7 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
             else:
                 lines.append("COPY\t%s\t%s" % (f.path, dest))
 
-    # Copy workspace dep sources into node_modules/<pkg_name>/
+    # Copy workspace dep sources into {pkg_dir}/node_modules/<pkg_name>/
     for ws_dep in bun_info.workspace_deps.to_list():
         dep_pkg_dir = ws_dep.target.package
         dep_name = _workspace_dep_name(ws_dep)
@@ -72,14 +70,26 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
             rel_path = f.short_path
             if rel_path.startswith(dep_pkg_dir + "/"):
                 rel_path = rel_path[len(dep_pkg_dir) + 1:]
-            lines.append("COPY\t%s\tnode_modules/%s/%s" % (f.path, dep_name, rel_path))
+            lines.append("COPY\t%s\t%s/node_modules/%s/%s" % (f.path, pkg_dir, dep_name, rel_path))
 
         if ws_dep.package_json:
-            lines.append("COPY\t%s\tnode_modules/%s/package.json" % (ws_dep.package_json.path, dep_name))
+            lines.append("COPY\t%s\t%s/node_modules/%s/package.json" % (ws_dep.package_json.path, pkg_dir, dep_name))
 
     # Copy prisma client if provided
     if prisma_client:
-        lines.append("COPYDIR\t%s\t.prisma/client" % prisma_client.path)
+        lines.append("COPYDIR\t%s\t%s/.prisma/client" % (prisma_client.path, pkg_dir))
+        lines.append("COPYDIR\t%s\t%s/node_modules/.prisma/client" % (prisma_client.path, pkg_dir))
+
+    # Create node_modules symlinks at each ancestor directory so that files
+    # at parent levels (e.g. shared eslint configs) can resolve npm imports.
+    parts = pkg_dir.split("/")
+    for i in range(len(parts)):
+        link_dir = "/".join(parts[:i]) if i > 0 else ""
+        rel_target = "/".join(parts[i:]) + "/node_modules"
+        if link_dir:
+            lines.append("LINK\t%s\t%s/node_modules" % (rel_target, link_dir))
+        else:
+            lines.append("LINK\t%s\tnode_modules" % rel_target)
 
     ctx.actions.write(
         output = manifest_file,
@@ -113,6 +123,10 @@ while IFS=$'\\t' read -r op src dst; do
         COPYDIR)
             mkdir -p "$OUT_DIR/$dst"
             cp -R "$src/." "$OUT_DIR/$dst/" 2>/dev/null || true
+            ;;
+        LINK)
+            mkdir -p "$OUT_DIR/$(dirname "$dst")"
+            ln -sf "$src" "$OUT_DIR/$dst" 2>/dev/null || true
             ;;
     esac
 done < "$MANIFEST"

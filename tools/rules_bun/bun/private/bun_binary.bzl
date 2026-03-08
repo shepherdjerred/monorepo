@@ -40,6 +40,7 @@ def _bun_binary_impl(ctx):
         substitutions = {
             "{{BUN_PATH}}": bun_rp,
             "{{TREE_PATH}}": ctx.workspace_name + "/" + tree.short_path,
+            "{{PKG_DIR}}": ctx.label.package,
             "{{ENTRY_POINT}}": ctx.attr.entry_point,
         },
         is_executable = True,

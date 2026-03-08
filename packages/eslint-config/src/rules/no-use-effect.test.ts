@@ -1,6 +1,6 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "bun:test";
-import { noUseEffect } from "./no-use-effect";
+import { noUseEffect } from "./no-use-effect.ts";
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
