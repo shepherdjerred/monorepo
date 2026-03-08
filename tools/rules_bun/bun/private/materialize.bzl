@@ -88,6 +88,8 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
 
 def _workspace_dep_name(bun_info):
     """Extract the npm package name from a workspace dep's package directory."""
+    if bun_info.package_name:
+        return bun_info.package_name
     parts = bun_info.target.package.split("/")
     if len(parts) >= 2:
         return parts[-1]

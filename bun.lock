@@ -10,6 +10,7 @@
       },
       "devDependencies": {
         "@dagger.io/dagger": "^0.19.0",
+        "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "^1.3.5",
         "@types/node": "^22.15.0",
         "bun-types": "^1.3.10",
@@ -845,7 +846,7 @@
         "zod": "^3.24",
       },
       "devDependencies": {
-        "@types/bun": "latest",
+        "@types/bun": "^1.3.5",
         "eslint": "^9.39.2",
         "jiti": "^2.6.1",
         "prisma": "^6.0.0",

@@ -1,4 +1,4 @@
-import { recommended, customRulesPlugin } from "../eslint-config/local.ts";
+import { recommended, customRulesPlugin } from "@shepherdjerred/eslint-config";
 
 export default [
   ...recommended({

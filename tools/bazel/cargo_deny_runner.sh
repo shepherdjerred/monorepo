@@ -1,36 +1,30 @@
 #!/usr/bin/env bash
 # Shell wrapper for running cargo-deny in the Bazel sandbox.
 # Checks advisories, bans, and sources against deny.toml config.
+# Uses a hermetic cargo-deny binary provided via $CARGO_DENY_BIN from @multitool
+# and a hermetic cargo binary provided via $CARGO_BIN from @rules_rust.
 
 set -euo pipefail
-
-# Bazel's strict action env strips PATH and HOME; restore common locations.
-# Use tilde expansion as fallback when HOME is unset (bash resolves ~ from /etc/passwd).
-if [ -z "${HOME:-}" ]; then
-  export HOME
-  HOME=$(bash -c 'cd ~ && pwd' 2>/dev/null) || HOME=/tmp
-fi
-# Use mise installs directly (not shims) to avoid .mise.toml trust issues in execroot.
-# Disable mise activation so it doesn't try to read untrusted config files.
-export MISE_DISABLED=1
-MISE_INSTALLS="${HOME}/.local/share/mise/installs"
-# Find the mise-managed Rust toolchain that has cargo-deny installed.
-RUST_BIN=""
-if [ -d "$MISE_INSTALLS/rust" ]; then
-  RUST_BIN=$(find "$MISE_INSTALLS/rust" -maxdepth 3 -name cargo-deny -type f 2>/dev/null | head -1 | xargs -r dirname)
-fi
-export PATH="${RUST_BIN:+$RUST_BIN:}${HOME}/.cargo/bin:/usr/local/bin:/opt/homebrew/bin:${PATH:-}"
 
 # Set up a writable CARGO_HOME for the sandbox since the real one is read-only.
 # cargo-deny needs to download advisory database and crate index.
 export CARGO_HOME="${TEST_TMPDIR:-/tmp}/cargo-home"
 mkdir -p "$CARGO_HOME"
 
-# Ensure rustup can find a toolchain (sandbox strips HOME/defaults)
-export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-stable}"
-
 RUNFILES="${TEST_SRCDIR:-${BASH_SOURCE[0]}.runfiles}"
 WS="${TEST_WORKSPACE:-_main}"
+
+# Resolve hermetic binaries to absolute paths from runfiles
+CARGO_DENY="$(cd "$RUNFILES/$WS" && pwd)/$CARGO_DENY_BIN"
+CARGO="$(cd "$RUNFILES/$WS" && pwd)/$CARGO_BIN"
+RUSTC="$(cd "$RUNFILES/$WS" && pwd)/$RUSTC_BIN"
+
+# Put hermetic cargo and rustc on PATH so cargo-deny can find them for `cargo metadata`
+# hermeticity-exempt: cargo-deny shells out to cargo/rustc which need PATH discovery
+CARGO_DIR="$(dirname "$CARGO")"
+RUSTC_DIR="$(dirname "$RUSTC")"
+export PATH="$CARGO_DIR:$RUSTC_DIR:$PATH"
+
 cd "$RUNFILES/$WS/$PKG_DIR"
 
-cargo-deny --manifest-path Cargo.toml check advisories bans sources
+"$CARGO_DENY" --manifest-path Cargo.toml check advisories bans sources

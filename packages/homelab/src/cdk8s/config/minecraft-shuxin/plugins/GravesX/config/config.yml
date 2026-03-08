@@ -1,0 +1,410 @@
+# Config version, you should never manually change this.
+config-version: 25
+
+# ##############
+# Core Config #
+# ##############
+# Core config for backend processes or misc options.
+# If you are looking to edit graves, the main grave config file is grave.yml.
+settings:
+  
+  # ##########
+  # Storage #
+  # ##########
+  # Data storage system.
+  storage:
+    # SQLITE will be removed in a future release. Use H2 instead.
+    # Available options: MYSQL, MARIADB, POSTGRESQL, H2, MSSQL.
+    # More storage types will be added in the future.
+    type: H2
+    # Prefix to use for all database table names. Applies to all database types.
+    # Useful for distinguishing tables when using a shared database (Not Recommended)
+    # Leave empty to use no prefix (default)
+    # NOTE: If using H2, you may need to reset or recreate your database as existing databases may not be compatible.
+    #       If enabling a prefix after tables already exist, you must manually rename or migrate the existing tables to match the prefix set in config.
+    prefix: ''
+    
+    sqlite:
+      # Unless you know what you're doing, leave the options under sqlite default.
+      # Journal mode for SQLite. Options include DELETE, TRUNCATE, PERSIST, MEMORY, WAL, OFF.
+      # Refer to https://www.sqlite.org/pragma.html#pragma_journal_mode for more details.
+      journal-mode: WAL
+      # Synchronous mode for SQLite. Options include 0 (OFF), 1 (NORMAL), 2 (FULL), 3 (EXTRA).
+      # Refer to https://www.sqlite.org/pragma.html#pragma_synchronous for more details.
+      synchronous: 'OFF'
+    
+    mysql:
+      # Unless you know what you're doing, leave the options under mysql default.
+      # Host of the MySQL database.
+      host: localhost
+      # Port for the MySQL database (do not change unless you use a different port).
+      port: 3306
+      # Database username. Ensure the user has access to the database.
+      username: username
+      # Database password. Case-sensitive.
+      password: password
+      # Database to use.
+      database: graves
+      # Maximum number of connections allowed to the database.
+      # Do not change unless you know what you are doing.
+      maxConnections: 10
+      # Maximum lifetime of a connection in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      maxLifetime: 1800000
+      # Connection timeout in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      # Only increase if your connection keeps timing out.
+      connectionTimeout: 30000
+      # Should we use SSL? Unless you know what you are doing, leave this at false.
+      useSSL: false
+      # Should we allow public key retrieval? DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      allowPublicKeyRetrieval: false
+      # Should we verify the server certificate? DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      verifyServerCertificate: false
+    
+    postgresql:
+      # Unless you know what you're doing, leave the options under postgresql default.
+      # Host of the PostgreSQL database.
+      host: localhost
+      # Port for the PostgreSQL database (do not change unless you use a different port).
+      port: 5432
+      # Database username. Ensure the user has access to the database.
+      username: username
+      # Database password. Case-sensitive.
+      password: password
+      # Database to use.
+      database: graves
+      # Maximum number of connections allowed to the database.
+      # Do not change unless you know what you are doing.
+      maxConnections: 10
+      # Maximum lifetime of a connection in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      maxLifetime: 1800000
+      # Connection timeout in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      # Only increase if your connection keeps timing out.
+      connectionTimeout: 30000
+      # Should we use SSL? Unless you know what you are doing, leave this at false.
+      ssl: false
+      # SSL factory class. Default: org.postgresql.ssl.NonValidatingFactory.
+      # Refer to PostgreSQL SSL documentation for more details.
+      sslfactory: org.postgresql.ssl.NonValidatingFactory
+      # SSL mode. Options include disable, allow, prefer, require, verify-ca, verify-full.
+      # Refer to PostgreSQL SSL documentation for more details.
+      sslmode: disable
+      # Path to the server root certificate.
+      sslrootcert: /path/to/server.crt
+      # Path to the SSL certificate.
+      sslcert: /path/to/client.crt
+      # Path to the SSL key.
+      sslkey: /path/to/client.key
+    
+    h2:
+      # Unless you know what you're doing, leave the options under h2 default.
+      # Username for the H2 database.
+      username: sa
+      # Password for the H2 database. The default is an empty string.
+      password: ''
+      # Maximum number of connections allowed to the database.
+      # Do not change unless you know what you are doing.
+      maxConnections: 50
+      # Maximum lifetime of a connection in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      maxLifetime: 1800000
+      # Connection timeout in milliseconds.
+      # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
+      # Only increase if your connection keeps timing out.
+      connectionTimeout: 30000
+    
+    mssql:
+      # The hostname or IP address of the MS SQL server.
+      host: localhost
+      # The port MS SQL is running on (default is 1433).
+      port: 1433
+      # The username for authenticating to the MS SQL server.
+      username: username
+      # The password for the specified username.
+      password: password
+      # The name of the database to use on the MS SQL server.
+      database: graves
+      # Maximum lifetime of a connection in milliseconds before it is closed (30 minutes).
+      maxLifetime: 1800000
+      # Maximum number of connections in the connection pool.
+      maxConnections: 20
+      # Timeout in milliseconds before a connection attempt fails (30 seconds).
+      connectionTimeout: 30000
+      # Whether to encrypt the connection to the MS SQL server.
+      encrypt: true
+      # Whether to trust the server certificate if SSL is enabled (useful for self-signed certificates).
+      trustServerCertificate: false
+  
+  # ########
+  # Cache #
+  # ########
+  # Data storage system.
+  cache:
+    # Cache type. Implementation Unused
+    type: NORMAL
+  
+  # ########
+  # Debug #
+  # ########
+  # Debug information, debug level 2 can be useful in finding out why a Grave does not spawn on your server.
+  debug:
+    # UUID or name of admins to send debug information to. https://mcuuid.net/
+    admin:
+    - c59ac6d2-4851-4183-a9f7-15d1a293eed6
+    - 069a79f4-44e9-4726-a5be-fca90e38aaf5
+    # Should we display which plugin calls this debug?
+    show-caller: true
+    # Should we show what class and line number called this? This is intended for developers and not for production reasons though we won't stop you :)
+    show-caller-class: false
+    # 0 = Nothing, 1 = Information, 2 = Failures
+    level: 0
+  
+  # ########
+  # Dump  #
+  # ########
+  # Dump server information to help debug the plugin.
+  # Methods: MCLOGS, FILE, PASTEBIN, TOPTAL/HASTEBIN
+  dump:
+    method: MCLOGS
+    
+    # Only used when method is TOPTAL or HASTEBIN (former name, but will use TOPTAL. Added back for legacy naming)
+    toptal:
+      # Required Bearer token or else will fail (get from https://www.toptal.com/developers/hastebin/documentation)
+      token: ''
+    
+    # Only used when method is PASTEBIN
+    pastebin:
+      # REQUIRED (get from https://pastebin.com/doc_api)
+      dev-key: ''
+      # OPTIONAL; required for PRIVATE pastes
+      user-key: ''
+      # Valid Options:
+      # PUBLIC | UNLISTED | PRIVATE
+      privacy: UNLISTED
+      # Valid Options:
+      # N | 10M | 1H | 1D | 1W | 2W | 1M | 6M | 1Y
+      expire: 1W
+  
+  # #########
+  # Update #
+  # #########
+  update:
+    # Should GravesX try and check for an update.
+    check: true
+  
+  # ##########
+  # Metrics #
+  # ##########
+  metrics:
+    # Should we report metrics to bstats? Available in the following:
+    # https://bstats.org/plugin/bukkit/Graves/12849 - Legacy Stats. We still contribute to those stats as we choose to do so
+    # https://bstats.org/plugin/bukkit/GravesX/23069 - Related to GravesX. Contains more stats.
+    enabled: true
+  
+  # ################
+  # Compatibility #
+  # ################
+  compatibility:
+    # Warn when a plugin to have known incompatibilities is detected.
+    warning: true
+  
+  # ##############
+  # Integration #
+  # ##############
+  # Enable/Disable integrations into other plugins, if you are having errors relating to another plugin
+  # try disabling them here.
+  integration:
+    
+    # #############
+    # MultiPaper #
+    # #############
+    # Source: https://multipaper.io/
+    multipaper:
+      # Should MultiPaper integration be enabled.
+      enabled: false
+    
+    # #############
+    # MultiCache #
+    # #############
+    # Source: https://github.com/PestoNotPasta/MultiCache/
+    multicache:
+      # Should MultiCache integration be enabled.
+      enabled: false
+    
+    # ########
+    # Vault #
+    # ########
+    # Source: https://www.spigotmc.org/resources/vault.34315/
+    vault:
+      # Should Vault integration be enabled.
+      enabled: true
+    
+    # ##############
+    # ProtocolLib #
+    # ##############
+    # Source: https://www.spigotmc.org/resources/protocollib.1997/
+    protocollib:
+      # Should ProtocolLib integration be enabled.
+      enabled: true
+    
+    # ###############
+    # FurnitureLib #
+    # ###############
+    # Source: https://www.spigotmc.org/resources/furniturelibary.9368/
+    furniturelib:
+      # Should FurnitureLib integration be enabled.
+      enabled: false
+    
+    # ##################
+    # FurnitureEngine #
+    # ##################
+    # Source: https://github.com/Mira047/FurnitureEngine - Plugin must be compiled yourself. No support given.
+    furnitureengine:
+      # Should FurnitureEngine integration be enabled.
+      enabled: false
+    
+    # ################
+    # ProtectionLib #
+    # ################
+    # Source: https://www.spigotmc.org/resources/protectionlib.9368/
+    protectionlib:
+      # Should ProtectionLib integration be enabled.
+      enabled: false
+    
+    # #############
+    # ItemsAdder #
+    # #############
+    # Source: https://www.spigotmc.org/resources/itemsadder.73355/
+    itemsadder:
+      # Should ItemsAdder integration be enabled.
+      enabled: false
+      # Should Graves write its data into the ItemsAdder data folder.
+      write: false
+    
+    # #########
+    # Oraxen #
+    # #########
+    # Source: https://www.spigotmc.org/resources/oraxen.72448/
+    # We have fully deprecated this and have no plans to update. This will be retained for those who still want to use oraxen until they feel safe to move over to Nexo. No support will be given when this dependency breaks
+    oraxen:
+      # Should Oraxen integration be enabled.
+      enabled: false
+      # Should Graves write its pack into the Oraxen pack folder.
+      write: false
+    
+    # #######
+    # Nexo #
+    # #######
+    # Source: https://polymart.org/product/6901/nexo
+    nexo:
+      # Should Nexo integration be enabled.
+      enabled: false
+      # Should Graves write its pack into the Nexo pack folder.
+      write: false
+    
+    # #################
+    # PlaceholderAPI #
+    # #################
+    # Source: https://www.spigotmc.org/resources/placeholderapi.6245/
+    placeholderapi:
+      # Should PlaceholderAPI integration be enabled.
+      enabled: true
+    
+    # #########
+    # Skript #
+    # #########
+    # Source: https://github.com/SkriptLang/Skript/
+    skript:
+      # Should Skript integration be enabled.
+      enabled: false
+    
+    # ############
+    # ChestSort #
+    # ############
+    # Source: https://www.spigotmc.org/resources/chestsort.59773/ - Unsupported by main author
+    chestsort:
+      # Should ChestSort integration be enabled.
+      enabled: false
+    
+    # ##############
+    # MiniMessage #
+    # ##############
+    # Source: https://docs.adventure.kyori.net/minimessage/index.html
+    minimessage:
+      # Should MiniMessage integration be enabled. Shaded into plugin.
+      enabled: true
+    
+    # ###########
+    # MineDown #
+    # ###########
+    # Source: https://github.com/Phoenix616/MineDownPlugin/
+    minedown:
+      # Should MineDown integration be enabled. Shaded into plugin.
+      enabled: true
+    
+    # ############
+    # PlayerNPC #
+    # ############
+    # Source: https://www.spigotmc.org/resources/playernpc.93625/
+    playernpc:
+      # Should PlayerNPC integration be enabled.
+      enabled: false
+    
+    # #############
+    # FancyNpcs #
+    # #############
+    # Source: https://www.spigotmc.org/resources/fancy-npcs.107306/
+    fancynpcs:
+      # Should FancyNpcs integration be enabled.
+      enabled: false
+    
+    # #############
+    # Mannequins #
+    # #############
+    # Mannequins support. Works for 1.21.9+ servers.
+    mannequins:
+      # Should we enable support for mannequins?
+      enabled: false
+    
+    # #############
+    # ItemBridge #
+    # #############
+    # Source: https://www.spigotmc.org/resources/itembridge.77080/
+    itembridge:
+      # Should ItemBridge integration be enabled.
+      enabled: false
+    
+    # ############
+    # LuckPerms #
+    # ############
+    # Source: https://luckperms.net/download
+    luckperms:
+      # Should LuckPerms integration be enabled.
+      enabled: true
+    
+    # ##############
+    # CoreProtect #
+    # ##############
+    # Source: https://www.spigotmc.org/resources/coreprotect.8631/
+    coreprotect:
+      # Should CoreProtect integration be enabled. Requires API version 9 or newer
+      enabled: true
+    
+    # ###############
+    # NoteBlockAPI #
+    # ###############
+    # Source: https://www.spigotmc.org/resources/noteblockapi.19287/
+    noteblockapi:
+      # Should NoteBlockAPI integration be enabled.
+      enabled: false
+    
+    # ############
+    # Floodgate #
+    # ############
+    # Source: https://geysermc.org/download?project=floodgate
+    floodgate:
+      # Should Floodgate integration be enabled? Geyser Spigot is required.
+      enabled: true

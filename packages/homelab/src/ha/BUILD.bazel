@@ -1,9 +1,8 @@
 load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
-load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -33,23 +32,31 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    size = "small",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//packages/homelab:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Requires @digital-alchemy/type-writer generated entity types from a running
 # Home Assistant instance. Type checking works locally but not in Bazel sandbox.
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//packages/homelab:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
         ":pkg",
-        "//:node_modules/typescript",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
         "//:node_modules/undici-types",
     ],
 )
@@ -80,8 +87,8 @@ bun_service_image(
 oci_image(
     name = "image",
     base = ":image_base",
-    tars = ["//tools/oci:git_layer"],
     tags = ["manual"],
+    tars = ["//tools/oci:git_layer"],
     visibility = ["//visibility:public"],
 )
 
@@ -95,16 +102,16 @@ genrule(
 expand_template(
     name = "image_tags",
     out = "image_tags.txt",
-    template = ":image_tags_tmpl",
     stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
     tags = ["manual"],
+    template = ":image_tags_tmpl",
 )
 
 oci_push(
     name = "image_push",
     image = ":image",
-    repository = "ghcr.io/shepherdjerred/homelab",
     remote_tags = ":image_tags",
+    repository = "ghcr.io/shepherdjerred/homelab",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

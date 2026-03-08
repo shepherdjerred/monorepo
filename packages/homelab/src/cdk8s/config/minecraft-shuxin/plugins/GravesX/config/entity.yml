@@ -1,0 +1,66 @@
+###################
+# Entity Override #
+###################
+# Override default config options for entities that match these types, entity type names must be uppercase.
+# You can find a list of valid entity types here:
+# https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html
+
+settings:
+  entity:
+    ############################
+    # Player Entity Overrides  #
+    ############################
+    # Overrides default options for players.
+    PLAYER:
+      grave:
+        # Enable or disable graves for players.
+        enabled: true
+    
+    #############################
+    # Ender Dragon Overrides    #
+    #############################
+    # Overrides default options for Ender Dragons.
+    ENDER_DRAGON:
+      grave:
+        # Enable or disable graves for Ender Dragons.
+        enabled: false
+        # Time (in seconds) before the grave despawns. Set to -1 to disable despawning.
+        time: -1
+        # Should the grave explode when the entity dies? (e.g., for Ender Dragons)
+        explode: false
+      block:
+        # Material used for the grave block.
+        material: DRAGON_HEAD
+      gui:
+        grave:
+          # Title shown in the grave's GUI.
+          title: '%owner_name% Corpse'
+      command:
+        create:
+        - say %killer_name% killed the %owner_name%.
+    # Commands to execute when the grave is created.
+    
+    #########################
+    # Wither Entity Override #
+    #########################
+    # Overrides default options for Withers.
+    WITHER:
+      grave:
+        # Enable or disable graves for Withers.
+        enabled: false
+        # Time (in seconds) before the grave despawns. Set to -1 to disable despawning.
+        time: -1
+        # Should the grave explode when the entity dies? (e.g., for Withers)
+        explode: false
+      block:
+        # Enable or disable the block for Wither graves.
+        enabled: false
+      gui:
+        grave:
+          # Title shown in the grave's GUI.
+          title: '%owner_name% Corpse'
+      schematic:
+        # Enable or disable the schematic for the Wither grave.
+        enabled: true
+        # Name of the schematic to use.
+        name: grave_wither

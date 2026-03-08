@@ -1,8 +1,7 @@
 """Trivy vulnerability scanning macro using sh_test for sandboxed execution.
 
 Runs Trivy filesystem scan inside the Bazel sandbox via a shell wrapper.
-We use sh_test (same pattern as bun_test.bzl) because Trivy is a standalone
-binary invoked via the system PATH, not a Node.js tool.
+Uses a hermetic Trivy binary from @multitool.
 """
 
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
@@ -20,9 +19,10 @@ def trivy_test(name, srcs, severity = "HIGH,CRITICAL", tags = [], **kwargs):
     sh_test(
         name = name,
         srcs = ["//tools/bazel:trivy_runner.sh"],
-        data = srcs,
+        data = srcs + ["@multitool//tools/trivy"],
         env = {
             "TRIVY_SEVERITY": severity,
+            "TRIVY_BIN": "$(rootpath @multitool//tools/trivy)",
         },
         tags = ["security"] + tags,
         **kwargs

@@ -1,0 +1,33 @@
+################
+# Placeholders #
+################
+%uuid% - Grave UUID
+%owner_name% - Owner name
+%owner_name_display% - Owner name display
+%owner_type% - Owner type
+%owner_uuid% - Owner UUID
+%killer_name% - Killer name
+%killer_name_display% - Killer name display
+%killer_type% - Killer type
+%killer_uuid% - Killer UUID
+%time_creation% - Creation time
+%time_creation_formatted% - Creation time formatted
+%time_alive_remaining% - Remaining alive time
+%time_alive_remaining_formatted% - Remaining alive time formatted
+%time_protection_remaining% - Remaining protection time
+%time_protection_remaining_formatted% - Remaining protection time formatted
+%time_lived% - Lived time
+%time_lived_formatted% - Lived time formatted
+%state_protection% - Protection state
+%item% - Item amount
+%level% - Level amount
+%experience% - Experience amount
+%world% - World
+%world_formatted% - World formatted
+%x% - X cord
+%y% - Y cord
+%z% - Z cord
+%distance% - Distance
+%interact_name% - Interact name
+%interact_type% - Interact type
+%interact_uuid% - Interact UUID

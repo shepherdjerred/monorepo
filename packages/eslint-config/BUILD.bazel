@@ -1,6 +1,5 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -12,6 +11,7 @@ exports_files([
 
 bun_library(
     name = "pkg",
+    package_name = "@shepherdjerred/eslint-config",
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/**/*.test.ts"],
@@ -43,25 +43,32 @@ bun_library(
         ":node_modules/eslint-plugin-react-native",
         ":node_modules/eslint-plugin-regexp",
         ":node_modules/eslint-plugin-unicorn",
-        "//:node_modules/typescript",
         ":node_modules/typescript-eslint",
+        "//:node_modules/typescript",
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    size = "small",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+    ],
 )
 
 bun_typecheck_test(
     name = "typecheck",
-    tsconfig = "tsconfig.json",
     extra_files = ["//:tsconfig.base.json"],
+    tsconfig = "tsconfig.json",
     deps = [
         ":pkg",
-        "//:node_modules/typescript",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
     ],
 )
 

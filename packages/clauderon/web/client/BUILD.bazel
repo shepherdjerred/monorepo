@@ -1,7 +1,6 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -40,22 +39,30 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    size = "small",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 bun_typecheck_test(
     name = "typecheck",
-    tags = ["manual"],
     extra_files = ["//:tsconfig.base.json"],
+    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
-        ":pkg",
         ":node_modules/@clauderon/shared",
         ":node_modules/@types/bun",
         ":node_modules/typescript",
+        ":pkg",
     ],
 )
 

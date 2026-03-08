@@ -1,0 +1,88 @@
+# WanderingTrades Config 1.9.0
+debug: false
+
+# Languages currently included: en_US, zh_CN, de_DE, ro_RO, ru_RU
+# Contribute translations for the menus and commands on GitHub
+language: en_US
+
+# Set to true to overwrite the existing lang file to update it
+updateLang: true
+
+# Enable adding trades to natural spawned Wandering Traders
+# Summoning Villagers or Traders through commands will bypass this
+#     requires server restart to turn on/off
+enabled: true
+
+# should traders be allowed to get trades from more than one
+# trade config
+#
+#    - when true, the chance in the trade config is the % chance that any
+#      trader will get that config
+#    - when false, the chance in the trade config is a weight value for
+#      picking one trade set per villager
+#
+# when using false, use disabled configs to insert chances for wandering
+# traders with no custom trades
+allowMultipleSets: true
+
+# Should the plugin remove the original trades from wandering
+#    traders
+removeOriginalTrades: false
+
+# should traders summoned using the /wt commands have their trades
+# automatically refreshed
+#     requires server restart to turn on/off
+refreshCommandTraders: false
+
+# how many minutes between trade refreshes, if enabled.
+#     tip: setting this to 0 gives a new trade every time you
+#          click the trader
+refreshCommandTradersMinutes: 5
+
+# should traders summoned using the /wt commands become invisible at night
+# false: wandering traders drink an invisibility potion at night
+# true: wandering traders will not drink an invisibility potion at night
+preventNightInvisibility: false
+
+# false: below is a blacklist of Worlds for modifying natural spawned Wandering Traders
+# true: below is a whitelist of Worlds for modifying natural spawned Wandering Traders
+traderWorldWhitelist: false
+traderWorldList:
+- example_world
+
+# false: below is a blacklist of WorldGuard regions for refreshing trades
+# true: below is a whitelist of WorldGuard regions for refreshing trades
+wgWhitelist: false
+wgRegionList:
+- RegionExample
+
+# Setting this option to true will completely disable all WanderingTrades commands.
+disableCommands: false
+
+# Should WanderingTrades check GitHub for updates on startup?
+updateChecker: true
+
+# Options for notifying players of Wandering Trader spawns
+traderSpawnNotifications:
+  # Toggle the notification feature
+  enabled: false
+  
+  # Who to notify. Can be:
+  #  - 'all': all online players
+  #  - 'world': all players in the world the trader spawned in
+  #  - a number (B), i.e. '500': notify players within B blocks of the spawned trader (on the X and Z (horizontal) axes)
+  #  - a number (B) followed by 'box', i.e. '500box': notify players within B blocks of the spawned trader (on the X, Y, and Z (horizontal and vertical) axes)
+  #
+  # Requires 'wanderingtrades.trader-spawn-notifications' permission, which defaults to true
+  notifyPlayers: '500'
+  
+  # Commands to run when a trader spawns
+  commands:
+  - effect give {trader-uuid} glowing 30
+  
+  # Commands to run for each (optionally nearby) player when a trader spawns
+  perPlayerCommands:
+  - 'tellraw {player} ["A wandering trader has spawned {distance} blocks away! ({x-pos},
+    {y-pos}, {z-pos}) (uuid: {trader-uuid})"]'
+  - execute at {player} run playsound minecraft:block.note_block.cow_bell neutral
+    {player}

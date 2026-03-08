@@ -1,0 +1,3269 @@
+# WanderingTrades 1.9.0 Microblocks trade config
+
+# Enable this tradeset config
+enabled: false
+
+# the chance that a wandering trader will get the trades
+# from this config [0.01 - 1] ie 75% = 0.75
+chance: 1.00
+
+# true: randomly select from these trades
+# false: add all off these trades
+randomized: true
+
+# if the above is true, how many random
+# trades to add
+# may be a number, or a range for random selection
+#   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
+randomAmount: 6
+
+# if true, a trader spawned with this config by command
+# will not take damage, except from players with the
+# wanderingtrades.damage permission
+# and will also not despawn
+invincible: false
+
+# if set, a trader spawned with this config by command
+# will display this custom name tag above their head
+#
+# set to 'NONE' to disable
+customName: '<gradient:green:blue><bold>Microblocks</gradient><yellow>!'
+
+# Enabling this option will disable villagers with this config from
+# giving gifts to players with Hero of the Village.
+disableHeroOfTheVillageGifts: false
+
+# you may define as many trades as you want
+# in this section. this example shows all of
+# the configuration features
+trades:
+  ender_chest:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ENDER_CHEST
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Ender Chest"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTZjYzQ4NmMyYmUxY2I5ZGZjYjJlNTNkZDlhM2U5YTg4M2JmYWRiMjdjYjk1NmYxODk2ZDYwMmI0MDY3In19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  enchanting_table:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ENCHANTING_TABLE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Enchanting Table"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTU2OTYzNzNhMTg3ZTZkMmRkY2RmMWQ2Nzc3NGNiMTFmM2E1MmE5NzY3YTA4NDU4OWIyM2YxOWE3ZjIzYTcxYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  furnace:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: FURNACE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Furnace"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTI5NTc3YjhmNDBkNjE0ZDJhODA5NDYxNWRhMTA2OGNmMTJjYjhmNzgzNDU4MzliZDBmN2VhYTc3YjA2ZTI3ZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  crafting_table:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CRAFTING_TABLE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Crafting Table"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWU2YWIzZmRjMmJjYjA3YWU3NjkwODAxYWUwMGFjMmZmZjU0MmQ3OTMwODk2MWMyYjU3OTM3MGVjZjY1NmMyOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  chest:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHEST
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Chest"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDVjNmRjMmJiZjUxYzM2Y2ZjNzcxNDU4NWE2YTU2ODNlZjJiMTRkNDdkOGZmNzE0NjU0YTg5M2Y1ZGE2MjIifX19
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  shulker_box:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SHULKER_BOX
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Shulker Box"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzlhYTg4YTA1ZmE1ZjMzYjYzMmU1NWE2NDU1YzE0ZmIwZmEyNzllNjMxNDdmOTc3OGQzOWRmOGY1OGE0NzkyMiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  jukebox:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: JUKEBOX
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Jukebox"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZThmNTY3MzM5ZjQ1NmNkNzk4NzVjNmRmMDM3NDI1MjAyMTIyYzhhNDE2YTRkNGU5ODcyMmNiMDFhYTVmODg5OCJ9fX0
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  white_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WHITE_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>White Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDA5MjVjNDhiMDU2NjI4NDhlYzlmMDY4NWY4NThkODg5ZDNkYTExYjA3MTc4OGVhYTM2Y2NkOGYxZjMxZGUifX19
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  orange_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ORANGE_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Orange Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjNmMTNlMjNlYzIzNDY3YWM1ZTZmNjVhODNmMjY4NmViZWNkOTk4NmRmNWY4Y2JjZDZmYWZjNDJlNjYyYjM4In19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  magenta_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MAGENTA_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Magenta Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjVlZjJkODdmN2MxZGVmNzk1MjNlOTU2NzY3YjgyODRjYTM4OWIyNDI5OWY1ZTQ2NWQ0NTc5ODlkNjJkZjgifX19
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  light_blue_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LIGHT_BLUE_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Light Blue Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjQ3N2Y0NDM4OTM2MmM0Yzc2NGM4NDdhOTczOWJjNzhjMzI0NjdlYWI0ZTM4MzBhZTRjOGJlYWMzNDQyZWY5In19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  yellow_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: YELLOW_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Yellow Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmNhNWJmZjMyNWVkNzFkOTdhMmRkZmM4M2FjZjA1ZmU3ZmQ5Y2I3Y2JkYjE1ZWJiNGYwNTYyMTkwN2U5ZjJiIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  lime_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LIME_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Lime Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGI1OTljNjE4ZTkxNGMyNWEzN2Q2OWY1NDFhMjJiZWJiZjc1MTYxNTI2Mzc1NmYyNTYxZmFiNGNmYTM5ZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  pink_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PINK_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Pink Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjI3NDlkMzdjM2Y5OGQ0NTdiZjU0MDIyYThiNjEzYTQzNTNlZDhkZDJlMTQ5NDI2ZmM0MmRiM2I3ZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  gray_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GRAY_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Gray Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzA2ZDdiZWZjODJmMjAxZjgzZTE5Mzc2N2U2M2Y4MTAzNzIxNWFmZDQ4M2EzOGQzNjk2NTk4MmNhNmQwIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  light_gray_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LIGHT_GRAY_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Light Gray Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmJhMGM0YTBmZGNlOTIzYTkwNDgzMjhkNjY0MTQ3YzViOTI0NDkxZjRlZTVmZWE3MWYzZTllYzMxNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cyan_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CYAN_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cyan Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjMzYjUxZmVmMWQ3ZmRmMTkyNzRiYjc2ZmNlZGVjZWM3YTc3ZDAxMGNiMzRmZTAyOWZiNzk0Y2M1OWFiYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  purple_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PURPLE_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Purple Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjBjMDVkNTYwZDhlMTNmMGNiMjVjMTVjODMxYmM1OTU0NTBjNWU1NGNlMzVmYTU0ZTE3ZTA0OTUyNjdjIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  blue_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BLUE_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Blue Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTdjN2EyOTcxMDNkYjA4NGFmNjI3M2I4Nzk4MDVhZmM4NTc3Y2M4MmM3NTJhYzI2NmNmOGQ3YTZlZWE2MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  brown_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BROWN_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Brown Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjUzODEyMGY2MThmMmNjZDNiYmRjMThjZDU3ODJlNjM4MmFlOWVlNzJkMDVmNWY4NjI3NmFkYTU0ZWY3ZWQifX19
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  green_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GREEN_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Green Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGZhYjdkYWViOGYzMzNjNzg4NmE3MGVmMzBjYWY0ZGVjNGE4Y2QxMDQ5M2YyMzgwMmYxNTE2YmRkMjNmY2QifX19
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  red_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RED_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Red Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjE4NTZjN2IzNzhkMzUwMjYyMTQzODQzZDFmOWZiYjIxOTExYTcxOTgzYmE3YjM5YTRkNGJhNWI2NmJlZGM2In19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  black_concrete:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BLACK_CONCRETE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Black Concrete"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGZjMjM3MmI0NTc1NDJjNjU0ODNhZmExNDQyZTFjMzNhNWZmNzU4ZDM2MmVjZWM0MzQ4Nzk1MTcyODI0ZDg2OSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  obsidian:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OBSIDIAN
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Obsidian"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODRjMzA4NTVmODliNDkwYzZmZjIzMmRmM2QzZWM3NDMzYWI2MzYxMGE5YTk1N2M4OGE2Y2Q0MzI3YjA2YTQ5ZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ2YWJjY2RmZGI1MjMxZjc0NzEwZDc3OGMyMDg0ZjRjOGU0Y2Q2OTEzYTcwZThhNzIxM2FkYjYzOTE5MjUyNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sandstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SANDSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sandstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWJhZTQxMTk4NTdiZDgyYzdlZGVjMDM0ODIwYjc3ZDVhODM2MDBjOWRhZGNiYWI4NWE3MDQzMTM1MTU2MDFhYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  quartz_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: QUARTZ_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Quartz Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTIxMDY0NTlkMjI0N2I0M2M2MjhkY2Y2YzY4Zjc0YmI3MDY2OTQ4YWRhMTFkMzNhODA0OTUzY2I1YzYwZjY3YyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  purpur_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PURPUR_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Purpur Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTc0NWViNTM3YTA3YWNiYmE3ZmFiNTAwOTA1MWM0MmI4MmI3ZTg3N2ViODM2ODkxMzFkNDg3NjExOGYzOTMwMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  snow_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SNOW_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Snow Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjNhOWUxNTM4MjhmNWZlMzJjMWM0ODVhYWUxNWMwYzFmNTE2ZWZlN2Y0NzBmYThjMGMzYjk0MDgxYjU2ZTBhNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  terracotta:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: TERRACOTTA
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Terracotta"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmRkMWJkYjk0MWJkNjkyOGZhMDFlM2NkY2E2MzdhZjViNjFmYmNiYWZhZTk2MmQ0MTQzMDQ5MTUzYjA3NThhMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  end_stone_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: END_STONE_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>End Stone Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjBjNzRlMDFiOGIzNTI1NjVjNzFiNGZiMjgxMjEwMDhmNjI4NDAxNzUzMmRjZDkxODAyMzM4ODIxZjdkYjQ4ZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  red_mushroom_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RED_MUSHROOM_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Red Mushroom Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2JhMWEzZDg3NmEwN2EzMDBkYWM1MTUwZWI3MGY0ZGE2NDE4NmM2NzcwZDQwOWMxODViYThjYjA5MDJlOGZhYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sand:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SAND
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sand"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTE3OGQ4MWRhZjdlMGRmMjk3YmNiNWJiOTAwOWZiNjYzMjAzZjllMjA3MzYxOTRkZjgzYWFjOGVhOTQwODNiMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  red_sand:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RED_SAND
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Red Sand"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDM5MzA5M2U4ZWU2NGVhZTBlNmNmYTUyZjI5ODhkMGQwNzZhNDI1YzQ0YmZhM2Q0MzQ0MGY3OTMxYzU0ZTU2YiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  gravel:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GRAVEL
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Gravel"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2U0YThlNTFlMjg5OTA2OGU4MjNjODE4ZGIxYTBkYjk0NDdkMmYxNmY0YTE1NzhlNWQxNDYxZDcxNDc2NWU2MiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  grass_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GRASS_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Grass Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjc4NDk5Nzc2ZmYyZGFiNzdhNTkzZGI2MDc3YTZmNzY1NDkzMWU1NWZmNTVlNWRhZDJkMjgwN2JiMGUzNzc2OCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dirt:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DIRT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dirt"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWFiNDNiOGMzZDM0ZjEyNWU1YTNmOGI5MmNkNDNkZmQxNGM2MjQwMmMzMzI5ODQ2MWQ0ZDRkN2NlMmQzYWVhIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  podzol:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PODZOL
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Podzol"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTA0NmI4YzQzMDY0OTA4M2Y4NjRkNDBkZmFjODViZTBkNGRkYWRiZGRlOTE5ZTM2MjZjYzdmNDE3NGY1NGZlYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mycelium:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MYCELIUM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mycelium"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTNjMDc3ZWQ2ZDk5NjIyMzBkOWQ4NjcwYmFkODc2YzMzOTQxZmM5Y2ZiMTdlNmVkMGE4MDUyN2M2OTE4NTQ3OCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  clay:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CLAY
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Clay"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTkyNGVkYTcyYTA3ZjU2MzI4ZTAzNmYyMzBlNDg4ODE3ZGQ0ZDQ1NjgxOTEzZDJmYzliZjJkMmE1ZjE5NDFhZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  packed_ice:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PACKED_ICE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Packed Ice"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzE1NDIyODZkYTAzYWI3ZWVjYzRlNTYyYzNmOGI4YTFjZjc4MWRhMzA4YjA3OWUzYWMzMzE0NTYxYjljMWQ5OSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  melon:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MELON
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Melon"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjgzZjc4NWJmMGEwMDU0NDcwZDc0YWUyZDEyODUyNTI5NTZmZWUwYWJkMjg0YWZhMzcxNTQwNGVlYzY2ZWVlZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  pumpkin:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PUMPKIN
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Pumpkin"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjliZTU1MDUzMTg4OGQ2MzI1NzE3Yjc1M2U2MjUyZTM4MDg2NzM2OWRlMDEyMjVmYTQwMmUxYWVlYzZmYWY3OSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  hay_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: HAY_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Hay Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGI1OTZiNzI4NmVlZjJkZjI3NWMwZmIzZjQ5MTY2NGM2ZWZkMzBjYTdkNDY5N2I5OTg0OWEwYTQ2YmRlM2QyNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dark_prismarine:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DARK_PRISMARINE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dark Prismarine"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODIxNTI0MWEyMGVkZWEwYTY0ZjY4MmYzOGE2OWQxZGNkZmFhOGQ5Y2M2NjhhNzhiM2I3MmMwODhmZDIyOTFkOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  prismarine_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PRISMARINE_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Prismarine Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWJkYTMyOTNlYzZhMDAzMzJlNjk4NjJjNzJhNGZmN2IxZDRhODBlZTY1YTRlMGU1MTViNTc0MzhiOTYxODcxYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  prismarine:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PRISMARINE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Prismarine"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTg2MjJmMzM3MTU1OGRjNGM3NDMxYzMyZTM1ZTc0YmVhZWE2NjA4MmMzZTRjY2NmNzAwNjIzMWY4ZjIzODNhZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sea_lantern:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SEA_LANTERN
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sea Lantern"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGY4NTAzZWY3OTEzNWUwZGI0NjE2N2MzMDRhZWM5Zjc4MTQwN2ZmODZiMDkzNDdkN2Y5OGZhMTQ4ZjkzOWIxMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  tube_coral_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: TUBE_CORAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Tube Coral Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzlmYzNjZjU1MDhkNDBjMTQ2OTlkNWJmN2YyNTI3NTllMTk1NmFmOWE2NmQxNWE2YzM4NTQzNzhjNjFmNmQ5YSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  brain_coral_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BRAIN_CORAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Brain Coral Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTU3ZGQ0M2U4ZjFjZDEzNzI2YzBmOTlhYzQwNDcxNTA0N2QxMmViNDJhMjhmZmM2YWU5YmZiM2I3MGQ3NjQwYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bubble_coral_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BUBBLE_CORAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bubble Coral Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTNmMTgwNWVkY2QzMmI5N2FiMmYxOWEwM2JhYWIxZjhkNGRjNGRiOGVjN2EwMDRiMTRlYjY2NmQwOWZiODdmMiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  fire_coral_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: FIRE_CORAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Fire Coral Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZlOGRlZDNjNzRlYWNkNzg0MTJhOTAzYjkwNGY1NTc3ODUwZDFlMjBkMzQ4NzhmZDc3NTk3YWQxNjMzYmY3NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  horn_coral_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: HORN_CORAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Horn Coral Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzQ5MWI2ZTZhZTk0NTFjNDdlMDliZjFmZjIzZDUwZmZmODdiYTU5MjdhNTFmNDZmZmVkZjkyNmM1Y2JkZTc3ZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dried_kelp_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DRIED_KELP_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dried Kelp Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjgwNWNhZjNkMDJlMzVlNGFhZGMxOWFmMTVlODI3OTAxNzdmMWNkN2I3OWY0ZjViODhkOTQzYWM2YmUyMDNhMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  nether_wart_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHER_WART_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Nether Wart Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTAwNjIzOTk4YTI4NzA5ZmNmMDUzZmM1Njk2ODcxMTU4NjdlMGM3ZTU5ODlhOTRiNmU0YmY1MWQ4ZWQ3OWI0NiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  magma_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MAGMA_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Magma Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTVkNzEwMjZiODU4OTEyNWQ0Yjk3OWM5NzIxYzkwYjc3NTg0YmQ3YjIwOTQyODJkMGYyZmEzNTMwNjQ0MmFhNSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  red_nether_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RED_NETHER_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Red Nether Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDc3Njk5ZWZkNGI5NzBhMGQxYzY1YWVmYmNiY2U4ZDNiZWJhODhmMWJlYzI5YmZhODY0NTA4OGY2YjI1YmM2MSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  soul_sand:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SOUL_SAND
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Soul Sand"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmQyMTVjMDY5MDI2MDIxMGY5ODFjYTliYjgxZTY0MmIxODgyZWEzYzdiZjgxOTMwYmRhZmZmYjFkYWUxZmM5YSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  nether_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHER_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Nether Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2NlNDZmZTNlNzU4MjYwZTYwMGE4OWMzM2QxM2UxZjYyN2ZkMDYxZDVlMGRkNzhiYWI4ODk5NTUxZTg0YWEwOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  netherrack:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHERRACK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Netherrack"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZjNDRmN2Y3NmVkMTI0NzJmNzA1ZTk5YmI1ZDc5YTQ0NjUzNGU5ZGMwNmQyMjhiYjYxOTQxYzNmYjg0OTQ3YiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  glowstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GLOWSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Glowstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzQ2ZDM0OTU4Zjg3MDQxYjVlNGFmNjQxMjM4NjAwYTI3N2YwNjRmZjIyZGMxM2Y2YWY5YjZiZTU1NDdkZDc5MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  coal_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: COAL_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Coal Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTVkZTZkYTBjMzNkODAyNjFjNzhhZmJlMjY0Mjc5M2M2YTM4NTJkODdjZjY1ZDVhMjU5Njg1OGMwYjViY2EwNiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  iron_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: IRON_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Iron Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWQwNDA5ZmZiMGZmMTBlNTliNzIwY2U0MThhNDQ5NWM5MjI3YzdlNzQ1YTFiNTVmMzZjNzYwODliMDNmZTA0NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  gold_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GOLD_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Gold Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzY4OTY5NGM5NzlkMWM0YmM0NDMzZjdkMzM0ZGQzNzM3NjQ0NGQxZmM0MzY2MmFkODdjZDM5ODRlOWI5MTNiYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  lapis_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LAPIS_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Lapis Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmI4ZDkxMzE4NWU1YTM2NWI5NWE4NThkMmU2Yzk5NDE5ODU2NjM5ZDAzNWRjYmY3N2NkNDQwNDU2MGEyNTM4NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  diamond_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DIAMOND_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Diamond Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmZiZjBhYzMxNDFkNWI2MzJjYmNkMzY1OWViODE1MmIyOWQ1ZmEwZDA5ZTRiMDhkYmU4MTNhYzg0MWU0MzQ4YiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  redstone_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: REDSTONE_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Redstone Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzk4MmI0MWNlMmViOWZlYjM1MTZlZWY3NTMzNjk0YWQ2YWE2YzE4NTA5MDFiYjU5NDkzOTkwOWQ3MzNiZjJkYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  emerald_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: EMERALD_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Emerald Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI0NTQ4MmE4Y2FlNjk0NmViZTUxMTUxNjc3MGQxMDE4MjA0ZmRjNDgyYmY3OTQyYjQxNzUyNjYxMWExYzBiNSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  nether_quartz_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHER_QUARTZ_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Nether Quartz Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGVhYzNhZmJhNjdhNWJhMTZhOTgzMTM3NDJhODJiMmJkODRkOTFhYzMyYTAyZWE4N2YxNWIxNDZjNzkwZTQ4YiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  lapis_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LAPIS_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Lapis Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBmOTcyYWU1ZDc4ZjVlMzA1ZGZiZWQ1NmM2NWI0YTNmYmFkZTZiM2E3NzkwYzdlYTUwZjI0NDM2MjZhYWI3OCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  gold_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GOLD_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Gold Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmRjZjVmNzhiZjFkOWFkZTEyNmIyYzdmNmI0OTgwZGNmZTg5YjRlNjVjZDUzMmZjNjVhZDhiNzU3MjUzMGM1YiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  iron_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: IRON_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Iron Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmFhYjdkNjA4YmZkZGFjNWQ4ZTJjYWYzNzA0OWY2MmY4NDNmZmE5ZjA3NmMyNTJjMWRjMGE0NGVlNDZkMzIwNiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  diamond_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DIAMOND_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Diamond Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2IxNWRiNDkzMzI1ZGNjZTI5MDhiZTkzMjMxNjY0MTA1YWRjYmZhOGNjMDM5NTc5NjYzMzgxNWVhMTU2ZmVmYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  emerald_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: EMERALD_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Emerald Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWFiOGZhNzY1NTU1MTVlMmRjYmUzODMzNmM2OTE4NDFhOWMyM2Q5OWM4OGY2NWQ5NmY0NDQ3Nzc1YmNjMTZlYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  coal_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: COAL_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Coal Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzY4MjQ4NGNlNmMwYTgxMjE1MDMxZjk2YTcxNDliZWRlOThjOWQyMTVkMTZlYzhkZjAxZGFkZmYzZDA5NWRiNSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  redstone_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: REDSTONE_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Redstone Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTRiMjUwYzMwNDZmZGNhYWJlYjJmYzI4MjU2YTBmMjEzYTljYzYwNDhkN2ZjNzQwMDU4ZGYzMzgzMmJjZjE2YSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dispenser:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DISPENSER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dispenser"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDkzMzBkZGU0Zjk0MjRiNTBmMzZkNjJjODQzZWZlYWNiY2NmNWRhM2I5Y2UwNGFiZjE0ZTE3NWE5YzRmZGZmYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dropper:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DROPPER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dropper"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjNmM2UwM2YwNGU2ZmRmYzAwZDkxZWM4OTQyMmU5NDgzY2FhNjdmYzAyMGZjYWNjOTEwMzQyZGJlOWNjODBiYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  observer:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OBSERVER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Observer"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmE5YzkzYTJhMzY0NDU2OTA4NDEwN2I3YjRkODAyNjE0NDk4ODRkOWZiYzM0YWRiZDg4YzYzNDIwNDUyMDJiMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  redstone_lamp:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: REDSTONE_LAMP
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Redstone Lamp"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTAwZTg1ODU1YTY1OTVkODg5ZWYyNDYzOTZlMWQwNmIyYjg0MzFlMTAyZDcxYmViY2I1YzU5NTIzNzFiNzdiMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sticky_piston:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: STICKY_PISTON
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sticky Piston"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWE2ZmVlNWI2MWVmYzYzYjliNDRmYzMyMjA2N2ZiNjIwZGQ1ZWE5YTdmYjJmODVhMGFhZGVjODAzOGJjMTM3NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  piston:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PISTON
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Piston"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2OTFkZTlmNTZiMzllNjhlODdmZGFhMTI4YzdjZTcxM2ZkMDA2NGM1Nzg2ODdiNjc5ZWU2YTg0Mzc1MDJlZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  tnt:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: TNT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Tnt"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjA4OWY3OWUxZjc0ZTM3MGRjM2U2MWJhYWIyNmVlNzkzNWEyYTM4MTM4MGE0ZjJlOWRlMGY1YjBhNTI2ZTBhOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  stone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: STONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Stone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2MwOTMwYTFiZWMyNDg3ZjZhNmNiOTY0ZDczMTNmYjBhYmQwNDU5OWQ3NmZmNjUxOGQ5NzdlODNkNDYxMzg0OCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_granite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_GRANITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Granite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDY4MTUxZjIxMzc2MGVlYWMwNWZiODYzZmU5ODVjMmMzNzM4OGM5MDVjODMxZDgwNWJjODA1ODkwY2Y4ZTllMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_diorite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_DIORITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Diorite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWYyZWNhOTgyNzg2NmJhMTA1NWY1NjYzYmYyMDU0NzMxMDdjNzkwYjcyNGVkYTIxZjVkMTc0ODVmMGZjZWVlYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_andesite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_ANDESITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Andesite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGM3MzVlMjg5MzE5MWRlYzBmN2UxYzkwNDE3YmY4ZmRmODg5N2U4M2FkMDMzYmFiNGQzNDUzNWI3NTA2NzM2ZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  granite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GRANITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Granite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGQ4MzhiMmQwNDg0NzAwMTU1MmU0YmYyZTUzNzMzZWNlNzBmNTU1YzZmNGM2NmYxNzRjYzMxMWYzMDkxYzMyOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  diorite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DIORITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Diorite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTVjMWVmMmQ0NDY1NzE1MDZiNTlmOTI5MTAzZDE5NTZmYzMxNTJmZDlkNDAwMjAyNmJjZTViMDI4YzkxN2ZlZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  andesite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ANDESITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Andesite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmM1ZTE2Yzc2MWUwYWFhMmRkNTI4OWU0M2Y1MmNjNDcxNTY3Y2Q4ZjhjOGE0NzVhNGIyOTBhZWU4Y2ZhNDUzOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cobblestone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: COBBLESTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cobblestone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzNkNTFmNGQwNjA5OGJiMWY0Y2VmZjYxOWM2ZGRjYTk3NmZjNzBlOWY4ODcxZWJlZTRlZWY2NTgwY2Y3NmIwZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mossy_cobblestone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MOSSY_COBBLESTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mossy Cobblestone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTFiNzcyOTFlMTU3MWZkMjdkZWNhMWM3NzJlZjRmOTE3ZjU5YTlkNTllZjcwMjYxOTBmMTY2NzM1MDdmMmVlNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  stone_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: STONE_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Stone Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjlhMzEyNjIzZTFhOGFhNzVmZDczZmIyNWNhNjIwOTY0MmJjNWEyYzBlYTMwYjNiZTA2MmVjNGM4YzQzMjNmZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  chiseled_stone_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHISELED_STONE_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Chiseled Stone Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTBlYzk0MDZhYzA4NWNkOTU3OGRlYWIzMGNkNzQ2NzA0NmVmYzQyZjU4MjEyZmI4Mjg0MzllZTg4NWYxYmUxMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  smooth_stone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SMOOTH_STONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Smooth Stone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTU2MjQ2OTc1YmU4MTYxNmE1OWJjZTViNGU5MmJiNjE1ZDA3MjhjZmU0MWJlNmNmYjVmZmRjZGU1NzkyY2IwOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  oak_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OAK_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Oak Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzgxOTJhMWFkZDRhMTExMjRhZDFlOWI2M2ZhN2Q5NzViNTUwMGJmZjEyNzQyNGU3NWJmMjliMjlmNmFmYjI2NSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  spruce_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SPRUCE_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Spruce Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2VhM2FhZjE5NDQ4MmEzOTc1YTE4ZDFlZWNlMjNjMGIzZWEwZjI1ODcwN2ZhZDc1YzVjYWE3NDUzMjA4OGRiIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  birch_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BIRCH_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Birch Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmNjODg4NzczZTlkMTFjYzhhYjE0ZmM4OGUwY2ZmOTRjY2IxNmM4OWE1OGZlYzE4MWUyMmYwZmIxOTRiYjlmZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  jungle_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: JUNGLE_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Jungle Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjM3OTdmNWFhZTllZTkwNmViNTA2NmU3NDE2N2FjMGI2MGQ4NTc2ZjBkNGIyM2I0MTI0NDdmZDBmMjkwYmMwNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dark_oak_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DARK_OAK_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dark Oak Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODljYTc5OGZlM2U0MDIzOTcxYjc4NmE2NGE3MmJkOThhMTVmZjc1YTdmODExN2I1NjAxMDNlMjM0ZGUwNTJhYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  acacia_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ACACIA_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Acacia Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzAxNjk2NmY0ZjNkYWU2NTI0ODYxZTZjYzU2MzE3NDk5MDcwMWJlYWUyNjI3NzEyNzE4YzUxMGYzMzNjNmM4MyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  oak_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OAK_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Oak Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWEzY2ExNzdkMjE2OTMxM2YxNjU5NjQzOWRjZDYwZWJiNDgxM2IzNzhiMTdmZmIxNzUzNTQzNzBkNTEwZmIwZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  spruce_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SPRUCE_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Spruce Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTczMTM3YzQ3ZWUxODllOWZkZDgxZWRhNDhjMTEyNjk0MGEwZTVkNmQ5Y2E0YzU5ZGQzYjgwY2NkOTI3YWRmOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  birch_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BIRCH_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Birch Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmM0MDExOTliNzgzMzAwY2JkOWNiMWNlYWNmYTVlMjkzZmU3NTc1Nzc2MTg4Y2Q1YWE2Y2E4YmZmYjhlMmY1NyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  jungle_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: JUNGLE_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Jungle Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjAwMjlhNTJmOTQ1YjNlYWFjNzJlOWQzZDk5N2MxYTBiNTBlZmY5NTQ0NDE2YWIyYzNjNGU0YmIzOTc3ZjViZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dark_oak_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DARK_OAK_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dark Oak Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGIyZDUzNjA4NjM0OGZkZmMwODExZjljNmY2ZWMxYzBhN2Q2MDUwNzYxZjU5MjFiMmE3YTVkM2EwMDU5ZWMwMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  acacia_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ACACIA_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Acacia Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjY3ZTljNzRhYjc3YzAwOTE1NGE5YzczNzg0NmI1MjUxMDliOGMzMTdhNzE2Y2FlZGVjOTI3MDJhZmQwZGU2NSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  crimson_nylium:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CRIMSON_NYLIUM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Crimson Nylium"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMThmMGI4ODQ2YmIyMmMyZGU2ODQ5NDgzYWU1MThmYWZiYmU0NDZhNzM1YTNlODgwNmUwMmYxYTQ3ZmMxNGQ3MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  warped_nylium:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WARPED_NYLIUM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Warped Nylium"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmUzZTFiZDJhMWJiMmRkNzczYmNmMTExMWMxNDZlMTAwNDMwNmFiOTk1ZDUxMDA5ZTY3ZDNhNWMyMTZmMjJlMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  redstone_lamp_365392:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: REDSTONE_LAMP
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Redstone Lamp"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjcyZGM1ZDJjYzM0NTcxYWRhODA1ZjllZmFlOWY4YzVjZjA4MTU5ZjNhY2MwOGMwMDY1MjY5NDIxYjVjYjM4YyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  crimson_stem:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CRIMSON_STEM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Crimson Stem"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzRmOWE0ZDhhMDQ1NDRjYjIyOTdiZTE2MDM0MGFlZTlkMjE1MTk0NGY4OGE0NTQzZjdkYzhiZTlhN2IwN2Q1NiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  warped_stem:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WARPED_STEM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Warped Stem"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTIyODE3ZWU1MmI3NWRlODEwM2Y1YWYyN2E3NWJiY2ZmODdhNDUzZWNlNTkzNTBmYjQxOTZmYWFiZmI2YjJiYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  crimson_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CRIMSON_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Crimson Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjlhYWIyZTE3NWE3ZTc3ZTM2NTVmNzY5MmQxYzY1MTczMTZiYTM3ODNiNWQ1ZmM1OWIzNDk1NGZmNmJhNjY1MyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  warped_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WARPED_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Warped Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWQzYzNjZWJlMDZlMGRkZDljYzRhOTBlYzQ1Y2FjZGVjM2QxODU1ZGFmYzliODVhNTIzNDI3MGYwNmZmNzY0MyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  netherite_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHERITE_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Netherite Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzAxMWNkMmNmMWUzMmFlMTMxZDhlNTQyNDAzYmVhMDNjNDgyZmEzOTVhNzI3YTM3MDc2OTA0NzYyODQwMjkyZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  ancient_debris:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: ANCIENT_DEBRIS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Ancient Debris"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTcxMTRmNWQzOTAxODhkZjA0NzdjZGY5YWVjZjViYzgxNDE2Y2U1ZTVjNTljZmNhYzU4MWE0M2YzOTAyYzFlIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  nether_gold_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: NETHER_GOLD_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Nether Gold Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjEzMjc5YTE5YjY1ODI5YWM3NDU5OGE3NjQ3OTgyNTQ5ZjdhMWUxMGIzNTRmMzk1ZTIzYjBlOGMzMGRmMjhlZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  blackstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BLACKSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Blackstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTkwNzQ1NzVkMDcwMTRlOTI4OTcyMTBmNTI3OTViYThhYzRhNTVhYjU5ZWYzNDhlMTFlOGRhMDMwMTJkNjc0NyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_blackstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_BLACKSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Blackstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWJiY2FhNDExN2UzNTA0NTI1OTNkMjA5MjcxMzM4NWMwYTQxM2NiNjJiYjljNDMyYTk3OWRiYTRlYjJkM2JjMiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_blackstone_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_BLACKSTONE_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Blackstone Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzk3NzUwYTI4NGZmNDAzOGNiMDM1ZjFkNmRiMDQ5M2ZmNTM5YzhhOTNhZTNjZGE2MTg2ZGYwYmU2MTYyYzMwNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  chiseled_polished_blackstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHISELED_POLISHED_BLACKSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Chiseled Polished Blackstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmJlODJmMGZlZDY5NTc4ZDI1ZjE1M2ZmMTVhYTBmNGRkNTdhZDY5ZGI2ZGNkNzdhYThkZmFmZTA1NmI2ZGNiNiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  gilded_blackstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: GILDED_BLACKSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Gilded Blackstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmJiZWQyZmM2MzIxZWM0MTA4MzE2ZjE4NjJjYmYyY2Q4MWYzODlmMjU4N2IxZjUzNjAyNTEzYjdhN2NhNTRhIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  shroomlight:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SHROOMLIGHT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Shroomlight"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTQ2OTk3ZmQ5M2I1ZWJlNzFmYWUwMWQzZjNmOTc2MGMyMjM4N2FmNjBkN2VkNWRiZDE1YmI2Y2U0MDRjODA5YyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  chiseled_nether_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHISELED_NETHER_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Chiseled Nether Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTMxODBjYjA4MmQ5MTBjNjIwOGQ0M2FjNjE5ZmNiMGI2NTRhYjZmNzBmZDgxYzM1OTkxZmNhMjFhYWI5MDhjMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  basalt:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BASALT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Basalt"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzEwNDliZmJhNGY3ZWE5MzA1MWNhMTA5NWExMjNlMjNmYWRiNGFiYjJiZDU3YmVmOGI1Mzc4YTY2OTZiOGM5NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_basalt:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_BASALT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Basalt"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWVkNTYxMDVkMDY3OGFlNDBiNjZjNDQzMTE3ZTgwYTgxY2UyYzgyNTUzMzY2YWRjOGQ0NDc2ZmRjNWYxODFjOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  warped_wart_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WARPED_WART_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Warped Wart Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2U3ZTFlMGFkMWZmOGJlM2MxN2Q2MWUxNmQ5NGI2YjJiY2U3ODAyMmQ4OGRlMmFhNmM2NjliYmE1ZjVlYzA0NyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  crying_obsidian:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CRYING_OBSIDIAN
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Crying Obsidian"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmRmODJiZGM4YTRmN2QwMjZiMGM0ZjE3ZDA2YjhiZjVkYzUyNmEyNTQzODk4NjYyOTFlN2I2YjQ0ZjkwYjBlIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  target:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: TARGET
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Target"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDIwZTE3ZWJjYjFiMTgzNzg2ZGRlMjUwNDViODMyYjIzOGY3NWEzNzRhYWNlMGM1YTRmNjllOTQyNWVkODllNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  slime_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SLIME_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Slime Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjNiZmM0ZjAxYTgyMDYwZTgwODdhMzE0YTlmY2I1ZmZjMWVhYzlhYzFkMzA0ZGEzYzhiMGQ2NmFkNzE1YzViMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  honey_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: HONEY_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Honey Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNThkYTg2NWFhODNiNjAwNDM4MGMxZWRhOGNjZTNkZDEyZWRhMzZkNzFmZDhkNWZlYzliMThmMDE1OWRkY2M3NiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sponge:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SPONGE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sponge"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWNkMWNmMWZiNTVkNTA1NTgzMjQ1NWFkZThmYTdiMGE2OGY0NDUzNDIzOTlhMjdkZjE1MTllNjZmMmE3NGFiMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  white_wool:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WHITE_WOOL
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>White Wool"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODMxYTg3MDE0OTNjMDQ2MjdiMWYwYzQ5OWY0YWE3MGUyMjg2NzI5ODJlMTRmMTM1Y2NmMmU4ZjYzZDEyYTYxYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  end_stone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: END_STONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>End Stone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGI2YjZiMzJlOWZlOGY3Y2I3OTBkNDJlZGYzZGY2OWQ0NzFkYzZiOWI2MTZiMTU3MGVjOGJjMWJmZmExNDMyYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  red_sandstone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RED_SANDSTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Red Sandstone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmFmZTdiNjg4ZmU0NTU4YzI0M2VlOTVlMDdjMmVlYzYwNjA2MTI5NzFhMzk1NDJmY2Y3N2ZlMzJhMmZkZWE4YyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bone_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BONE_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bone Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y0YjllZDFiMzRmYzQ3MzJmNjIyYmVkZWMwYzY0Y2UyZjJhNzkwZDdmNjNkNTkyZTU1N2RiNjAyZmY2OWIwYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  barrel:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BARREL
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Barrel"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGVjZDIyYzRiYjYxM2JkN2Y2OWNiMDIzMWExMzBiYjEwMzViNmIwZDQ2ZDY3MmMwN2U4ZTJhMDM1ZmUwMmU3MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  loom:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LOOM
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Loom"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmZjMDE0NDhkNjQ3N2UxZjdhM2QyMDdmMjM1MGEwNjZkZmE5NTA5MGQzNDBkNDUxNTUzY2UwNWU3MDBiYjczMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  smoker:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SMOKER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Smoker"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTgzMWNlODIyN2JiYzdiNzVjMzY4OTQ2NmNlYzRkYWY1ZGEyZDljNTNiYjgzZDExN2E5YmE4OTBkYWVhZjQwNiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  blast_furnace:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BLAST_FURNACE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Blast Furnace"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjBmNGQzNjAxYjI0ZDZiMzcxYmI5N2EzZjQyNzc5ODQwYTEyOTQ4N2EzMDRkYWI2MjM0NjlkY2EwMjg3Y2FmNSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  fletching_table:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: FLETCHING_TABLE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Fletching Table"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBiNzhlMDk2MTIzNmM4ZGE3N2QyOGZhOWExYzZmMDM5OGViYjI4ZWJmZDdhMTc4M2ViMmI2YzhjNDE2MDM0NiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cartography_table:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CARTOGRAPHY_TABLE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cartography Table"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWNiOTdjNjgyMzZjNjM1MjM2MmYzZWI5MTk0YWI1NDJmMTg3MjBhMzRlOGQwOWRhYTE2OGEwNWVmNjUwMTMwZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  smithing_table:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SMITHING_TABLE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Smithing Table"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUyNzlmMDVkYjgzNjAyMTg1OTU5MGE1YjVmNDM0OWE2MGFkZjAyYmMxZDMwOWRhODQwZDllYmJlZjhmMGUyYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bee_nest:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BEE_NEST
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bee Nest"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDZmMjAwMDZlZWI0NTcyZWZlMTljM2YxNjcyMjY5MGY3MzVkYTlmZWE0Y2ZjOTQxZWI0YzNlZDU3NDNmMTkwNiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  beehive:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BEEHIVE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Beehive"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGNlMGQzY2E1YzExMzY3MjRiNzg3ODdlMGE1NDc3NTNkYzhlOTk2OTY1MWU3YzZlZTNkZmU0MmI3OGZiMThjZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  honeycomb_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: HONEYCOMB_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Honeycomb Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODNlZmNmMjMxNGFmZjdmZjVkNmRkOWFjNTRkNDI3N2RkNjA5ODcwNmY5NWYxZjM0ODBmNGVjMTYyZDg3MDU3ZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  lodestone:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: LODESTONE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Lodestone"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzEzOTUxZmQ4N2M2OGNmOGNhNDdkMThkYWVjYTVhZDNhZDgwNGIyNTE3NmYyYjRlZjQ4YmZjOTY4NmFiODA2NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  respawn_anchor:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RESPAWN_ANCHOR
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Respawn Anchor"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWFjZDQ3MzQ5NjQyNjQxM2VlYmI2NTIzZGVlNGEyZmMxN2MxOTJhYTMwMWQyMzQwNjcyY2FiYTI0OWMzZTRmNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cut_copper:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CUT_COPPER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cut Copper"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTMxYzU3ODM3YjhjMzdlY2RiM2RkZDlmM2E4ZGMzOTVhNzEyYzI1N2ZhZjE3N2Q3ZmU4ZDNmNDRlZjQ3NTkzMSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  exposed_cut_copper:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: EXPOSED_CUT_COPPER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Exposed Cut Copper"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTY0YmQ2ZTc4MWFhMTU1NmNjZGZmMzIyYzE5NmM5Nzk5MWVhOTUyODI4NDhiZTkwOGYxYThkZGNhOTJjYmViMiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  weathered_cut_copper:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: WEATHERED_CUT_COPPER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Weathered Cut Copper"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWZhOGZjNDM3MThhZTgxZDU4M2M2NGIyOTA0ZmE1ZmMwMzBiMWJkYmVjMmFmNjYwNTA5OWRmMmZkMmYwMGE2MSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  oxidized_cut_copper:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OXIDIZED_CUT_COPPER
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Oxidized Cut Copper"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjQ1YTk2ZTZlMGJkMGIxZjRkZDY0MjdiNTVjMmE2MGM5MDUzZmUwMGE2ODI5NTc1MWZkY2E3OThlMGVhZGU0MiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjJkNzE0NGRjZjFlNzg0OTU2ZWUxMmZiMjljNjEzODJlZWEyNzJhNzYyMWI1MDY2MjM5N2JjMDc0NTE1ZDk4MiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cobbled_deepslate:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: COBBLED_DEEPSLATE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cobbled Deepslate"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzAxMDFkMDEzNzk3MTJhYTZiMWE5ODg5ZmE2NmU0ZDA1OTE2MWUyZTM1ZDk1YThlYTQ4MzQ3ZDY4N2QwODYzOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  calcite:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CALCITE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Calcite"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDlhYjZlN2IwYzcyNjQ1Y2RiNGEwOWE0Mjk2MDAzZGYyNGM2Y2ZhMWQ4ZDAxMzNiYzhhZTIxMWU5NDg4MDdjMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_lapis_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_LAPIS_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Lapis Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTU1ZWZjOWMzNzlhYzMzYWVjOTA1MWU4OTk5ZTdmNDgzNzE1NTEwYjM3NGYyYmUyY2QzNTc4MjFmZjg0MDYzMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  dripstone_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DRIPSTONE_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Dripstone Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjI1Yjk4NTRkMmU0OGVkZTdhMjY4ZjAwMWY2YTEzMjZjOTdlYTU2MmNjYzA1MmQyOWZkOTE4OTVlNThkZWUzMCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  tuff:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: TUFF
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Tuff"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjZkNzQ4M2Q5ZTY5Yjc5Nzg5NTg4NjllMjI2OGU1OTE5NDAxYzY3NTJlM2Y2MmYxYWNmYzNjYTlkYmY0MjllYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  azalea_leaves:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: AZALEA_LEAVES
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Azalea Leaves"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGRhNjI1ZGNmYmZiODc1NTZmZTk0NjI3MWQ4YWIwMWFhZjAyYmE2ODFmNTY3MzcyZDA1NjI4NmI3YTAyYmIxZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  flowering_azalea_leaves:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: FLOWERING_AZALEA_LEAVES
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Flowering Azalea Leaves"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDc5ZDQ3ZjMxMDk0ZTYyNGU5YmQ3ZTIzZTY2ZDQ1ZjQ0ZDAzMzc5MWE1ZmFjNDJhODQ1ODQxYTM4NjI5NDYwMiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  raw_copper_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RAW_COPPER_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Raw Copper Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDRmNWE3Y2NhMmY0MDk5MzhkMGRiOTJkYTQ3NDk2YjM2MjA0YmI4NTgyY2VkNjVkNWZiOGQzY2Q5MjFjMDhhZSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  raw_gold_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RAW_GOLD_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Raw Gold Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGRhYzc0YzVlOTVkMDdlYmM5MGYxYzE2Y2Q5NTk5ZWJiYzk0YWExMzIxZDljYjliYjE0MzRjMzg0YTdlMjc0ZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  raw_iron_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: RAW_IRON_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Raw Iron Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjVmYzA2YjBkY2M1ZGIwN2E4NTNhZmJlM2Q2OWNkNzcwM2UxMGQ3NTg0ZGE3OTlmZDI4MTlhZDU3YWJjNGRmZiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  amethyst_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: AMETHYST_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Amethyst Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzEzYjc3ZjVhNzQ2YzFmMDBkZDFjZTdmZTY2OTc2Yzc1Y2VjZjdkODliZGIwMmU4Y2Y5NDM2NjcyYWY1ODk2ZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  polished_deepslate:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: POLISHED_DEEPSLATE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Polished Deepslate"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjFkMDIyNTY2OTNjYWYwODFlNGM1ZmMzMDQ5MTc5YmZkNTVjMWU3NmFmYWI5ZTExMjZiYmQ3NjQzZWRjZThkYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_coal_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_COAL_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Coal Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTE5NjBkM2RlZGJjNmRlMTA5N2I3Y2MyZDgzNzcyOGJkOTQzZTdjZmI5MGQxMWM0OTQzNjc5NmZiZDlkZDBjYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_copper_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_COPPER_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Copper Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjQ2MWViZmYzZWZiMTk1NzIxYzRjNjQzZjEzNDFkMjg1NzMwMmYwZWYzY2U1MzdkZTA3MjI3ZWU5MzQ3NzYwNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_diamond_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_DIAMOND_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Diamond Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmYxMjFlNTE4YTRmZmFkNzQ5NDAwNzQ2NDJkNmRiOWE0OGRjMmFhOWJlYzJiNjYyNTQ0NjgyZDhlODUxZDJhIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_emerald_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_EMERALD_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Emerald Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTA1NjFjN2E3N2EyOTUyMjg2NTIwZGNhZTA3NjVkNDllZGEyNmRjOWQ0YzQwYmRjNmUwODQ3MzI3NWQ2MDI0MiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_gold_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_GOLD_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Gold Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTQwYzQwNzM0ZDU1YzIyNWRhMjIwYTMwYzA3NjhjNzAwYmRmYTU2YzE3ZDNhNWViNWZkY2I3NTg2MTliNWUxNyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_iron_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_IRON_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Iron Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY2NWZmZGZiMjA5YjU4OGYzYTVlYTJkYTZmYzIxZjg0MzQ1ZjQ3ZjMxODQxODk5NjZjZGQwODBhN2RhOWEyOCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  deepslate_redstone_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: DEEPSLATE_REDSTONE_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Deepslate Redstone Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBjZGZiZTUzODk5ODk4MWFiMzlkM2Q4OTg0MzBkNTg4NjExZjQ3NmM4ODIwOTA5Njc4YTI5YTA3ZmRmNDAyZCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  copper_ore:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: COPPER_ORE
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Copper Ore"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjUwMTliMmMxOTRkNDBkYmFkOWYzOTUwMTU2MGMxZTc5ZjhkNTZiOTg4MzAxNDU0OGFlOTk3NmJiNmQ5ODEwIn19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  moss_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MOSS_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Moss Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2NhMWFlYWRhZDkyZmM4YTE4ZGVmMTQ4MmNlZjMwODhmZDdlMzlhMjAyMjA3ODFiNmU2ODUzZmNkMGQ5YjhjYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mangrove_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MANGROVE_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mangrove Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTYzYWVjM2IyMDczODI2YjI5MjdhZTY0NmIzNDVmMTk3ZTdlMmYxNjFmMWE3Mzg3NjhjMGRmNGZhZTA2YjBjYSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mangrove_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MANGROVE_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mangrove Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzFmYWY2NjM5ZWMwZGMzMDBkYzYzNDgyOGU3Y2M3YjFkYzU4ODMyZmIzNDI3NjQ4NmZjNTRjZDFhNWEwNGRmYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  ochre_froglight:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: OCHRE_FROGLIGHT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Ochre Froglight"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzEzMWUyZGFlNjkyMTg3ZWQzYTYyMTc1ZWU2YmYwOGUzYjg5MWFkMjBkZTk2YmVlMDNkNTQ4M2I0MDBlMmVhOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  verdant_froglight:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: VERDANT_FROGLIGHT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Verdant Froglight"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmIyMGI5MGY3OWZmYWRjZDdmM2NmMTlhNzNjMzcxZmQ0ZThmMjZkNjk4N2RkMjZhYzZjYjc0YWM2MTQ0NzZiMyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  pearlescent_froglight:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PEARLESCENT_FROGLIGHT
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Pearlescent Froglight"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTVkNzIwM2UzNTlkM2NmYTE1OTU1ZmU2NDAyMDRlMTk3NTZhNGRkMGE3ZGJhNzQ2YTZhMzY2YTM1YzZiY2VlNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mud:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MUD
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mud"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ3NmM0YjEzZGIwYzczY2ViYjVjODZlNDVjOWU1MjgyOTUwZDc1Mzk2YTcxYWVlZGQxOGNjNThmNzlhMGU5MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  packed_mud:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PACKED_MUD
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Packed Mud"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTFiODE0ZWZkMzM4ZDM4YzRiYTAwMTJiMWVmNjUxZDI5YWE2MjhkNmRkYzgyMmQxZTFkYTEzZWFlYjFiZjNlYiJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  mud_bricks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: MUD_BRICKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Mud Bricks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2I5NDkxYTAwMGNiMWIzYjJmYThhOWFlZTFlZTUyZGM4YTlkZWZmZjQ4OTdlYzRjZTQ4OGNjY2QxZTZiODNjYyJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sculk:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SCULK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sculk"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODQ2NzJkYjk0MTYwNWZhNjMzYzM1NDgwZDFlOTk2Nzc1ZmFmY2E1ZmM4NGRjMzFlNzUyNDcxNWJlMDUxNmQxOSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bamboo_block:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BAMBOO_BLOCK
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bamboo Block"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTFmZGFjOGUyMzkzYzcwZjM1ZDk3MWIwZGRkMjY2ZmJmYWY1NjIxNDFjZjE1NjY2NWZlMjMwMmYyMWUzOGI2OSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  bamboo_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: BAMBOO_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Bamboo Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmQwZWYzYTc3NzllMzNiYWMzZjVlYzM5NGIxMTVjZjIyN2NhMjA1ODJlNTZjZjNjYzBjMjNkNzhjMWUyN2U0NCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cherry_planks:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHERRY_PLANKS
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cherry Planks"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGJiMmY1NWZjOTM3MDQ0NTM4NTEwNzg0ZDZlZmM5ZTE4NjQxZDRiODRmNWNhMDdmOTk0YjJjN2Q2MjEyNGY5In19fQ==
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cherry_log:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHERRY_LOG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cherry Log"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2VjNmY4MjVjMDkxMjRiY2NiYjBkY2Q1MjJhOTQzZmYzNmY0N2I2MmVjNzcxM2UwN2JjNTIyODUwZGYxMWI0NSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  chiseled_bookshelf:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHISELED_BOOKSHELF
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Chiseled Bookshelf"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjlmNzE0OWM4Y2ViNzljMDQzNTBhYWMwMzRlZjcyNDUwN2E3M2ZhZjljNjM5OWU3OTc2YThkZTVhMTk3MGRkNCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  sniffer_egg:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: SNIFFER_EGG
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Sniffer Egg"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWFjMDY4ZTA3YmFiNmM4MTM3MTIyOTZmZWEyMzZlZTcwM2ExY2Y2YzY3YmE0NjVmOTE1NWNmNWFmMWVkYTc3MCJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"
+  cherry_leaves:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: CHERRY_LEAVES
+        amount: 1
+    result:
+      customname: "<gradient:aqua:blue>Cherry Leaves"
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjk4YjM4YWViZTdjNGVkNWM4MTllZTQyM2YzYjQ2YzYwNjg0Y2JkM2VkMGZhNGE5ZmQ1OTNhY2E2M2MwYWM4NSJ9fX0=
+      amount: 8
+      lore:
+        - "  <gray><italic>Microblock"

@@ -1,4 +1,6 @@
-import rootConfig from "../../eslint.config.ts";
-import { defineConfig } from "eslint/config";
+import { recommended } from "@shepherdjerred/eslint-config";
 
-export default defineConfig(...rootConfig);
+export default [
+  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  { rules: { "no-console": "off" } },
+];

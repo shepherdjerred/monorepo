@@ -26,7 +26,7 @@ BIN_ROOT=""
 FIRST_LINK=$(find . -maxdepth 4 -type l \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' \) ! -path '*/node_modules/*' 2>/dev/null | head -1)
 
 if [ -n "$FIRST_LINK" ]; then
-  REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
+  REAL_PATH=$("$BUN_BINARY" -e "console.log(require('fs').realpathSync(process.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
   if [ -n "$REAL_PATH" ]; then
     REL_SUFFIX="${FIRST_LINK#./}"
     BIN_PKG_DIR="${REAL_PATH%/"$REL_SUFFIX"}"

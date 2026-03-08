@@ -1,18 +1,8 @@
-import { defineConfig } from "eslint/config";
-import rootConfig from "../../eslint.config.ts";
+import { recommended } from "@shepherdjerred/eslint-config";
 
-export default defineConfig(
-  ...rootConfig,
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: {
-          allowDefaultProject: ["eslint.config.ts"],
-        },
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
+export default [
+  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  { rules: { "no-console": "off" } },
   {
     files: [
       "src/type-converter.ts",
@@ -23,4 +13,4 @@ export default defineConfig(
       "max-lines": ["error", { max: 600 }],
     },
   },
-);
+];

@@ -1,6 +1,5 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -25,22 +24,30 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob(["src/**/*.ts"]),
-    config = "//packages/scout-for-lol:eslint.config.ts",
+    extra_files = [
+        "//packages/scout-for-lol:eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Depends on @scout-for-lol/backend Prisma client and @google/generative-ai
 # workspace deps not resolved by tsc in sandbox.
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],
@@ -48,9 +55,9 @@ bun_typecheck_test(
 
 bun_test(
     name = "test",
-    tags = ["manual"],
     size = "large",
     data = ["//packages/scout-for-lol/packages/backend:testdata"],
+    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [":pkg"],
 )

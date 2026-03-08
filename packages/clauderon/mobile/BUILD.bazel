@@ -1,5 +1,4 @@
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 exports_files(["package.json"])
@@ -15,22 +14,28 @@ bun_library(
     visibility = ["//visibility:public"],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Missing React Native and other native module type declarations in Bazel sandbox.
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
     ],
 )

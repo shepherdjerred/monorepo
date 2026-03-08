@@ -1,0 +1,91 @@
+# WanderingTrades 1.9.0 example trade config
+
+# Enable this tradeset config
+enabled: false
+
+# the chance that a wandering trader will get the trades
+# from this config [0.01 - 1] ie 75% = 0.75
+chance: 0.75
+
+# true: randomly select from these trades
+# false: add all off these trades
+randomized: true
+
+# if the above is true, how many random
+# trades to add
+# may be a number, or a range for random selection
+#   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
+randomAmount: 2
+
+# if true, a trader spawned with this config by command
+# will not take damage, except from players with the
+# wanderingtrades.damage permission
+# and will also not despawn
+invincible: false
+
+# if set, a trader spawned with this config by command
+# will display this custom name tag above their head
+#
+# set to 'NONE' to disable
+customName: '<gradient:red:yellow><bold>Example</gradient><blue>!'
+
+# Enabling this option will disable villagers with this config from
+# giving gifts to players with Hero of the Village.
+disableHeroOfTheVillageGifts: false
+
+# you may define as many trades as you want
+# in this section. this example shows all of
+# the configuration features
+trades:
+  myfirsttrade:
+    maxUses: 3
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: GLASS
+        amount: 3
+    result:
+      customname: NONE
+      material: DIAMOND_PICKAXE
+      amount: 64
+      enchantments:
+        - unbreaking:3
+        - efficiency:5
+        - mending:1
+        - silk_touch:1
+  microblock1:
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: EMERALD
+        amount: 1
+      2:
+        customname: NONE
+        material: PACKED_ICE
+        amount: 1
+    result:
+      customname: '<aqua>Packed Ice'
+      material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzE1NDIyODZkYTAzYWI3ZWVjYzRlNTYyYzNmOGI4YTFjZjc4MWRhMzA4YjA3OWUzYWMzMzE0NTYxYjljMWQ5OSJ9fX0=
+      amount: 8
+  loreExample:
+    maxUses: 1
+    experienceReward: true
+    ingredients:
+      1:
+        customname: NONE
+        material: GLASS
+        amount: 3
+    result:
+      customname: '<rainbow>-====- God Axe -====-'
+      material: DIAMOND_AXE
+      amount: 1
+      enchantments:
+        - unbreaking:3
+        - efficiency:10
+        - mending:1
+      lore:
+        - "<gradient:black:white>||||||||||||||||||||||||||||||||</gradient><gradient:white:black>||||||||||||||||||||||||||||||||"
+        - '       <gradient:blue:green>Very Cool Axe'
+        - "<gradient:black:white>||||||||||||||||||||||||||||||||</gradient><gradient:white:black>||||||||||||||||||||||||||||||||"

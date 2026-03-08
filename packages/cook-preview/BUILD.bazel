@@ -1,8 +1,7 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:astro_build.bzl", "astro_build")
 load("//tools/bazel:astro_check.bzl", "astro_check")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -28,20 +27,29 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 # Astro virtual modules prevent tsc from resolving in sandbox.
 bun_typecheck_test(
     name = "typecheck",
-    tsconfig = "tsconfig.json",
     extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
-        ":pkg",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/@types/bun",
         "//:node_modules/@types/node",
         "//:node_modules/undici-types",

@@ -38,6 +38,8 @@ const EXCLUDED_FILES = [
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
+  // Documentation: CLAUDE.md mentions suppression patterns as things to avoid
+  "packages/dotfiles/CLAUDE.md",
 ];
 
 type Finding = {

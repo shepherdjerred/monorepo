@@ -24,11 +24,11 @@ bun_typecheck_test(
     name = "typecheck",
     tsconfig = "tsconfig.json",
     deps = [
-        ":pkg",
         ":node_modules/@tsconfig/node-lts",
         ":node_modules/@tsconfig/recommended",
         ":node_modules/@tsconfig/strictest",
         ":node_modules/typescript",
+        ":pkg",
         "//:node_modules/undici-types",
     ],
 )

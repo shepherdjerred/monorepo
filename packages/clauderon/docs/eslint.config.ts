@@ -1,4 +1,4 @@
-import { recommended, astroConfig } from "../../eslint-config/local.ts";
+import { recommended, astroConfig } from "@shepherdjerred/eslint-config";
 
 export default [
   ...recommended({

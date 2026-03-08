@@ -42,6 +42,7 @@ def _bun_library_impl(ctx):
         target = ctx.label,
         sources = sources,
         package_json = package_json,
+        package_name = ctx.attr.package_name,
         transitive_sources = transitive_sources,
         npm_sources = npm_sources,
         npm_package_store_infos = npm_package_store_infos,
@@ -86,6 +87,9 @@ bun_library = rule(
         "data": attr.label_list(
             allow_files = True,
             doc = "Additional runtime data files",
+        ),
+        "package_name": attr.string(
+            doc = "npm package name (e.g. @scope/pkg) for workspace dep resolution. Falls back to path-based heuristic if empty.",
         ),
     },
 )

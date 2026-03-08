@@ -1,6 +1,7 @@
-load("//tools/bazel:shellcheck.bzl", "shellcheck_test")
+load("@rules_shellcheck//shellcheck:defs.bzl", "shellcheck_test")
 
 shellcheck_test(
     name = "shellcheck",
-    srcs = glob(["scripts/*.sh"]),
+    data = glob(["scripts/*.sh"]),
+    severity = "warning",
 )

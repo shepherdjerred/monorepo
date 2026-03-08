@@ -1,6 +1,5 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("//tools/bazel:eslint.bzl", "eslint_test")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
@@ -32,21 +31,29 @@ bun_library(
     ],
 )
 
-eslint_test(
+bun_eslint_test(
     name = "lint",
-    size = "large",
-    srcs = glob(["src/**/*.ts"]),
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//packages/homelab:tsconfig.base.json",
+    ],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//packages/eslint-config:pkg",
+    ],
 )
 
 bun_typecheck_test(
     name = "typecheck",
+    extra_files = ["//packages/homelab:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
-    extra_files = ["//:tsconfig.base.json"],
     deps = [
         ":pkg",
-        "//:node_modules/typescript",
         "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
         "//:node_modules/undici-types",
     ],
 )
@@ -55,7 +62,6 @@ bun_typecheck_test(
 # needed so Bun can resolve them from the bin tree with tsconfig.json.
 bun_test(
     name = "test",
-    tags = ["manual"],
     size = "large",
     data = glob(
         [
@@ -73,6 +79,7 @@ bun_test(
         "//packages/homelab:scripts/lint-helm.sh",
     ],
     local = True,
+    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [":pkg"],
 )

@@ -5,8 +5,8 @@ import json
 # Read existing file
 data = json.load(sys.stdin)
 
-# Update mcpServers with templated secrets
-data["mcpServers"] = {{ template "claude-mcp-additional-servers.json.tmpl" . }}
+# Update mcpServers from the shared Claude MCP template
+data["mcpServers"] = {{ template "claude-mcp-servers.json.tmpl" . }}
 
 # Output modified file
 json.dump(data, sys.stdout, indent=2)

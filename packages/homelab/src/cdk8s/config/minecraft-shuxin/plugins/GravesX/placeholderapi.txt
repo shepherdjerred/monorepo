@@ -1,0 +1,24 @@
+##################
+# PlaceholderAPI #
+##################
+%gravesx_author% - Plugin author
+%gravesx_version% - Plugin version
+%gravesx_count_total% - Grave total count
+%gravesx_owner_name_<UUID>% - Grave owner name
+%gravesx_owner_type_<UUID>% - Grave owner type
+%gravesx_owner_uuid_<UUID>% - Grave owner UUID
+%gravesx_killer_name_<UUID>% - Grave killer name
+%gravesx_killer_type_<UUID>% - Grave killer type
+%gravesx_killer_uuid_<UUID>% - Grave killer UUID
+%gravesx_item_<UUID>% - Item amount
+%gravesx_experience_<UUID>% - Experience amount
+%gravesx_level_<UUID>% - Level amount
+%gravesx_time_creation_<UUID>% - Creation time
+%gravesx_time_creation_formatted_<UUID>% - Creation time formatted
+%gravesx_time_alive_remaining_<UUID>% - Remaining alive time
+%gravesx_time_alive_remaining_formatted_<UUID>% - Remaining alive time formatted
+%gravesx_time_protection_remaining_<UUID>% - Remaining protection time
+%gravesx_time_protection_remaining_formatted_<UUID>% - Remaining protection time formatted
+%gravesx_time_lived_<UUID>% - Lived time
+%gravesx_time_lived_formatted_<UUID>% - Lived time formatted
+%gravesx_count% - Grave count for player

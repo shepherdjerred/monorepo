@@ -29,7 +29,8 @@ bedrock:
 java:
   # What type of authentication Bedrock players will be checked against when logging into the Java server.
   # Can be "floodgate" (see https://wiki.geysermc.org/floodgate/), "online", or "offline".
-  auth-type: online
+  # BedrockPlayerSupport expects Floodgate identities.
+  auth-type: floodgate
 
 # MOTD settings
 motd:

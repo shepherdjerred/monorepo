@@ -72,15 +72,34 @@ async function loadServerConfigs(
     );
   }
 
-  // Validate size (ConfigMaps have 1MB limit)
-  const totalSize = Object.values(configs).reduce(
-    (sum, c) => sum + c.length,
-    0,
-  );
-  if (totalSize > 900_000) {
+  // Validate per-plugin ConfigMap sizes (Kubernetes 1MB limit per ConfigMap)
+  // With split ConfigMaps, each plugin gets its own ConfigMap, so validate individually
+  const pluginSizes = new Map<string, number>();
+  let nonPluginSize = 0;
+  for (const [key, value] of Object.entries(configs)) {
+    if (key.startsWith("plugins__")) {
+      const parts = key.split("__");
+      const pluginName = parts[1] ?? "unknown";
+      pluginSizes.set(
+        pluginName,
+        (pluginSizes.get(pluginName) ?? 0) + value.length,
+      );
+    } else {
+      nonPluginSize += value.length;
+    }
+  }
+
+  if (nonPluginSize > 900_000) {
     throw new Error(
-      `${serverName} configs too large: ${String(totalSize)} bytes (limit ~1MB). Remove translation/language files.`,
+      `${serverName} non-plugin configs too large: ${String(nonPluginSize)} bytes (limit ~1MB).`,
     );
+  }
+  for (const [pluginName, size] of pluginSizes) {
+    if (size > 900_000) {
+      throw new Error(
+        `${serverName} plugin ${pluginName} configs too large: ${String(size)} bytes (limit ~1MB).`,
+      );
+    }
   }
 
   configCache.set(serverName, configs);
@@ -122,86 +141,21 @@ function getConfigs(serverName: ServerName): Record<string, string> {
 }
 
 /**
- * Returns ConfigMap manifest with all server configs in a single ConfigMap.
- * @deprecated Use getMinecraftConfigMapManifests for large configs to avoid Application size limits
+ * Returns the set of plugin names that have configs for a given server.
  */
-export function getMinecraftConfigMapManifest(
-  serverName: ServerName,
-  namespace: string,
-): object {
-  return {
-    apiVersion: "v1",
-    kind: "ConfigMap",
-    metadata: {
-      name: `${namespace}-configs`,
-      // Note: namespace is set by ArgoCD from Application spec, not here
-      labels: { "app.kubernetes.io/component": "minecraft-config" },
-    },
-    data: getConfigs(serverName),
-  };
-}
-
-/**
- * Returns multiple ConfigMap manifests, split to avoid ArgoCD Application size limits.
- * - One ConfigMap for non-plugin configs (server.properties, bukkit.yml, etc)
- * - One ConfigMap per plugin directory
- */
-export function getMinecraftConfigMapManifests(
-  serverName: ServerName,
-  namespace: string,
-): object[] {
+export function getMinecraftPluginNames(serverName: ServerName): Set<string> {
   const configs = getConfigs(serverName);
-  const configMaps: object[] = [];
-
-  // Separate plugin configs from non-plugin configs
-  const nonPluginConfigs: Record<string, string> = {};
-  const pluginConfigs = new Map<string, Record<string, string>>();
-
-  for (const [key, value] of Object.entries(configs)) {
+  const pluginNames = new Set<string>();
+  for (const key of Object.keys(configs)) {
     if (key.startsWith("plugins__")) {
-      // Extract plugin name (e.g., "plugins__BlueMap__core.conf" -> "BlueMap")
       const parts = key.split("__");
       const pluginName = parts[1];
       if (pluginName != null && pluginName !== "") {
-        const existing = pluginConfigs.get(pluginName) ?? {};
-        existing[key] = value;
-        pluginConfigs.set(pluginName, existing);
+        pluginNames.add(pluginName);
       }
-    } else {
-      nonPluginConfigs[key] = value;
     }
   }
-
-  // ConfigMap for non-plugin configs
-  if (Object.keys(nonPluginConfigs).length > 0) {
-    configMaps.push({
-      apiVersion: "v1",
-      kind: "ConfigMap",
-      metadata: {
-        name: `${namespace}-server-configs`,
-        labels: { "app.kubernetes.io/component": "minecraft-config" },
-      },
-      data: nonPluginConfigs,
-    });
-  }
-
-  // One ConfigMap per plugin
-  for (const [pluginName, pluginData] of pluginConfigs) {
-    configMaps.push({
-      apiVersion: "v1",
-      kind: "ConfigMap",
-      metadata: {
-        name: `${namespace}-plugin-${pluginName.toLowerCase()}`,
-        labels: {
-          "app.kubernetes.io/component": "minecraft-config",
-          "app.kubernetes.io/plugin": pluginName,
-        },
-      },
-      data: pluginData,
-    });
-  }
-
-  return configMaps;
+  return pluginNames;
 }
 
 /**
@@ -458,7 +412,7 @@ export function getMinecraftPluginConfigInitContainer(
       // 2. Copy plugin configs if they exist
       `rm -rf /data/config && mkdir -p /data/config
       if [ -d /plugin-configs ] && [ "$(ls -A /plugin-configs)" ]; then
-        cd /plugin-configs && find -L . -type f | while read f; do
+        cd /plugin-configs && find -L . -type f -not -path '*/..*' | while read f; do
           mkdir -p "/data/plugins/$(dirname "$f")"
           cp "$f" "/data/plugins/$f"
         done
@@ -475,7 +429,7 @@ export function getMinecraftExtraEnv(): Record<string, string> {
   return {
     // itzg config sync settings
     COPY_CONFIG_DEST: "/data",
-    SYNC_SKIP_NEWER_IN_DESTINATION: "true", // Preserve runtime changes
+    SYNC_SKIP_NEWER_IN_DESTINATION: "false", // Repo always wins — all config changes go through code
     REPLACE_ENV_DURING_SYNC: "true",
     ENV_VARIABLE_PREFIX: "CFG_",
     REPLACE_ENV_SUFFIXES: "yml,yaml,json,properties,conf,txt",

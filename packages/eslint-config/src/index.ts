@@ -85,7 +85,7 @@ export type RecommendedOptions = BaseConfigOptions &
  * @example
  * ```ts
  * // eslint.config.ts
- * import { recommended } from "../eslint-config/local.ts";
+ * import { recommended } from "@shepherdjerred/eslint-config";
  *
  * export default recommended({
  *   tsconfigRootDir: import.meta.dirname,

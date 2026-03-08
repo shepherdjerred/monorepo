@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Shell wrapper for running Semgrep security scan in the Bazel sandbox.
 # Runs auto-detection rules against the workspace source files.
+# hermeticity-exempt: semgrep has OCaml+Python dual architecture that prevents pip.parse hermeticity
 
 set -euo pipefail
 
