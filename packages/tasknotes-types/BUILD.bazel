@@ -2,6 +2,8 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//tools/bazel:eslint.bzl", "eslint_test")
 load("//tools/bazel:typecheck.bzl", "typecheck_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -28,5 +30,26 @@ typecheck_test(
     srcs = glob(["src/**/*.ts"]),
     deps = [
         ":node_modules/zod",
+    ],
+)
+
+# ─── rules_bun (native Bun rules) ───
+
+bun_library(
+    name = "bun_pkg",
+    srcs = glob(["src/**/*.ts"]),
+    package_json = "package.json",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/zod",
+    ],
+)
+
+bun_typecheck_test(
+    name = "bun_typecheck",
+    tsconfig = "tsconfig.json",
+    deps = [
+        ":bun_pkg",
+        ":node_modules/typescript",
     ],
 )
