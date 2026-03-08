@@ -1,0 +1,6 @@
+# Private implementation files for rules_bun
+
+exports_files([
+    "bun_binary.sh.tpl",
+    "bun_test.sh.tpl",
+])
