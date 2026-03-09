@@ -1,8 +1,8 @@
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
@@ -23,6 +23,8 @@ bun_library(
     ],
 )
 
+# React Native deps (react-native-reanimated, @react-navigation/*, @sentry/react-native, etc.)
+# are not in the root pnpm lockfile since this package is not a workspace member.
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -30,6 +32,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    tags = ["manual"],
     deps = [
         ":node_modules/typescript",
         ":pkg",

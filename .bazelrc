@@ -30,10 +30,6 @@ build --remote_local_fallback
 build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
 build --remote_upload_local_results=false
 
-# TypeScript
-build --@aspect_rules_ts//ts:skipLibCheck=always
-# Use tsc as the default transpiler for ts_project rules
-common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 # CI-specific settings
 build:ci --remote_cache=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092

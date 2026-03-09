@@ -1,9 +1,8 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
@@ -12,22 +11,6 @@ bun_library(
     package_name = "@clauderon/shared",
     srcs = glob(["src/**/*.ts"]),
     package_json = "package.json",
-    visibility = ["//visibility:public"],
-    deps = [":types"],
-)
-
-# Produce .d.ts declarations so downstream ts_project deps can type-check
-# against this package's types.
-ts_project(
-    name = "types",
-    srcs = glob(["src/**/*.ts"]),
-    declaration = True,
-    emit_declaration_only = True,
-    extends = "//:tsconfig_base",
-    out_dir = "dist",
-    root_dir = "src",
-    tsconfig = "tsconfig.json",
-    validate = False,
     visibility = ["//visibility:public"],
 )
 

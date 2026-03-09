@@ -11,11 +11,8 @@ module(
 
 # Core dependencies
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
-bazel_dep(name = "aspect_rules_js", version = "2.9.2")
-bazel_dep(name = "aspect_rules_ts", version = "3.8.5")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_nodejs", version = "6.7.3")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "rules_shellcheck", version = "0.5.1")
 bazel_dep(name = "rules_multitool", version = "1.11.1")
@@ -35,16 +32,6 @@ bazel_dep(name = "rules_pkg", version = "1.2.0")
 bazel_dep(name = "rules_python", version = "1.0.0")
 
 ##############################################################################
-# Node.js toolchain (needed by rules_js lifecycle hooks)
-##############################################################################
-
-node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-node.toolchain(node_version = "22.14.0")
-use_repo(node, "nodejs_toolchains")
-
-register_toolchains("@nodejs_toolchains//:all")
-
-##############################################################################
 # Python toolchain (used transitively by rules_pkg)
 ##############################################################################
 
@@ -54,7 +41,6 @@ python.toolchain(
     python_version = "3.11",
 )
 
-##############################################################################
 ##############################################################################
 # Rust toolchain
 ##############################################################################
@@ -96,33 +82,7 @@ crate.annotation(
 use_repo(crate, "crates")
 
 ##############################################################################
-# Bun toolchain (Node.js masquerade — used by rules_js/rules_ts)
-##############################################################################
-
-bun = use_extension("//tools/bun:extensions.bzl", "bun")
-bun.toolchain(bun_version = "1.3.9")
-
-register_toolchains(
-    "@bun_darwin_arm64//:bun_toolchain",
-    "@bun_darwin_arm64//:bun_runtime_toolchain",
-    "@bun_darwin_amd64//:bun_toolchain",
-    "@bun_darwin_amd64//:bun_runtime_toolchain",
-    "@bun_linux_arm64//:bun_toolchain",
-    "@bun_linux_arm64//:bun_runtime_toolchain",
-    "@bun_linux_amd64//:bun_toolchain",
-    "@bun_linux_amd64//:bun_runtime_toolchain",
-)
-
-use_repo(
-    bun,
-    "bun_darwin_amd64",
-    "bun_darwin_arm64",
-    "bun_linux_amd64",
-    "bun_linux_arm64",
-)
-
-##############################################################################
-# Native Bun toolchain (rules_bun — no Node.js masquerade)
+# Native Bun toolchain (rules_bun)
 ##############################################################################
 
 rules_bun = use_extension("//tools/rules_bun/bun:extensions.bzl", "bun")
@@ -144,36 +104,27 @@ use_repo(
 )
 
 ##############################################################################
-# TypeScript compiler (managed by rules_ts)
+# Bun npm dependencies (replaces rules_js npm_translate_lock)
 ##############################################################################
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
-rules_ts_ext.deps()
-use_repo(rules_ts_ext, "npm_typescript")
-
-##############################################################################
-# pnpm + npm dependencies
-##############################################################################
-
-pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
-pnpm.pnpm(
-    name = "pnpm",
-    pnpm_version = "9.15.9",
-)
-use_repo(pnpm, "pnpm", "pnpm__links")
-
-npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
-npm.npm_translate_lock(
-    name = "npm",
+bun_modules = use_extension("//tools/rules_bun/bun:extensions.bzl", "bun_modules")
+bun_modules.install(
+    name = "bun_modules",
     bins = {
         "typescript": [
             "tsc=./bin/tsc",
             "tsserver=./bin/tsserver",
         ],
     },
+    bun_lock = "//:bun.lock",
     data = [
+        "//:patches/monarch-money-api@0.0.5.patch",
+        "//:patches/react-native-sound@0.13.0.patch",
+        "//packages/homelab:patches/@digital-alchemy%2Ftype-writer@25.10.12.patch",
+        "//packages/scout-for-lol:patches/satori@0.18.3.patch",
+    ],
+    package_jsons = [
         "//:package.json",
-        "//:pnpm-workspace.yaml",
         "//packages/astro-opengraph-images:package.json",
         "//packages/better-skill-capped:package.json",
         "//packages/better-skill-capped/fetcher:package.json",
@@ -184,6 +135,7 @@ npm.npm_translate_lock(
         "//packages/clauderon/web/frontend:package.json",
         "//packages/clauderon/web/shared:package.json",
         "//packages/cook-preview:package.json",
+        "//packages/cooklang-for-obsidian:package.json",
         "//packages/discord-plays-pokemon:package.json",
         "//packages/discord-plays-pokemon/packages/backend:package.json",
         "//packages/discord-plays-pokemon/packages/common:package.json",
@@ -215,16 +167,9 @@ npm.npm_translate_lock(
         "//packages/tools:package.json",
         "//packages/webring:package.json",
     ],
-    pnpm_lock = "//:pnpm-lock.yaml",
-    public_hoist_packages = {
-        # bun-types does import("undici-types") but doesn't declare it as a
-        # direct dependency. In pnpm-strict layout (used by rules_js), this
-        # causes TypeScript resolution failures. Hoisting undici-types makes
-        # it available at node_modules/undici-types for all packages.
-        "undici-types@6.21.0": [""],
-    },
+    pnpm_workspace = "//:pnpm-workspace.yaml",
 )
-use_repo(npm, "npm")
+use_repo(bun_modules, "bun_modules")
 
 ##############################################################################
 # Container base images (rules_oci)

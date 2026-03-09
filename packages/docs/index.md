@@ -9,6 +9,7 @@ AI-maintained knowledge base for the monorepo.
 - [Sentinel](architecture/sentinel.md) - Autonomous agent system architecture
 - [Monarch](architecture/monarch.md) - Transaction categorization pipeline with tiered classification
 - [Package Integration Audit](architecture/package-integration-audit.md) - Integration status of new packages (sentinel, tasks-for-obsidian, tasknotes-server)
+- [Dirty Worktree State](architecture/dirty-worktree-state.md) - Uncommitted WIP rules_bun migration breaking local Bazel builds
 
 ## Patterns
 

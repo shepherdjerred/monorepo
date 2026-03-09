@@ -1,50 +1,45 @@
 """TypeScript type-check macros.
 
 Two variants:
-- typecheck_test: Uses ts_project for packages without workspace deps.
-  Type errors are build failures. Run with: bazel build //packages/<name>:typecheck
+- typecheck_test: Uses bun_typecheck_test for packages without workspace deps.
+  Type errors are test failures. Run with: bazel test //packages/<name>:typecheck
 - workspace_typecheck_test: Uses sh_test + typecheck_runner.sh for packages
   with workspace:* deps that need symlink setup before tsc runs.
   Run with: bazel test //packages/<name>:typecheck
-
-Note: tsBuildInfoFile is intentionally omitted. With no_emit=True, tsc does
-not write any output files (including .tsbuildinfo). Declaring one would cause
-ts_project to expect an output that never gets written, breaking the build.
-Bazel's own action cache already provides equivalent caching — unchanged inputs
-produce a cache hit without re-running tsc.
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", extends = "//:tsconfig_base", data = [], tags = [], **kwargs):
-    """TypeScript type checking via ts_project --noEmit.
-
-    This produces no output files — it only validates types.
-    Success/failure is cached by Bazel.
+def typecheck_test(name, srcs, deps = [], tsconfig = "tsconfig.json", data = [], tags = [], **kwargs):
+    """TypeScript type checking via bun_typecheck_test.
 
     Args:
         name: Target name (conventionally "typecheck")
         srcs: TypeScript source files
         deps: npm and workspace dependencies
         tsconfig: Path to tsconfig.json (default: tsconfig.json)
-        extends: Label for parent tsconfig (default: //:tsconfig_base).
-            Use a ts_config target for intermediate configs in the extends chain.
-        data: Additional data files needed at type-check time (e.g. package.json
-            for path alias resolution). Note: only JSON files are supported.
+        data: Additional data files needed at type-check time
         tags: Additional tags
-        **kwargs: Additional args passed to ts_project
+        **kwargs: Additional args passed to bun_typecheck_test
     """
-    ts_project(
-        name = name,
+
+    # We need a bun_library to wrap sources for bun_typecheck_test
+    lib_name = name + "_lib"
+    bun_library(
+        name = lib_name,
         srcs = srcs + data,
-        no_emit = True,
-        declaration = False,
-        tsconfig = tsconfig,
-        extends = extends,
-        validate = False,
+        package_json = "package.json",
         deps = deps,
+    )
+
+    bun_typecheck_test(
+        name = name,
+        tsconfig = tsconfig,
+        deps = [
+            ":" + lib_name,
+        ] + deps,
         tags = ["typecheck"] + tags,
         **kwargs
     )
@@ -66,11 +61,12 @@ def workspace_typecheck_test(name, srcs, deps = [], data = [], tags = [], env = 
         **kwargs: Additional args passed to sh_test
     """
 
-    # Aggregate all runtime deps into a js_library so they appear in runfiles
+    # Aggregate all runtime deps into a bun_library so they appear in runfiles
     lib_name = name + "_lib"
-    js_library(
+    bun_library(
         name = lib_name,
         srcs = srcs + ["package.json", "tsconfig.json"],
+        package_json = "package.json",
         deps = deps,
     )
 
