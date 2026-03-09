@@ -1,16 +1,9 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files([
     "package.json",
     "tsconfig.base.json",
     "scripts/lint-helm.sh",
-])
-
-ts_config(
-    name = "tsconfig_base",
-    src = "tsconfig.base.json",
-    visibility = ["//packages/homelab:__subpackages__"],
-)
+] + glob(["patches/*.patch"]))

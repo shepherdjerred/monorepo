@@ -1,9 +1,8 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files([
     "package.json",
@@ -19,34 +18,6 @@ bun_library(
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
-        ":node_modules/remeda",
-        ":node_modules/rss-parser",
-        ":node_modules/sanitize-html",
-        ":node_modules/truncate-html",
-        ":node_modules/zod",
-    ],
-)
-
-# Compile TypeScript to dist/ with declarations for downstream consumers.
-ts_project(
-    name = "build",
-    srcs = glob(
-        ["src/**/*.ts"],
-        exclude = ["src/**/*.test.ts"],
-    ),
-    declaration = True,
-    declaration_map = True,
-    extends = "//:tsconfig_base",
-    out_dir = "dist",
-    root_dir = "src",
-    source_map = True,
-    validate = False,
-    visibility = ["//visibility:public"],
-    deps = [
-        ":node_modules/@tsconfig/node24",
-        ":node_modules/@tsconfig/strictest",
-        ":node_modules/@types/node",
-        ":node_modules/@types/sanitize-html",
         ":node_modules/remeda",
         ":node_modules/rss-parser",
         ":node_modules/sanitize-html",

@@ -6,8 +6,8 @@ because js_test's node wrapper injects --require for fs patches that
 are incompatible with Bun's module resolution.
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_library")
 
 def bun_test(name, srcs, deps = [], data = [], tags = [], env = {}, **kwargs):
     """Bun test runner via sh_test.
@@ -22,11 +22,12 @@ def bun_test(name, srcs, deps = [], data = [], tags = [], env = {}, **kwargs):
         **kwargs: Additional args passed to sh_test
     """
 
-    # Aggregate all runtime deps into a js_library so they appear in runfiles
+    # Aggregate all runtime deps into a bun_library so they appear in runfiles
     lib_name = name + "_lib"
-    js_library(
+    bun_library(
         name = lib_name,
         srcs = srcs + ["package.json", "tsconfig.json"],
+        package_json = "package.json",
         deps = deps,
     )
 

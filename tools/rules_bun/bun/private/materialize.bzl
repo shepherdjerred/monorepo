@@ -4,7 +4,6 @@ Creates a self-contained TreeArtifact directory containing all sources,
 npm packages, workspace deps, and optional prisma client.
 """
 
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
 
 def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_client, data_files, all_npm_sources):
@@ -41,14 +40,16 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
     seen_npm_paths = {}
     for f in all_npm_sources:
         sp = f.short_path
-        if sp.startswith("../"):
-            continue
 
-        # Extract package-relative path from the last "node_modules/" segment
+        # Extract package-relative path from the last "node_modules/" segment.
+        # Works for both workspace files (packages/foo/node_modules/react/...)
+        # and external repo files (../bun_modules/node_modules/react/...).
         parts = sp.split("/node_modules/")
         if len(parts) >= 2:
             pkg_relative = parts[-1]
-            if pkg_relative.startswith(".aspect_rules_js") or pkg_relative.startswith(".bin"):
+
+            # Skip bun cache internals and bin stubs
+            if pkg_relative.startswith(".bun") or pkg_relative.startswith(".bin") or pkg_relative.startswith(".cache"):
                 continue
 
             dest = "%s/node_modules/%s" % (pkg_dir, pkg_relative)
@@ -130,13 +131,29 @@ while IFS=$'\\t' read -r op src dst; do
             ;;
     esac
 done < "$MANIFEST"
+
+# Dereference .d.ts symlinks that point outside the tree.
+# TypeScript's project service follows realpath and escapes the tree,
+# causing spurious type errors.  Only dereference .d.ts files — runtime
+# JS files must keep their symlinks so Bun can leverage the store's
+# nested node_modules for correct version resolution.
+find "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
+    target=$(readlink -f "$link" 2>/dev/null) || continue
+    case "$target" in
+        "$OUT_DIR"/*) ;;  # points inside the tree — keep it
+        *)
+            rm -f "$link"
+            cp -f "$target" "$link" 2>/dev/null || true
+            ;;
+    esac
+done
 """
 
 def collect_all_npm_sources(deps):
-    """Collect all npm_sources from deps, including dev deps.
+    """Collect all npm_sources from deps.
 
     Args:
-      deps: list of targets that may provide BunInfo or JsInfo.
+      deps: list of targets that may provide BunInfo.
 
     Returns:
       A depset of all npm source files from the given deps.
@@ -145,8 +162,6 @@ def collect_all_npm_sources(deps):
     for dep in deps:
         if BunInfo in dep:
             sources.append(dep[BunInfo].npm_sources)
-        elif JsInfo in dep:
-            sources.append(dep[JsInfo].npm_sources)
     return depset(transitive = sources)
 
 def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = [], prisma_client = None, data_files = [], additional_npm_sources = depset()):

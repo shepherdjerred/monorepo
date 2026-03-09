@@ -1,13 +1,11 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-# TypeScript library built with tsc.
 bun_library(
     name = "pkg",
     package_name = "@discord-plays-pokemon/common",
@@ -15,28 +13,6 @@ bun_library(
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
-        ":node_modules/lodash",
-        ":node_modules/ts-pattern",
-        ":node_modules/zod",
-    ],
-)
-
-# Compile TypeScript to dist/ with declarations for downstream consumers.
-ts_project(
-    name = "build",
-    srcs = glob(["src/**/*.ts"]),
-    declaration = True,
-    declaration_map = True,
-    extends = "//:tsconfig_base",
-    out_dir = "dist",
-    root_dir = "src",
-    source_map = True,
-    validate = False,
-    visibility = ["//visibility:public"],
-    deps = [
-        ":node_modules/@tsconfig/recommended",
-        ":node_modules/@types/lodash",
-        ":node_modules/@types/node",
         ":node_modules/lodash",
         ":node_modules/ts-pattern",
         ":node_modules/zod",

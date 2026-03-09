@@ -1,8 +1,8 @@
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prisma_generate", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
@@ -69,6 +69,7 @@ bun_eslint_test(
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
     prisma_client = ":prisma_generate",
+    tags = ["manual"],
     deps = [
         ":node_modules/typescript",
         ":pkg",

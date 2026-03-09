@@ -15,7 +15,10 @@ def _bun_typecheck_test_impl(ctx):
     if not bun_info:
         fail("No dep provides BunInfo")
 
-    additional_npm = collect_all_npm_sources(ctx.attr.deps)
+    nm_sources = []
+    if ctx.attr.node_modules:
+        nm_sources.append(ctx.attr.node_modules)
+    additional_npm = collect_all_npm_sources(ctx.attr.deps + nm_sources)
 
     tree = materialize_tree(
         ctx,
@@ -56,6 +59,9 @@ bun_typecheck_test = rule(
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
         "prisma_client": attr.label(allow_single_file = True),
+        "node_modules": attr.label(
+            doc = "npm_link_all_packages target to include all npm deps from package.json",
+        ),
         "_launcher_template": attr.label(
             default = "//tools/rules_bun/ts/private:bun_typecheck.sh.tpl",
             allow_single_file = True,

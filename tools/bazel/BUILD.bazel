@@ -1,36 +1,23 @@
 # Shared Bazel macros for the monorepo
 
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@rules_shellcheck//shellcheck:defs.bzl", "shellcheck_test")
 
 exports_files([
-    "eslint_entry.cjs",
     "bun_test_entry.cjs",
     "bun_test_runner.sh",
     "cargo_deny_runner.sh",
+    "eslint_entry.cjs",
     "golangci_lint_runner.sh",
     "hermeticity_check.sh",
+    "jscpd_runner.sh",
+    "knip_runner.sh",
     "llvm_cov_runner.sh",
+    "semgrep_runner.sh",
+    "trivy_runner.sh",
     "typecheck_runner.sh",
     "workspace_status.sh",
-    "trivy_runner.sh",
-    "semgrep_runner.sh",
-    "knip_runner.sh",
-    "jscpd_runner.sh",
 ])
-
-js_library(
-    name = "bun_test_entry",
-    srcs = ["bun_test_entry.cjs"],
-    visibility = ["//visibility:public"],
-)
-
-js_library(
-    name = "eslint_entry",
-    srcs = ["eslint_entry.cjs"],
-    visibility = ["//visibility:public"],
-)
 
 sh_test(
     name = "hermeticity_check",

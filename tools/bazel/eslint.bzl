@@ -1,13 +1,13 @@
-"""ESLint test macro using js_test for sandboxed execution.
+"""ESLint test macro — delegates to bun_eslint_test.
 
-Runs ESLint programmatically via the ESLint Node API inside the
-Bazel sandbox. The eslint.config.ts in each package is auto-detected.
+This is a thin wrapper for backwards compatibility with BUILD files
+that still use eslint_test from tools/bazel.
 """
 
-load("@aspect_rules_js//js:defs.bzl", "js_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test")
 
 def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], tags = [], **kwargs):
-    """ESLint test via js_test.
+    """ESLint test via bun_eslint_test.
 
     Args:
         name: Target name (conventionally "lint")
@@ -16,24 +16,12 @@ def eslint_test(name, srcs, config = "eslint.config.ts", deps = [], data = [], t
         deps: Additional dependencies
         data: Additional data files
         tags: Additional tags
-        **kwargs: Additional args passed to js_test
+        **kwargs: Additional args passed to bun_eslint_test
     """
-
-    # Cross-package configs (labels starting with //) can't be copied to bin
-    no_copy = ["//tools/bazel:eslint_entry.cjs"]
-    if config.startswith("//"):
-        no_copy.append(config)
-
-    js_test(
+    bun_eslint_test(
         name = name,
-        entry_point = "//tools/bazel:eslint_entry.cjs",
-        data = srcs + deps + data + [
-            config,
-            "tsconfig.json",
-            "package.json",
-            "//tools/bazel:eslint_entry",
-        ],
-        no_copy_to_bin = no_copy,
+        extra_files = [config, "tsconfig.json"] + data,
+        deps = srcs + deps,
         tags = ["lint"] + tags,
         **kwargs
     )

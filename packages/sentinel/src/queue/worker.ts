@@ -1,8 +1,7 @@
 import type { Job } from "@prisma/client";
-import type { PrismaClient } from "@prisma/client";
-import type { SDKResultMessage } from "@anthropic-ai/claude-agent-sdk";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { claimJob, completeJob, failJob, recoverStaleJobs } from "./index.ts";
+import { claimJob, failJob, recoverStaleJobs } from "./index.ts";
+import { handleResult } from "./result-handler.ts";
 import { getAgent } from "@shepherdjerred/sentinel/agents/registry.ts";
 import { getConfig } from "@shepherdjerred/sentinel/config/index.ts";
 import { getPrisma } from "@shepherdjerred/sentinel/database/index.ts";
@@ -14,7 +13,6 @@ import { logger } from "@shepherdjerred/sentinel/observability/logger.ts";
 import { buildMemoryContext } from "@shepherdjerred/sentinel/memory/context.ts";
 import { buildPermissionHandler } from "@shepherdjerred/sentinel/permissions/index.ts";
 import { emitSSE } from "@shepherdjerred/sentinel/sse/index.ts";
-import type { ModelUsageEntry } from "@shepherdjerred/sentinel/types/history.ts";
 
 const workerLogger = logger.child({ module: "worker" });
 const STALE_RECOVERY_INTERVAL_MS = 60_000;
@@ -182,6 +180,112 @@ async function logAssistantTurn(
   }
 }
 
+type AgentMessage = Awaited<ReturnType<typeof query>> extends AsyncGenerator<infer T> ? T : never;
+
+type MessageContext = {
+  job: Job;
+  sessionId: string;
+  conversationLog: ConversationLogger;
+  prisma: ReturnType<typeof getPrisma>;
+  systemPrompt: string;
+  turnCount: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+};
+
+async function handleAgentMessage(
+  message: AgentMessage,
+  ctx: MessageContext,
+): Promise<{ turnCount: number; totalInputTokens: number; totalOutputTokens: number }> {
+  let { turnCount, totalInputTokens, totalOutputTokens } = ctx;
+
+  switch (message.type) {
+    case "assistant": {
+      turnCount++;
+      const betaMessage = message.message;
+      const turnUsage = betaMessage.usage;
+      const turnModel = betaMessage.model;
+
+      await logAssistantTurn(betaMessage, ctx.conversationLog, {
+        sessionId: ctx.sessionId,
+        agent: ctx.job.agent,
+        jobId: ctx.job.id,
+        turnNumber: turnCount,
+        model: turnModel,
+        tokenUsage: {
+          input: turnUsage.input_tokens,
+          output: turnUsage.output_tokens,
+        },
+      });
+
+      await ctx.prisma.agentSession.update({
+        where: { id: ctx.sessionId },
+        data: { turnsUsed: turnCount },
+      });
+      emitSSE({
+        type: "job:progress",
+        jobId: ctx.job.id,
+        sessionId: ctx.sessionId,
+        agent: ctx.job.agent,
+        turnsUsed: turnCount,
+      });
+      break;
+    }
+    case "user": {
+      await ctx.conversationLog.appendEntry({
+        timestamp: new Date().toISOString(),
+        sessionId: ctx.sessionId,
+        agent: ctx.job.agent,
+        jobId: ctx.job.id,
+        role: "tool_result",
+        content: JSON.stringify(message.message),
+        turnNumber: turnCount,
+      });
+      break;
+    }
+    case "result": {
+      totalInputTokens = message.usage["input_tokens"];
+      totalOutputTokens = message.usage["output_tokens"];
+      await handleResult(
+        message,
+        { job: ctx.job, sessionId: ctx.sessionId, conversationLog: ctx.conversationLog, prisma: ctx.prisma, systemPrompt: ctx.systemPrompt },
+        totalInputTokens,
+        totalOutputTokens,
+      );
+      break;
+    }
+    case "system": {
+      if (message.subtype === "init") {
+        await ctx.conversationLog.appendEntry({
+          timestamp: new Date().toISOString(),
+          sessionId: ctx.sessionId,
+          agent: ctx.job.agent,
+          jobId: ctx.job.id,
+          role: "system",
+          content: JSON.stringify({
+            model: message.model,
+            tools: message.tools,
+            mcpServers: message.mcp_servers,
+          }),
+          turnNumber: 0,
+          metadata: { type: "init" },
+        });
+      }
+      break;
+    }
+    case "stream_event":
+    case "tool_progress":
+    case "auth_status":
+    case "tool_use_summary":
+    case "rate_limit_event":
+    case "prompt_suggestion": {
+      break;
+    }
+  }
+
+  return { turnCount, totalInputTokens, totalOutputTokens };
+}
+
 async function processJob(job: Job): Promise<void> {
   const agentDef = getAgent(job.agent);
 
@@ -275,90 +379,19 @@ async function processJob(job: Job): Promise<void> {
     });
 
     for await (const message of agentQuery) {
-      switch (message.type) {
-        case "assistant": {
-          turnCount++;
-          const betaMessage = message.message;
-          const turnUsage = betaMessage.usage;
-          const turnModel = betaMessage.model;
-
-          await logAssistantTurn(betaMessage, conversationLog, {
-            sessionId,
-            agent: job.agent,
-            jobId: job.id,
-            turnNumber: turnCount,
-            model: turnModel,
-            tokenUsage: {
-              input: turnUsage.input_tokens,
-              output: turnUsage.output_tokens,
-            },
-          });
-
-          // Live progress: update DB (also bumps updatedAt) and emit SSE
-          await prisma.agentSession.update({
-            where: { id: sessionId },
-            data: { turnsUsed: turnCount },
-          });
-          emitSSE({
-            type: "job:progress",
-            jobId: job.id,
-            sessionId,
-            agent: job.agent,
-            turnsUsed: turnCount,
-          });
-          break;
-        }
-        case "user": {
-          await conversationLog.appendEntry({
-            timestamp: new Date().toISOString(),
-            sessionId,
-            agent: job.agent,
-            jobId: job.id,
-            role: "tool_result",
-            content: JSON.stringify(message.message),
-            turnNumber: turnCount,
-          });
-          break;
-        }
-        case "result": {
-          totalInputTokens = message.usage["input_tokens"];
-          totalOutputTokens = message.usage["output_tokens"];
-          await handleResult(
-            message,
-            { job, sessionId, conversationLog, prisma, systemPrompt },
-            totalInputTokens,
-            totalOutputTokens,
-          );
-          break;
-        }
-        case "system": {
-          if (message.subtype === "init") {
-            await conversationLog.appendEntry({
-              timestamp: new Date().toISOString(),
-              sessionId,
-              agent: job.agent,
-              jobId: job.id,
-              role: "system",
-              content: JSON.stringify({
-                model: message.model,
-                tools: message.tools,
-                mcpServers: message.mcp_servers,
-              }),
-              turnNumber: 0,
-              metadata: { type: "init" },
-            });
-          }
-          break;
-        }
-        case "stream_event":
-        case "tool_progress":
-        case "auth_status":
-        case "tool_use_summary":
-        case "rate_limit_event":
-        case "prompt_suggestion": {
-          break;
-        }
-      }
+      const counts = await handleAgentMessage(message, {
+        job,
+        sessionId,
+        conversationLog,
+        prisma,
+        systemPrompt,
+        turnCount,
+        totalInputTokens,
+        totalOutputTokens,
+      });
+      turnCount = counts.turnCount;
+      totalInputTokens = counts.totalInputTokens;
+      totalOutputTokens = counts.totalOutputTokens;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -387,112 +420,5 @@ async function processJob(job: Job): Promise<void> {
     }
   } finally {
     clearTimeout(timeout);
-  }
-}
-
-type HandleResultContext = {
-  job: Job;
-  sessionId: string;
-  conversationLog: ConversationLogger;
-  prisma: PrismaClient;
-  systemPrompt: string;
-};
-
-async function handleResult(
-  message: SDKResultMessage,
-  ctx: HandleResultContext,
-  totalInputTokens: number,
-  totalOutputTokens: number,
-): Promise<void> {
-  const { job, sessionId, conversationLog, prisma, systemPrompt } = ctx;
-  const isSuccess = message.subtype === "success";
-  const outcome = isSuccess ? "completed" : "failed";
-
-  const modelUsage: Record<string, ModelUsageEntry> = {};
-  for (const [modelId, usage] of Object.entries(message.modelUsage)) {
-    modelUsage[modelId] = {
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      cacheReadInputTokens: usage.cacheReadInputTokens,
-      cacheCreationInputTokens: usage.cacheCreationInputTokens,
-      costUsd: usage.costUSD,
-    };
-  }
-
-  const permissionDenials = message.permission_denials.map((d) => ({
-    toolName: d.tool_name,
-    toolInput: JSON.stringify(d.tool_input),
-  }));
-
-  await conversationLog.writeSummary({
-    totalTurns: message.num_turns,
-    totalInputTokens,
-    totalOutputTokens,
-    durationMs: message.duration_ms,
-    outcome,
-    totalCostUsd: message.total_cost_usd,
-    durationApiMs: message.duration_api_ms,
-    modelUsage,
-    permissionDenials,
-    systemPrompt,
-  });
-
-  if (message.subtype === "success") {
-    await prisma.agentSession.update({
-      where: { id: sessionId },
-      data: {
-        endedAt: new Date(),
-        turnsUsed: message.num_turns,
-        inputTokens: totalInputTokens,
-        outputTokens: totalOutputTokens,
-        status: "completed",
-        error: null,
-      },
-    });
-
-    const resultText = message.result;
-    const updatedJob = await completeJob(job.id, resultText);
-    workerLogger.info(
-      {
-        jobId: job.id,
-        turns: message.num_turns,
-        cost: message.total_cost_usd,
-        apiDurationMs: message.duration_api_ms,
-        inputTokens: totalInputTokens,
-        outputTokens: totalOutputTokens,
-        permissionDenials: permissionDenials.length,
-      },
-      "Job completed successfully",
-    );
-    await sendJobNotification(updatedJob, resultText);
-
-    if (job.triggerSource === "dm") {
-      await sendChatReply(job, resultText, message.session_id);
-    }
-  } else {
-    const errorMsg = message.errors.join("; ");
-
-    await prisma.agentSession.update({
-      where: { id: sessionId },
-      data: {
-        endedAt: new Date(),
-        turnsUsed: message.num_turns,
-        inputTokens: totalInputTokens,
-        outputTokens: totalOutputTokens,
-        status: "failed",
-        error: errorMsg,
-      },
-    });
-
-    const updatedJob = await failJob(job.id, errorMsg);
-    workerLogger.warn(
-      { jobId: job.id, subtype: message.subtype, cost: message.total_cost_usd },
-      "Job failed",
-    );
-    await sendJobNotification(updatedJob, errorMsg);
-
-    if (job.triggerSource === "dm") {
-      await sendChatReply(job, errorMsg, null);
-    }
   }
 }

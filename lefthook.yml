@@ -12,6 +12,34 @@ pre-commit:
       group:
         piped: true
         jobs:
+          - name: safety-checks
+            group:
+              parallel: true
+              jobs:
+                - name: gitleaks
+                  run: gitleaks protect --staged --redact --no-banner
+
+                - name: merge-conflicts
+                  glob: "*.{ts,tsx,js,jsx,json,yml,yaml,md,rs,sh,bzl,toml,astro}"
+                  exclude:
+                    - "lefthook.yml"
+                  run: "! grep -n '<<<<<<< \\|>>>>>>> ' {staged_files}"
+
+                - name: large-files
+                  run: |
+                    max=5242880
+                    large=$(git diff --staged --name-only --diff-filter=d | while read -r f; do
+                      size=$(wc -c < "$f" 2>/dev/null || echo 0)
+                      if [ "$size" -gt "$max" ]; then
+                        echo "  $f ($(( size / 1048576 ))MB)"
+                      fi
+                    done)
+                    if [ -n "$large" ]; then
+                      echo "Files exceed 5MB limit:"
+                      echo "$large"
+                      exit 1
+                    fi
+
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
 

@@ -9,7 +9,6 @@ BunInfo = provider(
         "package_name": "string: npm package name (e.g. @scope/pkg) for workspace dep resolution",
         "transitive_sources": "depset(File): sources from this target and all transitive deps",
         "npm_sources": "depset(File): files from npm package dependencies (transitive)",
-        "npm_package_store_infos": "depset(NpmPackageStoreInfo): npm dep store infos for linking",
         "workspace_deps": "depset(BunInfo): workspace:* dependencies",
     },
 )

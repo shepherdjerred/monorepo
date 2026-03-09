@@ -1,8 +1,8 @@
-load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
-npm_link_all_packages(name = "node_modules")
+bun_link_all_packages(name = "node_modules")
 
 exports_files([
     "package.json",
@@ -36,13 +36,8 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     deps = [
-        ":node_modules/@tsconfig/node24",
-        ":node_modules/@tsconfig/strictest",
-        ":node_modules/@types/jsdom",
-        ":node_modules/@types/node",
-        ":node_modules/@types/react",
-        ":node_modules/astro",
         ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
