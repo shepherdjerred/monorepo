@@ -180,7 +180,7 @@ oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 # Bun runtime on Debian — used by birmel, sentinel, tasknotes-server
 oci.pull(
     name = "bun_debian",
-    digest = "sha256:d48b40bf0106dc1e94462c7086fbf4e8aab97f0870db2c87a05ecf8765f964df",
+    digest = "sha256:b86c67b531d87b4db11470d9b2bd0c519b1976eee6fcd71634e73abfa6230d2e",
     image = "docker.io/oven/bun",
     platforms = [
         "linux/amd64",
