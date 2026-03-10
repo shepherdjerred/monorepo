@@ -17,7 +17,7 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "type": "module",
-  "version": "1.14.3",
+  "version": "0.2.0",
   "imports": {
     "#src/*": "./src/*"
   },
