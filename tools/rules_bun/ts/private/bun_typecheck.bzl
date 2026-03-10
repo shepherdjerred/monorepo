@@ -7,11 +7,18 @@ def _bun_typecheck_test_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
+    # Find the primary source dep (has package_json, not an npm package)
     bun_info = None
     for dep in ctx.attr.deps:
-        if BunInfo in dep:
+        if BunInfo in dep and dep[BunInfo].package_json:
             bun_info = dep[BunInfo]
             break
+    if not bun_info:
+        # Fall back to first BunInfo
+        for dep in ctx.attr.deps:
+            if BunInfo in dep:
+                bun_info = dep[BunInfo]
+                break
     if not bun_info:
         fail("No dep provides BunInfo")
 
@@ -29,6 +36,7 @@ def _bun_typecheck_test_impl(ctx):
         prisma_client = ctx.file.prisma_client,
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
+        hoisted_links = ctx.file._hoisted_links,
     )
 
     bun_rp = bun.short_path
@@ -61,6 +69,10 @@ bun_typecheck_test = rule(
         "prisma_client": attr.label(allow_single_file = True),
         "node_modules": attr.label(
             doc = "npm_link_all_packages target to include all npm deps from package.json",
+        ),
+        "_hoisted_links": attr.label(
+            default = "@bun_modules//:hoisted_links.sh",
+            allow_single_file = True,
         ),
         "_launcher_template": attr.label(
             default = "//tools/rules_bun/ts/private:bun_typecheck.sh.tpl",

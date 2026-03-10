@@ -194,7 +194,7 @@
   "moduleExtensions": {
     "//tools/rules_bun/bun:extensions.bzl%bun": {
       "general": {
-        "bzlTransitiveDigest": "MY7rFotFh00NdOkC6aRRO4nUUh4tz8r6C5WFZVE+pmc=",
+        "bzlTransitiveDigest": "ShoDhiB+I7+CUtnlGH7WavP6FN3rYJixgatOVEvo9Js=",
         "usagesDigest": "ZR1AiMVtxug9ZmKmY6yD4m0J52qeNG30rngifqpOB18=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -234,8 +234,8 @@
     },
     "//tools/rules_bun/bun:extensions.bzl%bun_modules": {
       "general": {
-        "bzlTransitiveDigest": "MY7rFotFh00NdOkC6aRRO4nUUh4tz8r6C5WFZVE+pmc=",
-        "usagesDigest": "UwMLYhAWZ/kRyNUqVZIWs0EUWI87ycL4RcjGl14gCDI=",
+        "bzlTransitiveDigest": "ShoDhiB+I7+CUtnlGH7WavP6FN3rYJixgatOVEvo9Js=",
+        "usagesDigest": "54r9B4Z8IPeoqET2LyBjktSUjfzR6Dv6vcshMcr4aJ8=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -291,8 +291,8 @@
               "data": [
                 "@@//:patches/monarch-money-api@0.0.5.patch",
                 "@@//:patches/react-native-sound@0.13.0.patch",
-                "@@//packages/scout-for-lol:patches/satori@0.18.3.patch",
-                "@@//packages/homelab:patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"
+                "@@//packages/homelab:patches/@digital-alchemy%2Ftype-writer@25.10.12.patch",
+                "@@//packages/scout-for-lol:patches/satori@0.18.3.patch"
               ],
               "pnpm_workspace": "@@//:pnpm-workspace.yaml",
               "bins": {

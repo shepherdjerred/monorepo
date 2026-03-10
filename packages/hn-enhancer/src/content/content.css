@@ -1,0 +1,129 @@
+/* Hide button next to usernames */
+.hn-hide-btn {
+  margin-left: 4px;
+  padding: 0 3px;
+  font-size: 8px;
+  color: #888;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+.hn-hide-btn:hover {
+  color: #ff6600;
+  border-color: #ff6600;
+}
+
+/* Hidden user indicators */
+.hn-hidden-indicator {
+  font-size: 8px;
+  color: #999;
+}
+
+/* Reply notification badge */
+.hn-reply-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  background: #c85000;
+  border-radius: 8px;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+.hn-reply-badge:hover {
+  background: #ff6600;
+}
+
+/* Sentiment filter: label mode */
+.hn-sentiment-label {
+  margin-bottom: 4px;
+}
+
+.hn-sentiment-tag {
+  font-size: 9px;
+  color: #999;
+  font-style: italic;
+}
+
+.hn-sentiment-toggle {
+  margin-left: 4px;
+  padding: 0 3px;
+  font-size: 8px;
+  color: #888;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.hn-sentiment-toggle:hover {
+  color: #ff6600;
+  border-color: #ff6600;
+}
+
+/* Sentiment filter: analyzing spinner */
+.hn-analyzing-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid #ddd;
+  border-top-color: #ff6600;
+  border-radius: 50%;
+  animation: hn-spin 0.6s linear infinite;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+@keyframes hn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Green account indicators */
+.hn-green-indicator {
+  font-size: 8px;
+  color: #3c963c;
+}
+
+/* Filter summary bar */
+.hn-filter-summary {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f6f6ef;
+  border-top: 1px solid #ff6600;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #666;
+  font-family: Verdana, Geneva, sans-serif;
+  z-index: 9999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hn-filter-summary-close {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.hn-filter-summary-close:hover {
+  color: #ff6600;
+}
+
+/* Hidden user comment styling */
+[data-hn-hidden-user="true"] {
+  opacity: 0.2;
+}

@@ -7,17 +7,24 @@ def _bun_eslint_test_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
+    # Find primary source dep (has package_json) vs npm/workspace deps
     bun_info = None
     extra_workspace_deps = []
     for dep in ctx.attr.deps:
         if BunInfo in dep:
-            if bun_info == None:
-                bun_info = dep[BunInfo]
+            info = dep[BunInfo]
+            if bun_info == None and info.package_json:
+                bun_info = info
+            elif bun_info == None:
+                extra_workspace_deps.append(info)
             else:
-                # Additional BunInfo deps become workspace deps in the tree
-                extra_workspace_deps.append(dep[BunInfo])
+                extra_workspace_deps.append(info)
     if not bun_info:
-        fail("No dep provides BunInfo")
+        # Fall back to first BunInfo if no source dep found
+        if extra_workspace_deps:
+            bun_info = extra_workspace_deps.pop(0)
+        else:
+            fail("No dep provides BunInfo")
 
     # Merge extra workspace deps into the main bun_info
     if extra_workspace_deps:
@@ -47,6 +54,7 @@ def _bun_eslint_test_impl(ctx):
         prisma_client = ctx.file.prisma_client,
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
+        hoisted_links = ctx.file._hoisted_links,
     )
 
     bun_rp = bun.short_path
@@ -79,6 +87,10 @@ bun_eslint_test = rule(
         "prisma_client": attr.label(allow_single_file = True),
         "node_modules": attr.label(
             doc = "npm_link_all_packages target to include all npm deps from package.json",
+        ),
+        "_hoisted_links": attr.label(
+            default = "@bun_modules//:hoisted_links.sh",
+            allow_single_file = True,
         ),
         "_launcher_template": attr.label(
             default = "//tools/rules_bun/bun/private:bun_eslint_test.sh.tpl",

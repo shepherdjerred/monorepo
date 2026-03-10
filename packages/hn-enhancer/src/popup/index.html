@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HN Enhancer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup">
+      <h1>HN Enhancer</h1>
+
+      <section class="section">
+        <h2>Hidden Users</h2>
+        <div id="hidden-users-list" class="user-list">
+          <p class="empty-state">No hidden users</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>AI Negativity Filter</h2>
+        <label class="toggle-row">
+          <input type="checkbox" id="sentiment-enabled" />
+          <span>Enable filter</span>
+        </label>
+        <div id="sentiment-options" class="sub-options">
+          <label class="option-row">
+            <span>Mode:</span>
+            <select id="sentiment-mode">
+              <option value="dim">Dim</option>
+              <option value="hide">Hide</option>
+              <option value="label">Label</option>
+            </select>
+          </label>
+          <label class="option-row">
+            <span>Sensitivity:</span>
+            <select id="sentiment-threshold">
+              <option value="low">Low (catches more)</option>
+              <option value="medium">Medium</option>
+              <option value="high">High (strict)</option>
+            </select>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="sentiment-llm" />
+            <span>Use Chrome AI for ambiguous comments</span>
+          </label>
+          <p id="llm-setup-hint" class="hint" style="display: none;">
+            Requires Chrome 128+. Enable at
+            chrome://flags/#optimization-guide-on-device-model and
+            chrome://flags/#prompt-api-for-gemini-nano, then restart Chrome.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>New Account Filter</h2>
+        <label class="toggle-row">
+          <input type="checkbox" id="green-enabled" />
+          <span>Hide comments from new accounts</span>
+        </label>
+        <div id="green-options" class="sub-options">
+          <label class="option-row">
+            <span>Max age (days):</span>
+            <input type="number" id="green-age" min="1" max="365" value="14" />
+          </label>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Reply Notifications</h2>
+        <label class="toggle-row">
+          <input type="checkbox" id="reply-enabled" />
+          <span>Enable reply notifications</span>
+        </label>
+        <div id="reply-options" class="sub-options">
+          <label class="option-row">
+            <span>Username:</span>
+            <input type="text" id="reply-username" placeholder="auto-detected" />
+          </label>
+          <label class="option-row">
+            <span>Poll interval:</span>
+            <select id="reply-interval">
+              <option value="5">5 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="60">1 hour</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <section class="section">
+        <h2>Advanced</h2>
+        <label class="toggle-row">
+          <input type="checkbox" id="debug-enabled" />
+          <span>Debug logging (DevTools console)</span>
+        </label>
+      </section>
+    </div>
+    <script type="module" src="popup.ts"></script>
+  </body>
+</html>

@@ -35,32 +35,36 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
     for f in data_files:
         lines.append("COPY\t%s\t%s" % (f.path, f.short_path))
 
-    # Copy npm package files into {pkg_dir}/node_modules
-    # Deduplicate by destination path — first entry wins
+    # Copy npm package files preserving .bun/<key> structure.
+    # Files live at .bun/<key>/node_modules/<pkg>/... paths which
+    # preserves version isolation — inter-entry dep symlinks and
+    # top-level hoisted symlinks are created by hoisted_links.sh.
+    # Deduplicate by destination path -- first entry wins.
     seen_npm_paths = {}
     for f in all_npm_sources:
         sp = f.short_path
 
-        # Extract package-relative path from the last "node_modules/" segment.
-        # Works for both workspace files (packages/foo/node_modules/react/...)
-        # and external repo files (../bun_modules/node_modules/react/...).
-        parts = sp.split("/node_modules/")
-        if len(parts) >= 2:
-            pkg_relative = parts[-1]
+        # Find the FIRST "node_modules/" segment to preserve .bun/<key> paths.
+        # For .bun/<key>/node_modules/<pkg>/file.js, this gives
+        # .bun/<key>/node_modules/<pkg>/file.js (preserving version structure).
+        idx = sp.find("/node_modules/")
+        if idx < 0:
+            continue
+        rel = sp[idx + len("/node_modules/"):]
 
-            # Skip bun cache internals and bin stubs
-            if pkg_relative.startswith(".bun") or pkg_relative.startswith(".bin") or pkg_relative.startswith(".cache"):
-                continue
+        # Skip bin stubs and cache metadata
+        if rel.startswith(".bin") or rel.startswith(".cache"):
+            continue
 
-            dest = "%s/node_modules/%s" % (pkg_dir, pkg_relative)
-            if dest in seen_npm_paths:
-                continue
-            seen_npm_paths[dest] = True
+        dest = "%s/node_modules/%s" % (pkg_dir, rel)
+        if dest in seen_npm_paths:
+            continue
+        seen_npm_paths[dest] = True
 
-            if f.is_directory:
-                lines.append("COPYDIR\t%s\t%s" % (f.path, dest))
-            else:
-                lines.append("COPY\t%s\t%s" % (f.path, dest))
+        if f.is_directory:
+            lines.append("COPYDIR\t%s\t%s" % (f.path, dest))
+        else:
+            lines.append("COPY\t%s\t%s" % (f.path, dest))
 
     # Copy workspace dep sources into {pkg_dir}/node_modules/<pkg_name>/
     for ws_dep in bun_info.workspace_deps.to_list():
@@ -112,6 +116,8 @@ set -euo pipefail
 
 MANIFEST="$1"
 OUT_DIR="$2"
+LINKS_SCRIPT="${3:-}"
+PKG_DIR="${4:-}"
 
 mkdir -p "$OUT_DIR"
 
@@ -132,12 +138,20 @@ while IFS=$'\\t' read -r op src dst; do
     esac
 done < "$MANIFEST"
 
+# Create inter-entry dep symlinks and top-level hoisted symlinks.
+# This recreates bun's .bun/<key>/node_modules/<dep> -> ../../<dep_key>/...
+# symlink structure for correct version-specific resolution.
+if [ -n "$LINKS_SCRIPT" ] && [ -f "$LINKS_SCRIPT" ]; then
+    bash "$LINKS_SCRIPT" "$OUT_DIR/$PKG_DIR/node_modules"
+fi
+
 # Dereference .d.ts symlinks that point outside the tree.
 # TypeScript's project service follows realpath and escapes the tree,
 # causing spurious type errors.  Only dereference .d.ts files — runtime
 # JS files must keep their symlinks so Bun can leverage the store's
 # nested node_modules for correct version resolution.
-find "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
+# Use -P to avoid following directory symlinks (dep links).
+find -P "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
     target=$(readlink -f "$link" 2>/dev/null) || continue
     case "$target" in
         "$OUT_DIR"/*) ;;  # points inside the tree — keep it
@@ -153,7 +167,7 @@ def collect_all_npm_sources(deps):
     """Collect all npm_sources from deps.
 
     Args:
-      deps: list of targets that may provide BunInfo.
+      deps: list of targets that may provide BunInfo or DefaultInfo.
 
     Returns:
       A depset of all npm source files from the given deps.
@@ -162,9 +176,11 @@ def collect_all_npm_sources(deps):
     for dep in deps:
         if BunInfo in dep:
             sources.append(dep[BunInfo].npm_sources)
+        elif DefaultInfo in dep:
+            sources.append(dep[DefaultInfo].files)
     return depset(transitive = sources)
 
-def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = [], prisma_client = None, data_files = [], additional_npm_sources = depset()):
+def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = [], prisma_client = None, data_files = [], additional_npm_sources = depset(), hoisted_links = None):
     """Create a TreeArtifact with a self-contained package directory.
 
     Args:
@@ -176,6 +192,8 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = [], pri
       prisma_client: optional Prisma client TreeArtifact.
       data_files: optional list of data files to copy.
       additional_npm_sources: optional depset of extra npm source files.
+      hoisted_links: optional File for hoisted_links.sh script that creates
+          inter-entry dep symlinks and top-level hoisted symlinks.
 
     Returns:
       A TreeArtifact File containing the materialized package tree.
@@ -213,11 +231,18 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = [], pri
     if prisma_client:
         inputs.append(prisma_client)
 
+    # Build arguments: manifest, output dir, [links script, pkg_dir]
+    args = [manifest.path, tree.path]
+    if hoisted_links:
+        inputs.append(hoisted_links)
+        args.append(hoisted_links.path)
+        args.append(ctx.label.package)
+
     ctx.actions.run(
         outputs = [tree],
         inputs = inputs + [script],
         executable = script,
-        arguments = [manifest.path, tree.path],
+        arguments = args,
         mnemonic = "BunMaterialize",
         progress_message = "Materializing Bun package tree for %s" % ctx.label,
     )

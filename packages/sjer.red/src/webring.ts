@@ -22,10 +22,6 @@ export async function getPosts(_date: Date): Promise<Result> {
         title: "Andreas Kling",
       },
       {
-        url: "https://xeiaso.net/blog.rss",
-        title: "Xe Iaso",
-      },
-      {
         url: "https://ciechanow.ski/atom.xml",
         title: "Bartosz Ciechanowski",
       },

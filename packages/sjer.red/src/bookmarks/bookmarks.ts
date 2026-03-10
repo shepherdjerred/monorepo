@@ -69,7 +69,6 @@ export const links = [
   "https://www.ben-evans.com",
   "https://awesomekling.github.io",
   "https://drewdevault.com",
-  "https://xeiaso.net/blog/",
   "https://www.joshwcomeau.com",
   "https://sive.rs",
   "https://jakelazaroff.com",

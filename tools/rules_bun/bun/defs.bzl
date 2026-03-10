@@ -9,7 +9,13 @@ load("//tools/rules_bun/bun/private:bun_test.bzl", _bun_test = "bun_test")
 
 BunInfo = _BunInfo
 bun_library = _bun_library
-bun_binary = _bun_binary
-bun_eslint_test = _bun_eslint_test
 bun_prisma_generate = _bun_prisma_generate
-bun_test = _bun_test
+
+def bun_binary(node_modules = ":node_modules", **kwargs):
+    _bun_binary(node_modules = node_modules, **kwargs)
+
+def bun_eslint_test(node_modules = ":node_modules", **kwargs):
+    _bun_eslint_test(node_modules = node_modules, **kwargs)
+
+def bun_test(node_modules = ":node_modules", **kwargs):
+    _bun_test(node_modules = node_modules, **kwargs)

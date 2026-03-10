@@ -14,21 +14,35 @@ def _bun_prisma_generate_impl(ctx):
         command = """
             set -euo pipefail
             BUN="{bun}"
+            # Create a node symlink so postinstall scripts and prisma CLI
+            # can find "node" (bun is Node-compatible)
+            BINDIR=$(mktemp -d)
+            ln -s "$PWD/$BUN" "$BINDIR/node"
+            ln -s "$PWD/$BUN" "$BINDIR/bun"
+            export PATH="$BINDIR:$PATH"
             WORK=$(mktemp -d)
             mkdir -p "$WORK/prisma"
             cp {schema} "$WORK/prisma/schema.prisma"
             echo '{{"name":"prisma-gen-tmp"}}' > "$WORK/package.json"
 
-            (cd "$WORK" && HOME="$WORK" "$OLDPWD/$BUN" add "@prisma/client@{version}" 2>/dev/null) || true
+            (cd "$WORK" && HOME="$WORK" "$OLDPWD/$BUN" add --ignore-scripts "@prisma/client@{version}")
             (cd "$WORK" && HOME="$WORK" PRISMA_GENERATE_SKIP_AUTOINSTALL=1 \
                 "$OLDPWD/$BUN" x --bun "prisma@{version}" generate \
-                    --schema=prisma/schema.prisma --no-engine --no-hints 2>/dev/null) || true
+                    --schema=prisma/schema.prisma --no-engine --no-hints)
 
+            # Find generated client — standard path (.prisma/client) or custom output
             GENERATED=$(find "$WORK" -path '*/.prisma/client' -type d 2>/dev/null | head -1)
+            if [ -z "$GENERATED" ]; then
+                # Custom output: look for index.d.ts under any */client/ dir
+                IDX=$(find "$WORK" -path '*/client/index.d.ts' -type f 2>/dev/null | head -1)
+                if [ -n "$IDX" ]; then
+                    GENERATED=$(dirname "$IDX")
+                fi
+            fi
             if [ -n "$GENERATED" ] && [ -d "$GENERATED" ]; then
                 cp -R "$GENERATED"/* {out}/
             else
-                echo "ERROR: prisma generate did not produce .prisma/client" >&2
+                echo "ERROR: prisma generate did not produce client output" >&2
                 exit 1
             fi
             rm -rf "$WORK"
