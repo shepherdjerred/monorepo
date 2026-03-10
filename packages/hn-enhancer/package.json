@@ -1,0 +1,39 @@
+{
+  "name": "hn-enhancer",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "test": "bun test",
+    "lint": "eslint src --cache",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.3.0",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/chrome": "^0.0.320",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/hn-enhancer"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/hn-enhancer",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

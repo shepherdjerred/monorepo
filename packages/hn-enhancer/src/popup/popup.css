@@ -1,0 +1,139 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 12px;
+  color: #333;
+  background: #f6f6ef;
+  width: 340px;
+}
+
+.popup {
+  padding: 12px;
+}
+
+h1 {
+  font-size: 14px;
+  color: #ff6600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+h2 {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+  accent-color: #ff6600;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.option-row span {
+  color: #555;
+}
+
+.option-row select,
+.option-row input[type="number"],
+.option-row input[type="text"] {
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 11px;
+  background: #fff;
+}
+
+.option-row input[type="number"] {
+  width: 60px;
+}
+
+.option-row input[type="text"] {
+  width: 120px;
+}
+
+.sub-options {
+  margin-left: 24px;
+  margin-top: 4px;
+}
+
+.sub-options[data-hidden="true"] {
+  display: none;
+}
+
+.user-list {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.user-item span {
+  color: #333;
+}
+
+.user-item button {
+  padding: 1px 6px;
+  font-size: 10px;
+  color: #888;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.user-item button:hover {
+  color: #c00;
+  border-color: #c00;
+}
+
+.empty-state {
+  color: #999;
+  font-style: italic;
+  font-size: 11px;
+}
+
+.hint {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #996600;
+  line-height: 1.4;
+}

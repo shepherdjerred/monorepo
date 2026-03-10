@@ -7,15 +7,24 @@ def _bun_binary_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
+    # Find the primary source dep (has package_json, not an npm package)
     bun_info = None
     for dep in ctx.attr.deps:
-        if BunInfo in dep:
+        if BunInfo in dep and dep[BunInfo].package_json:
             bun_info = dep[BunInfo]
             break
     if not bun_info:
+        for dep in ctx.attr.deps:
+            if BunInfo in dep:
+                bun_info = dep[BunInfo]
+                break
+    if not bun_info:
         fail("No dep provides BunInfo")
 
-    additional_npm = collect_all_npm_sources(ctx.attr.deps)
+    nm_sources = []
+    if ctx.attr.node_modules:
+        nm_sources.append(ctx.attr.node_modules)
+    additional_npm = collect_all_npm_sources(ctx.attr.deps + nm_sources)
 
     tree = materialize_tree(
         ctx,
@@ -25,6 +34,7 @@ def _bun_binary_impl(ctx):
         extra_files = ctx.files.extra_files,
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
+        hoisted_links = ctx.file._hoisted_links,
     )
 
     bun_rp = bun.short_path
@@ -56,7 +66,14 @@ bun_binary = rule(
         "tsconfig": attr.label(allow_single_file = ["tsconfig.json"]),
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
+        "node_modules": attr.label(
+            doc = "Aggregate npm deps target to include all workspace npm packages",
+        ),
         "env": attr.string_dict(),
+        "_hoisted_links": attr.label(
+            default = "@bun_modules//:hoisted_links.sh",
+            allow_single_file = True,
+        ),
         "_launcher_template": attr.label(
             default = "//tools/rules_bun/bun/private:bun_binary.sh.tpl",
             allow_single_file = True,

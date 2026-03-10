@@ -35,7 +35,8 @@
     "eslint-import-resolver-typescript-bun": "^0.0.104",
     "lefthook": "^2.1.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.35.1"
+    "typescript-eslint": "^8.35.1",
+    "undici-types": "~6.21.0"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",

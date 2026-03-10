@@ -1,0 +1,86 @@
+---
+title: Things I've done with AI
+description: My thoughts on AI, and what it has helped me achieve
+date: 2026-03-09Z-0700
+hackerNews: https://news.ycombinator.com/item?id=47314123
+starred: true
+isDraft: false
+---
+
+I started programming in middle school. The first thing I remember writing is HTML for my [neopets](https://www.neopets.com/) homepage. That morphed into writing static sites for Minecraft servers, and later on Java plugins for Minecraft.
+
+Programming is _so_ fun. I took it on as a hobby and it became an obvious career path, but I didn't realize how well engineers were paid until my junior year in college. I had received an internship at AWS and was astonished. That led to a return offer and eventually to where I am today, with about seven years of professional experience and another seven of self-teaching/programming as a hobby.
+
+I felt I was a year or two ahead of the application-focused classes I took. The more theoretical courses helped round out my knowledge and was the foundation I needed to work at tech companies.
+
+In college I programmed all of the time. I found problems to solve. I found libraries and languages to try. I _always_ wanted to learn more -- to make sure my code was well-architected, maintainable, "clean". This led to me reading programming books for fun. [Clean Code](https://books.google.com/books/about/Clean_Code.html?id=EpeDEQAAQBAJ) taught me how to write better Java. [You Don't Know JavaScript](https://github.com/getify/You-Dont-Know-JS) taught me that JavaScript is actually quite a good language. [Category Theory for Programmers](https://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/) taught me that it's really hard to find a job writing Haskell.
+
+I tend to qualify my statements before talking about AI. I write this to make it clear that I have a passion for programming. The money is quite nice but it's incidental. I would be doing this if I were rich. I honestly cannot imagine my life without programming -- it's so satisfying to learn, solve problems, and build something others can use.
+
+I was initially quite hesitant on applying AI to programming. I avoided GitHib Copilot when it came out. I thought Cursor was overhyped. I didn't understand why someone would use Claude Code (a CLI/TUI interface) over an IDE.
+
+I have spent years caring about architecture, type systems, maintainability. I am quite good at paying attention to every little detail. I wanted _full_ control over my code. How could I have control if AI is writing everything? How could I be sure it wasn't writing my project in a substandard way?
+
+Effectively using AI required fundamental shift in how I thought about my projects. Why did I care about types? Why do we have design patterns? Why does code need to be maintainable or "well written". For hobby projects, it can be a source of pleasure to write and see beautiful code.
+
+That's not an acceptable reason for projects I'm paid to work on, though. At work, all that matters is that value is delivered to the business. Code needs to be maintainable so that new requirements can be met. Code follows design patterns, when appropriate, because they are known solutions to common problems, and thus are easy to talk about with others. Code has type systems and static analysis so that programmers make fewer mistakes.
+
+Speaking in the context of solving a problem: does AI need to write beautiful code? No. It needs to write code that works. The code doesn't need to be maintainable in the traditional sense. If you have sufficient tests, you can throw some LLMs at a pile of "bad" code and have them figure it out. Type systems and static analysis continue to be useful to LLMs, if not more so than humans.
+
+This is all to say: if you care about solving a problem more than gaining satisfaction, LLMS fit the bill. I've discovered that, largely, I enjoy solving problems more than I care about writing code. I haven't written code, for work _or_ personal projects, since October 2025. I've only written prompts and reviewed (a lot of) LLM output. This has led to me making a massive number of projects.
+
+## Projects
+
+### Personal
+
+I've done all of these in the last 9 months with the help of Cursor and Claude Code.
+
+- Migrating from Jenkins + [Earthly](https://github.com/earthly/earthly) to GHA + [Dagger](https://dagger.io/)
+  - All of my projects were using Earthly, which is now deprecated. I moved to Dagger.
+  - I was using Jenkins to learn more about it. I decided GHA would be easier to use.
+- Moving all of my projects into a [monorepo](https://github.com/shepherdjerred/monorepo)
+  - As I used LLMs to write code, I discovered I really wanted more code and standards reuse. The easiest way to do this in my opinion is a monorepo, so I migrated everything into one giant repo on GitHub
+- Migrating from GHA + Dagger to BuildKite + Bazel
+  - Moving all of my projects into a monorepo made CI super slow. Dagger is great, but I felt I had outgrown it
+  - I heard good things about Bazel so I wanted to try it out. I also use it at work, so this was a nice time to learn about it
+  - This includes writing [Bazel rules for Bun](https://github.com/shepherdjerred/monorepo/tree/main/tools/rules_bun)
+- Adding new features to [Scout for LoL](https://scout-for-lol.com/)
+  - Marketing site
+  - Support for the Arena gamemode
+  - Competitions
+  - Discord commands for managing the bot
+  - Features for my personal server where it mimics the tone/voice of my friends to review games
+- Writing [Clauderon](https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon), a multiplexer for Claude Code, Codex, etc.
+  - CLI
+  - TUI
+  - Web UI
+  - React Native app for iOS/macOS/Android/Windows
+- Upgrading [better-skill-capped](https://better-skill-capped.com/) to the latest version of Bulma
+- Writing a [program to decompile/unminify Bun programs](https://github.com/shepherdjerred/monorepo/tree/main/packages/bun-decompile)
+- Writing an [admin bot for Discord](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel)
+- Adding [cooklang support to Obsidian](https://github.com/shepherdjerred/monorepo/tree/main/packages/cooklang-for-obsidian)
+- Writing a [program to use LLMs to classify my expenses](https://github.com/shepherdjerred/monorepo/tree/main/packages/monarch)
+- Writing a [clone of OpenClaw](https://github.com/shepherdjerred/monorepo/tree/main/packages/sentinel) tailored to myself (WIP)
+- Writing a [React Native app for TaskNotes + Obsidian](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasks-for-obsidian)
+- Writing a [terraform provider for my router](https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt) (untested)
+- Writing a [program to generate TypeScript types for Helm charts](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/helm-types)
+
+### Work
+
+- Writing complex design docs to migrate projects or add features
+- Writing bespoke tools for investigations, data analysis, etc.
+- Automating common tasks around operations, root causing, etc.
+- _Quickly_ adding new features or fixing bugs
+  - Small requests from PMs or users are now essentially free to implement. The only work left is reviewing code and manual testing.
+
+## Final Thoughts
+
+I've accomplished _so_ much with AI. I still am figuring out how to use it effectively. There is _so_ much power in these tools -- there has never been a better time to be a programmer who just wants to build things.
+
+At the same time, it is a bit exhausting. Work in particular has been difficult as we slowly embrace these new tools. There are many problems to solve around testing, developer experience, and velocity.
+
+For personal projects, testing and documentation has been become the bottleneck. I have to make sure that the LLM has produced the correct thing, and that the documentation it has written is truthful.
+
+As an industry I think we have to invest a significant amount of effort into better tools for testing and generated documentation.
+
+I'll continue use these tools with the hope that they don't make me obsolete too quickly.

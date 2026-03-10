@@ -1,0 +1,58 @@
+load("@bun_modules//:defs.bzl", "bun_link_all_packages")
+load("//tools/bazel:vite_build.bzl", "vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
+load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
+
+bun_link_all_packages(name = "node_modules")
+
+exports_files(["package.json"])
+
+vite_build(name = "vite_build")
+
+bun_library(
+    name = "pkg",
+    srcs = glob([
+        "src/**/*.ts",
+    ]),
+    data = glob(["src/**/*.css"]),
+    package_json = "package.json",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/zod",
+        "//:node_modules/typescript",
+    ],
+)
+
+bun_eslint_test(
+    name = "lint",
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [
+        ":node_modules/@types/chrome",
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
+        "//packages/eslint-config:pkg",
+    ],
+)
+
+bun_typecheck_test(
+    name = "typecheck",
+    extra_files = ["tsconfig.node.json"],
+    tsconfig = "tsconfig.json",
+    deps = [
+        ":node_modules/@types/chrome",
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
+    ],
+)
+
+bun_test(
+    name = "test",
+    tsconfig = "tsconfig.json",
+    deps = [":pkg"],
+)

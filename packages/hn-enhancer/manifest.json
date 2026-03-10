@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "HN Enhancer",
+  "version": "0.1.0",
+  "description": "Filter AI negativity, hide commenters, reply notifications, and new-account hiding for Hacker News.",
+  "icons": {
+    "128": "public/icon-128.png"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": "public/icon-128.png",
+    "default_title": "HN Enhancer"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://news.ycombinator.com/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://hacker-news.firebaseio.com/*"]
+}

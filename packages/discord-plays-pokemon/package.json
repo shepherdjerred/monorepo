@@ -13,6 +13,8 @@
     "packages/backend",
     "packages/frontend"
   ],
-  "devDependencies": {},
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*"
+  },
   "dependencies": {}
 }

@@ -16,6 +16,7 @@ test --test_output=errors
 
 
 # Performance
+startup --host_jvm_args=-Xmx8g
 build --jobs=auto
 build --experimental_remote_merkle_tree_cache
 
