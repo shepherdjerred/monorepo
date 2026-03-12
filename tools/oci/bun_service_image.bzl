@@ -183,19 +183,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cd $$TMPDIR && \
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
-            echo "DEBUG: pwd=$$(pwd)" >&2 && \
-            echo "DEBUG: package.json contents:" >&2 && \
-            cat package.json >&2 && \
-            echo "DEBUG: BUN=$$BUN" >&2 && \
-            $$BUN --version >&2 && \
-            $$BUN install --ignore-scripts 2>&1 && \
-            echo "DEBUG: bun install exit code: $$?" >&2 && \
-            echo "DEBUG: ls -la after install:" >&2 && \
-            ls -la >&2 && \
-            echo "DEBUG: ls node_modules (first 20):" >&2 && \
-            (ls node_modules 2>&1 || echo "node_modules does not exist") | head -20 >&2 && \
-            echo "DEBUG: find node_modules -maxdepth 2 (first 30):" >&2 && \
-            (find node_modules -maxdepth 2 2>&1 || echo "find failed") | head -30 >&2 && \
+            $$BUN install --ignore-scripts --backend=copyfile && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
