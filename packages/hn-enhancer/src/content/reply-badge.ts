@@ -58,7 +58,9 @@ async function renderBadge(): Promise<void> {
     const pagetop = document.querySelector(".pagetop");
     if (!pagetop) return;
 
-    const userLink = pagetop.querySelector<HTMLAnchorElement>(`a[href="user?id=${settings.myUsername}"]`);
+    const userLink = pagetop.querySelector<HTMLAnchorElement>(
+      `a[href="user?id=${settings.myUsername}"]`,
+    );
     if (userLink) {
       userLink.after(badge);
     } else {

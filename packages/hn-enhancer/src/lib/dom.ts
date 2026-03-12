@@ -7,7 +7,9 @@ export function getCommentIndent(row: HTMLTableRowElement): number {
   return Number(indentCell?.getAttribute("indent") ?? 0);
 }
 
-export function getCommentUsername(row: HTMLTableRowElement): string | undefined {
+export function getCommentUsername(
+  row: HTMLTableRowElement,
+): string | undefined {
   const el = row.querySelector<HTMLAnchorElement>("a.hnuser");
   if (!el) return undefined;
   return el.textContent;
@@ -70,7 +72,9 @@ export function expandThread(startRow: HTMLTableRowElement): void {
 }
 
 export function getLoggedInUsername(): string | undefined {
-  const userLink = document.querySelector<HTMLAnchorElement>('.pagetop a[href^="user?"]');
+  const userLink = document.querySelector<HTMLAnchorElement>(
+    '.pagetop a[href^="user?"]',
+  );
   if (!userLink) return undefined;
   return userLink.textContent;
 }
@@ -79,7 +83,9 @@ export function getPageType(): string | undefined {
   return document.documentElement.getAttribute("op") ?? undefined;
 }
 
-export function observeCommentTree(callback: (addedRows: HTMLTableRowElement[]) => void): void {
+export function observeCommentTree(
+  callback: (addedRows: HTMLTableRowElement[]) => void,
+): void {
   const commentTree = document.querySelector("table.comment-tree");
   if (!commentTree) return;
 
@@ -87,7 +93,10 @@ export function observeCommentTree(callback: (addedRows: HTMLTableRowElement[]) 
     const addedRows: HTMLTableRowElement[] = [];
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
-        if (node instanceof HTMLTableRowElement && node.classList.contains("comtr")) {
+        if (
+          node instanceof HTMLTableRowElement &&
+          node.classList.contains("comtr")
+        ) {
           addedRows.push(node);
         }
       }

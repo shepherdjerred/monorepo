@@ -5,7 +5,7 @@ import { getLLMCacheEntry, setLLMCacheEntry } from "#src/lib/storage.ts";
 export type LLMClassification = {
   negative: boolean;
   confidence: number;
-}
+};
 
 const LLMResponseSchema = z.object({
   negative: z.boolean(),
@@ -66,13 +66,20 @@ async function hashText(text: string): Promise<string> {
     .join("");
 }
 
-export async function classifyWithLLM(text: string): Promise<LLMClassification | undefined> {
+export async function classifyWithLLM(
+  text: string,
+): Promise<LLMClassification | undefined> {
   const hash = await hashText(text);
 
   // Check cache first
   const cached = await getLLMCacheEntry(hash);
   if (cached) {
-    debug("llm", { hash, cacheHit: true, negative: cached.negative, confidence: cached.confidence });
+    debug("llm", {
+      hash,
+      cacheHit: true,
+      negative: cached.negative,
+      confidence: cached.confidence,
+    });
     return { negative: cached.negative, confidence: cached.confidence };
   }
 
@@ -131,7 +138,9 @@ export async function classifyBatchProgressive(
     if (i + concurrency < texts.length) {
       await new Promise<void>((resolve) => {
         if ("requestIdleCallback" in globalThis) {
-          requestIdleCallback(() => { resolve(); });
+          requestIdleCallback(() => {
+            resolve();
+          });
         } else {
           setTimeout(resolve, 10);
         }

@@ -44,7 +44,7 @@ settings:
 advancements:
   disable-saving: false
   disabled:
-  - minecraft:story/disabled
+    - minecraft:story/disabled
 world-settings:
   default:
     below-zero-generation-in-existing-chunks: true
@@ -172,11 +172,11 @@ commands:
   tab-complete: 0
   send-namespaced: true
   spam-exclusions:
-  - /skill
+    - /skill
   silent-commandblock-console: false
   replace-commands:
-  - setblock
-  - summon
-  - testforblock
-  - tellraw
+    - setblock
+    - summon
+    - testforblock
+    - tellraw
   enable-spam-exclusions: false

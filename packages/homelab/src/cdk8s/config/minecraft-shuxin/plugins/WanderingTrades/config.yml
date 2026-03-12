@@ -48,13 +48,13 @@ preventNightInvisibility: false
 # true: below is a whitelist of Worlds for modifying natural spawned Wandering Traders
 traderWorldWhitelist: false
 traderWorldList:
-- example_world
+  - example_world
 
 # false: below is a blacklist of WorldGuard regions for refreshing trades
 # true: below is a whitelist of WorldGuard regions for refreshing trades
 wgWhitelist: false
 wgRegionList:
-- RegionExample
+  - RegionExample
 
 # Setting this option to true will completely disable all WanderingTrades commands.
 disableCommands: false
@@ -66,7 +66,7 @@ updateChecker: true
 traderSpawnNotifications:
   # Toggle the notification feature
   enabled: false
-  
+
   # Who to notify. Can be:
   #  - 'all': all online players
   #  - 'world': all players in the world the trader spawned in
@@ -74,15 +74,15 @@ traderSpawnNotifications:
   #  - a number (B) followed by 'box', i.e. '500box': notify players within B blocks of the spawned trader (on the X, Y, and Z (horizontal and vertical) axes)
   #
   # Requires 'wanderingtrades.trader-spawn-notifications' permission, which defaults to true
-  notifyPlayers: '500'
-  
+  notifyPlayers: "500"
+
   # Commands to run when a trader spawns
   commands:
-  - effect give {trader-uuid} glowing 30
-  
+    - effect give {trader-uuid} glowing 30
+
   # Commands to run for each (optionally nearby) player when a trader spawns
   perPlayerCommands:
-  - 'tellraw {player} ["A wandering trader has spawned {distance} blocks away! ({x-pos},
-    {y-pos}, {z-pos}) (uuid: {trader-uuid})"]'
-  - execute at {player} run playsound minecraft:block.note_block.cow_bell neutral
-    {player}
+    - 'tellraw {player} ["A wandering trader has spawned {distance} blocks away! ({x-pos},
+      {y-pos}, {z-pos}) (uuid: {trader-uuid})"]'
+    - execute at {player} run playsound minecraft:block.note_block.cow_bell neutral
+      {player}

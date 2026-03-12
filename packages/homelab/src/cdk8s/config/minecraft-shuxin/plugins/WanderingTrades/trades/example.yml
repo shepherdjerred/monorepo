@@ -27,7 +27,7 @@ invincible: false
 # will display this custom name tag above their head
 #
 # set to 'NONE' to disable
-customName: '<gradient:red:yellow><bold>Example</gradient><blue>!'
+customName: "<gradient:red:yellow><bold>Example</gradient><blue>!"
 
 # Enabling this option will disable villagers with this config from
 # giving gifts to players with Hero of the Village.
@@ -66,7 +66,7 @@ trades:
         material: PACKED_ICE
         amount: 1
     result:
-      customname: '<aqua>Packed Ice'
+      customname: "<aqua>Packed Ice"
       material: head-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzE1NDIyODZkYTAzYWI3ZWVjYzRlNTYyYzNmOGI4YTFjZjc4MWRhMzA4YjA3OWUzYWMzMzE0NTYxYjljMWQ5OSJ9fX0=
       amount: 8
   loreExample:
@@ -78,7 +78,7 @@ trades:
         material: GLASS
         amount: 3
     result:
-      customname: '<rainbow>-====- God Axe -====-'
+      customname: "<rainbow>-====- God Axe -====-"
       material: DIAMOND_AXE
       amount: 1
       enchantments:
@@ -87,5 +87,5 @@ trades:
         - mending:1
       lore:
         - "<gradient:black:white>||||||||||||||||||||||||||||||||</gradient><gradient:white:black>||||||||||||||||||||||||||||||||"
-        - '       <gradient:blue:green>Very Cool Axe'
+        - "       <gradient:blue:green>Very Cool Axe"
         - "<gradient:black:white>||||||||||||||||||||||||||||||||</gradient><gradient:white:black>||||||||||||||||||||||||||||||||"

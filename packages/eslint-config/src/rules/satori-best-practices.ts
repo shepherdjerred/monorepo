@@ -95,10 +95,7 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           attr.name.name === "style",
       );
 
-      if (
-        styleAttr?.type !== AST_NODE_TYPES.JSXAttribute ||
-        !styleAttr.value
-      ) {
+      if (styleAttr?.type !== AST_NODE_TYPES.JSXAttribute || !styleAttr.value) {
         return null;
       }
 
@@ -136,25 +133,25 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
 
       for (const child of node.children) {
         switch (child.type) {
-        case AST_NODE_TYPES.JSXElement: 
-        case AST_NODE_TYPES.JSXFragment: {
-          elementCount++;
-        
-        break;
-        }
-        case AST_NODE_TYPES.JSXText: {
-          if (child.value.trim().length > 0) {
-            hasTextOrExpression = true;
+          case AST_NODE_TYPES.JSXElement:
+          case AST_NODE_TYPES.JSXFragment: {
+            elementCount++;
+
+            break;
           }
-        
-        break;
-        }
-        case AST_NODE_TYPES.JSXExpressionContainer: {
-          hasTextOrExpression = true;
-        
-        break;
-        }
-        // No default
+          case AST_NODE_TYPES.JSXText: {
+            if (child.value.trim().length > 0) {
+              hasTextOrExpression = true;
+            }
+
+            break;
+          }
+          case AST_NODE_TYPES.JSXExpressionContainer: {
+            hasTextOrExpression = true;
+
+            break;
+          }
+          // No default
         }
       }
 
@@ -270,13 +267,16 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
       }
 
       // Also check for useXxx patterns from the callee
-      if (node.callee.type === AST_NODE_TYPES.MemberExpression && node.callee.property.type === AST_NODE_TYPES.Identifier) {
-          const name = node.callee.property.name;
-          return (
-            name.startsWith("use") &&
-            name.charAt(3).toUpperCase() === name.charAt(3)
-          );
-        }
+      if (
+        node.callee.type === AST_NODE_TYPES.MemberExpression &&
+        node.callee.property.type === AST_NODE_TYPES.Identifier
+      ) {
+        const name = node.callee.property.name;
+        return (
+          name.startsWith("use") &&
+          name.charAt(3).toUpperCase() === name.charAt(3)
+        );
+      }
 
       return false;
     }
@@ -301,13 +301,16 @@ export const satoriBestPractices = createRule<Options, MessageIds>({
           }
 
           // Check for function calls - but only if they look like hooks
-          if (expression.type === AST_NODE_TYPES.CallExpression && isLikelyHookCall(expression)) {
-              context.report({
-                node: child,
-                messageId: "noDynamicJsx",
-              });
-            }
-            // Other function calls (like ts-pattern's match(), utility functions, etc.) are okay
+          if (
+            expression.type === AST_NODE_TYPES.CallExpression &&
+            isLikelyHookCall(expression)
+          ) {
+            context.report({
+              node: child,
+              messageId: "noDynamicJsx",
+            });
+          }
+          // Other function calls (like ts-pattern's match(), utility functions, etc.) are okay
         }
 
         // Check for spread children

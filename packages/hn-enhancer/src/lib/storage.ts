@@ -5,7 +5,11 @@ import {
   LLMCacheEntrySchema,
   SettingsSchema,
 } from "#src/types/storage.ts";
-import type { LLMCacheEntry, LocalState, Settings } from "#src/types/storage.ts";
+import type {
+  LLMCacheEntry,
+  LocalState,
+  Settings,
+} from "#src/types/storage.ts";
 
 function parseSettings(raw: unknown): Settings {
   const result = SettingsSchema.safeParse(raw);
@@ -66,8 +70,14 @@ export async function getLocalState(): Promise<LocalState> {
   ]);
   return {
     replyCount: parseNumber(result.replyCount, DEFAULT_LOCAL_STATE.replyCount),
-    lastSeenItemId: parseNumber(result.lastSeenItemId, DEFAULT_LOCAL_STATE.lastSeenItemId),
-    lastPolledAt: parseNumber(result.lastPolledAt, DEFAULT_LOCAL_STATE.lastPolledAt),
+    lastSeenItemId: parseNumber(
+      result.lastSeenItemId,
+      DEFAULT_LOCAL_STATE.lastSeenItemId,
+    ),
+    lastPolledAt: parseNumber(
+      result.lastPolledAt,
+      DEFAULT_LOCAL_STATE.lastPolledAt,
+    ),
   };
 }
 
@@ -77,13 +87,18 @@ export async function setLocalState(state: Partial<LocalState>): Promise<void> {
 
 const LLM_CACHE_PREFIX = "llm_";
 
-export async function getLLMCacheEntry(hash: string): Promise<LLMCacheEntry | undefined> {
+export async function getLLMCacheEntry(
+  hash: string,
+): Promise<LLMCacheEntry | undefined> {
   const key = `${LLM_CACHE_PREFIX}${hash}`;
   const result = await chrome.storage.local.get(key);
   return parseLLMCacheEntry(result[key]);
 }
 
-export async function setLLMCacheEntry(hash: string, entry: LLMCacheEntry): Promise<void> {
+export async function setLLMCacheEntry(
+  hash: string,
+  entry: LLMCacheEntry,
+): Promise<void> {
   const key = `${LLM_CACHE_PREFIX}${hash}`;
   await chrome.storage.local.set({ [key]: entry });
 }
@@ -107,7 +122,9 @@ export async function pruneOldLLMCache(maxAgeDays = 30): Promise<void> {
   }
 }
 
-export function onSettingsChanged(callback: (settings: Settings) => void): void {
+export function onSettingsChanged(
+  callback: (settings: Settings) => void,
+): void {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && "settings" in changes) {
       callback(parseSettings(changes.settings.newValue));
@@ -115,7 +132,9 @@ export function onSettingsChanged(callback: (settings: Settings) => void): void 
   });
 }
 
-export function onHiddenUsersChanged(callback: (users: string[]) => void): void {
+export function onHiddenUsersChanged(
+  callback: (users: string[]) => void,
+): void {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && "hiddenUsers" in changes) {
       callback(parseHiddenUsers(changes.hiddenUsers.newValue));

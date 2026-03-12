@@ -19,6 +19,7 @@ bun_library(
         # dist/ is included because downstream consumers import the compiled JS.
         # Source maps are data-only (not runtime imports).
         ["dist/**"],
+        allow_empty = True,
         exclude = ["dist/**/*.map"],
     ) + [
         "local.d.ts",

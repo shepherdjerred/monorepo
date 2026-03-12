@@ -140,10 +140,7 @@ export function verifyWebhookSignature(
   return null;
 }
 
-export function verifyTokenEqual(
-  provided: string,
-  expected: string,
-): boolean {
+export function verifyTokenEqual(provided: string, expected: string): boolean {
   const a = Buffer.from(provided);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;

@@ -1,12 +1,26 @@
 import { debug } from "#src/lib/debug.ts";
-import { getCommentId, getCommentText, getCommentUsername } from "#src/lib/dom.ts";
-import { classifyBatchProgressive, isLLMAvailable } from "#src/lib/llm-filter.ts";
-import { getThresholdValue, hasAIKeywords, scoreSentiment } from "#src/lib/sentiment.ts";
+import {
+  getCommentId,
+  getCommentText,
+  getCommentUsername,
+} from "#src/lib/dom.ts";
+import {
+  classifyBatchProgressive,
+  isLLMAvailable,
+} from "#src/lib/llm-filter.ts";
+import {
+  getThresholdValue,
+  hasAIKeywords,
+  scoreSentiment,
+} from "#src/lib/sentiment.ts";
 import type { Settings } from "#src/types/storage.ts";
 
 let settings: Settings["sentimentFilter"];
 
-const hoverListeners = new WeakMap<HTMLTableRowElement, { enter: () => void; leave: () => void }>();
+const hoverListeners = new WeakMap<
+  HTMLTableRowElement,
+  { enter: () => void; leave: () => void }
+>();
 
 const filterStats = {
   total: 0,
@@ -16,11 +30,11 @@ const filterStats = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   "reductive-label": "reductive labels",
-  "slop": "slop/garbage",
+  slop: "slop/garbage",
   "snake-oil": "snake oil",
   "categorical-denial": "categorical denials",
-  "regurgitation": "regurgitation claims",
-  "bubble": "bubble/hype",
+  regurgitation: "regurgitation claims",
+  bubble: "bubble/hype",
   "vibe-coding-contempt": "vibe coding contempt",
   "vibe-coding-dismissal": "vibe coding contempt",
   "mass-delusion": "mass delusion",
@@ -30,7 +44,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   "ad-hominem": "ad hominem",
   "replacement-doom": "replacement doom",
   "skill-atrophy": "skill atrophy",
-  "gatekeeping": "gatekeeping",
+  gatekeeping: "gatekeeping",
   "doom-prediction": "doom prediction",
   "absolutist-never": "absolutist claims",
   "reductive-just": "reductive dismissals",
@@ -55,7 +69,11 @@ export function processRows(rows: Iterable<HTMLTableRowElement>): void {
   if (!settings.enabled) return;
 
   const threshold = getThresholdValue(settings.threshold);
-  const llmCandidates: { id: string; text: string; row: HTMLTableRowElement }[] = [];
+  const llmCandidates: {
+    id: string;
+    text: string;
+    row: HTMLTableRowElement;
+  }[] = [];
 
   for (const row of rows) {
     const text = getCommentText(row);
@@ -73,7 +91,12 @@ export function processRows(rows: Iterable<HTMLTableRowElement>): void {
         matches: result.matches.map((m) => m.category),
         mode: settings.mode,
       });
-      markAsNegative(row, settings.mode, "regex", result.matches.map((m) => m.category));
+      markAsNegative(
+        row,
+        settings.mode,
+        "regex",
+        result.matches.map((m) => m.category),
+      );
       continue;
     }
 
@@ -121,7 +144,8 @@ async function processWithLLM(
 }
 
 function processAllRows(): void {
-  const rows = document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
+  const rows =
+    document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
   processRows(rows);
 }
 
@@ -146,8 +170,12 @@ function markAsNegative(
       row.style.opacity = "0.3";
       row.style.transition = "opacity 0.2s";
 
-      const enter = (): void => { row.style.opacity = "1"; };
-      const leave = (): void => { row.style.opacity = "0.3"; };
+      const enter = (): void => {
+        row.style.opacity = "1";
+      };
+      const leave = (): void => {
+        row.style.opacity = "0.3";
+      };
       row.addEventListener("mouseenter", enter);
       row.addEventListener("mouseleave", leave);
       hoverListeners.set(row, { enter, leave });
@@ -227,7 +255,9 @@ function updateSummaryBar(): void {
     close.className = "hn-filter-summary-close";
     close.textContent = "\u00D7";
     close.title = "Dismiss";
-    close.addEventListener("click", () => { bar?.remove(); });
+    close.addEventListener("click", () => {
+      bar?.remove();
+    });
     bar.append(close);
 
     document.body.append(bar);
@@ -237,7 +267,9 @@ function updateSummaryBar(): void {
   if (!text) return;
 
   const categoryParts: string[] = [];
-  const sorted = [...filterStats.byCategory.entries()].toSorted((a, b) => b[1] - a[1]);
+  const sorted = [...filterStats.byCategory.entries()].toSorted(
+    (a, b) => b[1] - a[1],
+  );
   for (const [cat, count] of sorted) {
     const label = CATEGORY_LABELS[cat] ?? cat;
     categoryParts.push(`${String(count)} ${label}`);
@@ -260,7 +292,9 @@ function resetStats(): void {
 function clearAllSentimentMarkers(): void {
   resetStats();
   removeSummaryBar();
-  const rows = document.querySelectorAll<HTMLTableRowElement>("[data-hn-sentiment]");
+  const rows = document.querySelectorAll<HTMLTableRowElement>(
+    "[data-hn-sentiment]",
+  );
   for (const row of rows) {
     delete row.dataset.hnSentiment;
 

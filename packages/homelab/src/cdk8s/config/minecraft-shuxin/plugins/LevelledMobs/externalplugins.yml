@@ -26,68 +26,68 @@
 #   ---------------  -  ------------------------------
 #
 infernal-mobs:
-  friendly-name: 'infernal-mobs'
-  plugin-name: 'InfernalMobs'
-  key-name: 'infernalMetadata'
-  key-type: 'metadata'
-  requirement: 'exists'
+  friendly-name: "infernal-mobs"
+  plugin-name: "InfernalMobs"
+  key-name: "infernalMetadata"
+  key-type: "metadata"
+  requirement: "exists"
 #  placeholder-name: '%infernal-mobs-name%'
 
 shop-keepers:
-  friendly-name: 'shop-keepers'
-  plugin-name: 'ShopKeepers'
-  key-name: 'shopkeeper'
-  key-type: 'metadata'
-  requirement: 'exists'
+  friendly-name: "shop-keepers"
+  plugin-name: "ShopKeepers"
+  key-name: "shopkeeper"
+  key-type: "metadata"
+  requirement: "exists"
 #  placeholder-name: '%shop-keeper-name%'
 
 blood-night:
-  friendly-name: 'blood-night'
-  plugin-name: 'BloodNight'
-  key-name: 'mobtype'
-  key-type: 'PDC'
-  requirement: 'exists'
+  friendly-name: "blood-night"
+  plugin-name: "BloodNight"
+  key-name: "mobtype"
+  key-type: "PDC"
+  requirement: "exists"
 #  placeholder-name: '%blood-night-name%'
 
 eco-bosses:
-  friendly-name: 'eco-bosses'
-  plugin-name: 'EcoBosses'
-  key-name: 'boss'
-  key-type: 'PDC'
-  requirement: 'exists'
+  friendly-name: "eco-bosses"
+  plugin-name: "EcoBosses"
+  key-name: "boss"
+  key-type: "PDC"
+  requirement: "exists"
 #  placeholder-name: '%eco-bosses-name%'
 
 combat-pets:
-  friendly-name: 'combat-pets'
-  plugin-name: 'CombatPets'
-  key-name: 'attribute.health_regeneration_speed'
-  key-type: 'PDC'
-  key-valuetype: 'double'
-  requirement: 'exists'
+  friendly-name: "combat-pets"
+  plugin-name: "CombatPets"
+  key-name: "attribute.health_regeneration_speed"
+  key-type: "PDC"
+  key-valuetype: "double"
+  requirement: "exists"
 #  placeholder-name: '%combat-pets-name%'
 
 Deadly-Disasters:
-  friendly-name: 'deadly-disasters'
-  plugin-name: 'DeadlyDisasters'
-  key-name: 'customentity'
-  key-type: 'PDC'
-  requirement: 'exists'
+  friendly-name: "deadly-disasters"
+  plugin-name: "DeadlyDisasters"
+  key-name: "customentity"
+  key-type: "PDC"
+  requirement: "exists"
 #  placeholder-name: '%deadly-disasters-name%'
 
 gadgets-menu:
-  friendly-name: 'gadgets-menu'
-  plugin-name: 'GadgetsMenu'
-  key-name: 'GadgetsMenu-Pet'
-  key-type: 'metadata'
-  requirement: 'exists'
+  friendly-name: "gadgets-menu"
+  plugin-name: "GadgetsMenu"
+  key-name: "GadgetsMenu-Pet"
+  key-type: "metadata"
+  requirement: "exists"
 #  placeholder-name: '%gadgets-menu-name%'
 
 my-pet:
-  friendly-name: 'my-pet'
-  plugin-name: 'MyPet'
-  key-name: 'MyPet'
-  key-type: 'metadata'
-  requirement: 'exists'
+  friendly-name: "my-pet"
+  plugin-name: "MyPet"
+  key-name: "MyPet"
+  key-type: "metadata"
+  requirement: "exists"
 #  placeholder-name: '%mypet-menu-name%'
 
 #

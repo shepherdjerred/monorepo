@@ -180,7 +180,8 @@ async function logAssistantTurn(
   }
 }
 
-type AgentMessage = Awaited<ReturnType<typeof query>> extends AsyncGenerator<infer T> ? T : never;
+type AgentMessage =
+  Awaited<ReturnType<typeof query>> extends AsyncGenerator<infer T> ? T : never;
 
 type MessageContext = {
   job: Job;
@@ -196,7 +197,11 @@ type MessageContext = {
 async function handleAgentMessage(
   message: AgentMessage,
   ctx: MessageContext,
-): Promise<{ turnCount: number; totalInputTokens: number; totalOutputTokens: number }> {
+): Promise<{
+  turnCount: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+}> {
   let { turnCount, totalInputTokens, totalOutputTokens } = ctx;
 
   switch (message.type) {
@@ -248,7 +253,13 @@ async function handleAgentMessage(
       totalOutputTokens = message.usage.output_tokens;
       await handleResult(
         message,
-        { job: ctx.job, sessionId: ctx.sessionId, conversationLog: ctx.conversationLog, prisma: ctx.prisma, systemPrompt: ctx.systemPrompt },
+        {
+          job: ctx.job,
+          sessionId: ctx.sessionId,
+          conversationLog: ctx.conversationLog,
+          prisma: ctx.prisma,
+          systemPrompt: ctx.systemPrompt,
+        },
         totalInputTokens,
         totalOutputTokens,
       );

@@ -30,7 +30,12 @@ export type Settings = z.infer<typeof SettingsSchema>;
 
 export const DEFAULT_SETTINGS: Settings = {
   hideUsers: { enabled: true },
-  sentimentFilter: { enabled: false, mode: "dim", threshold: "medium", useLLM: true },
+  sentimentFilter: {
+    enabled: false,
+    mode: "dim",
+    threshold: "medium",
+    useLLM: true,
+  },
   hideGreenAccounts: { enabled: false, ageDays: 14 },
   replyNotifier: { enabled: true, pollIntervalMinutes: 15, myUsername: "" },
   debug: false,

@@ -15,7 +15,7 @@ randomized: true
 # trades to add
 # may be a number, or a range for random selection
 #   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
-randomAmount: '3:5'
+randomAmount: "3:5"
 
 # if true, a trader spawned with this config by command
 # will not take damage, except from players with the
@@ -27,7 +27,7 @@ invincible: false
 # will display this custom name tag above their head
 #
 # set to 'NONE' to disable
-customName: 'NONE'
+customName: "NONE"
 
 # Enabling this option will disable villagers with this config from
 # giving gifts to players with Hero of the Village.

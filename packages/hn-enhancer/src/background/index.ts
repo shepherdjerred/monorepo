@@ -1,5 +1,10 @@
 import { fetchItem, fetchUser } from "#src/lib/hn-api.ts";
-import { getLocalState, getSettings, pruneOldLLMCache, setLocalState } from "#src/lib/storage.ts";
+import {
+  getLocalState,
+  getSettings,
+  pruneOldLLMCache,
+  setLocalState,
+} from "#src/lib/storage.ts";
 
 const ALARM_NAME = "poll-replies";
 
@@ -25,7 +30,8 @@ async function setupAlarm(): Promise<void> {
 
 async function pollForReplies(): Promise<void> {
   const settings = await getSettings();
-  if (!settings.replyNotifier.enabled || !settings.replyNotifier.myUsername) return;
+  if (!settings.replyNotifier.enabled || !settings.replyNotifier.myUsername)
+    return;
 
   const username = settings.replyNotifier.myUsername;
   const localState = await getLocalState();
@@ -35,9 +41,7 @@ async function pollForReplies(): Promise<void> {
 
   // Get the user's most recent comment IDs (not stories)
   const recentIds = user.submitted.slice(0, 30);
-  const items = await Promise.all(
-    recentIds.map((id) => fetchItem(id)),
-  );
+  const items = await Promise.all(recentIds.map((id) => fetchItem(id)));
 
   const myComments = items.filter(
     (item) => item?.type === "comment" && item.by === username,

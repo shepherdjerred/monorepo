@@ -1,22 +1,34 @@
 import { describe, expect, test } from "bun:test";
-import { getThresholdValue, hasAIKeywords, scoreSentiment } from "./sentiment.ts";
+import {
+  getThresholdValue,
+  hasAIKeywords,
+  scoreSentiment,
+} from "./sentiment.ts";
 
 describe("scoreSentiment", () => {
   describe("should match negative AI comments (real HN quotes)", () => {
     test("stochastic parrot", () => {
-      const result = scoreSentiment("Don't believe the PR bull. It is just a stochastic parrot.");
+      const result = scoreSentiment(
+        "Don't believe the PR bull. It is just a stochastic parrot.",
+      );
       expect(result.score).toBeGreaterThanOrEqual(0.4);
-      expect(result.matches.some((m) => m.category === "reductive-label")).toBe(true);
+      expect(result.matches.some((m) => m.category === "reductive-label")).toBe(
+        true,
+      );
     });
 
     test("spicy autocomplete + dismissive just", () => {
-      const result = scoreSentiment("LLMs are just spicy autocomplete. They can't reason.");
+      const result = scoreSentiment(
+        "LLMs are just spicy autocomplete. They can't reason.",
+      );
       expect(result.score).toBeGreaterThanOrEqual(0.5);
       expect(result.matches.length).toBeGreaterThanOrEqual(2);
     });
 
     test("spicy autocomplete + LLMs can't reason", () => {
-      const result = scoreSentiment("LLMs are just spicy autocomplete. LLMs can't reason.");
+      const result = scoreSentiment(
+        "LLMs are just spicy autocomplete. LLMs can't reason.",
+      );
       expect(result.score).toBeGreaterThanOrEqual(0.6);
       expect(result.matches.length).toBeGreaterThanOrEqual(3);
     });
@@ -28,7 +40,9 @@ describe("scoreSentiment", () => {
     });
 
     test("glorified autocomplete", () => {
-      const result = scoreSentiment("glorified autocomplete that wastes energy");
+      const result = scoreSentiment(
+        "glorified autocomplete that wastes energy",
+      );
       expect(result.score).toBeGreaterThanOrEqual(0.4);
     });
 
@@ -61,7 +75,9 @@ describe("scoreSentiment", () => {
     });
 
     test("snake oil framing", () => {
-      const result = scoreSentiment("the AI snake-oil salesmen are at it again");
+      const result = scoreSentiment(
+        "the AI snake-oil salesmen are at it again",
+      );
       expect(result.score).toBeGreaterThanOrEqual(0.4);
     });
 
@@ -90,7 +106,9 @@ describe("scoreSentiment", () => {
         "And like everyone else you trained the AI how to replace you",
       );
       expect(result.score).toBeGreaterThanOrEqual(0.15);
-      expect(result.matches.some((m) => m.category === "replacement-doom")).toBe(true);
+      expect(
+        result.matches.some((m) => m.category === "replacement-doom"),
+      ).toBe(true);
     });
 
     test("AI boosters ad hominem", () => {
@@ -98,7 +116,9 @@ describe("scoreSentiment", () => {
         "AI boosters mostly use AI to do useless stuff focused on pretending to improve productivity",
       );
       expect(result.score).toBeGreaterThanOrEqual(0.25);
-      expect(result.matches.some((m) => m.category === "ad-hominem")).toBe(true);
+      expect(result.matches.some((m) => m.category === "ad-hominem")).toBe(
+        true,
+      );
     });
 
     test("vibe codebase pejorative", () => {
@@ -151,7 +171,9 @@ describe("scoreSentiment", () => {
     });
 
     test("about actual autocomplete (not AI)", () => {
-      const result = scoreSentiment("The autocomplete in my IDE is getting better");
+      const result = scoreSentiment(
+        "The autocomplete in my IDE is getting better",
+      );
       expect(result.score).toBeLessThan(0.4);
     });
 

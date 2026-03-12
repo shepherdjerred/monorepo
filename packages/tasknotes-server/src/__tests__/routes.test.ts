@@ -125,7 +125,10 @@ describe("tasks CRUD", () => {
 
   test("POST /api/tasks/:id/archive archives task", async () => {
     const created = await createTask({ title: "Archive me" });
-    const res = await makeRequest("POST", `/api/tasks/${String(created.id)}/archive`);
+    const res = await makeRequest(
+      "POST",
+      `/api/tasks/${String(created.id)}/archive`,
+    );
     expect(res.status).toBe(200);
 
     const listRes = await makeRequest("GET", "/api/tasks");

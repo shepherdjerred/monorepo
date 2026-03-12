@@ -1,4 +1,9 @@
-import { getHiddenUsers, getSettings, removeHiddenUser, setSettings } from "#src/lib/storage.ts";
+import {
+  getHiddenUsers,
+  getSettings,
+  removeHiddenUser,
+  setSettings,
+} from "#src/lib/storage.ts";
 import type { Settings } from "#src/types/storage.ts";
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -11,13 +16,15 @@ function $(id: string): HTMLElement {
 
 function $input(id: string): HTMLInputElement {
   const el = document.querySelector(`#${id}`);
-  if (!(el instanceof HTMLInputElement)) throw new Error(`Element #${id} is not an input`);
+  if (!(el instanceof HTMLInputElement))
+    throw new Error(`Element #${id} is not an input`);
   return el;
 }
 
 function $select(id: string): HTMLSelectElement {
   const el = document.querySelector(`#${id}`);
-  if (!(el instanceof HTMLSelectElement)) throw new Error(`Element #${id} is not a select`);
+  if (!(el instanceof HTMLSelectElement))
+    throw new Error(`Element #${id} is not a select`);
   return el;
 }
 
@@ -40,7 +47,9 @@ async function loadSettings(): Promise<void> {
   // Reply notifier
   $input("reply-enabled").checked = settings.replyNotifier.enabled;
   $input("reply-username").value = settings.replyNotifier.myUsername;
-  $select("reply-interval").value = String(settings.replyNotifier.pollIntervalMinutes);
+  $select("reply-interval").value = String(
+    settings.replyNotifier.pollIntervalMinutes,
+  );
   toggleSubOptions("reply-options", settings.replyNotifier.enabled);
 
   // Debug

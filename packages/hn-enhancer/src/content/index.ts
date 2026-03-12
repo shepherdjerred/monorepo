@@ -3,10 +3,18 @@ import { setDebugEnabled } from "#src/lib/debug.ts";
 import { observeCommentTree } from "#src/lib/dom.ts";
 import { pruneOldLLMCache } from "#src/lib/storage.ts";
 import { getSettings, onSettingsChanged } from "#src/lib/storage.ts";
-import { initGreenAccounts, processRows as processGreenRows, updateGreenAccountSettings } from "./green-accounts.ts";
+import {
+  initGreenAccounts,
+  processRows as processGreenRows,
+  updateGreenAccountSettings,
+} from "./green-accounts.ts";
 import { initHideUser, processRows as processHideRows } from "./hide-user.ts";
 import { initReplyNotifier } from "./reply-badge.ts";
-import { initSentimentFilter, processRows as processSentimentRows, updateSentimentSettings } from "./sentiment-filter.ts";
+import {
+  initSentimentFilter,
+  processRows as processSentimentRows,
+  updateSentimentSettings,
+} from "./sentiment-filter.ts";
 
 async function main() {
   const settings = await getSettings();

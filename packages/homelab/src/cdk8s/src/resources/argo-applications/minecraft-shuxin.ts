@@ -166,7 +166,11 @@ export function createMinecraftShuxinApp(chart: Chart) {
 
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
     initContainers: [
-      getMinecraftConfigDriftCheckInitContainer("shuxin", getMinecraftPluginNames("shuxin"), true),
+      getMinecraftConfigDriftCheckInitContainer(
+        "shuxin",
+        getMinecraftPluginNames("shuxin"),
+        true,
+      ),
       getMinecraftPluginConfigInitContainer("shuxin", true),
     ],
   };

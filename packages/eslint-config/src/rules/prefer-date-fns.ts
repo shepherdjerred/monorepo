@@ -197,13 +197,16 @@ export const preferDateFns = createRule({
 
       // Detect: Custom date helper functions (formatTimeAgo, daysUntil, formatHumanDateTime, etc.)
       FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
-        if (node.id && isCustomDateHelperName(node.id.name) && // Check if function body contains manual date calculations
-          containsManualDateMath(node.body)) {
-            context.report({
-              node,
-              messageId: "customDateHelper",
-            });
-          }
+        if (
+          node.id &&
+          isCustomDateHelperName(node.id.name) && // Check if function body contains manual date calculations
+          containsManualDateMath(node.body)
+        ) {
+          context.report({
+            node,
+            messageId: "customDateHelper",
+          });
+        }
       },
     };
   },
@@ -242,21 +245,22 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
     if (!node || visited.has(node)) return;
     visited.add(node);
 
-    if (node.type === "CallExpression" && 
-        node.callee.type === "MemberExpression" &&
-        node.callee.property.type === "Identifier"
-      ) {
-        const methodNames = [
-          "setDate",
-          "setUTCDate",
-          "setUTCHours",
-          "setUTCMinutes",
-          "setUTCSeconds",
-        ];
-        if (methodNames.includes(node.callee.property.name)) {
-          visitor.found = true;
-        }
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "MemberExpression" &&
+      node.callee.property.type === "Identifier"
+    ) {
+      const methodNames = [
+        "setDate",
+        "setUTCDate",
+        "setUTCHours",
+        "setUTCMinutes",
+        "setUTCSeconds",
+      ];
+      if (methodNames.includes(node.callee.property.name)) {
+        visitor.found = true;
       }
+    }
 
     // Recursively traverse child nodes
     for (const key in node) {

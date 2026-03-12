@@ -1,6 +1,16 @@
 import { debug } from "#src/lib/debug.ts";
-import { collapseThread, expandThread, getCommentIndent, getCommentUsername } from "#src/lib/dom.ts";
-import { addHiddenUser, getHiddenUsers, onHiddenUsersChanged, removeHiddenUser } from "#src/lib/storage.ts";
+import {
+  collapseThread,
+  expandThread,
+  getCommentIndent,
+  getCommentUsername,
+} from "#src/lib/dom.ts";
+import {
+  addHiddenUser,
+  getHiddenUsers,
+  onHiddenUsersChanged,
+  removeHiddenUser,
+} from "#src/lib/storage.ts";
 import type { Settings } from "#src/types/storage.ts";
 
 let hiddenUsers: string[] = [];
@@ -35,7 +45,8 @@ export function processRows(rows: Iterable<HTMLTableRowElement>): void {
 }
 
 function processAllRows(): void {
-  const rows = document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
+  const rows =
+    document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
   processRows(rows);
 }
 
@@ -98,7 +109,8 @@ function maybeHideRow(row: HTMLTableRowElement): void {
 }
 
 function unhideUserComments(username: string): void {
-  const rows = document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
+  const rows =
+    document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
   for (const row of rows) {
     const rowUser = getCommentUsername(row);
     if (rowUser === username) {
@@ -110,7 +122,9 @@ function unhideUserComments(username: string): void {
         delete commtext.dataset.hnHiddenUser;
       }
 
-      const indicator = row.querySelector<HTMLSpanElement>(".hn-hidden-indicator");
+      const indicator = row.querySelector<HTMLSpanElement>(
+        ".hn-hidden-indicator",
+      );
       if (indicator) {
         indicator.remove();
       }

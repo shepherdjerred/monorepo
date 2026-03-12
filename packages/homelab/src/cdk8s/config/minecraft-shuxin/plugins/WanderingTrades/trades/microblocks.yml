@@ -27,7 +27,7 @@ invincible: false
 # will display this custom name tag above their head
 #
 # set to 'NONE' to disable
-customName: '<gradient:green:blue><bold>Microblocks</gradient><yellow>!'
+customName: "<gradient:green:blue><bold>Microblocks</gradient><yellow>!"
 
 # Enabling this option will disable villagers with this config from
 # giving gifts to players with Hero of the Village.

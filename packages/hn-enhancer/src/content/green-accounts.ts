@@ -11,7 +11,9 @@ export function initGreenAccounts(s: Settings): void {
   processAllRows();
 }
 
-export function updateGreenAccountSettings(s: Settings["hideGreenAccounts"]): void {
+export function updateGreenAccountSettings(
+  s: Settings["hideGreenAccounts"],
+): void {
   settings = s;
   clearMarkers();
   processAllRows();
@@ -37,10 +39,10 @@ export function processRows(rows: Iterable<HTMLTableRowElement>): void {
   for (const [username, userRows] of rowsByUser) {
     const cached = accountAgeCache.get(username);
     if (cached !== undefined && isNewAccount(cached, settings.ageDays)) {
-        for (const row of userRows) {
-          markAsGreenAccount(row);
-        }
+      for (const row of userRows) {
+        markAsGreenAccount(row);
       }
+    }
   }
 
   // Fetch uncached users
@@ -93,7 +95,8 @@ async function fetchAndProcess(
 }
 
 function processAllRows(): void {
-  const rows = document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
+  const rows =
+    document.querySelectorAll<HTMLTableRowElement>("tr.athing.comtr");
   processRows(rows);
 }
 
@@ -115,7 +118,9 @@ function markAsGreenAccount(row: HTMLTableRowElement): void {
 }
 
 function clearMarkers(): void {
-  const rows = document.querySelectorAll<HTMLTableRowElement>("[data-hn-green-account]");
+  const rows = document.querySelectorAll<HTMLTableRowElement>(
+    "[data-hn-green-account]",
+  );
   for (const row of rows) {
     delete row.dataset.hnGreenAccount;
     row.style.display = "";

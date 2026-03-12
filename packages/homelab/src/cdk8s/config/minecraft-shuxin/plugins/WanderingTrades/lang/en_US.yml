@@ -7,7 +7,8 @@ command:
   exception:
     parse:
       no-trade-config: There are no trade configs with that name loaded.
-    malformed-config: <red>Config is malformed. Make sure recipes have at least one
+    malformed-config:
+      <red>Config is malformed. Make sure recipes have at least one
       ingredient.
   editconfig:
     description: Opens a GUI menu to edit the config.yml settings
@@ -19,7 +20,7 @@ command:
     description: WanderingTrades Help
   list:
     description: Lists the loaded trade configs.
-    message: '<blue>Loaded Trade Configs</blue><gray>:'
+    message: "<blue>Loaded Trade Configs</blue><gray>:"
   reload:
     message: <gradient:#6B0BDE:#BA0DFA>Reloading WanderingTrades config...
     description: Reloads all config files for WanderingTrades
@@ -27,10 +28,12 @@ command:
   summonnatural:
     description: Summon a 'natural' Wandering Trader with some modification options
   summonvillager:
-    description: Summons a Villager with the specified config. Ignores whether the
+    description:
+      Summons a Villager with the specified config. Ignores whether the
       config is disabled.
   summon:
-    description: Summons a Wandering Trader with the specified config. Ignores whether
+    description:
+      Summons a Wandering Trader with the specified config. Ignores whether
       the config is disabled.
 gui:
   back:
@@ -41,14 +44,16 @@ gui:
     lore: <gray><italic>  Click to close
   config:
     allow-multiple-sets: <green>Allowing more than one trade config per trader
-    allow-night-invisibility: <red>Not preventing use of invisibility potions of /wt
+    allow-night-invisibility:
+      <red>Not preventing use of invisibility potions of /wt
       summoned traders
     disabled: <red>Not Adding Trades to Natural Spawned Traders
     disallow-multiple-sets: <red>Not allowing more than one trade config per trader
     enabled: <green>Adding Trades to Natural Spawned Traders
     keep-original: <red>Not removing original Wandering Trader trades
     no-refresh: <red>Not auto-refreshing trades of /wt summoned traders
-    prevent-night-invisibility: <green>Preventing use of invisibility potions of /wt
+    prevent-night-invisibility:
+      <green>Preventing use of invisibility potions of /wt
       summoned traders
     refresh: <green>Auto-refreshing trades of /wt summoned traders
     refresh-minutes:
@@ -59,7 +64,7 @@ gui:
     wg-black: <aqua>Mode</aqua><gray>:</gray> WorldGuard Region Blacklist
     wg-list:
       name: <aqua>List of regions for White/Black list
-      lore: '  <gray>Left-click to add, Right-click to remove'
+      lore: "  <gray>Left-click to add, Right-click to remove"
     wg-white: <aqua>Mode</aqua><gray>:</gray> WorldGuard Region Whitelist
   tc-edit:
     config-delete-lore: <white> <aqua>-</aqua> Click to delete this Trade Config
@@ -72,8 +77,8 @@ gui:
     not-randomized: <red>Not Randomized
     randomized: <green>Randomized
     random-amount: <aqua>Random Amount
-    title: '<blue>Editing Config</blue><gray>:</gray> '
-  edit-lore: '  <gray><italic>Click to edit'
+    title: "<blue>Editing Config</blue><gray>:</gray> "
+  edit-lore: "  <gray><italic>Click to edit"
   paged:
     last:
       name: <green>Last Page
@@ -87,22 +92,22 @@ gui:
     blacklist: <aqua>Player Head Blacklist
     chance: <aqua>What is the chance a Wandering Trader gets Heads
     days: <aqua>How many days since last login to include head
-    days-lore: '  <gray><italic>Set to -1 to ignore'
+    days-lore: "  <gray><italic>Set to -1 to ignore"
     disabled: <red>Not Adding Heads from the server to Wandering Traders
     enabled: <green>Adding Heads from the server to Wandering Traders
     pwl-disabled: <red>Not requiring permission to add head
     pwl-enabled: <green>Requiring permission to add head
-    pwl-lore: '  <aqua>-</aqua> <gray>''<white>wanderingtrades.headavailable</white>'''
+    pwl-lore: "  <aqua>-</aqua> <gray>'<white>wanderingtrades.headavailable</white>'"
     result-lore: <aqua>Result Head Lore
-    save-lore: '  <gray><italic>Click to save ingredients'
+    save-lore: "  <gray><italic>Click to save ingredients"
     title: Editing <blue>Player Heads config
   tc-list:
     add-config:
       name: <green>Add config
       lore: <gray><italic>  Click to create a new config
-    and-more: '  <gray><italic>...and <value> more'
+    and-more: "  <gray><italic>...and <value> more"
     title: <blue>Trade Configs
-  toggle-lore: '  <gray><italic>Click to toggle'
+  toggle-lore: "  <gray><italic>Click to toggle"
   trade:
     cancel:
       name: <red>Cancel
@@ -113,27 +118,27 @@ gui:
       name: <red>Delete
       lore: <white> <aqua>-</aqua> Click to delete this trade
     edit:
-      title: '<blue>Editing Trade</blue><gray>:</gray> '
+      title: "<blue>Editing Trade</blue><gray>:</gray> "
     exp-reward: <green>Experience Reward
     info:
       name: <yellow>Info!
       lore:
-      - ' <aqua>-</aqua> <white>In order to save your edits,'
-      - '   <white>you must have a result item,'
-      - '   <white>a trade name, and at least'
-      - '   <white>one ingredient.'
+        - " <aqua>-</aqua> <white>In order to save your edits,"
+        - "   <white>you must have a result item,"
+        - "   <white>a trade name, and at least"
+        - "   <white>one ingredient."
     ingredient-1: <green>Ingredient One
     ingredient-2: <green>Ingredient Two
     max-uses: <aqua>Max Uses
     no-exp-reward: <red>No Experience Reward
     optional-lore:
-    - ' <aqua>- <gray>Click with an item to set'
-    - ' <aqua>- <gray>Click without item to reset'
-    - ' <aqua>- <gray>Optional'
+      - " <aqua>- <gray>Click with an item to set"
+      - " <aqua>- <gray>Click without item to reset"
+      - " <aqua>- <gray>Optional"
     required-lore:
-    - ' <aqua>- <gray>Click with an item to set'
-    - ' <aqua>- <gray>Click without item to reset'
-    - ' <aqua>- <gray>Required'
+      - " <aqua>- <gray>Click with an item to set"
+      - " <aqua>- <gray>Click without item to reset"
+      - " <aqua>- <gray>Required"
     result: <green>Result
     save:
       name: <green>Save
@@ -145,29 +150,30 @@ gui:
       lore: <gray><italic>  Click to edit settings for this config
     new-trade:
       name: <green>New Trade
-      lore: '  <gray>Click to create new trade'
-    title: '<blue>Trade Config</blue><gray>:</gray> '
-  value-lore: '<white>Value</white><gray>:</gray> '
+      lore: "  <gray>Click to create new trade"
+    title: "<blue>Trade Config</blue><gray>:</gray> "
+  value-lore: "<white>Value</white><gray>:</gray> "
 conversation:
-  add-blacklist-player: '<gradient:aqua:blue>Enter a player name to blacklist</gradient><gray>:'
-  add-lore-prompt: '<gradient:aqua:blue>Enter a new line of lore</gradient><gray>:'
-  add-wg-region: '<gradient:aqua:blue>Enter a WorldGuard region name</gradient><gray>:'
+  add-blacklist-player: "<gradient:aqua:blue>Enter a player name to blacklist</gradient><gray>:"
+  add-lore-prompt: "<gradient:aqua:blue>Enter a new line of lore</gradient><gray>:"
+  add-wg-region: "<gradient:aqua:blue>Enter a WorldGuard region name</gradient><gray>:"
   confirm: Type "<key>" to confirm or anything else to cancel
-  confirm-key: 'yes'
+  confirm-key: "yes"
   create-config-cancel: <red>Cancelled config creation
-  create-config-prompt: '<gradient:blue:aqua>Enter a name for your new config</gradient><gray>:'
+  create-config-prompt: "<gradient:blue:aqua>Enter a name for your new config</gradient><gray>:"
   create-config-success: <green>Successfully created new config and reloaded
   create-title-or-none-prompt: Enter a Name or "NONE"
-  create-trade-prompt: '<gradient:blue:aqua>Enter a name for your new trade</gradient><gray>:'
+  create-trade-prompt: "<gradient:blue:aqua>Enter a name for your new trade</gradient><gray>:"
   create-unique: <gradient:red:gold><italic>Must be a new/unique name
   current-value: <white>Current Value<gray>:</gray> <value>
-  custom-name-prompt: '<gradient:blue:aqua>Enter a custom name</gradient><gray>:'
+  custom-name-prompt: "<gradient:blue:aqua>Enter a custom name</gradient><gray>:"
   delete-prompt: Are you sure you want to delete "<name>"?
   edit-cancelled: <italic><gradient:red:gold>Edit cancelled
   edit-saved: <italic><green>Edit saved
-  enter-number: '<gradient:blue:aqua>Enter a number</gradient><gray>:'
-  enter-number-or-range: '<aqua>Enter a number or a range<gray>. (</gray>Range example<gray>:
-    </gray>0<gray>:</gray>5<gray>)</gray></aqua><white>:'
+  enter-number: "<gradient:blue:aqua>Enter a number</gradient><gray>:"
+  enter-number-or-range:
+    "<aqua>Enter a number or a range<gray>. (</gray>Range example<gray>:
+    </gray>0<gray>:</gray>5<gray>)</gray></aqua><white>:"
   no-spaces: <gradient:red:gold><italic>Spaces are not allowed here
   number-0t1: Number must be between 0.00 and 1.00
   number-gte-0: Number must be >= 0
@@ -180,7 +186,8 @@ conversation:
   set-max-uses-prompt: Setting the max uses of the trade
   set-rand-amount-prompt: Setting the amount of random trades
   set-refresh-delay-prompt: Setting minutes between trade refreshes<reset>
-  yes-no: 'Use this value? Type or Click: <hover:show_text:''<green>Click to run!''><click:run_command:''/wanderingtrades
-    accept-input yes''><green>Yes</green></hover> or <hover:show_text:''<green>Click
-    to run!''><click:run_command:''/wanderingtrades accept-input no''><red>No</red></hover>'
+  yes-no:
+    "Use this value? Type or Click: <hover:show_text:'<green>Click to run!'><click:run_command:'/wanderingtrades
+    accept-input yes'><green>Yes</green></hover> or <hover:show_text:'<green>Click
+    to run!'><click:run_command:'/wanderingtrades accept-input no'><red>No</red></hover>"
   you-entered: <white>You Entered<gray>:</gray> <value>

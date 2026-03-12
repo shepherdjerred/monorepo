@@ -37,12 +37,12 @@ defaults:
   nomultiplier: true
   nospawner: false
   use-chunk-kill-max: true
-  overall-permission: ''
+  overall-permission: ""
   override: false
   minLevel: -1
   maxLevel: -1
-  item-flags: ''
-  groupid: ''
+  item-flags: ""
+  groupid: ""
   group-limits:
     cap-select: 1
     cap-per-item: -1
@@ -53,7 +53,6 @@ defaults:
   run-on-spawn: false
   run-on-death: true
   delay: 0
-
 
 #
 #   ---------------  -  ------------------------------
@@ -86,7 +85,6 @@ all_ground_mobs:
 
 all_aquatic_mobs:
   -
-
 
 #
 #   ---------------  -  ------------------------------
@@ -330,7 +328,6 @@ ZOMBIE_VILLAGER:
 ZOMBIFIED_PIGLIN:
   -
 
-
 #
 #   ---------------  -  ------------------------------
 #        Section 04  |  Drop Tables
@@ -370,7 +367,6 @@ drop-table:
         groupid: iron_weapons
         equipped: 0.05
         chance: 0.005
-
 
 #
 #   ---------------  -  ------------------------------

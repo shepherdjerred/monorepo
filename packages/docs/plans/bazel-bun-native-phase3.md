@@ -3,6 +3,7 @@
 ## Status: ~95% complete (2026-03-10)
 
 ### What's done
+
 - All `@aspect_rules_js`, `@aspect_rules_ts`, `rules_nodejs` imports removed from MODULE.bazel
 - All BUILD files migrated to bun-native rules (`bun_library`, `bun_test`, `bun_eslint_test`, `bun_typecheck_test`, etc.)
 - Custom `BunInfo` provider and `rules_bun` rules handle everything
@@ -13,6 +14,7 @@
 Bun installs packages into `node_modules/.bun/<key>/node_modules/<pkg>/` with version-specific keys. Each entry contains the primary package as real files and deps as symlinks to other entries.
 
 **Key design decisions:**
+
 - **Preserve .bun/ structure** in materialized trees (not flat `node_modules/<pkg>/`)
 - **Per-package filegroups** with multi-version globs (e.g., `wrap-ansi` globs all 4 version entries)
 - **Inter-entry dep symlinks** recreated by `hoisted_links.sh` with existence checks
@@ -22,12 +24,12 @@ Bun installs packages into `node_modules/.bun/<key>/node_modules/<pkg>/` with ve
 
 ### Files
 
-| File | Purpose |
-|------|---------|
+| File                                          | Purpose                                                                 |
+| --------------------------------------------- | ----------------------------------------------------------------------- |
 | `tools/rules_bun/bun/private/bun_install.bzl` | Repository rule: `bun install`, lockfile parsing, BUILD/defs generation |
 | `tools/rules_bun/bun/private/materialize.bzl` | TreeArtifact builder: copies sources + npm files, runs hoisted_links.sh |
-| `tools/rules_bun/bun/providers.bzl` | `BunInfo` provider definition |
-| `tools/rules_bun/bun/extensions.bzl` | MODULE.bazel extension for `bun_modules` |
+| `tools/rules_bun/bun/providers.bzl`           | `BunInfo` provider definition                                           |
+| `tools/rules_bun/bun/extensions.bzl`          | MODULE.bazel extension for `bun_modules`                                |
 
 ### Fixed issues (this session)
 
@@ -41,6 +43,7 @@ Bun installs packages into `node_modules/.bun/<key>/node_modules/<pkg>/` with ve
 3. **Missing eslint-config dep** — 18 packages import `@shepherdjerred/eslint-config` without declaring it as a dependency. Fixed by adding `"@shepherdjerred/eslint-config": "workspace:*"` to each package's devDependencies.
 
 ### Verified passing
+
 - `//packages/tools:lint` — PASSED
 - `//packages/tools:typecheck` — PASSED
 - `//packages/birmel:lint` — PASSED
