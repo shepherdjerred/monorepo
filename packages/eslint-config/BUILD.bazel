@@ -26,7 +26,10 @@ bun_library(
         "local.ts",
         "local-rules.ts",
     ],
-    data = glob(["dist/**/*.map"]),
+    data = glob(
+        ["dist/**/*.map"],
+        allow_empty = True,
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
