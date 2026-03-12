@@ -178,15 +178,23 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             done && \
             rm -f bun.lock && \
             $$BUN install --ignore-scripts --production && \
+            echo "DEBUG: cwd=$$PWD" >&2 && \
+            echo "DEBUG: root node_modules:" >&2 && (ls -la node_modules/ 2>&1 | head -20) >&2 && \
+            echo "DEBUG: pkg node_modules:" >&2 && (ls -la {pkg_dir}/node_modules/ 2>&1 | head -10) >&2 && \
+            echo "DEBUG: node_modules type:" >&2 && (file node_modules 2>&1) >&2 && \
+            echo "DEBUG: root nm file count:" >&2 && (find node_modules -type f 2>/dev/null | wc -l) >&2 && \
+            echo "DEBUG: pkg nm file count:" >&2 && (find {pkg_dir}/node_modules -type f 2>/dev/null | wc -l) >&2 && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace && \
-            cp -a node_modules $$TARDIR/workspace/node_modules && \
+            cp -rL node_modules $$TARDIR/workspace/node_modules 2>&1 && \
             if [ -d {pkg_dir}/node_modules ]; then \
                 mkdir -p $$TARDIR/workspace/{pkg_dir} && \
-                cp -a {pkg_dir}/node_modules $$TARDIR/workspace/{pkg_dir}/node_modules; \
+                cp -rL {pkg_dir}/node_modules $$TARDIR/workspace/{pkg_dir}/node_modules 2>&1; \
             fi && \
+            echo "DEBUG: tardir contents:" >&2 && (find $$TARDIR -maxdepth 4 -type d 2>&1 | head -20) >&2 && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
+            echo "DEBUG: tar entry count:" >&2 && (tar -tf $$OUTPUT_TAR | wc -l) >&2 && \
             tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules" >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
