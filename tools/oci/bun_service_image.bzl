@@ -177,10 +177,10 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             EXECROOT=$$PWD && \
             BUN=$$EXECROOT/$(location //tools/bun) && \
             OUTPUT_TAR=$$EXECROOT/$@ && \
-            TMPDIR=$$(mktemp -d) && \
-            trap 'rm -rf $$TMPDIR' EXIT && \
-            cp $(location {package_json}) $$TMPDIR/package.json && \
-            cd $$TMPDIR && \
+            INSTALLDIR=$$(mktemp -d) && \
+            trap 'rm -rf $$INSTALLDIR' EXIT && \
+            cp $(location {package_json}) $$INSTALLDIR/package.json && \
+            cd $$INSTALLDIR && \
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
             $$BUN install --ignore-scripts --backend=copyfile && \
@@ -189,7 +189,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
-            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules" >&2; exit 1; }}
+            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in $$(pwd)" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls node_modules:" >&2; ls node_modules 2>&1 >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
