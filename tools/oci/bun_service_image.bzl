@@ -136,25 +136,38 @@ def bun_service_image(
         )
 
 def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
-    """Run bun install and produce a tar of node_modules."""
+    """Run bun install and produce a tar of node_modules.
+
+    Instead of using bun workspaces (which requires ALL workspace packages from
+    the lockfile to be present), we install as a standalone package:
+    1. Copy the service's package.json to a clean tmpdir root
+    2. Replace workspace:* deps with * (resolve from registry)
+    3. Run bun install without any lockfile or workspace config
+    4. Package node_modules into a tar for the container image
+
+    The bun.lock is kept in srcs for Bazel cache invalidation but not copied.
+    """
 
     srcs = [
         package_json,
-        "//:package.json",
         "//:bun.lock",
     ]
 
+    # Workspace packages' package.json files are needed to extract their
+    # production dependencies and merge them into the install.
     for ws_dir in workspace_packages.keys():
         srcs.append("//" + ws_dir + ":package.json")
 
-    ws_copies = ""
+    # Build shell code to merge workspace package deps into the main package.json.
+    # For each workspace dep, read its package.json and merge its production deps.
+    # After merging, remove any workspace:* protocol deps (inter-workspace deps
+    # that only exist in the monorepo, not on npm).
+    ws_merge = ""
     for ws_dir in workspace_packages.keys():
-        ws_copies += "mkdir -p $$TMPDIR/{ws_dir} && cp $(location //{ws_dir}:package.json) $$TMPDIR/{ws_dir}/package.json && ".format(ws_dir = ws_dir)
-
-    # Build a comma-separated list of workspace dirs for the root package.json.
-    # This prevents bun install from failing on missing workspace directories.
-    workspace_dirs = [pkg_dir] + list(workspace_packages.keys())
-    workspace_csv = ",".join(workspace_dirs)
+        ws_merge += """
+            WS_PJ=$$EXECROOT/$(location //{ws_dir}:package.json) && \
+            $$BUN -e "var f=require('fs'),main=JSON.parse(f.readFileSync('package.json','utf8')),ws=JSON.parse(f.readFileSync('$$WS_PJ','utf8'));var d=main.dependencies=main.dependencies||{{}};var wd=ws.dependencies||{{}};for(var k in wd)if(!wd[k].startsWith('workspace:'))d[k]=wd[k];f.writeFileSync('package.json',JSON.stringify(main,null,2))" && \
+        """.format(ws_dir = ws_dir)
 
     native.genrule(
         name = name,
@@ -166,42 +179,21 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             OUTPUT_TAR=$$EXECROOT/$@ && \
             TMPDIR=$$(mktemp -d) && \
             trap 'rm -rf $$TMPDIR' EXIT && \
-            cp $(location //:package.json) $$TMPDIR/package.json && \
-            cp $(location //:bun.lock) $$TMPDIR/bun.lock && \
-            mkdir -p $$TMPDIR/{pkg_dir} && \
-            cp $(location {package_json}) $$TMPDIR/{pkg_dir}/package.json && \
-            {ws_copies} \
+            cp $(location {package_json}) $$TMPDIR/package.json && \
             cd $$TMPDIR && \
-            $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));p.workspaces="{workspace_csv}".split(",");delete p.patchedDependencies;delete p.devDependencies;f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
-            for pj in {pkg_dir}/package.json {ws_package_jsons}; do \
-                $$BUN -e "var f=require('fs'),p=JSON.parse(f.readFileSync('$$pj','utf8'));delete p.patchedDependencies;delete p.devDependencies;f.writeFileSync('$$pj',JSON.stringify(p,null,2))" ; \
-            done && \
-            rm -f bun.lock && \
-            $$BUN install --ignore-scripts --production && \
-            echo "DEBUG: cwd=$$PWD" >&2 && \
-            echo "DEBUG: root node_modules:" >&2 && (ls -la node_modules/ 2>&1 | head -20) >&2 && \
-            echo "DEBUG: pkg node_modules:" >&2 && (ls -la {pkg_dir}/node_modules/ 2>&1 | head -10) >&2 && \
-            echo "DEBUG: node_modules type:" >&2 && (file node_modules 2>&1) >&2 && \
-            echo "DEBUG: root nm file count:" >&2 && (find node_modules -type f 2>/dev/null | wc -l) >&2 && \
-            echo "DEBUG: pkg nm file count:" >&2 && (find {pkg_dir}/node_modules -type f 2>/dev/null | wc -l) >&2 && \
+            $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
+            {ws_merge} \
+            $$BUN install --ignore-scripts && \
             TARDIR=$$(mktemp -d) && \
-            mkdir -p $$TARDIR/workspace && \
-            cp -rL node_modules $$TARDIR/workspace/node_modules 2>&1 && \
-            if [ -d {pkg_dir}/node_modules ]; then \
-                mkdir -p $$TARDIR/workspace/{pkg_dir} && \
-                cp -rL {pkg_dir}/node_modules $$TARDIR/workspace/{pkg_dir}/node_modules 2>&1; \
-            fi && \
-            echo "DEBUG: tardir contents:" >&2 && (find $$TARDIR -maxdepth 4 -type d 2>&1 | head -20) >&2 && \
+            mkdir -p $$TARDIR/workspace/{pkg_dir} && \
+            cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
-            echo "DEBUG: tar entry count:" >&2 && (tar -tf $$OUTPUT_TAR | wc -l) >&2 && \
             tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules" >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
-            ws_copies = ws_copies if ws_copies else "true && ",
-            workspace_csv = workspace_csv,
-            ws_package_jsons = " ".join([d + "/package.json" for d in workspace_packages.keys()]),
+            ws_merge = ws_merge if ws_merge else "true && ",
         ),
         tools = ["//tools/bun"],
         tags = ["manual", "requires-network"],
