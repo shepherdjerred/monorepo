@@ -12,6 +12,7 @@ else
 fi
 BUN="$RUNFILES/{{BUN_PATH}}"
 TREE="$RUNFILES/{{TREE_PATH}}"
+{{ENV_VARS}}
 find "$TREE" -name "__snapshots__" -type d -exec chmod -R u+w {} + 2>/dev/null || true
 cd "$TREE/{{PKG_DIR}}"
 # Exit 0 if no test files found (matches old bun_test_entry.cjs behavior)

@@ -4,7 +4,7 @@ set -euo pipefail
 source "$(dirname "$0")/setup-tools.sh"
 
 install_base
-install_node
+install_bun
 install_gh
 
 # Install Claude Code CLI

@@ -67,6 +67,19 @@ Always verify changes:
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 
+## Bazel Conventions
+
+- Use `@types/bun`, never `bun-types` in BUILD.bazel deps
+- `bun_library` globs must exclude `*.test.ts` and `*.spec.ts`
+- Manual tags require a `# Manual: <reason>` comment on the preceding line
+- Never use `readlink -f` (not portable on macOS) — use POSIX `_realpath` or `$BUN_BINARY`
+- Never use `python3` in runner scripts — use `$BUN_BINARY -e` instead
+- Never add `/usr/local/bin` to PATH in `.bzl` files
+- New workspace packages must add their `package.json` to `npm_translate_lock` data list in `MODULE.bazel`
+- Version constants (Bun, Prisma) have a single source of truth in `versions.bzl` files
+- Scoped packages (e.g. `@shepherdjerred/eslint-config`) must set `package_name` on `bun_library`
+- During development, use targeted builds (`bazel test //packages/foo:lint`) — never `bazel test //...`
+
 ## Package Notes
 
 Each package has its own CLAUDE.md with specific instructions:

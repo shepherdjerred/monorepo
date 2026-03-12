@@ -124,7 +124,7 @@ class TestBazelPatterns:
         assert m.group("currentValue") == "v3.17.3"
 
     def test_npm_at_version(self, patterns: list[re.Pattern[str]]) -> None:
-        text = "            # renovate: datasource=npm depName=obsidian-headless\n            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless@0.0.4 && \\"
+        text = "            # renovate: datasource=npm depName=obsidian-headless\n            BUN_INSTALL=$$TMPDIR/usr/local bun add --global obsidian-headless@0.0.4 && \\"
         m = _match_any(patterns, text)
         assert m is not None
         assert m.group("datasource") == "npm"

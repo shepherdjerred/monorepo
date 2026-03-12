@@ -4,8 +4,8 @@
   "description": "Obsidian plugin for viewing and editing Cooklang recipe files",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "node esbuild.config.mjs production",
+    "dev": "bun esbuild.config.mjs",
+    "build": "bun esbuild.config.mjs production",
     "lint": "eslint src --cache",
     "test": "bun test",
     "typecheck": "tsc --noEmit"

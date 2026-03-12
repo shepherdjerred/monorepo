@@ -9,7 +9,13 @@ exports_files(["package.json"])
 bun_library(
     name = "pkg",
     package_name = "@clauderon/client",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -17,6 +23,7 @@ bun_library(
     ],
 )
 
+# Manual: TypeShare-generated types resolve as 'error' in eslint-typescript sandbox
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -24,6 +31,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
         ":node_modules/typescript",
@@ -33,16 +41,17 @@ bun_eslint_test(
     ],
 )
 
+# Manual: @clauderon/shared exports dist/ types which aren't available in sandbox
 bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//:tsconfig.base.json"],
     tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
-        ":node_modules/@clauderon/shared",
         ":node_modules/@types/bun",
         ":node_modules/typescript",
         ":pkg",
+        "//packages/clauderon/web/shared:pkg",
     ],
 )
 

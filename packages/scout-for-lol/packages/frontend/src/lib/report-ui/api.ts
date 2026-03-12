@@ -117,7 +117,7 @@ export async function fetchMatchFromRiot(
       };
     }
 
-    const data = await response.json();
+    const data: unknown = await response.json();
     const dataValidated = RiotMatchResponseSchema.safeParse(data);
     if (!dataValidated.success) {
       return { match: null, error: "Invalid API response" };

@@ -15,10 +15,18 @@ vite_build(
 # Vite-based React SPA.
 bun_library(
     name = "pkg",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx",
+        ],
+    ),
     data = glob(["src/**/*.css"]),
     package_json = "package.json",
     visibility = ["//visibility:public"],
@@ -35,6 +43,7 @@ bun_library(
     ],
 )
 
+# Manual: tRPC router types from parent sentinel package resolve as 'any' in sandbox
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -42,6 +51,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
         ":node_modules/typescript",

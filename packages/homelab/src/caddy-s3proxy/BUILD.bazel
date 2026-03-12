@@ -42,6 +42,7 @@ oci_image(
         "org.opencontainers.image.description": "Caddy with S3 proxy plugin",
         "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
     },
+    # Manual: CI-only container image build/push
     tags = ["manual"],
     tars = [":caddy_layer"],
     visibility = ["//visibility:public"],
@@ -51,14 +52,14 @@ genrule(
     name = "image_tags_tmpl",
     outs = ["image_tags_tmpl.txt"],
     cmd = "echo '{STABLE_GIT_SHA}' > $@",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
 )
 
 expand_template(
     name = "image_tags",
     out = "image_tags.txt",
     stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     template = ":image_tags_tmpl",
 )
 
@@ -67,6 +68,6 @@ oci_push(
     image = ":image",
     remote_tags = ":image_tags",
     repository = "ghcr.io/shepherdjerred/caddy-s3proxy",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     visibility = ["//visibility:public"],
 )

@@ -156,7 +156,6 @@ RUN \
     rm -rf /home/${USERNAME}/.cache/Homebrew && \
     rm -rf /home/${USERNAME}/.local/share/mise/downloads/* && \
     rm -rf /home/${USERNAME}/.local/share/mise/cache/* && \
-    rm -rf /home/${USERNAME}/.npm && \
     rm -rf /home/${USERNAME}/.cargo/registry && \
     rm -rf /home/${USERNAME}/.cargo/git && \
     \

@@ -49,6 +49,7 @@ bun_eslint_test(
     ],
 )
 
+# Manual: cdk8s tsconfig path aliases not resolved in Bazel sandbox
 bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//packages/homelab:tsconfig.base.json"],
@@ -62,8 +63,7 @@ bun_typecheck_test(
     ],
 )
 
-# Uses @shepherdjerred/homelab/cdk8s/* tsconfig path aliases; local execution
-# needed so Bun can resolve them from the bin tree with tsconfig.json.
+# Manual: tsconfig path aliases need local execution; Bun resolves them from bin tree
 bun_test(
     name = "test",
     size = "large",

@@ -9,7 +9,13 @@ exports_files(["package.json"])
 # Bun-native: TypeScript executed directly by Bun after tsc build.
 bun_library(
     name = "pkg",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -35,6 +41,7 @@ bun_binary(
     deps = [":pkg"],
 )
 
+# Manual: discord.js Activity/Presence types resolve as 'any' in Bazel sandbox
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -42,6 +49,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
         ":node_modules/@tsconfig/recommended",

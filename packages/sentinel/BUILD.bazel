@@ -66,10 +66,8 @@ bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//:tsconfig.base.json"],
     prisma_client = ":prisma_generate",
-    tags = [
-        "manual",
-        "requires-network",
-    ],
+    # Manual: Prisma types require prisma generate + network access for schema introspection
+    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/@types/bun",

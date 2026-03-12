@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-if ! command -v semgrep &>/dev/null; then
+if ! command -v semgrep &>/dev/null; then # hermeticity-exempt: semgrep requires system install (OCaml+Python)
   echo "ERROR: semgrep not found in PATH" >&2
   exit 1
 fi
@@ -18,4 +18,7 @@ semgrep scan \
   --config auto \
   --error \
   --no-git \
+  --exclude node_modules \
+  --exclude .aspect_rules_js \
+  --exclude "*.d.ts" \
   .

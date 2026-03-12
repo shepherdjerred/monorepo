@@ -12,5 +12,6 @@ else
 fi
 BUN="$RUNFILES/{{BUN_PATH}}"
 TREE="$RUNFILES/{{TREE_PATH}}"
+{{ENV_VARS}}
 cd "$TREE/{{PKG_DIR}}"
 exec "$BUN" run "{{ENTRY_POINT}}" "$@"

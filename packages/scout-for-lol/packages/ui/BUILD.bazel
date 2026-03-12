@@ -9,10 +9,18 @@ exports_files(["package.json"])
 bun_library(
     name = "pkg",
     package_name = "@scout-for-lol/ui",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -28,7 +36,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
-    tags = ["manual"],
+    node_modules = ":node_modules",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -38,8 +46,7 @@ bun_eslint_test(
     ],
 )
 
-# Uses workspace_typecheck_test for workspace:* dep resolution in sandbox.
-# Blocked: @scout-for-lol/data has undeclared transitive deps (@google/generative-ai,
+# Manual: @scout-for-lol/data has undeclared transitive deps (@google/generative-ai,
 # @scout-for-lol/backend). Fix data package deps to unblock.
 bun_typecheck_test(
     name = "typecheck",

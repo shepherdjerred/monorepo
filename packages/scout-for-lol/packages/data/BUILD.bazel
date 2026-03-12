@@ -9,7 +9,13 @@ exports_files(["package.json"])
 bun_library(
     name = "pkg",
     package_name = "@scout-for-lol/data",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+        ],
+    ),
     data = glob([
         "src/**/*.txt",
         "src/**/assets/*.json",
@@ -25,6 +31,7 @@ bun_library(
     ],
 )
 
+# Manual: workspace dep types (@scout-for-lol/backend Prisma client) resolve as 'error' in sandbox
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -32,6 +39,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
         ":node_modules/typescript",

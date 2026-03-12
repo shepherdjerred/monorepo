@@ -16,6 +16,8 @@ bun_library(
         ["src/**/*.ts"],
         exclude = ["src/**/*.test.ts"],
     ) + glob(
+        # dist/ is included because downstream consumers import the compiled JS.
+        # Source maps are data-only (not runtime imports).
         ["dist/**"],
         exclude = ["dist/**/*.map"],
     ) + [

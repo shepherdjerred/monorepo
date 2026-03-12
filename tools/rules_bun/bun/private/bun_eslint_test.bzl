@@ -71,6 +71,7 @@ def _bun_eslint_test_impl(ctx):
             "{{BUN_PATH}}": bun_rp,
             "{{TREE_PATH}}": ctx.workspace_name + "/" + tree.short_path,
             "{{PKG_DIR}}": ctx.label.package,
+            "{{ESLINT_TARGET}}": ctx.attr.eslint_target,
         },
         is_executable = True,
     )
@@ -85,6 +86,10 @@ bun_eslint_test = rule(
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
         "prisma_client": attr.label(allow_single_file = True),
+        "eslint_target": attr.string(
+            default = "src/",
+            doc = "Directory or glob to lint (default: src/)",
+        ),
         "node_modules": attr.label(
             doc = "npm_link_all_packages target to include all npm deps from package.json",
         ),

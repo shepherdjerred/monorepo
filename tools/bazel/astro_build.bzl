@@ -16,16 +16,17 @@ def _astro_build_impl(ctx):
         inputs = [marker, bun],
         command = """
             set -euo pipefail
+            _realpath() {{ cd "$(dirname "$1")" && echo "$PWD/$(basename "$1")"; }}
             # Save the execroot so we can resolve output paths after cd
             EXECROOT="$PWD"
             OUT_DIR="$EXECROOT/{out_path}"
             mkdir -p "$OUT_DIR"
             # Set up bun in PATH
-            BUN_DIR=$(dirname $(readlink -f '{bun_path}'))
-            export PATH="$BUN_DIR:/bin:/usr/bin:/usr/local/bin"
+            BUN_DIR=$(dirname $(_realpath '{bun_path}'))
+            export PATH="$BUN_DIR:/bin:/usr/bin"
             export HOME="${{TMPDIR:-/tmp}}"
             # Resolve the real workspace directory from the marker file symlink
-            MARKER_REAL=$(readlink -f '{marker_path}')
+            MARKER_REAL=$(_realpath '{marker_path}')
             WORKSPACE_DIR=$(echo "$MARKER_REAL" | sed 's|/{pkg_path}/BUILD.bazel$||')
             cd "$WORKSPACE_DIR/{pkg_path}"
             {build_cmd}

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Shell wrapper for running jscpd duplication detection in the Bazel sandbox.
 # Uses the package-level .jscpd.json config to find duplicated code.
+# hermeticity-exempt: bunx downloads jscpd at runtime
 
 set -euo pipefail
 

@@ -88,7 +88,7 @@ export async function downloadConfigBundle(
  * Import config bundle from JSON string
  */
 export function importAllConfigFromJSON(json: string): ConfigBundle {
-  const parsed = JSON.parse(json);
+  const parsed: unknown = JSON.parse(json);
   return ConfigBundleSchema.parse(parsed);
 }
 

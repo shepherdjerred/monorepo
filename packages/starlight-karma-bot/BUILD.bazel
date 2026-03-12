@@ -54,7 +54,7 @@ bun_typecheck_test(
         ":node_modules/@types/lodash",
         ":node_modules/typescript",
         ":pkg",
-        "//:node_modules/bun-types",
+        "//:node_modules/@types/bun",
         "//:node_modules/undici-types",
     ],
 )

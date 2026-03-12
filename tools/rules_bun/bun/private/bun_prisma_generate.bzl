@@ -1,5 +1,7 @@
 """bun_prisma_generate rule implementation."""
 
+load(":prisma_versions.bzl", "PRISMA_DEFAULT_VERSION")
+
 def _bun_prisma_generate_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
@@ -15,7 +17,8 @@ def _bun_prisma_generate_impl(ctx):
             set -euo pipefail
             BUN="{bun}"
             # Create a node symlink so postinstall scripts and prisma CLI
-            # can find "node" (bun is Node-compatible)
+            # can find "node" (bun is Node-compatible).
+            # Prisma hangs without a "node" binary: https://github.com/prisma/prisma/issues/26560
             BINDIR=$(mktemp -d)
             ln -s "$PWD/$BUN" "$BINDIR/node"
             ln -s "$PWD/$BUN" "$BINDIR/bun"
@@ -58,7 +61,7 @@ bun_prisma_generate = rule(
     implementation = _bun_prisma_generate_impl,
     attrs = {
         "schema": attr.label(mandatory = True, allow_single_file = [".prisma"]),
-        "version": attr.string(default = "6.19.2"),
+        "version": attr.string(default = PRISMA_DEFAULT_VERSION),
     },
     toolchains = ["//tools/rules_bun/bun:toolchain_type"],
 )

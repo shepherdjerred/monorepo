@@ -24,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ci.lib import bazel, buildkite, ghcr, npm
+from ci.lib import bazel, buildkite, ghcr, publish_npm
 from ci.lib.config import ReleaseConfig
 
 
@@ -145,7 +145,7 @@ def main() -> None:
         for pkg_dir in npm_packages:
             try:
                 print(f"\nPublishing {pkg_dir}", flush=True)
-                npm.publish(pkg_dir, npm_token)
+                publish_npm.publish(pkg_dir, npm_token)
             except Exception as e:
                 errors.append(f"Failed to publish {pkg_dir}: {e}")
     else:

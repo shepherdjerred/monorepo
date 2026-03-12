@@ -119,21 +119,28 @@ fi
 if [ -n "${DEV_PEER_LINKS:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_ROOT" ]; then
   ASPECT_DIR="$BIN_ROOT/node_modules/.aspect_rules_js"
   if [ -d "$ASPECT_DIR" ]; then
+    # Normalize scoped package names for aspect_rules_js directory lookup.
+    # @scope/pkg becomes @scope+pkg (aspect_rules_js encoding).
+    normalize_pkg_name() {
+      echo "$1" | sed 's|/|+|g'
+    }
     IFS=',' read -ra PAIRS <<< "$DEV_PEER_LINKS"
     for pair in "${PAIRS[@]}"; do
       CONSUMER="${pair%%:*}"
       DEP="${pair##*:}"
+      CONSUMER_NORMALIZED=$(normalize_pkg_name "$CONSUMER")
       # Find the consumer's versioned dir in .aspect_rules_js
       CONSUMER_VERSIONED=""
-      for d in "$ASPECT_DIR/${CONSUMER}@"*/; do
+      for d in "$ASPECT_DIR/${CONSUMER_NORMALIZED}@"*/; do
         [ -d "$d" ] && CONSUMER_VERSIONED="$(basename "$d")" && break
       done
       if [ -n "$CONSUMER_VERSIONED" ]; then
         CONSUMER_NM="$ASPECT_DIR/$CONSUMER_VERSIONED/node_modules"
         if [ -d "$CONSUMER_NM" ] && [ ! -e "$CONSUMER_NM/$DEP" ]; then
           # Find the dep's versioned dir
+          DEP_NORMALIZED=$(normalize_pkg_name "$DEP")
           DEP_VERSIONED=""
-          for d in "$ASPECT_DIR/${DEP}@"*/; do
+          for d in "$ASPECT_DIR/${DEP_NORMALIZED}@"*/; do
             [ -d "$d" ] && DEP_VERSIONED="$(basename "$d")" && break
           done
           if [ -n "$DEP_VERSIONED" ]; then
@@ -186,6 +193,7 @@ if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DI
     fi
     if [ -n "$PRISMA_CLI" ]; then
       PRISMA_TMPDIR=$(mktemp -d)
+      trap 'rm -rf "$PRISMA_TMPDIR"' EXIT
       mkdir -p "$PRISMA_TMPDIR/prisma"
       cp "$SCHEMA_PATH" "$PRISMA_TMPDIR/prisma/schema.prisma"
       echo '{"name":"prisma-gen-tmp"}' > "$PRISMA_TMPDIR/package.json"
@@ -193,7 +201,7 @@ if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DI
       PRISMA_VER="${PRISMA_CLI##*prisma@}"
       PRISMA_VER="${PRISMA_VER%%_*}"
       PRISMA_VER="${PRISMA_VER%%/*}"
-      [ -z "$PRISMA_VER" ] && PRISMA_VER="6.19.2"
+      [ -z "$PRISMA_VER" ] && PRISMA_VER="${PRISMA_FALLBACK_VER:-6.19.2}"
 
       (cd "$PRISMA_TMPDIR" && \
         HOME="$PRISMA_TMPDIR" \

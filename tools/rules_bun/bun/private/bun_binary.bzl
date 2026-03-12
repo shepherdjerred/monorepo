@@ -7,19 +7,36 @@ def _bun_binary_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
-    # Find the primary source dep (has package_json, not an npm package)
+    # Find primary source dep (has package_json) vs npm/workspace deps
     bun_info = None
+    extra_workspace_deps = []
     for dep in ctx.attr.deps:
-        if BunInfo in dep and dep[BunInfo].package_json:
-            bun_info = dep[BunInfo]
-            break
+        if BunInfo in dep:
+            info = dep[BunInfo]
+            if bun_info == None and info.package_json:
+                bun_info = info
+            else:
+                extra_workspace_deps.append(info)
     if not bun_info:
-        for dep in ctx.attr.deps:
-            if BunInfo in dep:
-                bun_info = dep[BunInfo]
-                break
-    if not bun_info:
-        fail("No dep provides BunInfo")
+        # Fall back to first BunInfo if no source dep found
+        if extra_workspace_deps:
+            bun_info = extra_workspace_deps.pop(0)
+        else:
+            fail("No dep provides BunInfo")
+
+    # Merge extra workspace deps into the main bun_info
+    if extra_workspace_deps:
+        merged_ws = depset(extra_workspace_deps, transitive = [bun_info.workspace_deps])
+        merged_npm = depset(transitive = [bun_info.npm_sources] + [d.npm_sources for d in extra_workspace_deps])
+        bun_info = BunInfo(
+            target = bun_info.target,
+            sources = bun_info.sources,
+            package_json = bun_info.package_json,
+            package_name = bun_info.package_name,
+            transitive_sources = bun_info.transitive_sources,
+            npm_sources = merged_npm,
+            workspace_deps = merged_ws,
+        )
 
     nm_sources = []
     if ctx.attr.node_modules:
@@ -35,6 +52,7 @@ def _bun_binary_impl(ctx):
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
         hoisted_links = ctx.file._hoisted_links,
+        prisma_client = ctx.attr.prisma_client,
     )
 
     bun_rp = bun.short_path
@@ -42,6 +60,12 @@ def _bun_binary_impl(ctx):
         bun_rp = bun_rp[3:]
     else:
         bun_rp = ctx.workspace_name + "/" + bun_rp
+
+    # Generate env var exports
+    env_lines = []
+    for k, v in ctx.attr.env.items():
+        env_lines.append("export %s=%s" % (k, repr(v)))
+    env_block = "\n".join(env_lines)
 
     launcher = ctx.actions.declare_file(ctx.label.name + "_launcher.sh")
     ctx.actions.expand_template(
@@ -52,6 +76,7 @@ def _bun_binary_impl(ctx):
             "{{TREE_PATH}}": ctx.workspace_name + "/" + tree.short_path,
             "{{PKG_DIR}}": ctx.label.package,
             "{{ENTRY_POINT}}": ctx.attr.entry_point,
+            "{{ENV_VARS}}": env_block,
         },
         is_executable = True,
     )
@@ -68,6 +93,9 @@ bun_binary = rule(
         "extra_files": attr.label_list(allow_files = True),
         "node_modules": attr.label(
             doc = "Aggregate npm deps target to include all workspace npm packages",
+        ),
+        "prisma_client": attr.label(
+            doc = "bun_prisma_generate target to include .prisma/client in the tree",
         ),
         "env": attr.string_dict(),
         "_hoisted_links": attr.label(

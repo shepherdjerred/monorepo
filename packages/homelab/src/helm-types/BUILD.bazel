@@ -11,7 +11,13 @@ exports_files(["package.json"])
 bun_library(
     name = "pkg",
     package_name = "@shepherdjerred/helm-types",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -45,7 +51,6 @@ bun_eslint_test(
 bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//packages/homelab:tsconfig.base.json"],
-    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
         ":pkg",
@@ -58,7 +63,6 @@ bun_typecheck_test(
 bun_test(
     name = "test",
     size = "small",
-    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [":pkg"],
 )

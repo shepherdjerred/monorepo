@@ -43,6 +43,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.17",
     "@tauri-apps/cli": "^2.4.0",
     "@types/node": "^25.0.0",
@@ -51,6 +52,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
     "bun-types": "latest",
+    "eslint": "^9.39.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",

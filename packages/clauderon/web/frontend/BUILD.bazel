@@ -25,10 +25,18 @@ vite_build(name = "vite_build")
 # Vite/React SPA; this bun_library wraps sources for dependency tracking.
 bun_library(
     name = "pkg",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -40,6 +48,7 @@ bun_library(
     ],
 )
 
+# Manual: TypeShare-generated types resolve as 'error' in eslint-typescript sandbox
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -47,6 +56,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
         ":node_modules/typescript",
@@ -57,6 +67,7 @@ bun_eslint_test(
     ],
 )
 
+# Manual: @clauderon/shared exports dist/ types which aren't available in sandbox
 bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//:tsconfig.base.json"],

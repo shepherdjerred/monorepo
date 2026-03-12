@@ -5,7 +5,7 @@ export default [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     projectService: {
-      allowDefaultProject: ["eslint.config.ts"],
+      allowDefaultProject: ["eslint.config.ts", "vitest.config.mts"],
     },
   }),
   {

@@ -5,7 +5,7 @@ load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
 _VALID_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".json", ".mts", ".cts", ".mjs", ".cjs", ".d.ts"]
 
 def _bun_library_impl(ctx):
-    sources = depset(ctx.files.srcs)
+    sources = depset(ctx.files.srcs + ctx.files.data)
     package_json = ctx.file.package_json
 
     transitive_sources_list = [sources]

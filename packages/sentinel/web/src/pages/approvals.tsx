@@ -44,10 +44,16 @@ export function Approvals({ onNavigate }: ApprovalsProps) {
   const lowerTool = toolFilter.toLowerCase();
 
   const filteredApprovals = approvals?.filter((a) => {
-    if (lowerAgent.length > 0 && !a.agent.toLowerCase().includes(lowerAgent)) {
+    if (
+      lowerAgent.length > 0 &&
+      !String(a.agent).toLowerCase().includes(lowerAgent)
+    ) {
       return false;
     }
-    if (lowerTool.length > 0 && !a.toolName.toLowerCase().includes(lowerTool)) {
+    if (
+      lowerTool.length > 0 &&
+      !String(a.toolName).toLowerCase().includes(lowerTool)
+    ) {
       return false;
     }
     return true;

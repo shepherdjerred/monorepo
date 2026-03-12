@@ -1,6 +1,5 @@
 [tools]
 bun = "latest"
-node = "lts"
 
 [tasks.check]
 description = "Run all checks (typecheck, lint, format, test)"

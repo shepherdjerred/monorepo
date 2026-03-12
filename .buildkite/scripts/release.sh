@@ -4,7 +4,7 @@ source "$(dirname "$0")/setup-tools.sh"
 
 install_base
 install_uv
-install_node
+install_bun
 
 # renovate: datasource=npm depName=release-please
 RELEASE_PLEASE_VERSION="17.3.0"
