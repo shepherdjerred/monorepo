@@ -117,6 +117,9 @@ def main() -> None:
                 versioned = ghcr.format_version_with_digest(config.version, output)
                 digests[version_key] = versioned
                 print(f"  Digest: {versioned}", flush=True)
+        except subprocess.CalledProcessError as e:
+            stderr = e.stderr or "(no stderr captured)"
+            errors.append(f"Failed to push {target}: {e}\n  stderr: {stderr}")
         except Exception as e:
             errors.append(f"Failed to push {target}: {e}")
 

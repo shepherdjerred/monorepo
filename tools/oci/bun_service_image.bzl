@@ -172,11 +172,12 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cp $(location {package_json}) $$TMPDIR/{pkg_dir}/package.json && \
             {ws_copies} \
             cd $$TMPDIR && \
-            $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));p.workspaces="{workspace_csv}".split(",");delete p.patchedDependencies;f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
+            $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));p.workspaces="{workspace_csv}".split(",");delete p.patchedDependencies;delete p.devDependencies;f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             for pj in {pkg_dir}/package.json {ws_package_jsons}; do \
-                $$BUN -e "var f=require('fs'),p=JSON.parse(f.readFileSync('$$pj','utf8'));delete p.patchedDependencies;f.writeFileSync('$$pj',JSON.stringify(p,null,2))" ; \
+                $$BUN -e "var f=require('fs'),p=JSON.parse(f.readFileSync('$$pj','utf8'));delete p.patchedDependencies;delete p.devDependencies;f.writeFileSync('$$pj',JSON.stringify(p,null,2))" ; \
             done && \
-            $$BUN install --ignore-scripts && \
+            rm -f bun.lock && \
+            $$BUN install --ignore-scripts --production && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace && \
             cp -a node_modules $$TARDIR/workspace/node_modules && \
