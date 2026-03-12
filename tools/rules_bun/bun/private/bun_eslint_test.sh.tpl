@@ -14,13 +14,4 @@ BUN="$RUNFILES/{{BUN_PATH}}"
 TREE="$RUNFILES/{{TREE_PATH}}"
 cd "$TREE/{{PKG_DIR}}"
 
-# Dereference @prisma/client symlinks so TypeScript resolves .prisma/client locally
-if [ -d node_modules/.prisma/client ] && [ -d node_modules/@prisma/client ]; then
-    TMP_PRISMA=$(mktemp -d)
-    cp -RL node_modules/@prisma/client "$TMP_PRISMA/"
-    rm -rf node_modules/@prisma/client
-    mv "$TMP_PRISMA/client" node_modules/@prisma/client
-    rm -rf "$TMP_PRISMA"
-fi
-
-exec "$BUN" run ./node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 src/ "$@"
+"$BUN" run ./node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 {{ESLINT_TARGET}} "$@"

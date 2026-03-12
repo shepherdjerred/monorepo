@@ -20,10 +20,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^9.39.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.3",

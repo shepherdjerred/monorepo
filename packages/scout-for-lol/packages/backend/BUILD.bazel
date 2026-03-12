@@ -21,7 +21,13 @@ bun_prisma_generate(
 bun_library(
     name = "pkg",
     package_name = "@scout-for-lol/backend",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.spec.ts",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [

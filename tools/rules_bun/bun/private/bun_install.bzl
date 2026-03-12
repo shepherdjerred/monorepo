@@ -503,10 +503,6 @@ def _bun_install_impl(rctx):
         else:
             rctx.symlink(pkg_json, "package.json")
 
-    # Symlink pnpm-workspace.yaml if provided (needed during transition)
-    if rctx.attr.pnpm_workspace:
-        rctx.symlink(rctx.attr.pnpm_workspace, "pnpm-workspace.yaml")
-
     # Symlink additional data files (patches, configs, etc.) at workspace-relative paths
     for f in rctx.attr.data:
         f_pkg = f.package
@@ -627,10 +623,6 @@ bun_install = repository_rule(
             default = [],
             allow_files = True,
             doc = "Additional files needed during bun install (patches, configs, etc.)",
-        ),
-        "pnpm_workspace": attr.label(
-            allow_single_file = True,
-            doc = "Label for pnpm-workspace.yaml (temporary, for transition)",
         ),
         "bins": attr.string_list_dict(
             default = {},

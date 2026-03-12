@@ -7,6 +7,9 @@ toolchain_type(
 )
 
 # Platform config_settings for select()
+# NOTE: These duplicate //tools/bun:BUILD.bazel config_settings.
+# Both are needed: this package is for the native toolchain system,
+# while tools/bun is for genrule/sh_test consumers via $(location).
 config_setting(
     name = "macos_arm64",
     constraint_values = [

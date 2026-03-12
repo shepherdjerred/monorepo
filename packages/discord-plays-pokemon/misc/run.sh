@@ -3,4 +3,4 @@
 set -euxo pipefail
 
 pkill firefox || true
-node packages/backend/dist/index.js
+bun packages/backend/dist/index.js

@@ -1,6 +1,6 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -17,6 +17,24 @@ bun_library(
         ":node_modules/@sentry/node",
         ":node_modules/@types/bun",
         ":node_modules/firebase",
+    ],
+)
+
+# Manual: parent eslint.config.ts ignores fetcher/** and plugins fail to resolve in sandbox
+bun_eslint_test(
+    name = "lint",
+    extra_files = [
+        "//packages/better-skill-capped:eslint.config.ts",
+        "tsconfig.json",
+    ],
+    node_modules = ":node_modules",
+    tags = ["manual"],
+    deps = [
+        ":node_modules/typescript",
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//:node_modules/undici-types",
+        "//packages/eslint-config:pkg",
     ],
 )
 

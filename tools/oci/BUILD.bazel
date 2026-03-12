@@ -3,6 +3,8 @@
 
 load(":obsidian_headless.bzl", "obsidian_headless_image")
 
+exports_files(["git_sha_tag.tmpl"])
+
 # Obsidian Headless: standalone image (no monorepo source, just npm install)
 obsidian_headless_image(
     name = "obsidian_headless",
@@ -28,8 +30,9 @@ genrule(
             mkdir -p $$APT_STATE/lists/partial $$APT_CACHE/archives/partial && \
             apt-get -o Dir::State=$$APT_STATE -o Dir::Cache=$$APT_CACHE update -qq 2>/dev/null && \
             cd $$TMPDIR && \
-            apt-get -o Dir::State=$$APT_STATE -o Dir::Cache=$$APT_CACHE download git liberror-perl 2>/dev/null && \
-            for deb in *.deb; do dpkg-deb -x $$deb root; done; \
+            apt-get -o Dir::State=$$APT_STATE -o Dir::Cache=$$APT_CACHE download git liberror-perl && \
+            for deb in *.deb; do dpkg-deb -x $$deb root; done && \
+            test -f $$TMPDIR/root/usr/bin/git; \
         fi && \
         (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR/root . 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR/root .)
     """,
@@ -41,7 +44,7 @@ genrule(
 )
 
 # Helm layer: downloads the helm binary for linux/amd64 into a tar layer.
-# Helm is a statically-linked Go binary, so no shared library deps.
+# Container layer: always linux/amd64 — helm is a statically-linked Go binary, so no shared library deps.
 genrule(
     name = "helm_layer",
     outs = ["helm_layer.tar"],

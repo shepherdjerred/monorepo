@@ -2,7 +2,6 @@ node_modules
 dist
 target
 archive
-.dagger
 packages/clauderon/mobile
 packages/clauderon/target
 packages/terraform-provider-asuswrt

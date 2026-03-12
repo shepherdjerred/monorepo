@@ -1,9 +1,8 @@
-"""OCI image for obsidian-headless: installs the npm package on node:22-slim.
+"""OCI image for obsidian-headless: installs the package globally via bun.
 
-The genrule uses bare `npm` because the monorepo's Node.js toolchain is Bun
-(which doesn't include npm). This target is tagged `manual` so it only runs
-when explicitly requested. The container's own node:22-slim base provides npm
-at runtime, and the genrule relies on a system npm during the build step.
+The genrule uses bare `bun` because the target is tagged `manual` and runs
+locally. The container's own bun base provides bun at runtime, and the
+genrule relies on a system bun during the build step.
 """
 
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
@@ -12,8 +11,8 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 def obsidian_headless_image(name, visibility = None):
     """Build an OCI image that runs obsidian-headless CLI.
 
-    Installs obsidian-headless globally via npm on a node:22-slim base.
-    Currently tagged manual — requires npm which Bun toolchain doesn't provide.
+    Installs obsidian-headless globally via bun on an oven/bun:slim base.
+    Currently tagged manual — requires local bun for the build step.
 
     Args:
       name: name for the oci_image target.
@@ -21,9 +20,10 @@ def obsidian_headless_image(name, visibility = None):
     """
 
     # Layer with globally-installed obsidian-headless.
+    # hermeticity-exempt: uses system bun because Bazel toolchain doesn't expose a global install command
     native.genrule(
-        name = name + "_npm_layer",
-        outs = [name + "_npm_layer.tar"],
+        name = name + "_bun_layer",
+        outs = [name + "_bun_layer.tar"],
         cmd = """
             EXECROOT=$$PWD && \
             OUTPUT_TAR=$$EXECROOT/$@ && \
@@ -31,9 +31,10 @@ def obsidian_headless_image(name, visibility = None):
             trap 'rm -rf $$TMPDIR' EXIT && \
             cd $$TMPDIR && \
             # renovate: datasource=npm depName=obsidian-headless
-            npm install --global --prefix $$TMPDIR/usr/local obsidian-headless@0.0.4 && \
+            BUN_INSTALL=$$TMPDIR/usr/local bun add --global obsidian-headless@0.0.4 && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
         """,
+        local = True,
         tags = ["requires-network", "manual"],
     )
 
@@ -47,9 +48,9 @@ def obsidian_headless_image(name, visibility = None):
 
     oci_image(
         name = name,
-        base = "@node_slim",
+        base = "@bun_slim",
         tars = [
-            ":" + name + "_npm_layer",
+            ":" + name + "_bun_layer",
             ":" + name + "_vault_layer",
         ],
         entrypoint = ["/bin/sh", "-c"],

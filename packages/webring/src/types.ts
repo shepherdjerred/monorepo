@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export type Source = z.infer<typeof SourceSchema>;
 /** An RSS source */

@@ -75,7 +75,6 @@ INFRA_FILES = {
     "WORKSPACE.bazel",
     ".bazelrc",
     ".bazelversion",
-    "pnpm-lock.yaml",
     "bun.lock",
     "package.json",
     "tsconfig.json",

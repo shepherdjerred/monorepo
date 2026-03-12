@@ -29,6 +29,12 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "remeda": "^2.21.2",
     "rss-parser": "^3.13.0",

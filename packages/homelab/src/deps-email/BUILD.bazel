@@ -42,7 +42,6 @@ bun_eslint_test(
 bun_typecheck_test(
     name = "typecheck",
     extra_files = ["//packages/homelab:tsconfig.base.json"],
-    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
         ":pkg",
@@ -74,6 +73,7 @@ bun_service_image(
     },
 )
 
+# Manual: CI-only container image build/push
 oci_image(
     name = "image",
     base = ":image_base",
@@ -89,14 +89,14 @@ genrule(
     name = "image_tags_tmpl",
     outs = ["image_tags_tmpl.txt"],
     cmd = "echo '{STABLE_GIT_SHA}' > $@",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
 )
 
 expand_template(
     name = "image_tags",
     out = "image_tags.txt",
     stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     template = ":image_tags_tmpl",
 )
 
@@ -105,6 +105,6 @@ oci_push(
     image = ":image",
     remote_tags = ":image_tags",
     repository = "ghcr.io/shepherdjerred/dependency-summary",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     visibility = ["//visibility:public"],
 )

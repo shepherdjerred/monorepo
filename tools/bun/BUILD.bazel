@@ -1,6 +1,10 @@
 # Bun toolchain package
 # Provides a platform-aware alias to the Bun binary for use in genrules and sh_test:
 #   tools = ["//tools/bun"], cmd = "$(location //tools/bun) ..."
+#
+# NOTE: config_settings here duplicate //tools/rules_bun/bun:BUILD.bazel.
+# Both are needed: this package is for genrule/sh_test consumers via $(location),
+# while rules_bun is for the native toolchain system.
 
 config_setting(
     name = "macos_arm64",

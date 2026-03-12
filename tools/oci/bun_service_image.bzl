@@ -98,8 +98,12 @@ def bun_service_image(
         _kwargs["env"] = env
     if exposed_ports:
         _kwargs["exposed_ports"] = exposed_ports
+
+    # Default OCI labels — image.source enables auto-linking on GHCR
+    default_labels = {"org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo"}
     if labels:
-        _kwargs["labels"] = labels
+        default_labels.update(labels)
+    _kwargs["labels"] = default_labels
 
     oci_image(
         name = name,
@@ -114,20 +118,10 @@ def bun_service_image(
 
     # Push target with stamped git SHA tag
     if repository:
-        # Create a tags file with the git SHA from workspace status stamping.
-        # The template uses stamp_substitutions so the SHA is resolved at
-        # build time from the workspace_status_command output.
-        native.genrule(
-            name = name + "_tags_tmpl",
-            outs = [name + "_tags_tmpl.txt"],
-            cmd = "echo '{STABLE_GIT_SHA}' > $@",
-            tags = ["manual"],
-        )
-
         expand_template(
             name = name + "_tags",
             out = name + "_tags.txt",
-            template = ":" + name + "_tags_tmpl",
+            template = "//tools/oci:git_sha_tag.tmpl",
             stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
             tags = ["manual"],
         )

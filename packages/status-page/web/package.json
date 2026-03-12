@@ -30,8 +30,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3"
   },
   "imports": {

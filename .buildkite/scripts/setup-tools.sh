@@ -130,16 +130,6 @@ install_tofu() {
     curl -fsSL https://get.opentofu.org/install-opentofu.sh | bash -s -- --install-method standalone --opentofu-version "${OPENTOFU_VERSION}"
 }
 
-install_node() {
-    if command -v node &>/dev/null; then
-        echo "--- :nodejs: Node.js already installed, skipping"
-        return
-    fi
-    echo "--- :nodejs: Installing Node.js"
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-    apt-get install -y -qq nodejs > /dev/null
-}
-
 install_bun() {
     if command -v bun &>/dev/null; then
         echo "--- :bun: Bun already installed, skipping"

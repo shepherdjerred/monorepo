@@ -32,6 +32,7 @@ bun_library(
     ],
 )
 
+# Manual: @digital-alchemy/type-writer entity types require a running Home Assistant instance
 bun_eslint_test(
     name = "lint",
     extra_files = [
@@ -39,11 +40,12 @@ bun_eslint_test(
         "tsconfig.json",
         "//packages/homelab:tsconfig.base.json",
     ],
+    node_modules = ":node_modules",
     tags = ["manual"],
     deps = [
+        ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
-        "//:node_modules/typescript",
         "//:node_modules/undici-types",
         "//packages/eslint-config:pkg",
     ],
@@ -87,6 +89,7 @@ bun_service_image(
     },
 )
 
+# Manual: CI-only container image build/push
 oci_image(
     name = "image",
     base = ":image_base",
@@ -99,14 +102,14 @@ genrule(
     name = "image_tags_tmpl",
     outs = ["image_tags_tmpl.txt"],
     cmd = "echo '{STABLE_GIT_SHA}' > $@",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
 )
 
 expand_template(
     name = "image_tags",
     out = "image_tags.txt",
     stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     template = ":image_tags_tmpl",
 )
 
@@ -115,6 +118,6 @@ oci_push(
     image = ":image",
     remote_tags = ":image_tags",
     repository = "ghcr.io/shepherdjerred/homelab",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     visibility = ["//visibility:public"],
 )

@@ -62,11 +62,6 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
     chmod +x /usr/local/bin/gh && \
     rm -rf /tmp/gh_*
 
-# Node.js 22
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y -qq nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
 # renovate: datasource=github-releases depName=helm/helm
 ARG HELM_VERSION=v3.17.3
 RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" \

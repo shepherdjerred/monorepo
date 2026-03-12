@@ -2,9 +2,7 @@
 
 load("//tools/rules_bun/bun/private:bun_install.bzl", "bun_install")
 load(":repositories.bzl", "bun_repo")
-
-# renovate: datasource=github-releases depName=oven-sh/bun
-_DEFAULT_BUN_VERSION = "1.3.9"
+load(":versions.bzl", "BUN_DEFAULT_VERSION")
 
 _PLATFORMS = [
     "darwin_arm64",
@@ -14,7 +12,7 @@ _PLATFORMS = [
 ]
 
 def _bun_extension_impl(module_ctx):
-    version = _DEFAULT_BUN_VERSION
+    version = BUN_DEFAULT_VERSION
     for mod in module_ctx.modules:
         for toolchain in mod.tags.toolchain:
             if toolchain.bun_version:
@@ -32,7 +30,7 @@ bun = module_extension(
     tag_classes = {
         "toolchain": tag_class(
             attrs = {
-                "bun_version": attr.string(default = _DEFAULT_BUN_VERSION),
+                "bun_version": attr.string(default = BUN_DEFAULT_VERSION),
             },
         ),
     },
@@ -50,7 +48,6 @@ def _bun_modules_impl(module_ctx):
                 bun_lock = install.bun_lock,
                 package_jsons = install.package_jsons,
                 data = install.data,
-                pnpm_workspace = install.pnpm_workspace,
                 bins = install.bins,
             )
 
@@ -63,7 +60,6 @@ bun_modules = module_extension(
                 "bun_lock": attr.label(mandatory = True, allow_single_file = True),
                 "package_jsons": attr.label_list(mandatory = True, allow_files = ["package.json"]),
                 "data": attr.label_list(default = [], allow_files = True),
-                "pnpm_workspace": attr.label(allow_single_file = True),
                 "bins": attr.string_list_dict(default = {}),
             },
         ),

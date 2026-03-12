@@ -44,11 +44,18 @@ cat > ~/.gitconfig-theme << EOF
   syntax-theme = Catppuccin $CATPPUCCIN
 EOF
 
-# Claude Code
+# Claude Code (settings.json)
 CLAUDE_SETTINGS=~/.claude/settings.json
 if [[ -f "$CLAUDE_SETTINGS" ]] && command -v jq &>/dev/null; then
   TMP=$(mktemp)
   jq --arg t "$THEME_MODE" '.theme = $t' "$CLAUDE_SETTINGS" > "$TMP" && mv "$TMP" "$CLAUDE_SETTINGS"
+fi
+
+# Claude Code (.claude.json)
+CLAUDE_JSON=~/.claude.json
+if [[ -f "$CLAUDE_JSON" ]] && command -v jq &>/dev/null; then
+  TMP=$(mktemp)
+  jq --arg t "$THEME_MODE" '.theme = $t' "$CLAUDE_JSON" > "$TMP" && mv "$TMP" "$CLAUDE_JSON"
 fi
 
 # Gemini CLI

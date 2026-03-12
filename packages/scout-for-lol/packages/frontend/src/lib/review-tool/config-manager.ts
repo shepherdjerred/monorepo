@@ -79,7 +79,7 @@ export function exportGlobalConfigAsBlob(config: GlobalConfig): string {
 export function importGlobalConfigFromBlob(blob: string): GlobalConfig {
   try {
     const json = atob(blob);
-    const parsed = JSON.parse(json);
+    const parsed: unknown = JSON.parse(json);
     return GlobalConfigSchema.parse(parsed);
   } catch {
     throw new Error(

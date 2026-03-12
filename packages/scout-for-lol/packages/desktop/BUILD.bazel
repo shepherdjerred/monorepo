@@ -16,10 +16,18 @@ vite_build(
 # Tauri desktop app; this bun_library wraps sources for dependency tracking.
 bun_library(
     name = "pkg",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx",
+        ],
+    ),
     package_json = "package.json",
     visibility = ["//visibility:public"],
     deps = [
@@ -41,7 +49,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
-    tags = ["manual"],
+    node_modules = ":node_modules",
     deps = [
         ":node_modules/typescript",
         ":pkg",

@@ -21,6 +21,7 @@ _No decision records yet._
 
 ## Plans
 
+- [Bazel Bun-Native Phase 3](plans/bazel-bun-native-phase3.md) - Drop rules_js, fully bun-native Bazel (~95% complete)
 - [Buildkite Dynamic Pipeline](plans/buildkite.md) - Bazel + Buildkite CI pipeline design
 - [ArgoCD Token Management](plans/argocd-token-management.md) - Automate ArgoCD token via OpenTofu + 1Password
 - [Sentinel Implementation](plans/sentinel-implementation.md) - Autonomous agent system build plan with phased rollout

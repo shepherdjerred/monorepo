@@ -1,7 +1,7 @@
 import Parser from "rss-parser";
 import sanitizeHtml from "sanitize-html";
 import * as truncateHtml from "truncate-html";
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   type Source,
   type ResultEntry,

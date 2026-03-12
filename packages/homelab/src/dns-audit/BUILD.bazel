@@ -31,6 +31,7 @@ oci_image(
         "org.opencontainers.image.description": "DNS audit tool using checkdmarc",
         "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
     },
+    # Manual: CI-only container image build/push
     tags = ["manual"],
     tars = [":pip_layer"],
     visibility = ["//visibility:public"],
@@ -40,14 +41,14 @@ genrule(
     name = "image_tags_tmpl",
     outs = ["image_tags_tmpl.txt"],
     cmd = "echo '{STABLE_GIT_SHA}' > $@",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
 )
 
 expand_template(
     name = "image_tags",
     out = "image_tags.txt",
     stamp_substitutions = {"{STABLE_GIT_SHA}": "{{STABLE_GIT_SHA}}"},
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     template = ":image_tags_tmpl",
 )
 
@@ -56,6 +57,6 @@ oci_push(
     image = ":image",
     remote_tags = ":image_tags",
     repository = "ghcr.io/shepherdjerred/dns-audit",
-    tags = ["manual"],
+    tags = ["manual"],  # CI-only
     visibility = ["//visibility:public"],
 )

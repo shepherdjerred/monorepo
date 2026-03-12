@@ -25,7 +25,9 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
     "bun-types": "latest",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3"
   },
   "imports": {

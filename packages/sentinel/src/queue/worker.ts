@@ -244,8 +244,8 @@ async function handleAgentMessage(
       break;
     }
     case "result": {
-      totalInputTokens = message.usage["input_tokens"];
-      totalOutputTokens = message.usage["output_tokens"];
+      totalInputTokens = message.usage.input_tokens;
+      totalOutputTokens = message.usage.output_tokens;
       await handleResult(
         message,
         { job: ctx.job, sessionId: ctx.sessionId, conversationLog: ctx.conversationLog, prisma: ctx.prisma, systemPrompt: ctx.systemPrompt },

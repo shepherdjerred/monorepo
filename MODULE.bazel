@@ -167,7 +167,6 @@ bun_modules.install(
         "//packages/tools:package.json",
         "//packages/webring:package.json",
     ],
-    pnpm_workspace = "//:pnpm-workspace.yaml",
 )
 use_repo(bun_modules, "bun_modules")
 
@@ -199,15 +198,14 @@ oci.pull(
     ],
 )
 
-# Node.js slim — used by obsidian-headless
-# Note: node images use variant=v8 for arm64, so we pull platform-specific digests.
+# Bun slim — used by obsidian-headless
 oci.pull(
-    name = "node_slim",
-    digest = "sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94",
-    image = "docker.io/library/node",
+    name = "bun_slim",
+    digest = "sha256:5d5863f35ad9b3acceee8dc134fb2b89f07831129eaeec81af2b19a23dabe3e0",
+    image = "docker.io/oven/bun",
     platforms = [
         "linux/amd64",
-        "linux/arm64/v8",
+        "linux/arm64",
     ],
 )
 
@@ -240,12 +238,12 @@ use_repo(
     "bun_debian",
     "bun_debian_linux_amd64",
     "bun_debian_linux_arm64",
+    "bun_slim",
+    "bun_slim_linux_amd64",
+    "bun_slim_linux_arm64",
     "caddy_alpine",
     "caddy_alpine_linux_amd64",
     "caddy_alpine_linux_arm64_v8",
-    "node_slim",
-    "node_slim_linux_amd64",
-    "node_slim_linux_arm64_v8",
     "python_slim",
     "python_slim_linux_amd64",
     "python_slim_linux_arm64_v8",

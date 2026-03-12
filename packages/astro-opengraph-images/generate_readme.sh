@@ -4,7 +4,7 @@ set -euxo pipefail
 
 rm -rf assets/presets/*
 
-npx tsx src/presets/renderExamples.ts
+bun run src/presets/renderExamples.ts
 
 # look up the files in assets/presets/
 # save the list as JSON

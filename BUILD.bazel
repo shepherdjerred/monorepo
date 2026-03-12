@@ -10,7 +10,6 @@ exports_files([
     "tsconfig.base.json",
     "package.json",
     "bun.lock",
-    "pnpm-workspace.yaml",
 ] + glob(["patches/*.patch"]))
 
 copy_to_bin(

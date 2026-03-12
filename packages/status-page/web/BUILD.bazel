@@ -17,10 +17,18 @@ astro_check(name = "astro_check")
 
 bun_library(
     name = "pkg",
-    srcs = glob([
-        "src/**/*.ts",
-        "src/**/*.tsx",
-    ]),
+    srcs = glob(
+        [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+        ],
+        exclude = [
+            "**/*.test.ts",
+            "**/*.test.tsx",
+            "**/*.spec.ts",
+            "**/*.spec.tsx",
+        ],
+    ),
     data = glob([
         "src/**/*.astro",
         "src/**/*.css",
@@ -36,7 +44,7 @@ bun_eslint_test(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
-    tags = ["manual"],
+    node_modules = ":node_modules",
     deps = [
         ":node_modules/typescript",
         ":pkg",

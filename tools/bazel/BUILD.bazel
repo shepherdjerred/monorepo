@@ -29,6 +29,12 @@ sh_test(
     tags = ["lint"],
 )
 
+sh_test(
+    name = "bazel_lint_check",
+    srcs = ["bazel_lint_check.sh"],
+    tags = ["lint"],
+)
+
 shellcheck_test(
     name = "shellcheck",
     data = [

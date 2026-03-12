@@ -35,7 +35,7 @@ BIN_ROOT=""
 FIRST_LINK=$(find . -maxdepth 4 -type l \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' \) ! -path '*/node_modules/*' 2>/dev/null | head -1 || true)
 
 if [ -n "$FIRST_LINK" ]; then
-  REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
+  REAL_PATH=$("$BUN_BINARY" -e "console.log(require('fs').realpathSync(process.argv[1]))" "$FIRST_LINK" 2>/dev/null || true)
   if [ -n "$REAL_PATH" ]; then
     REL_SUFFIX="${FIRST_LINK#./}"
     BIN_PKG_DIR="${REAL_PATH%/"$REL_SUFFIX"}"
@@ -166,6 +166,7 @@ if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DI
       # We use bunx to run the exact prisma version from our lockfile.
       # bunx handles all dependency resolution in a writable cache.
       PRISMA_TMPDIR=$(mktemp -d)
+      trap 'rm -rf "$PRISMA_TMPDIR"' EXIT
       mkdir -p "$PRISMA_TMPDIR/prisma"
       cp "$SCHEMA_PATH" "$PRISMA_TMPDIR/prisma/schema.prisma"
       echo '{"name":"prisma-gen-tmp"}' > "$PRISMA_TMPDIR/package.json"
@@ -174,7 +175,7 @@ if [ -n "${PRISMA_SCHEMA:-}" ] && [ "$IS_BIN_TREE" = true ] && [ -n "$BIN_PKG_DI
       PRISMA_VER="${PRISMA_CLI##*prisma@}"
       PRISMA_VER="${PRISMA_VER%%_*}"
       PRISMA_VER="${PRISMA_VER%%/*}"
-      [ -z "$PRISMA_VER" ] && PRISMA_VER="6.19.2"
+      [ -z "$PRISMA_VER" ] && PRISMA_VER="${PRISMA_FALLBACK_VER:-6.19.2}"
 
       # Install @prisma/client so prisma generate can find its output target
       (cd "$PRISMA_TMPDIR" && \

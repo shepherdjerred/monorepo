@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Shell wrapper for running Knip dead code detection in the Bazel sandbox.
 # Uses the workspace knip.json config to find unused exports and dependencies.
+# hermeticity-exempt: bunx downloads knip at runtime
 
 set -euo pipefail
 
