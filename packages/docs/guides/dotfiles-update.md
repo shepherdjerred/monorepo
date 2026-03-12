@@ -19,6 +19,7 @@ Configured in `.chezmoi.toml.tmpl` to use `~/git/monorepo/packages/dotfiles` (no
 `private_dot_config/private_fish/config.fish.tmpl` loads secrets via `onepasswordRead`. If a 1Password item is deleted/archived, `chezmoi apply` fails entirely.
 
 Affected secrets (lines 39-46):
+
 - `GITHUB_TOKEN` — Homelab vault
 - `GRAFANA_TOKEN` — Homelab vault
 - `PAGERDUTY_TOKEN` — was Homelab vault item `yio3tx4wkvysvy5umdrqh7fe2e`, **deleted as of 2026-02-28**

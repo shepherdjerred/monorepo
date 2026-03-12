@@ -44,7 +44,7 @@
             <input type="checkbox" id="sentiment-llm" />
             <span>Use Chrome AI for ambiguous comments</span>
           </label>
-          <p id="llm-setup-hint" class="hint" style="display: none;">
+          <p id="llm-setup-hint" class="hint" style="display: none">
             Requires Chrome 128+. Enable at
             chrome://flags/#optimization-guide-on-device-model and
             chrome://flags/#prompt-api-for-gemini-nano, then restart Chrome.
@@ -75,7 +75,11 @@
         <div id="reply-options" class="sub-options">
           <label class="option-row">
             <span>Username:</span>
-            <input type="text" id="reply-username" placeholder="auto-detected" />
+            <input
+              type="text"
+              id="reply-username"
+              placeholder="auto-detected"
+            />
           </label>
           <label class="option-row">
             <span>Poll interval:</span>

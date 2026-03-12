@@ -30,7 +30,7 @@
 # ||  These settings print a lot of 'behind the scenes'
 # ||  information about LevelledMobs' operations to the console.
 # ||  With LevelledMobs4, we suggest using the command: /lm debug
-debug-misc: [ ]
+debug-misc: []
 
 # ||  This is a good update checker - it doesn't freeze
 # ||  your server startup since it is asynchronous, it
@@ -152,8 +152,8 @@ kill-skip-conditions:
   is-transforming: true
   is-villager: true
   entitytype:
-    included-groups: ['all_passive_mobs']
-    included-list: ['']
+    included-groups: ["all_passive_mobs"]
+    included-list: [""]
 
 # ||  Should mob heads be multiplied by LevelledMobs'
 # ||  drop multiplier? A considerable amount of servers
@@ -187,11 +187,11 @@ ignore-mobs-with-no-player-context: false
 # ||  various events.
 event-priorities:
   # valid values: lowest, low, normal, high, highest, monitor
-  entity-damage-event: 'monitor'
-  entity-death-event: 'normal'
-  entity-spawn-event: 'monitor'
-  entity-transform-event: 'monitor'
-  player-death-event: 'normal'
+  entity-damage-event: "monitor"
+  entity-death-event: "normal"
+  entity-spawn-event: "monitor"
+  entity-transform-event: "monitor"
+  player-death-event: "normal"
 
 #
 #   ---------------  -  ------------------------------

@@ -85,30 +85,28 @@ export const noRedundantZodParse = createRule({
           if (
             test.type === AST_NODE_TYPES.MemberExpression &&
             test.property.type === AST_NODE_TYPES.Identifier &&
-            test.property.name === "success"
-           && // Check if the object is a safeParse call
-            
-              test.object.type === AST_NODE_TYPES.CallExpression &&
-              test.object.callee.type === AST_NODE_TYPES.MemberExpression &&
-              test.object.callee.property.type === AST_NODE_TYPES.Identifier &&
-              test.object.callee.property.name === "safeParse"
-            ) {
-              // Check if it's the same schema
-              const safeParseSchema = test.object.callee.object;
-              const safeParseArg = test.object.arguments[0];
+            test.property.name === "success" && // Check if the object is a safeParse call
+            test.object.type === AST_NODE_TYPES.CallExpression &&
+            test.object.callee.type === AST_NODE_TYPES.MemberExpression &&
+            test.object.callee.property.type === AST_NODE_TYPES.Identifier &&
+            test.object.callee.property.name === "safeParse"
+          ) {
+            // Check if it's the same schema
+            const safeParseSchema = test.object.callee.object;
+            const safeParseArg = test.object.arguments[0];
 
-              // Compare schema and argument
-              const isSameSchema =
-                context.sourceCode.getText(safeParseSchema) ===
-                context.sourceCode.getText(schemaNode);
-              const isSameArg =
-                safeParseArg !== undefined &&
-                context.sourceCode.getText(safeParseArg) ===
-                  context.sourceCode.getText(argument);
+            // Compare schema and argument
+            const isSameSchema =
+              context.sourceCode.getText(safeParseSchema) ===
+              context.sourceCode.getText(schemaNode);
+            const isSameArg =
+              safeParseArg !== undefined &&
+              context.sourceCode.getText(safeParseArg) ===
+                context.sourceCode.getText(argument);
 
-              // Early return to reduce nesting depth
-              return isSameSchema && isSameArg;
-            }
+            // Early return to reduce nesting depth
+            return isSameSchema && isSameArg;
+          }
         }
         parent = parent.parent;
       }

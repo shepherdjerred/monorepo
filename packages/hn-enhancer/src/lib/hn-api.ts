@@ -28,7 +28,9 @@ export type HNUser = z.infer<typeof HNUserSchema>;
 export type HNItem = z.infer<typeof HNItemSchema>;
 
 export async function fetchUser(username: string): Promise<HNUser | undefined> {
-  const response = await fetch(`${BASE_URL}/user/${encodeURIComponent(username)}.json`);
+  const response = await fetch(
+    `${BASE_URL}/user/${encodeURIComponent(username)}.json`,
+  );
   if (!response.ok) return undefined;
   const json: unknown = await response.json();
   const parsed = HNUserSchema.safeParse(json);
@@ -45,13 +47,18 @@ export async function fetchItem(id: number): Promise<HNItem | undefined> {
   return undefined;
 }
 
-export async function fetchUserAccountAge(username: string): Promise<number | undefined> {
+export async function fetchUserAccountAge(
+  username: string,
+): Promise<number | undefined> {
   const user = await fetchUser(username);
   if (!user) return undefined;
   return user.created;
 }
 
-export function isNewAccount(createdTimestamp: number, maxAgeDays: number): boolean {
+export function isNewAccount(
+  createdTimestamp: number,
+  maxAgeDays: number,
+): boolean {
   const ageSeconds = Date.now() / 1000 - createdTimestamp;
   return ageSeconds < maxAgeDays * 24 * 60 * 60;
 }

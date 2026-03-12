@@ -7,6 +7,7 @@ Status snapshot of uncommitted local changes that affect Bazel builds.
 `bazel test //...` and `bazel build //...` fail locally because MODULE.bazel references `//tools/rules_bun/bun:extensions.bzl` — a WIP `rules_bun` migration that exists only as untracked files, not committed code.
 
 Error:
+
 ```
 ERROR: Analysis of target '//.buildkite:shellcheck' failed; build aborted:
 Error loading '//tools/rules_bun/bun:extensions.bzl' for module extensions,
@@ -19,12 +20,14 @@ is invalid because 'tools/rules_bun/bun' is not a package
 36 uncommitted files spanning two separate efforts:
 
 ### 1. WIP `rules_bun` migration (breaks builds)
+
 - `MODULE.bazel` lines 123-143: adds `rules_bun` extension + toolchain registration
 - `tools/rules_bun/` (untracked): custom Bun Bazel rules with `bun_library`, `bun_binary`, `bun_typecheck_test`
 - `packages/tools/BUILD.bazel`: references `bun_typecheck_test` from `rules_bun`
 - Various `tools/bazel/*.bzl` and runner scripts: refactored to use new shared helpers
 
 ### 2. Misc BUILD.bazel / CI cleanups (safe)
+
 - Various `packages/*/BUILD.bazel`: minor additions (shellcheck, extra deps)
 - `tools/bazel/shellcheck.bzl` deleted (replaced by `rules_shellcheck`)
 - `scripts/ci/` changes: buildkite helper extraction, minor refactors
@@ -32,14 +35,14 @@ is invalid because 'tools/rules_bun/bun' is not a package
 
 ## Affected Files (key ones)
 
-| File | Change | Impact |
-|------|--------|--------|
-| `MODULE.bazel` | Adds `rules_bun` extension | **Breaks all builds** |
-| `tools/rules_bun/**` | New untracked files | Required by MODULE.bazel |
-| `tools/bazel/bun_test_runner.sh` | 200+ lines removed | Major refactor |
-| `tools/bazel/typecheck_runner.sh` | 200+ lines removed | Major refactor |
-| `tools/bazel/bun_package.bzl` | Deleted | Replaced by rules_bun |
-| `tools/bazel/shellcheck.bzl` | Deleted | Replaced by rules_shellcheck |
+| File                              | Change                     | Impact                       |
+| --------------------------------- | -------------------------- | ---------------------------- |
+| `MODULE.bazel`                    | Adds `rules_bun` extension | **Breaks all builds**        |
+| `tools/rules_bun/**`              | New untracked files        | Required by MODULE.bazel     |
+| `tools/bazel/bun_test_runner.sh`  | 200+ lines removed         | Major refactor               |
+| `tools/bazel/typecheck_runner.sh` | 200+ lines removed         | Major refactor               |
+| `tools/bazel/bun_package.bzl`     | Deleted                    | Replaced by rules_bun        |
+| `tools/bazel/shellcheck.bzl`      | Deleted                    | Replaced by rules_shellcheck |
 
 ## Resolution Options
 
@@ -50,6 +53,7 @@ is invalid because 'tools/rules_bun/bun' is not a package
 ## What's Actually Committed and Working
 
 The committed code (HEAD at `de2341492`) includes the Docker-to-Bazel migration:
+
 - 4 new OCI image targets: `dns-audit`, `caddy-s3proxy`, `ha`, `deps-email`
 - `git_layer` and `helm_layer` genrules
 - GHCR auth via config.json (no Docker CLI)

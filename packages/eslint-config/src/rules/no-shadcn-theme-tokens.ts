@@ -56,7 +56,10 @@ const SHADCN_TOKENS = [
   "outline-secondary",
 ];
 
-const TOKEN_PATTERN = new RegExp(String.raw`\b(${SHADCN_TOKENS.join("|")})\b`, "g");
+const TOKEN_PATTERN = new RegExp(
+  String.raw`\b(${SHADCN_TOKENS.join("|")})\b`,
+  "g",
+);
 
 export const noShadcnThemeTokens = createRule({
   name: "no-shadcn-theme-tokens",

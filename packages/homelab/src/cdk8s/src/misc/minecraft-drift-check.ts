@@ -58,11 +58,7 @@ export function getMinecraftConfigDriftCheckInitContainer(
   return {
     name: "check-config-drift",
     image: `library/busybox:${versions["library/busybox"]}`,
-    command: [
-      "sh",
-      "-c",
-      DRIFT_CHECK_SCRIPT,
-    ],
+    command: ["sh", "-c", DRIFT_CHECK_SCRIPT],
     volumeMounts,
   };
 }

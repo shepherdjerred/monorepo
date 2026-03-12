@@ -21,12 +21,12 @@ playerHeadsFromServerChance: 0.8
 # recommended range [1 - 4]
 # may be a number, or a range for random selection
 #   range example: " randomAmount: '0:5' " -> will pick a random number 0 to 5
-playerHeadsFromServerAmount: '1'
+playerHeadsFromServerAmount: "1"
 
 # usernames listed here will not be used for player head trades
 # for exmaple put your staff or OPs name so players cannot buy their head
 usernameBlacklist:
-- Notch
+  - Notch
 
 # if Vault is installed and this is enabled, players must have
 # the wanderingtrades.headavailable permission for their
@@ -39,14 +39,14 @@ headTrade:
   maxUses: 1
   experienceReward: true
   ingredients:
-    '1':
+    "1":
       customname: NONE
       material: EMERALD
       amount: 1
       # The following value was serialized from an in-game item and is not meant to be human-readable or editable. As long as it is present other options for this item will be ignored.
       itemStackAsBytes: !!binary |-
         H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQsudgYMpMYRDMzcxLTS5KTCuxSs1NLUrMSWFmYE3OL80rYWBgYGQAAOUKxRU6AAAA
-    '2':
+    "2":
       customname: NONE
       material: IRON_INGOT
       amount: 1
@@ -57,4 +57,4 @@ headTrade:
     customname: <yellow>{PLAYER}'s Head
     amount: 1
     lore:
-    - '  <gray><italic>Obtained from Wandering Trader'
+      - "  <gray><italic>Obtained from Wandering Trader"

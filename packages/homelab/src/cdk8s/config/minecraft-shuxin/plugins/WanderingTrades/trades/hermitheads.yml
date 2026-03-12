@@ -27,7 +27,7 @@ invincible: false
 # will display this custom name tag above their head
 #
 # set to 'NONE' to disable
-customName: '<gradient:red:yellow><bold>Hermit Heads</gradient><blue>!'
+customName: "<gradient:red:yellow><bold>Hermit Heads</gradient><blue>!"
 
 # Enabling this option will disable villagers with this config from
 # giving gifts to players with Hero of the Village.

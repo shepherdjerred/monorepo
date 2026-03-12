@@ -1,13 +1,13 @@
 # This is the world defaults configuration file for Paper.
 # As you can see, there's a lot to configure. Some options may impact gameplay, so use
 # with caution, and make sure you know what each option does before configuring.
-# 
+#
 # If you need help with the configuration or have any questions related to Paper,
 # join us in our Discord or check the docs page.
-# 
+#
 # Configuration options here apply to all worlds, unless you specify overrides inside
 # the world-specific config file inside each world folder.
-# 
+#
 # File Reference: https://docs.papermc.io/paper/reference/world-configuration/
 # Docs: https://docs.papermc.io/
 # Discord: https://discord.gg/papermc
@@ -19,35 +19,35 @@ anticheat:
     enabled: false
     engine-mode: 1
     hidden-blocks:
-    - copper_ore
-    - deepslate_copper_ore
-    - raw_copper_block
-    - gold_ore
-    - deepslate_gold_ore
-    - iron_ore
-    - deepslate_iron_ore
-    - raw_iron_block
-    - coal_ore
-    - deepslate_coal_ore
-    - lapis_ore
-    - deepslate_lapis_ore
-    - mossy_cobblestone
-    - obsidian
-    - chest
-    - diamond_ore
-    - deepslate_diamond_ore
-    - redstone_ore
-    - deepslate_redstone_ore
-    - clay
-    - emerald_ore
-    - deepslate_emerald_ore
-    - ender_chest
+      - copper_ore
+      - deepslate_copper_ore
+      - raw_copper_block
+      - gold_ore
+      - deepslate_gold_ore
+      - iron_ore
+      - deepslate_iron_ore
+      - raw_iron_block
+      - coal_ore
+      - deepslate_coal_ore
+      - lapis_ore
+      - deepslate_lapis_ore
+      - mossy_cobblestone
+      - obsidian
+      - chest
+      - diamond_ore
+      - deepslate_diamond_ore
+      - redstone_ore
+      - deepslate_redstone_ore
+      - clay
+      - emerald_ore
+      - deepslate_emerald_ore
+      - ender_chest
     lava-obscures: false
     max-block-height: 64
     replacement-blocks:
-    - stone
-    - oak_planks
-    - deepslate
+      - stone
+      - oak_planks
+      - deepslate
     update-radius: 2
     use-permission: false
 chunks:
@@ -86,16 +86,16 @@ entities:
     disable-player-crits: false
     door-breaking-difficulty:
       husk:
-      - HARD
+        - HARD
       vindicator:
-      - NORMAL
-      - HARD
+        - NORMAL
+        - HARD
       zombie:
-      - HARD
+        - HARD
       zombie_villager:
-      - HARD
+        - HARD
       zombified_piglin:
-      - HARD
+        - HARD
     ender-dragons-death-always-places-dragon-egg: false
     experience-merge-max-value: -1
     mobs-can-always-pick-up-loot:
@@ -177,9 +177,9 @@ entities:
       safe-regen-delete-range: 32
     filter-bad-tile-entity-nbt-from-falling-blocks: true
     filtered-entity-tag-nbt-paths:
-    - Pos
-    - Motion
-    - sleeping_pos
+      - Pos
+      - Motion
+      - sleeping_pos
     iron-golems-can-spawn-in-air: false
     max-arrow-despawn-invulnerability: 200
     monster-spawn-max-light-level: default

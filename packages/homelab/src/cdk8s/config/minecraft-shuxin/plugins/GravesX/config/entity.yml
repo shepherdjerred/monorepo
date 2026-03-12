@@ -15,7 +15,7 @@ settings:
       grave:
         # Enable or disable graves for players.
         enabled: true
-    
+
     #############################
     # Ender Dragon Overrides    #
     #############################
@@ -34,12 +34,12 @@ settings:
       gui:
         grave:
           # Title shown in the grave's GUI.
-          title: '%owner_name% Corpse'
+          title: "%owner_name% Corpse"
       command:
         create:
-        - say %killer_name% killed the %owner_name%.
+          - say %killer_name% killed the %owner_name%.
     # Commands to execute when the grave is created.
-    
+
     #########################
     # Wither Entity Override #
     #########################
@@ -58,7 +58,7 @@ settings:
       gui:
         grave:
           # Title shown in the grave's GUI.
-          title: '%owner_name% Corpse'
+          title: "%owner_name% Corpse"
       schematic:
         # Enable or disable the schematic for the Wither grave.
         enabled: true

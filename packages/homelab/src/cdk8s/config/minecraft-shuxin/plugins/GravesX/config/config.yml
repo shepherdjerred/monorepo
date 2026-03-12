@@ -7,7 +7,6 @@ config-version: 25
 # Core config for backend processes or misc options.
 # If you are looking to edit graves, the main grave config file is grave.yml.
 settings:
-  
   # ##########
   # Storage #
   # ##########
@@ -22,8 +21,8 @@ settings:
     # Leave empty to use no prefix (default)
     # NOTE: If using H2, you may need to reset or recreate your database as existing databases may not be compatible.
     #       If enabling a prefix after tables already exist, you must manually rename or migrate the existing tables to match the prefix set in config.
-    prefix: ''
-    
+    prefix: ""
+
     sqlite:
       # Unless you know what you're doing, leave the options under sqlite default.
       # Journal mode for SQLite. Options include DELETE, TRUNCATE, PERSIST, MEMORY, WAL, OFF.
@@ -31,8 +30,8 @@ settings:
       journal-mode: WAL
       # Synchronous mode for SQLite. Options include 0 (OFF), 1 (NORMAL), 2 (FULL), 3 (EXTRA).
       # Refer to https://www.sqlite.org/pragma.html#pragma_synchronous for more details.
-      synchronous: 'OFF'
-    
+      synchronous: "OFF"
+
     mysql:
       # Unless you know what you're doing, leave the options under mysql default.
       # Host of the MySQL database.
@@ -61,7 +60,7 @@ settings:
       allowPublicKeyRetrieval: false
       # Should we verify the server certificate? DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
       verifyServerCertificate: false
-    
+
     postgresql:
       # Unless you know what you're doing, leave the options under postgresql default.
       # Host of the PostgreSQL database.
@@ -98,13 +97,13 @@ settings:
       sslcert: /path/to/client.crt
       # Path to the SSL key.
       sslkey: /path/to/client.key
-    
+
     h2:
       # Unless you know what you're doing, leave the options under h2 default.
       # Username for the H2 database.
       username: sa
       # Password for the H2 database. The default is an empty string.
-      password: ''
+      password: ""
       # Maximum number of connections allowed to the database.
       # Do not change unless you know what you are doing.
       maxConnections: 50
@@ -115,7 +114,7 @@ settings:
       # DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING.
       # Only increase if your connection keeps timing out.
       connectionTimeout: 30000
-    
+
     mssql:
       # The hostname or IP address of the MS SQL server.
       host: localhost
@@ -137,7 +136,7 @@ settings:
       encrypt: true
       # Whether to trust the server certificate if SSL is enabled (useful for self-signed certificates).
       trustServerCertificate: false
-  
+
   # ########
   # Cache #
   # ########
@@ -145,7 +144,7 @@ settings:
   cache:
     # Cache type. Implementation Unused
     type: NORMAL
-  
+
   # ########
   # Debug #
   # ########
@@ -153,15 +152,15 @@ settings:
   debug:
     # UUID or name of admins to send debug information to. https://mcuuid.net/
     admin:
-    - c59ac6d2-4851-4183-a9f7-15d1a293eed6
-    - 069a79f4-44e9-4726-a5be-fca90e38aaf5
+      - c59ac6d2-4851-4183-a9f7-15d1a293eed6
+      - 069a79f4-44e9-4726-a5be-fca90e38aaf5
     # Should we display which plugin calls this debug?
     show-caller: true
     # Should we show what class and line number called this? This is intended for developers and not for production reasons though we won't stop you :)
     show-caller-class: false
     # 0 = Nothing, 1 = Information, 2 = Failures
     level: 0
-  
+
   # ########
   # Dump  #
   # ########
@@ -169,32 +168,32 @@ settings:
   # Methods: MCLOGS, FILE, PASTEBIN, TOPTAL/HASTEBIN
   dump:
     method: MCLOGS
-    
+
     # Only used when method is TOPTAL or HASTEBIN (former name, but will use TOPTAL. Added back for legacy naming)
     toptal:
       # Required Bearer token or else will fail (get from https://www.toptal.com/developers/hastebin/documentation)
-      token: ''
-    
+      token: ""
+
     # Only used when method is PASTEBIN
     pastebin:
       # REQUIRED (get from https://pastebin.com/doc_api)
-      dev-key: ''
+      dev-key: ""
       # OPTIONAL; required for PRIVATE pastes
-      user-key: ''
+      user-key: ""
       # Valid Options:
       # PUBLIC | UNLISTED | PRIVATE
       privacy: UNLISTED
       # Valid Options:
       # N | 10M | 1H | 1D | 1W | 2W | 1M | 6M | 1Y
       expire: 1W
-  
+
   # #########
   # Update #
   # #########
   update:
     # Should GravesX try and check for an update.
     check: true
-  
+
   # ##########
   # Metrics #
   # ##########
@@ -203,21 +202,20 @@ settings:
     # https://bstats.org/plugin/bukkit/Graves/12849 - Legacy Stats. We still contribute to those stats as we choose to do so
     # https://bstats.org/plugin/bukkit/GravesX/23069 - Related to GravesX. Contains more stats.
     enabled: true
-  
+
   # ################
   # Compatibility #
   # ################
   compatibility:
     # Warn when a plugin to have known incompatibilities is detected.
     warning: true
-  
+
   # ##############
   # Integration #
   # ##############
   # Enable/Disable integrations into other plugins, if you are having errors relating to another plugin
   # try disabling them here.
   integration:
-    
     # #############
     # MultiPaper #
     # #############
@@ -225,7 +223,7 @@ settings:
     multipaper:
       # Should MultiPaper integration be enabled.
       enabled: false
-    
+
     # #############
     # MultiCache #
     # #############
@@ -233,7 +231,7 @@ settings:
     multicache:
       # Should MultiCache integration be enabled.
       enabled: false
-    
+
     # ########
     # Vault #
     # ########
@@ -241,7 +239,7 @@ settings:
     vault:
       # Should Vault integration be enabled.
       enabled: true
-    
+
     # ##############
     # ProtocolLib #
     # ##############
@@ -249,7 +247,7 @@ settings:
     protocollib:
       # Should ProtocolLib integration be enabled.
       enabled: true
-    
+
     # ###############
     # FurnitureLib #
     # ###############
@@ -257,7 +255,7 @@ settings:
     furniturelib:
       # Should FurnitureLib integration be enabled.
       enabled: false
-    
+
     # ##################
     # FurnitureEngine #
     # ##################
@@ -265,7 +263,7 @@ settings:
     furnitureengine:
       # Should FurnitureEngine integration be enabled.
       enabled: false
-    
+
     # ################
     # ProtectionLib #
     # ################
@@ -273,7 +271,7 @@ settings:
     protectionlib:
       # Should ProtectionLib integration be enabled.
       enabled: false
-    
+
     # #############
     # ItemsAdder #
     # #############
@@ -283,7 +281,7 @@ settings:
       enabled: false
       # Should Graves write its data into the ItemsAdder data folder.
       write: false
-    
+
     # #########
     # Oraxen #
     # #########
@@ -294,7 +292,7 @@ settings:
       enabled: false
       # Should Graves write its pack into the Oraxen pack folder.
       write: false
-    
+
     # #######
     # Nexo #
     # #######
@@ -304,7 +302,7 @@ settings:
       enabled: false
       # Should Graves write its pack into the Nexo pack folder.
       write: false
-    
+
     # #################
     # PlaceholderAPI #
     # #################
@@ -312,7 +310,7 @@ settings:
     placeholderapi:
       # Should PlaceholderAPI integration be enabled.
       enabled: true
-    
+
     # #########
     # Skript #
     # #########
@@ -320,7 +318,7 @@ settings:
     skript:
       # Should Skript integration be enabled.
       enabled: false
-    
+
     # ############
     # ChestSort #
     # ############
@@ -328,7 +326,7 @@ settings:
     chestsort:
       # Should ChestSort integration be enabled.
       enabled: false
-    
+
     # ##############
     # MiniMessage #
     # ##############
@@ -336,7 +334,7 @@ settings:
     minimessage:
       # Should MiniMessage integration be enabled. Shaded into plugin.
       enabled: true
-    
+
     # ###########
     # MineDown #
     # ###########
@@ -344,7 +342,7 @@ settings:
     minedown:
       # Should MineDown integration be enabled. Shaded into plugin.
       enabled: true
-    
+
     # ############
     # PlayerNPC #
     # ############
@@ -352,7 +350,7 @@ settings:
     playernpc:
       # Should PlayerNPC integration be enabled.
       enabled: false
-    
+
     # #############
     # FancyNpcs #
     # #############
@@ -360,7 +358,7 @@ settings:
     fancynpcs:
       # Should FancyNpcs integration be enabled.
       enabled: false
-    
+
     # #############
     # Mannequins #
     # #############
@@ -368,7 +366,7 @@ settings:
     mannequins:
       # Should we enable support for mannequins?
       enabled: false
-    
+
     # #############
     # ItemBridge #
     # #############
@@ -376,7 +374,7 @@ settings:
     itembridge:
       # Should ItemBridge integration be enabled.
       enabled: false
-    
+
     # ############
     # LuckPerms #
     # ############
@@ -384,7 +382,7 @@ settings:
     luckperms:
       # Should LuckPerms integration be enabled.
       enabled: true
-    
+
     # ##############
     # CoreProtect #
     # ##############
@@ -392,7 +390,7 @@ settings:
     coreprotect:
       # Should CoreProtect integration be enabled. Requires API version 9 or newer
       enabled: true
-    
+
     # ###############
     # NoteBlockAPI #
     # ###############
@@ -400,7 +398,7 @@ settings:
     noteblockapi:
       # Should NoteBlockAPI integration be enabled.
       enabled: false
-    
+
     # ############
     # Floodgate #
     # ############

@@ -44,7 +44,7 @@ export default [
       "custom-rules/require-ts-extensions": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "off",
       "unicorn/consistent-function-scoping": "off",
-      "complexity": ["error", { max: 30 }],
+      complexity: ["error", { max: 30 }],
       "max-depth": ["error", { max: 6 }],
       "@typescript-eslint/restrict-template-expressions": "off",
       "@typescript-eslint/strict-boolean-expressions": "off",
