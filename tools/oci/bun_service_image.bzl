@@ -183,13 +183,19 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cd $$INSTALLDIR && \
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
-            CI= $$BUN install --ignore-scripts --no-save && \
+            echo "DEBUG: bun version:" >&2 && $$BUN --version >&2 && \
+            echo "DEBUG: HOME=$$HOME TMPDIR=$${TMPDIR:-unset}" >&2 && \
+            CI= $$BUN install --ignore-scripts --no-save --verbose 2>&1 | tail -50 >&2 && \
+            echo "DEBUG: ls -la node_modules/ (after install):" >&2 && ls -la node_modules/ >&2 || true && \
+            echo "DEBUG: ls -la node_modules/.bun/ (if exists):" >&2 && ls -la node_modules/.bun/ >&2 2>/dev/null || true && \
+            echo "DEBUG: find node_modules -maxdepth 1 -type d | head -20:" >&2 && find node_modules -maxdepth 1 -type d 2>/dev/null | head -20 >&2 || true && \
+            echo "DEBUG: find node_modules -maxdepth 1 -type l | head -20:" >&2 && find node_modules -maxdepth 1 -type l 2>/dev/null | head -20 >&2 || true && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
-            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in $$(pwd)" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls -la node_modules/:" >&2; ls -la node_modules/ 2>&1 >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }}
+            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in $$(pwd)" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls -la node_modules/:" >&2; ls -la node_modules/ >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
