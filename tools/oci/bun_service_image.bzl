@@ -184,7 +184,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
             echo "DEBUG: bun version:" >&2 && $$BUN --version >&2 && \
-            echo "DEBUG: HOME=$$HOME TMPDIR=$${TMPDIR:-unset}" >&2 && \
+            echo "DEBUG: HOME=$$HOME TMPDIR=$${{TMPDIR:-unset}}" >&2 && \
             CI= $$BUN install --ignore-scripts --no-save --verbose 2>&1 | tail -50 >&2 && \
             echo "DEBUG: ls -la node_modules/ (after install):" >&2 && ls -la node_modules/ >&2 || true && \
             echo "DEBUG: ls -la node_modules/.bun/ (if exists):" >&2 && ls -la node_modules/.bun/ >&2 2>/dev/null || true && \
