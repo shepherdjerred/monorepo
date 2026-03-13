@@ -12,7 +12,7 @@ def build(*targets: str, config: str = "ci", stamp: bool = False, bep_file: str 
     if bep_file:
         cmd.append(f"--build_event_binary_file={bep_file}")
     cmd.extend(targets)
-    _run(cmd)
+    _run(cmd, tolerate_remote_cache_failure=True)
 
 
 def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_tag_filters: str | None = None) -> None:
@@ -32,6 +32,8 @@ def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_ta
         target_str = " ".join(targets)
         phase = test_tag_filters or "test"
         print(f"WARNING: No {phase} targets found for {target_str}", flush=True)
+    elif result.returncode in (34, 38):
+        print(f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success", flush=True)
     elif result.returncode != 0:
         sys.exit(result.returncode)
 
@@ -84,9 +86,16 @@ def affected_targets(base_revision: str, ignore_file: str | None = None) -> list
     return targets
 
 
-def _run(cmd: list[str]) -> None:
-    """Execute a command, printing it first. Exit on failure."""
+def _run(cmd: list[str], tolerate_remote_cache_failure: bool = False) -> None:
+    """Execute a command, printing it first. Exit on failure.
+
+    If tolerate_remote_cache_failure is True, exit codes 34 and 38
+    (remote cache / BEP upload failures) are treated as warnings
+    rather than fatal errors.
+    """
     print(f"+ {' '.join(cmd)}", flush=True)
     result = subprocess.run(cmd, check=False)
-    if result.returncode != 0:
+    if result.returncode in (34, 38) and tolerate_remote_cache_failure:
+        print(f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success", flush=True)
+    elif result.returncode != 0:
         sys.exit(result.returncode)
