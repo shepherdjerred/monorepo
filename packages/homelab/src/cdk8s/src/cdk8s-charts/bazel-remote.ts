@@ -114,6 +114,8 @@ export function createBazelRemoteChart(app: App) {
                 },
                 initialDelaySeconds: 10,
                 periodSeconds: 30,
+                timeoutSeconds: 5,
+                failureThreshold: 5,
               },
             },
           ],
