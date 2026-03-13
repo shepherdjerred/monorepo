@@ -183,7 +183,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             cd $$INSTALLDIR && \
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
-            $$BUN install --ignore-scripts --backend=copyfile && \
+            CI= $$BUN install --ignore-scripts --backend=copyfile --no-save && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
