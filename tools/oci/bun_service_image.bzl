@@ -184,13 +184,14 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             $$BUN -e 'var f=require("fs"),p=JSON.parse(f.readFileSync("package.json","utf8"));delete p.devDependencies;delete p.patchedDependencies;delete p.workspaces;var d=p.dependencies||{{}};for(var k in d)if(d[k].startsWith("workspace:"))delete d[k];f.writeFileSync("package.json",JSON.stringify(p,null,2))' && \
             {ws_merge} \
             export HOME=$$INSTALLDIR && \
-            CI= $$BUN install --ignore-scripts --no-save && \
+            $$BUN install --ignore-scripts 1>&2 || {{ echo "ERROR: bun install failed (exit $$?) in $$(pwd)" >&2; echo "HOME=$$HOME" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls -la node_modules/ 2>/dev/null:" >&2; ls -la node_modules/ >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }} && \
+            test -d node_modules || {{ echo "ERROR: node_modules not created" >&2; ls -la >&2; exit 1; }} && \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
-            cp -a node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
+            cp -rL node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
-            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in $$(pwd)" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls -la node_modules/:" >&2; ls -la node_modules/ >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }}
+            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in tar" >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
