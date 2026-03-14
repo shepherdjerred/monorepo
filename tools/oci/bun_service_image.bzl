@@ -189,13 +189,9 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -rL node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
-            echo "node_modules copied: $$(ls $$TARDIR/workspace/{pkg_dir}/node_modules/ | wc -l) entries" >&2 && \
-            ls $$TARDIR/workspace/{pkg_dir}/node_modules/ | head -5 >&2 && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
-            echo "tar size: $$(wc -c < $$OUTPUT_TAR) bytes" >&2 && \
-            echo "tar entries with node_modules: $$(tar -tf $$OUTPUT_TAR | grep -c 'node_modules/' || echo 0)" >&2 && \
             rm -rf $$TARDIR && \
-            tar -tf $$OUTPUT_TAR | grep -q "node_modules/" || {{ echo "ERROR: empty node_modules in tar" >&2; echo "tar -tf output (first 20 lines):" >&2; tar -tf $$OUTPUT_TAR | head -20 >&2; exit 1; }}
+            tar -tf $$OUTPUT_TAR | grep "node_modules/" > /dev/null 2>&1 || {{ echo "ERROR: empty node_modules in tar" >&2; tar -tf $$OUTPUT_TAR | head -20 >&2; exit 1; }}
         """.format(
             pkg_dir = pkg_dir,
             package_json = package_json,
