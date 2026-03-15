@@ -31,6 +31,10 @@ resource "aws_s3_bucket" "webring" {
   bucket = "webring"
 }
 
+resource "aws_s3_bucket" "cook" {
+  bucket = "cook"
+}
+
 # Scout application storage
 resource "aws_s3_bucket" "scout_beta" {
   bucket = "scout-beta"
@@ -70,6 +74,11 @@ resource "terraform_data" "sccache_lifecycle" {
 }
 
 # Bazel remote cache with 30-day expiration
+import {
+  to = aws_s3_bucket.bazel_cache
+  id = "bazel-cache"
+}
+
 resource "aws_s3_bucket" "bazel_cache" {
   bucket = "bazel-cache"
 }
