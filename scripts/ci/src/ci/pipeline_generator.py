@@ -608,14 +608,21 @@ def generate_pipeline() -> dict:
     # Ensure we have enough git history
     _ensure_git_depth()
 
+    # Check for forced full build via env var or commit message tag
+    force_full = os.environ.get("FULL_BUILD", "").lower() == "true"
+    commit_msg = os.environ.get("BUILDKITE_MESSAGE", "")
+    if "[full-build]" in commit_msg:
+        force_full = True
+
     # Get changed files and check for infra changes
     changed_files = _get_changed_files()
     infra_changed = _check_infra_changes(changed_files)
 
     # Try to determine affected targets
     affected = AffectedPackages(build_all=True)
-    if infra_changed:
-        print("Infrastructure files changed, building everything", flush=True)
+    if force_full or infra_changed:
+        reason = "Full build requested" if force_full else "Infrastructure files changed"
+        print(f"{reason}, building everything", flush=True)
         affected.build_all = True
         affected.homelab_changed = True
         affected.clauderon_changed = True
