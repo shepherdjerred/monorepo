@@ -127,10 +127,12 @@ export {
   getSpellImageBase64,
   getRuneIconBase64,
   getAugmentIconBase64,
+  getLaneIconBase64,
   // Validation functions (async)
   validateChampionImage,
   validateItemImage,
   validateSpellImage,
   validateRuneIcon,
   validateAugmentIcon,
+  validateLaneIcon,
 } from "./data-dragon/images.ts";

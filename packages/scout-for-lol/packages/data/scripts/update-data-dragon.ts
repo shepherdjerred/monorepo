@@ -19,6 +19,8 @@ const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
 const COMMUNITY_DRAGON_URL = "https://raw.communitydragon.org/latest/game";
+const COMMUNITY_DRAGON_POSITIONS_URL =
+  "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions";
 
 async function ensureDir(path: string): Promise<void> {
   await $`mkdir -p ${path}`;
@@ -103,6 +105,7 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/spell`);
   await ensureDir(`${IMG_DIR}/rune`);
   await ensureDir(`${IMG_DIR}/augment`);
+  await ensureDir(`${IMG_DIR}/lane`);
   await ensureDir(`${ASSETS_DIR}/champion`);
 }
 
@@ -260,6 +263,26 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
   return runeImages.length;
 }
 
+const LANE_ICON_MAP: Record<string, string> = {
+  top: "icon-position-top.png",
+  jungle: "icon-position-jungle.png",
+  middle: "icon-position-middle.png",
+  adc: "icon-position-bottom.png",
+  support: "icon-position-utility.png",
+};
+
+async function downloadLaneImages(): Promise<number> {
+  console.log("\nDownloading lane position icons from CommunityDragon...");
+  const laneImages = Object.entries(LANE_ICON_MAP).map(([lane, filename]) => ({
+    url: `${COMMUNITY_DRAGON_POSITIONS_URL}/${filename}`,
+    path: `${IMG_DIR}/lane/${lane}.png`,
+    name: lane,
+  }));
+  await downloadImagesInBatches(laneImages, 5);
+  console.log(`✓ Downloaded ${String(laneImages.length)} lane position icons`);
+  return laneImages.length;
+}
+
 const ARENA_AUGMENTS_URL =
   "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
 
@@ -382,13 +405,15 @@ async function main(): Promise<void> {
     );
     const runeImagesCount = await downloadRuneImages(runes);
     const augmentImagesCount = await downloadAugmentImages();
+    const laneImagesCount = await downloadLaneImages();
 
     const totalImages =
       spellImagesCount +
       itemImagesCount +
       championImagesCount +
       runeImagesCount +
-      augmentImagesCount;
+      augmentImagesCount +
+      laneImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
@@ -399,6 +424,7 @@ async function main(): Promise<void> {
     console.log(`  - ${String(championImagesCount)} champion portrait images`);
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
+    console.log(`  - ${String(laneImagesCount)} lane position icons`);
     console.log(
       `  - ${String(championDataCount)} champion data files (abilities/passives)`,
     );
