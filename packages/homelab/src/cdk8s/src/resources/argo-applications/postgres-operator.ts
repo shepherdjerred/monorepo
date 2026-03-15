@@ -65,10 +65,7 @@ export function createPostgresOperatorApp(chart: Chart) {
         {
           group: "apiextensions.k8s.io",
           kind: "CustomResourceDefinition",
-          jsonPointers: [
-            "/status",
-            "/spec/versions/0/schema/openAPIV3Schema",
-          ],
+          jsonPointers: ["/status", "/spec/versions/0/schema/openAPIV3Schema"],
         },
         {
           group: "acid.zalan.do",

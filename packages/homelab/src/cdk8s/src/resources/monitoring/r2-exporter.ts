@@ -21,16 +21,10 @@ const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 export async function createR2ExporterMonitoring(chart: Chart) {
   // Load the exporter script content from file
   const scriptPath = path.join(CURRENT_DIRNAME, "scripts", "r2_exporter.py");
-  let scriptContent = await Bun.file(scriptPath).text();
+  const scriptContent = await Bun.file(scriptPath).text();
 
-  // Escape double curly braces for Helm compatibility
-  // Python f-strings use {{ and }} for literal braces, but Helm interprets these as template delimiters
-  // Use placeholders to avoid double-replacement issues
-  scriptContent = scriptContent
-    .replaceAll("{{", "__HELM_OPEN__")
-    .replaceAll("}}", "__HELM_CLOSE__")
-    .replaceAll("__HELM_OPEN__", '{{ "{{" }}')
-    .replaceAll("__HELM_CLOSE__", '{{ "}}" }}');
+  // No Helm escaping needed: this ConfigMap is rendered by cdk8s as a raw Kubernetes resource,
+  // not processed by Helm's template engine. Python f-string braces pass through as-is.
 
   // Create 1Password secret for Cloudflare API credentials
   const cloudflareSecret = new OnePasswordItem(

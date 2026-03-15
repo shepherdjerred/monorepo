@@ -15,7 +15,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { ServiceMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
 export function createStatusPageDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "status-page", {
@@ -109,12 +109,33 @@ export function createStatusPageDeployment(chart: Chart) {
     ports: [{ port: 3000, name: "http" }],
   });
 
-  createServiceMonitor(chart, {
-    name: "status-page",
-    port: "http",
-    path: "/metrics",
-    namespace: "status-page",
-    matchLabels: { app: "status-page" },
+  new ServiceMonitor(chart, "status-page-service-monitor", {
+    metadata: {
+      name: "status-page-service-monitor",
+      namespace: "status-page",
+      labels: {
+        release: "prometheus",
+      },
+    },
+    spec: {
+      endpoints: [
+        {
+          port: "http",
+          interval: "30s",
+          path: "/metrics",
+          authorization: {
+            type: "Bearer",
+            credentials: {
+              name: onePasswordItem.name,
+              key: "auth-token",
+            },
+          },
+        },
+      ],
+      selector: {
+        matchLabels: { app: "status-page" },
+      },
+    },
   });
 
   createCloudflareTunnelBinding(chart, "status-page-cf-tunnel", {

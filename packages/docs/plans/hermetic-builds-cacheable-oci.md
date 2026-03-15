@@ -3,6 +3,7 @@
 ## Context
 
 The Bazel monorepo has ~80 targets, but Vite/Astro builds and OCI images bypass the remote cache entirely:
+
 - **Vite/Astro rules** use `local = True` + `no-remote-cache = True`, escaping the sandbox to run in the real workspace. They declare almost no inputs, so Bazel can't cache them.
 - **OCI image targets** are tagged `manual`, so they're never built during normal CI — only during the publish phase on main. This means the first build is never cached when publish runs.
 
@@ -13,25 +14,27 @@ The repo already has a mature `materialize_tree` pattern (used by `bun_test`, `b
 ## Inventory of Affected Targets
 
 ### Targets with `no-remote-cache` or `local` execution:
-| Rule | File | Used by |
-|------|------|---------|
-| `vite_build` | `tools/bazel/vite_build.bzl` | 6 packages |
-| `astro_build` | `tools/bazel/astro_build.bzl` | 5 packages |
-| `astro_check` | `tools/bazel/astro_check.bzl` | 5 packages |
+
+| Rule                | File                              | Used by                      |
+| ------------------- | --------------------------------- | ---------------------------- |
+| `vite_build`        | `tools/bazel/vite_build.bzl`      | 6 packages                   |
+| `astro_build`       | `tools/bazel/astro_build.bzl`     | 5 packages                   |
+| `astro_check`       | `tools/bazel/astro_check.bzl`     | 5 packages                   |
 | `obsidian_headless` | `tools/oci/obsidian_headless.bzl` | 1 target (keep as-is, niche) |
 
 ### OCI image targets tagged `manual` (cacheable but never built in CI):
-| Package | Target |
-|---------|--------|
-| birmel | `image`, `image_push` |
-| sentinel | `image`, `image_push` |
-| tasknotes-server | `image`, `image_push` |
-| scout-for-lol | `image`, `image_push` |
-| discord-plays-pokemon | `image`, `image_push` |
-| starlight-karma-bot | `image`, `image_push` |
-| better-skill-capped/fetcher | `image`, `image_push` |
-| homelab/src/{dns-audit,deps-email,ha,caddy-s3proxy} | `image`, `image_push` |
-| tools/oci | `obsidian_headless`, `obsidian_headless_push` |
+
+| Package                                             | Target                                        |
+| --------------------------------------------------- | --------------------------------------------- |
+| birmel                                              | `image`, `image_push`                         |
+| sentinel                                            | `image`, `image_push`                         |
+| tasknotes-server                                    | `image`, `image_push`                         |
+| scout-for-lol                                       | `image`, `image_push`                         |
+| discord-plays-pokemon                               | `image`, `image_push`                         |
+| starlight-karma-bot                                 | `image`, `image_push`                         |
+| better-skill-capped/fetcher                         | `image`, `image_push`                         |
+| homelab/src/{dns-audit,deps-email,ha,caddy-s3proxy} | `image`, `image_push`                         |
+| tools/oci                                           | `obsidian_headless`, `obsidian_headless_push` |
 
 ---
 
@@ -44,6 +47,7 @@ Create a single hermetic build rule that replaces both `vite_build` and `astro_b
 **`tools/rules_bun/bun/private/bun_build.bzl`** — Rule implementation
 
 The rule:
+
 1. Resolves `BunInfo` from deps (identical to `bun_test`)
 2. Merges workspace deps (identical to `bun_test`)
 3. Calls `materialize_tree` to create a hermetic TreeArtifact
@@ -76,6 +80,7 @@ ctx.actions.run_shell(
 ```
 
 Attrs:
+
 - `deps` (label_list, mandatory) — must provide BunInfo
 - `tsconfig` (label, single file)
 - `data` (label_list, allow_files) — for `public/`, content files
@@ -92,6 +97,7 @@ Attrs:
 ### Modified files
 
 **`tools/rules_bun/bun/defs.bzl`** — Add public API:
+
 ```python
 load("//tools/rules_bun/bun/private:bun_build.bzl", _bun_build = "bun_build")
 
@@ -117,6 +123,7 @@ Same pattern as `bun_typecheck_test` but runs `bun x astro check` instead of `ts
 **`tools/rules_bun/bun/private/bun_astro_check.bzl`** — Rule implementation (copy of `bun_typecheck.bzl` with different command)
 
 **`tools/rules_bun/bun/private/bun_astro_check.sh.tpl`** — Launcher template:
+
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
@@ -182,6 +189,7 @@ For each: verify with `bazel build //packages/<name>:astro_build` and `bazel tes
 ### Modified files
 
 **`tools/oci/bun_service_image.bzl`**:
+
 - Remove `tags = ["manual"]` from `oci_image` target (line 114) — replace with `tags = []` or omit
 - Remove `tags = ["manual"]` from `pkg_tar` targets (lines 64, 77)
 - Keep `tags = ["manual", "requires-network"]` on `_bun_install_layer` genrule (line 201)
@@ -208,20 +216,21 @@ The homelab images in `packages/homelab/src/{dns-audit,deps-email,ha,caddy-s3pro
 
 ## Risks and Mitigations
 
-| Risk | Mitigation |
-|------|-----------|
-| Vite/Astro plugins can't resolve in materialized tree | The materialized tree already places npm deps at `{pkg_dir}/node_modules/` — same path resolution as real workspace. ESLint + typecheck already work this way. |
-| Astro `astro:content` virtual modules | Generated during build from content files which are declared as `data`. Works as long as `.md/.mdx/.astro` files are in the tree at correct paths (they are via materialize). |
-| Build needs writable directory | The action copies the materialized tree to a writable tmpdir before running the build. Node_modules are symlinked to avoid the copy cost. |
-| `sentinel/web` dist_dir = `"../dist/web"` | May need adjustment — check if the Vite config can output to `dist/` within the package, or handle the relative path in the copy step. |
-| OCI image builds add CI time | Only runs when files change (target-determinator). `_bun_install_layer` caches on `package.json` + `bun.lock`. Subsequent runs use remote cache. |
-| `requires-network` genrule in sandbox | `requires-network` execution requirement tells Bazel to allow network access for that action. Works in both local and remote execution. |
+| Risk                                                  | Mitigation                                                                                                                                                                    |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vite/Astro plugins can't resolve in materialized tree | The materialized tree already places npm deps at `{pkg_dir}/node_modules/` — same path resolution as real workspace. ESLint + typecheck already work this way.                |
+| Astro `astro:content` virtual modules                 | Generated during build from content files which are declared as `data`. Works as long as `.md/.mdx/.astro` files are in the tree at correct paths (they are via materialize). |
+| Build needs writable directory                        | The action copies the materialized tree to a writable tmpdir before running the build. Node_modules are symlinked to avoid the copy cost.                                     |
+| `sentinel/web` dist_dir = `"../dist/web"`             | May need adjustment — check if the Vite config can output to `dist/` within the package, or handle the relative path in the copy step.                                        |
+| OCI image builds add CI time                          | Only runs when files change (target-determinator). `_bun_install_layer` caches on `package.json` + `bun.lock`. Subsequent runs use remote cache.                              |
+| `requires-network` genrule in sandbox                 | `requires-network` execution requirement tells Bazel to allow network access for that action. Works in both local and remote execution.                                       |
 
 ---
 
 ## Verification
 
 After each phase:
+
 1. `bazel build //packages/hn-enhancer:vite_build` — verify Vite build succeeds in sandbox
 2. `bazel build //packages/cook-preview:astro_build` — verify Astro build succeeds
 3. `bazel test //packages/cook-preview:astro_check` — verify Astro check succeeds
@@ -231,13 +240,13 @@ After each phase:
 
 ## Critical Files Reference
 
-| File | Role |
-|------|------|
+| File                                          | Role                                                              |
+| --------------------------------------------- | ----------------------------------------------------------------- |
 | `tools/rules_bun/bun/private/materialize.bzl` | Reuse `materialize_tree` + `collect_all_npm_sources` (no changes) |
-| `tools/rules_bun/bun/private/bun_test.bzl` | Pattern to follow for BunInfo resolution + workspace dep merging |
-| `tools/rules_bun/bun/defs.bzl` | Public API — add `bun_build`, `bun_astro_check` |
-| `tools/rules_bun/bun/private/BUILD.bazel` | Register new template files |
-| `tools/oci/bun_service_image.bzl` | Remove `manual` from non-push targets |
-| `tools/bazel/vite_build.bzl` | Delete after migration |
-| `tools/bazel/astro_build.bzl` | Delete after migration |
-| `tools/bazel/astro_check.bzl` | Delete after migration |
+| `tools/rules_bun/bun/private/bun_test.bzl`    | Pattern to follow for BunInfo resolution + workspace dep merging  |
+| `tools/rules_bun/bun/defs.bzl`                | Public API — add `bun_build`, `bun_astro_check`                   |
+| `tools/rules_bun/bun/private/BUILD.bazel`     | Register new template files                                       |
+| `tools/oci/bun_service_image.bzl`             | Remove `manual` from non-push targets                             |
+| `tools/bazel/vite_build.bzl`                  | Delete after migration                                            |
+| `tools/bazel/astro_build.bzl`                 | Delete after migration                                            |
+| `tools/bazel/astro_check.bzl`                 | Delete after migration                                            |

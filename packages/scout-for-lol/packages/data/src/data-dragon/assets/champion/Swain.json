@@ -92,10 +92,7 @@
         "High mobility counters all of Swain's basic abilities: Death's Hand does more damage the closer he is, Vision of Empire has a very long delay and Nevermove must start returning back to him to be dangerous.",
         "Buying an item with Grievous Wounds will make Swain much easier to kill during his Demonic Ascension."
       ],
-      "tags": [
-        "Mage",
-        "Support"
-      ],
+      "tags": ["Mage", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -132,11 +129,7 @@
           "description": "Swain unleashes several bolts of eldritch power that pierce through enemies. Enemies hit take more damage for each bolt they are struck by.",
           "tooltip": "Swain unleashes 5 eldritch bolts, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> plus <magicDamage>{{ extraboltdamage }} magic damage</magicDamage> per bolt past the first (max <magicDamage>{{ maxdamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Bolt Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Bolt Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -144,95 +137,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            6,
-            5,
-            4,
-            3
-          ],
+          "cooldown": [7, 6, 5, 4, 3],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -250,13 +171,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "SwainQ.png",
@@ -289,95 +204,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            21,
-            20,
-            19,
-            18
-          ],
+          "cooldown": [22, 21, 20, 19, 18],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -395,13 +238,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            5500,
-            6000,
-            6500,
-            7000,
-            7500
-          ],
+          "range": [5500, 6000, 6500, 7000, 7500],
           "rangeBurn": "5500/6000/6500/7000/7500",
           "image": {
             "full": "SwainW.png",
@@ -420,11 +257,7 @@
           "description": "Swain launches a wave of demonic power forward. It then returns to Swain and roots enemies it hits. Swain can then choose to pull all rooted champions closer. This ability has a shorter cooldown during Demonic Ascension.",
           "tooltip": "Swain launches a wave of demonic power that returns, detonating on the first enemy hit to deal <magicDamage>{{ secondarydamage }} magic damage</magicDamage> and <status>Root</status> enemies in the area for {{ rootduration }} seconds.<br /><br /><status>Rooting</status> a champion allows Swain to reactivate this ability to pull all champions <status>Rooted</status> by <spellName>Nevermove</spellName> toward him, gaining a <span class=\"size18 colorFF3F3F\">Soul Fragment</span> for each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ e2damage }} -> {{ e2damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -432,95 +265,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            11.5,
-            11,
-            10.5,
-            10
-          ],
+          "cooldown": [12, 11.5, 11, 10.5, 10],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -538,13 +299,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            850,
-            850,
-            850,
-            850,
-            850
-          ],
+          "range": [850, 850, 850, 850, 850],
           "rangeBurn": "850",
           "image": {
             "full": "SwainE.png",
@@ -563,11 +318,7 @@
           "description": "Swain transforms into a demon and drains health from nearby enemy champions, minions, and neutral monsters. Swain can cast Demonflare to decimate and slow nearby enemies with a nova of soulfire. This form is indefinite as long as Swain drains enemy champions.",
           "tooltip": "Swain frees the demon, which deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and drains <healing>{{ healingcalc }} Health</healing> per second from nearby enemies. His Demonic Energy depletes over time but can be recharged indefinitely by draining enemy Champions and is fully restored on Champion takedowns.<br /><br />After {{ demonflarecastdelay }} seconds and every {{ demonflarecooldowntooltip }} seconds thereafter, Swain can cast <spellName>Demonflare</spellName> while transformed, which deals <magicDamage>{{ demonflaredamagetotal }} magic damage</magicDamage> and <status>Slows</status> enemies by {{ demonflareslowamount*100 }}%, decaying over {{ demonflareslowduration }}s.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Drain Damage",
-              "Drain Heal",
-              "Demonflare Damage"
-            ],
+            "label": ["Drain Damage", "Drain Heal", "Demonflare Damage"],
             "effect": [
               "{{ damagepersecond }} -> {{ damagepersecondNL }}",
               "{{ healpersecond }} -> {{ healpersecondNL }}",
@@ -575,71 +326,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            120,
-            120
-          ],
+          "cooldown": [120, 120, 120],
           "cooldownBurn": "120",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -657,11 +360,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "SwainR.png",

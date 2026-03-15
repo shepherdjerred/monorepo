@@ -57,13 +57,7 @@ export function createDependencySummaryCronJob(chart: Chart) {
                 {
                   name: "dependency-summary",
                   image: `ghcr.io/shepherdjerred/dependency-summary:${versions["shepherdjerred/dependency-summary"]}`,
-                  command: [
-                    "timeout",
-                    "300",
-                    "bun",
-                    "run",
-                    "src/main.ts",
-                  ],
+                  command: ["timeout", "300", "bun", "run", "src/main.ts"],
                   env: [
                     {
                       name: "OPENAI_API_KEY",

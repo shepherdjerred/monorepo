@@ -89,10 +89,7 @@
       "blurb": "To those who still revere him, the Volibear is the storm made manifest. Destructive, wild, and stubbornly resolute, he existed before mortals walked the Freljord's tundra, and is fiercely protective of the lands that he and his demi-god kin created...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Fighter",
-        "Tank"
-      ],
+      "tags": ["Fighter", "Tank"],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -129,11 +126,7 @@
           "description": "Volibear gains speed towards enemies, <status>Stunning</status> and damaging the first one he Attacks.",
           "tooltip": "Volibear gains <speed>{{ minspeedcalc }} Move Speed</speed>, doubled to <speed>{{ maxspeedcalc }}</speed> towards enemy champions for the next {{ duration }} seconds. While active, Volibear's next Attack deals <physicalDamage>{{ calculateddamage }} physical damage</physicalDamage> and <status>Stuns</status> the target for {{ stunduration }} second.<br /><br />Volibear becomes enraged if an enemy <status>Immobilizes</status> him before he <status>Stuns</status> a target, ending the Ability early but refreshing its Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Move Speed",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Move Speed", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ minspeed*100.000000 }}% -> {{ minspeednl*100.000000 }}%",
@@ -141,95 +134,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -247,13 +168,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "VolibearQ.png",
@@ -286,95 +201,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            5,
-            5,
-            5,
-            5,
-            5
-          ],
+          "cooldown": [5, 5, 5, 5, 5],
           "cooldownBurn": "5",
-          "cost": [
-            20,
-            25,
-            30,
-            35,
-            40
-          ],
+          "cost": [20, 25, 30, 35, 40],
           "costBurn": "20/25/30/35/40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -392,13 +235,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            325,
-            325,
-            325,
-            325,
-            325
-          ],
+          "range": [325, 325, 325, 325, 325],
           "rangeBurn": "325",
           "image": {
             "full": "VolibearW.png",
@@ -417,11 +254,7 @@
           "description": "Volibear summons a lightning bolt at a location, dealing damage and Slowing enemies while granting Volibear a Shield if he's inside the blast radius.",
           "tooltip": "Volibear summons a thundercloud that fires a lightning bolt, dealing <magicDamage>{{ totaldamagetooltip }} plus {{ percentdamage*100 }}% max Health magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If Volibear is inside the blast zone, he gains a <shield>{{ shieldapratiotooltip }} plus {{ shieldamount*100 }}% max Health Shield</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Percentage Damage",
-              "Monster Damage Cap"
-            ],
+            "label": ["Damage", "Percentage Damage", "Monster Damage Cap"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ percentdamage*100.000000 }}% -> {{ percentdamagenl*100.000000 }}%",
@@ -429,95 +262,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            16,
-            16,
-            16,
-            16
-          ],
+          "cooldown": [16, 16, 16, 16, 16],
           "cooldownBurn": "16",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -535,13 +296,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "VolibearE.png",
@@ -574,71 +329,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            160,
-            135,
-            110
-          ],
+          "cooldown": [160, 135, 110],
           "cooldownBurn": "160/135/110",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              75,
-              115,
-              155
-            ],
-            [
-              9,
-              9,
-              9
-            ],
-            [
-              12,
-              12,
-              12
-            ],
-            [
-              8,
-              8,
-              8
-            ],
-            [
-              0.08,
-              0.08,
-              0.08
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [75, 115, 155],
+            [9, 9, 9],
+            [12, 12, 12],
+            [8, 8, 8],
+            [0.08, 0.08, 0.08],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -656,11 +363,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "VolibearR.png",

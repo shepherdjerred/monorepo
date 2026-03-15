@@ -47,9 +47,7 @@
       "blurb": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Fighter"
-      ],
+      "tags": ["Fighter"],
       "partype": "",
       "info": {
         "attack": 4,
@@ -100,95 +98,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "cooldown": [1, 1, 1, 1, 1],
           "cooldownBurn": "1",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -206,13 +132,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "BelvethQ.png",
@@ -231,11 +151,7 @@
           "description": "Bel'Veth slams her tail to the ground, damaging, knocking up, and slowing her enemies.",
           "tooltip": "Bel'Veth slams her tail, dealing <magicDamage>{{ damage }} magic damage</magicDamage>, <status>Knocking Up</status> foes for {{ duration }} seconds, and <status>Slowing</status> them by {{ slowpercent*100 }}% for {{ slowduration }} seconds. If a champion is hit, this refreshes the Cooldown of <spellName>Void Surge</spellName> in that direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow Duration",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Slow Duration", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -243,95 +159,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            11,
-            10,
-            9,
-            8
-          ],
+          "cooldown": [12, 11, 10, 9, 8],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -349,13 +193,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            715,
-            715,
-            715,
-            715,
-            715
-          ],
+          "range": [715, 715, 715, 715, 715],
           "rangeBurn": "715",
           "image": {
             "full": "BelvethW.png",
@@ -374,11 +212,7 @@
           "description": "Bel'Veth roots herself in place, channeling a storm of slashes around her that targets the lowest-health enemy and grants her lifesteal and damage reduction.",
           "tooltip": "Bel'Veth channels and slashes around herself, gaining {{ drpercent*100 }}% Damage Reduction, {{ totallifesteal }} Life Steal, and Attacking {{ f2.0 }} times over {{ totalduration }} seconds with the number of Attacks increasing based on her <attackSpeed>Attack Speed</attackSpeed>. Each Attack strikes the lowest-health enemy, dealing <physicalDamage>{{ damageperstrike }}</physicalDamage> to <physicalDamage>{{ maxdamageperstriketooltip }} physical damage</physicalDamage> based on the target's missing Health.<br /><br />Using another Ability or <recast>Recasting</recast> ends this Ability early.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Damage Reduction",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Damage Reduction", "Cooldown"],
             "effect": [
               "{{ damageperhit }} -> {{ damageperhitNL }}",
               "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
@@ -386,95 +220,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
-          ],
+          "cooldown": [20, 19, 18, 17, 16],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -492,13 +254,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "BelvethE.png",
@@ -535,71 +291,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            1,
-            1,
-            1
-          ],
+          "cooldown": [1, 1, 1],
           "cooldownBurn": "1",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -617,11 +325,7 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "BelvethR.png",

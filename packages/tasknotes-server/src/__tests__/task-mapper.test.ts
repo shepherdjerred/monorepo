@@ -85,9 +85,7 @@ describe("frontmatterToTask", () => {
     };
     const task = frontmatterToTask(data, "", "test.md");
     expect(task).toBeDefined();
-    expect(task!.recurrence).toBe(
-      "DTSTART:20260301;FREQ=MONTHLY;BYMONTHDAY=1",
-    );
+    expect(task!.recurrence).toBe("DTSTART:20260301;FREQ=MONTHLY;BYMONTHDAY=1");
     expect(task!.recurrenceAnchor).toBe("scheduled");
     expect(task!.completeInstances).toEqual(["2026-03-03", "2026-03-14"]);
     expect(task!.skippedInstances).toEqual(["2026-02-01"]);
@@ -291,10 +289,10 @@ describe("taskToFrontmatter", () => {
       dateCreated: "2026-02-20T09:00:00Z",
       dateModified: "2026-03-08T17:00:00Z",
       timeEstimate: 45,
-      blockedBy: [
-        { uid: "[[Setup]]", reltype: "FINISHTOSTART", gap: "P1D" },
+      blockedBy: [{ uid: "[[Setup]]", reltype: "FINISHTOSTART", gap: "P1D" }],
+      reminders: [
+        { type: "relative" as const, offset: "-PT1H", relatedTo: "due" },
       ],
-      reminders: [{ type: "relative" as const, offset: "-PT1H", relatedTo: "due" }],
       archived: false,
       totalTrackedTime: 3600,
       isBlocked: true,
