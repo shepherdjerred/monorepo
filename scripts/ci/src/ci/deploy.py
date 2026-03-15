@@ -47,7 +47,7 @@ SITES = [
     {"bucket": "resume", "build_dir": str(_REPO_ROOT / "packages/resume"), "build_cmd": None, "dist_dir": str(_REPO_ROOT / "packages/resume")},
     {"bucket": "webring", "build_dir": str(_REPO_ROOT / "packages/webring"), "build_cmd": ["bun", "run", "build"], "dist_dir": str(_REPO_ROOT / "packages/webring/dist")},
     {"bucket": "cook", "build_dir": str(_REPO_ROOT / "packages/cook-preview"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/cook-preview/dist")},
-    {"bucket": "status-page", "build_dir": str(_REPO_ROOT / "packages/status-page-web"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/status-page-web/dist"), "target": "r2"},
+    {"bucket": "status-page", "build_dir": str(_REPO_ROOT / "packages/status-page/web"), "build_cmd": ["bun", "run", "astro", "build"], "dist_dir": str(_REPO_ROOT / "packages/status-page/web/dist"), "target": "r2"},
 ]
 
 
@@ -102,11 +102,16 @@ def main() -> None:
     # --- S3/R2 static site sync ---
     s3_key = os.environ.get("S3_ACCESS_KEY_ID", "")
     s3_secret = os.environ.get("S3_SECRET_ACCESS_KEY", "")
+    has_r2_creds = all(os.environ.get(v) for v in ["CF_ACCOUNT_ID", "CF_R2_ACCESS_KEY_ID", "CF_R2_SECRET_ACCESS_KEY"])
     if s3_key and s3_secret:
         print("\n--- Deploy static sites to S3/R2 ---", flush=True)
         for site in sites:
             bucket, local_dir = site["bucket"], site["dist_dir"]
             try:
+                if site.get("target") == "r2":
+                    if not has_r2_creds:
+                        print(f"\nSkipping {bucket} (R2 credentials not set)", flush=True)
+                        continue
                 print(f"\nSyncing {bucket} from {local_dir}", flush=True)
                 if site.get("target") == "r2":
                     r2.sync(bucket, local_dir)
