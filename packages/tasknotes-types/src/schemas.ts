@@ -26,6 +26,28 @@ export const ALL_STATUSES = TaskStatusSchema.options;
 
 // ── Task ───────────────────────────────────────────────────────
 
+export const RecurrenceAnchorSchema = z.enum(["scheduled", "completion"]);
+export type RecurrenceAnchor = z.infer<typeof RecurrenceAnchorSchema>;
+
+export const BlockedByEntrySchema = z.object({
+  uid: z.string(),
+  reltype: z.string().optional(),
+  gap: z.string().optional(),
+});
+
+export const ReminderSchema = z.object({
+  type: z.enum(["relative", "absolute"]),
+  offset: z.string().optional(),
+  relatedTo: z.string().optional(),
+  absoluteTime: z.string().optional(),
+});
+
+export const InlineTimeEntrySchema = z.object({
+  startTime: z.string(),
+  endTime: z.string().optional(),
+  duration: z.number().optional(),
+});
+
 export const TaskSchema = z.object({
   id: z.string(),
   path: z.string().default(""),
@@ -38,10 +60,23 @@ export const TaskSchema = z.object({
   projects: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   recurrence: z.string().optional(),
+  recurrenceAnchor: RecurrenceAnchorSchema.optional(),
+  completeInstances: z.array(z.string()).default([]),
+  skippedInstances: z.array(z.string()).default([]),
+  completedDate: z.string().optional(),
+  dateCreated: z.string().optional(),
+  dateModified: z.string().optional(),
+  timeEstimate: z.number().optional(),
+  timeEntries: z.array(InlineTimeEntrySchema).default([]),
+  blockedBy: z.array(BlockedByEntrySchema).default([]),
+  reminders: z.array(ReminderSchema).default([]),
   archived: z.boolean().default(false),
   totalTrackedTime: z.number().default(0),
   isBlocked: z.boolean().default(false),
   isBlocking: z.boolean().default(false),
+  googleCalendarEventId: z.string().optional(),
+  icsEventId: z.string().optional(),
+  extraFields: z.record(z.unknown()).default({}),
   details: z.string().optional(),
 });
 export type Task = z.infer<typeof TaskSchema>;
@@ -59,7 +94,9 @@ export const CreateTaskRequestSchema = z.object({
   projects: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   recurrence: z.string().optional(),
+  recurrenceAnchor: RecurrenceAnchorSchema.optional(),
   timeEstimate: z.number().optional(),
+  extraFields: z.record(z.unknown()).optional(),
 });
 export type CreateTaskRequest = z.infer<typeof CreateTaskRequestSchema>;
 
@@ -74,7 +111,9 @@ export const UpdateTaskRequestSchema = z.object({
   projects: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   recurrence: z.string().nullable().optional(),
+  recurrenceAnchor: RecurrenceAnchorSchema.nullable().optional(),
   timeEstimate: z.number().nullable().optional(),
+  extraFields: z.record(z.unknown()).optional(),
 });
 export type UpdateTaskRequest = z.infer<typeof UpdateTaskRequestSchema>;
 

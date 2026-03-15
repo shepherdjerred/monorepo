@@ -37,6 +37,18 @@ export function createClickHouseDeployment(chart: Chart) {
   <!-- Disable text_log - not needed for homelab -->
   <text_log remove="1"/>
 
+  <!-- Disable part_log - generates billions of rows from merge activity -->
+  <part_log remove="1"/>
+
+  <!-- Disable profiling logs - not needed for homelab -->
+  <processors_profile_log remove="1"/>
+  <background_schedule_pool_log remove="1"/>
+
+  <!-- Keep error_log with short TTL for debugging -->
+  <error_log>
+    <ttl>event_date + INTERVAL 1 DAY</ttl>
+  </error_log>
+
   <!-- Keep query_log with short TTL -->
   <query_log>
     <ttl>event_date + INTERVAL 1 DAY</ttl>

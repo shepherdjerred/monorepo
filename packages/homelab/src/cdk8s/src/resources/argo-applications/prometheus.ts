@@ -276,7 +276,7 @@ export async function createPrometheusApp(chart: Chart) {
                 // Map alert severity label to PagerDuty severity (critical/warning/error/info)
                 // Check if GroupLabels exists first (nil during helm lint)
                 severity: escapeAlertmanagerTemplate(
-                  '{{ if .GroupLabels }}{{ if eq .GroupLabels.severity "critical" }}critical{{ else if eq .GroupLabels.severity "warning" }}warning{{ else }}error{{ end }}{{ else }}error{{ end }}',
+                  '{{ if .GroupLabels }}{{ if eq .GroupLabels.severity "critical" }}critical{{ else if eq .GroupLabels.severity "warning" }}warning{{ else if eq .GroupLabels.severity "error" }}error{{ else if eq .GroupLabels.severity "info" }}info{{ else }}error{{ end }}{{ else }}error{{ end }}',
                 ),
                 // details: escapeAlertmanagerTemplate(
                 //   JSON.stringify(

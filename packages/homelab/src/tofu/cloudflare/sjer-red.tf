@@ -223,6 +223,14 @@ resource "cloudflare_record" "sjer_red_cname_status_api" {
   proxied = true
 }
 
+resource "cloudflare_record" "sjer_red_cname_status" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "status"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # FastMail DKIM
 resource "cloudflare_record" "sjer_red_dkim_fm1" {
   zone_id = cloudflare_zone.sjer_red.id

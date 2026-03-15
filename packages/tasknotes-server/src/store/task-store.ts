@@ -79,10 +79,23 @@ export class TaskStore {
       projects: request.projects === undefined ? [] : [...request.projects],
       tags: request.tags === undefined ? [] : [...request.tags],
       recurrence: request.recurrence,
+      recurrenceAnchor: request.recurrenceAnchor,
+      completeInstances: [],
+      skippedInstances: [],
+      completedDate: undefined,
+      dateCreated: new Date().toISOString(),
+      dateModified: new Date().toISOString(),
+      timeEstimate: request.timeEstimate,
+      timeEntries: [],
+      blockedBy: [],
+      reminders: [],
       archived: false,
       totalTrackedTime: 0,
       isBlocked: false,
       isBlocking: false,
+      googleCalendarEventId: undefined,
+      icsEventId: undefined,
+      extraFields: request.extraFields ?? {},
       details: request.details,
     };
 
@@ -128,6 +141,19 @@ export class TaskStore {
         request.recurrence === null
           ? undefined
           : (request.recurrence ?? existing.recurrence),
+      recurrenceAnchor:
+        request.recurrenceAnchor === null
+          ? undefined
+          : (request.recurrenceAnchor ?? existing.recurrenceAnchor),
+      timeEstimate:
+        request.timeEstimate === null
+          ? undefined
+          : (request.timeEstimate ?? existing.timeEstimate),
+      extraFields:
+        request.extraFields === undefined
+          ? existing.extraFields
+          : { ...existing.extraFields, ...request.extraFields },
+      dateModified: new Date().toISOString(),
     };
 
     const filePath = path.resolve(this.vaultPath, existing.path);

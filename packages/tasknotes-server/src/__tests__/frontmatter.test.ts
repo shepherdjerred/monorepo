@@ -197,9 +197,10 @@ describe("frontmatterToTask", () => {
     expect(task?.isBlocking).toBe(false);
   });
 
-  test("returns undefined for missing id", () => {
+  test("derives id from path when id is missing", () => {
     const task = frontmatterToTask({ title: "No ID" }, "", "test.md");
-    expect(task).toBeUndefined();
+    expect(task).toBeDefined();
+    expect(task!.id).toBe("test");
   });
 
   test("returns undefined for missing title", () => {
@@ -249,10 +250,16 @@ describe("taskToFrontmatter", () => {
       projects: ["MyProject"],
       tags: ["urgent"],
       recurrence: "every day",
+      completeInstances: [],
+      skippedInstances: [],
+      timeEntries: [],
+      blockedBy: [],
+      reminders: [],
       archived: true,
       totalTrackedTime: 1800,
       isBlocked: true,
       isBlocking: true,
+      extraFields: {},
       details: "Task body",
     };
 
@@ -284,10 +291,16 @@ describe("taskToFrontmatter", () => {
       contexts: [],
       projects: [],
       tags: [],
+      completeInstances: [],
+      skippedInstances: [],
+      timeEntries: [],
+      blockedBy: [],
+      reminders: [],
       archived: false,
       totalTrackedTime: 0,
       isBlocked: false,
       isBlocking: false,
+      extraFields: {},
     };
 
     const { data } = taskToFrontmatter(task);
@@ -313,10 +326,16 @@ describe("taskToFrontmatter", () => {
       contexts: [],
       projects: [],
       tags: [],
+      completeInstances: [],
+      skippedInstances: [],
+      timeEntries: [],
+      blockedBy: [],
+      reminders: [],
       archived: false,
       totalTrackedTime: 0,
       isBlocked: false,
       isBlocking: false,
+      extraFields: {},
     };
 
     const { content } = taskToFrontmatter(task);
