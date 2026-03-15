@@ -35,6 +35,10 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
+resource "aws_s3_bucket" "status_page" {
+  bucket = "status-page"
+}
+
 # Scout application storage
 resource "aws_s3_bucket" "scout_beta" {
   bucket = "scout-beta"

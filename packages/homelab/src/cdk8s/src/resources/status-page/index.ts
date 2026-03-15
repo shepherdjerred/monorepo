@@ -51,7 +51,7 @@ export function createStatusPageDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/status-page-api:${versions["shepherdjerred/status-page-api"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        "bunx prisma db push --skip-generate && bun run src/index.ts",
+        "bun node_modules/prisma/build/index.js db push --skip-generate && bun run src/index.ts",
       ],
       securityContext: {
         readOnlyRootFilesystem: false,
