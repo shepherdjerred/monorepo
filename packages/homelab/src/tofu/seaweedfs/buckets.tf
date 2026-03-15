@@ -74,11 +74,6 @@ resource "terraform_data" "sccache_lifecycle" {
 }
 
 # Bazel remote cache with 30-day expiration
-import {
-  to = aws_s3_bucket.bazel_cache
-  id = "bazel-cache"
-}
-
 resource "aws_s3_bucket" "bazel_cache" {
   bucket = "bazel-cache"
 }
