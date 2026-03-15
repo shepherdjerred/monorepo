@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Sona": {
       "id": "Sona",
@@ -113,6 +113,12 @@
           "num": 66,
           "name": "Spirit Blossom Springs Sona",
           "chromas": true
+        },
+        {
+          "id": "37075",
+          "num": 75,
+          "name": "Prestige Requiem Sona",
+          "chromas": true
         }
       ],
       "lore": "Sona is Demacia's foremost virtuoso of the stringed etwahl, speaking only through her graceful chords and vibrant arias. This genteel manner has endeared her to the highborn, though others suspect her spellbinding melodies to actually emanate magic—a Demacian taboo. Silent to outsiders but somehow understood by close companions, Sona plucks her harmonies not only to soothe injured allies, but also to strike down unsuspecting enemies.",
@@ -126,7 +132,10 @@
         "Spread out when you see Sona so she can't make your entire team dance.",
         "Kill Sona first, as she will heal up her team if left alone for too long."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -152,7 +161,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 49,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.3,
         "attackspeed": 0.644
       },
@@ -175,23 +184,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -209,7 +290,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825, 825, 825],
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "SonaQ.png",
@@ -240,23 +327,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -274,7 +433,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "SonaW.png",
@@ -293,29 +458,103 @@
           "description": "Sona plays the Song of Celerity, granting nearby allies bonus Move Speed. Sona gains a temporary aura that grants allied champions tagged by the zone bonus Move Speed.",
           "tooltip": "<spellPassive>Active:</spellPassive> She begins a new <keywordMajor>Melody</keywordMajor> and grants herself <speed>{{ totalselfmovementspeed }} Move Speed</speed> for {{ selfmovementspeeddurationmin }} seconds, extended to up to {{ selfmovementspeeddurationmax }} seconds if she doesn't take damage. <br /><br /><keywordMajor>Melody:</keywordMajor> Sona gains an aura for {{ auraduration }} seconds that grants allied champions <speed>{{ totalallymovementspeed }} Move Speed</speed> for {{ allymovementspeedduration }} seconds.<br /><br /><keywordMajor>Power Chord - Tempo:</keywordMajor> Power Chord also <status>Slows</status> the target by {{ totaltempomovespeedslow }} for {{ tempoduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed"],
+            "label": [
+              "Move Speed"
+            ],
             "effect": [
               "{{ allybasemovementspeed*100.000000 }}% -> {{ allybasemovementspeednl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
           "cooldownBurn": "14",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -333,7 +572,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [430, 430, 430, 430, 430],
+          "range": [
+            430,
+            430,
+            430,
+            430,
+            430
+          ],
           "rangeBurn": "430",
           "image": {
             "full": "SonaE.png",
@@ -352,30 +597,81 @@
           "description": "Sona plays her ultimate chord, stunning enemy champions and forcing them to dance and dealing magic damage to them.",
           "tooltip": "Sona strikes an irresistible chord, <status>Stunning</status> enemy for {{ stunduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -393,7 +689,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900],
+          "range": [
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "SonaR.png",

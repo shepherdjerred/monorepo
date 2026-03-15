@@ -1857,7 +1857,7 @@
     },
     "3190": {
       "name": "Locket of the Iron Solari",
-      "description": "<mainText><stats><attention>200</attention> Health<br><attention>25</attention> Armor<br><attention>25</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>200 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>25</attention> Armor<br><attention>25</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
       "plaintext": "Activate to shield nearby allies from damage",
       "stats": {
         "FlatSpellBlockMod": 25,
@@ -4947,7 +4947,7 @@
     },
     "323190": {
       "name": "Locket of the Iron Solari",
-      "description": "<mainText><stats><attention>250</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>200 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>250</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 30,

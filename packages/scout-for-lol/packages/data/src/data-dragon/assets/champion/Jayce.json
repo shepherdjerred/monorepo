@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Jayce": {
       "id": "Jayce",
@@ -109,7 +109,10 @@
         "If you see Jayce drop his Acceleration Gate, be careful, he is probably about to cast Shock Blast.",
         "Jayce is strong in the early game. If he gains the advantage, play defensively."
       ],
-      "tags": ["Fighter", "Marksman"],
+      "tags": [
+        "Fighter",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -135,7 +138,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 4.25,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 3,
         "attackspeed": 0.658
       },
@@ -146,7 +149,11 @@
           "description": "Hammer Stance: Leaps to an enemy dealing physical damage and slowing enemies.<br><br>Cannon Stance: Fires an orb of electricity that detonates upon hitting an enemy (or reaching the end of its path) dealing physical damage to all enemies hit.",
           "tooltip": "<keywordMajor>Mercury Hammer:</keywordMajor> Jayce leaps to an enemy, dealing <physicalDamage>{{ spell.jaycetotheskies:damage }} physical damage</physicalDamage> to surrounding enemies and <status>Slowing</status> them by {{ spell.jaycetotheskies:slow*-100 }}% for {{ spell.jaycetotheskies:slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Slow"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Slow"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -154,23 +161,107 @@
             ]
           },
           "maxrank": 6,
-          "cooldown": [16, 14, 12, 10, 8, 6],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
           "cooldownBurn": "16/14/12/10/8/6",
-          "cost": [40, 40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -188,7 +279,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "JayceToTheSkies.png",
@@ -207,30 +305,117 @@
           "description": "Hammer Stance: Passive: Restores Mana per strike. Active: Creates a field of lightning damaging nearby enemies for several seconds.<br><br>Cannon Stance: Gains a burst of energy, increasing Attack Speed to maximum for several attacks.",
           "tooltip": "<keywordMajor>Mercury Hammer - Passive:</keywordMajor> Jayce's <keywordMajor>Hammer</keywordMajor> Attacks grant <scaleMana>{{ spell.jaycestaticfield:managain }} Mana</scaleMana>.<br /><br /><keywordMajor>Mercury Hammer - Active:</keywordMajor> Jayce creates an electric aura dealing <magicDamage>{{ spell.jaycestaticfield:damage }} magic damage</magicDamage> over {{ spell.jaycestaticfield:duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Mana Restore"],
+            "label": [
+              "Damage",
+              "Mana Restore"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ managain }} -> {{ managainNL }}"
             ]
           },
           "maxrank": 6,
-          "cooldown": [10, 10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [40, 40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +433,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [285, 285, 285, 285, 285, 285],
+          "range": [
+            285,
+            285,
+            285,
+            285,
+            285,
+            285
+          ],
           "rangeBurn": "285",
           "image": {
             "full": "JayceStaticField.png",
@@ -267,7 +459,11 @@
           "description": "Hammer Stance: Deals magic damage to an enemy and knocks them back a short distance.<br><br>Cannon Stance: Deploys an Acceleration Gate increasing the Move Speed of all allied champions who pass through it. If Shock Blast is fired through the gate the missile speed, range, and damage will increase.",
           "tooltip": "<keywordMajor>Hammer Form</keywordMajor>: Jayce swings his hammer, <status>Knocking Back</status> his target and dealing <magicDamage>{{ spell.jaycethunderingblow:flatdamage }} plus {{ spell.jaycethunderingblow:perchpdamage*100 }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Health %", "Cooldown", "Monster Damage Cap"],
+            "label": [
+              "Max Health %",
+              "Cooldown",
+              "Monster Damage Cap"
+            ],
             "effect": [
               "{{ perchpdamage*100.000000 }}% -> {{ perchpdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -275,23 +471,107 @@
             ]
           },
           "maxrank": 6,
-          "cooldown": [20, 18, 16, 14, 12, 10],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
           "cooldownBurn": "20/18/16/14/12/10",
-          "cost": [55, 55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +589,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [240, 240, 240, 240, 240, 240],
+          "range": [
+            240,
+            240,
+            240,
+            240,
+            240,
+            240
+          ],
           "rangeBurn": "240",
           "image": {
             "full": "JayceThunderingBlow.png",
@@ -328,12 +615,48 @@
           "description": "Hammer Stance: Transforms the Mercury Hammer into the Mercury Cannon gaining new abilities and increased range. The first attack in this form reduces the target's Armor and Magic Resist.<br><br>Cannon Stance: Transforms the Mercury Cannon into the Mercury Hammer gaining new abilities and increasing Armor and Magic Resist. The first attack in this form deals additional magic damage.",
           "tooltip": "<keywordMajor>Mercury Hammer</keywordMajor>: Jayce transforms his weapon into the <keywordMajor>Mercury Cannon</keywordMajor>, gaining Attack Range and new Abilities. Jayce's next Attack removes <scaleArmor>{{ spell.jaycestancehtg:rangedformshred }} Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ spell.jaycestancehtg:shredduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "maxrank": 1,
-          "cooldown": [6],
+          "cooldown": [
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [0],
+          "cost": [
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
-          "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+          "effect": [
+            null,
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ],
+            [
+              0
+            ]
+          ],
           "effectBurn": [
             null,
             "0",
@@ -350,7 +673,9 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [600],
+          "range": [
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "JayceStanceHtG.png",

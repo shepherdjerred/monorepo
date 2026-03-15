@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Caitlyn": {
       "id": "Caitlyn",
@@ -156,7 +156,9 @@
         "Keep behind allied minions if Caitlyn is harassing you with Piltover Peacemaker (it deals less damage with each subsequent target).",
         "You can intercept Ace in the Hole's missile from hitting an ally if you stand in its path."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -182,7 +184,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 62,
-        "attackdamageperlevel": 3.8,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 4,
         "attackspeed": 0.681
       },
@@ -207,23 +209,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [50, 50, 50, 50, 50],
-            [1, 1, 1, 1, 1],
-            [1.3, 1.45, 1.6, 1.75, 1.9],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.3,
+              1.45,
+              1.6,
+              1.75,
+              1.9
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -241,7 +315,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "CaitlynQ.png",
@@ -274,23 +354,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
           "cooldownBurn": "0.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [30, 30, 30, 30, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +460,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "CaitlynW.png",
@@ -327,30 +485,105 @@
           "description": "Caitlyn fires a heavy net to slow her target. The recoil knocks Caitlyn back.",
           "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ e3 }}% for {{ e2 }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [75, 75, 75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [80, 130, 180, 230, 280],
-            [1, 1, 1, 1, 1],
-            [50, 50, 50, 50, 50],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              130,
+              180,
+              230,
+              280
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -368,7 +601,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "CaitlynE.png",
@@ -387,27 +626,79 @@
           "description": "Caitlyn takes time to line up the perfect shot, dealing massive damage to a single target at a huge range. Enemy champions can intercept the bullet for their ally.",
           "tooltip": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing <physicalDamage>{{ rtotaldamage }} physical damage</physicalDamage>, but other enemy champions can intercept it. This Ability grants <keywordStealth>True Sight</keywordStealth> of the target during the channel.<br /><br /><rules>Damage scales with Caitlyn's Critical Strike chance and Critical Strike Damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [90, 90, 90],
+          "cooldown": [
+            90,
+            90,
+            90
+          ],
           "cooldownBurn": "90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -425,7 +716,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3500, 3500, 3500],
+          "range": [
+            3500,
+            3500,
+            3500
+          ],
           "rangeBurn": "3500",
           "image": {
             "full": "CaitlynR.png",

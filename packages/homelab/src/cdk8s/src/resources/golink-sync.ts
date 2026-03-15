@@ -332,7 +332,7 @@ exit 0
                   valueFrom: {
                     secretKeyRef: {
                       name: "tailscale-auth-key",
-                      key: "credential",
+                      key: "client_secret",
                     },
                   },
                 },

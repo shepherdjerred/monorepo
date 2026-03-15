@@ -112,7 +112,7 @@ export function createSeaweedfsApp(chart: Chart) {
         {
           name: "data",
           type: "persistentVolumeClaim",
-          size: Size.gibibytes(128).asString(),
+          size: Size.gibibytes(256).asString(),
           storageClass: NVME_STORAGE_CLASS,
           maxVolumes: 0, // 0 means auto-detect
         },

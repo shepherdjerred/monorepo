@@ -115,7 +115,7 @@ export function createClickHouseDeployment(chart: Chart) {
         },
         memory: {
           request: Size.gibibytes(1),
-          limit: Size.gibibytes(4),
+          limit: Size.gibibytes(6),
         },
       },
     }),

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -108,7 +108,10 @@
         "Orianna can only affect the area the Ball is around. Use this to your advantage.",
         "Watch out for Orianna's Ball returning to her due to leashing. This may cause some unexpected situations."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -134,7 +137,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 44,
-        "attackdamageperlevel": 2.6,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.5,
         "attackspeed": 0.658
       },
@@ -145,30 +148,105 @@
           "description": "Orianna commands her Ball to fire toward a target location, dealing magic damage to targets along the way (deals less damage to subsequent targets). Her Ball remains at the target location after.",
           "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to surrounding enemies and to enemies it passes through. Deals {{ e2 }}% less damage to all enemies after the first.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.25, 4.5, 3.75, 3],
-          "cooldownBurn": "6/5.25/4.5/3.75/3",
-          "cost": [35, 35, 35, 35, 35],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [60, 90, 120, 150, 180],
-            [30, 30, 30, 30, 30],
-            [70, 70, 70, 70, 70],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              90,
+              120,
+              150,
+              180
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -186,7 +264,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [815, 815, 815, 815, 815],
+          "range": [
+            815,
+            815,
+            815,
+            815,
+            815
+          ],
           "rangeBurn": "815",
           "image": {
             "full": "OrianaIzunaCommand.png",
@@ -219,23 +303,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -253,7 +409,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [225, 225, 225, 225, 225],
+          "range": [
+            225,
+            225,
+            225,
+            225,
+            225
+          ],
           "rangeBurn": "225",
           "image": {
             "full": "OrianaDissonanceCommand.png",
@@ -286,23 +448,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [55, 90, 125, 160, 195],
-            [6, 12, 18, 24, 30],
-            [60, 90, 120, 150, 180],
-            [75, 75, 75, 75, 75],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              55,
+              90,
+              125,
+              160,
+              195
+            ],
+            [
+              6,
+              12,
+              18,
+              24,
+              30
+            ],
+            [
+              60,
+              90,
+              120,
+              150,
+              180
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -320,7 +554,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1095, 1095, 1095, 1095, 1095],
+          "range": [
+            1095,
+            1095,
+            1095,
+            1095,
+            1095
+          ],
           "rangeBurn": "1095",
           "image": {
             "full": "OrianaRedactCommand.png",
@@ -339,30 +579,81 @@
           "description": "Orianna commands her Ball to unleash a shockwave, dealing magic damage and launching nearby enemies towards the Ball after a short delay.",
           "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to unleash a shockwave, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and <status>Knocking</status> them in the direction of the <keywordMajor>Ball</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 95, 80],
+          "cooldown": [
+            110,
+            95,
+            80
+          ],
           "cooldownBurn": "110/95/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -380,7 +671,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [410, 410, 410],
+          "range": [
+            410,
+            410,
+            410
+          ],
           "rangeBurn": "410",
           "image": {
             "full": "OrianaDetonateCommand.png",

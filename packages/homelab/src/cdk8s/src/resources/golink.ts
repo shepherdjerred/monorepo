@@ -11,6 +11,7 @@ import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.t
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export function createGolinkDeployment(chart: Chart) {
   const UID = 65_532;
@@ -30,8 +31,7 @@ export function createGolinkDeployment(chart: Chart) {
 
   const item = new OnePasswordItem(chart, "tailscale-auth-key-onepassword", {
     spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/t5scpnlhnxvu25dneg6jdd7c7q",
+      itemPath: vaultItemPath("mboftvs4fyptyqvg3anrfjy6vu"),
     },
     metadata: {
       name: "tailscale-auth-key",
@@ -44,7 +44,7 @@ export function createGolinkDeployment(chart: Chart) {
       envVariables: {
         TS_AUTH_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "tailscale-auth-key", item.name),
-          key: "credential",
+          key: "client_secret",
         }),
       },
       securityContext: {

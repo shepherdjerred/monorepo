@@ -248,23 +248,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/cook-preview": {
-      "name": "@shepherdjerred/cook-preview",
-      "version": "0.0.1",
-      "dependencies": {
-        "@iconify-json/heroicons": "^1.2.1",
-        "@tailwindcss/postcss": "^4.1.11",
-        "astro": "^5.0.9",
-        "astro-icon": "^1.1.1",
-        "autoprefixer": "^10.4.21",
-        "tailwindcss": "^4.0.0",
-      },
-      "devDependencies": {
-        "@astrojs/check": "^0.9.4",
-        "@shepherdjerred/eslint-config": "workspace:*",
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/cooklang-for-obsidian": {
       "name": "cooklang-for-obsidian",
       "version": "1.0.0",
@@ -278,6 +261,23 @@
         "esbuild": "^0.24.0",
         "obsidian": "latest",
         "typescript": "^5.7.0",
+      },
+    },
+    "packages/cooklang-rich-preview": {
+      "name": "@shepherdjerred/cooklang-rich-preview",
+      "version": "0.0.1",
+      "dependencies": {
+        "@iconify-json/heroicons": "^1.2.1",
+        "@tailwindcss/postcss": "^4.1.11",
+        "astro": "^5.0.9",
+        "astro-icon": "^1.1.1",
+        "autoprefixer": "^10.4.21",
+        "tailwindcss": "^4.0.0",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.4",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "typescript": "^5.9.3",
       },
     },
     "packages/discord-plays-pokemon": {
@@ -2684,7 +2684,7 @@
 
     "@shepherdjerred/bun-decompile": ["@shepherdjerred/bun-decompile@workspace:packages/bun-decompile"],
 
-    "@shepherdjerred/cook-preview": ["@shepherdjerred/cook-preview@workspace:packages/cook-preview"],
+    "@shepherdjerred/cooklang-rich-preview": ["@shepherdjerred/cooklang-rich-preview@workspace:packages/cooklang-rich-preview"],
 
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@workspace:packages/eslint-config"],
 

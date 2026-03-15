@@ -1,8 +1,8 @@
 {
-  "name": "@shepherdjerred/cook-preview",
+  "name": "@shepherdjerred/cooklang-rich-preview",
   "version": "0.0.1",
   "type": "module",
-  "description": "Marketing site for Cook Preview Obsidian plugin",
+  "description": "Marketing site for Cooklang Rich Preview Obsidian plugin",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "astro dev",

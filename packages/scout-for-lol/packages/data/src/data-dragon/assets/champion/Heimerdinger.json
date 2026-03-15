@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Heimerdinger": {
       "id": "Heimerdinger",
@@ -90,7 +90,10 @@
         "It's better to destroy all of Heimerdinger's turrets at once with the help of creeps than to fight them one at a time.",
         "Be wary of Heimerdinger's Upgrade!!!, as he can use it to find an answer to most trouble he gets into. Once his ultimate is down, go in for the kill!"
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -116,7 +119,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 56,
-        "attackdamageperlevel": 2.7,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 1.36,
         "attackspeed": 0.658
       },
@@ -127,30 +130,105 @@
           "description": "Heimerdinger lays down a rapid-fire cannon turret equipped with a secondary pass-through beam attack (turrets deal half damage to towers).",
           "tooltip": "Heimerdinger constructs a <keywordMajor>Turret</keywordMajor> that attacks nearby enemies. Heimerdinger can have {{ maxturrets }} turrets active at once. <keywordMajor>Turrets</keywordMajor> slowly build up charge. At max charge, they fire a stronger attack.<br /><br />If Heimerdinger gets too far away, his <keywordMajor>Turrets</keywordMajor> will deactivate after 8 seconds.<br /><br />This Ability has {{ maxkits }} charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cannon Damage", "Beam Damage"],
+            "label": [
+              "Cannon Damage",
+              "Beam Damage"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamagebeam }} -> {{ basedamagebeamNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [1, 1, 1, 1, 1],
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "cooldownBurn": "1",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [900, 900, 900, 900, 900],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              900,
+              900,
+              900,
+              900,
+              900
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -168,7 +246,13 @@
           "vars": [],
           "costType": " Turret Kit & {{ cost }} Mana",
           "maxammo": "3",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "HeimerdingerQ.png",
@@ -187,7 +271,11 @@
           "description": "Heimerdinger fires long-range rockets that converge on his cursor.",
           "tooltip": "Heimerdinger unleashes a barrage of {{ rockets }} rockets that deal <magicDamage>{{ damage }} magic damage</magicDamage> to the first enemy hit. Additional rocket hits deal reduced damage.<br /><br />Max Damage: <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Nearby <keywordMajor>Turrets</keywordMajor> gain 20% charge per rocket that hits a champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -195,23 +283,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [60, 90, 120, 150, 180],
-            [12, 18, 24, 30, 36],
-            [25, 25, 25, 25, 25],
-            [20, 20, 20, 20, 20],
-            [30, 30, 30, 30, 30],
-            [108, 162, 216, 270, 324],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              90,
+              120,
+              150,
+              180
+            ],
+            [
+              12,
+              18,
+              24,
+              30,
+              36
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              108,
+              162,
+              216,
+              270,
+              324
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -229,7 +389,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1325, 1325, 1325, 1325, 1325],
+          "range": [
+            1325,
+            1325,
+            1325,
+            1325,
+            1325
+          ],
           "rangeBurn": "1325",
           "image": {
             "full": "HeimerdingerW.png",
@@ -248,27 +414,103 @@
           "description": "Heimerdinger lobs a grenade at a location, dealing damage to enemy units, as well as stunning anyone directly hit and slowing surrounding units.",
           "tooltip": "Heimerdinger hurls a grenade that deals <magicDamage>{{ damage }} magic damage</magicDamage> in an area and <status>Slows</status> by {{ slowpercent.0*100 }}% for {{ slowduration }} seconds. Enemies in the center are also <status>Stunned</status> for {{ stunduration }} seconds.<br /><br />Hitting a champion fully charges nearby <keywordMajor>Turrets</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [11, 11, 11, 11, 11],
+          "cooldown": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
           "cooldownBurn": "11",
-          "cost": [85, 85, 85, 85, 85],
+          "cost": [
+            85,
+            85,
+            85,
+            85,
+            85
+          ],
           "costBurn": "85",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -286,7 +528,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [970, 970, 970, 970, 970],
+          "range": [
+            970,
+            970,
+            970,
+            970,
+            970
+          ],
           "rangeBurn": "970",
           "image": {
             "full": "HeimerdingerE.png",
@@ -323,23 +571,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [100, 140, 180],
-            [80, 80, 80],
-            [1.5, 1.5, 1.5],
-            [0.12, 0.12, 0.12],
-            [500, 690, 865],
-            [0.45, 0.45, 0.45],
-            [80, 100, 120],
-            [135, 180, 225],
-            [28, 39, 49],
-            [150, 250, 350]
+            [
+              100,
+              140,
+              180
+            ],
+            [
+              80,
+              80,
+              80
+            ],
+            [
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0.12,
+              0.12,
+              0.12
+            ],
+            [
+              500,
+              690,
+              865
+            ],
+            [
+              0.45,
+              0.45,
+              0.45
+            ],
+            [
+              80,
+              100,
+              120
+            ],
+            [
+              135,
+              180,
+              225
+            ],
+            [
+              28,
+              39,
+              49
+            ],
+            [
+              150,
+              250,
+              350
+            ]
           ],
           "effectBurn": [
             null,
@@ -357,7 +653,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1],
+          "range": [
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "HeimerdingerR.png",

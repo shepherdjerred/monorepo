@@ -11,10 +11,10 @@ import Footer from "../components/Footer.astro";
 <Layout>
   <div class="bg-white dark:bg-gray-900">
     <Hero
-      title="Cook Preview"
+      title="Cooklang Rich Preview"
       subtitle="Preview Cooklang .cook recipe files directly in Obsidian with rich rendering, highlighted ingredients, and step-by-step directions. Built on the Cooklang markup language."
       ctaButtons={[
-        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-for-obsidian", variant: "primary" },
+        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-rich-preview", variant: "primary" },
         { text: "View on GitHub", href: "https://github.com/shepherdjerred/cooklang-for-obsidian", variant: "secondary" },
       ]}
     />
@@ -25,7 +25,7 @@ import Footer from "../components/Footer.astro";
         <SectionHeader
           badge="Before & After"
           title="From source to rich preview"
-          subtitle="Write recipes in Cooklang syntax. Cook Preview renders them instantly."
+          subtitle="Write recipes in Cooklang syntax. Cooklang Rich Preview renders them instantly."
         />
         <div class="mx-auto mt-12 max-w-5xl">
           <div class="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_auto_1fr]">
@@ -114,7 +114,7 @@ import Footer from "../components/Footer.astro";
             />
             <div class="mt-10">
               <ProcessStep number={1} title="Install the plugin">
-                <p>Open Obsidian Settings, go to Community Plugins, and search for "Cook Preview".</p>
+                <p>Open Obsidian Settings, go to Community Plugins, and search for "Cooklang Rich Preview".</p>
               </ProcessStep>
               <ProcessStep number={2} title="Open a .cook file">
                 <p>Create or open any .cook file in your vault using <a href="https://cooklang.org" target="_blank" rel="noopener noreferrer" class="text-amber-600 dark:text-amber-400 hover:underline">Cooklang</a> syntax.</p>
@@ -140,9 +140,9 @@ import Footer from "../components/Footer.astro";
     <!-- CTA -->
     <CTA
       title="Ready to preview your recipes?"
-      description="Install Cook Preview and turn your .cook files into beautifully rendered recipes."
+      description="Install Cooklang Rich Preview and turn your .cook files into beautifully rendered recipes."
       buttons={[
-        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-for-obsidian", variant: "primary" },
+        { text: "Install in Obsidian", href: "obsidian://show-plugin?id=cooklang-rich-preview", variant: "primary" },
         { text: "View on GitHub", href: "https://github.com/shepherdjerred/cooklang-for-obsidian", variant: "secondary" },
       ]}
     />

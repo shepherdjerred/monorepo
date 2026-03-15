@@ -41,6 +41,7 @@ VERSION_KEYS = [
     "shepherdjerred/better-skill-capped-fetcher",
     "shepherdjerred/discord-plays-pokemon",
     "shepherdjerred/scout-for-lol/beta",
+    "shepherdjerred/status-page-api",
 ]
 
 
@@ -56,13 +57,27 @@ def _get_metadata(key: str, default: str = "") -> str:
 
 
 def _load_digests() -> dict[str, str]:
-    """Load digest maps from publish + homelab release steps via Buildkite metadata.
+    """Load digest maps from per-image push steps via Buildkite metadata.
 
-    Falls back to local /tmp files if metadata isn't available (e.g. local testing).
+    Each image push step writes its digest to a per-key metadata entry:
+      digest:shepherdjerred/birmel -> 1.1.123@sha256:abc...
+
+    Falls back to legacy bulk JSON keys (image_digests, infra_digests) and
+    local /tmp files for backwards compatibility.
     """
     digests: dict[str, str] = {}
 
-    # Try Buildkite metadata first (cross-step sharing)
+    # Try per-key metadata first (new per-image push steps)
+    for key in VERSION_KEYS:
+        value = _get_metadata(f"digest:{key}")
+        if value:
+            digests[key] = value
+
+    if digests:
+        print(f"Loaded {len(digests)} digests from per-key Buildkite metadata", flush=True)
+        return digests
+
+    # Fall back to legacy bulk JSON keys (backwards compatibility)
     image_digests_json = _get_metadata("image_digests")
     if image_digests_json:
         digests.update(json.loads(image_digests_json))

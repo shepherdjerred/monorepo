@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Shen": {
       "id": "Shen",
@@ -107,7 +107,9 @@
         "Be ready to dodge Shen's taunt and punish him if he misses.",
         "Once Shen reaches level 6, watch out for his global-range ultimate, which can turn fights quickly."
       ],
-      "tags": ["Tank"],
+      "tags": [
+        "Tank"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 3,
@@ -133,7 +135,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 64,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 3,
         "attackspeed": 0.751
       },
@@ -162,23 +164,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.25, 6.5, 5.75, 5],
+          "cooldown": [
+            8,
+            7.25,
+            6.5,
+            5.75,
+            5
+          ],
           "cooldownBurn": "8/7.25/6.5/5.75/5",
-          "cost": [140, 130, 120, 110, 100],
+          "cost": [
+            140,
+            130,
+            120,
+            110,
+            100
+          ],
           "costBurn": "140/130/120/110/100",
           "datavalues": {},
           "effect": [
             null,
-            [1, 1, 1, 1, 1],
-            [2, 2.5, 3, 3.5, 4],
-            [3, 3, 3, 3, 3],
-            [25, 30, 35, 40, 45],
-            [2, 2, 2, 2, 2],
-            [5, 5.5, 6, 6.5, 7],
-            [120, 140, 160, 180, 200],
-            [8, 8, 8, 8, 8],
-            [50, 50, 50, 50, 50],
-            [75, 75, 75, 75, 75]
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2.5,
+              3,
+              3.5,
+              4
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              5,
+              5.5,
+              6,
+              6.5,
+              7
+            ],
+            [
+              120,
+              140,
+              160,
+              180,
+              200
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
           ],
           "effectBurn": [
             null,
@@ -196,7 +270,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "ShenQ.png",
@@ -215,27 +295,103 @@
           "description": "Attacks that would hit Shen or his allies near his spirit blade are blocked.",
           "tooltip": "Shen creates a defensive zone at his <keywordMajor>Spirit Blade</keywordMajor> for {{ e1 }} seconds. Attacks against allied champions in the zone are blocked. <br /><br />If there are no champions to protect in the zone when it starts, it will wait for up to {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [1.75, 1.75, 1.75, 1.75, 1.75],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -253,7 +409,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "ShenW.png",
@@ -272,30 +434,105 @@
           "description": "Shen dashes in a direction, taunting enemies in his path.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Dealing damage with <spellName>Twilight Assault</spellName> or this Ability recovers <keywordMajor>{{ energyrefund }} Energy</keywordMajor>.<br /><br /><spellActive>Active:</spellActive> Shen dashes, <status>Taunting</status> champions and jungle monsters for {{ ccduration }} seconds and dealing <physicalDamage>{{ tauntdamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16, 14, 12, 10],
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
           "cooldownBurn": "18/16/14/12/10",
-          "cost": [150, 150, 150, 150, 150],
+          "cost": [
+            150,
+            150,
+            150,
+            150,
+            150
+          ],
           "costBurn": "150",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -313,7 +550,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "ShenE.png",
@@ -344,23 +587,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [200, 180, 160],
+          "cooldown": [
+            200,
+            180,
+            160
+          ],
           "cooldownBurn": "200/180/160",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -378,7 +669,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [35000, 35000, 35000],
+          "range": [
+            35000,
+            35000,
+            35000
+          ],
           "rangeBurn": "35000",
           "image": {
             "full": "ShenR.png",

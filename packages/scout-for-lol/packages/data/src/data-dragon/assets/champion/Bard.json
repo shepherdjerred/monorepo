@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Bard": {
       "id": "Bard",
@@ -85,7 +85,10 @@
         "You can crush Bard's healing shrines just by walking over them. Don't let his allies take them without a fight.",
         "Bard's ultimate, Tempered Fate, affects allies, enemies, monsters, and turrets alike. Sometimes it can be to your advantage to jump into it!"
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -111,7 +114,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 52,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2,
         "attackspeed": 0.658
       },
@@ -122,7 +125,12 @@
           "description": "Bard fires a missile which will slow the first enemy struck, and continue onward. If it strikes a wall, it will stun the initial target; if it strikes another enemy, it will stun them both.",
           "tooltip": "Bard fires an energy bolt, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first two enemies hit. The first target hit is <status>Slowed</status> by {{ slowamountpercentage }}% for {{ slowduration }}s.<br /><br />If the bolt hits a second enemy or a wall, any enemies hit are <status>Stunned</status> for {{ stunduration }}s.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow Duration", "Stun Duration:", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow Duration",
+              "Stun Duration:",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -131,23 +139,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -165,7 +245,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "BardQ.png",
@@ -184,7 +270,11 @@
           "description": "Reveals a Health shrine which powers up over a short time, disappearing after healing and speeding up the first ally that touches it.",
           "tooltip": "Bard creates a Health shrine that grants <speed>{{ calc_movespeed }} Move Speed</speed> decaying over {{ movespeed_duration }} seconds and restores at least <healing>{{ initialheal }} Health</healing> to the first ally to enter. The shrine grows to restore <healing>{{ maxheal }} Health</healing> after existing for {{ chargeuptime }} seconds.<br /><br />Bard can have up to {{ maxpacks }} shrines at once. If an enemy champion enters a shrine, it is destroyed.<br /><br />This ability has {{ ammo_limit }} charges.<br /><br />Current Active Shrines: {{ f1 }} / {{ f2 }}{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Heal", "Max Heal", "Move Speed"],
+            "label": [
+              "Base Heal",
+              "Max Heal",
+              "Move Speed"
+            ],
             "effect": [
               "{{ minimumheal }} -> {{ minimumhealNL }}",
               "{{ maximumheal }} -> {{ maximumhealNL }}",
@@ -192,23 +282,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +388,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "BardW.png",
@@ -245,27 +413,103 @@
           "description": "Bard opens a portal in nearby terrain. Allies and enemies alike can take a one-way trip through that terrain by moving into the portal.",
           "tooltip": "Bard opens a one-way portal through Terrain for {{ e1 }} seconds. Any champion can enter the portal by moving onto it while near the entrance.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20.5, 19, 17.5, 16],
+          "cooldown": [
+            22,
+            20.5,
+            19,
+            17.5,
+            16
+          ],
           "cooldownBurn": "22/20.5/19/17.5/16",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [10, 10, 10, 10, 10],
-            [33, 33, 33, 33, 33],
-            [900, 900, 900, 900, 900],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              33,
+              33,
+              33,
+              33,
+              33
+            ],
+            [
+              900,
+              900,
+              900,
+              900,
+              900
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -283,7 +527,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "BardE.png",
@@ -302,27 +552,79 @@
           "description": "Bard sends spirit energy arcing to a location, putting all champions, minions, monsters, and turrets hit into stasis for a brief time.",
           "tooltip": "Bard hurls magical protective energy to an area, placing all units and structures hit into Stasis for {{ rstasisduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [110, 95, 80],
+          "cooldown": [
+            110,
+            95,
+            80
+          ],
           "cooldownBurn": "110/95/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -340,7 +642,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3400, 3400, 3400],
+          "range": [
+            3400,
+            3400,
+            3400
+          ],
           "rangeBurn": "3400",
           "image": {
             "full": "BardR.png",

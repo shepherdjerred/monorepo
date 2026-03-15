@@ -92,7 +92,56 @@ PACKAGE_TO_SITE = {
     "resume": "resume",
     "clauderon": "clauderon",
     "webring": "webring",
-    "cook-preview": "cook",
+    "cooklang-rich-preview": "cook",
+}
+
+# --- Container image push targets (app images) ---
+IMAGE_PUSH_TARGETS: list[dict] = [
+    {"target": "//packages/birmel:image_push", "version_key": "shepherdjerred/birmel", "name": "birmel"},
+    {"target": "//packages/sentinel:image_push", "version_key": "shepherdjerred/sentinel", "name": "sentinel"},
+    {"target": "//packages/tasknotes-server:image_push", "version_key": "shepherdjerred/tasknotes-server", "name": "tasknotes-server"},
+    {"target": "//packages/scout-for-lol:image_push", "version_key": "shepherdjerred/scout-for-lol/beta", "name": "scout-for-lol"},
+    {"target": "//packages/discord-plays-pokemon:image_push", "version_key": "shepherdjerred/discord-plays-pokemon", "name": "discord-plays-pokemon"},
+    {"target": "//packages/starlight-karma-bot:image_push", "version_key": "shepherdjerred/starlight-karma-bot/beta", "name": "starlight-karma-bot"},
+    {"target": "//packages/better-skill-capped/fetcher:image_push", "version_key": "shepherdjerred/better-skill-capped-fetcher", "name": "better-skill-capped-fetcher"},
+    {"target": "//tools/oci:obsidian_headless_push", "version_key": "shepherdjerred/obsidian-headless", "name": "obsidian-headless"},
+    {"target": "//packages/status-page/api:image_push", "version_key": "shepherdjerred/status-page-api", "name": "status-page-api"},
+]
+
+# --- Container image push targets (homelab infra images) ---
+INFRA_PUSH_TARGETS: list[dict] = [
+    {"target": "//packages/homelab/src/ha:image_push", "version_key": "shepherdjerred/homelab", "name": "homelab"},
+    {"target": "//packages/homelab/src/deps-email:image_push", "version_key": "shepherdjerred/dependency-summary", "name": "dependency-summary"},
+    {"target": "//packages/homelab/src/dns-audit:image_push", "version_key": "shepherdjerred/dns-audit", "name": "dns-audit"},
+    {"target": "//packages/homelab/src/caddy-s3proxy:image_push", "version_key": "shepherdjerred/caddy-s3proxy", "name": "caddy-s3proxy"},
+]
+
+# --- NPM packages to publish ---
+NPM_PACKAGES: list[dict] = [
+    {"name": "bun-decompile", "dir": "packages/bun-decompile"},
+    {"name": "astro-opengraph-images", "dir": "packages/astro-opengraph-images"},
+    {"name": "webring", "dir": "packages/webring"},
+    {"name": "helm-types", "dir": "packages/homelab/src/helm-types"},
+]
+
+# --- Static sites to deploy ---
+DEPLOY_SITES: list[dict] = [
+    {"bucket": "sjer-red", "name": "sjer.red", "build_dir": "packages/sjer.red", "build_cmd": "bun run astro build", "dist_dir": "packages/sjer.red/dist", "needs_playwright": True, "workspace_deps": "astro-opengraph-images,webring"},
+    {"bucket": "clauderon", "name": "clauderon docs", "build_dir": "packages/clauderon/docs", "build_cmd": "bun run astro build", "dist_dir": "packages/clauderon/docs/dist", "workspace_deps": "astro-opengraph-images"},
+    {"bucket": "resume", "name": "resume", "build_dir": "packages/resume", "build_cmd": "", "dist_dir": "packages/resume"},
+    {"bucket": "webring", "name": "webring", "build_dir": "packages/webring", "build_cmd": "bun run typedoc", "dist_dir": "packages/webring/docs"},
+    {"bucket": "cook", "name": "cooklang-rich-preview", "build_dir": "packages/cooklang-rich-preview", "build_cmd": "bun run astro build", "dist_dir": "packages/cooklang-rich-preview/dist"},
+    {"bucket": "status-page", "name": "status-page", "build_dir": "packages/status-page/web", "build_cmd": "bun run astro build", "dist_dir": "packages/status-page/web/dist", "target": "r2"},
+]
+
+# --- OpenTofu stacks ---
+TOFU_STACKS = ["cloudflare", "github", "seaweedfs"]
+
+# Human-friendly names for tofu stacks in Buildkite labels
+TOFU_STACK_LABELS = {
+    "cloudflare": "Cloudflare DNS",
+    "github": "GitHub Config",
+    "seaweedfs": "SeaweedFS Config",
 }
 
 # Resource tiers for per-package build steps (requests only; pods burst above these)
@@ -377,7 +426,7 @@ ALL_PACKAGES = [
     "terraform-provider-asuswrt",
     "tools",
     "webring",
-    "cook-preview",
+    "cooklang-rich-preview",
 ]
 
 
@@ -500,89 +549,313 @@ def _generate_release_step() -> dict:
     }
 
 
-def _generate_publish_step(packages: set[str] | None) -> dict:
-    """Generate the Publish step."""
-    if packages:
-        label = f":package: Publish ({len(packages)} packages)"
-    else:
-        label = ":package: Publish"
-    step: dict = {
-        "label": label,
-        "key": "publish",
-        "if": "build.branch == pipeline.default_branch",
-        "depends_on": "release",
-        "command": ".buildkite/scripts/publish.sh",
-        "timeout_in_minutes": 30,
-        "plugins": [_k8s_plugin(secrets=["buildkite-argocd-token"])],
-    }
-    if packages:
-        step["env"] = {"BUILDKITE_PUBLISH_PACKAGES": " ".join(sorted(packages))}
-    return step
+def _safe_key(name: str) -> str:
+    """Convert a name to a Buildkite-safe step key."""
+    return name.replace(".", "-").replace("/", "-")
 
 
-def _generate_clauderon_release_step() -> dict:
-    """Generate the Clauderon Release step."""
+# --- Image push step generators ---
+
+def _generate_image_push_step(img: dict, *, depends_on: str = "release") -> dict:
+    """Generate a single container image push step."""
     return {
-        "label": ":rust: Clauderon Release",
-        "key": "clauderon-release",
+        "label": f":docker: Push {img['name']} to GHCR",
+        "key": f"push-{_safe_key(img['name'])}",
         "if": "build.branch == pipeline.default_branch",
-        "command": ".buildkite/scripts/clauderon-release.sh",
-        "timeout_in_minutes": 30,
-        "depends_on": "release",
-        "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=[])],
-    }
-
-
-def _generate_cooklang_release_step() -> dict:
-    """Generate the Cooklang-for-Obsidian Release step."""
-    return {
-        "label": ":cook: Cooklang Release",
-        "key": "cooklang-release",
-        "if": "build.branch == pipeline.default_branch",
-        "command": ".buildkite/scripts/cooklang-release.sh",
+        "depends_on": depends_on,
+        "command": f".buildkite/scripts/push-image.sh --target {img['target']} --version-key {img['version_key']}",
         "timeout_in_minutes": 15,
-        "depends_on": "release",
-        "plugins": [_k8s_plugin(secrets=[])],
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi", secrets=["buildkite-argocd-token"])],
     }
 
 
-def _generate_deploy_step(sites: set[str] | None) -> dict:
-    """Generate the Deploy step."""
-    if sites:
-        label = f":ship: Deploy ({len(sites)} sites)"
-    else:
-        label = ":ship: Deploy"
-    step: dict = {
-        "label": label,
-        "key": "deploy",
-        "if": "build.branch == pipeline.default_branch",
-        "command": ".buildkite/scripts/deploy.sh",
-        "timeout_in_minutes": 30,
-        "plugins": [_k8s_plugin(secrets=["buildkite-argocd-token"])],
-    }
-    if sites:
-        step["env"] = {"BUILDKITE_DEPLOY_SITES": " ".join(sorted(sites))}
-    return step
-
-
-def _generate_homelab_release_step() -> dict:
-    """Generate the Homelab Release step."""
+def _generate_publish_images_group(images: list[dict]) -> dict:
+    """Generate a group of image push steps."""
     return {
-        "label": ":kubernetes: Homelab Release",
-        "key": "homelab-release",
-        "if": "build.branch == pipeline.default_branch",
-        "command": ".buildkite/scripts/homelab-release.sh",
-        "timeout_in_minutes": 45,
-        "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=["buildkite-argocd-token"])],
+        "group": ":package: Publish Images",
+        "key": "publish-images",
+        "steps": [_generate_image_push_step(img) for img in images],
     }
 
 
-def _generate_version_commit_back_step() -> dict:
+def _all_push_keys(images: list[dict]) -> list[str]:
+    """Get all step keys for a list of image push targets."""
+    return [f"push-{_safe_key(img['name'])}" for img in images]
+
+
+# --- NPM publish step generators ---
+
+def _generate_npm_publish_step(pkg: dict) -> dict:
+    """Generate a single NPM package publish step."""
+    return {
+        "label": f":npm: Publish {pkg['name']} to NPM",
+        "key": f"npm-{_safe_key(pkg['name'])}",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": "release",
+        "command": f".buildkite/scripts/publish-npm-package.sh --package-dir {pkg['dir']}",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="512Mi")],
+    }
+
+
+def _generate_publish_npm_group() -> dict:
+    """Generate a group of NPM publish steps."""
+    return {
+        "group": ":npm: Publish NPM",
+        "key": "publish-npm",
+        "steps": [_generate_npm_publish_step(pkg) for pkg in NPM_PACKAGES],
+    }
+
+
+# --- Deploy site step generators ---
+
+def _generate_deploy_site_step(site: dict, *, depends_on: list[str]) -> dict:
+    """Generate a single site deploy step."""
+    args = f"--bucket {site['bucket']} --build-dir {site['build_dir']} --dist-dir {site['dist_dir']}"
+    if site.get("build_cmd"):
+        args += f" --build-cmd \"{site['build_cmd']}\""
+    if site.get("needs_playwright"):
+        args += " --needs-playwright"
+    if site.get("target") == "r2":
+        args += " --target r2"
+    if site.get("workspace_deps"):
+        args += f" --workspace-deps {site['workspace_deps']}"
+
+    cpu = "1" if site.get("needs_playwright") or site.get("build_cmd") else "500m"
+    memory = "2Gi" if site.get("needs_playwright") or site.get("build_cmd") else "512Mi"
+
+    return {
+        "label": f":ship: Deploy {site['name']}",
+        "key": f"deploy-{_safe_key(site['bucket'])}",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": depends_on,
+        "command": f".buildkite/scripts/deploy-site.sh {args}",
+        "timeout_in_minutes": 15,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu=cpu, memory=memory, secrets=["buildkite-argocd-token"])],
+    }
+
+
+def _generate_deploy_argocd_step(*, depends_on: list[str], key: str = "deploy-argocd", app: str = "apps") -> dict:
+    """Generate an ArgoCD sync step."""
+    return {
+        "label": ":argocd: Sync ArgoCD Apps",
+        "key": key,
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": depends_on,
+        "command": f".buildkite/scripts/deploy-argocd.sh --app {app}",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="512Mi", secrets=["buildkite-argocd-token"])],
+    }
+
+
+def _generate_deploy_sites_group(sites: list[dict], *, depends_on: list[str]) -> dict:
+    """Generate a group of site deploy steps."""
+    return {
+        "group": ":ship: Deploy Sites",
+        "key": "deploy-sites",
+        "steps": [_generate_deploy_site_step(site, depends_on=depends_on) for site in sites],
+    }
+
+
+# --- Homelab infra image step generators ---
+
+def _generate_homelab_images_group() -> dict:
+    """Generate a group of homelab infra image push steps."""
+    return {
+        "group": ":kubernetes: Homelab Images",
+        "key": "homelab-images",
+        "steps": [_generate_image_push_step(img) for img in INFRA_PUSH_TARGETS],
+    }
+
+
+# --- Homelab Helm step generators ---
+
+def _generate_homelab_cdk8s_step(*, depends_on: list[str]) -> dict:
+    """Generate the cdk8s manifest build step."""
+    return {
+        "label": ":cdk8s: Build cdk8s Manifests",
+        "key": "homelab-cdk8s",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": depends_on,
+        "command": ".buildkite/scripts/homelab-cdk8s.sh",
+        "timeout_in_minutes": 15,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="2", memory="4Gi")],
+    }
+
+
+def _generate_homelab_helm_push_step() -> dict:
+    """Generate the Helm chart package + push step with parallelism."""
+    from ci.homelab_helm_push import HELM_CHARTS
+    return {
+        "label": ":helm: Push Helm Chart to ChartMuseum",
+        "key": "homelab-helm-push",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": "homelab-cdk8s",
+        "command": ".buildkite/scripts/homelab-helm-push.sh",
+        "parallelism": len(HELM_CHARTS),
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+    }
+
+
+def _generate_homelab_helm_group(*, depends_on: list[str]) -> dict:
+    """Generate a group of Helm-related steps."""
+    return {
+        "group": ":helm: Homelab Helm",
+        "key": "homelab-helm",
+        "steps": [
+            _generate_homelab_cdk8s_step(depends_on=depends_on),
+            _generate_homelab_helm_push_step(),
+        ],
+    }
+
+
+# --- Homelab Tofu step generators ---
+
+def _generate_tofu_stack_step(stack: str) -> dict:
+    """Generate a single OpenTofu stack apply step."""
+    label = TOFU_STACK_LABELS.get(stack, stack.title())
+    return {
+        "label": f":terraform: Apply {label}",
+        "key": f"tofu-{stack}",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": "release",
+        "command": f".buildkite/scripts/homelab-tofu-stack.sh --stack {stack}",
+        "timeout_in_minutes": 15,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi", secrets=["buildkite-argocd-token"])],
+    }
+
+
+def _generate_homelab_tofu_group() -> dict:
+    """Generate a group of OpenTofu stack steps."""
+    return {
+        "group": ":terraform: Homelab Tofu",
+        "key": "homelab-tofu",
+        "steps": [_generate_tofu_stack_step(stack) for stack in TOFU_STACKS],
+    }
+
+
+# --- Homelab ArgoCD step generators ---
+
+def _generate_homelab_argocd_sync_step(*, depends_on: list[str]) -> dict:
+    """Generate the homelab ArgoCD sync step."""
+    return {
+        "label": ":argocd: Sync ArgoCD Apps (homelab)",
+        "key": "homelab-argocd-sync",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": depends_on,
+        "command": ".buildkite/scripts/deploy-argocd.sh --app apps",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="512Mi", secrets=["buildkite-argocd-token"])],
+    }
+
+
+def _generate_homelab_argocd_health_step() -> dict:
+    """Generate the ArgoCD health wait step."""
+    return {
+        "label": ":heart: Wait for ArgoCD Healthy",
+        "key": "homelab-argocd-health",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": "homelab-argocd-sync",
+        "command": ".buildkite/scripts/homelab-argocd-health.sh --app apps --timeout 300",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="512Mi", secrets=["buildkite-argocd-token"])],
+    }
+
+
+# --- Other release steps ---
+
+def _generate_clauderon_release_group() -> dict:
+    """Generate the Clauderon Release group: 2 parallel builds + 1 upload."""
+    targets = [
+        {"target": "x86_64-unknown-linux-gnu", "filename": "clauderon-linux-x86_64", "label": "x86_64", "key": "clauderon-build-x86-64"},
+        {"target": "aarch64-unknown-linux-gnu", "filename": "clauderon-linux-arm64", "label": "arm64", "key": "clauderon-build-arm64"},
+    ]
+    build_steps = []
+    for t in targets:
+        build_steps.append({
+            "label": f":rust: Build clauderon ({t['label']})",
+            "key": t["key"],
+            "if": "build.branch == pipeline.default_branch",
+            "depends_on": "release",
+            "command": f".buildkite/scripts/clauderon-build.sh --target {t['target']} --filename {t['filename']}",
+            "timeout_in_minutes": 20,
+            "retry": _RETRY,
+            "plugins": [_k8s_plugin(cpu="2", memory="4Gi", secrets=[])],
+        })
+    upload_step = {
+        "label": ":rust: Upload clauderon binaries",
+        "key": "clauderon-upload",
+        "if": "build.branch == pipeline.default_branch",
+        "depends_on": [t["key"] for t in targets],
+        "command": ".buildkite/scripts/clauderon-upload.sh",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="512Mi", secrets=[])],
+    }
+    return {
+        "group": ":rust: Clauderon Release",
+        "key": "clauderon-release",
+        "steps": build_steps + [upload_step],
+    }
+
+
+def _generate_cooklang_release_group() -> dict:
+    """Generate the Cooklang Release group: build → push → create release."""
+    return {
+        "group": ":cook: Cooklang Release",
+        "key": "cooklang-release",
+        "steps": [
+            {
+                "label": ":cook: Build cooklang plugin",
+                "key": "cooklang-build",
+                "if": "build.branch == pipeline.default_branch",
+                "depends_on": "release",
+                "command": ".buildkite/scripts/cooklang-build.sh",
+                "timeout_in_minutes": 10,
+                "retry": _RETRY,
+                "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+            },
+            {
+                "label": ":cook: Push cooklang to repo",
+                "key": "cooklang-push",
+                "if": "build.branch == pipeline.default_branch",
+                "depends_on": "cooklang-build",
+                "command": ".buildkite/scripts/cooklang-push.sh",
+                "timeout_in_minutes": 10,
+                "retry": _RETRY,
+                "plugins": [_k8s_plugin(cpu="500m", memory="512Mi")],
+            },
+            {
+                "label": ":cook: Create cooklang release",
+                "key": "cooklang-release-create",
+                "if": "build.branch == pipeline.default_branch",
+                "depends_on": "cooklang-push",
+                "command": ".buildkite/scripts/cooklang-create-release.sh",
+                "timeout_in_minutes": 10,
+                "retry": _RETRY,
+                "plugins": [_k8s_plugin(cpu="500m", memory="512Mi", secrets=[])],
+            },
+        ],
+    }
+
+
+def _generate_version_commit_back_step(*, depends_on: list[str]) -> dict:
     """Generate the Version Commit-Back step."""
     return {
         "label": ":bookmark: Version Commit-Back",
         "key": "version-commit-back",
         "if": "build.branch == pipeline.default_branch",
+        "depends_on": depends_on,
         "command": ".buildkite/scripts/version-commit-back.sh",
         "timeout_in_minutes": 10,
         "plugins": [_k8s_plugin(secrets=[])],
@@ -701,64 +974,76 @@ def generate_pipeline() -> dict:
     )
 
     if has_main_steps:
-        # Wait gate for main-only steps
+        # Wait for all build/test to pass before release steps
         steps.append({"wait": "", "if": "build.branch == pipeline.default_branch"})
 
         # Release (always on main when there are releasable changes)
         steps.append(_generate_release_step())
 
-        steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
+        # All subsequent steps use depends_on for ordering (no more wait~ gates)
 
-        # Publish (only if image packages changed or building all)
-        has_publish = affected.build_all or affected.has_image_packages
-        if has_publish:
-            publish_pkgs = None if affected.build_all else affected.has_image_packages
-            steps.append(_generate_publish_step(publish_pkgs))
+        # --- Publish app images (8 parallel steps) ---
+        has_images = affected.build_all or bool(affected.has_image_packages)
+        app_push_keys: list[str] = []
+        if has_images:
+            steps.append(_generate_publish_images_group(IMAGE_PUSH_TARGETS))
+            app_push_keys = _all_push_keys(IMAGE_PUSH_TARGETS)
 
-        # Clauderon Release (only if clauderon changed)
+        # --- Publish NPM packages (4 parallel steps) ---
+        steps.append(_generate_publish_npm_group())
+
+        # --- Clauderon Release ---
         if affected.build_all or affected.clauderon_changed:
-            steps.append(_generate_clauderon_release_step())
+            steps.append(_generate_clauderon_release_group())
 
-        # Cooklang Release (only if cooklang-for-obsidian changed)
+        # --- Cooklang Release ---
         if affected.build_all or affected.cooklang_changed:
-            steps.append(_generate_cooklang_release_step())
+            steps.append(_generate_cooklang_release_group())
 
-        steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
-
-        # Deploy (only if static sites changed)
+        # --- Deploy sites (6 parallel steps) ---
         if affected.build_all or affected.has_site_packages:
-            deploy_sites = None if affected.build_all else {
-                PACKAGE_TO_SITE.get(p, p) for p in affected.has_site_packages
-            }
-            deploy_step = _generate_deploy_step(deploy_sites)
-            if has_publish:
-                deploy_step["depends_on"] = "publish"
-            steps.append(deploy_step)
+            deploy_depends = app_push_keys if app_push_keys else ["release"]
+            if affected.build_all:
+                sites_to_deploy = DEPLOY_SITES
+            else:
+                site_buckets = {PACKAGE_TO_SITE.get(p, p) for p in affected.has_site_packages}
+                sites_to_deploy = [s for s in DEPLOY_SITES if s["bucket"] in site_buckets]
+            steps.append(_generate_deploy_sites_group(sites_to_deploy, depends_on=deploy_depends))
 
-        # Homelab Release (only if homelab changed)
+        # --- Deploy ArgoCD sync (for app images) ---
+        if has_images:
+            steps.append(_generate_deploy_argocd_step(depends_on=app_push_keys))
+
+        # --- Homelab release (infra images + helm + tofu + argocd) ---
         if affected.build_all or affected.homelab_changed:
-            homelab_step = _generate_homelab_release_step()
-            if has_publish:
-                homelab_step["depends_on"] = "publish"
-            steps.append(homelab_step)
+            # Homelab infra images (4 parallel)
+            steps.append(_generate_homelab_images_group())
+            infra_push_keys = _all_push_keys(INFRA_PUSH_TARGETS)
 
-        steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
+            # Homelab Helm: cdk8s build -> helm chart push (depends on infra images)
+            steps.append(_generate_homelab_helm_group(depends_on=infra_push_keys))
 
-        # Version Commit-Back (if publish or homelab ran)
-        if affected.build_all or affected.has_image_packages or affected.homelab_changed:
-            vcb_step = _generate_version_commit_back_step()
-            vcb_deps = []
-            if has_publish:
-                vcb_deps.append("publish")
+            # Homelab Tofu: 3 parallel stacks (independent of images/helm)
+            steps.append(_generate_homelab_tofu_group())
+
+            # Homelab ArgoCD sync (depends on helm push + all tofu stacks)
+            argocd_depends = ["homelab-helm-push"] + [f"tofu-{s}" for s in TOFU_STACKS]
+            steps.append(_generate_homelab_argocd_sync_step(depends_on=argocd_depends))
+
+            # Wait for ArgoCD healthy (depends on sync)
+            steps.append(_generate_homelab_argocd_health_step())
+
+        # --- Version Commit-Back ---
+        if affected.build_all or bool(affected.has_image_packages) or affected.homelab_changed:
+            vcb_deps: list[str] = []
+            if has_images:
+                vcb_deps.extend(app_push_keys)
             if affected.build_all or affected.homelab_changed:
-                vcb_deps.append("homelab-release")
-            if vcb_deps:
-                vcb_step["depends_on"] = vcb_deps
-            steps.append(vcb_step)
+                vcb_deps.extend(_all_push_keys(INFRA_PUSH_TARGETS))
+            steps.append(_generate_version_commit_back_step(depends_on=vcb_deps))
 
-        # Update READMEs (if docs changed or building all)
+        # --- Update READMEs ---
         if affected.build_all or affected.docs_changed:
-            steps.append({"wait": "~", "if": "build.branch == pipeline.default_branch"})
             steps.append(_generate_update_readmes_step())
 
     return {"agents": {"queue": "default"}, "steps": steps}

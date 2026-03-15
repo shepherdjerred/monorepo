@@ -92,11 +92,11 @@ export function createBazelRemoteChart(app: App) {
               resources: {
                 requests: {
                   cpu: Quantity.fromString("250m"),
-                  memory: Quantity.fromString("2Gi"),
+                  memory: Quantity.fromString("4Gi"),
                 },
                 limits: {
                   cpu: Quantity.fromString("2"),
-                  memory: Quantity.fromString("8Gi"),
+                  memory: Quantity.fromString("12Gi"),
                 },
               },
               readinessProbe: {

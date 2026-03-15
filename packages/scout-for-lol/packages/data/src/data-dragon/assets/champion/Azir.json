@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Azir": {
       "id": "Azir",
@@ -80,7 +80,10 @@
         "Azir has immense damage over a prolonged amount of time but lacks the upfront burst of other mages. Try to burst him out before he can turn a confrontation around.",
         "Try to think of Sand Soldiers as fire. Don't stand in the fire."
       ],
-      "tags": ["Mage", "Marksman"],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -90,7 +93,7 @@
       },
       "stats": {
         "hp": 575,
-        "hpperlevel": 119,
+        "hpperlevel": 108,
         "mp": 320,
         "mpperlevel": 40,
         "movespeed": 330,
@@ -106,7 +109,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 56,
-        "attackdamageperlevel": 3.5,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 5,
         "attackspeed": 0.625
       },
@@ -117,7 +120,11 @@
           "description": "Azir sends all Sand Soldiers towards a location. Sand Soldiers deal magic damage to enemies they pass through and apply a slow for 1 second.",
           "tooltip": "Azir orders all <keywordMajor>Sand Soldiers</keywordMajor> to an area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies they pass through and <status>Slowing</status> them by {{ e2 }}% for 1 second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -125,23 +132,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12, 10, 8, 6],
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
           "cooldownBurn": "14/12/10/8/6",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [60, 80, 100, 120, 140],
-            [25, 25, 25, 25, 25],
-            [0, 0, 0, 0, 0],
-            [70, 70, 70, 70, 70],
-            [1600, 1600, 1600, 1600, 1600],
-            [200, 200, 200, 200, 200],
-            [325, 325, 325, 325, 325],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              80,
+              100,
+              120,
+              140
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              1600,
+              1600,
+              1600,
+              1600,
+              1600
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              325,
+              325,
+              325,
+              325,
+              325
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -159,7 +238,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [740, 740, 740, 740, 740],
+          "range": [
+            740,
+            740,
+            740,
+            740,
+            740
+          ],
           "rangeBurn": "740",
           "image": {
             "full": "AzirQWrapper.png",
@@ -192,23 +277,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
+          "cooldown": [
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+            1.5
+          ],
           "cooldownBurn": "1.5",
-          "cost": [40, 35, 30, 25, 20],
+          "cost": [
+            40,
+            35,
+            30,
+            25,
+            20
+          ],
           "costBurn": "40/35/30/25/20",
           "datavalues": {},
           "effect": [
             null,
-            [10, 10, 10, 10, 10],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [25, 25, 25, 25, 25],
-            [0.5, 0.5, 0.5, 0.5, 0.5]
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +383,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "AzirW.png",
@@ -245,7 +408,11 @@
           "description": "Azir shields himself briefly and dashes to one of his Sand Soldiers, damaging enemies. If he hits an enemy champion, he instantly readies a new Sand Soldier for deployment and halts his dash.",
           "tooltip": "Azir grants himself <shield>{{ totalshield }} Shield</shield> for {{ e6 }} seconds and dashes to one of his <keywordMajor>Sand Soldiers</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies he passes through.<br /><br />If Azir hits an enemy champion, he stops and gains a <keywordMajor>Sand Soldier</keywordMajor> charge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Damage", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -253,23 +420,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20.5, 19, 17.5, 16],
+          "cooldown": [
+            22,
+            20.5,
+            19,
+            17.5,
+            16
+          ],
           "cooldownBurn": "22/20.5/19/17.5/16",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [1700, 1700, 1700, 1700, 1700],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.3, 0.5, 0.7, 0.9, 1.1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1100, 1100, 1100, 1100, 1100],
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [25, 25, 25, 25, 25]
+            [
+              1700,
+              1700,
+              1700,
+              1700,
+              1700
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.3,
+              0.5,
+              0.7,
+              0.9,
+              1.1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1100,
+              1100,
+              1100,
+              1100,
+              1100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ]
           ],
           "effectBurn": [
             null,
@@ -287,7 +526,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "AzirEWrapper.png",
@@ -306,7 +551,11 @@
           "description": "Azir summons a wall of soldiers which charge forward, knocking back and damaging enemies.",
           "tooltip": "Azir summons a wall of armored soldiers that charges forward, <status>Knocking Back</status> enemies and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The soldiers remain, blocking enemy paths for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Number of Soldiers", "Cooldown"],
+            "label": [
+              "Damage",
+              "Number of Soldiers",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ numberofsoldiers }} -> {{ numberofsoldiersNL }}",
@@ -314,23 +563,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [200, 400, 600],
-            [0, 0, 0],
-            [6, 7, 8],
-            [5, 5, 5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              200,
+              400,
+              600
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              7,
+              8
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -348,7 +645,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [250, 250, 250],
+          "range": [
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "AzirR.png",

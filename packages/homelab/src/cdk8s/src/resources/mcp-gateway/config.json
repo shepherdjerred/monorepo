@@ -9,10 +9,6 @@
       "command": "npx",
       "args": ["-y", "@r-huijts/canvas-mcp@1.0.8"]
     },
-    "todoist": {
-      "command": "npx",
-      "args": ["-y", "@doist/todoist-ai"]
-    },
     "piazza": {
       "command": "uv",
       "args": [

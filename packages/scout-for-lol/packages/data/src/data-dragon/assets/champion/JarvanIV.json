@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "JarvanIV": {
       "id": "JarvanIV",
@@ -126,7 +126,10 @@
         "Keep out of the path between Jarvan IV and his Demacian Standard to avoid being knocked up in the air.",
         "Cataclysm's terrain is a frightening force to fight against, but movement abilities can go through it."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -152,7 +155,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 64,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.5,
         "attackspeed": 0.658
       },
@@ -177,23 +180,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [80, 120, 160, 200, 240],
-            [10, 14, 18, 22, 26],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              10,
+              14,
+              18,
+              22,
+              26
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +286,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [770, 770, 770, 770, 770],
+          "range": [
+            770,
+            770,
+            770,
+            770,
+            770
+          ],
           "rangeBurn": "770",
           "image": {
             "full": "JarvanIVDragonStrike.png",
@@ -230,27 +311,105 @@
           "description": "Jarvan IV calls upon the ancient kings of Demacia to shield him from harm and slow surrounding enemies.",
           "tooltip": "Jarvan summons an aegis, <status>Slowing</status> nearby enemies by {{ e2 }}% for {{ e5 }} seconds and granting him a <shield>{{ baseshield }} Shield</shield>, increased by <shield>{{ bonusshield }}</shield> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Slow"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+            "label": [
+              "Shield Amount",
+              "Slow"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }}% -> {{ e2NL }}%"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [60, 80, 100, 120, 140],
-            [15, 20, 25, 30, 35],
-            [10, 20, 30, 40, 50],
-            [4, 4, 4, 4, 4],
-            [2, 2, 2, 2, 2],
-            [0.013, 0.013, 0.013, 0.013, 0.013],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              80,
+              100,
+              120,
+              140
+            ],
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0.013,
+              0.013,
+              0.013,
+              0.013,
+              0.013
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -268,7 +427,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "JarvanIVGoldenAegis.png",
@@ -301,23 +466,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [10, 13, 16, 19, 22],
-            [80, 120, 160, 200, 240],
-            [20, 22.5, 25, 27.5, 30],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              13,
+              16,
+              19,
+              22
+            ],
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              20,
+              22.5,
+              25,
+              27.5,
+              30
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -335,7 +572,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [860, 860, 860, 860, 860],
+          "range": [
+            860,
+            860,
+            860,
+            860,
+            860
+          ],
           "rangeBurn": "860",
           "image": {
             "full": "JarvanIVDemacianStandard.png",
@@ -354,30 +597,81 @@
           "description": "Jarvan IV heroically leaps into battle at a target with such force that he terraforms the surrounding area to create an arena around them. Nearby enemies are damaged at the moment of impact.",
           "tooltip": "Jarvan heroically leaps to an enemy Champion, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to them and surrounding enemies and creating an arena of impassable terrain around them for {{ wallduration }} seconds.<br /><br />Jarvan can <recast>Recast</recast> to collapse the terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +689,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "JarvanIVCataclysm.png",

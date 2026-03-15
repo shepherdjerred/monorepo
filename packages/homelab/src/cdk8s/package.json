@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun run src/app.ts && bun run scripts/patch.ts",
+    "build": "rm -rf dist/ && bun run src/app.ts && bun run scripts/patch.ts",
     "lint": "bunx eslint .",
     "typecheck": "bunx tsc --noEmit",
     "test": "bun test && bun run test:gpu-resources",

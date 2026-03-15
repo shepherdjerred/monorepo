@@ -71,6 +71,7 @@ bun_service_image(
         "package.json",
         "prisma/schema.prisma",
     ],
+    base = "@bun_debian_linux_amd64",
     entry_point = "src/index.ts",
     env = {"NODE_ENV": "production"},
     exposed_ports = ["3000"],
@@ -80,6 +81,7 @@ bun_service_image(
         "org.opencontainers.image.source": "https://github.com/shepherdjerred/monorepo",
     },
     package_json = "package.json",
+    prisma_schema = "prisma/schema.prisma",
     repository = "ghcr.io/shepherdjerred/status-page-api",
     visibility = ["//visibility:public"],
 )
