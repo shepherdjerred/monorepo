@@ -91,8 +91,9 @@ export function createArgoCdApp(chart: Chart) {
         "accounts.buildkite.enabled": true,
       },
       rbac: {
-        // Scoped to sync-only permission for the apps application
-        "policy.csv": "p, buildkite, applications, sync, apps, allow",
+        // Allow buildkite to sync and read the apps application
+        "policy.csv":
+          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow",
       },
     },
   };
