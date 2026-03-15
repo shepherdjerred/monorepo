@@ -53,17 +53,6 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  new OnePasswordItem(chart, "buildkite-argocd-token", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/3f5huutipiuunkvllkkygxu35i",
-    },
-    metadata: {
-      name: "buildkite-argocd-token",
-      namespace: "buildkite",
-    },
-  });
-
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",

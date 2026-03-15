@@ -17,6 +17,3 @@ steps:
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
-                  - secretRef:
-                      name: buildkite-argocd-token
-                      optional: true
