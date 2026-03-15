@@ -91,9 +91,7 @@
         "Lissandra's Ring of Frost has a long cooldown at early ranks; engage her while it's on cooldown.",
         "Lissandra's Ice Shard only slows the first unit it hits. Approach Lissandra from behind your team's minions to avoid being slowed."
       ],
-      "tags": [
-        "Mage"
-      ],
+      "tags": ["Mage"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -144,95 +142,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7,
-            6,
-            5,
-            4
-          ],
+          "cooldown": [8, 7, 6, 5, 4],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [
-            55,
-            60,
-            65,
-            70,
-            75
-          ],
+          "cost": [55, 60, 65, 70, 75],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              20,
-              24,
-              28,
-              32,
-              36
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [20, 24, 28, 32, 36],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -250,13 +176,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725,
-            725,
-            725
-          ],
+          "range": [725, 725, 725, 725, 725],
           "rangeBurn": "725",
           "image": {
             "full": "LissandraQ.png",
@@ -275,11 +195,7 @@
           "description": "Freezes nearby enemies in ice, dealing magic damage and rooting them.",
           "tooltip": "Lissandra creates an ice field, <status>Rooting</status> nearby enemies for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Root Duration",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Root Duration", "Cooldown"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -287,95 +203,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              105,
-              140,
-              175,
-              210
-            ],
-            [
-              1.25,
-              1.35,
-              1.45,
-              1.55,
-              1.65
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              8,
-              8,
-              8,
-              8,
-              8
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 105, 140, 175, 210],
+            [1.25, 1.35, 1.45, 1.55, 1.65],
+            [3, 3, 3, 3, 3],
+            [8, 8, 8, 8, 8],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -393,13 +237,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "LissandraW.png",
@@ -418,11 +256,7 @@
           "description": "Lissandra creates an ice claw that deals magic damage. Reactivating this ability transports Lissandra to the claw's current location.",
           "tooltip": "Lissandra casts forth an ice claw that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Lissandra can <recast>Recast</recast> while the claw travels to teleport to its location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -430,95 +264,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            24,
-            21,
-            18,
-            15,
-            12
-          ],
+          "cooldown": [24, 21, 18, 15, 12],
           "cooldownBurn": "24/21/18/15/12",
-          "cost": [
-            80,
-            85,
-            90,
-            95,
-            100
-          ],
+          "cost": [80, 85, 90, 95, 100],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              105,
-              140,
-              175,
-              210
-            ],
-            [
-              14,
-              13,
-              12,
-              11,
-              10
-            ],
-            [
-              20,
-              20,
-              20,
-              20,
-              20
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 105, 140, 175, 210],
+            [14, 13, 12, 11, 10],
+            [20, 20, 20, 20, 20],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -536,13 +298,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1050,
-            1050,
-            1050,
-            1050,
-            1050
-          ],
+          "range": [1050, 1050, 1050, 1050, 1050],
           "rangeBurn": "1050",
           "image": {
             "full": "LissandraE.png",
@@ -561,12 +317,7 @@
           "description": "If cast on an enemy champion, the target is frozen solid, stunning it. If cast on Lissandra, she encases herself in dark ice, healing herself while becoming untargetable and invulnerable. Dark ice then emanates from the target dealing magic damage to enemies and slowing Move Speed.",
           "tooltip": "Lissandra encases herself or an enemy champion in ice. Enemies are <status>Stunned</status> for {{ enemycastduration }} seconds. When self cast, Lissandra enters Stasis for {{ selfcastduration }} seconds and restores <healing>{{ healamount }} Health</healing>, increased by {{ selfcastmissinghpratio }}% for each {{ selfcastmissinghpperabove }}% missing Health.<br /><br />In either case, dark ice eminates from the target, dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>. The ice persists for {{ slowduration }} seconds, <status>Slowing</status> enemies by {{ slowamount*-100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "Healing",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Slow", "Healing", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
@@ -575,71 +326,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            100,
-            80
-          ],
+          "cooldown": [120, 100, 80],
           "cooldownBurn": "120/100/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -657,11 +360,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "LissandraR.png",
