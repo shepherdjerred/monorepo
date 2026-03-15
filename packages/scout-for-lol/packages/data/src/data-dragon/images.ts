@@ -1,3 +1,4 @@
+import type { Lane } from "#src/model/lane.ts";
 import { latestVersion } from "./version.ts";
 
 const championNameOverrides: Record<string, string> = {
@@ -92,6 +93,12 @@ export async function validateAugmentIcon(
   await validateImageExists(absolutePath, `Augment image ${filename}`);
 }
 
+export async function validateLaneIcon(lane: Lane): Promise<void> {
+  const relativePath = `./assets/img/lane/${lane}.png`;
+  const absolutePath = getAbsolutePath(relativePath);
+  await validateImageExists(absolutePath, `Lane icon for ${lane}`);
+}
+
 // URL getters (synchronous, for use in components)
 export function getChampionImageUrl(championName: string): string {
   const normalized = normalizeChampionName(championName);
@@ -146,5 +153,10 @@ export async function getAugmentIconBase64(
 ): Promise<string> {
   const filename = augmentIconPath.split("/").pop() ?? "unknown.png";
   const relativePath = `./assets/img/augment/${filename}`;
+  return loadImageAsBase64(relativePath, "image/png");
+}
+
+export async function getLaneIconBase64(lane: Lane): Promise<string> {
+  const relativePath = `./assets/img/lane/${lane}.png`;
   return loadImageAsBase64(relativePath, "image/png");
 }

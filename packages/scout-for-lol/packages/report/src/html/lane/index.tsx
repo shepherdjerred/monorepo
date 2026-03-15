@@ -1,6 +1,5 @@
-import { type Lane, LaneSchema } from "@scout-for-lol/data";
+import { type Lane, LaneSchema, getLaneIconBase64 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { match } from "ts-pattern";
 
 let images: Record<Lane, string>;
 
@@ -9,12 +8,8 @@ if (typeof Bun !== "undefined") {
     Object.fromEntries(
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
-          const image = await Bun.file(
-            new URL(`assets/${lane}.svg`, import.meta.url),
-          ).arrayBuffer();
-          const bytes = new Uint8Array(image);
-          // Use Buffer to avoid stack overflow with large arrays
-          return [lane, Buffer.from(bytes).toString("base64")];
+          const base64 = await getLaneIconBase64(lane);
+          return [lane, base64];
         }),
       ),
     ),
@@ -23,13 +18,10 @@ if (typeof Bun !== "undefined") {
 
 export function Lane({ lane }: { lane: Lane }) {
   const environment = typeof Bun === "undefined" ? "browser" : "bun";
-  const image = match(environment)
-    .with("bun", () => `data:image/svg+xml;base64,${images[lane]}`)
-    .with("browser", () => {
-      // Construct the URL for Vite to handle at build time
-      return new URL(`assets/${lane}.svg`, import.meta.url).href;
-    })
-    .exhaustive();
+  const image =
+    environment === "bun"
+      ? images[lane]
+      : new URL(`assets/${lane}.png`, import.meta.url).href;
   return (
     <span style={{ width: "20rem", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "8rem", height: "8rem", display: "flex" }}>
