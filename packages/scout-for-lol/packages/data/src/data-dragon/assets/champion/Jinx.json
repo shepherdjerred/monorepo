@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Jinx": {
       "id": "Jinx",
@@ -121,7 +121,9 @@
         "Jinx's ultimate does less damage the closer you are to her.",
         "Jinx's snare grenades have a long cooldown and are her primary means of protecting herself. If she misses with them she will have a hard time escaping if engaged upon. "
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -147,7 +149,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 3.25,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 1,
         "attackspeed": 0.625
       },
@@ -158,30 +160,105 @@
           "description": "Jinx modifies her basic attacks by swapping between Pow-Pow, her minigun and Fishbones, her rocket launcher. Attacks with Pow-Pow grant Attack Speed, while attacks with Fishbones deal area of effect damage, gain increased range, but drain Mana and attack slower.",
           "tooltip": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun.<br /><br />While using the rocket launcher, Jinx's Attacks deal <physicalDamage>{{ rocketdamage }} physical damage</physicalDamage> to the target and nearby enemies, gain {{ rocketbonusrange }} range, cost Mana, and scale {{ rocketaspdpenalty*100 }}% less with bonus Attack Speed.<br /><br />While using the minigun, Jinx's Attacks grant <attackSpeed>Attack Speed</attackSpeed> for {{ minigunattackspeedduration }} seconds, stacking up to {{ minigunattackspeedstacks }} times (<attackSpeed>+{{ minigunattackspeedmax }}% %i:scaleAS% max</attackSpeed>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Rocket Bonus Range", "Minigun Total Attack Speed"],
+            "label": [
+              "Rocket Bonus Range",
+              "Minigun Total Attack Speed"
+            ],
             "effect": [
               "{{ rocketbonusrange }} -> {{ rocketbonusrangeNL }}",
               "{{ minigunattackspeedmax }}% -> {{ minigunattackspeedmaxNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.9, 0.9, 0.9, 0.9, 0.9],
+          "cooldown": [
+            0.9,
+            0.9,
+            0.9,
+            0.9,
+            0.9
+          ],
           "cooldownBurn": "0.9",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +276,13 @@
           "vars": [],
           "costType": " Mana Per Rocket",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "JinxQ.png",
@@ -232,23 +315,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -266,7 +421,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1450, 1450, 1450, 1450, 1450],
+          "range": [
+            1450,
+            1450,
+            1450,
+            1450,
+            1450
+          ],
           "rangeBurn": "1450",
           "image": {
             "full": "JinxW.png",
@@ -285,30 +446,105 @@
           "description": "Jinx throws out a line of snare grenades that explode after 5 seconds, lighting enemies on fire. Flame Chompers will bite enemy champions who walk over them, rooting them in place.",
           "tooltip": "Jinx tosses out 3 chompers that last for {{ grenadeduration }} seconds. They explode on contact with enemy champions, <status>Rooting</status> them for {{ rootduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 20.5, 17, 13.5, 10],
+          "cooldown": [
+            24,
+            20.5,
+            17,
+            13.5,
+            10
+          ],
           "cooldownBurn": "24/20.5/17/13.5/10",
-          "cost": [90, 90, 90, 90, 90],
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -326,7 +562,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "JinxE.png",
@@ -359,23 +601,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [85, 65, 45],
+          "cooldown": [
+            85,
+            65,
+            45
+          ],
           "cooldownBurn": "85/65/45",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -393,7 +683,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "JinxR.png",

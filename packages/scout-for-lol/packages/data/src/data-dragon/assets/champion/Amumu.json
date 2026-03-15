@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Amumu": {
       "id": "Amumu",
@@ -121,7 +121,10 @@
         "Erratic movement, or hiding behind creep waves can make it difficult for Amumu to instigate a fight with Bandage Toss.",
         "Amumu's Despair makes purchasing primarily Health items a risky proposition."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -147,7 +150,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 57,
-        "attackdamageperlevel": 3.8,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.18,
         "attackspeed": 0.736
       },
@@ -158,30 +161,105 @@
           "description": "Amumu tosses a sticky bandage at a target, stunning and damaging the target while he pulls himself to them.",
           "tooltip": "Amumu launches a bandage, pulling himself to the first enemy hit, <status>Stunning</status> them for {{ e2 }} second, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Recharge Time"],
+            "label": [
+              "Damage",
+              "Recharge Time"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [3, 3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [70, 95, 120, 145, 170],
-            [1, 1, 1, 1, 1],
-            [1800, 1800, 1800, 1800, 1800],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1800,
+              1800,
+              1800,
+              1800,
+              1800
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +277,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "BandageToss.png",
@@ -218,27 +302,103 @@
           "description": "Overcome by anguish, nearby enemies lose a percentage of their maximum Health each second and have their <font color='#9b0f5f'>Curses</font> refreshed.",
           "tooltip": "<toggle>Toggle:</toggle> Amumu begins crying, dealing <magicDamage>{{ basedamage }} plus {{ totalhealthdamage }}% max Health magic damage</magicDamage> to nearby enemies every second and refreshing <keywordMajor>Curse</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["% Health damage"],
-            "effect": ["{{ healthdamage }}% -> {{ healthdamageNL }}%"]
+            "label": [
+              "% Health damage"
+            ],
+            "effect": [
+              "{{ healthdamage }}% -> {{ healthdamageNL }}%"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [1, 1, 1, 1, 1],
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "cooldownBurn": "1",
-          "cost": [8, 8, 8, 8, 8],
+          "cost": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "costBurn": "8",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -256,7 +416,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }} per Second",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "AuraofDespair.png",
@@ -275,7 +441,11 @@
           "description": "Permanently reduces the physical damage Amumu would take. Amumu can unleash his rage, dealing damage to surrounding enemies. Each time Amumu is hit, the cooldown on Tantrum is reduced.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Amumu takes {{ damagereduction }} reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by {{ e3 }} seconds.<br /><br /><spellActive>Active:</spellActive> Amumu throws a tantrum, dealing <magicDamage>{{ tantrumdamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Reduced", "Cooldown", "Damage"],
+            "label": [
+              "Damage Reduced",
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -283,23 +453,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [5, 7, 9, 11, 13],
-            [65, 95, 125, 155, 185],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.03, 0.03, 0.03, 0.03, 0.03],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5,
+              7,
+              9,
+              11,
+              13
+            ],
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.03,
+              0.03,
+              0.03,
+              0.03,
+              0.03
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -317,7 +559,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "Tantrum.png",
@@ -336,7 +584,11 @@
           "description": "Amumu entangles surrounding enemy units in bandages, applying his <keywordMajor>Curse</keywordMajor>, damaging and stunning them.",
           "tooltip": "Amumu flares out his bandages, <status>Stunning</status> for {{ rduration }} seconds, dealing <magicDamage>{{ rcalculateddamage }} magic damage</magicDamage> and applying <keywordMajor>Curse</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Cooldown", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -344,23 +596,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [150, 125, 100],
+          "cooldown": [
+            150,
+            125,
+            100
+          ],
           "cooldownBurn": "150/125/100",
-          "cost": [100, 150, 200],
+          "cost": [
+            100,
+            150,
+            200
+          ],
           "costBurn": "100/150/200",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -378,7 +678,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "CurseoftheSadMummy.png",

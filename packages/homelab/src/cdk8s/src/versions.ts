@@ -223,11 +223,11 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "1.1.137@sha256:03e72664f23779e5711635077e7fe2895d54c93b3d1c86bbd97711e4906f5d3c",
+    "1.1.138@sha256:01f83aab44669a1dcc24bcb59e3d07670eea5dad77e1bce7ca48823a984e4f92",
   // Custom status-page-api image - Status page API
   // not managed by renovate
   "shepherdjerred/status-page-api":
-    "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "1.1.138@sha256:1fdac05a84be349cb57cec2a69c521d6ccf39f734ece2209a6e0ce94e9823dc7",
 };
 
 const daggerVersion = versions["dagger-helm"].split("@")[0];

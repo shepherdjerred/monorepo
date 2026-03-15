@@ -16,6 +16,7 @@ def bun_service_image(
         package_json,
         base = "@bun_debian",
         workspace_packages = None,
+        prisma_schema = None,
         entry_point = "src/index.ts",
         workdir = None,
         env = None,
@@ -38,6 +39,9 @@ def bun_service_image(
         base: Base OCI image (default: @bun_debian).
         workspace_packages: Dict of {package_dir: label} for workspace dependencies.
             E.g., {"packages/tasknotes-types": "//packages/tasknotes-types:pkg"}
+        prisma_schema: Path to prisma schema file (e.g., "prisma/schema.prisma").
+            When set, runs ``prisma generate`` after ``bun install`` to produce
+            the Prisma client in the deps layer.
         entry_point: Entry point file relative to the package (default: src/index.ts).
         workdir: Container working directory. Defaults to /workspace/{package_path}.
         env: Dict of environment variables.
@@ -83,6 +87,7 @@ def bun_service_image(
         package_json = package_json,
         workspace_packages = workspace_packages,
         pkg_dir = pkg_dir,
+        prisma_schema = prisma_schema,
     )
 
     # Combine all tar layers (deps first = less frequently changed = better caching)
@@ -135,7 +140,7 @@ def bun_service_image(
             visibility = visibility,
         )
 
-def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
+def _bun_install_layer(name, package_json, workspace_packages, pkg_dir, prisma_schema = None):
     """Run bun install and produce a tar of node_modules.
 
     Instead of using bun workspaces (which requires ALL workspace packages from
@@ -152,6 +157,9 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
         package_json,
         "//:bun.lock",
     ]
+
+    if prisma_schema:
+        srcs.append(prisma_schema)
 
     # Workspace packages' package.json files are needed to extract their
     # production dependencies and merge them into the install.
@@ -186,6 +194,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             export HOME=$$INSTALLDIR && \
             $$BUN install --ignore-scripts 1>&2 || {{ echo "ERROR: bun install failed (exit $$?) in $$(pwd)" >&2; echo "HOME=$$HOME" >&2; echo "ls -la:" >&2; ls -la >&2; echo "ls -la node_modules/ 2>/dev/null:" >&2; ls -la node_modules/ >&2 || true; echo "cat package.json:" >&2; cat package.json >&2; exit 1; }} && \
             test -d node_modules || {{ echo "ERROR: node_modules not created" >&2; ls -la >&2; exit 1; }} && \
+            {prisma_generate} \
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -rL node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
@@ -196,6 +205,11 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir):
             pkg_dir = pkg_dir,
             package_json = package_json,
             ws_merge = ws_merge if ws_merge else "true && ",
+            prisma_generate = (
+                'mkdir -p $$(dirname {schema}) && cp $$EXECROOT/$(location {schema}) {schema} && ln -sf $$BUN $$(dirname $$BUN)/node && export DATABASE_URL=file:./dev.db && PATH=$$(dirname $$BUN):$$PATH && PRISMA_VER=$$($$BUN -e "console.log(require(\\\"./node_modules/@prisma/client/package.json\\\").version)") && $$BUN add prisma@$$PRISMA_VER 1>&2 && $$BUN node_modules/.bin/prisma generate --schema={schema} 1>&2 && '.format(
+                    schema = prisma_schema,
+                ) if prisma_schema else "true &&"
+            ),
         ),
         tools = ["//tools/bun"],
         tags = ["manual", "requires-network"],

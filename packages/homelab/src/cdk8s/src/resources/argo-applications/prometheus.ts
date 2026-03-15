@@ -364,6 +364,18 @@ export async function createPrometheusApp(chart: Chart) {
           mountPropagation: "HostToContainer",
         },
       ],
+
+      prometheus: {
+        monitor: {
+          relabelings: [
+            {
+              sourceLabels: ["__meta_kubernetes_pod_node_name"],
+              targetLabel: "node",
+              action: "replace",
+            },
+          ],
+        },
+      },
     },
     prometheus: {
       prometheusSpec: {

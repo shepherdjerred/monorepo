@@ -114,12 +114,16 @@ export function createTasknotesDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && ob sync --continuous --path /vault',
+        'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && while true; do rm -rf /vault/.obsidian/.sync.lock; ob sync --continuous --path /vault; echo "Sync exited, retrying in 10s..."; sleep 10; done',
       ],
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
+      liveness: Probe.fromCommand(["pgrep", "-f", "ob sync --continuous"], {
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 6,
+      }),
       resources: {
         cpu: {
           request: Cpu.millis(100),

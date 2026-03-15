@@ -49,6 +49,10 @@ export function createStatusPageDeployment(chart: Chart) {
     withCommonProps({
       name: "status-page-api",
       image: `ghcr.io/shepherdjerred/status-page-api:${versions["shepherdjerred/status-page-api"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        "bunx prisma db push --skip-generate && bun run src/index.ts",
+      ],
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,

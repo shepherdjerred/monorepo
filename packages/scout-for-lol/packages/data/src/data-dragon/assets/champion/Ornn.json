@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Ornn": {
       "id": "Ornn",
@@ -66,7 +66,9 @@
         "Try to stay away from walls. Ornn is much less strong if he cannot stun you.",
         "Attack Ornn to keep him from creating items in lane."
       ],
-      "tags": ["Tank"],
+      "tags": [
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -92,7 +94,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 69,
-        "attackdamageperlevel": 3.5,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2,
         "attackspeed": 0.625
       },
@@ -103,30 +105,105 @@
           "description": "Ornn slams the ground, sending out a fissure dealing damage and slowing enemies hit. After a small delay, a magma pillar forms at the end location.",
           "tooltip": "Ornn slams the ground, creating a fissure dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ e5 }}% for {{ e6 }} seconds. A pillar of rock forms at the fissure's end for {{ e3 }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldown": [
+            9,
+            8.5,
+            8,
+            7.5,
+            7
+          ],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [45, 45, 45, 45, 45],
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [20, 45, 70, 95, 120],
-            [1, 1, 1, 1, 1],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [40, 40, 40, 40, 40],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              45,
+              70,
+              95,
+              120
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -144,7 +221,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "OrnnQ.png",
@@ -179,23 +262,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -213,7 +368,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "OrnnW.png",
@@ -232,7 +393,11 @@
           "description": "Ornn charges, dealing damage to enemies he passes through. If Ornn collides with terrain while charging, the impact creates a shockwave around him which deals damage and knocks up enemies.",
           "tooltip": "Ornn charges, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If Ornn rams into terrain, he creates a shockwave that <status>Knocks Up</status> enemies for {{ knockupduration }} seconds and applies the same damage to those not hit by the charge.<br /><br />Ornn's charge destroys magma pillars and terrain created by enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Dash Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Dash Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -240,23 +405,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13.5, 13, 12.5, 12],
+          "cooldown": [
+            14,
+            13.5,
+            13,
+            12.5,
+            12
+          ],
           "cooldownBurn": "14/13.5/13/12.5/12",
-          "cost": [35, 40, 45, 50, 55],
+          "cost": [
+            35,
+            40,
+            45,
+            50,
+            55
+          ],
           "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -274,7 +511,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "OrnnE.png",
@@ -293,7 +536,11 @@
           "description": "Ornn summons a massive elemental at a location which travels toward him with increasing speed. Enemies run over by the elemental take damage, are slowed and are made Brittle. Ornn can recast the ability to charge into the elemental, redirecting it in the direction he hits it, causing the elemental to affect any enemies it runs over to be knocked up, dealing the same damage and re-applying Brittle.",
           "tooltip": "Ornn summons a massive lava elemental, which stampedes towards him, dealing <magicDamage>{{ rdamagecalc }} magic damage</magicDamage>, applying <keywordMajor>Brittle</keywordMajor> to, and <status>Slowing</status> enemies hit by {{ rslowpercentbasepremath }}% for {{ brittledurationtooltiponly }} seconds.<br /><br />Ornn can <recast>Recast</recast> to dash with a headbutt. If he dashes into the elemental, he redirects and empowers it, causing it to <status>Knock Up</status> the first champion for {{ rstunduration }} second and subsequent champions for {{ minstun }} seconds. The elemental also deals <magicDamage>{{ rdamagecalc }} magic damage</magicDamage> and reapplies <keywordMajor>Brittle</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ rslowpercentbasepremath }} -> {{ rslowpercentbasepremathNL }}",
@@ -301,23 +548,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -335,7 +630,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2500, 2500, 2500],
+          "range": [
+            2500,
+            2500,
+            2500
+          ],
           "rangeBurn": "2500",
           "image": {
             "full": "OrnnR.png",

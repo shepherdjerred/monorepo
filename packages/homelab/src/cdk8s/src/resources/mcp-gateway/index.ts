@@ -17,6 +17,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
@@ -43,15 +44,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   });
 
   // Shared credential items
-  const todoistItem = new OnePasswordItem(chart, "todoist-1p", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/todoist",
-    },
-    metadata: {
-      name: "todoist",
-    },
-  });
-
   const canvasItem = new OnePasswordItem(chart, "canvas-1p", {
     spec: {
       itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/canvas",
@@ -76,7 +68,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     "mcp-gateway-credentials-1p",
     {
       spec: {
-        itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/openclaw",
+        itemPath: vaultItemPath("iixelnobjabehkgxhl3ekacdy4"),
       },
       metadata: {
         name: "mcp-gateway-credentials",
@@ -151,15 +143,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "base-url",
         }),
-        // Todoist configuration - @doist/todoist-ai expects TODOIST_API_KEY
-        TODOIST_API_KEY: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "todoist-secret",
-            todoistItem.name,
-          ),
-          key: "api-key",
-        }),
         // Piazza configuration (cookie-based auth to bypass SSO/2FA)
         PIAZZA_COOKIES: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
@@ -186,7 +169,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "gh-token",
         }),
-        // Fastmail JMAP configuration - token stored in openclaw 1Password item
+        // Fastmail JMAP configuration
         JMAP_SESSION_URL: EnvValue.fromValue(
           "https://api.fastmail.com/jmap/session",
         ),

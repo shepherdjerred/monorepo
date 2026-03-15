@@ -15,11 +15,14 @@ import httpx
 CHARTMUSEUM_URL = "https://chartmuseum.tailnet-1a49.ts.net"
 
 
-def package(chart_dir: str, version: str) -> str:
+def package(chart_dir: str, version: str, *, dist_dir: str | None = None) -> str:
     """Package a Helm chart directory into a .tgz archive.
 
     Chart.yaml uses placeholder ``$version`` / ``$appVersion`` which helm
     rejects as invalid semver.  We patch a temp copy before packaging.
+
+    If *dist_dir* is provided, the CDK8s-generated manifest
+    ``{dist_dir}/{chart_name}.k8s.yaml`` is copied into ``templates/``.
     """
     src = Path(chart_dir)
     with tempfile.TemporaryDirectory() as tmp:
@@ -30,6 +33,17 @@ def package(chart_dir: str, version: str) -> str:
         text = text.replace('"$version"', f'"{version}"')
         text = text.replace('"$appVersion"', f'"{version}"')
         chart_yaml.write_text(text)
+
+        # Copy CDK8s manifest into templates/
+        if dist_dir:
+            manifest = Path(dist_dir) / f"{src.name}.k8s.yaml"
+            if manifest.exists():
+                templates = dst / "templates"
+                templates.mkdir(exist_ok=True)
+                import shutil
+                shutil.copy2(str(manifest), str(templates / manifest.name))
+            else:
+                print(f"  Warning: no manifest at {manifest}", flush=True)
 
         cmd = [
             "helm",

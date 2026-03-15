@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Galio": {
       "id": "Galio",
@@ -97,7 +97,10 @@
         "Hero's Entrance can be interrupted before Galio jumps into the air.",
         "Galio cannot traverse walls with Justice Punch."
       ],
-      "tags": ["Tank", "Mage"],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -123,7 +126,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 3.5,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 1.5,
         "attackspeed": 0.625
       },
@@ -146,23 +149,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -180,7 +255,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825, 825, 825],
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "GalioQ.png",
@@ -215,23 +296,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [25, 30, 35, 40, 45],
-            [2, 2, 2, 2, 2],
-            [15, 15, 15, 15, 15],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [2, 2, 2, 2, 2],
-            [1.25, 1.25, 1.25, 1.25, 1.25],
-            [4, 4, 4, 4, 4]
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              1.25,
+              1.25,
+              1.25,
+              1.25,
+              1.25
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ]
           ],
           "effectBurn": [
             null,
@@ -249,7 +402,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [275, 275, 275, 275, 275],
+          "range": [
+            275,
+            275,
+            275,
+            275,
+            275
+          ],
           "rangeBurn": "275",
           "image": {
             "full": "GalioW.png",
@@ -268,30 +427,105 @@
           "description": "Galio will briefly step back and charge, knocking up the first enemy champion he encounters.",
           "tooltip": "Galio lunges forward with a mighty blow, <status>Knocking Up</status> for {{ knockupduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first champion hit. Other enemies in the way take <magicDamage>{{ pvedamage }} magic damage</magicDamage>.<br /><br />Galio's dash stops on hitting terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +543,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "GalioE.png",
@@ -328,7 +568,11 @@
           "description": "Galio designates an ally's position as his landing spot, granting all allies in the area a magic shield. After a delay Galio smashes down location, knocking up nearby enemies.",
           "tooltip": "Galio designates an allied champion's position as his landing spot, granting all allied champions in the area <spellName>Shield of Durand's</spellName> passive <shield>Shield</shield> for {{ temporarywshieldduration }} seconds. Galio then flies to his landing zone.<br /><br />When Galio lands, he <status>Knocks Up</status> for {{ stundurationouter }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Range", "Cooldown"],
+            "label": [
+              "Damage",
+              "Range",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ castrange }} -> {{ castrangeNL }}",
@@ -336,23 +580,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 160, 140],
+          "cooldown": [
+            180,
+            160,
+            140
+          ],
           "cooldownBurn": "180/160/140",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -370,7 +662,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [4000, 4750, 5500],
+          "range": [
+            4000,
+            4750,
+            5500
+          ],
           "rangeBurn": "4000/4750/5500",
           "image": {
             "full": "GalioR.png",

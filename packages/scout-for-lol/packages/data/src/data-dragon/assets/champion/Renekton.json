@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.4.1",
+  "version": "16.5.1",
   "data": {
     "Renekton": {
       "id": "Renekton",
@@ -126,7 +126,10 @@
         "Pay close attention to Renekton's Fury gauge as that will usually signify when he is about to attack.",
         "Keeping Renekton from being able to fight and gain Fury by continually harassing him will severely reduce the effectiveness of his abilities."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 8,
@@ -152,7 +155,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 69,
-        "attackdamageperlevel": 4.15,
+        "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.75,
         "attackspeed": 0.665
       },
@@ -177,23 +180,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +286,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "RenektonCleave.png",
@@ -230,7 +311,11 @@
           "description": "Renekton slashes his target twice, dealing moderate physical damage and stuns them for 0.75 seconds. If Renekton has more than 50 Fury, he slashes his target three times, destroying damage shields on the target, dealing high physical damage, and stunning them for 1.5 seconds.",
           "tooltip": "Renekton's next Attack strikes twice, <status>Stunning</status> for {{ stunduration }} seconds and dealing a total of <physicalDamage>{{ basictotaldamage }} physical damage</physicalDamage>. Hitting a champion generates an additional <keywordMajor>{{ bonusfuryvschamps }} Fury</keywordMajor>.<br /><br /><keywordMajor>Fury Bonus</keywordMajor>: Renekton Attacks 3 times instead, destroying <shield>Shields</shield> before dealing <physicalDamage>{{ emptotaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ enragedstunduration }} seconds. Does not generate any <keywordMajor>Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Empowered Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Empowered Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamageperhit*2.000000 }} -> {{ basedamageperhitnl*2.000000 }}",
               "{{ basedamageperhit*3.000000 }} -> {{ basedamageperhitnl*3.000000 }}",
@@ -238,23 +323,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -272,7 +429,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "RenektonPreExecute.png",
@@ -305,23 +468,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -339,7 +574,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "RenektonSliceAndDice.png",
@@ -358,7 +599,11 @@
           "description": "Renekton transforms into the Tyrant form, gaining bonus Health and dealing damage to enemies around him. While in this form, Renekton gains Fury periodically.",
           "tooltip": "Renekton surrounds himself with dark energies for {{ buffduration }} seconds, gaining <healing>{{ healthgain }} max Health</healing> and <keywordMajor>{{ furyoncast }} Fury</keywordMajor>. While active, he deals <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> and gains <keywordMajor>{{ furypersecond }} Fury</keywordMajor> per second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Health", "Damage Per Second", "Cooldown"],
+            "label": [
+              "Bonus Health",
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healthgain }} -> {{ healthgainNL }}",
               "{{ auradamagepersecond }} -> {{ auradamagepersecondNL }}",
@@ -366,23 +611,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -400,7 +693,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [20, 20, 20],
+          "range": [
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "RenektonReignOfTheTyrant.png",

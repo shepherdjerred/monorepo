@@ -31,7 +31,7 @@ def obsidian_headless_image(name, visibility = None):
             trap 'rm -rf $$TMPDIR' EXIT && \
             cd $$TMPDIR && \
             # renovate: datasource=npm depName=obsidian-headless
-            BUN_INSTALL=$$TMPDIR/usr/local bun add --global obsidian-headless@0.0.4 && \
+            BUN_INSTALL=$$TMPDIR/usr/local bun add --global obsidian-headless@0.0.7 && \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TMPDIR usr/local 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TMPDIR usr/local)
         """,
         local = True,
@@ -54,7 +54,7 @@ def obsidian_headless_image(name, visibility = None):
             ":" + name + "_vault_layer",
         ],
         entrypoint = ["/bin/sh", "-c"],
-        cmd = ['ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && ob sync --continuous --path /vault'],
+        cmd = ['ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && while true; do rm -rf /vault/.obsidian/.sync.lock; ob sync --continuous --path /vault; echo "Sync exited, retrying in 10s..."; sleep 10; done'],
         labels = {
             "org.opencontainers.image.title": "obsidian-headless",
             "org.opencontainers.image.description": "Obsidian Headless CLI for syncing vaults from the command line",

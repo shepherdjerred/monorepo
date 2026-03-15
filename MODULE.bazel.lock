@@ -235,7 +235,7 @@
     "//tools/rules_bun/bun:extensions.bzl%bun_modules": {
       "general": {
         "bzlTransitiveDigest": "zOBw65oZSMsaqcMIMZWbsklZr86UsuRaJgKacflB5es=",
-        "usagesDigest": "v9t5ChaNYGgGvuZnICLMq3ER/V8rttxLmchXV0xXCEM=",
+        "usagesDigest": "Ye5U8a/HCFb2//H3cydgMlmWQ4drUapoOG4Z/b3VRYM=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -255,7 +255,7 @@
                 "@@//packages/clauderon/web/client:package.json",
                 "@@//packages/clauderon/web/frontend:package.json",
                 "@@//packages/clauderon/web/shared:package.json",
-                "@@//packages/cook-preview:package.json",
+                "@@//packages/cooklang-rich-preview:package.json",
                 "@@//packages/cooklang-for-obsidian:package.json",
                 "@@//packages/discord-plays-pokemon:package.json",
                 "@@//packages/discord-plays-pokemon/packages/backend:package.json",

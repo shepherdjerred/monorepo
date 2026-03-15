@@ -2230,8 +2230,8 @@
     "id": 103,
     "apiName": "BreadAndButter",
     "name": "Bread And Butter",
-    "desc": "Your Q gains @QAbilityHaste@ Ability Haste.",
-    "tooltip": "Your Q gains @QAbilityHaste@ Ability Haste.",
+    "desc": "Your @spell1KeyBind@ gains @QAbilityHaste@ Ability Haste.",
+    "tooltip": "Your @spell1KeyBind@ gains @QAbilityHaste@ Ability Haste.",
     "iconLarge": "assets/ux/cherry/augments/icons/breadandbutter_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/breadandbutter_small.png",
     "rarity": "prismatic",
@@ -2727,8 +2727,8 @@
     "id": 150,
     "apiName": "BreadAndJam",
     "name": "Bread And Jam",
-    "desc": "Your W gains @WAbilityHaste@ Ability Haste.",
-    "tooltip": "Your W gains @WAbilityHaste@ Ability Haste.",
+    "desc": "Your @spell2KeyBind@ gains @WAbilityHaste@ Ability Haste.",
+    "tooltip": "Your @spell2KeyBind@ gains @WAbilityHaste@ Ability Haste.",
     "iconLarge": "assets/ux/cherry/augments/icons/breadandjam_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/breadandjam_small.png",
     "rarity": "prismatic",
@@ -2742,8 +2742,8 @@
     "id": 151,
     "apiName": "BreadAndCheese",
     "name": "Bread And Cheese",
-    "desc": "Your E gains @EAbilityHaste@ Ability Haste.",
-    "tooltip": "Your E gains @EAbilityHaste@ Ability Haste.",
+    "desc": "Your @spell3KeyBind@ gains @EAbilityHaste@ Ability Haste.",
+    "tooltip": "Your @spell3KeyBind@ gains @EAbilityHaste@ Ability Haste.",
     "iconLarge": "assets/ux/cherry/augments/icons/breadandcheese_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/breadandcheese_small.png",
     "rarity": "prismatic",
@@ -4634,21 +4634,6 @@
     },
     "type": "full"
   },
-  "320": {
-    "id": 320,
-    "apiName": "CalculatedRisk",
-    "name": "Calculated Risk",
-    "desc": "Instantly consume your remaining rerolls, you can no longer reroll.<br><br>Select a Gold Augment, if at least @PrismaticThreshold@ rerolls were consumed this way, empower this to select a Prismatic Augment instead.",
-    "tooltip": "{{ Cherry_CalculatedRisk_Summary }}",
-    "iconLarge": "assets/ux/cherry/augments/icons/calculated_risk_large.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/calculated_risk_small.png",
-    "rarity": "silver",
-    "dataValues": {
-      "PrismaticThreshold": 5
-    },
-    "calculations": {},
-    "type": "full"
-  },
   "321": {
     "id": 321,
     "apiName": "Bodyguard",
@@ -4854,7 +4839,7 @@
     "dataValues": {
       "AmountOfItemsToRoll": 5,
       "PrismaticRound": 4,
-      "SellableRound": 0
+      "SellableRound": 9
     },
     "calculations": {},
     "type": "full"
