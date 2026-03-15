@@ -58,9 +58,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "cloudflare/cloudflared":
     "2026.1.1@sha256:5bb6a0870686742d00e171f36c892ba91e5994631bc363d808b9ba822262dad6",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-  "tailscale/golink":
-    "main@sha256:ba5303fefc041cf9f11f960a90c3e16ca922dad8140ef43f704670f5c55f581b",
+  // not managed by renovate
+  "shepherdjerred/golink":
+    "main@sha256:3a204341938acc2cf78da4311487875e604643320a4143d6fd0dfd3eb6102822",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "home-assistant/home-assistant":
     "2026.1.2@sha256:3007eeeaf87d1e3a2047faeac6ff01dfef218b8a404bdff3ce421c1f4f363a43",
@@ -219,11 +219,11 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "1.1.137@sha256:fe9f6f78875e8e273a85ec92adf4db0dd29e2af0581dd3dabbdc050a5e3d8eab",
+    "1.1.139@sha256:d35f15bea23e80ee08267b8c2f8aeefe40ef5be7f8ba0b5d78d7d7035d02c40e",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "1.1.138@sha256:520d231588d0f0644cbc84ad7299a7ff9ad0383486efda81122b95a372ac74fb",
+    "1.1.138@sha256:cf94c5e387739851cc51376512ab013484caf7f9187e1a599122f1f2fc6b5158",
   // Custom status-page-api image - Status page API
   // not managed by renovate
   "shepherdjerred/status-page-api":

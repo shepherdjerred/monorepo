@@ -8,6 +8,11 @@ export {
   ALL_STATUSES,
 
   // Task
+  RecurrenceAnchorSchema,
+  type RecurrenceAnchor,
+  BlockedByEntrySchema,
+  ReminderSchema,
+  InlineTimeEntrySchema,
   TaskSchema,
   type Task,
 

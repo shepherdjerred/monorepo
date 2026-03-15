@@ -15,6 +15,9 @@ import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
 import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
+import { getClusterHygieneRuleGroups } from "./rules/cluster-hygiene.ts";
+import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
+import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -193,6 +196,42 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getTasknotesRuleGroups(),
+    },
+  });
+
+  // Create Cluster Hygiene rules
+  new PrometheusRule(chart, "prometheus-cluster-hygiene-rules", {
+    metadata: {
+      name: "prometheus-cluster-hygiene-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getClusterHygieneRuleGroups(),
+    },
+  });
+
+  // Create Etcd Custom rules
+  new PrometheusRule(chart, "prometheus-etcd-custom-rules", {
+    metadata: {
+      name: "prometheus-etcd-custom-rules",
+      namespace: "kube-system",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getEtcdCustomRuleGroups(),
+    },
+  });
+
+  // Create ZFS Maintenance rules
+  new PrometheusRule(chart, "prometheus-zfs-maintenance-rules", {
+    metadata: {
+      name: "prometheus-zfs-maintenance-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getZfsMaintenanceRuleGroups(),
     },
   });
 }

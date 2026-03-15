@@ -131,7 +131,7 @@ DEPLOY_SITES: list[dict] = [
     {"bucket": "resume", "name": "resume", "build_dir": "packages/resume", "build_cmd": "", "dist_dir": "packages/resume"},
     {"bucket": "webring", "name": "webring", "build_dir": "packages/webring", "build_cmd": "bun run typedoc", "dist_dir": "packages/webring/docs"},
     {"bucket": "cook", "name": "cooklang-rich-preview", "build_dir": "packages/cooklang-rich-preview", "build_cmd": "bun run astro build", "dist_dir": "packages/cooklang-rich-preview/dist"},
-    {"bucket": "status-page", "name": "status-page", "build_dir": "packages/status-page/web", "build_cmd": "bun run astro build", "dist_dir": "packages/status-page/web/dist", "target": "r2"},
+    {"bucket": "status-page", "name": "status-page", "build_dir": "packages/status-page/web", "build_cmd": "bun run astro build", "dist_dir": "packages/status-page/web/dist"},
 ]
 
 # --- OpenTofu stacks ---

@@ -74,7 +74,7 @@ def bun_service_image(
         tar_name = name + "_ws_" + ws_dir.replace("/", "_")
         pkg_tar(
             name = tar_name,
-            srcs = [ws_label],
+            srcs = [ws_label, "//" + ws_dir + ":package.json"],
             strip_prefix = ws_dir,
             package_dir = "/workspace/" + ws_dir,
             tags = ["manual"],
@@ -177,6 +177,24 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir, prisma_s
             $$BUN -e "var f=require('fs'),main=JSON.parse(f.readFileSync('package.json','utf8')),ws=JSON.parse(f.readFileSync('$$WS_PJ','utf8'));var d=main.dependencies=main.dependencies||{{}};var wd=ws.dependencies||{{}};for(var k in wd)if(!wd[k].startsWith('workspace:'))d[k]=wd[k];f.writeFileSync('package.json',JSON.stringify(main,null,2))" && \
         """.format(ws_dir = ws_dir)
 
+    # Build shell code to create node_modules symlinks for workspace packages.
+    # After copying node_modules to TARDIR, create symlinks pointing to where
+    # the ws source layers will be placed in the final image. These must be
+    # created in TARDIR (not the install dir) since cp -rL would try to
+    # dereference them and fail (targets don't exist at build time).
+    # Note: pkg_tar doesn't fully strip the prefix from bun_library outputs,
+    # so files end up at /workspace/{ws_dir}/{ws_dir}/src/... — the symlink
+    # must point to the actual nested location.
+    ws_symlinks = ""
+    for ws_dir in workspace_packages.keys():
+        # Read the package name from the workspace package's package.json
+        ws_symlinks += """
+            WS_PJ=$$EXECROOT/$(location //{ws_dir}:package.json) && \
+            WS_NAME=$$($$BUN -e "console.log(require('$$WS_PJ').name)") && \
+            rm -rf $$TARDIR/workspace/{pkg_dir}/node_modules/$$WS_NAME && \
+            ln -sf /workspace/{ws_dir}/{ws_dir} $$TARDIR/workspace/{pkg_dir}/node_modules/$$WS_NAME && \
+        """.format(ws_dir = ws_dir, pkg_dir = pkg_dir)
+
     native.genrule(
         name = name,
         srcs = srcs,
@@ -198,6 +216,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir, prisma_s
             TARDIR=$$(mktemp -d) && \
             mkdir -p $$TARDIR/workspace/{pkg_dir} && \
             cp -rL node_modules $$TARDIR/workspace/{pkg_dir}/node_modules && \
+            {ws_symlinks} \
             (tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf $$OUTPUT_TAR -C $$TARDIR workspace 2>/dev/null || tar -cf $$OUTPUT_TAR -C $$TARDIR workspace) && \
             rm -rf $$TARDIR && \
             tar -tf $$OUTPUT_TAR | grep "node_modules/" > /dev/null 2>&1 || {{ echo "ERROR: empty node_modules in tar" >&2; tar -tf $$OUTPUT_TAR | head -20 >&2; exit 1; }}
@@ -205,6 +224,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir, prisma_s
             pkg_dir = pkg_dir,
             package_json = package_json,
             ws_merge = ws_merge if ws_merge else "true && ",
+            ws_symlinks = ws_symlinks if ws_symlinks else "true &&",
             prisma_generate = (
                 'mkdir -p $$(dirname {schema}) && cp $$EXECROOT/$(location {schema}) {schema} && ln -sf $$BUN $$(dirname $$BUN)/node && export DATABASE_URL=file:./dev.db && PATH=$$(dirname $$BUN):$$PATH && PRISMA_VER=$$($$BUN -e "console.log(require(\\\"./node_modules/@prisma/client/package.json\\\").version)") && $$BUN add prisma@$$PRISMA_VER 1>&2 && $$BUN node_modules/.bin/prisma generate --schema={schema} 1>&2 && '.format(
                     schema = prisma_schema,

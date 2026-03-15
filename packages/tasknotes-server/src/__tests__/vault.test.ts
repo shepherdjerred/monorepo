@@ -32,10 +32,16 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     contexts: [],
     projects: [],
     tags: [],
+    completeInstances: [],
+    skippedInstances: [],
+    timeEntries: [],
+    blockedBy: [],
+    reminders: [],
     archived: false,
     totalTrackedTime: 0,
     isBlocked: false,
     isBlocking: false,
+    extraFields: {},
     ...overrides,
   };
 }

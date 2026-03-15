@@ -62,7 +62,7 @@ export function createDependencySummaryCronJob(chart: Chart) {
                     "300",
                     "bun",
                     "run",
-                    "src/deps-email/src/main.ts",
+                    "src/main.ts",
                   ],
                   env: [
                     {
