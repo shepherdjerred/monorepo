@@ -4,6 +4,7 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
+  KubeLimitRange,
   KubePersistentVolumeClaim,
   KubeResourceQuota,
   Quantity,
@@ -55,6 +56,25 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  new KubeLimitRange(chart, "buildkite-limit-range", {
+    metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
+    spec: {
+      limits: [
+        {
+          type: "Container",
+          default: {
+            cpu: Quantity.fromString("500m"),
+            memory: Quantity.fromString("256Mi"),
+          },
+          defaultRequest: {
+            cpu: Quantity.fromString("100m"),
+            memory: Quantity.fromString("128Mi"),
+          },
+        },
+      ],
+    },
+  });
+
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
     metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
     spec: {
@@ -95,29 +115,7 @@ export function createBuildkiteApp(chart: Chart) {
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                containers: [
-                  {
-                    name: "agent",
-                    resources: {
-                      requests: { cpu: "100m", memory: "128Mi" },
-                      limits: { cpu: "500m", memory: "256Mi" },
-                    },
-                  },
-                  {
-                    name: "checkout",
-                    resources: {
-                      requests: { cpu: "100m", memory: "128Mi" },
-                      limits: { cpu: "500m", memory: "256Mi" },
-                    },
-                  },
-                  {
-                    name: "copy-agent",
-                    resources: {
-                      requests: { cpu: "100m", memory: "128Mi" },
-                      limits: { cpu: "500m", memory: "256Mi" },
-                    },
-                  },
-                ],
+                containers: [{ name: "agent" }],
               },
             },
           },
