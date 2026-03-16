@@ -48,9 +48,9 @@ export function createBuildkiteApp(chart: Chart) {
     metadata: { name: "buildkite-cpu-quota", namespace: "buildkite" },
     spec: {
       hard: {
-        "requests.cpu": Quantity.fromString("16"),
-        "limits.cpu": Quantity.fromString("16"),
-        "limits.memory": Quantity.fromString("48Gi"),
+        "requests.cpu": Quantity.fromString("24"),
+        "limits.cpu": Quantity.fromString("32"),
+        "limits.memory": Quantity.fromString("64Gi"),
       },
     },
   });
@@ -95,7 +95,29 @@ export function createBuildkiteApp(chart: Chart) {
               "pod-spec-patch": {
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                containers: [{ name: "agent" }],
+                containers: [
+                  {
+                    name: "agent",
+                    resources: {
+                      requests: { cpu: "100m", memory: "128Mi" },
+                      limits: { cpu: "500m", memory: "256Mi" },
+                    },
+                  },
+                  {
+                    name: "checkout",
+                    resources: {
+                      requests: { cpu: "100m", memory: "128Mi" },
+                      limits: { cpu: "500m", memory: "256Mi" },
+                    },
+                  },
+                  {
+                    name: "copy-agent",
+                    resources: {
+                      requests: { cpu: "100m", memory: "128Mi" },
+                      limits: { cpu: "500m", memory: "256Mi" },
+                    },
+                  },
+                ],
               },
             },
           },
