@@ -1,28 +1,17 @@
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 
-// Generic helper to escape Go template syntax so Helm doesn't process it
-// Converts "{{ anything }}" to "{{ "{{" }} anything {{ "}}" }}"
+// These functions are identity functions. CDK8s-generated PrometheusRule CRDs
+// and kube-prometheus-stack alertmanager config are NOT processed through Helm
+// templating, so Go template syntax ({{ $labels.xxx }}, {{ .Alerts }}) must be
+// passed through as-is for Prometheus/Alertmanager to evaluate.
 export function escapeGoTemplate(template: string): string {
-  // Use a more specific replacement to avoid double-escaping
-  return template.replaceAll(/\{\{([^}]*)\}\}/g, '{{ "{{" }}$1{{ "}}" }}');
+  return template;
 }
 
-// Helper to create readable Prometheus template strings with Helm escaping
-// Uses smart replacements for common Prometheus patterns, falls back to generic escaping
 export function escapePrometheusTemplate(template: string): string {
-  return template
-    .replaceAll(
-      /\{\{\s*\$value\s*\|\s*(\w+)\s*\}\}/g,
-      '{{ "{{" }} $value | $1 {{ "}}" }}',
-    ) // Handle {{ $value | filter }}
-    .replaceAll(/\{\{\s*\$value\s*\}\}/g, '{{ "{{" }} $value {{ "}}" }}') // Handle {{ $value }}
-    .replaceAll(
-      /\{\{\s*\$labels\.(\w+)\s*\}\}/g,
-      '{{ "{{" }} $labels.$1 {{ "}}" }}',
-    ); // Handle {{ $labels.entity }}
+  return template;
 }
 
-// Alias for clarity when used in Alertmanager contexts
 export const escapeAlertmanagerTemplate = escapeGoTemplate;
 
 // Rule factory functions for common alert patterns

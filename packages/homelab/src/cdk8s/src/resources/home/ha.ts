@@ -8,7 +8,7 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { setRevisionHistoryLimit, withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -104,6 +104,8 @@ export function createHaDeployment(chart: Chart) {
       volumeMounts: [],
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   // Create Service to expose metrics port
   new Service(chart, "ha-service", {

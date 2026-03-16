@@ -12,6 +12,7 @@ import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   ROOT_GID,
   ROOT_UID,
+  setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -107,6 +108,8 @@ export async function createHomeAssistantDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   // this simplifies mDNS
   // TODO: remove host networking -- might not be possible with Talos

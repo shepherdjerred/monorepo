@@ -10,6 +10,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
   withCommonProps,
+  setRevisionHistoryLimit,
   ROOT_UID,
   ROOT_GID,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -71,6 +72,8 @@ export function createWhisperbridgeDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   new Service(chart, "whisperbridge-service", {
     selector: deployment,

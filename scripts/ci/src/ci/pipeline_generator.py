@@ -444,8 +444,6 @@ def _generate_per_package_steps(package: str) -> dict:
         "command": build_cmd,
         "timeout_in_minutes": 15,
         "retry": _RETRY,
-        "concurrency": 6,
-        "concurrency_group": "bazel-builds",
         "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
     }
 
@@ -464,8 +462,6 @@ def _generate_per_package_steps(package: str) -> dict:
             "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
             "timeout_in_minutes": 15,
             "retry": _RETRY,
-            "concurrency": 6,
-            "concurrency_group": "bazel-builds",
             "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory)],
         })
 

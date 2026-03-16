@@ -58,7 +58,11 @@ def run_capture(target: str, config: str = "ci", stamp: bool = False, embed_labe
         cmd.append(f"--embed_label={embed_label}")
     cmd.append(target)
     print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, flush=True)
+        raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
     return result.stdout.strip()
 
 
@@ -66,7 +70,11 @@ def query(expression: str) -> str:
     """Run bazel query and return stdout."""
     cmd = ["bazel", "query", expression]
     print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, flush=True)
+        raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
     return result.stdout.strip()
 
 

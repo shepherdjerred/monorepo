@@ -9,7 +9,7 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -98,6 +98,8 @@ export function createStatusPageDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   const service = new Service(chart, "status-page-service", {
     metadata: {

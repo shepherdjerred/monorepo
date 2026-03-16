@@ -18,7 +18,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { buildDbUrlScript } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createBugsinkDeployment(chart: Chart) {
@@ -347,6 +347,8 @@ export function createBugsinkDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   const service = new Service(chart, "bugsink-service", {
     selector: deployment,

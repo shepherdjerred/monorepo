@@ -12,7 +12,7 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { setRevisionHistoryLimit, withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -36,7 +36,7 @@ export function createSentinelDeployment(chart: Chart) {
   binding.addSubjects(serviceAccount);
 
   const deployment = new Deployment(chart, "sentinel", {
-    replicas: 1,
+    replicas: 0,
     strategy: DeploymentStrategy.recreate(),
     serviceAccount,
     securityContext: {
@@ -239,6 +239,8 @@ export function createSentinelDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   // Service for webhook server
   const webhookService = new Service(chart, "sentinel-webhook-service", {

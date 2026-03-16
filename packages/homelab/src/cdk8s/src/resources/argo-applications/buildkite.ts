@@ -5,6 +5,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubePersistentVolumeClaim,
+  KubeResourceQuota,
   KubeRoleBinding,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
@@ -41,6 +42,15 @@ export function createBuildkiteApp(chart: Chart) {
     metadata: {
       name: "buildkite-ci-secrets",
       namespace: "buildkite",
+    },
+  });
+
+  new KubeResourceQuota(chart, "buildkite-resource-quota", {
+    metadata: { name: "buildkite-cpu-quota", namespace: "buildkite" },
+    spec: {
+      hard: {
+        "requests.cpu": Quantity.fromString("16"),
+      },
     },
   });
 

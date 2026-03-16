@@ -11,7 +11,7 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -209,6 +209,8 @@ export function createPostalDeployment(
     }),
   );
 
+  setRevisionHistoryLimit(webDeployment);
+
   // Create deployment for Postal SMTP Server
   const smtpDeployment = new Deployment(chart, "postal-smtp", {
     replicas: 1,
@@ -269,6 +271,8 @@ export function createPostalDeployment(
       },
     }),
   );
+
+  setRevisionHistoryLimit(smtpDeployment);
 
   // Create deployment for Postal Worker
   const workerDeployment = new Deployment(chart, "postal-worker", {
@@ -408,6 +412,8 @@ export function createPostalDeployment(
     }),
   );
 
+  setRevisionHistoryLimit(workerDeployment);
+
   // Create services
   const webService = new Service(chart, "postal-web-service", {
     selector: webDeployment,
@@ -477,11 +483,7 @@ export function createPostalDeployment(
  * 3. Create initial admin user:
  *    kubectl exec -it <postal-web-pod> -n postal -- postal make-user
  *
- * 4. Create organization:
- *    Log into the web UI and create your first organization
- *
- * 5. Create mail server:
- *    Create a mail server within your organization
+ * 4. Create organization and mail server in the web UI
  *
  * 6. Configure DNS records:
  *    - A record: mail.yourdomain.com -> your-cluster-ip
@@ -492,7 +494,5 @@ export function createPostalDeployment(
  *
  * 7. Get API credentials from Postal web UI for sending emails
  *
- * 8. Test email sending:
- *    Use Postal's API or SMTP to send a test email
- *    Verify delivery and check SPF/DKIM/DMARC with mail-tester.com
+ * 8. Test email sending via Postal's API or SMTP, verify with mail-tester.com
  */

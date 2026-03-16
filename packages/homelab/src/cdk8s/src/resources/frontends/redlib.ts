@@ -5,7 +5,7 @@ import {
   Service,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -33,6 +33,8 @@ export function createRedlibDeployment(chart: Chart) {
       portNumber: 8080,
     }),
   );
+
+  setRevisionHistoryLimit(redlibDeployment);
 
   const service = new Service(chart, "redlib-service", {
     selector: redlibDeployment,

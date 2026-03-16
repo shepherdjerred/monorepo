@@ -16,7 +16,7 @@ import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
@@ -204,6 +204,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       ],
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   // Create Service for mcp-proxy
   const service = new Service(chart, "mcp-gateway-service", {

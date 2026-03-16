@@ -10,7 +10,7 @@ import {
 import type { Chart } from "cdk8s";
 import { Cpu } from "cdk8s-plus-31";
 import { Duration, Size } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
@@ -120,7 +120,7 @@ export function createTasknotesDeployment(chart: Chart) {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      liveness: Probe.fromCommand(["pgrep", "-f", "ob sync --continuous"], {
+      liveness: Probe.fromCommand(["test", "-f", "/proc/1/status"], {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 6,
       }),
@@ -163,6 +163,8 @@ export function createTasknotesDeployment(chart: Chart) {
       },
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   // Service for API server
   const apiService = new Service(chart, "tasknotes-service", {

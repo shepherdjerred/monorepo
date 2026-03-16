@@ -350,6 +350,8 @@ exit 0
                 { name: "TS_STATE_DIR", value: "/tmp/tailscale" },
                 // Unique hostname for this job instance
                 { name: "TS_HOSTNAME", value: "golink-sync-job" },
+                // OAuth clients require advertised tags
+                { name: "TS_EXTRA_ARGS", value: "--advertise-tags=tag:k8s" },
               ],
               volumeMounts: [
                 {

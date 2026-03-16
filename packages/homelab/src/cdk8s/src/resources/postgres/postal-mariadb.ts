@@ -112,6 +112,12 @@ collation-server = utf8mb4_unicode_ci
       // Enable metrics for monitoring
       metrics: {
         enabled: true,
+        extraEnvVars: [
+          {
+            name: "MARIADB_ROOT_PASSWORD_FILE",
+            value: "/opt/bitnami/mysqld-exporter/secrets/mariadb-root-password",
+          },
+        ],
         serviceMonitor: {
           enabled: true,
           additionalLabels: {

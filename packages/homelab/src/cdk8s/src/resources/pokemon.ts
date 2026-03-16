@@ -10,7 +10,7 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { setRevisionHistoryLimit, withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
@@ -134,6 +134,8 @@ export function createPokemonDeployment(chart: Chart) {
       ],
     }),
   );
+
+  setRevisionHistoryLimit(deployment);
 
   const selkiesService = new Service(chart, "selkies-service", {
     selector: deployment,
