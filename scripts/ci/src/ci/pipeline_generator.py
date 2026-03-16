@@ -59,7 +59,28 @@ def _k8s_plugin(
                             "limits": {"cpu": cpu_limit or cpu, "memory": memory_limit or memory},
                         },
                         "envFrom": secret_refs,
-                    }
+                    },
+                    {
+                        "name": "agent",
+                        "resources": {
+                            "requests": {"cpu": "100m", "memory": "128Mi"},
+                            "limits": {"cpu": "500m", "memory": "256Mi"},
+                        },
+                    },
+                    {
+                        "name": "checkout",
+                        "resources": {
+                            "requests": {"cpu": "100m", "memory": "128Mi"},
+                            "limits": {"cpu": "500m", "memory": "256Mi"},
+                        },
+                    },
+                    {
+                        "name": "copy-agent",
+                        "resources": {
+                            "requests": {"cpu": "100m", "memory": "128Mi"},
+                            "limits": {"cpu": "500m", "memory": "256Mi"},
+                        },
+                    },
                 ],
             },
         }
