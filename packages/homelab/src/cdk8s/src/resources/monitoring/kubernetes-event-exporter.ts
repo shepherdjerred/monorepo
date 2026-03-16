@@ -6,7 +6,7 @@ import {
   KubeDeployment,
   KubeServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { escapeGoTemplate } from "./monitoring/rules/shared.ts";
+import { escapeHelmGoTemplate } from "./monitoring/rules/shared.ts";
 
 const EVENT_EXPORTER_IMAGE = "ghcr.io/resmoio/kubernetes-event-exporter:v1.7";
 
@@ -62,7 +62,7 @@ export function createKubernetesEventExporter(chart: Chart) {
       namespace,
     },
     data: {
-      "config.yaml": escapeGoTemplate(`
+      "config.yaml": escapeHelmGoTemplate(`
 logLevel: info
 logFormat: json
 maxEventAgeSeconds: 60

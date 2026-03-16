@@ -49,6 +49,8 @@ export function createBuildkiteApp(chart: Chart) {
     spec: {
       hard: {
         "requests.cpu": Quantity.fromString("16"),
+        "limits.cpu": Quantity.fromString("16"),
+        "limits.memory": Quantity.fromString("48Gi"),
       },
     },
   });

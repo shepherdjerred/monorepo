@@ -8,6 +8,12 @@ export function escapeGoTemplate(template: string): string {
   return template;
 }
 
+// Escapes Go template syntax for content that goes through Helm templating.
+// Converts {{ X }} to {{ "{{" }} X {{ "}}" }} so Helm passes them through literally.
+export function escapeHelmGoTemplate(template: string): string {
+  return template.replaceAll(/\{\{(.*?)\}\}/g, '{{ "{{" }}$1{{ "}}" }}');
+}
+
 export function escapePrometheusTemplate(template: string): string {
   return template;
 }

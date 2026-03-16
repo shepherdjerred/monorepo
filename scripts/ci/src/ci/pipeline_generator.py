@@ -32,6 +32,8 @@ def _k8s_plugin(
     *,
     cpu: str = "1",
     memory: str = "2Gi",
+    cpu_limit: str | None = None,
+    memory_limit: str | None = None,
     secrets: list[str] | None = None,
 ) -> dict:
     """Build the kubernetes plugin config for a Buildkite step."""
@@ -52,7 +54,10 @@ def _k8s_plugin(
                     {
                         "name": "container-0",
                         "image": CI_BASE_IMAGE,
-                        "resources": {"requests": {"cpu": cpu, "memory": memory}},
+                        "resources": {
+                            "requests": {"cpu": cpu, "memory": memory},
+                            "limits": {"cpu": cpu_limit or cpu, "memory": memory_limit or memory},
+                        },
                         "envFrom": secret_refs,
                     }
                 ],
@@ -144,10 +149,10 @@ TOFU_STACK_LABELS = {
     "seaweedfs": "SeaweedFS Config",
 }
 
-# Resource tiers for per-package build steps (requests only; pods burst above these)
-_HEAVY = ("2", "4Gi")
-_MEDIUM = ("1", "2Gi")
-_LIGHT = ("500m", "1Gi")
+# Resource tiers for per-package build steps: (cpu_req, mem_req, cpu_limit, mem_limit)
+_HEAVY = ("2", "4Gi", "4", "8Gi")
+_MEDIUM = ("1", "2Gi", "2", "4Gi")
+_LIGHT = ("500m", "1Gi", "1", "2Gi")
 
 _RETRY = {
     "automatic": [
@@ -159,7 +164,7 @@ _RETRY = {
     ]
 }
 
-PACKAGE_RESOURCES: dict[str, tuple[str, str]] = {
+PACKAGE_RESOURCES: dict[str, tuple[str, str, str, str]] = {
     "clauderon": _HEAVY,
     "homelab": _HEAVY,
     "birmel": _MEDIUM,
@@ -434,7 +439,7 @@ def _generate_per_package_steps(package: str) -> dict:
     """Generate a Buildkite group with build + lint/typecheck/test steps for a package."""
     safe_key = package.replace(".", "-")
     build_key = f"build-{safe_key}"
-    cpu, memory = PACKAGE_RESOURCES.get(package, _LIGHT)
+    cpu, memory, cpu_limit, memory_limit = PACKAGE_RESOURCES.get(package, _LIGHT)
 
     build_cmd = f".buildkite/scripts/bazel-phase.sh //packages/{package}/... build"
 
@@ -444,17 +449,17 @@ def _generate_per_package_steps(package: str) -> dict:
         "command": build_cmd,
         "timeout_in_minutes": 15,
         "retry": _RETRY,
-        "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
+        "plugins": [_k8s_plugin(cpu=cpu, memory=memory, cpu_limit=cpu_limit, memory_limit=memory_limit)],
     }
 
     phases = [("lint", ":eslint:"), ("typecheck", ":typescript:"), ("test", ":test_tube:")]
     test_steps = []
     for phase, emoji in phases:
         # Use the same resources as the build step for test phases of heavy packages
-        if phase == "test" and (cpu, memory) == _HEAVY:
-            phase_cpu, phase_memory = cpu, memory
+        if phase == "test" and (cpu, memory, cpu_limit, memory_limit) == _HEAVY:
+            phase_cpu, phase_memory, phase_cpu_limit, phase_memory_limit = cpu, memory, cpu_limit, memory_limit
         else:
-            phase_cpu, phase_memory = "500m", "1Gi"
+            phase_cpu, phase_memory, phase_cpu_limit, phase_memory_limit = _LIGHT
         test_steps.append({
             "label": f"{emoji} {phase.title()}",
             "key": f"{phase}-{safe_key}",
@@ -462,7 +467,7 @@ def _generate_per_package_steps(package: str) -> dict:
             "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
             "timeout_in_minutes": 15,
             "retry": _RETRY,
-            "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory)],
+            "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory, cpu_limit=phase_cpu_limit, memory_limit=phase_memory_limit)],
         })
 
     return {
