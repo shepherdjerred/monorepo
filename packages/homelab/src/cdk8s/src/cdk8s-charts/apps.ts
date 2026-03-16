@@ -24,7 +24,6 @@ import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/openebs.ts";
 import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkite.ts";
-import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
 import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/velero.ts";
 import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/postgres-operator.ts";
 import { createSeaweedfsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/seaweedfs.ts";
@@ -102,7 +101,6 @@ export async function createAppsChart(app: App) {
   createPromtailApp(chart);
   createTempoApp(chart);
   createBuildkiteApp(chart);
-  createDaggerApp(chart);
   createVeleroApp(chart);
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);

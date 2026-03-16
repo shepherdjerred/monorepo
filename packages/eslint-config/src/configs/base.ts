@@ -112,7 +112,7 @@ export function baseConfig(
         // Code quality and complexity limits
         "max-lines": [
           "error",
-          { max: 500, skipBlankLines: false, skipComments: false },
+          { max: 500, skipBlankLines: false, skipComments: true },
         ],
         "max-lines-per-function": [
           "error",

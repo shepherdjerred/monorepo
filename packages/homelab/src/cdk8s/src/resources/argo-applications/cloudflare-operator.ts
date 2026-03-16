@@ -39,11 +39,10 @@ export function createCloudflareOperatorApp(chart: Chart) {
       },
       destination: {
         server: "https://kubernetes.default.svc",
-        namespace: "cloudflare-operator",
+        namespace: "cloudflare-operator-system",
       },
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true"],
       },
     },
   });

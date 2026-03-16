@@ -483,7 +483,11 @@ export function createPostalDeployment(
  * 3. Create initial admin user:
  *    kubectl exec -it <postal-web-pod> -n postal -- postal make-user
  *
- * 4. Create organization and mail server in the web UI
+ * 4. Create organization:
+ *    Log into the web UI and create your first organization
+ *
+ * 5. Create mail server:
+ *    Create a mail server within your organization
  *
  * 6. Configure DNS records:
  *    - A record: mail.yourdomain.com -> your-cluster-ip
@@ -494,5 +498,7 @@ export function createPostalDeployment(
  *
  * 7. Get API credentials from Postal web UI for sending emails
  *
- * 8. Test email sending via Postal's API or SMTP, verify with mail-tester.com
+ * 8. Test email sending:
+ *    Use Postal's API or SMTP to send a test email
+ *    Verify delivery and check SPF/DKIM/DMARC with mail-tester.com
  */

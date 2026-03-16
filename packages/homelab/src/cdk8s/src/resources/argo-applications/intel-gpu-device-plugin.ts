@@ -27,11 +27,10 @@ export function createIntelGpuDevicePluginApp(chart: Chart) {
       },
       destination: {
         server: "https://kubernetes.default.svc",
-        namespace: "gpu-device-plugin",
+        namespace: "intel-device-plugin-operator",
       },
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true"],
       },
     },
   });

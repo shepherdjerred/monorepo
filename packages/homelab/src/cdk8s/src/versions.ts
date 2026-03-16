@@ -124,8 +124,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:079b889b270e730f38bdbabf505362538db449a216895c2c45664b1538bd34d5",
-  // renovate: datasource=docker registryUrl=https://registry.dagger.io versioning=loose
-  "dagger-helm": "0.19.11",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "buchgr/bazel-remote-cache": "v2.6.1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
@@ -146,9 +144,6 @@ const versions = {
   "kubernetes/kubernetes": "v1.35.0",
   // renovate: datasource=custom.papermc versioning=semver
   paper: "1.21.11",
-  // this is empty because we have to perform some string manipulation below
-  // not managed by renovate
-  dagger: "",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
   recyclarr:
     "7.5.2@sha256:2550848d43a453f2c6adf3582f2198ac719f76670691d76de0819053103ef2fb",
@@ -229,12 +224,5 @@ const versions = {
   "shepherdjerred/status-page-api":
     "1.1.138@sha256:d8a35c286800ea21b880389b0405e333c8428c1c7af50dabe947f7ff9ca6a745",
 };
-
-const daggerVersion = versions["dagger-helm"].split("@")[0];
-if (daggerVersion == null || daggerVersion === "") {
-  throw new Error("Failed to parse dagger version");
-}
-
-versions.dagger = daggerVersion;
 
 export default versions;

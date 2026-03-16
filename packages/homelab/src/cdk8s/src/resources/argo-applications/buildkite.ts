@@ -6,7 +6,6 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   KubePersistentVolumeClaim,
   KubeResourceQuota,
-  KubeRoleBinding,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
@@ -109,25 +108,5 @@ export function createBuildkiteApp(chart: Chart) {
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },
-  });
-
-  // Grant Buildkite ServiceAccount access to pods in dagger namespace
-  new KubeRoleBinding(chart, "dagger-buildkite-access-binding", {
-    metadata: {
-      name: "dagger-buildkite-access-binding",
-      namespace: "dagger",
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "dagger-access",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: "buildkite-agent-stack-k8s-controller",
-        namespace: "buildkite",
-      },
-    ],
   });
 }

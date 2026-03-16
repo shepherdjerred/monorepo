@@ -8,7 +8,7 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { SATA_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 export function createChartMuseumApp(chart: Chart) {
-  createIngress(chart, "chartmusuem-ingress", {
+  createIngress(chart, "chartmuseum-ingress", {
     namespace: "chartmuseum",
     service: "chartmuseum",
     port: 8080,
