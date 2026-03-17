@@ -1,6 +1,9 @@
 import type { Chart } from "cdk8s";
 import { Deployment, DeploymentStrategy, Secret, Volume } from "cdk8s-plus-31";
-import { setRevisionHistoryLimit, withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  setRevisionHistoryLimit,
+  withCommonProps,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 

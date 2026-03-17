@@ -10,7 +10,10 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  withCommonProps,
+  setRevisionHistoryLimit,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";

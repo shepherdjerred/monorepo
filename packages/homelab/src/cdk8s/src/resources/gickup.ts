@@ -8,7 +8,10 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { setRevisionHistoryLimit, withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  setRevisionHistoryLimit,
+  withCommonProps,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-volume.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";

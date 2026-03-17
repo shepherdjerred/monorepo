@@ -5,7 +5,10 @@ import {
   Service,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { withCommonProps, setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  withCommonProps,
+  setRevisionHistoryLimit,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
