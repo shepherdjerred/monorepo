@@ -52,7 +52,13 @@ def _k8s_plugin(
                     {
                         "name": "container-0",
                         "image": CI_BASE_IMAGE,
-                        "resources": {"requests": {"cpu": cpu, "memory": memory}},
+                        "resources": {
+                            "requests": {"cpu": cpu, "memory": memory},
+                            # Generous limits prevent the LimitRange from injecting
+                            # restrictive defaults. The ResourceQuota only counts
+                            # requests, so these limits don't affect scheduling.
+                            "limits": {"cpu": "8", "memory": "16Gi"},
+                        },
                         "envFrom": secret_refs,
                     },
                 ],
