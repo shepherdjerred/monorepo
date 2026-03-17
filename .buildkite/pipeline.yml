@@ -14,13 +14,9 @@ steps:
             containers:
               - name: container-0
                 image: "ghcr.io/shepherdjerred/ci-base:402"
-                resources:
-                  requests:
-                    cpu: "1"
-                    memory: "2Gi"
-                  limits:
-                    cpu: "1"
-                    memory: "2Gi"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
+                  - secretRef:
+                      name: buildkite-argocd-token
+                      optional: true

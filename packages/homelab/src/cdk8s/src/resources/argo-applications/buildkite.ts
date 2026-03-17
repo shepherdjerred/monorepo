@@ -4,7 +4,6 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
-  KubeLimitRange,
   KubePersistentVolumeClaim,
   KubeResourceQuota,
   Quantity,
@@ -49,29 +48,9 @@ export function createBuildkiteApp(chart: Chart) {
     metadata: { name: "buildkite-cpu-quota", namespace: "buildkite" },
     spec: {
       hard: {
-        "requests.cpu": Quantity.fromString("24"),
-        "limits.cpu": Quantity.fromString("32"),
-        "limits.memory": Quantity.fromString("64Gi"),
+        "requests.cpu": Quantity.fromString("8"),
+        "requests.memory": Quantity.fromString("64Gi"),
       },
-    },
-  });
-
-  new KubeLimitRange(chart, "buildkite-limit-range", {
-    metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
-    spec: {
-      limits: [
-        {
-          type: "Container",
-          default: {
-            cpu: Quantity.fromString("500m"),
-            memory: Quantity.fromString("256Mi"),
-          },
-          defaultRequest: {
-            cpu: Quantity.fromString("100m"),
-            memory: Quantity.fromString("128Mi"),
-          },
-        },
-      ],
     },
   });
 
