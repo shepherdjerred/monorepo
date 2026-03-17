@@ -18,9 +18,6 @@ steps:
                   requests:
                     cpu: "1"
                     memory: "2Gi"
-                  limits:
-                    cpu: "8"
-                    memory: "16Gi"
                 envFrom:
                   - secretRef:
                       name: buildkite-ci-secrets
