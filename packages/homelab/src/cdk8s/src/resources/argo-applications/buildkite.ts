@@ -49,7 +49,7 @@ export function createBuildkiteApp(chart: Chart) {
     metadata: { name: "buildkite-cpu-quota", namespace: "buildkite" },
     spec: {
       hard: {
-        "requests.cpu": Quantity.fromString("8"),
+        "requests.cpu": Quantity.fromString("16"),
         "requests.memory": Quantity.fromString("64Gi"),
       },
     },
