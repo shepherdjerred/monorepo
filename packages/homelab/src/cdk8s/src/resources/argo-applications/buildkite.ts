@@ -100,6 +100,7 @@ export function createBuildkiteApp(chart: Chart) {
             config: {
               queue: "default",
               "max-in-flight": 20,
+              "empty-job-grace-period": "5m",
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {
