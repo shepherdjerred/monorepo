@@ -4,6 +4,7 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
+  KubeLimitRange,
   KubePersistentVolumeClaim,
   KubeResourceQuota,
   Quantity,
@@ -51,6 +52,25 @@ export function createBuildkiteApp(chart: Chart) {
         "requests.cpu": Quantity.fromString("8"),
         "requests.memory": Quantity.fromString("64Gi"),
       },
+    },
+  });
+
+  // Required: when a ResourceQuota covers requests.cpu/memory, every container
+  // must declare requests. This LimitRange provides defaults for sidecar
+  // containers (e.g. Buildkite agent) that don't set their own resources.
+  // Only defaultRequest is set — no default limits — so containers can burst freely.
+  new KubeLimitRange(chart, "buildkite-limit-range", {
+    metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
+    spec: {
+      limits: [
+        {
+          type: "Container",
+          defaultRequest: {
+            cpu: Quantity.fromString("100m"),
+            memory: Quantity.fromString("128Mi"),
+          },
+        },
+      ],
     },
   });
 
