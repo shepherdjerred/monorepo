@@ -274,7 +274,7 @@ def _get_last_green_commit() -> str | None:
     return None
 
 
-def _get_base_revision() -> str:
+def _get_base_revision() -> str | None:
     """Determine the base revision for target-determinator."""
     branch = os.environ.get("BUILDKITE_BRANCH", "")
     pull_request = os.environ.get("BUILDKITE_PULL_REQUEST", "false")
@@ -290,11 +290,10 @@ def _get_base_revision() -> str:
         return result.stdout.strip()
 
     if branch == "main":
-        # Main branch: compare against last fully-passing build
-        green_commit = _get_last_green_commit()
-        if green_commit:
-            return green_commit
-        return "HEAD~1"
+        # Main branch: compare against last fully-passing build.
+        # If unavailable, return None to trigger a full build — never
+        # fall back to HEAD~1 which would silently skip untested changes.
+        return _get_last_green_commit()
 
     # Feature branch without PR: compare against main
     result = subprocess.run(
@@ -323,9 +322,14 @@ def _ensure_git_depth() -> None:
         )
 
 
-def _get_changed_files() -> list[str]:
-    """Get list of files changed compared to the base revision."""
+def _get_changed_files() -> list[str] | None:
+    """Get list of files changed compared to the base revision.
+
+    Returns None if no base revision is available (triggers full build).
+    """
     base = _get_base_revision()
+    if base is None:
+        return None
     result = subprocess.run(
         ["git", "diff", "--name-only", base, "HEAD"],
         capture_output=True,
@@ -333,7 +337,7 @@ def _get_changed_files() -> list[str]:
         check=False,
     )
     if result.returncode != 0:
-        return []
+        return None
     return [f.strip() for f in result.stdout.strip().splitlines() if f.strip()]
 
 
@@ -883,9 +887,13 @@ def generate_pipeline() -> dict:
     if "[full-build]" in commit_msg:
         force_full = True
 
-    # Get changed files and check for infra changes
+    # Get changed files and check for infra changes.
+    # None means no base revision available — must do a full build.
     changed_files = _get_changed_files()
-    infra_changed = _check_infra_changes(changed_files)
+    if changed_files is None:
+        force_full = True
+        print("No base revision available, forcing full build", flush=True)
+    infra_changed = _check_infra_changes(changed_files or [])
 
     # Try to determine affected targets
     affected = AffectedPackages(build_all=True)
@@ -900,6 +908,8 @@ def generate_pipeline() -> dict:
     else:
         try:
             base_rev = _get_base_revision()
+            if base_rev is None:
+                raise ValueError("No base revision available")
             print(f"Base revision: {base_rev}", flush=True)
             targets = bazel.affected_targets(base_rev)
             print(f"Affected targets ({len(targets)}):", flush=True)
@@ -920,7 +930,7 @@ def generate_pipeline() -> dict:
                 affected = AffectedPackages()
             else:
                 affected = _analyze_targets(targets)
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        except (subprocess.CalledProcessError, FileNotFoundError, ValueError) as e:
             print(f"target-determinator failed ({e}), building everything", flush=True)
             affected.build_all = True
             affected.homelab_changed = True
