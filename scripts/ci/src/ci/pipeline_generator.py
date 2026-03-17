@@ -446,7 +446,7 @@ def _generate_per_package_steps(package: str) -> dict:
         "label": ":building_construction: Build",
         "key": build_key,
         "command": build_cmd,
-        "timeout_in_minutes": 15,
+        "timeout_in_minutes": 30,
         "retry": _RETRY,
         "plugins": [_k8s_plugin(cpu=cpu, memory=memory)],
     }
@@ -464,7 +464,7 @@ def _generate_per_package_steps(package: str) -> dict:
             "key": f"{phase}-{safe_key}",
             "depends_on": build_key,
             "command": f".buildkite/scripts/bazel-phase.sh //packages/{package}/... {phase}",
-            "timeout_in_minutes": 15,
+            "timeout_in_minutes": 30,
             "retry": _RETRY,
             "plugins": [_k8s_plugin(cpu=phase_cpu, memory=phase_memory)],
         })
