@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/tips",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "cd TipsApp && swift build",
+    "test": "cd TipsApp && swift test",
+    "lint": "swiftlint --strict",
+    "typecheck": "cd TipsApp && swift build"
+  }
+}
