@@ -4,7 +4,7 @@
 [[ -f ~/.bash_env ]] && source ~/.bash_env
 
 # Aliases (interactive only)
-alias vim=lvim
+alias vim=nvim
 alias ls=eza
 alias grep=rg
 alias cat=bat
@@ -13,7 +13,7 @@ alias top=btop
 
 # Environment
 export SHELL=bash
-export EDITOR=lvim
+export EDITOR=nvim
 export LANG=en_US.UTF-8
 
 # Setup Dagger engine with caching

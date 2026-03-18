@@ -218,17 +218,6 @@ else
     log_warn "Skipping fisher install/update: fish not available"
 fi
 
-# install lunarvim
-# manual step: setup copilot with :Copilot auth
-if ! command -v lvim &>/dev/null; then
-    LUNARVIM_BASE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/lunarvim/lvim"
-    if [ ! -d "$LUNARVIM_BASE_DIR" ]; then
-        git clone --branch release-1.4/neovim-0.9 https://github.com/LunarVim/LunarVim.git "$LUNARVIM_BASE_DIR"
-    fi
-    # Fix CRLF in all shell scripts (upstream has Windows line endings)
-    find "$LUNARVIM_BASE_DIR" -name "*.sh" -exec sed -i $'s/\r$//' {} +
-    LV_BRANCH='release-1.4/neovim-0.9' LUNARVIM_BASE_DIR="$LUNARVIM_BASE_DIR" bash "$LUNARVIM_BASE_DIR/utils/installer/install.sh" --local --no-install-dependencies || log_warn "LunarVim install skipped or failed"
-fi
 
 # setup atuin
 if command -v atuin >/dev/null 2>&1; then

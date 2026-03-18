@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import * as R from "remeda";
-import { existsSync } from "fs";
 
 type Command = {
   executable: string;
@@ -65,11 +64,6 @@ async function updateBrew() {
   await run({ executable: "brew", args: ["upgrade"] });
 }
 
-async function updateLvim() {
-  await run({ executable: "lvim", args: ["+LvimUpdate", "+q"] });
-  await run({ executable: "lvim", args: ["+LvimSyncCorePlugins", "+q", "+q"] });
-}
-
 // Run sequential commands first
 for (const cmd of sequentialCommands) {
   await run(cmd);
@@ -79,7 +73,6 @@ for (const cmd of sequentialCommands) {
 await Promise.all([
   ...R.pipe(parallelCommands, R.map(run)),
   updateBrew(),
-  updateLvim(),
 ]);
 
 // Export current brew state

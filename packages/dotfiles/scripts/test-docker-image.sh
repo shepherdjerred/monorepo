@@ -77,11 +77,9 @@ DOCKER_RUN="docker run --rm --platform linux/amd64 $IMAGE"
     $DOCKER_RUN bash -c 'source /etc/profile.d/linuxbrew.sh 2>/dev/null; bun --version 2>/dev/null || echo "bun: NOT FOUND"'
     echo ""
 
-    # --- Neovim/LunarVim ---
-    echo "=== NEOVIM/LUNARVIM ==="
+    # --- Neovim ---
+    echo "=== NEOVIM ==="
     $DOCKER_RUN bash -c 'nvim --version 2>/dev/null | head -1 || echo "nvim: NOT FOUND"'
-    $DOCKER_RUN bash -c 'command -v lvim >/dev/null 2>&1 && echo "lvim: OK" || echo "lvim: NOT FOUND"'
-    $DOCKER_RUN bash -c 'ls -d ~/.local/share/lunarvim 2>/dev/null && echo "lunarvim dir: OK" || echo "lunarvim dir: MISSING"'
     echo ""
 
     # --- Config Files ---

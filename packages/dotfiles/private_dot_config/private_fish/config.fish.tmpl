@@ -11,7 +11,7 @@ fish_add_path /usr/local/bin
 mise activate fish --shims | source
 
 # Use abbreviations so scripts use real commands, but your typing expands
-abbr vim lvim
+abbr vim nvim
 abbr ls eza
 abbr grep rg
 abbr cat bat
@@ -30,7 +30,7 @@ else if test -x /home/linuxbrew/.linuxbrew/bin/fish
 else
     set -gx SHELL (which fish)
 end
-set -gx EDITOR ~/.local/bin/lvim
+set -gx EDITOR nvim
 set -gx LANG en_US.UTF-8
 
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
@@ -45,6 +45,7 @@ set -gx PAGERDUTY_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/xjn
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_TOKEN" }}'
+set -gx OPENAI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
 {{ else -}}
 # 1Password CLI (op) not available - secrets not loaded
 # Install op and run 'chezmoi apply' to load secrets
