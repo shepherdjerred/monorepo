@@ -103,4 +103,16 @@ final class TipParserTests: XCTestCase {
         XCTAssertEqual(apps.count, 1)
         XCTAssertEqual(apps.first?.name, "Test App")
     }
+
+    func testLoadsBundledContentDirectoryFromSourceTree() throws {
+        let contentDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Resources/content", isDirectory: true)
+
+        let apps = try TipParser.loadAll(from: contentDirectory)
+
+        XCTAssertEqual(apps.count, 3)
+        XCTAssertEqual(apps.map(\.name), ["Finder", "Safari", "Xcode"])
+    }
 }

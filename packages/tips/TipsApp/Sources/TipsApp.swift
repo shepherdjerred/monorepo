@@ -22,11 +22,16 @@ struct TipsApp: App {
     }
 
     private static func findContentDirectory() -> URL {
-        if let bundledContentURL = Bundle.module.resourceURL?
-            .appendingPathComponent("content", isDirectory: true),
-           FileManager.default.fileExists(atPath: bundledContentURL.path)
-        {
-            return bundledContentURL
+        if let resourceURL = Bundle.module.resourceURL {
+            let bundledContentURL = resourceURL.appendingPathComponent("content", isDirectory: true)
+
+            if containsMarkdownFiles(at: bundledContentURL) {
+                return bundledContentURL
+            }
+
+            if containsMarkdownFiles(at: resourceURL) {
+                return resourceURL
+            }
         }
 
         let executableURL = Bundle.main.executableURL
@@ -52,5 +57,17 @@ struct TipsApp: App {
         }
 
         return possiblePaths[0]
+    }
+
+    private static func containsMarkdownFiles(at directory: URL) -> Bool {
+        guard let fileURLs = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return false
+        }
+
+        return fileURLs.contains { $0.pathExtension == "md" }
     }
 }
