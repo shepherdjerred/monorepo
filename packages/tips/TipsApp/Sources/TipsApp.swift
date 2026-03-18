@@ -60,7 +60,7 @@ struct TipsApp: App {
     }
 
     private static func containsMarkdownFiles(at directory: URL) -> Bool {
-        guard let fileURLs = try? FileManager.default.contentsOfDirectory(
+        guard let enumerator = FileManager.default.enumerator(
             at: directory,
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
@@ -68,6 +68,11 @@ struct TipsApp: App {
             return false
         }
 
-        return fileURLs.contains { $0.pathExtension == "md" }
+        while let fileURL = enumerator.nextObject() as? URL {
+            if fileURL.pathExtension == "md" {
+                return true
+            }
+        }
+        return false
     }
 }

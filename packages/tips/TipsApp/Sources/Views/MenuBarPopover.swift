@@ -1,15 +1,19 @@
+import AppKit
 import SwiftUI
 
 /// Popover content shown when clicking the menu bar icon.
 struct MenuBarPopover: View {
-    let appState: AppState
+
+    @Bindable var appState: AppState
+
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let app = appState.currentApp {
-                appHeader(app)
+            if let tip = appState.currentTip {
+                tipHeader(tip)
                 Divider()
-                tipContent(app)
+                tipBody(tip)
                 Divider()
                 footer
             } else {
@@ -23,55 +27,62 @@ struct MenuBarPopover: View {
     // MARK: - Subviews
 
     @ViewBuilder
-    private func appHeader(_ app: TipApp) -> some View {
+    private func tipHeader(_ tip: FlatTip) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: app.icon)
+            Image(systemName: tip.appIcon)
                 .font(.title2)
-                .foregroundStyle(app.color)
+                .foregroundStyle(tip.appColor)
+
             VStack(alignment: .leading, spacing: 2) {
-                Text("Today's App")
+                Text(tip.appName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(app.name)
+
+                Text(tip.category)
                     .font(.title3.bold())
             }
+
             Spacer()
         }
     }
 
     @ViewBuilder
-    private func tipContent(_ app: TipApp) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(app.sections) { section in
-                    TipSectionView(section: section)
-                }
+    private func tipBody(_ tip: FlatTip) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            if let shortcut = tip.shortcut {
+                KeyCapView(shortcut: shortcut)
             }
+            Text(tip.text)
+                .font(.body)
+                .foregroundStyle(.primary)
         }
-        .frame(maxHeight: 300)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var footer: some View {
         HStack {
             Button {
-                appState.showPreviousApp()
+                appState.showPreviousTip()
             } label: {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.borderless)
+            .disabled(appState.allTips.isEmpty)
 
             Button {
-                appState.showNextApp()
+                appState.showNextTip()
             } label: {
                 Image(systemName: "chevron.right")
             }
             .buttonStyle(.borderless)
+            .disabled(appState.allTips.isEmpty)
 
             Spacer()
 
             Button("Browse All") {
                 openBrowseWindow()
             }
+            .disabled(appState.apps.isEmpty)
 
             Button("Quit") {
                 NSApplication.shared.terminate(nil)
@@ -84,8 +95,10 @@ struct MenuBarPopover: View {
             Image(systemName: "lightbulb.slash")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
+
             Text("No tips found")
                 .font(.headline)
+
             Text("Add markdown files to the content directory.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -97,9 +110,13 @@ struct MenuBarPopover: View {
     // MARK: - Actions
 
     private func openBrowseWindow() {
-        if let url = URL(string: "tips://browse") {
-            NSWorkspace.shared.open(url)
+        if let tip = appState.currentTip {
+            let appId = tip.appName.lowercased().replacingOccurrences(of: " ", with: "-")
+            appState.selectedAppId = appId
         }
-        // Fallback: use environment openWindow when available
+
+        NSApplication.shared.setActivationPolicy(.regular)
+        openWindow(id: "browse")
+        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 }

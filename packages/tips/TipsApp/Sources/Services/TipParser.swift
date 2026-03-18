@@ -4,25 +4,38 @@ import SwiftUI
 import Yams
 
 /// Parses markdown files with YAML frontmatter into `TipApp` models.
+/// Each file contains a single tip with app metadata and category in frontmatter.
+/// Tips are grouped by app name and category to build the `TipApp` hierarchy.
 enum TipParser {
 
-    /// Parse a single markdown string into a `TipApp`.
-    static func parse(content: String) throws -> TipApp {
-        let (metadata, body) = try splitFrontmatter(content)
-        let sections = parseSections(from: body)
-        let color = metadata.color.flatMap { parseHexColor($0) } ?? .accentColor
-
-        return TipApp(
-            id: metadata.app.lowercased().replacingOccurrences(of: " ", with: "-"),
-            name: metadata.app,
-            icon: metadata.icon,
-            color: color,
-            website: metadata.website,
-            sections: sections
-        )
+    /// Parsed representation of a single tip file.
+    struct ParsedTip: Sendable {
+        let metadata: TipAppMetadata
+        let item: TipItem
     }
 
-    /// Load all tip files from a directory.
+    /// Parse a single tip file into its metadata and tip item.
+    static func parseSingleTip(content: String) throws -> ParsedTip {
+        let (metadata, body) = try splitFrontmatter(content)
+
+        // Extract the tip text from the body (strip leading "- " if present)
+        var tipText = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        if tipText.hasPrefix("- ") {
+            tipText = String(tipText.dropFirst(2))
+        }
+
+        let (cleanText, shortcut) = extractShortcut(from: tipText)
+        let category = metadata.category ?? "General"
+        let item = TipItem(
+            id: "\(category)-\(cleanText.prefix(30))",
+            text: cleanText,
+            shortcut: shortcut
+        )
+
+        return ParsedTip(metadata: metadata, item: item)
+    }
+
+    /// Load all tip files from a directory and group them into apps.
     static func loadAll(from directory: URL) throws -> [TipApp] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(
@@ -33,12 +46,55 @@ enum TipParser {
             return []
         }
 
-        var apps: [TipApp] = []
+        // Parse all individual tip files
+        var tipsByApp: [String: (metadata: TipAppMetadata, tips: [(category: String, item: TipItem)])] = [:]
+
         while let fileURL = enumerator.nextObject() as? URL {
             guard fileURL.pathExtension == "md" else { continue }
             let content = try String(contentsOf: fileURL, encoding: .utf8)
-            let app = try parse(content: content)
-            apps.append(app)
+            let parsed = try parseSingleTip(content: content)
+            let appName = parsed.metadata.app
+            let category = parsed.metadata.category ?? "General"
+
+            if tipsByApp[appName] == nil {
+                tipsByApp[appName] = (metadata: parsed.metadata, tips: [])
+            }
+            tipsByApp[appName]!.tips.append((category: category, item: parsed.item))
+        }
+
+        // Build TipApp objects from grouped tips
+        let apps = tipsByApp.map { (_, value) -> TipApp in
+            let metadata = value.metadata
+            let color = metadata.color.flatMap { parseHexColor($0) } ?? .accentColor
+
+            // Group tips by category, preserving insertion order
+            var sectionOrder: [String] = []
+            var sectionItems: [String: [TipItem]] = [:]
+
+            for (category, item) in value.tips {
+                if sectionItems[category] == nil {
+                    sectionOrder.append(category)
+                    sectionItems[category] = []
+                }
+                sectionItems[category]!.append(item)
+            }
+
+            let sections = sectionOrder.map { heading in
+                TipSection(
+                    id: heading.lowercased().replacingOccurrences(of: " ", with: "-"),
+                    heading: heading,
+                    items: sectionItems[heading]!
+                )
+            }
+
+            return TipApp(
+                id: metadata.app.lowercased().replacingOccurrences(of: " ", with: "-"),
+                name: metadata.app,
+                icon: metadata.icon,
+                color: color,
+                website: metadata.website,
+                sections: sections
+            )
         }
 
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -72,48 +128,7 @@ enum TipParser {
         return (metadata, bodyString)
     }
 
-    private static func parseSections(from body: String) -> [TipSection] {
-        let document = Document(parsing: body)
-        var sections: [TipSection] = []
-        var currentHeading: String?
-        var currentItems: [TipItem] = []
-
-        for child in document.children {
-            if let heading = child as? Heading, heading.level == 2 {
-                if let heading = currentHeading {
-                    sections.append(makeSection(heading: heading, items: currentItems))
-                }
-                currentHeading = heading.plainText
-                currentItems = []
-            } else if let list = child as? UnorderedList {
-                for listItem in list.listItems {
-                    let text = listItem.plainText
-                    let (cleanText, shortcut) = extractShortcut(from: text)
-                    currentItems.append(TipItem(
-                        id: "\(currentHeading ?? "unknown")-\(currentItems.count)",
-                        text: cleanText,
-                        shortcut: shortcut
-                    ))
-                }
-            }
-        }
-
-        if let heading = currentHeading {
-            sections.append(makeSection(heading: heading, items: currentItems))
-        }
-
-        return sections
-    }
-
-    private static func makeSection(heading: String, items: [TipItem]) -> TipSection {
-        TipSection(
-            id: heading.lowercased().replacingOccurrences(of: " ", with: "-"),
-            heading: heading,
-            items: items
-        )
-    }
-
-    private static func extractShortcut(from text: String) -> (String, String?) {
+    static func extractShortcut(from text: String) -> (String, String?) {
         let pattern = /`([^`]+)`\s*[—–-]\s*(.*)/
         if let match = text.firstMatch(of: pattern) {
             let shortcut = String(match.output.1)

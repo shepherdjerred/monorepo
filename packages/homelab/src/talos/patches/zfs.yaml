@@ -1,10 +1,10 @@
 # ZFS kernel module parameters
-# Increases ARC maximum to 50% of total system RAM (62.5 GB out of 125 GB)
-# This resolves recurring PagerDuty alerts for ZFS hash collisions
+# ARC maximum set to 48 GB (aligned with sysfs override in image.yaml)
+# Leaves ~77 GB for K8s pods + OS (69 Gi allocatable after kubelet reservations)
 machine:
   kernel:
     modules:
       - name: zfs
         parameters:
-          - zfs_arc_max=67108864000 # 62.5 GB (50% of 125 GB total RAM)
+          - zfs_arc_max=51539607552 # 48 GB (matches sysfs override in image.yaml)
           - zfs_arc_min=8589934592 # 8 GB minimum

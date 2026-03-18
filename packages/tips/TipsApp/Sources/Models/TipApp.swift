@@ -16,4 +16,5 @@ struct TipAppMetadata: Codable, Sendable {
     let icon: String
     let color: String?
     let website: String?
+    let category: String?
 }

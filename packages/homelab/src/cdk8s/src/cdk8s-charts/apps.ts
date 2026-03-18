@@ -22,6 +22,7 @@ import { createPromtailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/a
 import { createTempoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tempo.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/openebs.ts";
 import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkite.ts";
 import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/velero.ts";
@@ -68,6 +69,7 @@ export async function createAppsChart(app: App) {
   });
 
   createStorageClasses(chart);
+  createPriorityClasses(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
     metadata: {

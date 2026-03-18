@@ -50,7 +50,7 @@ export function createBuildkiteApp(chart: Chart) {
     spec: {
       hard: {
         "requests.cpu": Quantity.fromString("16"),
-        "requests.memory": Quantity.fromString("64Gi"),
+        "requests.memory": Quantity.fromString("32Gi"),
       },
     },
   });
@@ -113,6 +113,7 @@ export function createBuildkiteApp(chart: Chart) {
                 },
               },
               "pod-spec-patch": {
+                priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
                 containers: [{ name: "agent" }],

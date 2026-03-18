@@ -1,0 +1,9 @@
+---
+app: Firefox
+icon: flame.fill
+color: "#FF7139"
+website: https://firefox.com
+category: Navigation
+---
+
+- `Command-R` — Reload the current page.
