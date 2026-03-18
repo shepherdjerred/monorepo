@@ -271,11 +271,7 @@ else
     log_warn "Skipping bat theme setup: bat not available"
 fi
 
-# delta
-mkdir -p ~/.config/delta
-if [ ! -d "$HOME/.config/delta/themes" ]; then
-    git clone https://github.com/catppuccin/delta ~/.config/delta/themes || log_warn "delta themes clone failed"
-fi
+# Delta themes — managed by chezmoi (private_dot_config/delta/themes/catppuccin.gitconfig)
 
 # add fish to /etc/shells
 if ! grep -qx "/home/linuxbrew/.linuxbrew/bin/fish" /etc/shells; then

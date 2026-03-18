@@ -84,6 +84,12 @@ if command -v brew &>/dev/null; then
     # Re-apply chezmoi now that whiskers and other tools are available
     log_info "Re-applying chezmoi templates (post-brew)"
     chezmoi apply --keep-going || true
+
+    # Apply macOS app defaults (run_onchange won't re-trigger since hashes unchanged)
+    if command -v macos-defaults &>/dev/null && [ -d "$HOME/.config/macos-defaults" ]; then
+        log_info "Applying macOS app defaults"
+        macos-defaults apply ~/.config/macos-defaults/ || log_warn "macos-defaults apply failed"
+    fi
 else
     log_warn "Skipping brew bundle: brew not available"
 fi
@@ -163,12 +169,7 @@ if command -v bat &>/dev/null; then
     log_success "Bat themes installed"
 fi
 
-# Delta themes
-if [ ! -d "$HOME/.config/delta/themes" ]; then
-    log_info "Installing delta Catppuccin themes"
-    mkdir -p ~/.config/delta
-    git clone https://github.com/catppuccin/delta ~/.config/delta/themes || log_warn "delta themes clone failed"
-fi
+# Delta themes — managed by chezmoi (private_dot_config/delta/themes/catppuccin.gitconfig)
 
 # Add fish to /etc/shells and set as default
 if command -v fish &>/dev/null; then

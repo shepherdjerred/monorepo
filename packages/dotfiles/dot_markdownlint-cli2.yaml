@@ -1,9 +1,0 @@
-config:
-  # Allow longer lines
-  line-length:
-    line_length: 200
-    tables: false
-    code_blocks: false
-    headings: false
-  # Allow inline HTML
-  no-inline-html: false

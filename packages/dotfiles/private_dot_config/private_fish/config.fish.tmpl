@@ -1,6 +1,13 @@
-# Add common paths
-fish_add_path /opt/homebrew/bin /home/linuxbrew/.linuxbrew/bin ~/bin ~/.local/bin /bin /usr/bin /usr/local/bin
+# Add common paths (OS-specific to avoid testing nonexistent dirs)
+{{ if eq .chezmoi.os "darwin" -}}
+fish_add_path /opt/homebrew/bin ~/bin ~/.local/bin
+{{ else -}}
+fish_add_path /home/linuxbrew/.linuxbrew/bin ~/bin ~/.local/bin
+{{ end -}}
 
+# Disable vendor conf.d auto-activation (expensive full hook mode ~23ms)
+# and use only --shims mode (~2ms, just adds PATH entry)
+set -gx MISE_FISH_AUTO_ACTIVATE 0
 mise activate fish --shims | source
 
 # Use abbreviations so scripts use real commands, but your typing expands
@@ -15,14 +22,12 @@ abbr less ov
 abbr ping gping
 abbr claude "claude --allow-dangerously-skip-permissions"
 
-# Set shell to fish (detect location)
-if test -x /opt/homebrew/bin/fish
-    set -gx SHELL /opt/homebrew/bin/fish
-else if test -x /home/linuxbrew/.linuxbrew/bin/fish
-    set -gx SHELL /home/linuxbrew/.linuxbrew/bin/fish
-else
-    set -gx SHELL (which fish)
-end
+# Set shell to fish
+{{ if eq .chezmoi.os "darwin" -}}
+set -gx SHELL /opt/homebrew/bin/fish
+{{ else -}}
+set -gx SHELL /home/linuxbrew/.linuxbrew/bin/fish
+{{ end -}}
 set -gx EDITOR nvim
 set -gx LANG en_US.UTF-8
 set -gx RIPGREP_CONFIG_PATH ~/.config/ripgrep/ripgreprc
