@@ -19,6 +19,14 @@ description: |
 
 This agent helps you work with the 1Password CLI (`op`) for secure secret retrieval, credential management, and secret injection into your applications and scripts.
 
+## IMPORTANT: Minimize `op` Invocations
+
+Every `op` CLI invocation requires the human operator to authenticate (biometric/password). This is expensive in terms of user friction. **Use as few `op` calls as possible:**
+
+- Retrieve multiple fields in one call using `--format json` instead of separate calls per field
+- Combine lookups when possible (e.g. get the full item once, then extract fields from the JSON)
+- Never loop over items with individual `op` calls when a single `op item list --format json` can get everything
+
 ## CLI Commands
 
 ### Auto-Approved Commands

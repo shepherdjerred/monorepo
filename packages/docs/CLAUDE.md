@@ -24,7 +24,7 @@ docs/
 
 - Keep docs concise and factual — no filler
 - Use markdown with code examples where helpful
-- Name files with kebab-case (e.g., `ci-pipeline.md`)
+- Name files with `<date>_kebab-case` (e.g., `2026-02-22_ci-pipeline.md`)
 - Update `index.md` when adding new docs
 - Prefer updating existing docs over creating new ones
 - Delete docs that become outdated rather than leaving stale content

@@ -78,7 +78,29 @@ final class TipParserTests: XCTestCase {
             """
 
         let app = try TipParser.parse(content: minimal)
+
         XCTAssertEqual(app.name, "Minimal")
         XCTAssertNil(app.website)
+    }
+
+    func testLoadsAllMarkdownFilesFromDirectory() throws {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+
+        try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+
+        let markdownFile = temporaryDirectory.appendingPathComponent("sample.md")
+        try sampleMarkdown.write(to: markdownFile, atomically: true, encoding: .utf8)
+
+        let textFile = temporaryDirectory.appendingPathComponent("ignore.txt")
+        try "ignore me".write(to: textFile, atomically: true, encoding: .utf8)
+
+        let apps = try TipParser.loadAll(from: temporaryDirectory)
+
+        XCTAssertEqual(apps.count, 1)
+        XCTAssertEqual(apps.first?.name, "Test App")
     }
 }

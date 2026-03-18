@@ -1,0 +1,63 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v duti &>/dev/null; then
+    echo "duti not installed, skipping default app setup" >&2
+    exit 0
+fi
+
+# Sublime Text — text and source code
+SUBLIME="com.sublimetext.4"
+for ext in txt md log csv json yaml yml xml toml ini cfg conf \
+           sh bash zsh fish py js ts jsx tsx rs go java kt \
+           c cpp h hpp css scss html svg lua rb swift sql \
+           graphql env gitignore dockerfile makefile \
+           diff patch properties gradle cmake tf hcl nix proto \
+           plist editorconfig eslintrc prettierrc babelrc; do
+    duti -s "$SUBLIME" ".$ext" all 2>/dev/null
+done
+# UTI-based associations for broader coverage
+for uti in public.plain-text public.source-code public.shell-script \
+           public.python-script public.json public.xml public.yaml; do
+    duti -s "$SUBLIME" "$uti" all 2>/dev/null
+done
+
+# IINA — video
+IINA="com.colliderli.iina"
+for ext in mp4 mkv avi mov wmv flv webm m4v mpg mpeg 3gp \
+           ogv vob m2ts mts rmvb rm; do
+    duti -s "$IINA" ".$ext" all 2>/dev/null
+done
+
+# IINA — audio
+for ext in mp3 flac aac ogg wav m4a wma opus aiff aif alac; do
+    duti -s "$IINA" ".$ext" all 2>/dev/null
+done
+
+# IINA — broad UTIs for catch-all coverage
+duti -s "$IINA" public.movie all 2>/dev/null
+duti -s "$IINA" public.audio all 2>/dev/null
+
+# Affinity — design files (not general images, those stay with Preview)
+AFFINITY="com.canva.affinity"
+for ext in psd afdesign afphoto afpub ai; do
+    duti -s "$AFFINITY" ".$ext" all 2>/dev/null
+done
+
+# MailMate — email
+duti -s com.freron.MailMate mailto 2>/dev/null
+
+# NetNewsWire — RSS
+NNW="com.ranchero.NetNewsWire-Evergreen"
+duti -s "$NNW" feed 2>/dev/null
+for ext in rss atom; do
+    duti -s "$NNW" ".$ext" all 2>/dev/null
+done
+
+# Ghostty — SSH
+duti -s com.mitchellh.ghostty ssh 2>/dev/null
+
+# Calendar — webcal subscriptions
+duti -s com.apple.iCal webcal 2>/dev/null
+
+echo "Default apps configured via duti"
+{{ end -}}

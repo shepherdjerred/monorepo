@@ -19,6 +19,12 @@ let package = Package(
                 .product(name: "Markdown", package: "swift-markdown"),
             ],
             path: "Sources",
+
+            resources: [
+
+                .process("Resources"),
+
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
                 .enableUpcomingFeature("ExistentialAny"),

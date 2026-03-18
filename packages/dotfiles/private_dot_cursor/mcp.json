@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "/Users/jerred/.local/share/mise/shims/bunx",
+      "args": ["-y", "@playwright/mcp"]
+    }
+  }
+}

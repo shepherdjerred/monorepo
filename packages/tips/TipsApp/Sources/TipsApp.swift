@@ -2,7 +2,8 @@ import SwiftUI
 
 @main
 struct TipsApp: App {
-    @State private var appState = AppState()
+
+    @State private var appState: AppState
 
     var body: some Scene {
         MenuBarExtra("Tips", systemImage: "lightbulb.fill") {
@@ -17,15 +18,17 @@ struct TipsApp: App {
     }
 
     init() {
-        loadContent()
+        _appState = State(initialValue: AppState(tipsDirectory: Self.findContentDirectory()))
     }
 
-    private func loadContent() {
-        let contentPath = findContentDirectory()
-        appState.loadTips(from: contentPath)
-    }
+    private static func findContentDirectory() -> URL {
+        if let bundledContentURL = Bundle.module.resourceURL?
+            .appendingPathComponent("content", isDirectory: true),
+           FileManager.default.fileExists(atPath: bundledContentURL.path)
+        {
+            return bundledContentURL
+        }
 
-    private func findContentDirectory() -> URL {
         let executableURL = Bundle.main.executableURL
             ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
         let possiblePaths = [

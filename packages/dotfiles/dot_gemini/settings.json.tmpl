@@ -1,0 +1,15 @@
+{{- $bunxCmd := "bunx" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+  {{- $bunxCmd = printf "%s/.local/share/mise/shims/bunx" .chezmoi.homeDir -}}
+{{- end -}}
+{
+  "ui": {
+    "theme": "GitHub Light"
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": {{ $bunxCmd | quote }},
+      "args": ["-y", "@playwright/mcp"]
+    }
+  }
+}

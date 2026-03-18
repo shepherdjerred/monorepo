@@ -19,17 +19,7 @@ require("lazy").setup({
   { "catppuccin/nvim", name = "catppuccin", priority = 1000,
     opts = { flavour = "auto", background = { light = "latte", dark = "mocha" } } },
   { "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter",
-    opts = {} },
-  { "yetone/avante.nvim", event = "VeryLazy",
-    build = "make",
-    opts = { provider = "openai" },
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "stevearc/dressing.nvim",
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-    },
-  },
+    opts = { suggestion = { auto_trigger = true, keymap = { accept = "<Tab>" } } } },
   { "echasnovski/mini.pick", keys = {
     { "<leader>ff", function() require("mini.pick").builtin.files() end, desc = "Find files" },
     { "<leader>fg", function() require("mini.pick").builtin.grep_live() end, desc = "Live grep" },

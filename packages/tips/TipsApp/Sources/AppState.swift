@@ -27,12 +27,19 @@ final class AppState {
         return apps[currentAppIndex]
     }
 
+    init(tipsDirectory: URL? = nil) {
+        if let tipsDirectory {
+            loadTips(from: tipsDirectory)
+        }
+    }
+
     // MARK: - Loading
 
     func loadTips(from directory: URL) {
         do {
             apps = try TipParser.loadAll(from: directory)
             advanceIfNewDay()
+
             if selectedAppId == nil {
                 selectedAppId = currentApp?.id
             }
