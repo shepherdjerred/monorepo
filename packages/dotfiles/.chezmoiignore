@@ -1,4 +1,5 @@
 install.sh
+install_macos.sh
 docker-entrypoint.sh
 Dockerfile
 

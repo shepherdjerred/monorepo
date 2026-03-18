@@ -190,7 +190,7 @@ fi
 # Use local dotfiles if DOTFILES_LOCAL_PATH is set, otherwise clone from GitHub
 if [ -n "${DOTFILES_LOCAL_PATH:-}" ] && [ -d "${DOTFILES_LOCAL_PATH}" ]; then
     log_info "Using local dotfiles from: ${DOTFILES_LOCAL_PATH}"
-    chezmoi init --apply "${DOTFILES_LOCAL_PATH}" --keep-going || true
+    chezmoi init --source "${DOTFILES_LOCAL_PATH}" --apply --keep-going || true
 else
     log_info "Cloning dotfiles from GitHub"
     chezmoi init --apply https://github.com/shepherdjerred/dotfiles --keep-going || true
@@ -252,13 +252,6 @@ if command -v atuin >/dev/null 2>&1; then
     if [ "$ATUIN_LOGGED_IN" -eq 0 ]; then
         atuin sync || true
     fi
-fi
-
-# tmux
-# note: must run `prefix + I` to install plugins
-# note: must run through fish to use the updated tmux
-if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
 # bat

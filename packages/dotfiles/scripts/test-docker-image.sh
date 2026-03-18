@@ -84,13 +84,6 @@ DOCKER_RUN="docker run --rm --platform linux/amd64 $IMAGE"
     $DOCKER_RUN bash -c 'ls -d ~/.local/share/lunarvim 2>/dev/null && echo "lunarvim dir: OK" || echo "lunarvim dir: MISSING"'
     echo ""
 
-    # --- Tmux ---
-    echo "=== TMUX ==="
-    $DOCKER_RUN bash -c 'tmux -V 2>/dev/null || echo "tmux: NOT FOUND"'
-    $DOCKER_RUN bash -c 'ls ~/.tmux/plugins/ 2>/dev/null | wc -l | xargs echo "tmux plugins:"'
-    $DOCKER_RUN bash -c 'test -f ~/.tmux.conf && echo "tmux.conf: OK" || echo "tmux.conf: MISSING"'
-    echo ""
-
     # --- Config Files ---
     echo "=== CONFIG FILES ==="
     $DOCKER_RUN bash -c 'test -d ~/.config && echo "~/.config: OK" || echo "~/.config: MISSING"'

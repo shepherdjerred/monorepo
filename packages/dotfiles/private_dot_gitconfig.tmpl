@@ -2,9 +2,21 @@
 	name = Jerred Shepherd
 	email = github@sjer.red
 
+[core]
+  pager = delta
+  excludesFile = ~/.gitignore
+  autocrlf = false
+  eol = lf
+  fsmonitor = true
+  untrackedCache = true
+
 [diff]
   tool = difftastic
   external = difft
+  algorithm = histogram
+  colorMoved = plain
+  mnemonicPrefix = true
+  renames = true
 [difftool]
   prompt = false
 [difftool "difftastic"]
@@ -12,10 +24,6 @@
 [pager]
   difftool = true
 
-[core]
-  pager = delta
-  excludesFile = ~/.gitignore
-  autoclrf = true
 [interactive]
   diffFilter = delta --color-only
 [delta]
@@ -23,19 +31,7 @@
   dark = true
   syntax-theme = Catppuccin Mocha
 [merge]
-  conflictstyle = diff3
-{{ if eq .chezmoi.os "darwin" }}
-  tool = smerge
-{{ end }}
-[diff]
-  algorithm = histogram
-  colorMoved = plain
-  mnemonicPrefix = true
-  renames = true
-
-[mergetool "smerge"]
-  cmd = smerge mergetool \"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"$MERGED\"
-  trustExitCode = true
+  conflictstyle = zdiff3
 
 [push]
   autoSetupRemote = true
@@ -68,14 +64,6 @@
 [rerere]
   enabled = true
   autoupdate = true
-[core]
-  excludesfile = ~/.gitignore
-
-[core]
-  fsmonitor = true
-  untrackedCache = true
-[merge]
-  conflictstyle = zdiff3
 
 [include]
   path = ~/.gitconfig-theme

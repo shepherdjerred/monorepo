@@ -45,12 +45,6 @@ set -gx PAGERDUTY_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/xjn
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_TOKEN" }}'
-# sccache S3 backend (SeaweedFS) - credentials via ~/.aws/credentials
-set -gx AWS_PROFILE seaweedfs
-set -gx SCCACHE_BUCKET sccache
-set -gx SCCACHE_ENDPOINT https://seaweedfs.sjer.red
-set -gx SCCACHE_REGION us-east-1
-set -gx RUSTC_WRAPPER sccache
 {{ else -}}
 # 1Password CLI (op) not available - secrets not loaded
 # Install op and run 'chezmoi apply' to load secrets

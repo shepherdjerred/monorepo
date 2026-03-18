@@ -1,8 +1,13 @@
 # ~/.bash_env - Sourced by all bash shells via BASH_ENV and shell configs
 # This ensures mise and brew are available in scripts and non-interactive shells
 
-# Add Linuxbrew to PATH if not already present
-if [[ ":$PATH:" != *":/home/linuxbrew/.linuxbrew/bin:"* ]]; then
+# Add Homebrew to PATH (macOS Apple Silicon)
+if [[ ":$PATH:" != *":/opt/homebrew/bin:"* ]] && [[ -d /opt/homebrew ]]; then
+    export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+fi
+
+# Add Homebrew to PATH (Linux)
+if [[ ":$PATH:" != *":/home/linuxbrew/.linuxbrew/bin:"* ]] && [[ -d /home/linuxbrew/.linuxbrew ]]; then
     export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
 fi
 

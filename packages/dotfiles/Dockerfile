@@ -146,7 +146,6 @@ RUN \
     # -------------------------------------------------------------------------
     find /home/linuxbrew/.linuxbrew -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true && \
     rm -rf /home/linuxbrew/.linuxbrew/Homebrew/.git && \
-    rm -rf /home/${USERNAME}/.tmux/plugins/*/.git && \
     rm -rf /home/${USERNAME}/.config/delta/themes/.git && \
     \
     # -------------------------------------------------------------------------

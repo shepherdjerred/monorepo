@@ -10,7 +10,6 @@ type Command = {
 
 const isLinux = process.platform === "linux";
 const isMac = process.platform === "darwin";
-const hasTmux = existsSync(`${process.env.HOME}/.tmux/plugins/tpm`);
 
 async function run({ executable, args }: Command) {
   const prefix = `[${executable} ${args.join(" ")}]`;
@@ -38,17 +37,6 @@ async function pipeThrough(
     const text = decoder.decode(chunk);
     writable.write(new TextEncoder().encode(`${prefix} ${text}`));
   }
-}
-
-async function updateTmuxPlugins() {
-  if (!hasTmux) return;
-
-  const tpmPath = `${process.env.HOME}/.tmux/plugins/tpm/scripts`;
-  await run({ executable: "tmux", args: ["start-server"] });
-  await run({ executable: "tmux", args: ["new-session", "-d"] });
-  await run({ executable: "bash", args: [`${tpmPath}/install_plugins.sh`] });
-  await run({ executable: "bash", args: [`${tpmPath}/update_plugin.sh`] });
-  await run({ executable: "tmux", args: ["kill-server"] });
 }
 
 // Sequential commands (must run in order)
@@ -93,9 +81,6 @@ await Promise.all([
   updateBrew(),
   updateLvim(),
 ]);
-
-// Update tmux plugins
-await updateTmuxPlugins();
 
 // Export current brew state
 await run({

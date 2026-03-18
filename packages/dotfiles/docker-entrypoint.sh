@@ -74,7 +74,6 @@ if [[ "$CURRENT_UID" == "0" ]] && [[ -n "${HOST_UID:-}" ]]; then
     CACHE_DIRS=(
         "/workspace/.cargo/registry"
         "/workspace/.cargo/git"
-        "/workspace/.cache/sccache"
     )
     for dir in "${CACHE_DIRS[@]}"; do
         if [[ -d "$dir" ]]; then

@@ -1,5 +1,0 @@
-[cache.s3]
-bucket = "sccache"
-endpoint = "https://seaweedfs.sjer.red"
-region = "us-east-1"
-use_ssl = true
