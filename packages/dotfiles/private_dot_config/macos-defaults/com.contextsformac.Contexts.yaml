@@ -1,0 +1,13 @@
+---
+description: Contexts — window switcher
+sudo: false
+current_host: false
+data:
+  com.contextsformac.Contexts:
+    CTPreferenceSidebarDisplayMode: CTDisplayModeMenubarScreen
+    CTPreferenceSidebarSpacesOption: CTSpacesOptionAll
+    CTPreferenceSidebarWidth: 2
+    CTPreferencePanelWidth: 3
+    CTSidebarHorizontalAlignment: CTWindowHorizontalAlignmentRight
+    CTSidebarInactiveMaximumWidth: 1
+    CTSidebarVerticalAlignment: CTWindowVerticalAlignmentCenter

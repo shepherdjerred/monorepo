@@ -88,6 +88,16 @@ else
     log_warn "Skipping brew bundle: brew not available"
 fi
 
+# Open apps that need manual Gatekeeper approval.
+# These are unsigned or ad-hoc signed apps from Homebrew that macOS blocks on first launch.
+# The user must click "Open Anyway" in System Settings > Privacy & Security for each.
+log_info "Opening apps that need Gatekeeper approval..."
+log_info "If prompted, go to System Settings > Privacy & Security and click 'Open Anyway'"
+# Syntax Highlight: Quick Look extension for code syntax highlighting (unsigned Homebrew cask)
+open "/Applications/Syntax Highlight.app" 2>/dev/null || true
+# QLMarkdown: Quick Look extension for Markdown rendering (unsigned Homebrew cask)
+open "/Applications/QLMarkdown.app" 2>/dev/null || true
+
 # Install language runtimes via mise
 if command -v mise &>/dev/null; then
     log_info "Installing language runtimes via mise"
@@ -105,6 +115,17 @@ if command -v fish &>/dev/null; then
     log_success "Fisher and plugins installed"
 else
     log_warn "Skipping fisher install: fish not available"
+fi
+
+# Neovim: install plugins, LSP servers, and tree-sitter parsers
+if command -v nvim &>/dev/null; then
+    log_info "Installing Neovim plugins"
+    nvim --headless "+Lazy! sync" +qa
+    log_info "Installing tree-sitter parsers"
+    nvim --headless "+TSUpdateSync" +qa
+    log_success "Neovim setup complete"
+else
+    log_warn "Skipping Neovim setup: nvim not available"
 fi
 
 # Setup Atuin

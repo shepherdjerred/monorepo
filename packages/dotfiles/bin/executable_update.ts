@@ -56,6 +56,7 @@ const parallelCommands: Command[] = [
   { executable: "mise", args: ["upgrade"] },
   { executable: "fish", args: ["-c", "fisher update"] },
   { executable: "fish", args: ["-c", "fish_update_completions"] },
+  { executable: "nvim", args: ["--headless", "+Lazy! sync", "+qa"] },
 ];
 
 // Sequential command chains (each array runs in order)

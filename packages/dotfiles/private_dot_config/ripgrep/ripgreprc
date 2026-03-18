@@ -1,0 +1,14 @@
+# Smart case: case-insensitive unless pattern has uppercase
+--smart-case
+
+# Search hidden files/directories
+--hidden
+
+# Exclude version control directories
+--glob=!.git
+
+# Exclude common build/dependency directories
+--glob=!node_modules
+--glob=!target
+--glob=!.bazel-*
+--glob=!bazel-*

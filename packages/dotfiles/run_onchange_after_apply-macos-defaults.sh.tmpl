@@ -1,0 +1,11 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+# Content hash: {{ range glob (joinPath .chezmoi.sourceDir "private_dot_config/macos-defaults/*") }}{{ include . | sha256sum }} {{ end }}
+if ! command -v macos-defaults &>/dev/null; then
+    echo "macos-defaults not installed, skipping" >&2
+    exit 0
+fi
+
+macos-defaults apply ~/.config/macos-defaults/
+echo "macOS app defaults applied"
+{{ end -}}

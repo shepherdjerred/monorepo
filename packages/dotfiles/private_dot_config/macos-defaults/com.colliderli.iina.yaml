@@ -1,0 +1,15 @@
+---
+description: IINA — media player
+sudo: false
+current_host: false
+data:
+  com.colliderli.iina:
+    PluginEnabled.io.iina.opensub: true
+    PluginEnabled.io.iina.user-script: true
+    PluginEnabled.io.iina.ytdl: true
+    PluginOrder:
+      - io.iina.ytdl
+      - io.iina.opensub
+      - io.iina.user-script
+    SUAutomaticallyUpdate: true
+    SUEnableAutomaticChecks: true

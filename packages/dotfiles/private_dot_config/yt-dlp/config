@@ -1,0 +1,14 @@
+# Output template: Title [ID].ext
+-o %(title)s [%(id)s].%(ext)s
+
+# Prefer best quality
+-f bestvideo*+bestaudio/best
+
+# Embed metadata, subtitles, chapters, and thumbnail
+--embed-metadata
+--embed-subs
+--embed-chapters
+--embed-thumbnail
+
+# Download English subtitles when available
+--sub-langs en.*

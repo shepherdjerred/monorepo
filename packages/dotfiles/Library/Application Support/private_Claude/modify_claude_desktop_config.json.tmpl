@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+import sys
+import json
+
+sys.stdin.read()
+
+data = {
+    "mcpServers": {{ template "claude-mcp-servers.json.tmpl" . }},
+    "preferences": {
+        "coworkScheduledTasksEnabled": False,
+        "sidebarMode": "task"
+    }
+}
+
+json.dump(data, sys.stdout, indent=2, sort_keys=True)
+sys.stdout.write("\n")

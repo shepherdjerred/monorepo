@@ -1,0 +1,7 @@
+{
+	"theme": "Adaptive.sublime-theme",
+	"color_scheme": "auto",
+	"dark_color_scheme": "Catppuccin Mocha.sublime-color-scheme",
+	"light_color_scheme": "Catppuccin Latte.sublime-color-scheme",
+	"font_face": "Berkeley Mono"
+}

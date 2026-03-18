@@ -1,0 +1,7 @@
+---
+description: Swish — window gesture management
+sudo: false
+current_host: false
+data:
+  co.highlyopinionated.swish:
+    blacklist: "[\"com.apple.Spotlight\",\"com.apple.notificationcenterui\",\"com.apple.controlcenter\",\"com.apple.CharacterPaletteIM\",\"com.apple.PIPAgent\"]"

@@ -1,0 +1,12 @@
+---
+description: Middle — middle-click emulation
+sudo: false
+current_host: false
+data:
+  com.knollsoft.Middle:
+    launchOnLogin: true
+    mouseThreeClick: false
+    mouseThreeTap: true
+    trackpadThreeClick: false
+    trackpadThreeTap: true
+    wideOneCenterClick: 1

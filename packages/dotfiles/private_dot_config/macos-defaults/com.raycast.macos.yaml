@@ -1,0 +1,10 @@
+---
+description: Raycast launcher
+sudo: false
+current_host: false
+data:
+  com.raycast.macos:
+    raycastGlobalHotkey: "Command-49"
+    raycastShouldFollowSystemAppearance: true
+    raycastPreferredWindowMode: default
+    emojiPicker_skinTone: light

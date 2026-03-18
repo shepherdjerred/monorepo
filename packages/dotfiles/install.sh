@@ -219,6 +219,17 @@ else
 fi
 
 
+# Neovim: install plugins, LSP servers, and tree-sitter parsers
+if command -v nvim >/dev/null 2>&1; then
+    log_info "Installing Neovim plugins"
+    nvim --headless "+Lazy! sync" +qa
+    log_info "Installing tree-sitter parsers"
+    nvim --headless "+TSUpdateSync" +qa
+    log_success "Neovim setup complete"
+else
+    log_warn "Skipping Neovim setup: nvim not available"
+fi
+
 # setup atuin
 if command -v atuin >/dev/null 2>&1; then
     # Determine login status without failing the script under 'set -e'

@@ -9,5 +9,5 @@ data = json.load(sys.stdin)
 data["mcpServers"] = {{ template "claude-mcp-servers.json.tmpl" . }}
 
 # Output modified file
-json.dump(data, sys.stdout, indent=2)
+json.dump(data, sys.stdout, indent=2, sort_keys=True)
 sys.stdout.write("\n")

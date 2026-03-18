@@ -20,10 +20,24 @@ require("lazy").setup({
     opts = { flavour = "auto", background = { light = "latte", dark = "mocha" } } },
   { "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter",
     opts = { suggestion = { auto_trigger = true, keymap = { accept = "<Tab>" } } } },
-  { "echasnovski/mini.pick", keys = {
-    { "<leader>ff", function() require("mini.pick").builtin.files() end, desc = "Find files" },
-    { "<leader>fg", function() require("mini.pick").builtin.grep_live() end, desc = "Live grep" },
-  }, opts = {} },
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate",
+    opts = { auto_install = true, highlight = { enable = true } } },
+  { "mason-org/mason-lspconfig.nvim",
+    opts = {
+      automatic_enable = true,
+      ensure_installed = {
+        "ts_ls", "astro", "rust_analyzer", "pyright", "gopls",
+        "lua_ls", "bashls", "jsonls", "yamlls", "html", "cssls",
+        "prismals", "terraformls", "kotlin_language_server", "sqlls",
+        "clangd", "sourcekit", "hls", "starpls", "dockerls",
+        "markdown_oxide", "mdx_analyzer", "taplo",
+      },
+    },
+    dependencies = {
+      { "mason-org/mason.nvim", opts = {} },
+      "neovim/nvim-lspconfig",
+    },
+  },
 })
 
 -- Apply theme

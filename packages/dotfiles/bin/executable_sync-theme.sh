@@ -32,16 +32,13 @@ THEME_DIR=~/.config/fish/conf.d
 [[ -f "$THEME_DIR/theme-env-$M.fish" ]] && ln -sf "theme-env-$M.fish" "$THEME_DIR/theme-env.fish"
 
 # Git config (difft + delta) — write to include file to avoid clobbering chezmoi-managed .gitconfig
-DARK=$([[ "$M" == "mocha" ]] && echo true || echo false)
-CATPPUCCIN=$([[ "$M" == "mocha" ]] && echo Mocha || echo Latte)
 cat > ~/.gitconfig-theme << EOF
 [diff]
   external = difft --background=$THEME_MODE
 [difftool "difftastic"]
   cmd = difft --background=$THEME_MODE "\$LOCAL" "\$REMOTE"
 [delta]
-  dark = $DARK
-  syntax-theme = Catppuccin $CATPPUCCIN
+  features = catppuccin-$M
 EOF
 
 # Claude Code (settings.json)

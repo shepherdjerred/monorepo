@@ -43,6 +43,17 @@ for ext in psd afdesign afphoto afpub ai; do
     duti -s "$AFFINITY" ".$ext" all 2>/dev/null
 done
 
+# Keka — archives (UTI-based for zip/7z since extension-based doesn't override Archive Utility)
+KEKA="com.aone.keka"
+for uti in com.pkware.zip-archive public.zip-archive org.7-zip.7-zip-archive \
+           public.tar-archive org.gnu.gnu-zip-archive public.bzip2-archive \
+           org.tukaani.xz-archive com.rarlab.rar-archive; do
+    duti -s "$KEKA" "$uti" all 2>/dev/null
+done
+for ext in zip 7z rar tar gz bz2 xz zst lz tgz; do
+    duti -s "$KEKA" ".$ext" all 2>/dev/null
+done
+
 # MailMate — email
 duti -s com.freron.MailMate mailto 2>/dev/null
 

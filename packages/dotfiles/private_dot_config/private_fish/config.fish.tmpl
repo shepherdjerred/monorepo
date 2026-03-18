@@ -1,12 +1,5 @@
 # Add common paths
-fish_add_path /opt/homebrew/bin
-fish_add_path /home/linuxbrew/.linuxbrew/bin
-fish_add_path ~/bin
-fish_add_path ~/.local/bin
-# for some reason, these can be missing
-fish_add_path /bin
-fish_add_path /usr/bin
-fish_add_path /usr/local/bin
+fish_add_path /opt/homebrew/bin /home/linuxbrew/.linuxbrew/bin ~/bin ~/.local/bin /bin /usr/bin /usr/local/bin
 
 mise activate fish --shims | source
 
@@ -32,6 +25,7 @@ else
 end
 set -gx EDITOR nvim
 set -gx LANG en_US.UTF-8
+set -gx RIPGREP_CONFIG_PATH ~/.config/ripgrep/ripgreprc
 
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 
@@ -52,40 +46,6 @@ set -gx OPENAI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd
 set -gx GRAFANA_SERVER 'https://grafana.tailnet-1a49.ts.net/'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 {{ end -}}
-
-# Setup Dagger engine with caching
-function _setup_dagger_engine
-    set -l cache_dir "$HOME/.cache/dagger"
-    set -l cache_file "$cache_dir/pod_name"
-    set -l cache_ttl 3600  # 1 hour in seconds
-
-    mkdir -p "$cache_dir"
-
-    # Check if cache exists and is fresh
-    if test -f "$cache_file"
-        set -l current_time (date +%s)
-        set -l cache_mtime (stat -c %Y "$cache_file" 2>/dev/null; or stat -f %m "$cache_file" 2>/dev/null)
-        set -l cache_age (math $current_time - $cache_mtime)
-
-        if test $cache_age -lt $cache_ttl
-            set -gx _EXPERIMENTAL_DAGGER_RUNNER_HOST (cat "$cache_file")
-            return
-        end
-    end
-
-    # Try to get the pod name
-    if command -v kubectl &> /dev/null
-        set -l pod_name (kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-
-        if test -n "$pod_name"
-            set -l runner_host "kube-pod://$pod_name?namespace=dagger"
-            echo "$runner_host" > "$cache_file"
-            set -gx _EXPERIMENTAL_DAGGER_RUNNER_HOST "$runner_host"
-        end
-    end
-end
-
-_setup_dagger_engine
 
 # Setup Starship config for Coder environment
 function _setup_starship_config
@@ -131,7 +91,7 @@ if status is-interactive
   starship init fish | source
   atuin init fish | source
 
-  set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense' # optional
+  set -q CARAPACE_BRIDGES; or set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense'
   mkdir -p ~/.config/fish/completions
   # Run the following block only once a day
   if test (find ~/.config/fish/completions -name '*.fish' -mtime -1 | wc -l) -eq 0

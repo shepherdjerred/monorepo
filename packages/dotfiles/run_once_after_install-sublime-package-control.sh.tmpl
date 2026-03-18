@@ -1,0 +1,17 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Install Package Control
+pc_dir="$HOME/Library/Application Support/Sublime Text/Installed Packages"
+mkdir -p "$pc_dir"
+curl -fsSL "https://packagecontrol.io/Package%20Control.sublime-package" -o "$pc_dir/Package Control.sublime-package"
+
+# Install Catppuccin color schemes directly (Package Control may not auto-install on first run)
+cat_dir="$HOME/Library/Application Support/Sublime Text/Packages/Catppuccin"
+mkdir -p "$cat_dir"
+tmp="$(mktemp -d)"
+git clone --depth 1 https://github.com/catppuccin/sublime-text.git "$tmp" 2>/dev/null
+cp "$tmp/build/"*.sublime-color-scheme "$cat_dir/"
+rm -rf "$tmp"
+{{- end -}}
