@@ -110,7 +110,15 @@ fi
 # Install LunarVim
 if ! command -v lvim &>/dev/null; then
     log_info "Installing LunarVim"
-    LV_BRANCH='release-1.4/neovim-0.9' bash <(curl -fsSL https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh) --no-install-dependencies || log_warn "LunarVim install skipped or failed"
+    LUNARVIM_BASE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/lunarvim/lvim"
+    # Clone repo and fix CRLF line endings before running installer
+    if [ ! -d "$LUNARVIM_BASE_DIR" ]; then
+        git clone --branch release-1.4/neovim-0.9 https://github.com/LunarVim/LunarVim.git "$LUNARVIM_BASE_DIR"
+    fi
+    # Fix CRLF in all shell scripts (upstream has Windows line endings)
+    find "$LUNARVIM_BASE_DIR" -name "*.sh" -exec sed -i '' $'s/\r$//' {} +
+    # Run the installer from the fixed clone
+    LV_BRANCH='release-1.4/neovim-0.9' LUNARVIM_BASE_DIR="$LUNARVIM_BASE_DIR" bash "$LUNARVIM_BASE_DIR/utils/installer/install.sh" --local --no-install-dependencies || log_warn "LunarVim install skipped or failed"
 else
     log_info "LunarVim already installed"
 fi
