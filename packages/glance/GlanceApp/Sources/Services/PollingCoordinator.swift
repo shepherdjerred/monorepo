@@ -226,6 +226,33 @@ actor PollingCoordinator {
             || error.contains("unauthorized") || error.contains("forbidden")
     }
 
+    /// Update circuit breaker and auth failure counters for a single snapshot.
+    private func updateFailureTracking(for snapshot: ServiceSnapshot) {
+        guard snapshot.status == .unknown, snapshot.error != nil else {
+            self.consecutiveFailures[snapshot.id] = 0
+            self.consecutiveAuthFailures[snapshot.id] = 0
+            return
+        }
+        self.consecutiveFailures[snapshot.id, default: 0] += 1
+        let failures = self.consecutiveFailures[snapshot.id, default: 0]
+        if failures == self.circuitBreakerThreshold {
+            GlanceLogger.provider(snapshot.id).warning(
+                "Circuit breaker tripped after \(failures) consecutive failures",
+            )
+        }
+        if self.isAuthFailure(snapshot: snapshot) {
+            self.consecutiveAuthFailures[snapshot.id, default: 0] += 1
+            let authFailures = self.consecutiveAuthFailures[snapshot.id, default: 0]
+            if authFailures == self.authFailureThreshold {
+                GlanceLogger.provider(snapshot.id).error(
+                    "Repeated auth failures — secret may need rotation",
+                )
+            }
+        } else {
+            self.consecutiveAuthFailures[snapshot.id] = 0
+        }
+    }
+
     /// Called by the scheduler on each tick.
     private func tick() async {
         guard !self.isPaused else {
@@ -246,12 +273,33 @@ actor PollingCoordinator {
             "Starting refresh of \(eligibleProviders.count)/\(self.providers.count) providers",
         )
 
-        let metricsCollector = self.metricsCollector
-        let results = await withTaskGroup(
+        let results = await self.fetchAllProviders(eligibleProviders)
+
+        for snapshot in results {
+            self.updateFailureTracking(for: snapshot)
+        }
+
+        let cycleDuration = cycleStart.duration(to: .now)
+        let cycleSeconds = Double(cycleDuration.components.seconds)
+            + Double(cycleDuration.components.attoseconds) / 1e18
+        await self.metricsCollector.recordCycle(duration: cycleSeconds)
+
+        signposter.endInterval("pollCycle", pollState)
+
+        let sortedResults = results.sorted { $0.displayName < $1.displayName }
+        await self.onResults(sortedResults)
+    }
+
+    /// Fetch status from all eligible providers concurrently with metrics recording.
+    private func fetchAllProviders(
+        _ providers: [any ServiceProvider],
+    ) async -> [ServiceSnapshot] {
+        let collector = self.metricsCollector
+        return await withTaskGroup(
             of: ServiceSnapshot.self,
             returning: [ServiceSnapshot].self,
         ) { group in
-            for provider in eligibleProviders {
+            for provider in providers {
                 group.addTask {
                     let start = ContinuousClock.now
                     let snapshot = await Self.fetchWithTimeout(provider: provider, seconds: 25)
@@ -259,7 +307,7 @@ actor PollingCoordinator {
                     let seconds = Double(duration.components.seconds)
                         + Double(duration.components.attoseconds) / 1e18
                     let isSuccess = snapshot.error == nil
-                    await metricsCollector.recordFetch(
+                    await collector.recordFetch(
                         providerId: provider.id,
                         duration: seconds,
                         success: isSuccess,
@@ -275,46 +323,5 @@ actor PollingCoordinator {
             }
             return collected
         }
-
-        // Update circuit breaker state and auth failure tracking.
-        for snapshot in results {
-            if snapshot.status == .unknown, snapshot.error != nil {
-                self.consecutiveFailures[snapshot.id, default: 0] += 1
-                let failures = self.consecutiveFailures[snapshot.id, default: 0]
-                if failures == self.circuitBreakerThreshold {
-                    GlanceLogger.provider(snapshot.id).warning(
-                        "Circuit breaker tripped after \(failures) consecutive failures",
-                    )
-                }
-
-                // Track auth failures separately for secret rotation detection.
-                if self.isAuthFailure(snapshot: snapshot) {
-                    self.consecutiveAuthFailures[snapshot.id, default: 0] += 1
-                    let authFailures = self.consecutiveAuthFailures[snapshot.id, default: 0]
-                    if authFailures == self.authFailureThreshold {
-                        let providerId = snapshot.id
-                        GlanceLogger.provider(providerId).error(
-                            "Provider \(providerId, privacy: .public) has repeated auth failures — secret may need rotation",
-                        )
-                    }
-                } else {
-                    self.consecutiveAuthFailures[snapshot.id] = 0
-                }
-            } else {
-                self.consecutiveFailures[snapshot.id] = 0
-                self.consecutiveAuthFailures[snapshot.id] = 0
-            }
-        }
-
-        let cycleDuration = cycleStart.duration(to: .now)
-        let cycleSeconds = Double(cycleDuration.components.seconds)
-            + Double(cycleDuration.components.attoseconds) / 1e18
-        await metricsCollector.recordCycle(duration: cycleSeconds)
-
-        signposter.endInterval("pollCycle", pollState)
-
-        // Deliver results to AppState on the main actor.
-        let sortedResults = results.sorted { $0.displayName < $1.displayName }
-        await self.onResults(sortedResults)
     }
 }

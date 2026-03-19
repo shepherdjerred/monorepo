@@ -155,3 +155,33 @@ final class AppIntentStateProvider {
 
     var appState: AppState?
 }
+
+// MARK: - GlanceFocusFilter
+
+/// Focus Filter that lets users configure which notifications appear
+/// during a Focus mode. When enabled, only critical (error-level)
+/// alerts are shown during the active Focus.
+struct GlanceFocusFilter: SetFocusFilterIntent {
+    static let title: LocalizedStringResource = "Glance Notifications"
+    static let description: IntentDescription =
+        "Configure Glance notifications during this Focus."
+
+    @Parameter(title: "Show only critical alerts")
+    var criticalOnly: Bool
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(
+            title: self.criticalOnly
+                ? "Critical alerts only"
+                : "All notifications",
+        )
+    }
+
+    func perform() async throws -> some IntentResult {
+        UserDefaults.standard.set(
+            self.criticalOnly,
+            forKey: "focusCriticalOnly",
+        )
+        return .result()
+    }
+}

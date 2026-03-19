@@ -39,57 +39,39 @@ struct CertManagerDetailView: View {
             Text("No certificates found.")
                 .foregroundStyle(.secondary)
         } else {
-            Table(self.sortedCertificates, sortOrder: self.$certSortOrder) {
-                TableColumn("Name", value: \.name) { cert in
-                    Text(cert.name)
-                        .fontWeight(.medium)
-                }
-                TableColumn("Namespace", value: \.namespace) { cert in
-                    Text(cert.namespace)
-                        .foregroundStyle(.secondary)
-                }
-                .width(120)
-                TableColumn("Issuer", value: \.issuer) { cert in
-                    Text(cert.issuer)
-                        .foregroundStyle(.secondary)
-                }
-                .width(120)
-                TableColumn("Expires") { cert in
-                    if let notAfter = cert.notAfter, let expiryDate = Self.parseDate(notAfter) {
-                        TimelineView(.periodic(from: .now, by: 60)) { _ in
-                            let remaining = expiryDate.timeIntervalSinceNow
-                            let days = Int(remaining / 86400)
-                            if remaining <= 0 {
-                                Text("Expired")
-                                    .font(.caption)
-                                    .foregroundStyle(.red)
-                            } else if days < 7 {
-                                Text("\(days)d remaining")
-                                    .font(.caption)
-                                    .foregroundStyle(.orange)
-                            } else {
-                                Text("\(days)d remaining")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } else {
-                        Text(cert.notAfter ?? "-")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .width(160)
-                TableColumn("Ready") { cert in
-                    Circle()
-                        .fill(cert.ready ? .green : .red)
-                        .frame(width: 8, height: 8)
-                }
-                .width(50)
-            }
-            .alternatingRowBackgrounds()
-            .frame(minHeight: 200)
+            self.certificatesTable
         }
+    }
+
+    private var certificatesTable: some View {
+        Table(self.sortedCertificates, sortOrder: self.$certSortOrder) {
+            TableColumn("Name", value: \.name) { cert in
+                Text(cert.name)
+                    .fontWeight(.medium)
+            }
+            TableColumn("Namespace", value: \.namespace) { cert in
+                Text(cert.namespace)
+                    .foregroundStyle(.secondary)
+            }
+            .width(120)
+            TableColumn("Issuer", value: \.issuer) { cert in
+                Text(cert.issuer)
+                    .foregroundStyle(.secondary)
+            }
+            .width(120)
+            TableColumn("Expires") { cert in
+                self.expiryCountdown(cert.notAfter)
+            }
+            .width(160)
+            TableColumn("Ready") { cert in
+                Circle()
+                    .fill(cert.ready ? .green : .red)
+                    .frame(width: 8, height: 8)
+            }
+            .width(50)
+        }
+        .alternatingRowBackgrounds()
+        .frame(minHeight: 200)
     }
 
     // MARK: - Challenges
@@ -122,6 +104,33 @@ struct CertManagerDetailView: View {
         }
         .alternatingRowBackgrounds()
         .frame(minHeight: 100)
+    }
+
+    @ViewBuilder
+    private func expiryCountdown(_ notAfter: String?) -> some View {
+        if let notAfter, let expiryDate = Self.parseDate(notAfter) {
+            TimelineView(.periodic(from: .now, by: 60)) { _ in
+                let remaining = expiryDate.timeIntervalSinceNow
+                let days = Int(remaining / 86400)
+                if remaining <= 0 {
+                    Text("Expired")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                } else if days < 7 {
+                    Text("\(days)d remaining")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                } else {
+                    Text("\(days)d remaining")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } else {
+            Text(notAfter ?? "-")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder
