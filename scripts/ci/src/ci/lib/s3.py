@@ -6,12 +6,20 @@ Ported from .dagger/src/lib-s3.ts.
 from __future__ import annotations
 
 import os
-import subprocess
+
+from ci.lib import runner
 
 S3_ENDPOINT = "https://seaweedfs.sjer.red"
 
 
-def sync(bucket: str, local_dir: str, *, delete: bool = True, prefix: str = "") -> None:
+def sync(
+    bucket: str,
+    local_dir: str,
+    *,
+    delete: bool = True,
+    prefix: str = "",
+    dry_run: bool = False,
+) -> None:
     """Sync a local directory to an S3 bucket.
 
     Args:
@@ -19,12 +27,13 @@ def sync(bucket: str, local_dir: str, *, delete: bool = True, prefix: str = "") 
         local_dir: Local directory to sync from.
         delete: Whether to delete files in S3 that don't exist locally.
         prefix: Optional prefix/path within the bucket.
+        dry_run: If True, print what would be done without executing.
     """
     s3_path = f"s3://{bucket}/{prefix}" if prefix else f"s3://{bucket}/"
     env = {
         **os.environ,
-        "AWS_ACCESS_KEY_ID": os.environ["S3_ACCESS_KEY_ID"],
-        "AWS_SECRET_ACCESS_KEY": os.environ["S3_SECRET_ACCESS_KEY"],
+        "AWS_ACCESS_KEY_ID": os.environ.get("S3_ACCESS_KEY_ID", ""),
+        "AWS_SECRET_ACCESS_KEY": os.environ.get("S3_SECRET_ACCESS_KEY", ""),
         "AWS_DEFAULT_REGION": os.environ.get("AWS_DEFAULT_REGION", "us-east-1"),
     }
     cmd = [
@@ -38,5 +47,4 @@ def sync(bucket: str, local_dir: str, *, delete: bool = True, prefix: str = "") 
     ]
     if delete:
         cmd.append("--delete")
-    print(f"+ {' '.join(cmd)}", flush=True)
-    subprocess.run(cmd, env=env, check=True)
+    runner.run(cmd, env=env, dry_run=dry_run)

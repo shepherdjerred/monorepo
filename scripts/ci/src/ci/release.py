@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 import subprocess
 import sys
+
+from ci.lib import buildkite
 
 REPO_URL = "shepherdjerred/monorepo"
 
@@ -43,22 +44,11 @@ def _run_release_please(subcommand: str, token: str) -> tuple[bool, str]:
     return result.returncode == 0, output
 
 
-def _set_metadata(key: str, value: str) -> None:
-    """Set Buildkite metadata. No-op if buildkite-agent is not available."""
-    if shutil.which("buildkite-agent") is None:
-        print(f"buildkite-agent not found, skipping meta-data set {key}={value}", flush=True)
-        return
-    subprocess.run(
-        ["buildkite-agent", "meta-data", "set", key, value],
-        check=True,
-    )
-
-
 def main() -> None:
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
         print("GITHUB_TOKEN not set, skipping release-please", flush=True)
-        _set_metadata("release_created", "false")
+        buildkite.set_metadata("release_created", "false")
         return
 
     # Phase 1: release-pr
@@ -82,21 +72,21 @@ def main() -> None:
         or "created release" in release_output
     )
 
-    _set_metadata("release_created", str(release_created).lower())
+    buildkite.set_metadata("release_created", str(release_created).lower())
     print(f"\nRelease created: {release_created}", flush=True)
 
     # Detect clauderon release
     clauderon_match = re.search(r"clauderon-v([\d.]+)", release_output)
     if clauderon_match:
         clauderon_version = clauderon_match.group(1)
-        _set_metadata("clauderon_version", clauderon_version)
+        buildkite.set_metadata("clauderon_version", clauderon_version)
         print(f"Detected clauderon release: v{clauderon_version}", flush=True)
 
     # Detect cooklang-for-obsidian release
     cooklang_match = re.search(r"cooklang-for-obsidian-v([\d.]+)", release_output)
     if cooklang_match:
         cooklang_version = cooklang_match.group(1)
-        _set_metadata("cooklang_for_obsidian_version", cooklang_version)
+        buildkite.set_metadata("cooklang_for_obsidian_version", cooklang_version)
         print(f"Detected cooklang-for-obsidian release: v{cooklang_version}", flush=True)
 
     if not release_success:

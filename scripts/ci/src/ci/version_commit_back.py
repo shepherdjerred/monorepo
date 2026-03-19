@@ -15,45 +15,18 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 
+from ci.lib import buildkite
+from ci.lib.catalog import VERSION_KEYS
 from ci.lib.config import ReleaseConfig
 
 REPO = "shepherdjerred/monorepo"
 VERSIONS_FILE = "packages/homelab/src/cdk8s/src/versions.ts"
 DIGESTS_FILE = "/tmp/image-digests.json"
-
-# Version keys to update (maps to image names in versions.ts)
-VERSION_KEYS = [
-    "shepherdjerred/homelab",
-    "shepherdjerred/dependency-summary",
-    "shepherdjerred/dns-audit",
-    "shepherdjerred/caddy-s3proxy",
-    "shepherdjerred/sentinel",
-    "shepherdjerred/birmel",
-    "shepherdjerred/tasknotes-server",
-    "shepherdjerred/obsidian-headless",
-    "shepherdjerred/starlight-karma-bot/beta",
-    "shepherdjerred/better-skill-capped-fetcher",
-    "shepherdjerred/discord-plays-pokemon",
-    "shepherdjerred/scout-for-lol/beta",
-    "shepherdjerred/status-page-api",
-]
-
-
-def _get_metadata(key: str, default: str = "") -> str:
-    """Get Buildkite metadata. Returns default if unavailable."""
-    if shutil.which("buildkite-agent") is None:
-        return default
-    result = subprocess.run(
-        ["buildkite-agent", "meta-data", "get", key, "--default", default],
-        capture_output=True, text=True, check=False,
-    )
-    return result.stdout.strip() if result.returncode == 0 else default
 
 
 def _load_digests() -> dict[str, str]:
@@ -69,7 +42,7 @@ def _load_digests() -> dict[str, str]:
 
     # Try per-key metadata first (new per-image push steps)
     for key in VERSION_KEYS:
-        value = _get_metadata(f"digest:{key}")
+        value = buildkite.get_metadata(f"digest:{key}")
         if value:
             digests[key] = value
 
@@ -78,12 +51,12 @@ def _load_digests() -> dict[str, str]:
         return digests
 
     # Fall back to legacy bulk JSON keys (backwards compatibility)
-    image_digests_json = _get_metadata("image_digests")
+    image_digests_json = buildkite.get_metadata("image_digests")
     if image_digests_json:
         digests.update(json.loads(image_digests_json))
         print(f"Loaded {len(digests)} digests from Buildkite metadata (image_digests)", flush=True)
 
-    infra_digests_json = _get_metadata("infra_digests")
+    infra_digests_json = buildkite.get_metadata("infra_digests")
     if infra_digests_json:
         infra = json.loads(infra_digests_json)
         digests.update(infra)

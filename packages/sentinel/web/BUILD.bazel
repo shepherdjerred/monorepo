@@ -1,15 +1,21 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/bazel:vite_build.bzl", "vite_build")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_vite_build")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-vite_build(
+bun_vite_build(
     name = "vite_build",
-    dist_dir = "../dist/web",
+    extra_files = [
+        "vite.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+        "postcss.config.ts",
+        "index.html",
+    ],
+    deps = [":pkg"],
 )
 
 # Vite-based React SPA.

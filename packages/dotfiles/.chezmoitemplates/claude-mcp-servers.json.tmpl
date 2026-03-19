@@ -1,15 +1,10 @@
-{{- /* Define OS-specific paths */ -}}
-{{- $bunxCmd := "bunx" -}}
-{{- if eq .chezmoi.os "darwin" -}}
-  {{- $bunxCmd = printf "%s/.local/share/mise/shims/bunx" .chezmoi.homeDir -}}
-{{- else if eq .chezmoi.os "windows" -}}
-  {{- $bunxCmd = "bunx" -}}
-{{- end -}}
 {
-  "playwright": {
+  "pinchtab": {
     "type": "stdio",
-    "command": {{ $bunxCmd | quote }},
-    "args": ["-y", "@playwright/mcp"],
-    "env": {}
+    "command": "pinchtab",
+    "args": ["mcp"],
+    "env": {
+      "BRIDGE_HEADLESS": "false"
+    }
   }
 }

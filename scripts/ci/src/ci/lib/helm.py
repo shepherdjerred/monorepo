@@ -5,17 +5,23 @@ Ported from .dagger/src/homelab-helm.ts.
 
 from __future__ import annotations
 
-import subprocess
+import shutil
 import tempfile
 from pathlib import Path
 from shutil import copytree
 
-import httpx
+from ci.lib import runner
 
 CHARTMUSEUM_URL = "https://chartmuseum.tailnet-1a49.ts.net"
 
 
-def package(chart_dir: str, version: str, *, dist_dir: str | None = None) -> str:
+def package(
+    chart_dir: str,
+    version: str,
+    *,
+    dist_dir: str | None = None,
+    dry_run: bool = False,
+) -> str:
     """Package a Helm chart directory into a .tgz archive.
 
     Chart.yaml uses placeholder ``$version`` / ``$appVersion`` which helm
@@ -25,6 +31,12 @@ def package(chart_dir: str, version: str, *, dist_dir: str | None = None) -> str
     ``{dist_dir}/{chart_name}.k8s.yaml`` is copied into ``templates/``.
     """
     src = Path(chart_dir)
+    chart_name = src.name
+
+    if dry_run:
+        print(f"[DRY RUN] helm package {chart_name} --version {version}", flush=True)
+        return f"{chart_name}-{version}.tgz"
+
     with tempfile.TemporaryDirectory() as tmp:
         dst = Path(tmp) / src.name
         copytree(src, dst)
@@ -40,7 +52,6 @@ def package(chart_dir: str, version: str, *, dist_dir: str | None = None) -> str
             if manifest.exists():
                 templates = dst / "templates"
                 templates.mkdir(exist_ok=True)
-                import shutil
                 shutil.copy2(str(manifest), str(templates / manifest.name))
             else:
                 print(f"  Warning: no manifest at {manifest}", flush=True)
@@ -54,13 +65,11 @@ def package(chart_dir: str, version: str, *, dist_dir: str | None = None) -> str
             "--app-version",
             version,
         ]
-        print(f"+ {' '.join(cmd)}", flush=True)
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = runner.run(cmd, capture_output=True, check=True)
 
     for line in result.stdout.strip().splitlines():
         if line.startswith("Successfully packaged"):
             return line.split(": ", 1)[1]
-    chart_name = src.name
     return f"{chart_name}-{version}.tgz"
 
 
@@ -70,6 +79,7 @@ def push_to_chartmuseum(
     url: str = CHARTMUSEUM_URL,
     username: str,
     password: str,
+    dry_run: bool = False,
 ) -> str:
     """Upload a packaged Helm chart to a ChartMuseum instance.
 
@@ -78,6 +88,7 @@ def push_to_chartmuseum(
         url: ChartMuseum base URL.
         username: ChartMuseum username.
         password: ChartMuseum password.
+        dry_run: If True, print what would be done without executing.
 
     Returns:
         Response text from ChartMuseum.
@@ -85,16 +96,19 @@ def push_to_chartmuseum(
     Raises:
         httpx.HTTPStatusError: On non-2xx responses (except 409 Conflict).
     """
-    with open(chart_path, "rb") as f:
-        chart_data = f.read()
-
-    response = httpx.post(
+    response = runner.http_request(
+        "POST",
         f"{url}/api/charts",
-        content=chart_data,
+        dry_run=dry_run,
+        dry_run_text='{"saved":true}',
+        content=b"" if dry_run else Path(chart_path).read_bytes(),
         auth=(username, password),
         headers={"Content-Type": "application/octet-stream"},
         timeout=60,
     )
+
+    if dry_run:
+        return "Chart published (dry-run)"
 
     # 409 means chart already exists -- treat as success
     if response.status_code == 409:

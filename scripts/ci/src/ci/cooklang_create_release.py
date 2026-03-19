@@ -11,7 +11,6 @@ Required env vars:
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 
 from ci.lib import buildkite
@@ -36,11 +35,7 @@ def main() -> None:
     # Download artifacts
     print("\n--- Downloading artifacts ---", flush=True)
     for name in RELEASE_ARTIFACTS:
-        if shutil.which("buildkite-agent"):
-            subprocess.run(
-                ["buildkite-agent", "artifact", "download", name, "/tmp/"],
-                check=True,
-            )
+        buildkite.artifact_download(name, "/tmp")
         print(f"  Downloaded {name}", flush=True)
 
     # Create GitHub release

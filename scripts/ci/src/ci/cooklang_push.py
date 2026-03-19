@@ -11,8 +11,6 @@ Required env vars:
 from __future__ import annotations
 
 import os
-import shutil
-import subprocess
 from pathlib import Path
 
 from ci.lib import buildkite, github
@@ -37,11 +35,7 @@ def main() -> None:
     # Download artifacts
     print("\n--- Downloading artifacts ---", flush=True)
     for name in ARTIFACTS:
-        if shutil.which("buildkite-agent"):
-            subprocess.run(
-                ["buildkite-agent", "artifact", "download", name, "/tmp/"],
-                check=True,
-            )
+        buildkite.artifact_download(name, "/tmp")
         content = Path(f"/tmp/{name}").read_text()
         msg = github.commit_file(
             name, content, f"chore: update {name} for v{version}",

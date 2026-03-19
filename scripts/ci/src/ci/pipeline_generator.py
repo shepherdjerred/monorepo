@@ -22,6 +22,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ci.lib import bazel
+from ci.lib.catalog import (
+    DEPLOY_SITES,
+    IMAGE_PUSH_TARGETS,
+    INFRA_PUSH_TARGETS,
+    NPM_PACKAGES,
+    PACKAGE_TO_SITE,
+    TOFU_STACK_LABELS,
+    TOFU_STACKS,
+)
 
 _CI_IMAGE_VERSION_FILE = Path(__file__).resolve().parents[4] / ".buildkite" / "ci-image" / "VERSION"
 CI_BASE_IMAGE = f"ghcr.io/shepherdjerred/ci-base:{_CI_IMAGE_VERSION_FILE.read_text().strip()}"
@@ -86,63 +95,8 @@ INFRA_DIRS = {
     "tools/",
 }
 
-# Package -> static site bucket mapping for deploy filtering
-PACKAGE_TO_SITE = {
-    "sjer.red": "sjer-red",
-    "resume": "resume",
-    "clauderon": "clauderon",
-    "webring": "webring",
-    "cooklang-rich-preview": "cook",
-}
-
-# --- Container image push targets (app images) ---
-IMAGE_PUSH_TARGETS: list[dict] = [
-    {"target": "//packages/birmel:image_push", "version_key": "shepherdjerred/birmel", "name": "birmel"},
-    {"target": "//packages/sentinel:image_push", "version_key": "shepherdjerred/sentinel", "name": "sentinel"},
-    {"target": "//packages/tasknotes-server:image_push", "version_key": "shepherdjerred/tasknotes-server", "name": "tasknotes-server"},
-    {"target": "//packages/scout-for-lol:image_push", "version_key": "shepherdjerred/scout-for-lol/beta", "name": "scout-for-lol"},
-    {"target": "//packages/discord-plays-pokemon:image_push", "version_key": "shepherdjerred/discord-plays-pokemon", "name": "discord-plays-pokemon"},
-    {"target": "//packages/starlight-karma-bot:image_push", "version_key": "shepherdjerred/starlight-karma-bot/beta", "name": "starlight-karma-bot"},
-    {"target": "//packages/better-skill-capped/fetcher:image_push", "version_key": "shepherdjerred/better-skill-capped-fetcher", "name": "better-skill-capped-fetcher"},
-    {"target": "//tools/oci:obsidian_headless_push", "version_key": "shepherdjerred/obsidian-headless", "name": "obsidian-headless"},
-    {"target": "//packages/status-page/api:image_push", "version_key": "shepherdjerred/status-page-api", "name": "status-page-api"},
-]
-
-# --- Container image push targets (homelab infra images) ---
-INFRA_PUSH_TARGETS: list[dict] = [
-    {"target": "//packages/homelab/src/ha:image_push", "version_key": "shepherdjerred/homelab", "name": "homelab"},
-    {"target": "//packages/homelab/src/deps-email:image_push", "version_key": "shepherdjerred/dependency-summary", "name": "dependency-summary"},
-    {"target": "//packages/homelab/src/dns-audit:image_push", "version_key": "shepherdjerred/dns-audit", "name": "dns-audit"},
-    {"target": "//packages/homelab/src/caddy-s3proxy:image_push", "version_key": "shepherdjerred/caddy-s3proxy", "name": "caddy-s3proxy"},
-]
-
-# --- NPM packages to publish ---
-NPM_PACKAGES: list[dict] = [
-    {"name": "bun-decompile", "dir": "packages/bun-decompile"},
-    {"name": "astro-opengraph-images", "dir": "packages/astro-opengraph-images"},
-    {"name": "webring", "dir": "packages/webring"},
-    {"name": "helm-types", "dir": "packages/homelab/src/helm-types"},
-]
-
-# --- Static sites to deploy ---
-DEPLOY_SITES: list[dict] = [
-    {"bucket": "sjer-red", "name": "sjer.red", "build_dir": "packages/sjer.red", "build_cmd": "bun run astro build", "dist_dir": "packages/sjer.red/dist", "needs_playwright": True, "workspace_deps": "astro-opengraph-images,webring"},
-    {"bucket": "clauderon", "name": "clauderon docs", "build_dir": "packages/clauderon/docs", "build_cmd": "bun run astro build", "dist_dir": "packages/clauderon/docs/dist", "workspace_deps": "astro-opengraph-images"},
-    {"bucket": "resume", "name": "resume", "build_dir": "packages/resume", "build_cmd": "", "dist_dir": "packages/resume"},
-    {"bucket": "webring", "name": "webring", "build_dir": "packages/webring", "build_cmd": "bun run typedoc", "dist_dir": "packages/webring/docs"},
-    {"bucket": "cook", "name": "cooklang-rich-preview", "build_dir": "packages/cooklang-rich-preview", "build_cmd": "bun run astro build", "dist_dir": "packages/cooklang-rich-preview/dist"},
-    {"bucket": "status-page", "name": "status-page", "build_dir": "packages/status-page/web", "build_cmd": "bun run astro build", "dist_dir": "packages/status-page/web/dist"},
-]
-
-# --- OpenTofu stacks ---
-TOFU_STACKS = ["cloudflare", "github", "seaweedfs"]
-
-# Human-friendly names for tofu stacks in Buildkite labels
-TOFU_STACK_LABELS = {
-    "cloudflare": "Cloudflare DNS",
-    "github": "GitHub Config",
-    "seaweedfs": "SeaweedFS Config",
-}
+# NOTE: IMAGE_PUSH_TARGETS, INFRA_PUSH_TARGETS, NPM_PACKAGES, DEPLOY_SITES,
+# TOFU_STACKS, TOFU_STACK_LABELS, and PACKAGE_TO_SITE are imported from ci.lib.catalog
 
 # Resource tiers for per-package build steps: (cpu_request, memory_request)
 _HEAVY = ("2", "4Gi")
@@ -512,6 +466,18 @@ def _generate_buildifier_step() -> dict:
     }
 
 
+def _generate_ci_scripts_test_step() -> dict:
+    """Generate the CI scripts pytest step."""
+    return {
+        "label": ":python: CI Scripts Tests",
+        "key": "ci-scripts-test",
+        "command": "cd scripts/ci && uv run --extra dev pytest tests/ -v",
+        "timeout_in_minutes": 10,
+        "retry": _RETRY,
+        "plugins": [_k8s_plugin(cpu="500m", memory="1Gi")],
+    }
+
+
 def _generate_security_step() -> dict:
     """Generate the root-level shellcheck and hermeticity linting step."""
     return {
@@ -690,7 +656,7 @@ def _generate_homelab_cdk8s_step(*, depends_on: list[str]) -> dict:
 
 def _generate_homelab_helm_push_step() -> dict:
     """Generate the Helm chart package + push step with parallelism."""
-    from ci.homelab_helm_push import HELM_CHARTS
+    from ci.lib.catalog import HELM_CHARTS
     return {
         "label": ":helm: Push Helm Chart to ChartMuseum",
         "key": "homelab-helm-push",
@@ -963,6 +929,9 @@ def generate_pipeline() -> dict:
 
     # --- Security & Quality (every push) ---
     steps.append(_generate_security_step())
+
+    # --- CI Scripts Tests (every push) ---
+    steps.append(_generate_ci_scripts_test_step())
 
     # --- Code Review (PRs only) ---
     pr_number = os.environ.get("BUILDKITE_PULL_REQUEST", "false")

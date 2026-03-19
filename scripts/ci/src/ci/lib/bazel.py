@@ -3,8 +3,16 @@ from __future__ import annotations
 import subprocess
 import sys
 
+from ci.lib import runner
 
-def build(*targets: str, config: str = "ci", stamp: bool = False, bep_file: str | None = None) -> None:
+
+def build(
+    *targets: str,
+    config: str = "ci",
+    stamp: bool = False,
+    bep_file: str | None = None,
+    dry_run: bool = False,
+) -> None:
     """Run bazel build with the given targets."""
     cmd = ["bazel", "build", f"--config={config}"]
     if stamp:
@@ -12,10 +20,16 @@ def build(*targets: str, config: str = "ci", stamp: bool = False, bep_file: str 
     if bep_file:
         cmd.append(f"--build_event_binary_file={bep_file}")
     cmd.extend(targets)
-    _run(cmd, tolerate_remote_cache_failure=True)
+    _run(cmd, tolerate_remote_cache_failure=True, dry_run=dry_run)
 
 
-def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_tag_filters: str | None = None) -> None:
+def test(
+    *targets: str,
+    config: str = "ci",
+    bep_file: str | None = None,
+    test_tag_filters: str | None = None,
+    dry_run: bool = False,
+) -> None:
     """Run bazel test with the given targets.
 
     Exit code 4 means "no test targets found" — treated as success.
@@ -26,19 +40,29 @@ def test(*targets: str, config: str = "ci", bep_file: str | None = None, test_ta
     if bep_file:
         cmd.append(f"--build_event_binary_file={bep_file}")
     cmd.extend(targets)
-    print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, check=False)
+    result = runner.run(cmd, check=False, dry_run=dry_run)
+    if dry_run:
+        return
     if result.returncode == 4:
         target_str = " ".join(targets)
         phase = test_tag_filters or "test"
         print(f"WARNING: No {phase} targets found for {target_str}", flush=True)
     elif result.returncode in (34, 38):
-        print(f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success", flush=True)
+        print(
+            f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success",
+            flush=True,
+        )
     elif result.returncode != 0:
         sys.exit(result.returncode)
 
 
-def run(target: str, config: str = "ci", stamp: bool = False, embed_label: str | None = None) -> None:
+def run(
+    target: str,
+    config: str = "ci",
+    stamp: bool = False,
+    embed_label: str | None = None,
+    dry_run: bool = False,
+) -> None:
     """Run a bazel target."""
     cmd = ["bazel", "run", f"--config={config}"]
     if stamp:
@@ -46,10 +70,17 @@ def run(target: str, config: str = "ci", stamp: bool = False, embed_label: str |
     if embed_label:
         cmd.append(f"--embed_label={embed_label}")
     cmd.append(target)
-    _run(cmd)
+    _run(cmd, dry_run=dry_run)
 
 
-def run_capture(target: str, config: str = "ci", stamp: bool = False, embed_label: str | None = None) -> str:
+def run_capture(
+    target: str,
+    config: str = "ci",
+    stamp: bool = False,
+    embed_label: str | None = None,
+    dry_run: bool = False,
+    dry_run_stdout: str = "<dry-run>",
+) -> str:
     """Run a bazel target and return its stdout."""
     cmd = ["bazel", "run", f"--config={config}"]
     if stamp:
@@ -57,8 +88,15 @@ def run_capture(target: str, config: str = "ci", stamp: bool = False, embed_labe
     if embed_label:
         cmd.append(f"--embed_label={embed_label}")
     cmd.append(target)
-    print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    result = runner.run(
+        cmd,
+        capture_output=True,
+        check=False,
+        dry_run=dry_run,
+        dry_run_stdout=dry_run_stdout,
+    )
+    if dry_run:
+        return result.stdout
     if result.returncode != 0:
         if result.stderr:
             print(result.stderr, file=sys.stderr, flush=True)
@@ -69,8 +107,7 @@ def run_capture(target: str, config: str = "ci", stamp: bool = False, embed_labe
 def query(expression: str) -> str:
     """Run bazel query and return stdout."""
     cmd = ["bazel", "query", expression]
-    print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    result = runner.run(cmd, capture_output=True, check=False)
     if result.returncode != 0:
         if result.stderr:
             print(result.stderr, file=sys.stderr, flush=True)
@@ -88,22 +125,25 @@ def affected_targets(base_revision: str, ignore_file: str | None = None) -> list
     if ignore_file:
         cmd.append(f"-ignore-file={ignore_file}")
     cmd.append(base_revision)
-    print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    result = runner.run(cmd, capture_output=True, check=True)
     targets = [t.strip() for t in result.stdout.strip().splitlines() if t.strip()]
     return targets
 
 
-def _run(cmd: list[str], tolerate_remote_cache_failure: bool = False) -> None:
+def _run(cmd: list[str], tolerate_remote_cache_failure: bool = False, dry_run: bool = False) -> None:
     """Execute a command, printing it first. Exit on failure.
 
     If tolerate_remote_cache_failure is True, exit codes 34 and 38
     (remote cache / BEP upload failures) are treated as warnings
     rather than fatal errors.
     """
-    print(f"+ {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, check=False)
+    result = runner.run(cmd, check=False, dry_run=dry_run)
+    if dry_run:
+        return
     if result.returncode in (34, 38) and tolerate_remote_cache_failure:
-        print(f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success", flush=True)
+        print(
+            f"WARNING: Bazel exited with code {result.returncode} (remote cache issue), treating as success",
+            flush=True,
+        )
     elif result.returncode != 0:
         sys.exit(result.returncode)

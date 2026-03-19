@@ -1,12 +1,13 @@
 """Build the cooklang-for-obsidian plugin and upload artifacts.
 
-Usage: uv run -m ci.cooklang_build
+Usage: uv run -m ci.cooklang_build [--version VERSION]
 
 Builds the Obsidian plugin and uploads build artifacts via Buildkite's
 artifact system for consumption by downstream steps.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import subprocess
@@ -40,7 +41,11 @@ def _update_version(pkg_dir: Path, version: str) -> None:
 
 
 def main() -> None:
-    version = buildkite.get_metadata("cooklang_for_obsidian_version")
+    parser = argparse.ArgumentParser(description="Build cooklang-for-obsidian plugin")
+    parser.add_argument("--version", default=None, help="Override version (default: from Buildkite metadata)")
+    args = parser.parse_args()
+
+    version = args.version or buildkite.get_metadata("cooklang_for_obsidian_version")
     if not version:
         print("No cooklang-for-obsidian release detected, skipping", flush=True)
         return
@@ -69,14 +74,7 @@ def main() -> None:
             print(f"Warning: {name} not found, skipping", flush=True)
             continue
         shutil.copy2(str(src), f"/tmp/{name}")
-        if shutil.which("buildkite-agent"):
-            subprocess.run(
-                ["buildkite-agent", "artifact", "upload", f"/tmp/{name}"],
-                check=True,
-            )
-            print(f"  Uploaded {name}", flush=True)
-        else:
-            print(f"  Copied {name} to /tmp (buildkite-agent not available)", flush=True)
+        buildkite.artifact_upload(f"/tmp/{name}")
 
     print(f"\nCooklang-for-obsidian v{version} build complete", flush=True)
 

@@ -5,6 +5,11 @@ fish_add_path /opt/homebrew/bin ~/bin ~/.local/bin
 fish_add_path /home/linuxbrew/.linuxbrew/bin ~/bin ~/.local/bin
 {{ end -}}
 
+# Ghostty shell integration
+if set -q GHOSTTY_RESOURCES_DIR
+    source "$GHOSTTY_RESOURCES_DIR"/shell-integration/fish/vendor_conf.d/ghostty-shell-integration.fish
+end
+
 # Disable vendor conf.d auto-activation (expensive full hook mode ~23ms)
 # and use only --shims mode (~2ms, just adds PATH entry)
 set -gx MISE_FISH_AUTO_ACTIVATE 0
@@ -21,6 +26,7 @@ abbr btop "sudo btop"
 abbr less ov
 abbr ping gping
 abbr claude "claude --allow-dangerously-skip-permissions"
+abbr finder "open -a Finder"
 
 # Set shell to fish
 {{ if eq .chezmoi.os "darwin" -}}

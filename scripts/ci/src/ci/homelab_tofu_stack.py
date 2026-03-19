@@ -11,17 +11,15 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 
 from ci.lib import tofu
+from ci.lib.catalog import TOFU_STACKS
 from ci.lib.config import ReleaseConfig
-
-VALID_STACKS = ["cloudflare", "github", "seaweedfs"]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Apply one OpenTofu stack")
-    parser.add_argument("--stack", required=True, choices=VALID_STACKS, help="Stack name to apply")
+    parser.add_argument("--stack", required=True, choices=TOFU_STACKS, help="Stack name to apply")
     args = parser.parse_args()
 
     config = ReleaseConfig.from_env()

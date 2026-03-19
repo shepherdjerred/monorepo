@@ -1,59 +1,37 @@
 """bun_binary rule implementation."""
 
-load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
+load("//tools/rules_bun/bun:providers.bzl", "BunTreeInfo")
 load("//tools/rules_bun/bun/private:materialize.bzl", "collect_all_npm_sources", "materialize_tree")
+load("//tools/rules_bun/bun/private:resolve_bun_info.bzl", "resolve_bun_info")
 
 def _bun_binary_impl(ctx):
     bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
     bun = bun_toolchain.bun_info.bun
 
-    # Find primary source dep (has package_json) vs npm/workspace deps
-    bun_info = None
-    extra_workspace_deps = []
-    for dep in ctx.attr.deps:
-        if BunInfo in dep:
-            info = dep[BunInfo]
-            if bun_info == None and info.package_json:
-                bun_info = info
-            else:
-                extra_workspace_deps.append(info)
-    if not bun_info:
-        # Fall back to first BunInfo if no source dep found
-        if extra_workspace_deps:
-            bun_info = extra_workspace_deps.pop(0)
-        else:
-            fail("No dep provides BunInfo")
+    if ctx.attr.prepared_tree:
+        tree_info = ctx.attr.prepared_tree[BunTreeInfo]
+        tree = tree_info.tree
+    else:
+        if not ctx.attr.deps:
+            fail("Either prepared_tree or deps must be provided")
+        bun_info = resolve_bun_info(ctx.attr.deps)
 
-    # Merge extra workspace deps into the main bun_info
-    if extra_workspace_deps:
-        merged_ws = depset(extra_workspace_deps, transitive = [bun_info.workspace_deps])
-        merged_npm = depset(transitive = [bun_info.npm_sources] + [d.npm_sources for d in extra_workspace_deps])
-        bun_info = BunInfo(
-            target = bun_info.target,
-            sources = bun_info.sources,
-            package_json = bun_info.package_json,
-            package_name = bun_info.package_name,
-            transitive_sources = bun_info.transitive_sources,
-            npm_sources = merged_npm,
-            workspace_deps = merged_ws,
+        nm_sources = []
+        if ctx.attr.node_modules:
+            nm_sources.append(ctx.attr.node_modules)
+        additional_npm = collect_all_npm_sources(ctx.attr.deps + nm_sources)
+
+        tree = materialize_tree(
+            ctx,
+            ctx.label.name,
+            bun_info,
+            tsconfig = ctx.file.tsconfig,
+            extra_files = ctx.files.extra_files,
+            data_files = ctx.files.data,
+            additional_npm_sources = additional_npm,
+            hoisted_links = ctx.file._hoisted_links,
+            prisma_client = ctx.file.prisma_client,
         )
-
-    nm_sources = []
-    if ctx.attr.node_modules:
-        nm_sources.append(ctx.attr.node_modules)
-    additional_npm = collect_all_npm_sources(ctx.attr.deps + nm_sources)
-
-    tree = materialize_tree(
-        ctx,
-        ctx.label.name,
-        bun_info,
-        tsconfig = ctx.file.tsconfig,
-        extra_files = ctx.files.extra_files,
-        data_files = ctx.files.data,
-        additional_npm_sources = additional_npm,
-        hoisted_links = ctx.file._hoisted_links,
-        prisma_client = ctx.attr.prisma_client,
-    )
 
     bun_rp = bun.short_path
     if bun_rp.startswith("../"):
@@ -87,7 +65,11 @@ bun_binary = rule(
     implementation = _bun_binary_impl,
     attrs = {
         "entry_point": attr.string(mandatory = True),
-        "deps": attr.label_list(mandatory = True),
+        "prepared_tree": attr.label(
+            providers = [BunTreeInfo],
+            doc = "Pre-built BunTreeInfo to use instead of materializing a new tree",
+        ),
+        "deps": attr.label_list(),
         "tsconfig": attr.label(allow_single_file = ["tsconfig.json"]),
         "data": attr.label_list(allow_files = True),
         "extra_files": attr.label_list(allow_files = True),
@@ -95,6 +77,7 @@ bun_binary = rule(
             doc = "Aggregate npm deps target to include all workspace npm packages",
         ),
         "prisma_client": attr.label(
+            allow_single_file = True,
             doc = "bun_prisma_generate target to include .prisma/client in the tree",
         ),
         "env": attr.string_dict(),

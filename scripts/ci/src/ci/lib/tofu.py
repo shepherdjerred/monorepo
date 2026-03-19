@@ -9,20 +9,21 @@ import os
 import subprocess
 from pathlib import Path
 
+from ci.lib import runner
+
 
 def _repo_root() -> Path:
     """Get the git repository root directory."""
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return Path(result.stdout.strip())
 
 
 _REPO_ROOT = _repo_root()
-
-# argocd stack requires OP_CONNECT_TOKEN and argocd_admin_password (not available in CI)
-TOFU_STACKS = ["cloudflare", "github", "seaweedfs"]
 
 
 def _tofu_env() -> dict[str, str]:
@@ -42,18 +43,30 @@ def _tofu_env() -> dict[str, str]:
     return env
 
 
-def init(stack_dir: str) -> None:
+def init(stack_dir: str, *, dry_run: bool = False) -> None:
     """Run tofu init in the given directory."""
     cmd = ["tofu", "init", "-input=false"]
-    print(f"+ {' '.join(cmd)} (in {stack_dir})", flush=True)
-    subprocess.run(cmd, cwd=stack_dir, env=_tofu_env(), check=True)
+    runner.run(cmd, cwd=stack_dir, env=_tofu_env(), dry_run=dry_run)
 
 
-def apply(stack_dir: str) -> str:
-    """Run tofu apply -auto-approve in the given directory."""
+def apply(stack_dir: str, *, dry_run: bool = False) -> str:
+    """Run tofu apply -auto-approve in the given directory.
+
+    In dry-run mode, runs ``tofu plan`` instead for a read-only preview.
+    """
+    if dry_run:
+        cmd = ["tofu", "plan", "-input=false"]
+        runner.run(cmd, cwd=stack_dir, env=_tofu_env(), dry_run=True)
+        return "(dry-run: would apply)"
+
     cmd = ["tofu", "apply", "-auto-approve", "-input=false"]
-    print(f"+ {' '.join(cmd)} (in {stack_dir})", flush=True)
-    result = subprocess.run(cmd, cwd=stack_dir, capture_output=True, text=True, env=_tofu_env())
+    result = runner.run(
+        cmd,
+        cwd=stack_dir,
+        capture_output=True,
+        check=False,
+        env=_tofu_env(),
+    )
     if result.returncode != 0:
         print(result.stdout, flush=True)
         print(result.stderr, flush=True)
@@ -61,10 +74,15 @@ def apply(stack_dir: str) -> str:
     return result.stdout
 
 
-def plan_and_apply(stack_name: str, base_dir: str | None = None) -> str:
+def plan_and_apply(
+    stack_name: str,
+    base_dir: str | None = None,
+    *,
+    dry_run: bool = False,
+) -> str:
     """Init and apply a single tofu stack."""
     if base_dir is None:
         base_dir = str(_REPO_ROOT / "packages/homelab/src/tofu")
     stack_dir = os.path.join(base_dir, stack_name)
-    init(stack_dir)
-    return apply(stack_dir)
+    init(stack_dir, dry_run=dry_run)
+    return apply(stack_dir, dry_run=dry_run)

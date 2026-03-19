@@ -1,3 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ci"]
+
 [project]
 name = "monorepo-ci"
 version = "0.1.0"
@@ -5,6 +12,9 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.27",
 ]
+
+[project.scripts]
+ci-local = "ci.local:main"
 
 [project.optional-dependencies]
 dev = ["ruff", "mypy", "pytest"]
@@ -15,6 +25,9 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
 
 [tool.mypy]
 python_version = "3.12"

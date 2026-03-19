@@ -18,6 +18,9 @@ test --test_output=errors
 startup --host_jvm_args=-Xmx16g
 build --jobs=auto
 build --experimental_remote_merkle_tree_cache
+build --watchfs
+build --noexperimental_check_output_files
+build --reuse_sandbox_directories
 
 # Convenience
 build --color=yes

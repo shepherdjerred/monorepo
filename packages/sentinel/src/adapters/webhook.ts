@@ -203,9 +203,9 @@ export function createApp(config: Config): Hono {
   });
 
   // Static file serving for web UI (production build)
-  app.use("/*", serveStatic({ root: "./dist/web" }));
+  app.use("/*", serveStatic({ root: "./web/dist" }));
   // SPA fallback: serve index.html for unmatched routes
-  app.get("/*", serveStatic({ root: "./dist/web", path: "index.html" }));
+  app.get("/*", serveStatic({ root: "./web/dist", path: "index.html" }));
 
   return app;
 }

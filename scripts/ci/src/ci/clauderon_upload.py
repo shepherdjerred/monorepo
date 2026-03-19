@@ -8,7 +8,6 @@ Required env vars:
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 
 from ci.lib import buildkite
@@ -32,15 +31,8 @@ def main() -> None:
 
     print(f"Downloading clauderon v{version} artifacts", flush=True)
 
-    if shutil.which("buildkite-agent") is None:
-        print("buildkite-agent not found, skipping artifact download", flush=True)
-        return
-
     for filename in FILENAMES:
-        subprocess.run(
-            ["buildkite-agent", "artifact", "download", filename, "/tmp/"],
-            check=True,
-        )
+        buildkite.artifact_download(filename, "/tmp")
         print(f"Downloaded {filename}", flush=True)
 
     tag = f"clauderon-v{version}"

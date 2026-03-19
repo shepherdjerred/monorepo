@@ -3,5 +3,10 @@
 	"color_scheme": "auto",
 	"dark_color_scheme": "Catppuccin Mocha.sublime-color-scheme",
 	"light_color_scheme": "Catppuccin Latte.sublime-color-scheme",
-	"font_face": "Berkeley Mono"
+	"font_face": "Berkeley Mono",
+	"font_size": 14,
+	"ignored_packages":
+	[
+		"Vintage",
+	]
 }

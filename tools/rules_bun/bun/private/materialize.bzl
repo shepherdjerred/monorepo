@@ -150,28 +150,32 @@ PKG_DIR="${4:-}"
 # Phase 1: Pre-create ALL destination directories in one batch.
 # This avoids ~80k individual mkdir -p calls (the biggest perf bottleneck).
 # Only COPY and COPYDIR — LINK destinations are symlinks, not directories.
+# Use NUL-delimited output to handle paths with spaces.
 awk -F'\\t' '
-    $1 == "COPY"    { sub(/\\/[^\\/]*$/, "", $3); if ($3 != "") print d "/" $3 }
+    $1 == "COPY"    { orig=$3; sub(/\\/[^\\/]*$/, "", $3); if ($3 != "" && $3 != orig) print d "/" $3 }
     $1 == "COPYDIR" { print d "/" $3 }
-' d="$OUT_DIR" "$MANIFEST" | sort -u | xargs mkdir -p
+' d="$OUT_DIR" "$MANIFEST" | sort -u | while IFS= read -r dir; do
+    mkdir -p "$dir"
+done
 
-# Phase 2: Batch copy regular files.
+# Phase 2: Link-first regular files.
+# Try hardlink first (near-instant, same filesystem), fall back to copy.
 # awk can't output NUL bytes, so we use newline-delimited pairs (src\\ndst)
 # and read two lines at a time.
 awk -F'\\t' '$1 == "COPY" { print $2; print d "/" $3 }' d="$OUT_DIR" "$MANIFEST" \\
     | while IFS= read -r src && IFS= read -r dst; do
-    cp -f "$src" "$dst" 2>/dev/null || true
+    ln -f "$src" "$dst" 2>/dev/null || cp -f "$src" "$dst" || { echo "FATAL: link/copy failed: $src -> $dst" >&2; exit 1; }
 done
 
 # Phase 3: Copy directory artifacts (few operations).
 awk -F'\\t' '$1 == "COPYDIR" { print $2 "\\t" $3 }' "$MANIFEST" | while IFS=$'\\t' read -r src dst; do
-    cp -R "$src/." "$OUT_DIR/$dst/" 2>/dev/null || true
+    cp -R "$src/." "$OUT_DIR/$dst/" || { echo "FATAL: copydir failed: $src -> $OUT_DIR/$dst/" >&2; exit 1; }
 done
 
 # Phase 4: Create symlinks (few operations, mkdir inline is fine).
 awk -F'\\t' '$1 == "LINK" { print $2 "\\t" $3 }' "$MANIFEST" | while IFS=$'\\t' read -r src dst; do
     mkdir -p "$OUT_DIR/$(dirname "$dst")" 2>/dev/null || true
-    ln -sf "$src" "$OUT_DIR/$dst" 2>/dev/null || true
+    ln -sf "$src" "$OUT_DIR/$dst" || { echo "FATAL: symlink failed: $src -> $OUT_DIR/$dst" >&2; exit 1; }
 done
 
 # Create inter-entry dep symlinks and top-level hoisted symlinks.

@@ -1,16 +1,32 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/bazel:astro_build.bzl", "astro_build")
-load("//tools/bazel:astro_check.bzl", "astro_check")
-load("//tools/rules_bun/bun:defs.bzl", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
 
 exports_files(["package.json"])
 
-astro_build(name = "astro_build")
+bun_astro_build(
+    name = "astro_build",
+    data = glob(["public/**"]),
+    extra_files = [
+        "astro.config.mjs",
+        "postcss.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [":pkg"],
+)
 
-astro_check(name = "astro_check")
+bun_astro_check(
+    name = "astro_check",
+    extra_files = [
+        "astro.config.mjs",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [":pkg"],
+)
 
 bun_library(
     name = "pkg",

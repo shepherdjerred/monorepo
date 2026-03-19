@@ -12,3 +12,11 @@ BunInfo = provider(
         "workspace_deps": "depset(BunInfo): workspace:* dependencies",
     },
 )
+
+BunTreeInfo = provider(
+    doc = "A shared materialized TreeArtifact for Bun package rules",
+    fields = {
+        "tree": "File: the materialized TreeArtifact containing all sources, npm deps, and workspace deps",
+        "pkg_dir": "string: the package directory within the tree (e.g. 'packages/my-pkg')",
+    },
+)

@@ -21,39 +21,8 @@ import sys
 from pathlib import Path
 
 from ci.lib import buildkite, helm
+from ci.lib.catalog import HELM_CHARTS
 from ci.lib.config import ReleaseConfig
-
-HELM_CHARTS = [
-    "ddns",
-    "apps",
-    "scout-beta",
-    "scout-prod",
-    "starlight-karma-bot-beta",
-    "starlight-karma-bot-prod",
-    "redlib",
-    "better-skill-capped-fetcher",
-    "plausible",
-    "birmel",
-    "cloudflare-tunnel",
-    "media",
-    "home",
-    "postal",
-    "syncthing",
-    "golink",
-    "freshrss",
-    "pokemon",
-    "gickup",
-    "grafana-db",
-    "mcp-gateway",
-    "s3-static-sites",
-    "kyverno-policies",
-    "bugsink",
-    "dns-audit",
-    "sentinel",
-    "tasknotes",
-    "bazel-remote",
-    "status-page",
-]
 
 
 def _repo_root() -> Path:

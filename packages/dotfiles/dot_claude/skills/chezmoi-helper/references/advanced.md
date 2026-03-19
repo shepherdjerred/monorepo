@@ -329,6 +329,24 @@ data["mcpServers"] = {{ template "mcp-servers.json.tmpl" . }}
 json.dump(data, sys.stdout, indent=2)
 ```
 
+### Native Modify Template (Preferred for JSON)
+
+Use `chezmoi:modify-template` to modify JSON files without Python. The file must **not** have a `.tmpl` extension. Existing content is available via `.chezmoi.stdin`. Go's `toPrettyJson` sorts keys alphabetically, preventing key-ordering diffs.
+
+```
+{{- /* chezmoi:modify-template */ -}}
+{{- $data := dict -}}
+{{- if ne .chezmoi.stdin "" -}}
+{{-   $data = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{ $data |
+  setValueAtPath "ui.theme" "dark" |
+  setValueAtPath "mcpServers" (includeTemplate "mcp-servers.json.tmpl" . | fromJson) |
+  toPrettyJson -}}
+```
+
+`setValueAtPath` with dot-paths (e.g. `"mcpServers.playwright.command"`) sets only that nested key, preserving sibling keys — equivalent to deep merge.
+
 ## Multi-Machine Management
 
 ### OS Detection Patterns

@@ -2,6 +2,8 @@
 
 exports_files([
     "bun_binary.sh.tpl",
+    "bun_build.sh.tpl",
+    "bun_build_test.sh.tpl",
     "bun_eslint_test.sh.tpl",
     "bun_test.sh.tpl",
 ])

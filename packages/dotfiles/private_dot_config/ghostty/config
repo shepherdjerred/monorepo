@@ -9,3 +9,12 @@ font-codepoint-map = U+E000-U+F8FF=Symbols Nerd Font Mono
 theme = light:catppuccin-latte,dark:catppuccin-mocha
 
 keybind = shift+enter=text:\x1b\r
+keybind = global:cmd+backquote=toggle_quick_terminal
+
+window-save-state = always
+macos-titlebar-style = tabs
+cursor-click-to-move = true
+shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo,path
+background-blur = macos-glass-regular
+scrollback-limit = 100000000
+quick-terminal-position = top

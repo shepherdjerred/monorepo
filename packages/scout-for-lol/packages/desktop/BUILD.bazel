@@ -1,6 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/bazel:vite_build.bzl", "vite_build")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_vite_build")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -8,9 +7,17 @@ bun_link_all_packages(name = "node_modules")
 exports_files(["package.json"])
 
 # Build only the Vite frontend portion (not the full Tauri build).
-vite_build(
+bun_vite_build(
     name = "vite_build",
-    build_cmd = "bun x vite build",
+    extra_files = [
+        "vite.config.ts",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+        "postcss.config.js",
+        "tailwind.config.ts",
+        "index.html",
+    ],
+    deps = [":pkg"],
 )
 
 # Tauri desktop app; this bun_library wraps sources for dependency tracking.

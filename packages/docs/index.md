@@ -24,6 +24,7 @@ AI-maintained knowledge base for the monorepo.
 - [Bazel Bun-Native Phase 3](plans/2026-03-11_bazel-bun-native-phase3.md) - Drop rules_js, fully bun-native Bazel (~95% complete)
 - [rules_bun v2](plans/2026-03-17_rules-bun-v2-link-first-materialization.md) - Link-first prepared trees plus first-class Vite/Astro support
 - [rules_bun v2 Hermetic Framework Rules](plans/2026-03-18_rules-bun-v2-hermetic-framework-rules.md) - Complete hermetic, remote-cacheable Bun/Vite/Astro migration plan
+- [rules_bun v2 Implementation Status](plans/2026-03-19_rules-bun-v2-implementation-status.md) - Progress tracker: infrastructure done, Astro works, Vite blocked on realpath
 - [Buildkite Dynamic Pipeline](plans/2026-02-22_buildkite.md) - Bazel + Buildkite CI pipeline design
 - [ArgoCD Token Management](plans/2026-02-22_argocd-token-management.md) - Automate ArgoCD token via OpenTofu + 1Password
 - [Sentinel Implementation](plans/2026-02-22_sentinel-implementation.md) - Autonomous agent system build plan with phased rollout
@@ -31,4 +32,6 @@ AI-maintained knowledge base for the monorepo.
 
 ## Guides
 
+- [Monthly Changelog: March 2026](guides/2026-03-19_monthly-changelog-march.md) - Summary of major changes Feb 19 – Mar 19, 2026
+- [Local CI/Release CLI](guides/2026-03-18_local-ci-cli.md) - Run deploy/release workflows locally without Buildkite
 - [Sentinel Deployment](guides/2026-02-22_sentinel-deployment.md) - Manual steps to deploy sentinel to the cluster

@@ -1,0 +1,9 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Exclude Bazel output directories from Spotlight indexing
+mkdir -p ~/Library/Caches/bazel
+touch ~/Library/Caches/bazel/.metadata_never_index
+sudo touch /private/var/tmp/.metadata_never_index
+{{- end -}}

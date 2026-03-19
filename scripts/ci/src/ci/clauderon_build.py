@@ -5,7 +5,6 @@ Usage: uv run -m ci.clauderon_build --target x86_64-unknown-linux-gnu --filename
 from __future__ import annotations
 
 import argparse
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -25,9 +24,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build a single Clauderon target")
     parser.add_argument("--target", required=True, help="Rust target triple")
     parser.add_argument("--filename", required=True, help="Output binary name")
+    parser.add_argument("--version", default=None, help="Override version (default: from Buildkite metadata)")
     args = parser.parse_args()
 
-    version = buildkite.get_metadata("clauderon_version")
+    version = args.version or buildkite.get_metadata("clauderon_version")
     if not version:
         print("No clauderon release detected, skipping", flush=True)
         return
@@ -53,11 +53,7 @@ def main() -> None:
     dst = f"/tmp/{args.filename}"
     subprocess.run(["cp", str(src), dst], check=True)
 
-    if shutil.which("buildkite-agent") is not None:
-        subprocess.run(
-            ["buildkite-agent", "artifact", "upload", f"/tmp/{args.filename}"],
-            check=True,
-        )
+    buildkite.artifact_upload(f"/tmp/{args.filename}")
 
     print(f"Built and uploaded {args.filename}", flush=True)
 

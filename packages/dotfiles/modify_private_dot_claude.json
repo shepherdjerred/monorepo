@@ -1,0 +1,6 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $data := dict -}}
+{{- if ne .chezmoi.stdin "" -}}
+{{-   $data = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{ $data | setValueAtPath "mcpServers" (includeTemplate "claude-mcp-servers.json.tmpl" . | fromJson) | toPrettyJson -}}

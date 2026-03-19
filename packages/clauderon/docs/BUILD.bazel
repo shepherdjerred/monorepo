@@ -1,7 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/bazel:astro_build.bzl", "astro_build")
-load("//tools/bazel:astro_check.bzl", "astro_check")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_eslint_test", "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -24,9 +22,30 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-astro_build(name = "astro_build")
+bun_astro_build(
+    name = "astro_build",
+    data = glob([
+        "public/**",
+        "src/content/**",
+        "src/assets/**",
+    ]),
+    extra_files = [
+        "astro.config.mjs",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [":pkg"],
+)
 
-astro_check(name = "astro_check")
+bun_astro_check(
+    name = "astro_check",
+    extra_files = [
+        "astro.config.mjs",
+        "tsconfig.json",
+        "//:tsconfig.base.json",
+    ],
+    deps = [":pkg"],
+)
 
 # Astro/Starlight docs site; this bun_library wraps sources for dependency tracking.
 bun_library(

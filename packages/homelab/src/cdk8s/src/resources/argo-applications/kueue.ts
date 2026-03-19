@@ -12,7 +12,6 @@ manageJobsWithoutQueueName: true
 managedJobsNamespaceSelector:
   matchLabels:
     kueue.x-k8s.io/managed-namespace: "true"
-enableClusterQueueResources: true
 health:
   healthProbeBindAddress: :8081
 metrics:

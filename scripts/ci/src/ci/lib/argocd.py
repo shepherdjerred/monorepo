@@ -5,35 +5,47 @@ Ported from .dagger/src/homelab-argocd.ts.
 
 from __future__ import annotations
 
+import json
 import time
 
-import json
-
-import httpx
+from ci.lib import runner
 
 ARGOCD_SERVER = "https://argocd.tailnet-1a49.ts.net"
 
 
-def sync(app_name: str, token: str, *, server: str = ARGOCD_SERVER) -> str:
+def sync(
+    app_name: str,
+    token: str,
+    *,
+    server: str = ARGOCD_SERVER,
+    dry_run: bool = False,
+) -> str:
     """Trigger an ArgoCD sync for the given application.
 
     Args:
         app_name: The ArgoCD application name to sync.
         token: ArgoCD API bearer token.
         server: ArgoCD server URL.
+        dry_run: If True, print what would be done without executing.
 
     Returns:
         A human-readable status message.
     """
     url = f"{server}/api/v1/applications/{app_name}/sync"
-    response = httpx.post(
+    response = runner.http_request(
+        "POST",
         url,
+        dry_run=dry_run,
+        dry_run_text='{"status":{"sync":{"status":"Synced"},"health":{"status":"Healthy"}}}',
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         },
         timeout=60,
     )
+
+    if dry_run:
+        return f"Sync triggered (dry-run): {app_name}"
 
     if response.status_code >= 200 and response.status_code < 300:
         return _parse_sync_response(response.text)
@@ -46,7 +58,13 @@ def sync(app_name: str, token: str, *, server: str = ARGOCD_SERVER) -> str:
     return response.text  # unreachable, but satisfies type checker
 
 
-def wait_for_health(app_name: str, token: str, *, server: str = ARGOCD_SERVER, timeout: int = 300) -> str:
+def wait_for_health(
+    app_name: str,
+    token: str,
+    *,
+    server: str = ARGOCD_SERVER,
+    timeout: int = 300,
+) -> str:
     """Poll ArgoCD until the application reports Healthy status.
 
     Args:
@@ -65,14 +83,15 @@ def wait_for_health(app_name: str, token: str, *, server: str = ARGOCD_SERVER, t
     headers = {"Authorization": f"Bearer {token}"}
 
     while time.monotonic() < deadline:
-        response = httpx.get(
+        response = runner.http_request(
+            "GET",
             f"{server}/api/v1/applications/{app_name}",
             headers=headers,
             timeout=30,
         )
         if response.status_code == 200:
             data = response.json()
-            health = data.get("status", {}).get("health", {}).get("status", "Unknown")
+            health: str = data.get("status", {}).get("health", {}).get("status", "Unknown")
             if health == "Healthy":
                 return health
             sync_status = data.get("status", {}).get("sync", {}).get("status", "Unknown")
@@ -93,8 +112,15 @@ def _parse_sync_response(body: str) -> str:
         revision = (status.get("sync", {}).get("revision", "Unknown"))[:8]
         resources_count = len(status.get("resources", []))
         conditions = status.get("conditions", [])
-        message = conditions[0].get("message", "") if conditions else data.get("message", "Sync completed")
-        return f"Phase: {phase}, Health: {health}, Revision: {revision}, Resources: {resources_count}\n{message}"
+        message = (
+            conditions[0].get("message", "")
+            if conditions
+            else data.get("message", "Sync completed")
+        )
+        return (
+            f"Phase: {phase}, Health: {health}, "
+            f"Revision: {revision}, Resources: {resources_count}\n{message}"
+        )
     except (json.JSONDecodeError, KeyError, IndexError, TypeError) as e:
         print(f"WARNING: Failed to parse ArgoCD sync response: {e}", flush=True)
         return body

@@ -1,0 +1,29 @@
+---
+description: Finder — file manager
+sudo: false
+current_host: false
+data:
+  com.apple.finder:
+    # Use list view by default
+    FXPreferredViewStyle: Nlsv
+    # Show path bar at bottom of window
+    ShowPathbar: true
+    # Show status bar at bottom of window
+    ShowStatusBar: true
+    # Sort folders before files
+    _FXSortFoldersFirst: true
+    # Search the current folder by default
+    FXDefaultSearchScope: SCcf
+    # Disable warning when changing file extensions
+    FXEnableExtensionChangeWarning: false
+    # Auto-empty trash after 30 days
+    FXRemoveOldTrashItems: true
+    # Show all file extensions
+    AppleShowAllExtensions: true
+    # Show hidden files
+    AppleShowAllFiles: true
+    # Don't show icons on the desktop
+    ShowExternalHardDrivesOnDesktop: false
+    ShowHardDrivesOnDesktop: false
+    ShowMountedServersOnDesktop: false
+    ShowRemovableMediaOnDesktop: false
