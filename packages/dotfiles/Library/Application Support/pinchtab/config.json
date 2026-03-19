@@ -1,0 +1,97 @@
+{
+  "configVersion": "0.8.0",
+  "server": {
+    "port": "",
+    "bind": "",
+    "token": "0069f3555c0e8704af1cf13345d08af75fd9fc57165c055e",
+    "stateDir": "",
+    "engine": ""
+  },
+  "browser": {
+    "version": "",
+    "binary": "",
+    "extraFlags": "",
+    "extensionPaths": []
+  },
+  "instanceDefaults": {
+    "mode": "headed",
+    "noRestore": null,
+    "timezone": "",
+    "blockImages": null,
+    "blockMedia": null,
+    "blockAds": null,
+    "maxTabs": null,
+    "maxParallelTabs": null,
+    "userAgent": "",
+    "noAnimations": null,
+    "stealthLevel": "",
+    "tabEvictionPolicy": ""
+  },
+  "security": {
+    "allowEvaluate": null,
+    "allowMacro": null,
+    "allowScreencast": null,
+    "allowDownload": null,
+    "downloadAllowedDomains": [],
+    "downloadMaxBytes": null,
+    "allowUpload": null,
+    "uploadMaxRequestBytes": null,
+    "uploadMaxFiles": null,
+    "uploadMaxFileBytes": null,
+    "uploadMaxTotalBytes": null,
+    "maxRedirects": null,
+    "attach": {
+      "enabled": null,
+      "allowHosts": [],
+      "allowSchemes": []
+    },
+    "idpi": {
+      "enabled": false,
+      "allowedDomains": [],
+      "strictMode": false,
+      "scanContent": false,
+      "wrapContent": false,
+      "customPatterns": [],
+      "scanTimeoutSec": 0
+    }
+  },
+  "profiles": {
+    "baseDir": "",
+    "defaultProfile": ""
+  },
+  "multiInstance": {
+    "strategy": "",
+    "allocationPolicy": "",
+    "instancePortStart": null,
+    "instancePortEnd": null,
+    "restart": {
+      "maxRestarts": null,
+      "initBackoffSec": null,
+      "maxBackoffSec": null,
+      "stableAfterSec": null
+    }
+  },
+  "timeouts": {
+    "actionSec": 0,
+    "navigateSec": 0,
+    "shutdownSec": 0,
+    "waitNavMs": 0
+  },
+  "scheduler": {
+    "enabled": null,
+    "strategy": "",
+    "maxQueueSize": null,
+    "maxPerAgent": null,
+    "maxInflight": null,
+    "maxPerAgentInflight": null,
+    "resultTTLSec": null,
+    "workerCount": null
+  },
+  "observability": {
+    "activity": {
+      "enabled": null,
+      "sessionIdleSec": null,
+      "retentionDays": null
+    }
+  }
+}

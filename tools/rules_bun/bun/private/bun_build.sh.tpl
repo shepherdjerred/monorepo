@@ -28,13 +28,32 @@ export NEXT_TELEMETRY_DISABLED=1
 BUN="$(cd "$(dirname "$BUN")" && echo "$PWD/$(basename "$BUN")")"
 TREE_ABS="$(cd "$TREE" && pwd)"
 
-# Copy the full prepared tree to a clean short path.
-# This is necessary because Vite/Rollup resolve HTML entry points via
-# realpath and reject paths that look like they escape the project root.
-# The TreeArtifact lives deep in Bazel's execroot (20+ dir levels), causing
-# relative path computation to produce invalid "../" chains.
-# cp -a preserves symlinks and is fast enough (~5-10s for typical trees).
-cp -a "$TREE_ABS" "$WORK/tree"
+# Copy the prepared tree to a clean short path.
+# Vite/Rollup resolve HTML entry points via realpath and reject paths that
+# escape the project root. The TreeArtifact lives deep in Bazel's execroot
+# (20+ dir levels), causing relative path computation to produce invalid
+# "../" chains.
+#
+# Strategy: cp -R preserves symlinks (keeping node_modules small), then we
+# re-copy just the package source directory with -L to dereference hardlinks
+# so that realpath() on source/HTML files resolves within this overlay.
+# This avoids dereferencing the entire node_modules tree (which can be 600MB+).
+cp -R "$TREE_ABS" "$WORK/tree"
+
+# Dereference hardlinks in the package source directory only.
+# This makes realpath() on HTML entries and source files resolve within
+# the overlay instead of back to the deep TreeArtifact.
+PKG_SRC="$WORK/tree/$PKG_DIR"
+if [ -d "$PKG_SRC" ]; then
+    TMP_PKG="$WORK/_pkg_deref"
+    # Copy package dir with -RL to dereference, excluding node_modules
+    mkdir -p "$TMP_PKG"
+    # Use rsync-like approach: copy everything except node_modules
+    find "$PKG_SRC" -maxdepth 1 ! -name node_modules ! -path "$PKG_SRC" -exec cp -RL {} "$TMP_PKG/" \;
+    # Replace originals with dereferenced copies
+    find "$TMP_PKG" -maxdepth 1 ! -path "$TMP_PKG" -exec sh -c 'rm -rf "$1/$(basename "$2")" && mv "$2" "$1/"' _ "$PKG_SRC" {} \;
+    rm -rf "$TMP_PKG"
+fi
 
 cd "$WORK/tree/$PKG_DIR"
 export PATH="$(pwd)/node_modules/.bin:$(dirname "$BUN"):/usr/bin:/bin"

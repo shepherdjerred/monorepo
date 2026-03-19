@@ -1,5 +1,6 @@
 import Foundation
 import Markdown
+import os
 import SwiftUI
 import Yams
 
@@ -39,7 +40,7 @@ enum TipParser {
     }
 
     /// Load all tip files from a directory and group them into apps.
-    static func loadAll(from directory: URL) throws -> [TipApp] {
+    static func loadAll(from directory: URL) -> [TipApp] {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(
             at: directory,
@@ -51,55 +52,36 @@ enum TipParser {
 
         // Parse all individual tip files
         var tipsByApp: [String: (metadata: TipAppMetadata, tips: [(category: String, item: TipItem)])] = [:]
+        var parseFailures = 0
 
         while let fileURL = enumerator.nextObject() as? URL {
             guard fileURL.pathExtension == "md" else {
                 continue
             }
-            let content = try String(contentsOf: fileURL, encoding: .utf8)
-            let parsed = try parseSingleTip(content: content)
-            let appName = parsed.metadata.app
-            let category = parsed.metadata.category ?? "General"
+            do {
+                let content = try String(contentsOf: fileURL, encoding: .utf8)
+                let parsed = try parseSingleTip(content: content)
+                let appName = parsed.metadata.app
+                let category = parsed.metadata.category ?? "General"
 
-            if tipsByApp[appName] == nil {
-                tipsByApp[appName] = (metadata: parsed.metadata, tips: [])
+                if tipsByApp[appName] == nil {
+                    tipsByApp[appName] = (metadata: parsed.metadata, tips: [])
+                }
+                tipsByApp[appName]?.tips.append((category: category, item: parsed.item))
+            } catch {
+                parseFailures += 1
+                let tipsError = TipsError.tipFileParseError(file: fileURL, underlying: error)
+                Logger.parsing.error("\(tipsError.description)")
             }
-            tipsByApp[appName]!.tips.append((category: category, item: parsed.item))
+        }
+
+        if parseFailures > 0 {
+            Logger.parsing.notice("\(parseFailures) tip file(s) failed to parse")
         }
 
         // Build TipApp objects from grouped tips
         let apps = tipsByApp.map { _, value -> TipApp in
-            let metadata = value.metadata
-            let color = metadata.color.flatMap { self.parseHexColor($0) } ?? .accentColor
-
-            // Group tips by category, preserving insertion order
-            var sectionOrder: [String] = []
-            var sectionItems: [String: [TipItem]] = [:]
-
-            for (category, item) in value.tips {
-                if sectionItems[category] == nil {
-                    sectionOrder.append(category)
-                    sectionItems[category] = []
-                }
-                sectionItems[category]!.append(item)
-            }
-
-            let sections = sectionOrder.map { heading in
-                TipSection(
-                    id: heading.lowercased().replacingOccurrences(of: " ", with: "-"),
-                    heading: heading,
-                    items: sectionItems[heading]!
-                )
-            }
-
-            return TipApp(
-                id: metadata.app.lowercased().replacingOccurrences(of: " ", with: "-"),
-                name: metadata.app,
-                icon: metadata.icon,
-                color: color,
-                website: metadata.website,
-                sections: sections
-            )
+            self.buildApp(from: value)
         }
 
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -116,6 +98,41 @@ enum TipParser {
     }
 
     // MARK: Private
+
+    private static func buildApp(
+        from value: (metadata: TipAppMetadata, tips: [(category: String, item: TipItem)])
+    ) -> TipApp {
+        let metadata = value.metadata
+        let color = metadata.color.flatMap { self.parseHexColor($0) } ?? .accentColor
+
+        // Group tips by category, preserving insertion order
+        var sectionOrder: [String] = []
+        var sectionItems: [String: [TipItem]] = [:]
+
+        for (category, item) in value.tips {
+            if sectionItems[category] == nil {
+                sectionOrder.append(category)
+            }
+            sectionItems[category, default: []].append(item)
+        }
+
+        let sections = sectionOrder.map { heading in
+            TipSection(
+                id: heading.lowercased().replacingOccurrences(of: " ", with: "-"),
+                heading: heading,
+                items: sectionItems[heading] ?? []
+            )
+        }
+
+        return TipApp(
+            id: metadata.app.lowercased().replacingOccurrences(of: " ", with: "-"),
+            name: metadata.app,
+            icon: metadata.icon,
+            color: color,
+            website: metadata.website,
+            sections: sections
+        )
+    }
 
     private static func splitFrontmatter(_ content: String) throws -> (TipAppMetadata, String) {
         let delimiter = "---"

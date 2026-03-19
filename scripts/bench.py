@@ -42,9 +42,9 @@ console = Console()
 
 CACHE_DIR = Path.home() / ".cache" / "bazel-bench"
 STATE_FILE = CACHE_DIR / "state.json"
-INSTANCE_TYPE = "i4i.32xlarge"
-ON_DEMAND_PRICE = "10.98"  # USD/hr for i4i.32xlarge us-east-1
-SPOT_PRICE_ESTIMATE = 3.5  # rough estimate
+INSTANCE_TYPE = "i4i.4xlarge"
+ON_DEMAND_PRICE = "1.37"  # USD/hr for i4i.4xlarge us-east-1
+SPOT_PRICE_ESTIMATE = 0.45  # rough estimate
 REGION = "us-east-1"
 REPO_URL = "https://github.com/shepherdjerred/monorepo.git"
 REPO_LOCAL = Path.home() / "git" / "monorepo"
@@ -165,8 +165,9 @@ def cmd_launch(args: argparse.Namespace) -> None:
         resp = sq.get_service_quota(ServiceCode="ec2", QuotaCode="L-34B43A08")
         quota = resp["Quota"]["Value"]
         console.print(f"Spot vCPU quota: {quota}")
-        if quota < 128:
-            console.print(f"[yellow]Warning: Spot quota ({quota}) < 128 vCPUs needed for {INSTANCE_TYPE}.[/yellow]")
+        required_vcpus = 16  # i4i.4xlarge
+        if quota < required_vcpus:
+            console.print(f"[yellow]Warning: Spot quota ({quota}) < {required_vcpus} vCPUs needed for {INSTANCE_TYPE}.[/yellow]")
             console.print("[yellow]Request an increase at: https://console.aws.amazon.com/servicequotas/[/yellow]")
             if not args.force:
                 console.print("Use --force to attempt launch anyway.")
@@ -221,8 +222,8 @@ def cmd_launch(args: argparse.Namespace) -> None:
     ami_id = get_ubuntu_ami()
     console.print(f"Using AMI: {ami_id}")
 
-    # Launch spot instance
-    console.print(f"Launching {INSTANCE_TYPE} spot instance...")
+    # Launch on-demand instance
+    console.print(f"Launching {INSTANCE_TYPE} on-demand instance...")
     run_resp = ec2.run_instances(
         ImageId=ami_id,
         InstanceType=INSTANCE_TYPE,
@@ -238,14 +239,6 @@ def cmd_launch(args: argparse.Namespace) -> None:
                 "DeleteOnTermination": True,
             },
         }],
-        InstanceMarketOptions={
-            "MarketType": "spot",
-            "SpotOptions": {
-                "MaxPrice": ON_DEMAND_PRICE,
-                "SpotInstanceType": "one-time",
-                "InstanceInterruptionBehavior": "terminate",
-            },
-        },
         InstanceInitiatedShutdownBehavior="terminate",
         TagSpecifications=[{
             "ResourceType": "instance",
@@ -347,7 +340,7 @@ def cmd_setup(args: argparse.Namespace) -> None:
         "build --noremote_accept_cached\n"
         "build --noremote_upload_local_results\n"
         "build --noremote_local_fallback\n"
-        "build --jobs=120\n"
+        "build --jobs=14\n"
         "BAZELRC\n"
         "&& bazel --bazelrc=.bazelrc --bazelrc=.bazelrc.bench fetch //..."
     ))

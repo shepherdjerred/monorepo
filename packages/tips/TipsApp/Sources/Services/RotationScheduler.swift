@@ -2,6 +2,13 @@ import Foundation
 
 /// Manages daily app-of-the-day rotation.
 enum RotationScheduler {
+    /// Result of a rotation advance check.
+    struct RotationResult {
+        let index: Int
+        let dateString: String
+        let didAdvance: Bool
+    }
+
     /// Determine the current app index, advancing if a new day has started.
     ///
     /// - Parameters:
@@ -9,26 +16,26 @@ enum RotationScheduler {
     ///   - lastAppIndex: The index of the last shown app.
     ///   - appCount: Total number of apps available.
     ///   - today: The current date (injectable for testing).
-    /// - Returns: A tuple of (newIndex, newDateString, didAdvance).
+    /// - Returns: A `RotationResult` with the new index, date string, and whether advancement occurred.
     static func advance(
         lastShownDate: String,
         lastAppIndex: Int,
         appCount: Int,
         today: Date = .now
-    ) -> (index: Int, dateString: String, didAdvance: Bool) {
+    ) -> RotationResult {
         guard appCount > 0 else {
-            return (0, self.formatDate(today), false)
+            return RotationResult(index: 0, dateString: self.formatDate(today), didAdvance: false)
         }
 
         let todayString = self.formatDate(today)
 
         if lastShownDate == todayString {
             let safeIndex = lastAppIndex % appCount
-            return (safeIndex, todayString, false)
+            return RotationResult(index: safeIndex, dateString: todayString, didAdvance: false)
         }
 
         let newIndex = (lastAppIndex + 1) % appCount
-        return (newIndex, todayString, true)
+        return RotationResult(index: newIndex, dateString: todayString, didAdvance: true)
     }
 
     /// Format a date as yyyy-MM-dd for storage.

@@ -3,11 +3,19 @@ import SwiftUI
 // MARK: - ServiceStatus
 
 /// Health status of a monitored service, ordered by severity.
-enum ServiceStatus: Comparable, CaseIterable {
-    case ok
-    case warning
-    case error
-    case unknown
+enum ServiceStatus: Int, CaseIterable {
+    case ok = 0
+    case warning = 1
+    case error = 2
+    case unknown = 3
+}
+
+// MARK: Comparable
+
+extension ServiceStatus: Comparable {
+    static func < (lhs: ServiceStatus, rhs: ServiceStatus) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
 }
 
 extension ServiceStatus {

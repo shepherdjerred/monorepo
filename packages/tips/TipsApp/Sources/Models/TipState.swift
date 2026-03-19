@@ -15,7 +15,7 @@ enum TipStatus: String, Codable {
 // MARK: - TipState
 
 /// Persisted per-tip state for rotation, favorites, and learning.
-struct TipState: Codable {
+struct TipState: Codable, Equatable {
     var status: TipStatus = .unseen
     /// Date string (yyyy-MM-dd) when this tip should be shown again. Only set when status == .showAgain.
     var showAgainDate: String?

@@ -12,11 +12,11 @@ struct ServiceGridItem: View {
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(self.snapshot.displayName)
+                Text(verbatim: self.snapshot.displayName)
                     .font(.caption.bold())
                     .lineLimit(1)
 
-                Text(self.snapshot.summary)
+                Text(verbatim: self.snapshot.summary)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -29,5 +29,9 @@ struct ServiceGridItem: View {
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(self.snapshot.displayName), \(self.snapshot.status.label)")
+        .accessibilityValue(self.snapshot.summary)
+        .accessibilityHint(String(localized: "Double-tap to open dashboard"))
     }
 }

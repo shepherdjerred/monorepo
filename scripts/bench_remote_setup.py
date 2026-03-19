@@ -64,7 +64,7 @@ def setup_nvme_raid0() -> None:
 
     print(f"Mounting at {NVME_MOUNT}...")
     Path(NVME_MOUNT).mkdir(parents=True, exist_ok=True)
-    run(f"mount -o noatime,nobarrier,allocsize=64k /dev/md0 {NVME_MOUNT}")
+    run(f"mount -o noatime,allocsize=64k /dev/md0 {NVME_MOUNT}")
 
     # Create directory structure
     for d in ["repo", "bazel-output-base", "bazel-disk-cache", "results", "results/profiles", "results/bep"]:

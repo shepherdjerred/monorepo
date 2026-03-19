@@ -1,11 +1,16 @@
 import Foundation
 import Observation
+import os
 import SwiftUI
 
 // MARK: - FlatTip
 
 /// A single tip with its app context, for flat rotation.
-struct FlatTip: Identifiable {
+struct FlatTip: Identifiable, Transferable {
+    static var transferRepresentation: some TransferRepresentation {
+        ProxyRepresentation(exporting: \.formattedText)
+    }
+
     let id: String
     let appName: String
     let appIcon: String
@@ -14,6 +19,14 @@ struct FlatTip: Identifiable {
     let category: String
     let text: String
     let shortcut: String?
+
+    var formattedText: String {
+        if let shortcut {
+            "\(shortcut) — \(self.text)"
+        } else {
+            self.text
+        }
+    }
 }
 
 // MARK: - AppState
@@ -32,6 +45,7 @@ final class AppState {
         self.defaults = defaults
         self.reviewManager = reviewManager
         self.lastShownDate = defaults.string(forKey: self.lastShownDateKey) ?? ""
+        self.tipsDirectory = tipsDirectory
 
         if let tipsDirectory {
             self.loadTips(from: tipsDirectory)
@@ -45,6 +59,10 @@ final class AppState {
     var selectedAppId: String?
 
     let reviewManager: ReviewManager
+
+    var contentDirectoryPath: String {
+        self.tipsDirectory?.path ?? "(none)"
+    }
 
     var currentTip: FlatTip? {
         guard !self.tipHistory.isEmpty, self.tipHistory.indices.contains(self.historyIndex) else {
@@ -76,35 +94,45 @@ final class AppState {
 
     // MARK: - Loading
 
+    func reloadTips() {
+        guard let tipsDirectory else {
+            return
+        }
+        self.loadTips(from: tipsDirectory)
+    }
+
     func loadTips(from directory: URL) {
-        do {
-            self.apps = try TipParser.loadAll(from: directory)
-            self.allTips = self.apps.flatMap { app in
-                app.sections.flatMap { section in
-                    section.items.map { item in
-                        FlatTip(
-                            id: "\(app.id)-\(section.id)-\(item.id)",
-                            appName: app.name,
-                            appIcon: app.icon,
-                            appColor: app.color,
-                            appWebsite: app.website,
-                            category: section.heading,
-                            text: item.text,
-                            shortcut: item.shortcut
-                        )
-                    }
+        Logger.parsing.info("Loading tips from \(directory.path)")
+        self.tipsDirectory = directory
+
+        self.apps = TipParser.loadAll(from: directory)
+        self.allTips = self.apps.flatMap { app in
+            app.sections.flatMap { section in
+                section.items.map { item in
+                    FlatTip(
+                        id: "\(app.id)-\(section.id)-\(item.id)",
+                        appName: app.name,
+                        appIcon: app.icon,
+                        appColor: app.color,
+                        appWebsite: app.website,
+                        category: section.heading,
+                        text: item.text,
+                        shortcut: item.shortcut
+                    )
                 }
             }
-            .sorted { $0.id < $1.id }
-
-            self.selectDailyTip()
-
-            if self.selectedAppId == nil {
-                self.selectedAppId = self.currentApp?.id
-            }
-        } catch {
-            print("Failed to load tips: \(error)")
         }
+        .sorted { $0.id < $1.id }
+
+        Logger.parsing.info("Loaded \(self.apps.count) apps with \(self.allTips.count) tips")
+
+        self.selectDailyTip()
+
+        if self.selectedAppId == nil {
+            self.selectedAppId = self.currentApp?.id
+        }
+
+        SpotlightIndexer.indexAllTips(self.allTips)
     }
 
     // MARK: - Rotation
@@ -192,6 +220,7 @@ final class AppState {
 
     private let defaults: UserDefaults
     private let lastShownDateKey = "lastShownDate"
+    private var tipsDirectory: URL?
 
     private var lastShownDate: String
 

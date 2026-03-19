@@ -48,6 +48,8 @@ enum SecretRefs {
     static let cloudflareToken = "cloudflare-token"
     static let cloudflareAccountId = "cloudflare-account-id"
     static let pagerDuty = "pagerduty"
+    static let anthropicAdmin = "anthropic-admin"
+    static let openaiAdmin = "openai-admin"
 
     /// Map of logical key to op:// reference (using vault+item IDs).
     static let references: [(key: String, ref: String)] = [
@@ -59,6 +61,8 @@ enum SecretRefs {
         (cloudflareToken, "op://\(k8sVault)/phno6uzitv2hl7isv36abr5kky/password"),
         (cloudflareAccountId, "op://\(personalVault)/txmgcbswnpbpsoun2mrc4i5doi/account id"),
         (pagerDuty, "op://\(personalVault)/PagerDuty API Token/credential"),
+        (anthropicAdmin, "op://\(personalVault)/Anthropic Admin Key/credential"),
+        (openaiAdmin, "op://\(personalVault)/OpenAI Admin Key/credential"),
     ]
 
     // MARK: Private
@@ -86,7 +90,7 @@ final class BatchSecretProvider: SecretProvider, @unchecked Sendable {
     /// Load all secrets. Call once at startup before polling.
     func loadAll() async {
         guard FileManager.default.fileExists(atPath: self.opPath) else {
-            glanceLog("op not found at \(self.opPath)")
+            GlanceLogger.secrets.error("op not found at \(self.opPath, privacy: .public)")
             return
         }
 
@@ -95,10 +99,10 @@ final class BatchSecretProvider: SecretProvider, @unchecked Sendable {
         var lines = ["#!/bin/bash"]
         for (key, ref) in SecretRefs.references {
             // Use op read with --no-newline, capture output
-            lines
-                .append(
-                    "VAL=$(\"\(self.opPath)\" read \"\(ref)\" 2>/dev/null) && printf '%s\\t%s\\n' '\(key)' \"$VAL\" || printf '%s\\t\\n' '\(key)'",
-                )
+            let readCmd = "VAL=$(\"\(self.opPath)\" read \"\(ref)\" 2>/dev/null)"
+            let printOk = "printf '%s\\t%s\\n' '\(key)' \"$VAL\""
+            let printFail = "printf '%s\\t\\n' '\(key)'"
+            lines.append("\(readCmd) && \(printOk) || \(printFail)")
         }
         let script = lines.joined(separator: "\n")
 
@@ -119,9 +123,10 @@ final class BatchSecretProvider: SecretProvider, @unchecked Sendable {
                 }
             }
 
-            glanceLog("Loaded \(self.cache.count)/\(SecretRefs.references.count) secrets from 1Password")
+            let total = SecretRefs.references.count
+            GlanceLogger.secrets.info("Loaded \(self.cache.count)/\(total) secrets from 1Password")
         } catch {
-            glanceLog("Failed to load secrets: \(error)")
+            GlanceLogger.secrets.error("Failed to load secrets: \(error, privacy: .public)")
         }
     }
 

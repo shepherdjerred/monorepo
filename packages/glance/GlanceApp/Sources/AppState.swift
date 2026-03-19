@@ -1,12 +1,16 @@
+import AppKit
+import Dispatch
 import Foundation
 import Observation
 import OSLog
 
-private let logger = Logger(subsystem: "com.glance", category: "AppState")
-
 // MARK: - AppState
 
-/// Central app state managing service snapshots, polling, and health aggregation.
+/// Thin UI coordinator holding only view state.
+///
+/// All fetch/polling logic lives in `PollingCoordinator`.
+/// AppState receives snapshots via `receiveSnapshots(_:)` and exposes
+/// them to SwiftUI views.
 @MainActor @Observable
 final class AppState {
     // MARK: Lifecycle
@@ -15,10 +19,30 @@ final class AppState {
 
     init(
         providers: [any ServiceProvider],
-        refreshInterval: Duration = .seconds(60),
+        refreshInterval _: Duration = .seconds(60),
+        notificationManager: NotificationManager? = nil,
+        settings: GlanceSettings? = nil,
+        spotlightIndexer: SpotlightIndexer? = nil,
     ) {
-        self.providers = providers
-        self.refreshInterval = refreshInterval
+        self.notificationManager = notificationManager
+        self.settings = settings
+        self.spotlightIndexer = spotlightIndexer
+        // Placeholder coordinator -- immediately replaced after self is available.
+        self.coordinator = PollingCoordinator(
+            providers: providers,
+            metricsCollector: self.metricsCollector,
+            onResults: { _ in },
+        )
+        // Now that self is fully initialized, create the real coordinator
+        // with a callback that delivers results back to this AppState.
+        self.coordinator = PollingCoordinator(
+            providers: providers,
+            metricsCollector: self.metricsCollector,
+            onResults: { [weak self] snapshots in
+                self?.receiveSnapshots(snapshots)
+            },
+        )
+        self.setupMemoryPressureHandler()
     }
 
     // MARK: Internal
@@ -31,6 +55,18 @@ final class AppState {
     private(set) var lastRefresh: Date?
     var selectedServiceId: String?
 
+    // MARK: - Coordinator Access
+
+    private(set) var coordinator: PollingCoordinator
+
+    /// The metrics collector shared with the polling coordinator.
+    /// Stored directly so views can access it synchronously (actors are Sendable).
+    let metricsCollector = MetricsCollector()
+
+    /// Historical snapshot store for status history charts.
+    /// Exposed so views can query history per provider.
+    var snapshotStore: SnapshotStore?
+
     // MARK: - Computed
 
     /// SF Symbol name for the menu bar icon based on overall health.
@@ -40,12 +76,14 @@ final class AppState {
 
     /// Sorted list of all service IDs for sidebar display.
     var serviceIds: [String] {
-        self.providers.map(\.id)
+        get async {
+            await self.coordinator.providerIds
+        }
     }
 
     /// Look up a provider by ID.
-    func provider(for serviceId: String) -> (any ServiceProvider)? {
-        self.providers.first { $0.id == serviceId }
+    func provider(for serviceId: String) async -> (any ServiceProvider)? {
+        await self.coordinator.provider(for: serviceId)
     }
 
     /// Look up a snapshot by service ID.
@@ -57,94 +95,108 @@ final class AppState {
 
     /// Start the background polling loop.
     func startPolling() {
-        let scheduler = PollingScheduler(interval: refreshInterval) { [weak self] in
-            await self?.performRefresh()
-        }
-        self.scheduler = scheduler
         Task {
-            await scheduler.start()
+            await self.coordinator.startPolling()
         }
     }
 
     /// Stop background polling.
     func stopPolling() {
         Task {
-            await self.scheduler?.stop()
+            await self.coordinator.stopPolling()
         }
     }
 
     /// Trigger an immediate refresh of all services.
     func refreshNow() async {
-        await self.performRefresh()
+        self.isRefreshing = true
+        await self.coordinator.refreshNow()
+        self.isRefreshing = false
+    }
+
+    /// Fetch detail data for a specific provider on demand.
+    func fetchDetail(for providerId: String) async -> ServiceDetail {
+        await self.coordinator.fetchDetail(for: providerId)
     }
 
     // MARK: Private
 
-    private let providers: [any ServiceProvider]
-    private var scheduler: PollingScheduler?
-    private let refreshInterval: Duration
+    private let notificationManager: NotificationManager?
+    private let settings: GlanceSettings?
+    private let spotlightIndexer: SpotlightIndexer?
+    private var memoryPressureSource: (any DispatchSourceMemoryPressure)?
 
-    private nonisolated static func fetchWithTimeout(
-        provider: any ServiceProvider,
-        seconds: Int,
-    ) async -> ServiceSnapshot {
-        do {
-            return try await withThrowingTaskGroup(of: ServiceSnapshot.self) { group in
-                group.addTask {
-                    await provider.fetchStatus()
-                }
-                group.addTask {
-                    try await Task.sleep(for: .seconds(seconds))
-                    throw CancellationError()
-                }
-                let result = try await group.next()!
-                group.cancelAll()
-                return result
+    /// Set up a dispatch source to monitor system memory pressure.
+    private func setupMemoryPressureHandler() {
+        let source = DispatchSource.makeMemoryPressureSource(
+            eventMask: .all,
+            queue: .main,
+        )
+        source.setEventHandler { [weak self] in
+            guard self != nil else {
+                return
             }
-        } catch {
-            return ServiceSnapshot(
-                id: provider.id,
-                displayName: provider.displayName,
-                iconName: provider.iconName,
-                status: .unknown,
-                summary: "Timed out",
-                detail: .empty,
-                error: "Request timed out after \(seconds)s",
-                timestamp: .now,
-            )
+            let event = source.data
+            if event.contains(.critical) {
+                GlanceLogger.diagnostics.warning(
+                    "Critical memory pressure — pruning snapshot history to last 24 hours",
+                )
+                if let store = self?.snapshotStore {
+                    Task {
+                        try? await store.prune(olderThan: 86400)
+                    }
+                }
+            } else if event.contains(.warning) {
+                GlanceLogger.diagnostics.info("Memory pressure warning received")
+            }
         }
+        source.resume()
+        self.memoryPressureSource = source
     }
 
-    private func performRefresh() async {
-        glanceLog("[Glance] Starting refresh of \(self.providers.count) providers")
-        self.isRefreshing = true
-        defer { isRefreshing = false }
+    /// Receive snapshots from the polling coordinator.
+    private func receiveSnapshots(_ newSnapshots: [ServiceSnapshot]) {
+        // Process notifications before updating state so the manager can
+        // compare old vs new statuses.
+        self.notificationManager?.processSnapshots(
+            newSnapshots,
+            notificationsEnabled: self.settings?.notificationsEnabled ?? true,
+        )
 
-        let results = await withTaskGroup(
-            of: ServiceSnapshot.self,
-            returning: [ServiceSnapshot].self,
-        ) { group in
-            for provider in self.providers {
-                group.addTask {
-                    glanceLog("[Glance] Fetching \(provider.id)...")
-                    let snapshot = await Self.fetchWithTimeout(provider: provider, seconds: 25)
-                    glanceLog("[Glance] \(provider.id): \(snapshot.status.label) - \(snapshot.summary)")
-                    if let error = snapshot.error {
-                        glanceLog("[Glance] \(provider.id) ERROR: \(error)")
-                    }
-                    return snapshot
-                }
-            }
-            var collected: [ServiceSnapshot] = []
-            for await snapshot in group {
-                collected.append(snapshot)
-            }
-            return collected
+        // Merge new snapshots into existing: update matching providers, keep others.
+        let oldHealth = self.overallHealth
+        var merged = Dictionary(self.snapshots.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
+        for snapshot in newSnapshots {
+            merged[snapshot.id] = snapshot
         }
-
-        self.snapshots = results.sorted { $0.displayName < $1.displayName }
+        self.snapshots = merged.values.sorted { $0.displayName < $1.displayName }
         self.overallHealth = self.snapshots.map(\.status).max() ?? .unknown
         self.lastRefresh = .now
-        glanceLog("[Glance] Refresh complete: \(self.snapshots.count) services, overall: \(self.overallHealth.label)")
+
+        // Announce health changes to VoiceOver users.
+        if oldHealth != self.overallHealth {
+            NSAccessibility.post(
+                element: NSApp as Any,
+                notification: .announcementRequested,
+                userInfo: [
+                    .announcement: "Glance status changed to \(self.overallHealth.label)",
+                    .priority: NSAccessibilityPriorityLevel.high.rawValue,
+                ],
+            )
+        }
+        let health = self.overallHealth.label
+        GlanceLogger.polling.info(
+            "Received \(newSnapshots.count) snapshots, overall: \(health, privacy: .public)",
+        )
+
+        // Persist snapshots for history charts.
+        if let store = self.snapshotStore {
+            Task {
+                try? await store.save(newSnapshots)
+            }
+        }
+
+        // Update Spotlight index with latest statuses.
+        self.spotlightIndexer?.updateIndex(with: newSnapshots)
     }
 }

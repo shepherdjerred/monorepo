@@ -11,11 +11,11 @@ struct ErrorStateView: View {
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
 
-            Text("\(self.serviceName) Unreachable")
+            Text(String(localized: "\(self.serviceName) Unreachable"))
                 .font(.headline)
 
             if let errorMessage {
-                Text(errorMessage)
+                Text(verbatim: errorMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -23,5 +23,10 @@ struct ErrorStateView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            String(localized: "\(self.serviceName) unreachable"),
+        )
+        .accessibilityValue(self.errorMessage ?? "")
     }
 }

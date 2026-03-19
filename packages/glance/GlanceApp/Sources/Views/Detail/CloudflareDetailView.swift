@@ -11,21 +11,28 @@ struct CloudflareDetailView: View {
             Text("No tunnels found.")
                 .foregroundStyle(.secondary)
         } else {
-            Table(self.tunnels) {
-                TableColumn("Name") { tunnel in
+            Table(self.sortedTunnels, sortOrder: self.$tunnelSortOrder) {
+                TableColumn("Name", value: \.name) { tunnel in
                     Text(tunnel.name)
                         .fontWeight(.medium)
                 }
-                TableColumn("Status") { tunnel in
+                TableColumn("Status", value: \.status) { tunnel in
                     self.statusBadge(tunnel.status)
                 }
                 .width(100)
             }
+            .alternatingRowBackgrounds()
             .frame(minHeight: 200)
         }
     }
 
     // MARK: Private
+
+    @State private var tunnelSortOrder = [KeyPathComparator(\CloudflareTunnel.name)]
+
+    private var sortedTunnels: [CloudflareTunnel] {
+        self.tunnels.sorted(using: self.tunnelSortOrder)
+    }
 
     @ViewBuilder
     private func statusBadge(_ status: String) -> some View {

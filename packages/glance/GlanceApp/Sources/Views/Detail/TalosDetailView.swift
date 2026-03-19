@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Detail view showing Talos node health.
 struct TalosDetailView: View {
+    // MARK: Internal
+
     let nodes: [TalosNode]
 
     var body: some View {
@@ -9,8 +11,8 @@ struct TalosDetailView: View {
             Text("No Talos nodes found.")
                 .foregroundStyle(.secondary)
         } else {
-            Table(self.nodes) {
-                TableColumn("Hostname") { node in
+            Table(self.sortedNodes, sortOrder: self.$nodeSortOrder) {
+                TableColumn("Hostname", value: \.hostname) { node in
                     Text(node.hostname)
                         .fontWeight(.medium)
                 }
@@ -27,7 +29,16 @@ struct TalosDetailView: View {
                 }
                 .width(60)
             }
+            .alternatingRowBackgrounds()
             .frame(minHeight: 200)
         }
+    }
+
+    // MARK: Private
+
+    @State private var nodeSortOrder = [KeyPathComparator(\TalosNode.hostname)]
+
+    private var sortedNodes: [TalosNode] {
+        self.nodes.sorted(using: self.nodeSortOrder)
     }
 }

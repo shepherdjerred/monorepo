@@ -13,10 +13,19 @@ let package = Package(
     platforms: [
         .macOS(.v15),
     ],
+    dependencies: [
+        .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.0.0"),
+    ],
     targets: [
         .executableTarget(
             name: "GlanceApp",
+            dependencies: [
+                .product(name: "GRDB", package: "GRDB.swift"),
+            ],
             path: "Sources",
+            resources: [
+                .process("Localizable.xcstrings"),
+            ],
             swiftSettings: strictSwiftSettings,
         ),
         .testTarget(

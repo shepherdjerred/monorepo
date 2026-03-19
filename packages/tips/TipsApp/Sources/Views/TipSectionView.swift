@@ -37,11 +37,25 @@ struct TipItemRow: View {
                     .font(.system(size: 4))
                     .foregroundStyle(.tertiary)
                     .padding(.top, 6)
+                    .accessibilityHidden(true)
                 Text(self.item.text)
                     .font(.body)
                     .foregroundStyle(.primary)
             }
             Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .draggable(self.item.formattedText)
+    }
+}
+
+extension TipItem {
+    /// Formatted text suitable for copying or dragging.
+    var formattedText: String {
+        if let shortcut {
+            "\(shortcut) — \(text)"
+        } else {
+            text
         }
     }
 }

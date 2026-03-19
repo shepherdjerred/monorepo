@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Manages persistence of per-tip review state (favorites, learned, show-again).
 @MainActor
@@ -6,7 +7,7 @@ import Foundation
 final class ReviewManager {
     // MARK: Lifecycle
 
-    init(storageDirectory: URL? = nil) {
+    init(storageDirectory: URL? = nil, enableCloudSync: Bool = true) {
         let appSupportDir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first
@@ -17,6 +18,10 @@ final class ReviewManager {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         self.fileURL = dir.appendingPathComponent("tip_state.json")
         self.load()
+
+        if enableCloudSync {
+            self.startCloudSync()
+        }
     }
 
     // MARK: Internal
@@ -71,26 +76,109 @@ final class ReviewManager {
         self.save()
     }
 
+    func resetLearnedTips() {
+        for key in self.states.keys where self.states[key]?.status == .learned {
+            self.states[key]?.status = .unseen
+        }
+        self.save()
+    }
+
     // MARK: Private
+
+    private static let cloudKey = "tipStates"
 
     private let fileURL: URL
 
     // MARK: - Persistence
 
     private func load() {
-        guard let data = try? Data(contentsOf: fileURL),
-              let store = try? JSONDecoder().decode(TipStateStore.self, from: data)
-        else {
-            return
+        do {
+            let data = try Data(contentsOf: self.fileURL)
+            let store = try JSONDecoder().decode(TipStateStore.self, from: data)
+            self.states = store.states
+            Logger.persistence.info("Loaded \(store.states.count) tip states")
+        } catch {
+            let tipsError = TipsError.persistenceLoadFailed(url: self.fileURL, underlying: error)
+            Logger.persistence.info("\(tipsError.description)")
         }
-        self.states = store.states
     }
 
     private func save() {
-        let store = TipStateStore(states: states)
-        guard let data = try? JSONEncoder().encode(store) else {
+        do {
+            let store = TipStateStore(states: self.states)
+            let data = try JSONEncoder().encode(store)
+            try data.write(to: self.fileURL, options: .atomic)
+            Logger.persistence.debug("Saved \(self.states.count) tip states")
+        } catch {
+            let tipsError = TipsError.persistenceSaveFailed(url: self.fileURL, underlying: error)
+            Logger.persistence.error("\(tipsError.description)")
+        }
+        self.syncToCloud()
+    }
+
+    // MARK: - iCloud Sync
+
+    private func startCloudSync() {
+        NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: NSUbiquitousKeyValueStore.default,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.mergeCloudState()
+            }
+        }
+        NSUbiquitousKeyValueStore.default.synchronize()
+        self.mergeCloudState()
+    }
+
+    private func syncToCloud() {
+        do {
+            let store = TipStateStore(states: self.states)
+            let data = try JSONEncoder().encode(store)
+            NSUbiquitousKeyValueStore.default.set(data, forKey: Self.cloudKey)
+            Logger.persistence.debug("Synced \(self.states.count) tip states to iCloud")
+        } catch {
+            Logger.persistence.error("Failed to sync to iCloud: \(error)")
+        }
+    }
+
+    private func mergeCloudState() {
+        guard let data = NSUbiquitousKeyValueStore.default.data(forKey: Self.cloudKey),
+              let cloudStore = try? JSONDecoder().decode(TipStateStore.self, from: data)
+        else {
             return
         }
-        try? data.write(to: self.fileURL, options: .atomic)
+
+        var merged = self.states
+        for (key, cloudState) in cloudStore.states {
+            if let localState = merged[key] {
+                // Keep the more "advanced" state
+                if self.statusRank(cloudState.status) > self.statusRank(localState.status) {
+                    merged[key] = cloudState
+                } else if cloudState.isFavorite, !localState.isFavorite {
+                    merged[key]?.isFavorite = true
+                }
+            } else {
+                merged[key] = cloudState
+            }
+        }
+
+        if merged != self.states {
+            self.states = merged
+            self.save()
+            Logger.persistence.info("Merged cloud state: \(merged.count) total tip states")
+        }
+    }
+
+    private func statusRank(_ status: TipStatus) -> Int {
+        switch status {
+        case .unseen:
+            0
+        case .showAgain:
+            1
+        case .learned:
+            2
+        }
     }
 }

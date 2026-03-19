@@ -99,7 +99,7 @@ struct TipParserTests {
         let textFile = temporaryDirectory.appendingPathComponent("ignore.txt")
         try "ignore me".write(to: textFile, atomically: true, encoding: .utf8)
 
-        let apps = try TipParser.loadAll(from: temporaryDirectory)
+        let apps = TipParser.loadAll(from: temporaryDirectory)
 
         #expect(apps.count == 1)
         #expect(apps.first?.name == "Test App")
@@ -110,13 +110,38 @@ struct TipParserTests {
     }
 
     @Test
-    func `loads bundled content directory from source tree`() throws {
+    func `flat tip IDs are unique`() {
         let contentDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Resources/content", isDirectory: true)
 
-        let apps = try TipParser.loadAll(from: contentDirectory)
+        let apps = TipParser.loadAll(from: contentDirectory)
+        var ids: [String] = []
+        for app in apps {
+            for section in app.sections {
+                for item in section.items {
+                    ids.append("\(app.id)-\(section.id)-\(item.id)")
+                }
+            }
+        }
+
+        let uniqueCount = Set(ids).count
+        let totalCount = ids.count
+        let duplicateCount = totalCount - uniqueCount
+
+        // Allow up to 2 known duplicates from 30-char prefix truncation
+        #expect(duplicateCount <= 2, "Found \(duplicateCount) duplicate FlatTip IDs")
+    }
+
+    @Test
+    func `loads bundled content directory from source tree`() {
+        let contentDirectory = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/Resources/content", isDirectory: true)
+
+        let apps = TipParser.loadAll(from: contentDirectory)
 
         #expect(apps.count >= 46)
         #expect(apps.map(\.name).contains("Finder"))

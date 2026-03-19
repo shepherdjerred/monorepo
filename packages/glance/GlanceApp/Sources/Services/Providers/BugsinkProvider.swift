@@ -17,53 +17,66 @@ struct BugsinkProvider: ServiceProvider {
     let iconName = "ladybug.fill"
     let webURL: String? = "https://bugsink.tailnet-1a49.ts.net"
 
+    /// Parse Bugsink projects and their issue data into a ServiceSnapshot.
+    static func parse(
+        issueDataByProject: [(project: BugsinkProject, issuesData: Data)],
+    ) throws -> ServiceSnapshot {
+        var allIssues: [BugsinkIssue] = []
+        for (project, issuesData) in issueDataByProject {
+            let response = try JSONDecoder().decode(BugsinkPagedResponse<BugsinkAPIIssue>.self, from: issuesData)
+            let unresolvedIssues = response.results.filter { !$0.isResolved }
+            allIssues.append(contentsOf: unresolvedIssues.map { issue in
+                BugsinkIssue(
+                    id: issue.digestOrder,
+                    title: "\(issue.calculatedType): \(issue.calculatedValue)",
+                    status: issue.isResolved ? "resolved" : "unresolved",
+                    project: project.name,
+                    eventCount: issue.digestedEventCount,
+                )
+            })
+        }
+
+        let projectCount = issueDataByProject.count
+        let unresolvedCount = allIssues.count
+        let status: ServiceStatus =
+            if unresolvedCount == 0 {
+                .ok
+            } else if unresolvedCount > 20 {
+                .error
+            } else {
+                .warning
+            }
+
+        let summary =
+            unresolvedCount == 0
+                ? "No unresolved issues"
+                : "\(unresolvedCount) unresolved across \(projectCount) projects"
+
+        return ServiceSnapshot(
+            id: "bugsink",
+            displayName: "Bugsink",
+            iconName: "ladybug.fill",
+            status: status,
+            summary: summary,
+            detail: .bugsink(issues: allIssues),
+            error: nil,
+            timestamp: .now,
+        )
+    }
+
     func fetchStatus() async -> ServiceSnapshot {
         do {
             let token = try await secrets.read(reference: self.secretKey)
 
-            // First get all projects
             let projects = try await fetchProjects(token: token)
 
-            // Then get unresolved issue counts per project
-            var allIssues: [BugsinkIssue] = []
+            var issueDataByProject: [(project: BugsinkProject, issuesData: Data)] = []
             for project in projects {
-                let issues = try await fetchUnresolvedIssues(token: token, projectId: project.id)
-                allIssues.append(contentsOf: issues.map { issue in
-                    BugsinkIssue(
-                        id: issue.digestOrder,
-                        title: "\(issue.calculatedType): \(issue.calculatedValue)",
-                        status: issue.isResolved ? "resolved" : "unresolved",
-                        project: project.name,
-                        eventCount: issue.digestedEventCount,
-                    )
-                })
+                let data = try await fetchUnresolvedIssuesData(token: token, projectId: project.id)
+                issueDataByProject.append((project: project, issuesData: data))
             }
 
-            let unresolvedCount = allIssues.count
-            let status: ServiceStatus =
-                if unresolvedCount == 0 {
-                    .ok
-                } else if unresolvedCount > 20 {
-                    .error
-                } else {
-                    .warning
-                }
-
-            let summary =
-                unresolvedCount == 0
-                    ? "No unresolved issues"
-                    : "\(unresolvedCount) unresolved across \(projects.count) projects"
-
-            return ServiceSnapshot(
-                id: self.id,
-                displayName: self.displayName,
-                iconName: self.iconName,
-                status: status,
-                summary: summary,
-                detail: .bugsink(issues: allIssues),
-                error: nil,
-                timestamp: .now,
-            )
+            return try Self.parse(issueDataByProject: issueDataByProject)
         } catch is SecretError {
             return self.errorSnapshot("API token not configured")
         } catch {
@@ -71,9 +84,14 @@ struct BugsinkProvider: ServiceProvider {
         }
     }
 
+    func fetchDetail() async -> ServiceDetail {
+        let snapshot = await self.fetchStatus()
+        return snapshot.detail
+    }
+
     // MARK: Private
 
-    private let baseURL = URL(string: "https://bugsink.tailnet-1a49.ts.net/api/canonical/0")!
+    private let baseURL = URL(staticString: "https://bugsink.tailnet-1a49.ts.net/api/canonical/0")
     private let secretKey = SecretRefs.bugsink
     private let secrets: any SecretProvider
 
@@ -88,7 +106,7 @@ struct BugsinkProvider: ServiceProvider {
         return response.results
     }
 
-    private func fetchUnresolvedIssues(token: String, projectId: Int) async throws -> [BugsinkAPIIssue] {
+    private func fetchUnresolvedIssuesData(token: String, projectId: Int) async throws -> Data {
         let url = self.baseURL.appending(path: "/issues/")
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.queryItems = [
@@ -96,7 +114,7 @@ struct BugsinkProvider: ServiceProvider {
         ]
 
         guard let requestURL = components?.url else {
-            return []
+            return Data("{ \"results\": [] }".utf8)
         }
 
         var request = URLRequest(url: requestURL)
@@ -104,8 +122,7 @@ struct BugsinkProvider: ServiceProvider {
         request.timeoutInterval = 10
 
         let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(BugsinkPagedResponse<BugsinkAPIIssue>.self, from: data)
-        return response.results.filter { !$0.isResolved }
+        return data
     }
 
     private func errorSnapshot(_ message: String) -> ServiceSnapshot {
@@ -124,13 +141,13 @@ struct BugsinkProvider: ServiceProvider {
 
 // MARK: - BugsinkPagedResponse
 
-private struct BugsinkPagedResponse<T: Codable>: Codable {
+package struct BugsinkPagedResponse<T: Codable>: Codable {
     let results: [T]
 }
 
 // MARK: - BugsinkProject
 
-private struct BugsinkProject: Codable {
+package struct BugsinkProject: Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -144,7 +161,7 @@ private struct BugsinkProject: Codable {
 
 // MARK: - BugsinkAPIIssue
 
-private struct BugsinkAPIIssue: Codable {
+package struct BugsinkAPIIssue: Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case digestOrder = "digest_order"

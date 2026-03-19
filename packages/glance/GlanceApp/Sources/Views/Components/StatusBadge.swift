@@ -8,5 +8,6 @@ struct StatusBadge: View {
         Image(systemName: self.status.iconName)
             .font(.caption2)
             .foregroundStyle(self.status.color)
+            .accessibilityLabel(Text("Status: \(self.status.label)"))
     }
 }

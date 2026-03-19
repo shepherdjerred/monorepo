@@ -17,6 +17,27 @@ struct GitHubProvider: ServiceProvider {
     let iconName = "chevron.left.forwardslash.chevron.right"
     let webURL: String? = "https://github.com/shepherdjerred"
 
+    /// Parse GitHub search response JSON into a ServiceSnapshot.
+    static func parse(_ data: Data) throws -> ServiceSnapshot {
+        let response = try JSONDecoder().decode(GitHubSearchResponse.self, from: data)
+
+        let prs = response.items
+        let summary = prs.isEmpty
+            ? "No open PRs"
+            : "\(prs.count) open PR\(prs.count == 1 ? "" : "s")"
+
+        return ServiceSnapshot(
+            id: "github",
+            displayName: "GitHub",
+            iconName: "chevron.left.forwardslash.chevron.right",
+            status: .ok,
+            summary: summary,
+            detail: .github(pullRequests: prs),
+            error: nil,
+            timestamp: .now,
+        )
+    }
+
     func fetchStatus() async -> ServiceSnapshot {
         do {
             let token = try await secrets.read(reference: self.secretKey)
@@ -37,31 +58,20 @@ struct GitHubProvider: ServiceProvider {
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
 
             let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(GitHubSearchResponse.self, from: data)
-
-            let prs = response.items
-            let summary = prs.isEmpty
-                ? "No open PRs"
-                : "\(prs.count) open PR\(prs.count == 1 ? "" : "s")"
-
-            return ServiceSnapshot(
-                id: self.id,
-                displayName: self.displayName,
-                iconName: self.iconName,
-                status: .ok,
-                summary: summary,
-                detail: .github(pullRequests: prs),
-                error: nil,
-                timestamp: .now,
-            )
+            return try Self.parse(data)
         } catch {
             return self.errorSnapshot(error.localizedDescription)
         }
     }
 
+    func fetchDetail() async -> ServiceDetail {
+        let snapshot = await self.fetchStatus()
+        return snapshot.detail
+    }
+
     // MARK: Private
 
-    private let baseURL = URL(string: "https://api.github.com")!
+    private let baseURL = URL(staticString: "https://api.github.com")
     private let secretKey = SecretRefs.github
     private let owner = "shepherdjerred"
     private let secrets: any SecretProvider
@@ -82,6 +92,6 @@ struct GitHubProvider: ServiceProvider {
 
 // MARK: - GitHubSearchResponse
 
-private struct GitHubSearchResponse: Codable {
+package struct GitHubSearchResponse: Codable {
     let items: [GitHubPullRequest]
 }

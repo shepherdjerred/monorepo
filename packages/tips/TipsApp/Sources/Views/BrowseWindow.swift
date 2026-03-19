@@ -14,11 +14,20 @@ struct BrowseWindow: View {
         }
         .searchable(text: self.$searchText, prompt: "Search tips")
         .navigationTitle("Tips")
+        .onAppear {
+            if !self.restoredAppId.isEmpty, self.appState.selectedAppId == nil {
+                self.appState.selectedAppId = self.restoredAppId
+            }
+        }
+        .onChange(of: self.appState.selectedAppId) { _, newValue in
+            self.restoredAppId = newValue ?? ""
+        }
     }
 
     // MARK: Private
 
     @State private var searchText = ""
+    @SceneStorage("selectedAppId") private var restoredAppId = ""
 
     private let favoritesId = "___favorites___"
 
@@ -57,6 +66,7 @@ struct BrowseWindow: View {
                     } icon: {
                         Image(systemName: "star.fill")
                             .foregroundStyle(.yellow)
+                            .accessibilityHidden(true)
                     }
                     .badge(self.appState.favoriteTips.count)
                     .tag(self.favoritesId)
@@ -70,6 +80,7 @@ struct BrowseWindow: View {
                     } icon: {
                         Image(systemName: app.icon)
                             .foregroundStyle(app.color)
+                            .accessibilityHidden(true)
                     }
                     .badge(app.sections.flatMap(\.items).count)
                     .tag(app.id)
@@ -95,6 +106,7 @@ struct BrowseWindow: View {
                 }
                 .padding()
             }
+            .textSelection(.enabled)
         } else {
             ContentUnavailableView(
                 "Select an App",
@@ -135,6 +147,7 @@ struct BrowseWindow: View {
                 }
                 .padding()
             }
+            .textSelection(.enabled)
         }
     }
 
@@ -143,6 +156,7 @@ struct BrowseWindow: View {
             Image(systemName: app.icon)
                 .font(.largeTitle)
                 .foregroundStyle(app.color)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
                     .font(.title.bold())

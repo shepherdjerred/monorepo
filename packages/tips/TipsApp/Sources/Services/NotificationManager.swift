@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import os
 import UserNotifications
 
 // MARK: - NotificationManager
@@ -7,6 +8,10 @@ import UserNotifications
 /// Manages daily tip notification scheduling.
 @MainActor
 enum NotificationManager {
+    // MARK: Internal
+
+    static let browseActionIdentifier = "BROWSE_MORE"
+
     /// Whether the app is running inside a proper .app bundle (required for UserNotifications).
     static var isAvailable: Bool {
         Bundle.main.bundleIdentifier != nil
@@ -18,9 +23,13 @@ enum NotificationManager {
         }
         let center = UNUserNotificationCenter.current()
         do {
-            return try await center.requestAuthorization(options: [.alert, .sound])
+            let granted = try await center.requestAuthorization(options: [.alert, .sound])
+            if granted {
+                self.registerCategories()
+            }
+            return granted
         } catch {
-            print("Notification permission error: \(error)")
+            Logger.notifications.error("Notification permission error: \(error)")
             return false
         }
     }
@@ -43,6 +52,8 @@ enum NotificationManager {
             content.body = tip.text
         }
         content.sound = .default
+        content.threadIdentifier = "daily-tips"
+        content.categoryIdentifier = "DAILY_TIP"
 
         var dateComponents = DateComponents()
         dateComponents.hour = hour
@@ -53,9 +64,28 @@ enum NotificationManager {
 
         center.add(request) { error in
             if let error {
-                print("Failed to schedule notification: \(error)")
+                Logger.notifications.error("Failed to schedule notification: \(error)")
+            } else {
+                Logger.notifications.info("Scheduled daily tip notification for \(hour):\(minute)")
             }
         }
+    }
+
+    // MARK: Private
+
+    private static func registerCategories() {
+        let browseAction = UNNotificationAction(
+            identifier: self.browseActionIdentifier,
+            title: "Browse More",
+            options: [.foreground]
+        )
+        let category = UNNotificationCategory(
+            identifier: "DAILY_TIP",
+            actions: [browseAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 }
 
@@ -68,6 +98,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         didReceive _: UNNotificationResponse
     ) async {
         await MainActor.run {
+            NSApplication.shared.setActivationPolicy(.regular)
             NSApplication.shared.activate(ignoringOtherApps: true)
         }
     }

@@ -1,3 +1,5 @@
+// MARK: - ServiceProvider
+
 /// A pluggable service monitor that fetches current status.
 ///
 /// Implementations must never throw from `fetchStatus()`. On failure,
@@ -15,6 +17,15 @@ protocol ServiceProvider: Sendable {
     /// Base URL to open in browser for this service.
     var webURL: String? { get }
 
-    /// Fetch the current status. Must not throw.
+    /// Quick status -- runs every poll cycle. Must be fast (<5s).
     func fetchStatus() async -> ServiceSnapshot
+
+    /// Deep fetch -- on demand when user views detail. Can be slower (30s timeout).
+    func fetchDetail() async -> ServiceDetail
+}
+
+extension ServiceProvider {
+    func fetchDetail() async -> ServiceDetail {
+        .empty
+    }
 }

@@ -12,9 +12,14 @@ struct PagerDutyDetailView: View {
             self.incidentsSection
             self.onCallSection
         }
+        .sheet(item: self.$selectedIncident) { incident in
+            self.incidentDetailSheet(incident)
+        }
     }
 
     // MARK: Private
+
+    @State private var selectedIncident: PagerDutyIncident?
 
     // MARK: - Incidents
 
@@ -28,17 +33,23 @@ struct PagerDutyDetailView: View {
                 .foregroundStyle(.green)
         } else {
             ForEach(self.incidents) { incident in
-                HStack {
-                    self.urgencyBadge(incident.urgency)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(incident.title)
-                            .fontWeight(.medium)
-                        Text(incident.status)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                Button {
+                    self.selectedIncident = incident
+                } label: {
+                    HStack {
+                        self.urgencyBadge(incident.urgency)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(incident.title)
+                                .fontWeight(.medium)
+                            Text(incident.status)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
                     }
-                    Spacer()
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 Divider()
             }
         }
@@ -58,6 +69,7 @@ struct PagerDutyDetailView: View {
             ForEach(self.onCall) { entry in
                 HStack {
                     Image(systemName: "person.fill")
+                        .accessibilityHidden(true)
                         .foregroundStyle(.secondary)
                     Text(entry.user.name)
                         .fontWeight(.medium)
@@ -68,6 +80,34 @@ struct PagerDutyDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Incident Detail Sheet
+
+    private func incidentDetailSheet(_ incident: PagerDutyIncident) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Incident Details")
+                    .font(.headline)
+                Spacer()
+                Button("Done") {
+                    self.selectedIncident = nil
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding()
+
+            Divider()
+
+            Form {
+                LabeledContent("Title", value: incident.title)
+                LabeledContent("Status", value: incident.status)
+                LabeledContent("Urgency", value: incident.urgency)
+                LabeledContent("Created At", value: incident.createdAt)
+            }
+            .formStyle(.grouped)
+        }
+        .frame(width: 450, height: 260)
     }
 
     @ViewBuilder

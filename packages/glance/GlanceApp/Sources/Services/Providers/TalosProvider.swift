@@ -11,42 +11,52 @@ struct TalosProvider: ServiceProvider {
     let iconName = "cpu"
     let webURL: String? = nil
 
+    /// Parse talosctl members JSON output into a ServiceSnapshot.
+    static func parse(_ data: Data) -> ServiceSnapshot {
+        let nodes = self.parseMembers(from: data)
+
+        let notReady = nodes.filter { !$0.ready }
+        let status: ServiceStatus =
+            if nodes.isEmpty {
+                .unknown
+            } else if notReady.isEmpty {
+                .ok
+            } else {
+                .error
+            }
+
+        let summary = "\(nodes.count) node\(nodes.count == 1 ? "" : "s"), \(notReady.count) not ready"
+
+        return ServiceSnapshot(
+            id: "talos",
+            displayName: "Talos",
+            iconName: "cpu",
+            status: status,
+            summary: summary,
+            detail: .talos(nodes: nodes),
+            error: nil,
+            timestamp: .now,
+        )
+    }
+
     func fetchStatus() async -> ServiceSnapshot {
         do {
             let output = try await shellCommand("talosctl", arguments: ["get", "members", "-o", "json"])
-            let nodes = self.parseMembers(from: output)
-
-            let notReady = nodes.filter { !$0.ready }
-            let status: ServiceStatus =
-                if nodes.isEmpty {
-                    .unknown
-                } else if notReady.isEmpty {
-                    .ok
-                } else {
-                    .error
-                }
-
-            let summary = "\(nodes.count) node\(nodes.count == 1 ? "" : "s"), \(notReady.count) not ready"
-
-            return ServiceSnapshot(
-                id: self.id,
-                displayName: self.displayName,
-                iconName: self.iconName,
-                status: status,
-                summary: summary,
-                detail: .talos(nodes: nodes),
-                error: nil,
-                timestamp: .now,
-            )
+            return Self.parse(output)
         } catch {
             return self.errorSnapshot(error.localizedDescription)
         }
     }
 
+    func fetchDetail() async -> ServiceDetail {
+        let snapshot = await self.fetchStatus()
+        return snapshot.detail
+    }
+
     // MARK: Private
 
     /// Parse concatenated JSON objects from talosctl output.
-    private func parseMembers(from data: Data) -> [TalosNode] {
+    private static func parseMembers(from data: Data) -> [TalosNode] {
         guard let text = String(data: data, encoding: .utf8) else {
             return []
         }
@@ -98,7 +108,7 @@ struct TalosProvider: ServiceProvider {
 
 // MARK: - TalosMemberResponse
 
-private struct TalosMemberResponse: Codable {
+package struct TalosMemberResponse: Codable {
     struct MemberSpec: Codable {
         let hostname: String
         let machineType: String

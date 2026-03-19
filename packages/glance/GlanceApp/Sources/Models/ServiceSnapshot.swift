@@ -10,4 +10,5 @@ struct ServiceSnapshot: Identifiable {
     let detail: ServiceDetail
     let error: String?
     let timestamp: Date
+    var webURL: String?
 }
