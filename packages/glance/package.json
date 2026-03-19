@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/glance",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "cd GlanceApp && swift build",
+    "test": "cd GlanceApp && swift test",
+    "lint": "cd GlanceApp && swiftlint --strict",
+    "typecheck": "cd GlanceApp && swift build"
+  }
+}

@@ -3,13 +3,16 @@ import Markdown
 import SwiftUI
 import Yams
 
+// MARK: - TipParser
+
 /// Parses markdown files with YAML frontmatter into `TipApp` models.
 /// Each file contains a single tip with app metadata and category in frontmatter.
 /// Tips are grouped by app name and category to build the `TipApp` hierarchy.
 enum TipParser {
+    // MARK: Internal
 
     /// Parsed representation of a single tip file.
-    struct ParsedTip: Sendable {
+    struct ParsedTip {
         let metadata: TipAppMetadata
         let item: TipItem
     }
@@ -24,7 +27,7 @@ enum TipParser {
             tipText = String(tipText.dropFirst(2))
         }
 
-        let (cleanText, shortcut) = extractShortcut(from: tipText)
+        let (cleanText, shortcut) = self.extractShortcut(from: tipText)
         let category = metadata.category ?? "General"
         let item = TipItem(
             id: "\(category)-\(cleanText.prefix(30))",
@@ -50,7 +53,9 @@ enum TipParser {
         var tipsByApp: [String: (metadata: TipAppMetadata, tips: [(category: String, item: TipItem)])] = [:]
 
         while let fileURL = enumerator.nextObject() as? URL {
-            guard fileURL.pathExtension == "md" else { continue }
+            guard fileURL.pathExtension == "md" else {
+                continue
+            }
             let content = try String(contentsOf: fileURL, encoding: .utf8)
             let parsed = try parseSingleTip(content: content)
             let appName = parsed.metadata.app
@@ -63,9 +68,9 @@ enum TipParser {
         }
 
         // Build TipApp objects from grouped tips
-        let apps = tipsByApp.map { (_, value) -> TipApp in
+        let apps = tipsByApp.map { _, value -> TipApp in
             let metadata = value.metadata
-            let color = metadata.color.flatMap { parseHexColor($0) } ?? .accentColor
+            let color = metadata.color.flatMap { self.parseHexColor($0) } ?? .accentColor
 
             // Group tips by category, preserving insertion order
             var sectionOrder: [String] = []
@@ -100,13 +105,25 @@ enum TipParser {
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
-    // MARK: - Private
+    static func extractShortcut(from text: String) -> (String, String?) {
+        let pattern = /`([^`]+)`\s*[—–-]\s*(.*)/
+        if let match = text.firstMatch(of: pattern) {
+            let shortcut = String(match.output.1)
+            let description = String(match.output.2)
+            return (description, shortcut)
+        }
+        return (text, nil)
+    }
+
+    // MARK: Private
 
     private static func splitFrontmatter(_ content: String) throws -> (TipAppMetadata, String) {
         let delimiter = "---"
         let lines = content.components(separatedBy: .newlines)
 
-        guard let firstDelimiterIndex = lines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == delimiter }) else {
+        guard let firstDelimiterIndex = lines
+            .firstIndex(where: { $0.trimmingCharacters(in: .whitespaces) == delimiter })
+        else {
             throw TipParserError.missingFrontmatter
         }
 
@@ -117,7 +134,7 @@ enum TipParser {
             throw TipParserError.missingFrontmatter
         }
 
-        let yamlLines = lines[(firstDelimiterIndex + 1)..<secondDelimiterIndex]
+        let yamlLines = lines[(firstDelimiterIndex + 1) ..< secondDelimiterIndex]
         let yamlString = yamlLines.joined(separator: "\n")
         let bodyLines = lines[(secondDelimiterIndex + 1)...]
         let bodyString = bodyLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -126,16 +143,6 @@ enum TipParser {
         let metadata = try decoder.decode(TipAppMetadata.self, from: yamlString)
 
         return (metadata, bodyString)
-    }
-
-    static func extractShortcut(from text: String) -> (String, String?) {
-        let pattern = /`([^`]+)`\s*[—–-]\s*(.*)/
-        if let match = text.firstMatch(of: pattern) {
-            let shortcut = String(match.output.1)
-            let description = String(match.output.2)
-            return (description, shortcut)
-        }
-        return (text, nil)
     }
 
     private static func parseHexColor(_ hex: String) -> Color? {
@@ -153,9 +160,13 @@ enum TipParser {
     }
 }
 
+// MARK: - TipParserError
+
 /// Errors that can occur during tip file parsing.
 enum TipParserError: Error, CustomStringConvertible {
     case missingFrontmatter
+
+    // MARK: Internal
 
     var description: String {
         switch self {

@@ -52,6 +52,8 @@ import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/ar
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-db.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/s3-static-sites.ts";
+import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kueue.ts";
+import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKyvernoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno.ts";
 import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
@@ -103,6 +105,8 @@ export async function createAppsChart(app: App) {
   createPromtailApp(chart);
   createTempoApp(chart);
   createBuildkiteApp(chart);
+  createKueueApp(chart);
+  createKueueConfig(chart);
   createVeleroApp(chart);
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);

@@ -5,7 +5,7 @@ struct KeyCapView: View {
     let shortcut: String
 
     var body: some View {
-        Text(shortcut)
+        Text(self.shortcut)
             .font(.system(.caption, design: .monospaced, weight: .medium))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)

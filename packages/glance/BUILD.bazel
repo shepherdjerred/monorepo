@@ -1,0 +1,36 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+sh_test(
+    name = "build",
+    srcs = ["scripts/bazel-build.sh"],
+    data = glob(["GlanceApp/**"]),
+    tags = [
+        # Manual: requires macOS with Swift toolchain
+        "manual",
+        "no-sandbox",
+    ],
+)
+
+sh_test(
+    name = "test",
+    srcs = ["scripts/bazel-test.sh"],
+    data = glob(["GlanceApp/**"]),
+    tags = [
+        # Manual: requires macOS with Swift toolchain
+        "manual",
+        "no-sandbox",
+    ],
+)
+
+sh_test(
+    name = "lint",
+    srcs = ["scripts/bazel-lint.sh"],
+    data = glob(["GlanceApp/**"]) + [
+        ".swiftlint.yml",
+    ],
+    tags = [
+        # Manual: requires macOS with Swift toolchain
+        "manual",
+        "no-sandbox",
+    ],
+)

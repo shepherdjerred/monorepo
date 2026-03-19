@@ -17,7 +17,7 @@ AI-maintained knowledge base for the monorepo.
 
 ## Decisions
 
-_No decision records yet._
+- [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
 
 ## Plans
 

@@ -2,7 +2,6 @@ import Foundation
 
 /// Manages daily app-of-the-day rotation.
 enum RotationScheduler {
-
     /// Determine the current app index, advancing if a new day has started.
     ///
     /// - Parameters:
@@ -18,10 +17,10 @@ enum RotationScheduler {
         today: Date = .now
     ) -> (index: Int, dateString: String, didAdvance: Bool) {
         guard appCount > 0 else {
-            return (0, formatDate(today), false)
+            return (0, self.formatDate(today), false)
         }
 
-        let todayString = formatDate(today)
+        let todayString = self.formatDate(today)
 
         if lastShownDate == todayString {
             let safeIndex = lastAppIndex % appCount

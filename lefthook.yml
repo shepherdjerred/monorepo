@@ -191,6 +191,19 @@ pre-commit:
                   glob: "packages/clauderon/**/*.rs"
                   run: cargo fmt
 
+                # --- swiftformat (Glance) ---
+                - name: swiftformat-glance
+                  root: "packages/glance/GlanceApp/"
+                  glob: "packages/glance/**/*.swift"
+                  run: swiftformat {staged_files}
+                  stage_fixed: true
+
+                # --- swiftlint (Glance) ---
+                - name: swiftlint-glance
+                  root: "packages/glance/GlanceApp/"
+                  glob: "packages/glance/**/*.swift"
+                  run: swiftlint --strict {staged_files}
+
                 # --- buildifier ---
                 - name: buildifier
                   glob: "**/{BUILD.bazel,*.bzl,MODULE.bazel,REPO.bazel}"
@@ -334,6 +347,19 @@ pre-commit:
             root: "packages/homelab/"
             glob: "packages/homelab/**/*.{ts,tsx}"
             run: bun run typecheck
+
+          # --- Swift (Glance) ---
+          - name: glance-build
+            root: "packages/glance/GlanceApp/"
+            glob: "packages/glance/**/*.swift"
+            run: swift build 2>&1
+
+          - name: glance-test
+            root: "packages/glance/GlanceApp/"
+            glob: "packages/glance/**/*.swift"
+            env:
+              DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+            run: swift test 2>&1
 
           - name: full-typecheck
             glob: "tsconfig.base.json"

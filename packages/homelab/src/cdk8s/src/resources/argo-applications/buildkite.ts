@@ -6,7 +6,6 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   KubeLimitRange,
   KubePersistentVolumeClaim,
-  KubeResourceQuota,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
@@ -19,6 +18,7 @@ export function createBuildkiteApp(chart: Chart) {
         "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "privileged",
         "pod-security.kubernetes.io/warn": "privileged",
+        "kueue.x-k8s.io/managed-namespace": "true",
       },
     },
   });
@@ -45,19 +45,9 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  new KubeResourceQuota(chart, "buildkite-resource-quota", {
-    metadata: { name: "buildkite-cpu-quota", namespace: "buildkite" },
-    spec: {
-      hard: {
-        "requests.cpu": Quantity.fromString("16"),
-        "requests.memory": Quantity.fromString("32Gi"),
-      },
-    },
-  });
-
-  // Required: when a ResourceQuota covers requests.cpu/memory, every container
-  // must declare requests. This LimitRange provides defaults for sidecar
-  // containers (e.g. Buildkite agent) that don't set their own resources.
+  // Default resource requests for sidecar containers (e.g. Buildkite agent, checkout)
+  // that don't set their own resources. This ensures Kueue can account for sidecar
+  // CPU/memory when making admission decisions.
   // Only defaultRequest is set — no default limits — so containers can burst freely.
   new KubeLimitRange(chart, "buildkite-limit-range", {
     metadata: { name: "buildkite-default-resources", namespace: "buildkite" },

@@ -11,7 +11,7 @@
 --typeattributes prev-line
 --varattributes prev-line
 --header strip
---commas always
+--commas inline
 --semicolons never
 --trimwhitespace always
 --voidtype void

@@ -1,35 +1,60 @@
+import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 @main
 struct TipsApp: App {
+    // MARK: Lifecycle
 
-    @State private var appState: AppState
+    init() {
+        let state = AppState(tipsDirectory: Self.findContentDirectory())
+        _appState = State(initialValue: state)
+
+        if NotificationManager.isAvailable {
+            UNUserNotificationCenter.current().delegate = self.notificationDelegate
+
+            Task { @MainActor in
+                let granted = await NotificationManager.requestPermission()
+                if granted, let tip = state.currentTip {
+                    NotificationManager.scheduleDailyNotification(tip: tip)
+                }
+            }
+        }
+    }
+
+    // MARK: Internal
 
     var body: some Scene {
         MenuBarExtra("Tips", systemImage: "lightbulb.fill") {
-            MenuBarPopover(appState: appState)
+            MenuBarPopover(appState: self.appState)
         }
         .menuBarExtraStyle(.window)
 
         Window("Browse Tips", id: "browse") {
-            BrowseWindow(appState: appState)
+            BrowseWindow(appState: self.appState)
         }
         .defaultSize(width: 700, height: 500)
+
+        Settings {
+            SettingsView()
+        }
     }
 
-    init() {
-        _appState = State(initialValue: AppState(tipsDirectory: Self.findContentDirectory()))
-    }
+    // MARK: Private
+
+    @State private var appState: AppState
+
+    private let notificationDelegate = NotificationDelegate()
 
     private static func findContentDirectory() -> URL {
         if let resourceURL = Bundle.module.resourceURL {
             let bundledContentURL = resourceURL.appendingPathComponent("content", isDirectory: true)
 
-            if containsMarkdownFiles(at: bundledContentURL) {
+            if self.containsMarkdownFiles(at: bundledContentURL) {
                 return bundledContentURL
             }
 
-            if containsMarkdownFiles(at: resourceURL) {
+            if self.containsMarkdownFiles(at: resourceURL) {
                 return resourceURL
             }
         }
@@ -49,7 +74,7 @@ struct TipsApp: App {
                 .appendingPathComponent("content"),
             URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 .deletingLastPathComponent()
-                .appendingPathComponent("content"),
+                .appendingPathComponent("content")
         ]
 
         for path in possiblePaths where FileManager.default.fileExists(atPath: path.path) {

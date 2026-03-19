@@ -1,22 +1,22 @@
 import Foundation
-import XCTest
-
+import Testing
 @testable import TipsApp
 
-final class RotationSchedulerTests: XCTestCase {
-
-    func testAdvancesOnNewDay() {
+struct RotationSchedulerTests {
+    @Test
+    func `advances on new day`() {
         let result = RotationScheduler.advance(
             lastShownDate: "2025-01-01",
             lastAppIndex: 0,
             appCount: 3
         )
 
-        XCTAssertEqual(result.index, 1)
-        XCTAssertTrue(result.didAdvance)
+        #expect(result.index == 1)
+        #expect(result.didAdvance)
     }
 
-    func testStaysOnSameDay() {
+    @Test
+    func `stays on same day`() {
         let today = Date.now
         let todayString = RotationScheduler.formatDate(today)
 
@@ -27,33 +27,36 @@ final class RotationSchedulerTests: XCTestCase {
             today: today
         )
 
-        XCTAssertEqual(result.index, 1)
-        XCTAssertFalse(result.didAdvance)
+        #expect(result.index == 1)
+        #expect(!result.didAdvance)
     }
 
-    func testWrapsAround() {
+    @Test
+    func `wraps around`() {
         let result = RotationScheduler.advance(
             lastShownDate: "2025-01-01",
             lastAppIndex: 2,
             appCount: 3
         )
 
-        XCTAssertEqual(result.index, 0)
-        XCTAssertTrue(result.didAdvance)
+        #expect(result.index == 0)
+        #expect(result.didAdvance)
     }
 
-    func testHandlesZeroApps() {
+    @Test
+    func `handles zero apps`() {
         let result = RotationScheduler.advance(
             lastShownDate: "",
             lastAppIndex: 0,
             appCount: 0
         )
 
-        XCTAssertEqual(result.index, 0)
-        XCTAssertFalse(result.didAdvance)
+        #expect(result.index == 0)
+        #expect(!result.didAdvance)
     }
 
-    func testHandlesOverflowIndex() {
+    @Test
+    func `handles overflow index`() {
         let today = Date.now
         let todayString = RotationScheduler.formatDate(today)
 
@@ -64,17 +67,18 @@ final class RotationSchedulerTests: XCTestCase {
             today: today
         )
 
-        XCTAssertEqual(result.index, 1) // 10 % 3 == 1
+        #expect(result.index == 1) // 10 % 3 == 1
     }
 
-    func testFormatsDate() {
+    @Test
+    func `formats date`() throws {
         var components = DateComponents()
         components.year = 2025
         components.month = 3
         components.day = 15
-        let date = Calendar.current.date(from: components)!
+        let date = try #require(Calendar.current.date(from: components))
 
         let formatted = RotationScheduler.formatDate(date)
-        XCTAssertEqual(formatted, "2025-03-15")
+        #expect(formatted == "2025-03-15")
     }
 }

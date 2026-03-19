@@ -1,7 +1,9 @@
 import SwiftUI
 
+// MARK: - TipApp
+
 /// Represents an application with its associated tips, parsed from a markdown file.
-struct TipApp: Identifiable, Sendable {
+struct TipApp: Identifiable {
     let id: String
     let name: String
     let icon: String
@@ -10,8 +12,10 @@ struct TipApp: Identifiable, Sendable {
     let sections: [TipSection]
 }
 
+// MARK: - TipAppMetadata
+
 /// YAML frontmatter metadata for a tip file.
-struct TipAppMetadata: Codable, Sendable {
+struct TipAppMetadata: Codable {
     let app: String
     let icon: String
     let color: String?

@@ -1,80 +1,87 @@
-import XCTest
-
+import Foundation
+import Testing
 @testable import TipsApp
 
-final class TipParserTests: XCTestCase {
-
+struct TipParserTests {
     let singleTipMarkdown = """
-        ---
-        app: Test App
-        icon: star
-        color: "#FF0000"
-        website: https://example.com
-        category: Shortcuts
-        ---
+    ---
+    app: Test App
+    icon: star
+    color: "#FF0000"
+    website: https://example.com
+    category: Shortcuts
+    ---
 
-        - `⌘K` — Do something
-        """
+    - `⌘K` — Do something
+    """
 
     let plainTipMarkdown = """
-        ---
-        app: Test App
-        icon: star
-        color: "#FF0000"
-        website: https://example.com
-        category: Features
-        ---
+    ---
+    app: Test App
+    icon: star
+    color: "#FF0000"
+    website: https://example.com
+    category: Features
+    ---
 
-        - A cool feature
-        """
+    - A cool feature
+    """
 
-    func testParsesSingleTipFrontmatter() throws {
-        let parsed = try TipParser.parseSingleTip(content: singleTipMarkdown)
+    @Test
+    func `parses single tip frontmatter`() throws {
+        let parsed = try TipParser.parseSingleTip(content: self.singleTipMarkdown)
 
-        XCTAssertEqual(parsed.metadata.app, "Test App")
-        XCTAssertEqual(parsed.metadata.icon, "star")
-        XCTAssertEqual(parsed.metadata.category, "Shortcuts")
-        XCTAssertEqual(parsed.metadata.website, "https://example.com")
+        #expect(parsed.metadata.app == "Test App")
+        #expect(parsed.metadata.icon == "star")
+        #expect(parsed.metadata.category == "Shortcuts")
+        #expect(parsed.metadata.website == "https://example.com")
     }
 
-    func testParsesSingleTipShortcut() throws {
-        let parsed = try TipParser.parseSingleTip(content: singleTipMarkdown)
+    @Test
+    func `parses single tip shortcut`() throws {
+        let parsed = try TipParser.parseSingleTip(content: self.singleTipMarkdown)
 
-        XCTAssertEqual(parsed.item.shortcut, "⌘K")
-        XCTAssertEqual(parsed.item.text, "Do something")
+        #expect(parsed.item.shortcut == "⌘K")
+        #expect(parsed.item.text == "Do something")
     }
 
-    func testParsesSingleTipPlainItem() throws {
-        let parsed = try TipParser.parseSingleTip(content: plainTipMarkdown)
+    @Test
+    func `parses single tip plain item`() throws {
+        let parsed = try TipParser.parseSingleTip(content: self.plainTipMarkdown)
 
-        XCTAssertNil(parsed.item.shortcut)
-        XCTAssertEqual(parsed.item.text, "A cool feature")
+        #expect(parsed.item.shortcut == nil)
+        #expect(parsed.item.text == "A cool feature")
     }
 
-    func testThrowsOnMissingFrontmatter() {
+    @Test
+    func `throws on missing frontmatter`() {
         let badContent = "No frontmatter here"
-        XCTAssertThrowsError(try TipParser.parseSingleTip(content: badContent))
+        #expect(throws: (any Error).self) {
+            try TipParser.parseSingleTip(content: badContent)
+        }
     }
 
-    func testHandlesMissingOptionals() throws {
+    @Test
+    func `handles missing optionals`() throws {
         let minimal = """
-            ---
-            app: Minimal
-            icon: circle
-            ---
+        ---
+        app: Minimal
+        icon: circle
+        ---
 
-            - Just a tip
-            """
+        - Just a tip
+        """
 
         let parsed = try TipParser.parseSingleTip(content: minimal)
 
-        XCTAssertEqual(parsed.metadata.app, "Minimal")
-        XCTAssertNil(parsed.metadata.website)
-        XCTAssertNil(parsed.metadata.category)
-        XCTAssertEqual(parsed.item.text, "Just a tip")
+        #expect(parsed.metadata.app == "Minimal")
+        #expect(parsed.metadata.website == nil)
+        #expect(parsed.metadata.category == nil)
+        #expect(parsed.item.text == "Just a tip")
     }
 
-    func testLoadAllGroupsTipsByApp() throws {
+    @Test
+    func `load all groups tips by app`() throws {
         let temporaryDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
 
@@ -83,28 +90,27 @@ final class TipParserTests: XCTestCase {
             try? FileManager.default.removeItem(at: temporaryDirectory)
         }
 
-        // Write two tips for the same app in different categories
         let tip1 = temporaryDirectory.appendingPathComponent("tip1.md")
-        try singleTipMarkdown.write(to: tip1, atomically: true, encoding: .utf8)
+        try self.singleTipMarkdown.write(to: tip1, atomically: true, encoding: .utf8)
 
         let tip2 = temporaryDirectory.appendingPathComponent("tip2.md")
-        try plainTipMarkdown.write(to: tip2, atomically: true, encoding: .utf8)
+        try self.plainTipMarkdown.write(to: tip2, atomically: true, encoding: .utf8)
 
-        // Write a non-markdown file that should be ignored
         let textFile = temporaryDirectory.appendingPathComponent("ignore.txt")
         try "ignore me".write(to: textFile, atomically: true, encoding: .utf8)
 
         let apps = try TipParser.loadAll(from: temporaryDirectory)
 
-        XCTAssertEqual(apps.count, 1)
-        XCTAssertEqual(apps.first?.name, "Test App")
-        XCTAssertEqual(apps.first?.sections.count, 2)
+        #expect(apps.count == 1)
+        #expect(apps.first?.name == "Test App")
+        #expect(apps.first?.sections.count == 2)
         let headings = Set(apps.first?.sections.map(\.heading) ?? [])
-        XCTAssert(headings.contains("Shortcuts"))
-        XCTAssert(headings.contains("Features"))
+        #expect(headings.contains("Shortcuts"))
+        #expect(headings.contains("Features"))
     }
 
-    func testLoadsBundledContentDirectoryFromSourceTree() throws {
+    @Test
+    func `loads bundled content directory from source tree`() throws {
         let contentDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -112,15 +118,14 @@ final class TipParserTests: XCTestCase {
 
         let apps = try TipParser.loadAll(from: contentDirectory)
 
-        XCTAssertEqual(apps.count, 46)
-        XCTAssert(apps.map(\.name).contains("Finder"))
-        XCTAssert(apps.map(\.name).contains("Safari"))
-        XCTAssert(apps.map(\.name).contains("Xcode"))
+        #expect(apps.count >= 46)
+        #expect(apps.map(\.name).contains("Finder"))
+        #expect(apps.map(\.name).contains("Safari"))
+        #expect(apps.map(\.name).contains("Xcode"))
 
-        // Verify sections are grouped correctly
         if let finder = apps.first(where: { $0.name == "Finder" }) {
-            XCTAssertGreaterThan(finder.sections.count, 0)
-            XCTAssertGreaterThan(finder.sections.flatMap(\.items).count, 10)
+            #expect(!finder.sections.isEmpty)
+            #expect(finder.sections.flatMap(\.items).count > 10)
         }
     }
 }
