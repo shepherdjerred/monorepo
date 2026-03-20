@@ -158,7 +158,6 @@ for(var[s,dst]of pairs)c(s,dst,{recursive:true});
             dest="$OUT_DIR/$PKG_DIR/node_modules/$pkg_rel"
             mkdir -p "$dest"
             cp -Rc "$src_dir/." "$dest/" 2>/dev/null ||
-            cp -Ral "$src_dir/." "$dest/" 2>/dev/null ||
             cp -R "$src_dir/." "$dest/" ||
             { echo "FATAL: npm dir copy failed: $src_dir -> $dest" >&2; exit 1; }
         done < "$NPM_LIST"
@@ -215,33 +214,6 @@ if [ -n "$PKG_DIR" ] && [ -d "$OUT_DIR/$PKG_DIR/node_modules/.prisma/client" ] &
     rm -rf "$TMP_PRISMA"
 fi
 
-
-# Dereference .d.ts symlinks that point outside the tree.
-# TypeScript's project service follows realpath and escapes the tree,
-# causing spurious type errors.  Only dereference .d.ts files — runtime
-# JS files must keep their symlinks so Bun can leverage the store's
-# nested node_modules for correct version resolution.
-#
-# Only needed when npm files were hardlinked individually (legacy path).
-# With directory-level copies (Phase 0), .d.ts files are real files
-# (clonefiles/copies), not symlinks — nothing to dereference.
-if [ -z "$NPM_LIST" ]; then
-    # Legacy path: npm files were hardlinked individually, scan for d.ts symlinks
-    find -P "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
-        target=$(readlink "$link" 2>/dev/null) || continue
-        case "$target" in
-            /*) ;;
-            *) target="$(dirname "$link")/$target" ;;
-        esac
-        case "$target" in
-            "$OUT_DIR"/*) ;;
-            *)
-                rm -f "$link"
-                cp -f "$target" "$link" 2>/dev/null || true
-                ;;
-        esac
-    done
-fi
 
 """
 
@@ -358,6 +330,7 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, p
         arguments = [fixed_args, npm_args],
         mnemonic = "BunMaterialize",
         progress_message = "Materializing Bun package tree for %s" % ctx.label,
+        execution_requirements = {"no-sandbox": "1"},
     )
 
     return tree

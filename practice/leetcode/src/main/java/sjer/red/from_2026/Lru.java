@@ -6,7 +6,7 @@ public class Lru {
     }
 
     public int get(int key) {
-
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     public void put(int key, int value) {

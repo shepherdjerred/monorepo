@@ -2,10 +2,9 @@
 
 ## Decision
 
-Use `execution_requirements = {"no-sandbox": "1"}` on two action types:
+Use `execution_requirements = {"no-sandbox": "1"}` on the `BunMaterialize` action and eliminate the `bun_npm_dir` TreeArtifact layer entirely.
 
-1. **`BunMaterialize`** — the `materialize_tree()` action that creates per-package TreeArtifacts containing source files + npm dependencies
-2. **`bun_npm_dir`** — the ~1,060 actions that wrap npm package directories as TreeArtifacts in `@bun_modules`
+Previously, ~1,060 `bun_npm_dir` actions wrapped npm package directories as TreeArtifacts in `@bun_modules`. These existed solely for sandbox compatibility. With `no-sandbox`, the materialize script reads npm directories directly from `external/bun_modules/...` in the exec root, making the intermediate layer unnecessary.
 
 ## Why
 
@@ -18,7 +17,7 @@ Profiling shows Bazel's sandbox overhead dominates actual work:
 | Output scanning (stat all output files) | 10-17s per tree | reduced |
 | Total per tree | 40-50s | ~5-10s |
 
-For the ~1,060 `bun_npm_dir` actions, each creates a sandbox, runs `cp -Rc`, tears down the sandbox. The sandbox setup/teardown overhead exceeds the actual copy time.
+Removing the `bun_npm_dir` layer eliminates ~1,060 build actions entirely (each created a sandbox, ran `cp -Rc`, tore down the sandbox).
 
 ## What no-sandbox preserves
 
@@ -41,6 +40,10 @@ For the ~1,060 `bun_npm_dir` actions, each creates a sandbox, runs `cp -Rc`, tea
 3. **Actions are pure filesystem operations** — `cp`, `ln`, `mkdir`. No network access, no side effects beyond the output directory.
 4. **No undeclared inputs** — the source is `@bun_modules` (an external repo populated by a repo rule), the destination is the output TreeArtifact. There's nothing else to read.
 
+## Why no-sandbox is mandatory (not just a performance optimization)
+
+With `bun_npm_dir` removed, `bun_npm_package` provides raw filegroup files (not TreeArtifacts). The `_format_npm_entry` function derives `src_dir` as `external/bun_modules/...` — an exec-root-relative path that is only accessible without sandbox. In a sandboxed build, individual files are symlinked in but the directory structure is not preserved as a traversable directory, so `fs.cpSync(src_dir, ...)` would fail.
+
 ## Industry precedent
 
 [aspect-build/rules_js](https://github.com/aspect-build/rules_js) — the most widely-used Bazel rules for JavaScript — defaults to `no-sandbox` for npm lifecycle hooks and package operations:
@@ -55,8 +58,7 @@ See also [Bazel issue #5153](https://github.com/bazelbuild/bazel/issues/5153): A
 
 | Action | Mnemonic | File | Impact |
 |---|---|---|---|
-| `materialize_tree()` | `BunMaterialize` | `tools/rules_bun/bun/private/materialize.bzl` | All 37 prepared tree targets + inline materialization fallbacks |
-| `bun_npm_dir` | (default) | `tools/rules_bun/bun/private/bun_install.bzl` (generated `package_rule.bzl`) | ~1,060 TreeArtifact creation actions in `@bun_modules` |
+| `materialize_tree()` | `BunMaterialize` | `tools/rules_bun/bun/private/materialize.bzl` | All prepared tree targets + inline materialization fallbacks |
 
 ## NOT affected
 

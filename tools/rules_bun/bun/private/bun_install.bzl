@@ -30,6 +30,9 @@ def _bun_npm_dir_impl(ctx):
         command = 'if [ -d "%s" ]; then cp -Rc "%s/." "%s/" 2>/dev/null || cp -R "%s/." "%s/"; fi' % (
             src_path, src_path, out.path, src_path, out.path,
         ),
+        mnemonic = "BunNpmDir",
+        progress_message = "Packaging npm dir %s" % ctx.attr.src_dir,
+        execution_requirements = {"no-sandbox": "1"},
     )
     return [DefaultInfo(files = depset([out]))]
 

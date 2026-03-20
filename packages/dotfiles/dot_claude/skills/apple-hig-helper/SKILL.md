@@ -16,8 +16,8 @@ The Apple Human Interface Guidelines (HIG) provides comprehensive design guidanc
 - **Design Foundations**: Color, Typography, Icons, Layout, Materials, Branding
 - **Accessibility & Inclusion**: Guidelines for building apps everyone can use
 
-**Data Location**: `packages/claude-plugin/agents/apple-hig-helper/data/`
-**Format**: 174 HTML documentation pages (23 MB total)
+**Data Location**: `markdown/`
+**Format**: 174 Markdown documentation pages
 
 ## Quick Reference: Major Topics with Summaries
 
@@ -25,49 +25,49 @@ The Apple Human Interface Guidelines (HIG) provides comprehensive design guidanc
 
 #### Color
 
-**Path**: `data/color/index.html`
+**Path**: `markdown/color/index.md`
 
 Judicious use of color can enhance communication, evoke your brand, provide visual continuity, communicate status and feedback, and help people understand information.
 
 #### Typography
 
-**Path**: `data/typography/index.html`
+**Path**: `markdown/typography/index.md`
 
 Your typographic choices can help you display legible text, convey an information hierarchy, communicate important content, and express your brand or style.
 
 #### Icons
 
-**Path**: `data/icons/index.html`
+**Path**: `markdown/icons/index.md`
 
 An effective icon is a graphic asset that expresses a single concept in ways people instantly understand.
 
 #### Layout
 
-**Path**: `data/layout/index.html`
+**Path**: `markdown/layout/index.md`
 
 A consistent layout that adapts to various contexts makes your experience more approachable and helps people enjoy their favorite apps and games on all their devices.
 
 #### Materials
 
-**Path**: `data/materials/index.html`
+**Path**: `markdown/materials/index.md`
 
 A material is a visual effect that creates a sense of depth, layering, and hierarchy between foreground and background elements.
 
 #### Branding
 
-**Path**: `data/branding/index.html`
+**Path**: `markdown/branding/index.md`
 
 Apps and games express their unique brand identity in ways that make them instantly recognizable while feeling at home on the platform and giving people a consistent experience.
 
 #### Dark Mode
 
-**Path**: `data/dark-mode/index.html`
+**Path**: `markdown/dark-mode/index.md`
 
 Dark Mode is a systemwide appearance setting that uses a dark color palette to provide a comfortable viewing experience tailored for low-light environments.
 
 #### Images
 
-**Path**: `data/images/index.html`
+**Path**: `markdown/images/index.md`
 
 To make sure your artwork looks great on all devices you support, learn how the system displays content and how to deliver art at the appropriate scale factors.
 
@@ -75,13 +75,13 @@ To make sure your artwork looks great on all devices you support, learn how the 
 
 #### Accessibility
 
-**Path**: `data/accessibility/index.html`
+**Path**: `markdown/accessibility/index.md`
 
 Accessible user interfaces empower everyone to have a great experience with your app or game.
 
 #### Inclusion
 
-**Path**: `data/inclusion/index.html`
+**Path**: `markdown/inclusion/index.md`
 
 Inclusive apps and games put people first by prioritizing respectful communication and presenting content and functionality in ways that everyone can access and understand.
 
@@ -89,55 +89,55 @@ Inclusive apps and games put people first by prioritizing respectful communicati
 
 #### Buttons
 
-**Path**: `data/buttons/index.html`
+**Path**: `markdown/buttons/index.md`
 
 A button initiates an instantaneous action.
 
 #### Menus
 
-**Path**: `data/menus/index.html`
+**Path**: `markdown/menus/index.md`
 
 A menu reveals its options when people interact with it, making it a space-efficient way to present commands in your app or game.
 
 #### Alerts
 
-**Path**: `data/alerts/index.html`
+**Path**: `markdown/alerts/index.md`
 
 An alert gives people critical information they need right away.
 
 #### Sheets
 
-**Path**: `data/sheets/index.html`
+**Path**: `markdown/sheets/index.md`
 
 A sheet helps people perform a scoped task that's closely related to their current context.
 
 #### Lists and Tables
 
-**Path**: `data/lists-and-tables/index.html`
+**Path**: `markdown/lists-and-tables/index.md`
 
 Lists and tables present data in one or more columns of rows.
 
 #### Pickers
 
-**Path**: `data/pickers/index.html`
+**Path**: `markdown/pickers/index.md`
 
 A picker displays one or more scrollable lists of distinct values that people can choose from.
 
 #### Sliders
 
-**Path**: `data/sliders/index.html`
+**Path**: `markdown/sliders/index.md`
 
 A slider is a horizontal track with a control, called a thumb, that people can adjust between a minimum and maximum value.
 
 #### Toggles
 
-**Path**: `data/toggles/index.html`
+**Path**: `markdown/toggles/index.md`
 
 A toggle lets people choose between a pair of opposing states, like on and off, using a different appearance to indicate each state.
 
 #### Text Fields
 
-**Path**: `data/text-fields/index.html`
+**Path**: `markdown/text-fields/index.md`
 
 A text field is a rectangular area in which people enter or edit small, specific pieces of text.
 
@@ -145,37 +145,37 @@ A text field is a rectangular area in which people enter or edit small, specific
 
 #### Modality
 
-**Path**: `data/modality/index.html`
+**Path**: `markdown/modality/index.md`
 
 Modality is a design technique that presents content in a separate, dedicated mode that prevents interaction with the parent view and requires an explicit action to dismiss.
 
 #### Navigation and Search
 
-**Path**: `data/navigation-and-search/index.html`
+**Path**: `markdown/navigation-and-search/index.md`
 
 Help people navigate and find content efficiently.
 
 #### Feedback
 
-**Path**: `data/feedback/index.html`
+**Path**: `markdown/feedback/index.md`
 
 Feedback helps people know what's happening, discover what they can do next, understand the results of actions, and avoid mistakes.
 
 #### Loading
 
-**Path**: `data/loading/index.html`
+**Path**: `markdown/loading/index.md`
 
 The best content-loading experience finishes before people become aware of it.
 
 #### Settings
 
-**Path**: `data/settings/index.html`
+**Path**: `markdown/settings/index.md`
 
 People expect apps and games to just work, but they also appreciate having ways to customize the experience to fit their needs.
 
 #### Onboarding
 
-**Path**: `data/onboarding/index.html`
+**Path**: `markdown/onboarding/index.md`
 
 Onboarding can help people get a quick start using your app or game.
 
@@ -183,37 +183,37 @@ Onboarding can help people get a quick start using your app or game.
 
 #### Designing for iOS
 
-**Path**: `data/designing-for-ios/index.html`
+**Path**: `markdown/designing-for-ios/index.md`
 
 People depend on their iPhone to help them stay connected, play games, view media, accomplish tasks, and track personal data in any location and while on the go.
 
 #### Designing for iPadOS
 
-**Path**: `data/designing-for-ipados/index.html`
+**Path**: `markdown/designing-for-ipados/index.md`
 
 People value the power, mobility, and flexibility of iPad as they enjoy media, play games, perform detailed productivity tasks, and bring their creations to life.
 
 #### Designing for macOS
 
-**Path**: `data/designing-for-macos/index.html`
+**Path**: `markdown/designing-for-macos/index.md`
 
 People rely on the power, spaciousness, and flexibility of a Mac as they perform in-depth productivity tasks, view media or content, and play games, often using several apps at once.
 
 #### Designing for tvOS
 
-**Path**: `data/designing-for-tvos/index.html`
+**Path**: `markdown/designing-for-tvos/index.md`
 
 People enjoy the vibrant content, immersive experiences, and streamlined interactions that tvOS delivers in media and games, as well as in fitness, education, and home utility apps.
 
 #### Designing for visionOS
 
-**Path**: `data/designing-for-visionos/index.html`
+**Path**: `markdown/designing-for-visionos/index.md`
 
 When people wear Apple Vision Pro, they enter an infinite 3D space where they can engage with your app or game while staying connected to their surroundings.
 
 #### Designing for watchOS
 
-**Path**: `data/designing-for-watchos/index.html`
+**Path**: `markdown/designing-for-watchos/index.md`
 
 When people glance at their Apple Watch, they know they can access essential information and perform simple, timely tasks whether they're stationary or in motion.
 
@@ -464,15 +464,15 @@ wallet, watch-faces, web-views, widgets, windows, workouts, writing
 
 ```bash
 # List all topic directories
-ls packages/claude-plugin/agents/apple-hig-helper/data/
+ls markdown/
 
 # Count total topics
-ls packages/claude-plugin/agents/apple-hig-helper/data/ | wc -l
+ls markdown/ | wc -l
 
 # Search for specific topics
-ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -i "button"
-ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -i "menu"
-ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -i "ios"
+ls markdown/ | grep -i "button"
+ls markdown/ | grep -i "menu"
+ls markdown/ | grep -i "ios"
 ```
 
 ### Read Topic Metadata (Fast)
@@ -481,26 +481,26 @@ Extract title and description without reading full file:
 
 ```bash
 # Get title
-grep -oP '(?<=<title>)[^<]+' packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html | head -1
+grep -oP '(?<=<title>)[^<]+' markdown/buttons/index.md | head -1
 
 # Get description
-grep -oP '(?<=<meta name="description" content=")[^"]+' packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html | head -1
+grep -oP '(?<=<meta name="description" content=")[^"]+' markdown/buttons/index.md | head -1
 
 # Get both
-echo "Title:" && grep -oP '(?<=<title>)[^<]+' packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html | head -1
-echo "Description:" && grep -oP '(?<=<meta name="description" content=")[^"]+' packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html | head -1
+echo "Title:" && grep -oP '(?<=<title>)[^<]+' markdown/buttons/index.md | head -1
+echo "Description:" && grep -oP '(?<=<meta name="description" content=")[^"]+' markdown/buttons/index.md | head -1
 ```
 
 ### Read Full Topic Content
 
-For detailed guidance, read the complete HTML file:
+For detailed guidance, read the complete Markdown file:
 
 ```bash
 # Read entire file (may be large - 50-250KB per file)
-cat packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html
+cat markdown/buttons/index.md
 
 # Read with Bash tool through Read tool (preferred for large files)
-Read packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html
+Read markdown/buttons/index.md
 ```
 
 ### Search Across Multiple Topics
@@ -509,12 +509,12 @@ Read packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html
 # Extract metadata from multiple related topics
 for topic in buttons menus alerts sheets; do
   echo "=== $topic ==="
-  grep -oP '(?<=<meta name="description" content=")[^"]+' packages/claude-plugin/agents/apple-hig-helper/data/$topic/index.html
+  grep -oP '(?<=<meta name="description" content=")[^"]+' markdown/$topic/index.md
   echo ""
 done
 
 # Search for topics by category
-ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|alert|sheet)"
+ls markdown/ | grep -E "(button|menu|alert|sheet)"
 ```
 
 ## Usage Examples
@@ -522,27 +522,27 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 ### Example 1: "What does HIG say about buttons?"
 
 1. **Quick Summary**: Read the button summary from this skill
-2. **Full Details**: `Read packages/claude-plugin/agents/apple-hig-helper/data/buttons/index.html`
-3. **Response**: A button initiates an instantaneous action. (Provide platform-specific guidance from HTML)
+2. **Full Details**: `Read markdown/buttons/index.md`
+3. **Response**: A button initiates an instantaneous action. (Provide platform-specific guidance from Markdown)
 
 ### Example 2: "Show me iOS design guidelines"
 
-1. **Navigate**: `Read packages/claude-plugin/agents/apple-hig-helper/data/designing-for-ios/index.html`
+1. **Navigate**: `Read markdown/designing-for-ios/index.md`
 2. **Summary**: People depend on their iPhone to help them stay connected, play games, view media, accomplish tasks, and track personal data in any location and while on the go.
 3. **Provide**: Platform-specific patterns, components, and best practices
 
 ### Example 3: "Accessibility best practices from HIG"
 
-1. **Primary Guide**: `Read packages/claude-plugin/agents/apple-hig-helper/data/accessibility/index.html`
+1. **Primary Guide**: `Read markdown/accessibility/index.md`
 2. **Related Topics**:
-   - VoiceOver: `data/voiceover/index.html`
-   - Inclusion: `data/inclusion/index.html`
+   - VoiceOver: `markdown/voiceover/index.md`
+   - Inclusion: `markdown/inclusion/index.md`
    - Dynamic Type: Coverage in typography
 3. **Summary**: Provide key accessibility principles and implementation guidance
 
 ### Example 4: "List all available HIG component topics"
 
-1. **Search**: `ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -v "^designing-for" | sort`
+1. **Search**: `ls markdown/ | grep -v "^designing-for" | sort`
 2. **Categorize**: Group by component type (layout, navigation, input, etc.)
 3. **Provide**: Organized list with brief descriptions
 
@@ -557,9 +557,9 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 
 ### Example 6: "How should I design alerts for visionOS?"
 
-1. **Read Alert Guidelines**: `data/alerts/index.html`
-2. **Read visionOS Platform Guide**: `data/designing-for-visionos/index.html`
-3. **Cross-reference**: Look for visionOS-specific guidance in alerts HTML
+1. **Read Alert Guidelines**: `markdown/alerts/index.md`
+2. **Read visionOS Platform Guide**: `markdown/designing-for-visionos/index.md`
+3. **Cross-reference**: Look for visionOS-specific guidance in alerts Markdown
 4. **Provide**: Platform-specific alert design patterns
 
 ## Best Practices
@@ -577,7 +577,7 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 
 1. **Start with the category index** above to find relevant topics
 2. **Read metadata summaries** for quick overviews (30 major topics included)
-3. **Access full HTML files** for detailed platform-specific guidance
+3. **Access full Markdown files** for detailed platform-specific guidance
 4. **Cross-reference related topics**:
    - Buttons → Menus → Navigation
    - Color → Dark Mode → Materials
@@ -600,9 +600,9 @@ ls packages/claude-plugin/agents/apple-hig-helper/data/ | grep -E "(button|menu|
 
 ## Data Structure Reference
 
-- **Location**: `packages/claude-plugin/agents/apple-hig-helper/data/`
-- **Format**: HTML files with embedded Vue.js application
-- **Structure**: `{topic}/index.html` for each topic
+- **Location**: `markdown/`
+- **Format**: Markdown files
+- **Structure**: `{topic}/index.md` for each topic
 - **Metadata**: Available in `<title>` and `<meta>` tags
 - **Total Size**: 23 MB (174 files)
 - **Index File**: `.visited.json` contains complete list of URLs
