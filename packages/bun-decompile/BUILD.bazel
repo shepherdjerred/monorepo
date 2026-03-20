@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -35,19 +35,14 @@ bun_library(
     ],
 )
 
-bun_binary(
-    name = "bun_decompile",
-    entry_point = "src/index.ts",
-    deps = [":pkg"],
-)
-
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/@types/babel__core",
         ":node_modules/@types/babel__generator",
@@ -60,19 +55,20 @@ bun_eslint_test(
     ],
 )
 
+bun_binary(
+    name = "bun_decompile",
+    entry_point = "src/index.ts",
+    prepared_tree = ":tree",
+)
+
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/@types/babel__core",
-        ":node_modules/@types/babel__generator",
-        ":node_modules/@types/babel__traverse",
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/undici-types",
-    ],
+    prepared_tree = ":tree",
 )
 
 # Requires bun build --compile (local execution) and Bun >= 1.3.10 for
@@ -80,7 +76,6 @@ bun_typecheck_test(
 bun_test(
     name = "test",
     local = True,
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [":pkg"],
 )

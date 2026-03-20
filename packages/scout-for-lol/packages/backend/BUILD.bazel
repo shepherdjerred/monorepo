@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prisma_generate", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_prisma_generate", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -61,21 +61,16 @@ bun_library(
     ],
 )
 
-bun_binary(
-    name = "backend",
-    entry_point = "src/index.ts",
-    deps = [":pkg"],
-)
-
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
-        "//packages/scout-for-lol:eslint.config.ts",
         "tsconfig.json",
+        "//:tsconfig.base.json",
+        "//packages/scout-for-lol:eslint.config.ts",
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
     prisma_client = ":prisma_generate",
-    tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -85,19 +80,24 @@ bun_eslint_test(
     ],
 )
 
+bun_binary(
+    name = "backend",
+    entry_point = "src/index.ts",
+    prepared_tree = ":tree",
+)
+
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+    tags = ["manual"],
+)
+
 # Blocked: workspace packages (@scout-for-lol/data, @scout-for-lol/report) + #generated/prisma/client
 # not resolved by tsc in sandbox.
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/undici-types",
-    ],
 )
 
 # Blocked: tests use #generated/prisma/client (custom output path) which
@@ -105,8 +105,7 @@ bun_typecheck_test(
 # workspace packages (@scout-for-lol/data, @scout-for-lol/report).
 bun_test(
     name = "test",
+    prepared_tree = ":tree",
     size = "large",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [":pkg"],
 )

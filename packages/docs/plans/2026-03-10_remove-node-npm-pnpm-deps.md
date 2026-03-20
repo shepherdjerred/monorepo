@@ -1,5 +1,9 @@
 # Plan: Remove all node/npm/pnpm dependencies — Bun only
 
+## Status: ~95% Complete (2026-03-19)
+
+Items 1-7, 9-11 are complete. Items 8 (obsidian-headless), 12-15 are minor remaining work or accepted as-is.
+
 ## Context
 
 The monorepo should have zero dependencies on node, npm, or pnpm. Bun is the only JS runtime/package manager. `node_modules/` directories are fine (Bun uses them). `practice/` directory is excluded from scope.

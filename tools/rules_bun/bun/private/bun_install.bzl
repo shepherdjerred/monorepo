@@ -10,6 +10,37 @@ Creates an external Bazel repository (@bun_modules) containing:
 _PACKAGE_RULE_BZL = """\
 load("@monorepo//tools/rules_bun/bun:providers.bzl", "BunInfo")
 
+def _bun_npm_dir_impl(ctx):
+    \"\"\"Wraps npm package files into a TreeArtifact (directory artifact).
+
+    Bazel tracks the TreeArtifact as a single input instead of thousands
+    of individual files, dramatically reducing stat overhead during
+    dependency checking and output scanning.
+    \"\"\"
+    # Use src_dir in the output name so the TreeArtifact's short_path
+    # contains the .bun/<key>/node_modules/<pkg> structure that
+    # _format_npm_entry needs to extract the destination path.
+    out = ctx.actions.declare_directory(ctx.attr.src_dir)
+    # Prefix src_dir with workspace root so it's valid from the exec root
+    ws_root = ctx.label.workspace_root
+    src_path = ws_root + "/" + ctx.attr.src_dir if ws_root else ctx.attr.src_dir
+    ctx.actions.run_shell(
+        outputs = [out],
+        inputs = ctx.attr.pkg_files[DefaultInfo].files,
+        command = 'if [ -d "%s" ]; then cp -Rc "%s/." "%s/" 2>/dev/null || cp -R "%s/." "%s/"; fi' % (
+            src_path, src_path, out.path, src_path, out.path,
+        ),
+    )
+    return [DefaultInfo(files = depset([out]))]
+
+bun_npm_dir = rule(
+    implementation = _bun_npm_dir_impl,
+    attrs = {
+        "src_dir": attr.string(mandatory = True),
+        "pkg_files": attr.label(mandatory = True),
+    },
+)
+
 def _bun_npm_package_impl(ctx):
     pkg_files = ctx.attr.pkg_files[DefaultInfo].files
     return [
@@ -281,7 +312,7 @@ def _generate_build_file(packages, bun_keys, all_keys_by_pkg):
     inter-entry dep symlinks can resolve correctly.
     """
     lines = [
-        'load(":package_rule.bzl", "bun_npm_package")',
+        'load(":package_rule.bzl", "bun_npm_dir", "bun_npm_package")',
         "",
         'package(default_visibility = ["//visibility:public"])',
         "",
@@ -299,21 +330,52 @@ def _generate_build_file(packages, bun_keys, all_keys_by_pkg):
                 "node_modules/.bun/%s/node_modules/%s/**" % (key, pkg_name)
                 for key in sorted(keys)
             ]
+            # Source directories for TreeArtifact creation
+            src_dirs = [
+                "node_modules/.bun/%s/node_modules/%s" % (key, pkg_name)
+                for key in sorted(keys)
+            ]
         else:
             glob_patterns = ["node_modules/%s/**" % pkg_name]
+            src_dirs = ["node_modules/%s" % pkg_name]
 
         patterns_str = ", ".join(['"%s"' % p for p in glob_patterns])
 
+        # Filegroup for Bazel change detection (inputs to bun_npm_dir)
         lines.append("filegroup(")
         lines.append('    name = "_npm_files_%s",' % sanitized)
         lines.append("    srcs = glob([%s], allow_empty = True)," % patterns_str)
         lines.append(")")
         lines.append("")
 
+        # TreeArtifact per version entry — Bazel tracks 1 directory instead of N files
+        for i, src_dir in enumerate(src_dirs):
+            dir_name = "_npm_dir_%s_%d" % (sanitized, i) if len(src_dirs) > 1 else "_npm_dir_%s" % sanitized
+            lines.append("bun_npm_dir(")
+            lines.append('    name = "%s",' % dir_name)
+            lines.append('    src_dir = "%s",' % src_dir)
+            lines.append('    pkg_files = ":_npm_files_%s",' % sanitized)
+            lines.append(")")
+            lines.append("")
+
+        # bun_npm_package uses TreeArtifact(s) instead of raw filegroup
+        if len(src_dirs) == 1:
+            pkg_files_target = ":_npm_dir_%s" % sanitized
+        else:
+            # Multi-version: create a filegroup of all TreeArtifacts
+            dir_targets = [":_npm_dir_%s_%d" % (sanitized, i) for i in range(len(src_dirs))]
+            dirs_str = ", ".join(['"%s"' % t for t in dir_targets])
+            lines.append("filegroup(")
+            lines.append('    name = "_npm_dirs_%s",' % sanitized)
+            lines.append("    srcs = [%s]," % dirs_str)
+            lines.append(")")
+            lines.append("")
+            pkg_files_target = ":_npm_dirs_%s" % sanitized
+
         lines.append("bun_npm_package(")
         lines.append('    name = "%s",' % sanitized)
         lines.append('    package_name = "%s",' % pkg_name)
-        lines.append('    pkg_files = ":_npm_files_%s",' % sanitized)
+        lines.append('    pkg_files = "%s",' % pkg_files_target)
         lines.append(")")
         lines.append("")
 

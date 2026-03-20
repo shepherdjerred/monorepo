@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_eslint_test", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -22,6 +22,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# Manual: Starlight CSS virtual module path resolution fails in sandbox — Vite can't find
+# compile metadata for .astro component styles because node_modules hardlinks resolve back
+# to the deep execroot TreeArtifact path instead of the /tmp overlay
 bun_astro_build(
     name = "astro_build",
     data = glob([
@@ -34,6 +37,7 @@ bun_astro_build(
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    tags = ["manual"],
     deps = [":pkg"],
 )
 
@@ -73,14 +77,15 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
     node_modules = ":node_modules",
+    tsconfig = "tsconfig.json",
     deps = [
         ":pkg",
         "//:node_modules/@types/bun",
@@ -89,14 +94,15 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 # Astro uses virtual modules (astro:content) only resolvable in its build pipeline.
 # Type checking is done via `astro check` in local dev; tsc can't resolve these.
 bun_typecheck_test(
     name = "typecheck",
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":pkg",
-        "//:node_modules/typescript",
-    ],
 )

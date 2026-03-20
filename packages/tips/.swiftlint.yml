@@ -170,3 +170,4 @@ identifier_name:
 excluded:
   - .build
   - Package.swift
+  - QuickTip.xcodeproj

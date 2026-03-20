@@ -13,35 +13,51 @@ build --workspace_status_command=tools/bazel/workspace_status.sh
 # Test output
 test --test_output=errors
 
-
-# Performance
+# Performance — JVM
 startup --host_jvm_args=-Xmx16g
+
+# Performance — parallelism
 build --jobs=auto
-build --experimental_remote_merkle_tree_cache
-build --watchfs
-build --noexperimental_check_output_files
+
+# Performance — analysis cache protection
+build --noallow_analysis_cache_discard
+
+# Performance — sandbox optimization
 build --reuse_sandbox_directories
+build --noexperimental_check_output_files
+
+# Performance — file watching & hashing
+build --watchfs
+build --experimental_remote_merkle_tree_cache
+# build --digest_function=BLAKE3  # Not supported in Bazel 8.x yet
+
+# Performance — disk cache (survives bazel clean, crucial for branch switching)
+build --disk_cache=~/.cache/bazel-disk
+build --experimental_disk_cache_gc_max_size=10G
+build --experimental_disk_cache_gc_max_age=14d
+
+# Performance — memory management
+build --skyframe_high_water_mark_threshold=85
+build --heuristically_drop_nodes
 
 # Convenience
 build --color=yes
 test --color=yes
 
-build --remote_local_fallback
-
 # Remote cache (bazel-remote -> SeaweedFS S3)
+# Disabled during materialization optimization work.
 # Local dev uses Tailscale ingress (read-only); CI uses in-cluster gRPC (read-write).
-build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
-build --remote_upload_local_results=false
-
+#build --remote_cache=https://bazel-remote.tailnet-1a49.ts.net
+#build --remote_upload_local_results=false
+#build --remote_local_fallback
 
 # CI-specific settings
 build:ci --remote_cache=grpc://bazel-remote.bazel-remote.svc.cluster.local:9092
 build:ci --remote_upload_local_results=true
+build:ci --remote_cache_compression
+build:ci --remote_cache_async
 build:ci --lockfile_mode=error
 build:ci --sandbox_fake_hostname
 build:ci --sandbox_fake_username
 build:ci --color=yes
 test:ci --test_output=all
-
-# Local development
-build:local --disk_cache=~/.cache/bazel-disk

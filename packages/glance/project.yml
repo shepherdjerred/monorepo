@@ -1,0 +1,85 @@
+name: Glance
+options:
+  bundleIdPrefix: com.glance
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+  defaultConfig: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: "YES"
+    SWIFT_UPCOMING_FEATURE_INTERNAL_IMPORTS_BY_DEFAULT: "YES"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 63ZAG7X889
+
+targets:
+  GlanceApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: GlanceApp/Sources
+    info:
+      path: GlanceApp/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleDisplayName: Glance
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glance.app
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+        PRODUCT_NAME: Glance
+        SWIFT_PACKAGE_NAME: GlanceApp
+    dependencies:
+      - package: GRDB
+      - target: GlanceWidgetExtension
+        embed: true
+    entitlements:
+      path: GlanceApp/GlanceApp.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.glance.widget
+
+  GlanceWidgetExtension:
+    type: extensionkit-extension
+    platform: macOS
+    sources:
+      - path: GlanceWidget/Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glance.app.widget
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+        PRODUCT_NAME: GlanceWidget
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@executable_path/../Frameworks"
+          - "@executable_path/../../../../Frameworks"
+    info:
+      path: GlanceWidget/Info.plist
+      properties:
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: GlanceWidget/GlanceWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.glance.widget
+
+  GlanceAppTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: GlanceApp/Tests
+    dependencies:
+      - target: GlanceApp
+    settings:
+      base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+
+packages:
+  GRDB:
+    url: https://github.com/groue/GRDB.swift.git
+    from: "7.0.0"

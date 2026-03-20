@@ -28,9 +28,9 @@ def _bun_prisma_generate_impl(ctx):
             cp {schema} "$WORK/prisma/schema.prisma"
             echo '{{"name":"prisma-gen-tmp"}}' > "$WORK/package.json"
 
-            (cd "$WORK" && HOME="$WORK" "$OLDPWD/$BUN" add --ignore-scripts "@prisma/client@{version}")
+            (cd "$WORK" && HOME="$WORK" "$OLDPWD/$BUN" add --ignore-scripts "@prisma/client@{version}" "prisma@{version}")
             (cd "$WORK" && HOME="$WORK" PRISMA_GENERATE_SKIP_AUTOINSTALL=1 \
-                "$OLDPWD/$BUN" x --bun "prisma@{version}" generate \
+                "$OLDPWD/$BUN" node_modules/.bin/prisma generate \
                     --schema=prisma/schema.prisma --no-engine --no-hints)
 
             # Find generated client — standard path (.prisma/client) or custom output

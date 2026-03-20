@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test", "bun_vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test", "bun_vite_build")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -63,13 +63,16 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
+    data = glob(["src/**/fixtures/**"]),
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
+        "tsconfig.node.json",
         "//:tsconfig.base.json",
     ],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/@types/react",
         ":node_modules/@types/react-dom",
@@ -81,23 +84,17 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["tsconfig.node.json"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/@types/react",
-        ":node_modules/@types/react-dom",
-        ":node_modules/@types/react-highlight-words",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/typescript",
-    ],
+    prepared_tree = ":tree",
 )
 
 bun_test(
     name = "test",
-    data = glob(["src/**/fixtures/**"]),
-    tsconfig = "tsconfig.json",
-    deps = [":pkg"],
+    prepared_tree = ":tree",
 )

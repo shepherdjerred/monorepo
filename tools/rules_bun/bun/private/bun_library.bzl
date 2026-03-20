@@ -16,7 +16,12 @@ def _bun_library_impl(ctx):
         if BunInfo in dep:
             info = dep[BunInfo]
             transitive_sources_list.append(info.transitive_sources)
-            npm_sources_list.append(info.npm_sources)
+            # Only accumulate npm_sources from actual npm packages (no package_json),
+            # not from workspace deps (bun_library targets). This prevents the entire
+            # transitive npm closure from leaking into every consumer's tree — each
+            # bun_prepared_tree gets npm files only from its explicitly listed deps.
+            if not info.package_json:
+                npm_sources_list.append(info.npm_sources)
             workspace_deps_list.append(depset([info], transitive = [info.workspace_deps]))
 
     transitive_sources = depset(transitive = transitive_sources_list)

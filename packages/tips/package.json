@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "cd TipsApp && swift build",
-    "test": "cd TipsApp && swift test",
+    "build": "cd QuickTipApp && swift build",
+    "test": "cd QuickTipApp && swift test",
     "lint": "swiftlint --strict",
-    "typecheck": "cd TipsApp && swift build"
+    "typecheck": "cd QuickTipApp && swift build"
   }
 }

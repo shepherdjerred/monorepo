@@ -32,7 +32,10 @@ def resolve_bun_info(deps):
 
     if extra_workspace_deps:
         merged_ws = depset(extra_workspace_deps, transitive = [bun_info.workspace_deps])
-        merged_npm = depset(transitive = [bun_info.npm_sources] + [d.npm_sources for d in extra_workspace_deps])
+        # Only merge npm_sources from npm packages (no package_json), not workspace deps.
+        # Workspace deps' npm_sources would transitively pull in their entire npm closure.
+        extra_npm = [d.npm_sources for d in extra_workspace_deps if not d.package_json]
+        merged_npm = depset(transitive = [bun_info.npm_sources] + extra_npm)
         bun_info = BunInfo(
             target = bun_info.target,
             sources = bun_info.sources,

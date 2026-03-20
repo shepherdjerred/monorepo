@@ -2,7 +2,7 @@ load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -23,13 +23,14 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//packages/homelab:tsconfig.base.json",
     ],
+    tsconfig = "tsconfig.json",
     deps = [
         ":pkg",
         "//:node_modules/@types/bun",
@@ -39,16 +40,14 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//packages/homelab:tsconfig.base.json"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/typescript",
-        "//:node_modules/undici-types",
-    ],
+    prepared_tree = ":tree",
 )
 
 # Container image for K8s deployment.

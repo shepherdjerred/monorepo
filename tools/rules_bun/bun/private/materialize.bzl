@@ -6,11 +6,53 @@ npm packages, workspace deps, and optional prisma client.
 
 load("//tools/rules_bun/bun:providers.bzl", "BunInfo")
 
-def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_client, data_files, all_npm_sources):
-    """Write a manifest file listing all COPY/COPYDIR operations.
+def _format_npm_entry(f):
+    """Format an npm source file as a package directory entry.
 
-    Files are placed at their monorepo-relative paths so that all relative
-    references (tsconfig extends, eslint config discovery, etc.) work as-is.
+    Returns "src_dir\\tpkg_rel" where src_dir is the exec-root path to the
+    npm package directory and pkg_rel is the .bun/<key>/node_modules/<pkg>
+    relative path. Many files map to the same directory — use uniquify=True
+    on Args.add_all() to deduplicate.
+
+    Called by Args.add_all() during the execution phase (not analysis),
+    which avoids blocking Bazel's single-threaded analysis with a costly
+    .to_list() on the large npm depset.
+    """
+    sp = f.short_path
+    idx = sp.find("/node_modules/")
+    if idx < 0:
+        return None
+    rel = sp[idx + 14:]  # len("/node_modules/") == 14
+    if rel.startswith(".bin") or rel.startswith(".cache"):
+        return None
+
+    # Extract package directory from rel path.
+    # Format: .bun/<key>/node_modules/<pkg>/sub/path/file.js
+    # Scoped: .bun/<key>/node_modules/@scope/pkg/sub/path/file.js
+    parts = rel.split("/")
+    if len(parts) < 4:
+        return None
+
+    # Package boundary: 4 segments for regular, 5 for scoped (@scope/pkg)
+    pkg_end = 5 if parts[3].startswith("@") else 4
+    if len(parts) < pkg_end:
+        return None
+
+    pkg_rel = "/".join(parts[:pkg_end])
+
+    # Derive source directory by trimming file-specific suffix from exec path
+    file_suffix = "/".join(parts[pkg_end:])
+    src_dir = f.path
+    if file_suffix:
+        src_dir = src_dir[:-(len(file_suffix) + 1)]
+
+    return "%s\t%s" % (src_dir, pkg_rel)
+
+def _write_partial_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_client, data_files):
+    """Write manifest for source files, extra files, workspace deps, and links.
+
+    npm sources are handled separately via directory-level copies (Phase 0
+    of the materialize script), not through this manifest.
     """
     lines = []
     pkg_dir = ctx.label.package
@@ -34,37 +76,6 @@ def _write_manifest(ctx, manifest_file, bun_info, extra_files, tsconfig, prisma_
     # Copy data files — preserve monorepo-relative paths
     for f in data_files:
         lines.append("COPY\t%s\t%s" % (f.path, f.short_path))
-
-    # Copy npm package files preserving .bun/<key> structure.
-    # Files live at .bun/<key>/node_modules/<pkg>/... paths which
-    # preserves version isolation — inter-entry dep symlinks and
-    # top-level hoisted symlinks are created by hoisted_links.sh.
-    # Deduplicate by destination path -- first entry wins.
-    seen_npm_paths = {}
-    for f in all_npm_sources:
-        sp = f.short_path
-
-        # Find the FIRST "node_modules/" segment to preserve .bun/<key> paths.
-        # For .bun/<key>/node_modules/<pkg>/file.js, this gives
-        # .bun/<key>/node_modules/<pkg>/file.js (preserving version structure).
-        idx = sp.find("/node_modules/")
-        if idx < 0:
-            continue
-        rel = sp[idx + len("/node_modules/"):]
-
-        # Skip bin stubs and cache metadata
-        if rel.startswith(".bin") or rel.startswith(".cache"):
-            continue
-
-        dest = "%s/node_modules/%s" % (pkg_dir, rel)
-        if dest in seen_npm_paths:
-            continue
-        seen_npm_paths[dest] = True
-
-        if f.is_directory:
-            lines.append("COPYDIR\t%s\t%s" % (f.path, dest))
-        else:
-            lines.append("COPY\t%s\t%s" % (f.path, dest))
 
     # Copy workspace dep sources into {pkg_dir}/node_modules/<pkg_name>/
     for ws_dep in bun_info.workspace_deps.to_list():
@@ -120,32 +131,39 @@ _MATERIALIZE_SCRIPT = """\
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Portable realpath: works on macOS (which may lack readlink -f) and Linux
-_realpath() {
-    local path="$1"
-    if command -v realpath >/dev/null 2>&1; then
-        realpath "$path"
-    elif command -v readlink >/dev/null 2>&1 && readlink -f "$path" 2>/dev/null; then
-        return 0
-    else
-        # POSIX fallback: resolve symlinks manually
-        local dir base
-        while [ -L "$path" ]; do
-            dir="$(cd -P "$(dirname "$path")" && pwd)"
-            path="$(readlink "$path")"
-            # Handle relative symlink targets
-            case "$path" in /*) ;; *) path="$dir/$path" ;; esac
-        done
-        dir="$(cd -P "$(dirname "$path")" && pwd)"
-        base="$(basename "$path")"
-        echo "$dir/$base"
-    fi
-}
-
 MANIFEST="$1"
 OUT_DIR="$2"
 LINKS_SCRIPT="${3:-}"
 PKG_DIR="${4:-}"
+BUN="${5:-}"
+NPM_LIST="${6:-}"
+
+
+# Phase 0: Copy npm package directories using bun's native fs.cpSync.
+# A single bun process does ~1.1k directory copies with direct syscalls
+# (clonefile on macOS APFS, hardlinks on Linux) — no shell fork per dir.
+if [ -n "$NPM_LIST" ] && [ -f "$NPM_LIST" ]; then
+    if [ -n "$BUN" ] && [ -x "$BUN" ]; then
+        "$BUN" -e "
+var {cpSync:c,mkdirSync:m}=require('fs'),{dirname:d}=require('path');
+var ls=require('fs').readFileSync(process.argv[1],'utf8').trim().split('\\n');
+var ps=new Set(),pairs=[];
+for(var l of ls){var[s,r]=l.split('\\t');var dst=process.argv[2]+'/'+process.argv[3]+'/node_modules/'+r;ps.add(d(dst));pairs.push([s,dst])}
+for(var p of ps)m(p,{recursive:true});
+for(var[s,dst]of pairs)c(s,dst,{recursive:true});
+" "$NPM_LIST" "$OUT_DIR" "$PKG_DIR"
+    else
+        # Fallback: bash loop (slower, ~17s vs ~2s)
+        while IFS=$'\\t' read -r src_dir pkg_rel; do
+            dest="$OUT_DIR/$PKG_DIR/node_modules/$pkg_rel"
+            mkdir -p "$dest"
+            cp -Rc "$src_dir/." "$dest/" 2>/dev/null ||
+            cp -Ral "$src_dir/." "$dest/" 2>/dev/null ||
+            cp -R "$src_dir/." "$dest/" ||
+            { echo "FATAL: npm dir copy failed: $src_dir -> $dest" >&2; exit 1; }
+        done < "$NPM_LIST"
+    fi
+fi
 
 # Phase 1: Pre-create ALL destination directories in one batch.
 # This avoids ~80k individual mkdir -p calls (the biggest perf bottleneck).
@@ -181,9 +199,11 @@ done
 # Create inter-entry dep symlinks and top-level hoisted symlinks.
 # This recreates bun's .bun/<key>/node_modules/<dep> -> ../../<dep_key>/...
 # symlink structure for correct version-specific resolution.
+
 if [ -n "$LINKS_SCRIPT" ] && [ -f "$LINKS_SCRIPT" ]; then
     bash "$LINKS_SCRIPT" "$OUT_DIR/$PKG_DIR/node_modules"
 fi
+
 
 # Dereference @prisma/client symlinks so TypeScript resolves .prisma/client locally.
 # Previously done in per-runner templates; centralized here for all consumers.
@@ -195,22 +215,34 @@ if [ -n "$PKG_DIR" ] && [ -d "$OUT_DIR/$PKG_DIR/node_modules/.prisma/client" ] &
     rm -rf "$TMP_PRISMA"
 fi
 
+
 # Dereference .d.ts symlinks that point outside the tree.
 # TypeScript's project service follows realpath and escapes the tree,
 # causing spurious type errors.  Only dereference .d.ts files — runtime
 # JS files must keep their symlinks so Bun can leverage the store's
 # nested node_modules for correct version resolution.
-# Use -P to avoid following directory symlinks (dep links).
-find -P "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
-    target=$(_realpath "$link" 2>/dev/null) || continue
-    case "$target" in
-        "$OUT_DIR"/*) ;;  # points inside the tree — keep it
-        *)
-            rm -f "$link"
-            cp -f "$target" "$link" 2>/dev/null || true
-            ;;
-    esac
-done
+#
+# Only needed when npm files were hardlinked individually (legacy path).
+# With directory-level copies (Phase 0), .d.ts files are real files
+# (clonefiles/copies), not symlinks — nothing to dereference.
+if [ -z "$NPM_LIST" ]; then
+    # Legacy path: npm files were hardlinked individually, scan for d.ts symlinks
+    find -P "$OUT_DIR" -type l \\( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.d.mts' -o -name '*.d.cts' \\) -print0 2>/dev/null | while IFS= read -r -d '' link; do
+        target=$(readlink "$link" 2>/dev/null) || continue
+        case "$target" in
+            /*) ;;
+            *) target="$(dirname "$link")/$target" ;;
+        esac
+        case "$target" in
+            "$OUT_DIR"/*) ;;
+            *)
+                rm -f "$link"
+                cp -f "$target" "$link" 2>/dev/null || true
+                ;;
+        esac
+    done
+fi
+
 """
 
 def collect_all_npm_sources(deps):
@@ -230,7 +262,7 @@ def collect_all_npm_sources(deps):
             sources.append(dep[DefaultInfo].files)
     return depset(transitive = sources)
 
-def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, prisma_client = None, data_files = None, additional_npm_sources = None, hoisted_links = None):
+def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, prisma_client = None, data_files = None, additional_npm_sources = None, hoisted_links = None, bun_binary = None):
     """Create a TreeArtifact with a self-contained package directory.
 
     Args:
@@ -256,13 +288,15 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, p
         additional_npm_sources = depset()
 
     tree = ctx.actions.declare_directory(name + "_tree")
-    manifest = ctx.actions.declare_file(name + "_manifest.txt")
+    partial_manifest = ctx.actions.declare_file(name + "_manifest.txt")
 
     # Merge npm sources as a depset — shared across targets, avoids flat list copies.
     all_npm_sources_depset = depset(transitive = [bun_info.npm_sources, additional_npm_sources])
 
-    # Manifest writing needs iteration (unavoidable), but only once.
-    _write_manifest(ctx, manifest, bun_info, extra_files, tsconfig, prisma_client, data_files, all_npm_sources_depset.to_list())
+    # Write partial manifest (everything except npm sources).
+    # npm sources are passed via Args param file to avoid costly .to_list()
+    # on the large npm depset during Bazel's single-threaded analysis phase.
+    _write_partial_manifest(ctx, partial_manifest, bun_info, extra_files, tsconfig, prisma_client, data_files)
 
     script = ctx.actions.declare_file(name + "_materialize.sh")
     ctx.actions.write(
@@ -271,10 +305,30 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, p
         is_executable = True,
     )
 
+    # Fixed arguments: partial manifest, output dir, links script, pkg_dir, bun binary
+    fixed_args = ctx.actions.args()
+    fixed_args.add(partial_manifest)
+    fixed_args.add(tree.path)
+    if hoisted_links:
+        fixed_args.add(hoisted_links)
+    else:
+        fixed_args.add("")
+    fixed_args.add(ctx.label.package)
+    if bun_binary:
+        fixed_args.add(bun_binary)
+    else:
+        fixed_args.add("")
+
+    # npm sources as param file — iteration deferred to execution phase
+    # (parallelized) instead of analysis phase (single-threaded).
+    npm_args = ctx.actions.args()
+    npm_args.set_param_file_format("multiline")
+    npm_args.use_param_file("%s", use_always = True)
+    npm_args.add_all(all_npm_sources_depset, map_each = _format_npm_entry, uniquify = True)
+
     # Build action inputs as a depset so Bazel can share structure across
-    # targets that use the same npm packages (lint, typecheck, test for one
-    # package all reference the same npm_sources depset).
-    direct_inputs = [manifest, script]
+    # targets that use the same npm packages.
+    direct_inputs = [partial_manifest, script]
     if bun_info.package_json:
         direct_inputs.append(bun_info.package_json)
     if tsconfig:
@@ -283,6 +337,10 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, p
     direct_inputs.extend(data_files)
     if prisma_client:
         direct_inputs.append(prisma_client)
+    if hoisted_links:
+        direct_inputs.append(hoisted_links)
+    if bun_binary:
+        direct_inputs.append(bun_binary)
 
     transitive_inputs = [bun_info.sources, all_npm_sources_depset]
 
@@ -293,18 +351,11 @@ def materialize_tree(ctx, name, bun_info, tsconfig = None, extra_files = None, p
         if ws_dep.package_json:
             ws_dep_direct.append(ws_dep.package_json)
 
-    # Build arguments: manifest, output dir, [links script, pkg_dir]
-    args = [manifest.path, tree.path]
-    if hoisted_links:
-        direct_inputs.append(hoisted_links)
-        args.append(hoisted_links.path)
-        args.append(ctx.label.package)
-
     ctx.actions.run(
         outputs = [tree],
         inputs = depset(direct = direct_inputs + ws_dep_direct, transitive = transitive_inputs),
         executable = script,
-        arguments = args,
+        arguments = [fixed_args, npm_args],
         mnemonic = "BunMaterialize",
         progress_message = "Materializing Bun package tree for %s" % ctx.label,
     )

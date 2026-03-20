@@ -1,0 +1,67 @@
+name: QuickTip
+options:
+  bundleIdPrefix: com.jerred
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+  defaultConfig: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: "YES"
+    SWIFT_UPCOMING_FEATURE_INTERNAL_IMPORTS_BY_DEFAULT: "YES"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 63ZAG7X889
+
+targets:
+  QuickTipApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: QuickTipApp/Sources
+        excludes:
+          - "**/*.xcstrings"
+    resources:
+      - path: QuickTipApp/Sources/Resources
+        buildPhase: resources
+    info:
+      path: QuickTipApp/Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleDisplayName: QuickTip
+        NSHumanReadableCopyright: "Copyright © 2026 Jerred Shepherd. All rights reserved."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jerred.QuickTipApp
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+        PRODUCT_NAME: QuickTip
+        SWIFT_PACKAGE_NAME: QuickTipApp
+    dependencies:
+      - package: Yams
+      - package: swift-markdown
+        product: Markdown
+
+  QuickTipAppTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: QuickTipApp/Tests
+    dependencies:
+      - target: QuickTipApp
+      - package: Yams
+      - package: swift-markdown
+        product: Markdown
+    settings:
+      base:
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+
+packages:
+  Yams:
+    url: https://github.com/jpsim/Yams.git
+    from: "6.0.0"
+  swift-markdown:
+    url: https://github.com/swiftlang/swift-markdown.git
+    from: "0.5.0"

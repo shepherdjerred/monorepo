@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -23,43 +23,40 @@ bun_library(
     ],
 )
 
-# Manual: TypeShare-generated types resolve as 'error' in eslint-typescript sandbox
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
-    node_modules = ":node_modules",
-    tags = ["manual"],
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//packages/eslint-config:pkg",
-    ],
-)
-
-# Manual: @clauderon/shared exports dist/ types which aren't available in sandbox
-bun_typecheck_test(
-    name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
-    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/@types/bun",
         ":node_modules/typescript",
         ":pkg",
+        "//:node_modules/@types/bun",
         "//packages/clauderon/web/shared:pkg",
+        "//packages/eslint-config:pkg",
     ],
+)
+
+# Manual: TypeShare-generated types resolve as 'error' in eslint-typescript sandbox
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+    tags = ["manual"],
+)
+
+# Manual: @clauderon/shared exports dist/ types which aren't available in sandbox
+bun_typecheck_test(
+    name = "typecheck",
+    prepared_tree = ":tree",
+    tags = ["manual"],
 )
 
 bun_test(
     name = "test",
     size = "small",
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":pkg",
-    ],
+    prepared_tree = ":tree",
 )

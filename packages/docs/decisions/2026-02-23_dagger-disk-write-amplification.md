@@ -1,5 +1,7 @@
 # Decision: Reduce Dagger Engine Disk Write Amplification
 
+> **Note (2026-03-19):** Dagger has been removed from the CI pipeline entirely. This decision record is kept for historical context.
+
 **Date:** 2026-02-24
 **Status:** Proposed
 **Triggered by:** PagerDuty Incident #3042 — 130+ MB/s sustained writes to nvme1n1

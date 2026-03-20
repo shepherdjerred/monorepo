@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -14,13 +14,14 @@ bun_library(
     visibility = ["//visibility:public"],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -29,12 +30,12 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-    ],
+    prepared_tree = ":tree",
 )

@@ -116,6 +116,9 @@ def bun_service_image(
         tars = all_tars,
         entrypoint = ["/usr/local/bin/bun", "run", entry_point],
         workdir = workdir,
+        # Manual: OCI images are built during CI publish, not normal builds.
+        # The deps_layer genrule downloads packages from npm (requires-network)
+        # and building all images during `bazel build //...` causes OOM.
         tags = ["manual"],
         visibility = visibility,
         **_kwargs
@@ -191,6 +194,7 @@ def _bun_install_layer(name, package_json, workspace_packages, pkg_dir, prisma_s
         ws_symlinks += """
             WS_PJ=$$EXECROOT/$(location //{ws_dir}:package.json) && \
             WS_NAME=$$($$BUN -e "console.log(require('$$WS_PJ').name)") && \
+            mkdir -p $$(dirname "$$TARDIR/workspace/{pkg_dir}/node_modules/$$WS_NAME") && \
             rm -rf $$TARDIR/workspace/{pkg_dir}/node_modules/$$WS_NAME && \
             ln -sf /workspace/{ws_dir}/{ws_dir} $$TARDIR/workspace/{pkg_dir}/node_modules/$$WS_NAME && \
         """.format(ws_dir = ws_dir, pkg_dir = pkg_dir)

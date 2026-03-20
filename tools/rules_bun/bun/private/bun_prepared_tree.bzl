@@ -10,6 +10,8 @@ load("//tools/rules_bun/bun/private:materialize.bzl", "collect_all_npm_sources",
 load("//tools/rules_bun/bun/private:resolve_bun_info.bzl", "resolve_bun_info")
 
 def _bun_prepared_tree_impl(ctx):
+    bun_toolchain = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"]
+    bun = bun_toolchain.bun_info.bun
     bun_info = resolve_bun_info(ctx.attr.deps)
 
     nm_sources = []
@@ -27,6 +29,7 @@ def _bun_prepared_tree_impl(ctx):
         data_files = ctx.files.data,
         additional_npm_sources = additional_npm,
         hoisted_links = ctx.file._hoisted_links,
+        bun_binary = bun,
     )
 
     return [

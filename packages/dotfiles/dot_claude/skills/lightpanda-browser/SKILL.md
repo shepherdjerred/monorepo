@@ -13,22 +13,16 @@ Lightpanda is an open-source headless browser built from scratch in Zig for mach
 
 **Status:** Beta. Works for most sites. Complex JS-heavy SPAs may fail -- fall back to Playwright for those.
 
-## IMPORTANT: Binary Path
+## Binary Path
 
-The npm package `@lightpanda/browser` installs a **wrapper script** to PATH that does NOT support fetch commands. The real binary is downloaded to `~/.cache/lightpanda-node/lightpanda`. **Always use the full path:**
-
-```bash
-~/.cache/lightpanda-node/lightpanda
-```
-
-Never use bare `lightpanda` — it will hit the npm wrapper which just prints "Please enter a command".
+The binary is at `~/.local/bin/lightpanda`. Bare `lightpanda` works if `~/.local/bin` is in PATH.
 
 **All flags use UNDERSCORES, not hyphens** (e.g. `--strip_mode`, `--log_level`, NOT `--strip-mode`, `--log-level`).
 
 ## Ideal Command for AI Content Extraction
 
 ```bash
-~/.cache/lightpanda-node/~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal <url>
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal <url>
 ```
 
 - `--dump` outputs rendered HTML to stdout
@@ -89,13 +83,13 @@ Strip modes:
 ### Fetch a page (clean content)
 
 ```bash
-~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal https://example.com
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal https://example.com
 ```
 
 ### Search the web via DuckDuckGo
 
 ```bash
-~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal "https://duckduckgo.com/html/?q=search+terms+here"
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal "https://duckduckgo.com/html/?q=search+terms+here"
 ```
 
 Use the `/html/` endpoint for simpler, lighter HTML output from DuckDuckGo.
@@ -103,19 +97,19 @@ Use the `/html/` endpoint for simpler, lighter HTML output from DuckDuckGo.
 ### Fetch with extended timeout (slow sites)
 
 ```bash
-~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal --http_timeout 15000 https://slow-site.com
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal --http_timeout 15000 https://slow-site.com
 ```
 
 ### Fetch respecting robots.txt
 
 ```bash
-~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal --obey_robots https://example.com
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal --obey_robots https://example.com
 ```
 
 ### Fetch with base tag (for resolving relative URLs)
 
 ```bash
-~/.cache/lightpanda-node/lightpanda fetch --dump --strip_mode full --log_level fatal --with_base https://example.com
+~/.local/bin/lightpanda fetch --dump --strip_mode full --log_level fatal --with_base https://example.com
 ```
 
 ## Output Behavior

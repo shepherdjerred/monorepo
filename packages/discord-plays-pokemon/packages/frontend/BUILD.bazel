@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_vite_build")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_vite_build")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -45,13 +45,14 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -61,16 +62,15 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 # @discord-plays-pokemon/common exports from dist/ — common:build provides
 # compiled .js + .d.ts files. Also uses Vite's import.meta.env type augmentations.
 bun_typecheck_test(
     name = "typecheck",
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/undici-types",
-    ],
 )

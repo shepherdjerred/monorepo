@@ -420,6 +420,10 @@
         "typescript": "^5.0.0",
       },
     },
+    "packages/glance": {
+      "name": "@shepherdjerred/glance",
+      "version": "0.0.1",
+    },
     "packages/hn-enhancer": {
       "name": "hn-enhancer",
       "version": "0.1.0",
@@ -2691,6 +2695,8 @@
     "@shepherdjerred/cooklang-rich-preview": ["@shepherdjerred/cooklang-rich-preview@workspace:packages/cooklang-rich-preview"],
 
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@workspace:packages/eslint-config"],
+
+    "@shepherdjerred/glance": ["@shepherdjerred/glance@workspace:packages/glance"],
 
     "@shepherdjerred/helm-types": ["@shepherdjerred/helm-types@workspace:packages/homelab/src/helm-types"],
 

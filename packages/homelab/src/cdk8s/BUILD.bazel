@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -33,40 +33,8 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
-    extra_files = [
-        "eslint.config.ts",
-        "tsconfig.json",
-        "//packages/homelab:tsconfig.base.json",
-    ],
-    deps = [
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/typescript",
-        "//:node_modules/undici-types",
-        "//packages/eslint-config:pkg",
-    ],
-)
-
-# Manual: cdk8s tsconfig path aliases not resolved in Bazel sandbox
-bun_typecheck_test(
-    name = "typecheck",
-    extra_files = ["//packages/homelab:tsconfig.base.json"],
-    tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/typescript",
-        "//:node_modules/undici-types",
-    ],
-)
-
-# Manual: tsconfig path aliases need local execution; Bun resolves them from bin tree
-bun_test(
-    name = "test",
-    size = "large",
+bun_prepared_tree(
+    name = "tree",
     data = glob(
         [
             "config/**",
@@ -82,8 +50,38 @@ bun_test(
     ) + [
         "//packages/homelab:scripts/lint-helm.sh",
     ],
-    local = True,
-    tags = ["manual"],
+    extra_files = [
+        "eslint.config.ts",
+        "tsconfig.json",
+        "//packages/homelab:tsconfig.base.json",
+    ],
     tsconfig = "tsconfig.json",
-    deps = [":pkg"],
+    deps = [
+        ":pkg",
+        "//:node_modules/@types/bun",
+        "//:node_modules/typescript",
+        "//:node_modules/undici-types",
+        "//packages/eslint-config:pkg",
+    ],
+)
+
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
+# Manual: cdk8s tsconfig path aliases not resolved in Bazel sandbox
+bun_typecheck_test(
+    name = "typecheck",
+    prepared_tree = ":tree",
+    tags = ["manual"],
+)
+
+# Manual: tsconfig path aliases need local execution; Bun resolves them from bin tree
+bun_test(
+    name = "test",
+    size = "large",
+    local = True,
+    prepared_tree = ":tree",
+    tags = ["manual"],
 )

@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_eslint_test", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -64,16 +64,16 @@ bun_library(
     ],
 )
 
-# Manual: tRPC AppRouter type from @scout-for-lol/backend resolves as 'error' in sandbox
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
-        "//packages/scout-for-lol:eslint.config.ts",
         "tsconfig.json",
+        "//:tsconfig.base.json",
+        "//packages/scout-for-lol:eslint.config.ts",
         "//packages/scout-for-lol:tsconfig.base.json",
     ],
     node_modules = ":node_modules",
-    tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -83,16 +83,16 @@ bun_eslint_test(
     ],
 )
 
+# Manual: tRPC AppRouter type from @scout-for-lol/backend resolves as 'error' in sandbox
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+    tags = ["manual"],
+)
+
 # @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/undici-types",
-    ],
 )

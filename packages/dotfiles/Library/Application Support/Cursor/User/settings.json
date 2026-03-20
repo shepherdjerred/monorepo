@@ -1,0 +1,8 @@
+{
+    "window.commandCenter": true,
+    "editor.fontFamily": "Berkeley Mono",
+    "editor.fontSize": 13,
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredDarkColorTheme": "Catppuccin Mocha",
+    "workbench.preferredLightColorTheme": "Catppuccin Latte"
+}

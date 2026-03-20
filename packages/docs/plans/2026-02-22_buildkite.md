@@ -1,5 +1,9 @@
 # Plan: Buildkite Dynamic Pipeline for Granular Dagger CI Visibility
 
+## Status: Implemented (Python-based, 2026-03-19)
+
+The CI pipeline was implemented using Python (`scripts/ci/src/ci/pipeline_generator.py`) instead of the TypeScript approach described here. Dagger has also been removed from CI entirely, replaced by Bazel.
+
 ## Context
 
 The entire Dagger CI pipeline runs as a single opaque Buildkite step (`dagger call ci`). When something fails, developers dig through logs to find which check broke. This change splits Tier 0 validation checks into individual Buildkite steps — each gets its own pass/fail, logs, and retry button.

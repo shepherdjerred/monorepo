@@ -1,6 +1,6 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -20,16 +20,18 @@ bun_library(
     ],
 )
 
-# Manual: parent eslint.config.ts ignores fetcher/** and plugins fail to resolve in sandbox
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
-        "//packages/better-skill-capped:eslint.config.ts",
         "tsconfig.json",
+        "//packages/better-skill-capped:eslint.config.ts",
     ],
     node_modules = ":node_modules",
-    tags = ["manual"],
+    tsconfig = "tsconfig.json",
     deps = [
+        ":node_modules/@tsconfig/node-lts",
+        ":node_modules/@tsconfig/recommended",
+        ":node_modules/@tsconfig/strictest",
         ":node_modules/typescript",
         ":pkg",
         "//:node_modules/@types/bun",
@@ -38,17 +40,16 @@ bun_eslint_test(
     ],
 )
 
+# Manual: parent eslint.config.ts ignores fetcher/** and plugins fail to resolve in sandbox
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+    tags = ["manual"],
+)
+
 bun_typecheck_test(
     name = "typecheck",
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/@tsconfig/node-lts",
-        ":node_modules/@tsconfig/recommended",
-        ":node_modules/@tsconfig/strictest",
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/undici-types",
-    ],
+    prepared_tree = ":tree",
 )
 
 # Container image for scheduled fetcher job

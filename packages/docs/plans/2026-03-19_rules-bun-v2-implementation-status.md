@@ -97,19 +97,22 @@ that are neither absolute nor relative paths, received
 - `cp -a` overlay to `/tmp/bun_build_$$/tree/` — Bun still resolves realpath through hardlinks back to the original TreeArtifact
 - Symlinking tree to a short path — same problem, Bun follows realpath
 
-**Potential solutions (not yet tried):**
-1. Use `cp -RL` (dereference all symlinks) for the overlay — makes files fully independent of the tree, but slower
-2. Set `build.rollupOptions.input` in Vite config to use a relative path explicitly
-3. Run Vite with `--root` pointing to the overlay directory
-4. Patch the template to `cp` only source files (not hardlink) so realpath stays within the overlay
+**Solution implemented:** The `bun_build.sh.tpl` template uses `cp -RL` to re-copy the package source directory with symlink dereferencing into the `/tmp` working directory, excluding `node_modules`. This makes source files fully independent of the TreeArtifact, so Bun/Vite resolve realpaths within the short `/tmp` overlay path instead of the deep execroot path. The `node_modules` directory is still symlinked separately to avoid the copy cost.
 
 ### Undeclared Inputs
 
 Hermetic builds surface files that the legacy `local=True` macros masked. Each package may need `bun_library` glob adjustments. Known example: `better-skill-capped` needed `src/**/*.css` added to its `bun_library` data glob.
 
-### Astro Packages Not Yet Verified
+### Astro Package Sandbox Verification (2026-03-19)
 
-The 4 remaining Astro packages (`status-page/web`, `sjer.red`, `scout-for-lol/frontend`, `clauderon/docs`) use the same infrastructure as `cooklang-rich-preview` and should work, but haven't been built in the sandbox yet. They may have undeclared input issues.
+| Package | Build Result | Issue |
+|---------|:----------:|-------|
+| `status-page/web` | **PASS** | Builds and runs in sandbox (733s) |
+| `clauderon/docs` | **FAIL** | Starlight CSS virtual module path resolution — Vite can't find compile metadata for `.astro` component styles because Bun resolves node_modules paths through hardlinks back to the deep execroot TreeArtifact path |
+| `sjer.red` | **FAIL** | Vite SSR module runner can't resolve workspace package `astro-opengraph-images` — same realpath-through-hardlinks issue affecting node_modules resolution |
+| `scout-for-lol/frontend` | **FAIL** | Vite `import.meta.glob("assets/Rank=*.png")` in `@scout-for-lol/report` — glob must start with `/` or `./`. This is a source code bug, not a Bazel issue. |
+
+The failures are all variants of the same fundamental issue: the `cp -RL` source dereference only covers the package source directory, not `node_modules`. When Vite/Astro process `.astro` files or resolve workspace packages inside `node_modules`, Bun follows hardlinks back to the deep execroot path, breaking path computation. A full `cp -RL` of `node_modules` would fix this but at significant cost (600MB+). A targeted approach (dereference only the specific npm entries that Vite processes) may be needed.
 
 ### Clauderon Rust Integration
 

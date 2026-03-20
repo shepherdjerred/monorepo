@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_test")
+load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -35,14 +35,15 @@ bun_library(
     ],
 )
 
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "//packages/scout-for-lol:eslint.config.ts",
         "tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",
+        "//:tsconfig.base.json",
     ],
-    node_modules = ":node_modules",
+    tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
         ":pkg",
@@ -52,25 +53,22 @@ bun_eslint_test(
     ],
 )
 
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 # @scout-for-lol workspace packages (pnpm link:) not resolved by tsc in sandbox.
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/@types/bun",
-        "//:node_modules/undici-types",
-    ],
 )
 
 # Snapshot tests open .snap files in read-write mode; requires local execution.
 bun_test(
     name = "test",
     local = True,
+    prepared_tree = ":tree",
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [":pkg"],
 )

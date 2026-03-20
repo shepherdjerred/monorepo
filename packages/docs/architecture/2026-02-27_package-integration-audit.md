@@ -1,5 +1,7 @@
 # Package Integration Audit
 
+> **Note (2026-03-19):** This audit is outdated. Dagger CI has been removed (replaced by Bazel). Lefthook and Knip gaps may have been addressed. Re-audit recommended.
+
 Integration status of newer packages into monorepo infrastructure. Audited 2026-02-27.
 
 ## Packages Audited

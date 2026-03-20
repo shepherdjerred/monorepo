@@ -1,7 +1,11 @@
 node_modules
+packages/*/node_modules
+packages/*/packages/*/node_modules
+packages/homelab/src/*/node_modules
 dist
 target
 archive
 packages/clauderon/target
+packages/glance/GlanceApp/.build
 packages/tips/TipsApp/.build
 .claude/worktrees

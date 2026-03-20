@@ -1,5 +1,14 @@
 # Plan: Hermetic Vite/Astro Build Rules + Cacheable OCI Images
 
+## Status: ~90% Complete (2026-03-19)
+
+- Phase 1 (bun_build rule): Complete
+- Phase 2 (bun_astro_check): Complete
+- Phase 3 (Vite migration): Complete
+- Phase 4 (Astro migration): Complete
+- Phase 5 (OCI image cacheable): Being implemented now
+- Phase 6 (Cleanup): Complete (legacy macros deleted)
+
 ## Context
 
 The Bazel monorepo has ~80 targets, but Vite/Astro builds and OCI images bypass the remote cache entirely:

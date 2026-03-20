@@ -1,6 +1,6 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/oci:bun_service_image.bzl", "bun_service_image")
-load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prisma_generate")
+load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_prisma_generate")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -37,21 +37,17 @@ bun_library(
     ],
 )
 
-bun_binary(
-    name = "sentinel",
-    entry_point = "src/index.ts",
-    deps = [":pkg"],
-)
-
-bun_eslint_test(
-    name = "lint",
+bun_prepared_tree(
+    name = "tree",
     extra_files = [
         "eslint.config.ts",
         "tsconfig.json",
         "//:tsconfig.base.json",
     ],
     prisma_client = ":prisma_generate",
+    tsconfig = "tsconfig.json",
     deps = [
+        ":node_modules/@types/bun",
         ":node_modules/prisma",
         ":node_modules/typescript",
         ":pkg",
@@ -61,21 +57,23 @@ bun_eslint_test(
     ],
 )
 
+bun_binary(
+    name = "sentinel",
+    entry_point = "src/index.ts",
+    prepared_tree = ":tree",
+)
+
+bun_eslint_test(
+    name = "lint",
+    prepared_tree = ":tree",
+)
+
 # Prisma types require prisma generate.
 bun_typecheck_test(
     name = "typecheck",
-    extra_files = ["//:tsconfig.base.json"],
-    prisma_client = ":prisma_generate",
+    prepared_tree = ":tree",
     # Manual: Prisma types require prisma generate + network access for schema introspection
     tags = ["manual"],
-    tsconfig = "tsconfig.json",
-    deps = [
-        ":node_modules/@types/bun",
-        ":node_modules/prisma",
-        ":node_modules/typescript",
-        ":pkg",
-        "//:node_modules/undici-types",
-    ],
 )
 
 # Container image for K8s deployment

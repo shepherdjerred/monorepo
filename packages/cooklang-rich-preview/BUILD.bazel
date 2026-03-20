@@ -1,5 +1,5 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_library")
+load("//tools/rules_bun/bun:defs.bzl", "bun_astro_build", "bun_astro_check", "bun_library", "bun_prepared_tree")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
@@ -45,11 +45,9 @@ bun_library(
 
 # No bun_eslint_test: only .astro files in src/, no TS to lint.
 
-# Astro virtual modules prevent tsc from resolving in sandbox.
-bun_typecheck_test(
-    name = "typecheck",
+bun_prepared_tree(
+    name = "tree",
     extra_files = ["//:tsconfig.base.json"],
-    tags = ["manual"],
     tsconfig = "tsconfig.json",
     deps = [
         ":node_modules/typescript",
@@ -58,4 +56,11 @@ bun_typecheck_test(
         "//:node_modules/@types/node",
         "//:node_modules/undici-types",
     ],
+)
+
+# Astro virtual modules prevent tsc from resolving in sandbox.
+bun_typecheck_test(
+    name = "typecheck",
+    prepared_tree = ":tree",
+    tags = ["manual"],
 )
