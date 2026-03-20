@@ -44,7 +44,7 @@ targets:
           - group.glance.widget
 
   GlanceWidgetExtension:
-    type: extensionkit-extension
+    type: app-extension
     platform: macOS
     sources:
       - path: GlanceWidget/Sources
@@ -60,13 +60,14 @@ targets:
     info:
       path: GlanceWidget/Info.plist
       properties:
-        EXAppExtensionAttributes:
-          EXExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: GlanceWidget/GlanceWidget.entitlements
       properties:
-        com.apple.security.application-groups:
-          - group.glance.widget
+        com.apple.security.app-sandbox: true
+        com.apple.security.temporary-exception.files.home-relative-path.read-only:
+          - /Library/Application Support/Glance/
 
   GlanceAppTests:
     type: bundle.unit-test

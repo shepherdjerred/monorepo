@@ -18,8 +18,6 @@ struct UsageTimelineProvider: TimelineProvider {
             codex: nil,
             timestamp: .now,
         )
-        // Refresh every 5 minutes — the main app pushes updates via WidgetCenter
-        // so this is just a fallback.
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: .now)
             ?? .now.addingTimeInterval(300)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
@@ -28,12 +26,16 @@ struct UsageTimelineProvider: TimelineProvider {
 
     // MARK: Private
 
-    private static let suiteName = "group.glance.widget"
-
     private func loadEntry() -> WidgetUsageEntry? {
-        guard let defaults = UserDefaults(suiteName: Self.suiteName),
-              let data = defaults.data(forKey: "widgetUsageEntry")
-        else {
+        // Use getpwuid to get the real home directory, not the sandboxed container
+        let home: String
+        if let pw = getpwuid(getuid()), let dir = pw.pointee.pw_dir {
+            home = String(cString: dir)
+        } else {
+            home = NSHomeDirectory()
+        }
+        let path = "\(home)/Library/Application Support/Glance/widget-data.json"
+        guard let data = FileManager.default.contents(atPath: path) else {
             return nil
         }
         return try? JSONDecoder().decode(WidgetUsageEntry.self, from: data)

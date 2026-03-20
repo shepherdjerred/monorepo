@@ -27,8 +27,7 @@ struct GlanceAppShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: GetServiceStatusIntent(),
             phrases: [
-                "How is \(\.$serviceName) in \(.applicationName)",
-                "Check \(\.$serviceName) with \(.applicationName)",
+                "Check service status with \(.applicationName)",
             ],
             shortTitle: "Check Service Status",
             systemImageName: "magnifyingglass",
@@ -167,11 +166,11 @@ struct GlanceFocusFilter: SetFocusFilterIntent {
         "Configure Glance notifications during this Focus."
 
     @Parameter(title: "Show only critical alerts")
-    var criticalOnly: Bool
+    var criticalOnly: Bool?
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
-            title: self.criticalOnly
+            title: (self.criticalOnly ?? false)
                 ? "Critical alerts only"
                 : "All notifications",
         )
@@ -179,7 +178,7 @@ struct GlanceFocusFilter: SetFocusFilterIntent {
 
     func perform() async throws -> some IntentResult {
         UserDefaults.standard.set(
-            self.criticalOnly,
+            self.criticalOnly ?? false,
             forKey: "focusCriticalOnly",
         )
         return .result()

@@ -24,10 +24,20 @@ struct WidgetUsageEntry: Codable {
 
 // MARK: - WidgetDataProvider
 
-/// Writes Claude Code and Codex usage data to a shared UserDefaults suite
-/// so the Notification Center widget can display it.
+/// Writes Claude Code and Codex usage data to a JSON file at
+/// ~/Library/Application Support/Glance/widget-data.json.
+/// The sandboxed widget extension reads this file via a temporary file exception.
 enum WidgetDataProvider {
-    static let suiteName = "group.glance.widget"
+    // MARK: Internal
+
+    static var sharedDirectory: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return "\(home)/Library/Application Support/Glance"
+    }
+
+    static var sharedFilePath: String {
+        "\(self.sharedDirectory)/widget-data.json"
+    }
 
     static func update(from snapshots: [ServiceSnapshot]) {
         let ccSnapshot = snapshots.first { $0.id == "claude-code" }
@@ -39,18 +49,33 @@ enum WidgetDataProvider {
             timestamp: .now,
         )
 
-        guard let data = try? JSONEncoder().encode(entry) else { return }
-        let defaults = UserDefaults(suiteName: self.suiteName)
-        defaults?.set(data, forKey: "widgetUsageEntry")
+        guard let data = try? JSONEncoder().encode(entry) else {
+            return
+        }
+
+        let dir = self.sharedDirectory
+        try? FileManager.default.createDirectory(
+            atPath: dir,
+            withIntermediateDirectories: true,
+        )
+        FileManager.default.createFile(
+            atPath: self.sharedFilePath,
+            contents: data,
+            attributes: [.posixPermissions: 0o644],
+        )
 
         WidgetCenter.shared.reloadTimelines(ofKind: "GlanceUsageWidget")
     }
+
+    // MARK: Private
 
     private static func service(
         from snapshot: ServiceSnapshot?,
         name: String,
     ) -> WidgetUsageEntry.Service? {
-        guard let snapshot else { return nil }
+        guard let snapshot else {
+            return nil
+        }
         switch snapshot.detail {
         case let .claudeCode(usage):
             return WidgetUsageEntry.Service(

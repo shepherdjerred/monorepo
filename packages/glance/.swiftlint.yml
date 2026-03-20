@@ -193,4 +193,5 @@ excluded:
   - GlanceApp/.swiftpm
   - Package.swift
   - GlanceApp/Package.swift
+  - Glance.xcodeproj
 

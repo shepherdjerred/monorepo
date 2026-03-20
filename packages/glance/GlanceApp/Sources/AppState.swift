@@ -198,5 +198,8 @@ final class AppState {
 
         // Update Spotlight index with latest statuses.
         self.spotlightIndexer?.updateIndex(with: newSnapshots)
+
+        // Update widget data for Notification Center.
+        WidgetDataProvider.update(from: self.snapshots)
     }
 }

@@ -43,6 +43,10 @@ targets:
       - package: Yams
       - package: swift-markdown
         product: Markdown
+    entitlements:
+      path: QuickTipApp/QuickTipApp.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
 
   QuickTipAppTests:
     type: bundle.unit-test
