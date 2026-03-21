@@ -45,6 +45,16 @@ final class AppState {
         self.setupMemoryPressureHandler()
     }
 
+    #if DEBUG
+        /// Preview-only initializer with pre-populated snapshots.
+        convenience init(previewSnapshots: [ServiceSnapshot]) {
+            self.init(providers: [])
+            self.snapshots = previewSnapshots
+            self.overallHealth = previewSnapshots.map(\.status).max() ?? .unknown
+            self.lastRefresh = .now
+        }
+    #endif
+
     // MARK: Internal
 
     // MARK: - Published State

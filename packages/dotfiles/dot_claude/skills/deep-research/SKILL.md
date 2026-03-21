@@ -96,6 +96,17 @@ SEARCH → READ → EXTRACT → EVALUATE → (iterate if gaps remain)
 - Use a running findings list organized by sub-question
 - When context grows large, summarize completed sub-questions to free up space
 
+### Phase 2.5: Cross-Agent Reconciliation
+
+When multiple agents investigated overlapping sub-questions, reconcile before drafting:
+
+1. **Identify contradictions** — Compare agent findings on the same topic. Flag any claims where agents disagree.
+2. **Resolve or escalate** — For each contradiction:
+   - If one agent cited a primary source and the other cited a secondary source, prefer the primary
+   - If both have equal sourcing, do a targeted follow-up search to break the tie
+   - If unresolvable, note explicitly as contested in the draft
+3. **Merge findings** — Create a unified findings list organized by sub-question (not by agent) before proceeding to the draft
+
 ### Phase 3: Draft Report
 
 Compile findings into a structured markdown draft report:
@@ -152,6 +163,11 @@ After drafting the report, launch an adversarial review via a sub-agent. This is
 >
 > Return a structured critique with severity ratings (critical / major / minor) for each issue found. Be specific — cite the exact claim or section that is problematic and explain why.
 
+> You have access to WebSearch, WebFetch, and Bash (for lightpanda). For any claim you flag as
+> potentially inaccurate or exaggerated, spot-check it by visiting the cited source URL or
+> searching for counter-evidence. Do not rely solely on logical analysis — verify at least the
+> 3 most critical factual claims directly.
+
 **The adversary must NOT:**
 - Suggest rewording for style or tone
 - Praise the report
@@ -178,9 +194,11 @@ Take the original draft report and the adversarial critique, and produce the fin
 
 The final report should read as if it was written correctly the first time — the adversarial process is invisible to the reader.
 
+**Before proceeding to Phase 6**, walk through the Quality Checklist item by item. For each item, note pass/fail. If any item fails, fix it before delivering. This is a gate, not a suggestion.
+
 ### Phase 6: Deliver
 
-- Write the report to a file if the user requested it, or present inline
+- If the report exceeds ~100 lines, write to a file (default: `~/.claude/research/[topic-slug].md`) and present a concise summary inline with the file path. If the report is short enough to scan in a terminal, present inline. When writing to a file, mention the path to the user.
 - Offer to go deeper on any sub-topic
 - If the research revealed actionable next steps, highlight them
 

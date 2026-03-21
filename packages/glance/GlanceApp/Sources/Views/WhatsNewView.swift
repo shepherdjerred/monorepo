@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - WhatsNewView
+
 /// Shows release notes after an app update.
 struct WhatsNewView: View {
     // MARK: Internal
@@ -109,3 +111,9 @@ struct WhatsNewView: View {
         UserDefaults.standard.set(current, forKey: Self.lastSeenVersionKey)
     }
 }
+
+#if DEBUG
+    #Preview("What's New") {
+        WhatsNewView()
+    }
+#endif

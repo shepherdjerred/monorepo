@@ -28,11 +28,10 @@ struct UsageTimelineProvider: TimelineProvider {
 
     private func loadEntry() -> WidgetUsageEntry? {
         // Use getpwuid to get the real home directory, not the sandboxed container
-        let home: String
-        if let pw = getpwuid(getuid()), let dir = pw.pointee.pw_dir {
-            home = String(cString: dir)
+        let home: String = if let pw = getpwuid(getuid()), let dir = pw.pointee.pw_dir {
+            String(cString: dir)
         } else {
-            home = NSHomeDirectory()
+            NSHomeDirectory()
         }
         let path = "\(home)/Library/Application Support/Glance/widget-data.json"
         guard let data = FileManager.default.contents(atPath: path) else {

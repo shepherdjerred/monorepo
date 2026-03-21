@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 
+// MARK: - MenuBarPopover
+
 /// Popover content shown when clicking the menu bar icon.
 struct MenuBarPopover: View {
     // MARK: Internal
@@ -301,3 +303,30 @@ struct MenuBarPopover: View {
         NSApplication.shared.activate()
     }
 }
+
+#if DEBUG
+    #Preview("Popover — Mixed Status") {
+        MenuBarPopover(appState: AppState(previewSnapshots: PreviewData.snapshots))
+    }
+
+    #Preview("Popover — All OK") {
+        let okSnapshots = PreviewData.snapshots.map { snapshot in
+            ServiceSnapshot(
+                id: snapshot.id,
+                displayName: snapshot.displayName,
+                iconName: snapshot.iconName,
+                status: .ok,
+                summary: snapshot.summary,
+                detail: .empty,
+                error: nil,
+                timestamp: .now,
+                webURL: nil,
+            )
+        }
+        MenuBarPopover(appState: AppState(previewSnapshots: okSnapshots))
+    }
+
+    #Preview("Popover — Empty") {
+        MenuBarPopover(appState: AppState(previewSnapshots: []))
+    }
+#endif

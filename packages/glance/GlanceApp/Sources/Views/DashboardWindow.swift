@@ -152,3 +152,13 @@ struct DashboardWindow: View {
         }
     }
 }
+
+#if DEBUG
+    #Preview("Dashboard") {
+        DashboardWindow(
+            appState: AppState(previewSnapshots: PreviewData.snapshots),
+            settings: PreviewData.makeSettings(),
+        )
+        .frame(width: 900, height: 600)
+    }
+#endif

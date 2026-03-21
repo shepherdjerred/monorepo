@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - OnboardingView
+
 /// Multi-step onboarding sheet shown on first launch.
 struct OnboardingView: View {
     // MARK: Internal
@@ -259,3 +261,9 @@ struct OnboardingView: View {
         return "/usr/bin/\(tool)"
     }
 }
+
+#if DEBUG
+    #Preview("Onboarding") {
+        OnboardingView(settings: PreviewData.makeSettings())
+    }
+#endif

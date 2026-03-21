@@ -231,3 +231,9 @@ private struct AdvancedSettingsPane: View {
 
     @State private var showingResetConfirmation = false
 }
+
+#if DEBUG
+    #Preview("Settings") {
+        SettingsView(settings: PreviewData.makeSettings())
+    }
+#endif

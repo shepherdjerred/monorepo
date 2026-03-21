@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - StatusBadge
+
 /// A small colored circle indicating service health status.
 struct StatusBadge: View {
     let status: ServiceStatus
@@ -11,3 +13,15 @@ struct StatusBadge: View {
             .accessibilityLabel(Text("Status: \(self.status.label)"))
     }
 }
+
+#if DEBUG
+    #Preview("Status Badges") {
+        HStack(spacing: 16) {
+            StatusBadge(status: .ok)
+            StatusBadge(status: .warning)
+            StatusBadge(status: .error)
+            StatusBadge(status: .unknown)
+        }
+        .padding()
+    }
+#endif
