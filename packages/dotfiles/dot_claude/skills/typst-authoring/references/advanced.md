@@ -247,8 +247,14 @@ Import from the community package registry:
 The `@preview` namespace indicates community packages, not yet considered stable. Browse at https://typst.app/universe.
 
 Popular packages include:
-- `tablex` — advanced table layouts
-- `cetz` — vector drawings (similar to TikZ)
-- `showybox` — callout/admonition boxes
+- `fletcher` — node & arrow diagrams (architecture, flowcharts, state machines)
+- `cetz` — general-purpose vector drawings (similar to TikZ), with `cetz-plot` for charts
+- `lilaq` — publication-quality scientific data visualization (line, scatter, bar, contour)
+- `diagraph` — Graphviz DOT rendering with Typst-native labels
+- `pintorita` — multi-diagram tool (sequence, ERD, component, activity, mind maps, Gantt)
+- `timeliney` — Gantt charts and project timelines
+- `gentle-clues` — admonition callout boxes (info, warning, tip, note, etc.)
 - `charged-ieee` — IEEE conference template
 - `modern-cv` — CV/resume templates
+
+See `references/visualizations.md` for detailed usage examples and design principles.

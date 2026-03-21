@@ -145,6 +145,7 @@ For detailed syntax, patterns, and examples, consult:
 - **`references/math.md`** — Math mode, symbols, Greek letters, subscripts/superscripts, fractions, roots, matrices, vectors, alignment, equation numbering, delimiters, cases, accents, font styles, custom operators
 - **`references/tables-figures-bibliography.md`** — Tables (columns, headers, cell spans, alignment, fill, stroke, grid vs table), figures, images, captions, floating figures, bibliography, citations, footnotes
 - **`references/advanced.md`** — Custom functions, templates, counters, state, query, context keyword, numbering patterns, metadata, measure, packages
+- **`references/visualizations.md`** — Visualization packages: diagrams (fletcher, CeTZ, diagraph, pintorita), charts (lilaq), timelines (timeliney), callout boxes (gentle-clues). Design principles for reader-friendly documents
 
 ### Typst Document Template
 

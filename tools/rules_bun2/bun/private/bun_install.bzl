@@ -192,36 +192,27 @@ def _bun_install_impl(rctx):
             result.stderr,
         ))
 
-    # Remove workspace symlinks from node_modules. Bun always creates these for workspace
-    # packages referenced in the lockfile, even after stripping workspace config from
-    # package.json and bun.lock. These symlinks point to temp dirs with nested
-    # symlinks that Bazel can't represent in a TreeArtifact. Downstream rules link
-    # workspace deps via collect_workspace_dep_links() instead.
-    ws_cleanup = rctx.execute(
-        [bun_path, "-e", """
-            const fs = require('fs');
-            const path = require('path');
-            function removeWorkspaceLinks(dir) {
-                for (const entry of fs.readdirSync(dir)) {
-                    const full = path.join(dir, entry);
-                    const stat = fs.lstatSync(full);
-                    if (entry.startsWith('@') && stat.isDirectory()) {
-                        removeWorkspaceLinks(full);
-                        if (fs.readdirSync(full).length === 0) fs.rmdirSync(full);
-                    } else if (stat.isSymbolicLink()) {
-                        const target = fs.readlinkSync(full);
-                        if (path.isAbsolute(target) || target.startsWith('..')) {
-                            fs.unlinkSync(full);
-                        }
-                    }
-                }
-            }
-            removeWorkspaceLinks('node_modules');
-        """],
+    # Remove workspace symlinks from node_modules. Bun creates these for workspace
+    # packages even after stripping workspace config. These symlinks point outside
+    # the repo and Bazel can't represent them in a TreeArtifact. Downstream rules
+    # link workspace deps via collect_workspace_dep_links() instead.
+    rctx.execute(
+        ["find", "node_modules", "-maxdepth", "3", "-type", "l", "-exec",
+         "sh", "-c", """
+            for link; do
+                target=$(readlink "$link")
+                case "$target" in
+                    /*|../*) rm -f "$link" ;;
+                esac
+            done
+         """, "sh", "{}",  "+"],
         timeout = 10,
     )
-    if ws_cleanup.return_code != 0:
-        fail("Workspace symlink removal failed: %s" % ws_cleanup.stderr)
+    # Remove empty scoped dirs left behind
+    rctx.execute(
+        ["find", "node_modules", "-maxdepth", "1", "-type", "d", "-name", "@*", "-empty", "-delete"],
+        timeout = 5,
+    )
 
     # With BAZEL_TRACK_SOURCE_DIRECTORIES=1, Bazel treats source directories
     # as TreeArtifacts. We can reference node_modules/ directly — no filegroup,

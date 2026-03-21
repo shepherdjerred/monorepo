@@ -43,7 +43,7 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
 1. Load the `typst-authoring` skill for Typst language reference
 2. Read the plan `.md` file
-3. Convert to a well-formatted Typst document (headings, lists, tables as appropriate)
+3. Convert to a well-formatted Typst document designed for quick reviewer comprehension. Use tables for structured comparisons, diagrams (fletcher, CeTZ) for architecture and flow, callout boxes (gentle-clues) for key decisions and risks, and clear visual hierarchy. Do not just convert Markdown to Typst — invest effort so the reviewer can scan the plan in 60 seconds
 4. Save to `~/.claude/plans/[topic-slug].typ` (next to the `.md` file)
 5. Compile with `typst compile` to PDF
 6. Open the PDF with `open`
