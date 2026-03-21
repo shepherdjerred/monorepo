@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ResumableIteratorP1Test {
@@ -39,7 +43,7 @@ class ResumableIteratorP1Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
+assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     }
 
     @Test
@@ -52,7 +56,44 @@ class ResumableIteratorP1Test {
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-        assertEquals(99, it.next());
+assertTrue(99 == it.next());
         assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A4_next_after_exhaustion() {
+        var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(1, 2));
+        it.next(); // 1
+        it.next(); // 2
+        assertFalse(it.hasNext());
+        assertThrows(NoSuchElementException.class, it::next);
+    }
+
+    @Test
+    void scenario_A5_hasNext_idempotent() {
+        var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(1, 2, 3));
+        for (int i = 0; i < 5; i++) {
+            assertTrue(it.hasNext());
+        }
+        // Should still return first element
+assertTrue(1 == it.next());
+    }
+
+    @Test
+    void scenario_A6_next_without_hasNext() {
+        var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(10, 20, 30));
+assertTrue(10 == it.next());
+assertTrue(20 == it.next());
+assertTrue(30 == it.next());
+    }
+
+    @Test
+    void scenario_A7_large_list() {
+        var data = IntStream.rangeClosed(1, 1000).boxed().collect(Collectors.toList());
+        var it = new ResumableIteratorP1.ResumableListIterator<>(data);
+        var acc = drain(it);
+assertTrue(sig(data).equals(sig(acc)));
+assertTrue(1000 == acc.size());
+assertTrue(1000 == acc.get(999));
     }
 }

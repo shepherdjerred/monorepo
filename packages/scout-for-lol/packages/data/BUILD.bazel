@@ -5,6 +5,7 @@ load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 load("//tools/rules_bun2/bun:defs.bzl", bun2_eslint_test = "bun_eslint_test", bun2_library = "bun_library", bun2_test = "bun_test", bun2_typecheck_test = "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
+
 bun2_link(name = "node_modules2")
 
 exports_files(["package.json"])
@@ -79,6 +80,7 @@ bun_test(
 
 bun2_library(
     name = "pkg2",
+    package_name = "@scout-for-lol/data",
     srcs = glob(
         ["src/**/*.ts"],
         exclude = [
@@ -86,11 +88,10 @@ bun2_library(
             "**/*.spec.ts",
         ],
     ) + glob([
+        "src/**/*.json",
         "src/**/*.txt",
-        "src/**/assets/*.json",
         "src/**/assets/**/*.png",
     ]) + ["package.json"],
-    package_name = "@scout-for-lol/data",
     visibility = ["//visibility:public"],
 )
 
@@ -133,5 +134,8 @@ bun2_eslint_test(
         "//:tsconfig.base.json",
     ],
     node_modules = ":node_modules2",
-    deps = [":pkg2", "//packages/eslint-config:pkg2"],
+    deps = [
+        ":pkg2",
+        "//packages/eslint-config:pkg2",
+    ],
 )

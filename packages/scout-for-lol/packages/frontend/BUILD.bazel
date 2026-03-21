@@ -5,6 +5,7 @@ load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 load("//tools/rules_bun2/bun:defs.bzl", bun2_eslint_test = "bun_eslint_test", bun2_library = "bun_library", bun2_typecheck_test = "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
+
 bun2_link(name = "node_modules2")
 
 exports_files(["package.json"])
@@ -104,6 +105,7 @@ bun_typecheck_test(
 
 bun2_library(
     name = "pkg2",
+    package_name = "@scout-for-lol/frontend",
     srcs = glob(
         [
             "src/**/*.ts",
@@ -118,7 +120,6 @@ bun2_library(
             "**/*.spec.tsx",
         ],
     ) + ["package.json"],
-    package_name = "@scout-for-lol/frontend",
     visibility = ["//visibility:public"],
     deps = [
         "//packages/scout-for-lol/packages/backend:pkg2",
@@ -135,12 +136,18 @@ bun2_typecheck_test(
     ]),
     extra_files = [
         "tsconfig.json",
+        "//packages/scout-for-lol/packages/backend:tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",
         "//:tsconfig.base.json",
     ],
+    # Backend sources use #generated/prisma/client — needed when tsc follows
+    # the frontend → backend type dependency chain via tRPC router types.
+    # Path is relative to the frontend package dir, so ../../backend/ reaches the backend.
+    generated_dirs = {"//packages/scout-for-lol/packages/backend:prisma_branded": "../../backend/generated/prisma/client"},
     node_modules = ":node_modules2",
     deps = [
         ":pkg2",
+        "//packages/scout-for-lol/packages/backend:pkg2",
         "//packages/scout-for-lol/packages/data:pkg2",
         "//packages/scout-for-lol/packages/report:pkg2",
     ],

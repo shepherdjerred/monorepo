@@ -45,7 +45,7 @@ class WebCrawlerP3Test {
         graph.put("https://a.com/x", List.of("https://a.com/y"));
         graph.put("https://a.com/y", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
-        assertEquals(3, result.size());
+assertTrue(3 == result.size());
         assertTrue(result.contains("https://a.com"));
         assertTrue(result.contains("https://a.com/x"));
         assertTrue(result.contains("https://a.com/y"));
@@ -57,7 +57,7 @@ class WebCrawlerP3Test {
         graph.put("https://a.com/p", List.of());
         graph.put("https://b.com/q", List.of("https://b.com/r"));
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
-        assertEquals(2, result.size());
+assertTrue(2 == result.size());
         assertFalse(result.contains("https://b.com/q"));
     }
 
@@ -67,14 +67,14 @@ class WebCrawlerP3Test {
         graph.put("https://c.com/a", List.of("https://c.com/b"));
         graph.put("https://c.com/b", List.of("https://c.com"));
         var result = crawler.crawl("https://c.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
-        assertEquals(3, result.size());
+assertTrue(3 == result.size());
     }
 
     @Test
     void scenario_A4_isolated() {
         graph.put("https://solo.com", List.of());
         var result = crawler.crawl("https://solo.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
-        assertEquals(1, result.size());
+assertTrue(1 == result.size());
         assertTrue(result.contains("https://solo.com"));
     }
 
@@ -85,19 +85,19 @@ class WebCrawlerP3Test {
         graph.put("https://d.com/b", List.of("https://d.com/c"));
         graph.put("https://d.com/c", List.of());
         var result = crawler.crawl("https://d.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
-        assertEquals(4, result.size());
+assertTrue(4 == result.size());
     }
 
     // E tests: getDomain
 
     @Test
     void scenario_E1_domain() {
-        assertEquals("example.com", crawler.getDomain("https://example.com/path/to/page"));
+assertTrue("example.com".equals(crawler.getDomain("https://example.com/path/to/page")));
     }
 
     @Test
     void scenario_E2_domain_with_port() {
-        assertEquals("localhost:8080", crawler.getDomain("http://localhost:8080/api"));
+assertTrue("localhost:8080".equals(crawler.getDomain("http://localhost:8080/api")));
     }
 
     // B tests: depth limiting, single thread
@@ -107,7 +107,7 @@ class WebCrawlerP3Test {
         graph.put("https://e.com", List.of("https://e.com/a"));
         graph.put("https://e.com/a", List.of());
         var result = crawler.crawl("https://e.com", url -> graph.getOrDefault(url, List.of()), 0, 1);
-        assertEquals(1, result.size());
+assertTrue(1 == result.size());
         assertTrue(result.contains("https://e.com"));
     }
 
@@ -118,7 +118,7 @@ class WebCrawlerP3Test {
         graph.put("https://f.com/b", List.of());
         graph.put("https://f.com/deep", List.of());
         var result = crawler.crawl("https://f.com", url -> graph.getOrDefault(url, List.of()), 1, 1);
-        assertEquals(3, result.size());
+assertTrue(3 == result.size());
         assertFalse(result.contains("https://f.com/deep"));
     }
 
@@ -128,7 +128,7 @@ class WebCrawlerP3Test {
         graph.put("https://g.com/1", List.of("https://g.com/2"));
         graph.put("https://g.com/2", List.of());
         var result = crawler.crawl("https://g.com", url -> graph.getOrDefault(url, List.of()), 10, 1);
-        assertEquals(3, result.size());
+assertTrue(3 == result.size());
     }
 
     // C tests: multithreaded correctness
@@ -149,6 +149,52 @@ class WebCrawlerP3Test {
         var multi = crawler.crawl("https://mt.com/start",
                 url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 4);
         // Both should find the same URLs
-        assertEquals(fingerprint(single), fingerprint(multi));
+assertTrue(fingerprint(single).equals(fingerprint(multi)));
+    }
+
+    @Test
+    void scenario_C2_large_graph_thread_comparison() {
+        // Build a 50-node graph
+        for (int i = 0; i < 50; i++) {
+            var links = new java.util.ArrayList<String>();
+            for (int j = i + 1; j < Math.min(i + 4, 50); j++) {
+                links.add("https://lg.com/" + j);
+            }
+            graph.put("https://lg.com/" + i, links);
+        }
+        graph.put("https://lg.com/start", List.of("https://lg.com/0"));
+        var single = crawler.crawl("https://lg.com/start",
+                url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
+        var multi = crawler.crawl("https://lg.com/start",
+                url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 8);
+assertTrue(fingerprint(single).equals(fingerprint(multi)));
+    }
+
+    @Test
+    void scenario_C3_single_thread_matches_p1() {
+        graph.put("https://a.com", List.of("https://a.com/x", "https://a.com/y"));
+        graph.put("https://a.com/x", List.of("https://a.com/y"));
+        graph.put("https://a.com/y", List.of());
+        var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE, 1);
+assertTrue(3 == result.size());
+        assertTrue(result.contains("https://a.com"));
+        assertTrue(result.contains("https://a.com/x"));
+        assertTrue(result.contains("https://a.com/y"));
+    }
+
+    @Test
+    void scenario_C4_depth_limited_multithreaded() {
+        graph.put("https://dl.com", List.of("https://dl.com/a", "https://dl.com/b"));
+        graph.put("https://dl.com/a", List.of("https://dl.com/deep"));
+        graph.put("https://dl.com/b", List.of("https://dl.com/deep2"));
+        graph.put("https://dl.com/deep", List.of());
+        graph.put("https://dl.com/deep2", List.of());
+        var result = crawler.crawl("https://dl.com", url -> graph.getOrDefault(url, List.of()), 1, 4);
+assertTrue(3 == result.size());
+        assertTrue(result.contains("https://dl.com"));
+        assertTrue(result.contains("https://dl.com/a"));
+        assertTrue(result.contains("https://dl.com/b"));
+        assertFalse(result.contains("https://dl.com/deep"));
+        assertFalse(result.contains("https://dl.com/deep2"));
     }
 }

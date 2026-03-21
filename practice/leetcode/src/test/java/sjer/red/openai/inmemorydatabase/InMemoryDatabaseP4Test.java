@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryDatabaseP4Test {
@@ -52,7 +51,7 @@ class InMemoryDatabaseP4Test {
         db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
         db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
         var results = db.query("users", new ArrayList<>(), new ArrayList<>());
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
     }
@@ -60,14 +59,14 @@ class InMemoryDatabaseP4Test {
     @Test
     void scenario_A2_empty_table() {
         db.createTable("items", List.of("sku", "price"));
-        assertEquals(0, db.query("items", new ArrayList<>(), new ArrayList<>()).size());
+assertTrue(0 == db.query("items", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     @Test
     void scenario_A3_multiple_inserts() {
         db.createTable("t", List.of("x"));
         for (int i = 0; i < 100; i++) db.insert("t", Map.of("x", String.valueOf(i)));
-        assertEquals(100, db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+assertTrue(100 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     // --- Regression from Part 2 ---
@@ -76,8 +75,8 @@ class InMemoryDatabaseP4Test {
     void scenario_B1_equality() {
         seedUsers();
         var results = db.query("users", w("name", "=", "Alice"), new ArrayList<>());
-        assertEquals(1, results.size());
-        assertEquals("30", results.get(0).get("age"));
+assertTrue(1 == results.size());
+assertTrue("30".equals(results.get(0).get("age")));
     }
 
     @Test
@@ -85,7 +84,7 @@ class InMemoryDatabaseP4Test {
         seedUsers();
         var results = db.query("users", w("age", ">", "27"), new ArrayList<>());
         // Alice=30, Charlie=35
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
     }
 
     @Test
@@ -96,14 +95,14 @@ class InMemoryDatabaseP4Test {
         where.add(new String[]{"city", "=", "NYC"});
         var results = db.query("users", where, new ArrayList<>());
         // Only Alice (30, NYC)
-        assertEquals(1, results.size());
+assertTrue(1 == results.size());
     }
 
     @Test
     void scenario_B4_not_equals() {
         seedUsers();
         var results = db.query("users", w("name", "!=", "Bob"), new ArrayList<>());
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
         assertTrue(results.stream().noneMatch(r -> "Bob".equals(r.get("name"))));
     }
 
@@ -112,14 +111,14 @@ class InMemoryDatabaseP4Test {
         seedUsers();
         var results = db.query("users", w("age", "<=", "30"), new ArrayList<>());
         // Bob=25, Alice=30
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
     }
 
     @Test
     void scenario_B6_no_matches() {
         seedUsers();
         var results = db.query("users", w("age", ">", "100"), new ArrayList<>());
-        assertEquals(0, results.size());
+assertTrue(0 == results.size());
     }
 
     // --- Regression from Part 3 ---
@@ -128,7 +127,7 @@ class InMemoryDatabaseP4Test {
     void scenario_C1_sort_ascending() {
         seedUsers();
         var results = db.query("users", new ArrayList<>(), o("age", "ASC"));
-        assertEquals(3, results.size());
+assertTrue(3 == results.size());
         assertTrue(h(results.get(0).get("name")).startsWith("cd99")); // Bob, 25
         assertTrue(h(results.get(2).get("name")).startsWith("79c7")); // Charlie, 35
     }
@@ -152,17 +151,17 @@ class InMemoryDatabaseP4Test {
         orderBy.add(new String[]{"value", "ASC"});
         var results = db.query("data", new ArrayList<>(), orderBy);
         // A-1, A-2, B-1, B-2
-        assertEquals("z", results.get(0).get("label"));
-        assertEquals("x", results.get(1).get("label"));
-        assertEquals("y", results.get(2).get("label"));
-        assertEquals("w", results.get(3).get("label"));
+assertTrue("z".equals(results.get(0).get("label")));
+assertTrue("x".equals(results.get(1).get("label")));
+assertTrue("y".equals(results.get(2).get("label")));
+assertTrue("w".equals(results.get(3).get("label")));
     }
 
     @Test
     void scenario_C4_where_plus_order() {
         seedUsers();
         var results = db.query("users", w("age", ">=", "25"), o("age", "DESC"));
-        assertEquals(3, results.size());
+assertTrue(3 == results.size());
         assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie=35 first
     }
 
@@ -172,17 +171,118 @@ class InMemoryDatabaseP4Test {
     void scenario_D1_delete() {
         seedUsers();
         int deleted = db.delete("users", w("name", "=", "Bob"));
-        assertEquals(1, deleted);
-        assertEquals(2, db.query("users", new ArrayList<>(), new ArrayList<>()).size());
+assertTrue(1 == deleted);
+assertTrue(2 == db.query("users", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     @Test
     void scenario_D2_update() {
         seedUsers();
         int updated = db.update("users", w("name", "=", "Alice"), Map.of("city", "SF"));
-        assertEquals(1, updated);
+assertTrue(1 == updated);
         var results = db.query("users", w("name", "=", "Alice"), new ArrayList<>());
         assertTrue(h(results.get(0).get("city")).startsWith("ab56"));
+    }
+
+    @Test
+    void scenario_D3_delete_all_rows() {
+        seedUsers();
+        int deleted = db.delete("users", new ArrayList<>());
+assertTrue(3 == deleted);
+assertTrue(0 == db.query("users", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_D4_delete_from_empty_table() {
+        db.createTable("empty", List.of("x"));
+        int deleted = db.delete("empty", w("x", "=", "anything"));
+assertTrue(0 == deleted);
+    }
+
+    @Test
+    void scenario_D5_delete_count() {
+        db.createTable("t", List.of("val"));
+        for (int i = 0; i < 5; i++) db.insert("t", Map.of("val", String.valueOf(i)));
+        int deleted = db.delete("t", w("val", "<", "2"));
+assertTrue(2 == deleted);
+assertTrue(3 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_D6_update_where_matches_nothing() {
+        seedUsers();
+        int updated = db.update("users", w("name", "=", "Nobody"), Map.of("city", "Mars"));
+assertTrue(0 == updated);
+    }
+
+    @Test
+    void scenario_D7_update_all_rows() {
+        seedUsers();
+        int updated = db.update("users", new ArrayList<>(), Map.of("city", "SF"));
+assertTrue(3 == updated);
+        var results = db.query("users", new ArrayList<>(), new ArrayList<>());
+        assertTrue(results.stream().allMatch(r -> "SF".equals(r.get("city"))));
+    }
+
+    @Test
+    void scenario_D8_insert_after_delete() {
+        seedUsers();
+        db.delete("users", new ArrayList<>());
+assertTrue(0 == db.query("users", new ArrayList<>(), new ArrayList<>()).size());
+        db.insert("users", Map.of("name", "Dave", "age", "40", "city", "Boston"));
+assertTrue(1 == db.query("users", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_D9_chained_operations() {
+        db.createTable("t", List.of("key", "val"));
+        db.insert("t", Map.of("key", "a", "val", "1"));
+        db.insert("t", Map.of("key", "b", "val", "2"));
+assertTrue(2 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+        db.update("t", w("key", "=", "a"), Map.of("val", "10"));
+        var results = db.query("t", w("key", "=", "a"), new ArrayList<>());
+assertTrue("10".equals(results.get(0).get("val")));
+        db.delete("t", w("key", "=", "b"));
+assertTrue(1 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_D10_delete_some_then_update_remaining() {
+        seedUsers();
+        db.delete("users", w("name", "=", "Bob"));
+assertTrue(2 == db.query("users", new ArrayList<>(), new ArrayList<>()).size());
+        int updated = db.update("users", new ArrayList<>(), Map.of("city", "SF"));
+assertTrue(2 == updated);
+        var results = db.query("users", new ArrayList<>(), new ArrayList<>());
+        assertTrue(results.stream().allMatch(r -> "SF".equals(r.get("city"))));
+    }
+
+    @Test
+    void scenario_D11_update_column_used_in_where() {
+        seedUsers();
+        // Alice=30, Charlie=35 match age > "25"
+        // Update their age to "20"
+        int updated = db.update("users", w("age", ">", "29"), Map.of("age", "20"));
+assertTrue(2 == updated);
+        // Now only Bob=25 has age > "20" (as string comparison), Alice and Charlie are "20"
+        var results = db.query("users", w("age", ">", "20"), new ArrayList<>());
+        // Bob (25) should still match; Alice and Charlie now have "20" which is not > "20"
+assertTrue(1 == results.size());
+    }
+
+    @Test
+    void scenario_D12_multiple_sequential_deletes() {
+        db.createTable("t", List.of("val"));
+        for (int i = 0; i < 5; i++) db.insert("t", Map.of("val", String.valueOf(i)));
+        int d1 = db.delete("t", w("val", "=", "0"));
+assertTrue(1 == d1);
+assertTrue(4 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+        int d2 = db.delete("t", w("val", "<", "3"));
+assertTrue(2 == d2);
+assertTrue(2 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+        int d3 = db.delete("t", new ArrayList<>());
+assertTrue(2 == d3);
+assertTrue(0 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     // --- Helpers ---

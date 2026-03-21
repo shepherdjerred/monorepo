@@ -11,6 +11,7 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.4",
+    "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",

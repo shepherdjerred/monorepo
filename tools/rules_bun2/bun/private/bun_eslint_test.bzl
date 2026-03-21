@@ -1,6 +1,6 @@
 """bun_eslint_test rule — runs eslint via bun."""
 
-load(":common.bzl", "COMMON_ATTRS", "SCRIPT_PREAMBLE", "build_runfiles", "collect_generated_dir_links", "collect_sources", "collect_workspace_dep_links", "get_source_paths")
+load(":common.bzl", "COMMON_ATTRS", "SCRIPT_PREAMBLE", "build_runfiles", "collect_env_exports", "collect_generated_dir_links", "collect_sources", "collect_workspace_dep_links", "get_source_paths")
 
 def _bun_eslint_test_impl(ctx):
     bun = ctx.toolchains["//tools/rules_bun/bun:toolchain_type"].bun_info.bun
@@ -10,6 +10,7 @@ def _bun_eslint_test_impl(ctx):
     nm_dir = nm_depset.to_list()[0]
     ws_dep_links = collect_workspace_dep_links(ctx)
     gen_dir_links = collect_generated_dir_links(ctx)
+    env_exports = collect_env_exports(ctx)
     src_paths = get_source_paths(all_srcs, ctx.files.data, ctx.files.extra_files)
 
     script = ctx.actions.declare_file(ctx.label.name + "_test.sh")
@@ -21,6 +22,7 @@ def _bun_eslint_test_impl(ctx):
             package_dir = ctx.label.package,
             workspace_dep_links = "\n".join(ws_dep_links),
             generated_dir_links = "\n".join(gen_dir_links),
+            env_exports = "\n".join(env_exports),
         ) + _RUN_CMD.format(
             bun = bun.short_path,
             package_dir = ctx.label.package,

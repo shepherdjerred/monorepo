@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryDatabaseP3Test {
@@ -52,7 +51,7 @@ class InMemoryDatabaseP3Test {
         db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
         db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
         var results = db.query("users", new ArrayList<>(), new ArrayList<>());
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
     }
@@ -60,14 +59,14 @@ class InMemoryDatabaseP3Test {
     @Test
     void scenario_A2_empty_table() {
         db.createTable("items", List.of("sku", "price"));
-        assertEquals(0, db.query("items", new ArrayList<>(), new ArrayList<>()).size());
+assertTrue(0 == db.query("items", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     @Test
     void scenario_A3_multiple_inserts() {
         db.createTable("t", List.of("x"));
         for (int i = 0; i < 100; i++) db.insert("t", Map.of("x", String.valueOf(i)));
-        assertEquals(100, db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+assertTrue(100 == db.query("t", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     // --- Regression from Part 2 ---
@@ -76,8 +75,8 @@ class InMemoryDatabaseP3Test {
     void scenario_B1_equality() {
         seedUsers();
         var results = db.query("users", w("name", "=", "Alice"), new ArrayList<>());
-        assertEquals(1, results.size());
-        assertEquals("30", results.get(0).get("age"));
+assertTrue(1 == results.size());
+assertTrue("30".equals(results.get(0).get("age")));
     }
 
     @Test
@@ -85,7 +84,7 @@ class InMemoryDatabaseP3Test {
         seedUsers();
         var results = db.query("users", w("age", ">", "27"), new ArrayList<>());
         // Alice=30, Charlie=35
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
     }
 
     @Test
@@ -96,14 +95,14 @@ class InMemoryDatabaseP3Test {
         where.add(new String[]{"city", "=", "NYC"});
         var results = db.query("users", where, new ArrayList<>());
         // Only Alice (30, NYC)
-        assertEquals(1, results.size());
+assertTrue(1 == results.size());
     }
 
     @Test
     void scenario_B4_not_equals() {
         seedUsers();
         var results = db.query("users", w("name", "!=", "Bob"), new ArrayList<>());
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
         assertTrue(results.stream().noneMatch(r -> "Bob".equals(r.get("name"))));
     }
 
@@ -112,14 +111,14 @@ class InMemoryDatabaseP3Test {
         seedUsers();
         var results = db.query("users", w("age", "<=", "30"), new ArrayList<>());
         // Bob=25, Alice=30
-        assertEquals(2, results.size());
+assertTrue(2 == results.size());
     }
 
     @Test
     void scenario_B6_no_matches() {
         seedUsers();
         var results = db.query("users", w("age", ">", "100"), new ArrayList<>());
-        assertEquals(0, results.size());
+assertTrue(0 == results.size());
     }
 
     // --- Part 3: ORDER BY ---
@@ -128,7 +127,7 @@ class InMemoryDatabaseP3Test {
     void scenario_C1_sort_ascending() {
         seedUsers();
         var results = db.query("users", new ArrayList<>(), o("age", "ASC"));
-        assertEquals(3, results.size());
+assertTrue(3 == results.size());
         assertTrue(h(results.get(0).get("name")).startsWith("cd99")); // Bob, 25
         assertTrue(h(results.get(2).get("name")).startsWith("79c7")); // Charlie, 35
     }
@@ -152,18 +151,65 @@ class InMemoryDatabaseP3Test {
         orderBy.add(new String[]{"value", "ASC"});
         var results = db.query("data", new ArrayList<>(), orderBy);
         // A-1, A-2, B-1, B-2
-        assertEquals("z", results.get(0).get("label"));
-        assertEquals("x", results.get(1).get("label"));
-        assertEquals("y", results.get(2).get("label"));
-        assertEquals("w", results.get(3).get("label"));
+assertTrue("z".equals(results.get(0).get("label")));
+assertTrue("x".equals(results.get(1).get("label")));
+assertTrue("y".equals(results.get(2).get("label")));
+assertTrue("w".equals(results.get(3).get("label")));
     }
 
     @Test
     void scenario_C4_where_plus_order() {
         seedUsers();
         var results = db.query("users", w("age", ">=", "25"), o("age", "DESC"));
-        assertEquals(3, results.size());
+assertTrue(3 == results.size());
         assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie=35 first
+    }
+
+    @Test
+    void scenario_C5_identical_sort_column_values() {
+        db.createTable("t", List.of("group", "label"));
+        db.insert("t", Map.of("group", "A", "label", "x"));
+        db.insert("t", Map.of("group", "A", "label", "y"));
+        db.insert("t", Map.of("group", "A", "label", "z"));
+        var results = db.query("t", new ArrayList<>(), o("group", "ASC"));
+assertTrue(3 == results.size());
+    }
+
+    @Test
+    void scenario_C6_multi_column_mixed_direction() {
+        db.createTable("data", List.of("group", "value", "label"));
+        db.insert("data", Map.of("group", "A", "value", "2", "label", "a"));
+        db.insert("data", Map.of("group", "A", "value", "1", "label", "b"));
+        db.insert("data", Map.of("group", "B", "value", "2", "label", "c"));
+        db.insert("data", Map.of("group", "B", "value", "1", "label", "d"));
+        List<String[]> orderBy = new ArrayList<>();
+        orderBy.add(new String[]{"group", "ASC"});
+        orderBy.add(new String[]{"value", "DESC"});
+        var results = db.query("data", new ArrayList<>(), orderBy);
+        // A-2, A-1, B-2, B-1
+assertTrue("a".equals(results.get(0).get("label")));
+assertTrue("b".equals(results.get(1).get("label")));
+assertTrue("c".equals(results.get(2).get("label")));
+assertTrue("d".equals(results.get(3).get("label")));
+    }
+
+    @Test
+    void scenario_C7_where_matches_zero_rows_with_order_by() {
+        seedUsers();
+        var results = db.query("users", w("age", ">", "100"), o("age", "ASC"));
+assertTrue(0 == results.size());
+    }
+
+    @Test
+    void scenario_C8_sort_1000_rows() {
+        db.createTable("big", List.of("value"));
+        for (int i = 999; i >= 0; i--) {
+            db.insert("big", Map.of("value", String.format("%04d", i)));
+        }
+        var results = db.query("big", new ArrayList<>(), o("value", "ASC"));
+assertTrue(1000 == results.size());
+assertTrue("0000".equals(results.get(0).get("value")));
+assertTrue("0999".equals(results.get(999).get("value")));
     }
 
     // --- Helpers ---

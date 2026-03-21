@@ -9,6 +9,10 @@ COMMON_ATTRS = {
     "data": attr.label_list(allow_files = True),
     "extra_files": attr.label_list(allow_files = True),
     "node_modules": attr.label(mandatory = True, allow_single_file = True),
+    "env": attr.string_dict(
+        doc = "Environment variables to set before running the command.",
+        default = {},
+    ),
     "generated_dirs": attr.label_keyed_string_dict(
         doc = "Map of label -> relative path. Each label's output directory is symlinked into the work dir at the given path (relative to the package dir of the target using this attr).",
         default = {},
@@ -36,7 +40,7 @@ def collect_workspace_dep_links(ctx):
                 scope = "/".join(info.package_name.split("/")[:-1]) if "/" in info.package_name else ""
                 if scope:
                     lines.append(
-                        'mkdir -p "$WORK/node_modules/{scope}" && ln -sfn "$WORK/{dir}" "$WORK/node_modules/{name}"'.format(
+                        'mkdir -p "$WORK/node_modules/{scope}" && rm -f "$WORK/node_modules/{name}" && ln -sfn "$WORK/{dir}" "$WORK/node_modules/{name}"'.format(
                             scope = scope,
                             name = info.package_name,
                             dir = info.package_dir,
@@ -44,12 +48,24 @@ def collect_workspace_dep_links(ctx):
                     )
                 else:
                     lines.append(
-                        'ln -sfn "$WORK/{dir}" "$WORK/node_modules/{name}"'.format(
+                        'rm -f "$WORK/node_modules/{name}" && ln -sfn "$WORK/{dir}" "$WORK/node_modules/{name}"'.format(
                             name = info.package_name,
                             dir = info.package_dir,
                         ),
                     )
     return lines
+
+def _resolve_path(base, rel):
+    """Resolve a relative path against a base, handling '../' segments."""
+    parts = (base + "/" + rel).split("/")
+    resolved = []
+    for part in parts:
+        if part == "..":
+            if resolved:
+                resolved.pop()
+        elif part and part != ".":
+            resolved.append(part)
+    return "/".join(resolved)
 
 def collect_generated_dir_links(ctx):
     """Generate shell commands to symlink generated directories into the work dir."""
@@ -59,10 +75,7 @@ def collect_generated_dir_links(ctx):
         if files:
             # TreeArtifact: single directory entry
             dir_file = files[0]
-            dest = "{pkg_dir}/{rel_path}".format(
-                pkg_dir = ctx.label.package,
-                rel_path = rel_path,
-            )
+            dest = _resolve_path(ctx.label.package, rel_path)
             lines.append(
                 'mkdir -p "$WORK/$(dirname "{dest}")" && ln -sfn "$WS_ROOT/{src}" "$WORK/{dest}"'.format(
                     src = dir_file.short_path,
@@ -70,6 +83,17 @@ def collect_generated_dir_links(ctx):
                 ),
             )
     return lines
+
+def collect_env_exports(ctx):
+    """Generate shell export commands for environment variables."""
+    lines = []
+    for key, value in ctx.attr.env.items():
+        lines.append("export %s=%s" % (key, shell_quote(value)))
+    return lines
+
+def shell_quote(s):
+    """Quote a string for safe use in shell."""
+    return "'" + s.replace("'", "'\\''") + "'"
 
 def build_runfiles(ctx, bun, all_srcs, nm_depset):
     """Build runfiles including bun binary, sources, data, extra_files, and node_modules."""
@@ -134,4 +158,7 @@ ln -sfn "$NM_REAL" "$WORK/node_modules"
 
 # Link generated directories (e.g., Prisma client)
 {generated_dir_links}
+
+# Export environment variables
+{env_exports}
 """

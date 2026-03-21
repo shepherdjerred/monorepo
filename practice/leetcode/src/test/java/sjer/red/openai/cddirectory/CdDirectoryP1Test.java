@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CdDirectoryP1Test {
     private CdDirectoryP1 solver;
@@ -22,51 +22,81 @@ class CdDirectoryP1Test {
 
     @Test
     void scenario_A1() {
-        assertEquals(d("L2hvbWUvdXNlci9kb2Nz"), solver.cd("/home/user", "docs"));
+        assertTrue(d("L2hvbWUvdXNlci9kb2Nz").equals(solver.cd("/home/user", "docs")));
     }
 
     @Test
     void scenario_A2() {
-        assertEquals(d("L2hvbWU="), solver.cd("/home/user", ".."));
+        assertTrue(d("L2hvbWU=").equals(solver.cd("/home/user", "..")));
     }
 
     @Test
     void scenario_A3() {
-        assertEquals(d("Lw=="), solver.cd("/", ".."));
+        assertTrue(d("Lw==").equals(solver.cd("/", "..")));
     }
 
     @Test
     void scenario_A4() {
-        assertEquals(d("L2V0Yw=="), solver.cd("/home/user", "/etc"));
+        assertTrue(d("L2V0Yw==").equals(solver.cd("/home/user", "/etc")));
     }
 
     @Test
     void scenario_A5() {
-        assertEquals(d("L2hvbWUvdXNlci9waWNz"), solver.cd("/home/user", "./docs/../pics"));
+        assertTrue(d("L2hvbWUvdXNlci9waWNz").equals(solver.cd("/home/user", "./docs/../pics")));
     }
 
     @Test
     void scenario_A6() {
-        assertEquals(d("Lw=="), solver.cd("/a/b/c", "../../.."));
+        assertTrue(d("Lw==").equals(solver.cd("/a/b/c", "../../..")));
     }
 
     @Test
     void scenario_A7() {
-        assertEquals(d("L2EvYi9j"), solver.cd("/a/b/c", "."));
+        assertTrue(d("L2EvYi9j").equals(solver.cd("/a/b/c", ".")));
     }
 
     @Test
     void scenario_A8() {
-        assertEquals(d("L3gveQ=="), solver.cd("/a", "/x/y/z/.."));
+        assertTrue(d("L3gveQ==").equals(solver.cd("/a", "/x/y/z/..")));
     }
 
     @Test
     void scenario_A9() {
-        assertEquals(d("L2E="), solver.cd("/a/b/c/d/e", "../../../.."));
+        assertTrue(d("L2E=").equals(solver.cd("/a/b/c/d/e", "../../../..")));
     }
 
     @Test
     void scenario_A10() {
-        assertEquals(d("L2EvYg=="), solver.cd("/a", "b"));
+        assertTrue(d("L2EvYg==").equals(solver.cd("/a", "b")));
+    }
+
+    @Test
+    void scenario_A11() {
+        assertTrue(d("Lw==").equals(solver.cd("/home/user", "/")));
+    }
+
+    @Test
+    void scenario_A12() {
+        assertTrue(d("Lw==").equals(solver.cd("/a", "../../../..")));
+    }
+
+    @Test
+    void scenario_A13() {
+        assertTrue(d("L2M=").equals(solver.cd("/a/b", "./../.././c")));
+    }
+
+    @Test
+    void scenario_A14() {
+        assertTrue(d("L2EvYg==").equals(solver.cd("/", "a/b")));
+    }
+
+    @Test
+    void scenario_A15() {
+        assertTrue(d("Lw==").equals(solver.cd("/a", "..")));
+    }
+
+    @Test
+    void scenario_A16() {
+        assertTrue(d("L2EvYi9jL2QvZS9mL2cvaA==").equals(solver.cd("/", "a/b/c/d/e/f/g/h")));
     }
 }

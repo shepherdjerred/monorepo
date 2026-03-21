@@ -40,7 +40,7 @@ class ResumableIteratorP4Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
+assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     }
 
     @Test
@@ -53,7 +53,7 @@ class ResumableIteratorP4Test {
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-        assertEquals(99, it.next());
+assertTrue(99 == it.next());
         assertFalse(it.hasNext());
     }
 
@@ -64,13 +64,13 @@ class ResumableIteratorP4Test {
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-        assertEquals(3, it.next()); // 3
-        assertEquals(4, it.next()); // 4
+        assertTrue(3 == it.next()); // 3
+        assertTrue(4 == it.next()); // 4
         it.setState(state);
         // Should replay from position after 2
-        assertEquals(3, it.next());
-        assertEquals(4, it.next());
-        assertEquals(5, it.next());
+assertTrue(3 == it.next());
+assertTrue(4 == it.next());
+assertTrue(5 == it.next());
         assertFalse(it.hasNext());
     }
 
@@ -83,9 +83,9 @@ class ResumableIteratorP4Test {
         it.next(); // 20
         it.next(); // 30
         it.setState(s1);
-        assertEquals(10, it.next());
+assertTrue(10 == it.next());
         it.setState(s2);
-        assertEquals(20, it.next());
+assertTrue(20 == it.next());
     }
 
     // --- B1-B4 (from P3) ---
@@ -98,7 +98,7 @@ class ResumableIteratorP4Test {
         );
         var it = new ResumableIteratorP4.MultiFileIterator<>(files);
         var acc = drain(it);
-        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
+assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ResumableIteratorP4Test {
         );
         var it = new ResumableIteratorP4.MultiFileIterator<>(files);
         var acc = drain(it);
-        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
+assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
     }
 
     @Test
@@ -133,11 +133,11 @@ class ResumableIteratorP4Test {
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-        assertEquals(3, it.next());
-        assertEquals(4, it.next());
+assertTrue(3 == it.next());
+assertTrue(4 == it.next());
         it.setState(state);
-        assertEquals(3, it.next());
-        assertEquals(4, it.next());
+assertTrue(3 == it.next());
+assertTrue(4 == it.next());
         assertFalse(it.hasNext());
     }
 
@@ -151,7 +151,7 @@ class ResumableIteratorP4Test {
         );
         var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
         var acc = drain(it);
-        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
+assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
     }
 
     @Test
@@ -164,7 +164,7 @@ class ResumableIteratorP4Test {
         );
         var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
         var acc = drain(it);
-        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
+assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
     }
 
     @Test
@@ -176,8 +176,55 @@ class ResumableIteratorP4Test {
         it.next(); // 20
         it.next(); // 30
         it.setState(state);
-        assertEquals(20, it.next());
-        assertEquals(30, it.next());
-        assertEquals(40, it.next());
+assertTrue(20 == it.next());
+assertTrue(30 == it.next());
+assertTrue(40 == it.next());
+    }
+
+    @Test
+    void scenario_C4_all_empty_inner_lists() {
+        var data = List.of(List.<Integer>of(), List.<Integer>of(), List.<Integer>of());
+        var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_C5_outer_list_empty() {
+        var data = List.<List<Integer>>of();
+        var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_C6_single_element_inner_lists() {
+        var data = List.of(List.of(1), List.of(2), List.of(3));
+        var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
+        var acc = drain(it);
+assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+    }
+
+    @Test
+    void scenario_C7_save_across_empty_inner() {
+        var data = List.of(List.of(1), List.<Integer>of(), List.of(2));
+        var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
+assertTrue(1 == it.next());
+        var state = it.getState();
+assertTrue(2 == it.next());
+        assertFalse(it.hasNext());
+        it.setState(state);
+assertTrue(2 == it.next());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_C8_restore_iterate_restore() {
+        var data = List.of(List.of(10, 20), List.of(30));
+        var it = new ResumableIteratorP4.ResumableIterator2D<>(data);
+        var state = it.getState();
+        var acc1 = drain(it);
+assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc1)));
+        it.setState(state);
+        var acc2 = drain(it);
+assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc2)));
     }
 }

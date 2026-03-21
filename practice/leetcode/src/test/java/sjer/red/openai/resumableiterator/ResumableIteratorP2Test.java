@@ -40,7 +40,7 @@ class ResumableIteratorP2Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
+assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     }
 
     @Test
@@ -53,7 +53,7 @@ class ResumableIteratorP2Test {
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-        assertEquals(99, it.next());
+assertTrue(99 == it.next());
         assertFalse(it.hasNext());
     }
 
@@ -64,13 +64,13 @@ class ResumableIteratorP2Test {
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-        assertEquals(3, it.next()); // 3
-        assertEquals(4, it.next()); // 4
+        assertTrue(3 == it.next()); // 3
+        assertTrue(4 == it.next()); // 4
         it.setState(state);
         // Should replay from position after 2
-        assertEquals(3, it.next());
-        assertEquals(4, it.next());
-        assertEquals(5, it.next());
+assertTrue(3 == it.next());
+assertTrue(4 == it.next());
+assertTrue(5 == it.next());
         assertFalse(it.hasNext());
     }
 
@@ -83,8 +83,61 @@ class ResumableIteratorP2Test {
         it.next(); // 20
         it.next(); // 30
         it.setState(s1);
-        assertEquals(10, it.next());
+assertTrue(10 == it.next());
         it.setState(s2);
-        assertEquals(20, it.next());
+assertTrue(20 == it.next());
+    }
+
+    @Test
+    void scenario_A6_save_at_beginning() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(1, 2, 3));
+        var state = it.getState();
+        it.next(); // 1
+        it.next(); // 2
+        it.setState(state);
+assertTrue(1 == it.next());
+assertTrue(2 == it.next());
+assertTrue(3 == it.next());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A7_save_after_exhaustion() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(1, 2));
+        it.next(); // 1
+        it.next(); // 2
+        assertFalse(it.hasNext());
+        var state = it.getState();
+        it.setState(state);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A8_save_advance_restore_advance_restore() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(1, 2, 3, 4, 5));
+        it.next(); // 1
+        var state = it.getState();
+        it.next(); // 2
+        it.next(); // 3
+        it.setState(state);
+assertTrue(2 == it.next());
+        it.setState(state);
+assertTrue(2 == it.next());
+assertTrue(3 == it.next());
+    }
+
+    @Test
+    void scenario_A9_restore_then_save() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(1, 2, 3, 4));
+        it.next(); // 1
+        it.next(); // 2
+        var state = it.getState();
+        it.next(); // 3
+        it.setState(state);
+        var state2 = it.getState();
+        // state2 should be at same position as state (before element 3)
+assertTrue(3 == it.next());
+        it.setState(state2);
+assertTrue(3 == it.next());
     }
 }

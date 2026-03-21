@@ -79,7 +79,7 @@ class ExcelSheetP3Test {
         sheet.setCell("A1", 5);
         sheet.setCell("B1", 3);
         sheet.setCellFormula("C1", "=A1+B1");
-        assertEquals(8, sheet.getCell("C1"));
+assertTrue(8 == sheet.getCell("C1"));
         sheet.setCell("A1", 10);
         assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
     }
@@ -139,5 +139,51 @@ class ExcelSheetP3Test {
         sheet.setCellFormula("C1", "=B1+1");
         assertThrows(IllegalArgumentException.class, () ->
                 sheet.setCellFormula("A1", "=C1+1"));
+    }
+
+    @Test
+    void scenario_C4_cycle_rollback_preserves_state() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        assertThrows(IllegalArgumentException.class, () ->
+                sheet.setCellFormula("A1", "=C1+1"));
+        assertTrue(v(sheet.getCell("A1"), "6b86b273"));
+        assertTrue(v(sheet.getCell("B1"), "d4735e3a"));
+        assertTrue(v(sheet.getCell("C1"), "4e074085"));
+    }
+
+    @Test
+    void scenario_C5_valid_formula_after_rejected_cycle() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        assertThrows(IllegalArgumentException.class, () ->
+                sheet.setCellFormula("A1", "=C1+1"));
+        sheet.setCellFormula("A1", "=5+3");
+        assertTrue(v(sheet.getCell("A1"), "2c624232"));
+        assertTrue(v(sheet.getCell("B1"), "19581e27"));
+        assertTrue(v(sheet.getCell("C1"), "4a44dc15"));
+    }
+
+    @Test
+    void scenario_C6_longer_indirect_cycle() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        sheet.setCellFormula("D1", "=C1+1");
+        assertThrows(IllegalArgumentException.class, () ->
+                sheet.setCellFormula("A1", "=D1+1"));
+    }
+
+    @Test
+    void scenario_C7_breaking_cycle_path_allows_re_add() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        assertThrows(IllegalArgumentException.class, () ->
+                sheet.setCellFormula("A1", "=B1+1"));
+        sheet.setCell("B1", 99);
+        sheet.setCellFormula("A1", "=B1+1");
+        assertTrue(v(sheet.getCell("A1"), "ad573668"));
     }
 }

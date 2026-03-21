@@ -80,7 +80,7 @@ class ExcelSheetP2Test {
         sheet.setCell("A1", 5);
         sheet.setCell("B1", 3);
         sheet.setCellFormula("C1", "=A1+B1");
-        assertEquals(8, sheet.getCell("C1"));
+assertTrue(8 == sheet.getCell("C1"));
         sheet.setCell("A1", 10);
         assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
     }
@@ -113,5 +113,78 @@ class ExcelSheetP2Test {
         sheet.setCellFormula("E1", "=D1+1");
         sheet.setCell("A1", 100);
         assertTrue(v(sheet.getCell("E1"), "8f53e515"));
+    }
+
+    @Test
+    void scenario_B3_fan_out_update() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=A1+2");
+        sheet.setCellFormula("D1", "=A1+3");
+        sheet.setCellFormula("E1", "=A1+4");
+        sheet.setCell("A1", 10);
+        assertTrue(v(sheet.getCell("B1"), "4fc82b26"));
+        assertTrue(v(sheet.getCell("C1"), "6b51d431"));
+        assertTrue(v(sheet.getCell("D1"), "3fdba35f"));
+        assertTrue(v(sheet.getCell("E1"), "8527a891"));
+    }
+
+    @Test
+    void scenario_B4_overwrite_formula_with_plain_value() {
+        sheet.setCell("A1", 5);
+        sheet.setCellFormula("B1", "=A1+1");
+        assertTrue(v(sheet.getCell("B1"), "e7f6c011"));
+        sheet.setCell("B1", 99);
+        assertTrue(v(sheet.getCell("B1"), "8c1f1046"));
+        sheet.setCell("A1", 10);
+        assertTrue(v(sheet.getCell("B1"), "8c1f1046"));
+    }
+
+    @Test
+    void scenario_B5_overwrite_plain_value_with_formula() {
+        sheet.setCell("A1", 5);
+        sheet.setCell("B1", 10);
+        sheet.setCellFormula("B1", "=A1+1");
+        assertTrue(v(sheet.getCell("B1"), "e7f6c011"));
+        sheet.setCell("A1", 20);
+        assertTrue(v(sheet.getCell("B1"), "6f4b6612"));
+    }
+
+    @Test
+    void scenario_B6_diamond_dependency() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=A1+2");
+        sheet.setCellFormula("D1", "=B1+C1");
+        assertTrue(v(sheet.getCell("D1"), "ef2d127d"));
+        sheet.setCell("A1", 10);
+        assertTrue(v(sheet.getCell("B1"), "4fc82b26"));
+        assertTrue(v(sheet.getCell("C1"), "6b51d431"));
+        assertTrue(v(sheet.getCell("D1"), "535fa30d"));
+    }
+
+    @Test
+    void scenario_B7_wide_fan_out() {
+        sheet.setCell("A1", 1);
+        for (int i = 1; i <= 50; i++) {
+            sheet.setCellFormula("B" + i, "=A1+" + i);
+        }
+        sheet.setCell("A1", 100);
+        for (int i = 1; i <= 50; i++) {
+            assertEquals(100 + i, sheet.getCell("B" + i));
+        }
+    }
+
+    @Test
+    void scenario_B8_remove_formula_breaks_dependency() {
+        sheet.setCell("A1", 5);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        assertTrue(v(sheet.getCell("C1"), "7902699b"));
+        sheet.setCell("B1", 99);
+        assertTrue(v(sheet.getCell("B1"), "8c1f1046"));
+        sheet.setCell("A1", 10);
+        assertTrue(v(sheet.getCell("B1"), "8c1f1046"));
+        assertTrue(v(sheet.getCell("C1"), "ad573668"));
     }
 }

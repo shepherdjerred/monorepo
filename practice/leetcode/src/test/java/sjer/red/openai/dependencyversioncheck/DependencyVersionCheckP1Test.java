@@ -28,21 +28,21 @@ class DependencyVersionCheckP1Test {
     void scenario_A1_basic() {
         var versions = List.of("1.0", "1.1", "1.2", "1.3", "2.0");
         Function<String, Boolean> check = v -> v.compareTo("1.2") >= 0;
-        assertEquals(b("MS4y"), solver.findEarliest(versions, check));
+assertTrue(b("MS4y").equals(solver.findEarliest(versions, check)));
     }
 
     @Test
     void scenario_A2_first_version() {
         var versions = List.of("1.0", "2.0", "3.0");
         Function<String, Boolean> check = v -> true;
-        assertEquals(b("MS4w"), solver.findEarliest(versions, check));
+assertTrue(b("MS4w").equals(solver.findEarliest(versions, check)));
     }
 
     @Test
     void scenario_A3_last_version() {
         var versions = List.of("1.0", "2.0", "3.0");
         Function<String, Boolean> check = v -> v.equals("3.0");
-        assertEquals(b("My4w"), solver.findEarliest(versions, check));
+assertTrue(b("My4w").equals(solver.findEarliest(versions, check)));
     }
 
     @Test
@@ -62,7 +62,42 @@ class DependencyVersionCheckP1Test {
             calls.incrementAndGet();
             return Integer.parseInt(v) >= 500;
         };
-        assertEquals("500", solver.findEarliest(versions, check));
+assertTrue("500".equals(solver.findEarliest(versions, check)));
         assertTrue(calls.get() <= 12, "Expected <=12 calls, got " + calls.get());
+    }
+
+    @Test
+    void scenario_A6_single_supports() {
+        var versions = List.of("1.0");
+        Function<String, Boolean> check = v -> true;
+assertTrue(b("MS4w").equals(solver.findEarliest(versions, check)));
+    }
+
+    @Test
+    void scenario_A7_single_no_support() {
+        var versions = List.of("1.0");
+        Function<String, Boolean> check = v -> false;
+        assertNull(solver.findEarliest(versions, check));
+    }
+
+    @Test
+    void scenario_A8_second_supports() {
+        var versions = List.of("1.0", "2.0");
+        Function<String, Boolean> check = v -> v.equals("2.0");
+assertTrue(b("Mi4w").equals(solver.findEarliest(versions, check)));
+    }
+
+    @Test
+    void scenario_A9_all_support() {
+        var versions = List.of("1.0", "2.0", "3.0");
+        Function<String, Boolean> check = v -> true;
+assertTrue(b("MS4w").equals(solver.findEarliest(versions, check)));
+    }
+
+    @Test
+    void scenario_A10_empty_list() {
+        var versions = List.<String>of();
+        Function<String, Boolean> check = v -> true;
+        assertNull(solver.findEarliest(versions, check));
     }
 }

@@ -192,23 +192,36 @@ def _bun_install_impl(rctx):
             result.stderr,
         ))
 
-    # Remove workspace symlinks from node_modules. Bun creates these for workspace
-    # packages even after stripping workspace config. These symlinks point outside
-    # the repo and Bazel can't represent them in a TreeArtifact. Downstream rules
-    # link workspace deps via collect_workspace_dep_links() instead.
+    # Remove workspace symlinks from node_modules. Bun creates symlinks for workspace
+    # packages that point outside the repo. Bazel can't represent these in a
+    # TreeArtifact. Downstream rules link workspace deps at test time instead.
     rctx.execute(
-        ["find", "node_modules", "-maxdepth", "3", "-type", "l", "-exec",
-         "sh", "-c", """
+        [
+            "find",
+            "node_modules",
+            "-maxdepth",
+            "3",
+            "-type",
+            "l",
+            "-exec",
+            "sh",
+            "-c",
+            """
             for link; do
                 target=$(readlink "$link")
                 case "$target" in
                     /*|../*) rm -f "$link" ;;
                 esac
             done
-         """, "sh", "{}",  "+"],
+         """,
+            "sh",
+            "{}",
+            "+",
+        ],
         timeout = 10,
     )
-    # Remove empty scoped dirs left behind
+
+    # Delete leftover empty scoped dirs after workspace symlink removal
     rctx.execute(
         ["find", "node_modules", "-maxdepth", "1", "-type", "d", "-name", "@*", "-empty", "-delete"],
         timeout = 5,
