@@ -138,6 +138,15 @@ PKG_DIR="${4:-}"
 BUN="${5:-}"
 NPM_LIST="${6:-}"
 
+_ts() { date +%s%3N; }
+_T_START=$(_ts)
+_T_PREV=$_T_START
+
+_phase_done() {
+    local now=$(_ts)
+    echo "[materialize] $1: $((now - _T_PREV))ms" >&2
+    _T_PREV=$now
+}
 
 # Phase 0: Copy npm package directories using bun's native fs.cpSync.
 # A single bun process does ~1.1k directory copies with direct syscalls
@@ -163,6 +172,7 @@ for(var[s,dst]of pairs)c(s,dst,{recursive:true});
         done < "$NPM_LIST"
     fi
 fi
+_phase_done "Phase 0 (npm copy)"
 
 # Phase 1: Pre-create ALL destination directories in one batch.
 # This avoids ~80k individual mkdir -p calls (the biggest perf bottleneck).
@@ -174,6 +184,7 @@ awk -F'\\t' '
 ' d="$OUT_DIR" "$MANIFEST" | sort -u | while IFS= read -r dir; do
     mkdir -p "$dir"
 done
+_phase_done "Phase 1 (mkdir batch)"
 
 # Phase 2: Link-first regular files.
 # Try hardlink first (near-instant, same filesystem), fall back to copy.
@@ -183,17 +194,20 @@ awk -F'\\t' '$1 == "COPY" { print $2; print d "/" $3 }' d="$OUT_DIR" "$MANIFEST"
     | while IFS= read -r src && IFS= read -r dst; do
     ln -f "$src" "$dst" 2>/dev/null || cp -f "$src" "$dst" || { echo "FATAL: link/copy failed: $src -> $dst" >&2; exit 1; }
 done
+_phase_done "Phase 2 (link/copy files)"
 
 # Phase 3: Copy directory artifacts (few operations).
 awk -F'\\t' '$1 == "COPYDIR" { print $2 "\\t" $3 }' "$MANIFEST" | while IFS=$'\\t' read -r src dst; do
     cp -R "$src/." "$OUT_DIR/$dst/" || { echo "FATAL: copydir failed: $src -> $OUT_DIR/$dst/" >&2; exit 1; }
 done
+_phase_done "Phase 3 (copydir)"
 
 # Phase 4: Create symlinks (few operations, mkdir inline is fine).
 awk -F'\\t' '$1 == "LINK" { print $2 "\\t" $3 }' "$MANIFEST" | while IFS=$'\\t' read -r src dst; do
     mkdir -p "$OUT_DIR/$(dirname "$dst")" 2>/dev/null || true
     ln -sf "$src" "$OUT_DIR/$dst" || { echo "FATAL: symlink failed: $src -> $OUT_DIR/$dst" >&2; exit 1; }
 done
+_phase_done "Phase 4 (symlinks)"
 
 # Create inter-entry dep symlinks and top-level hoisted symlinks.
 # This recreates bun's .bun/<key>/node_modules/<dep> -> ../../<dep_key>/...
@@ -202,7 +216,7 @@ done
 if [ -n "$LINKS_SCRIPT" ] && [ -f "$LINKS_SCRIPT" ]; then
     bash "$LINKS_SCRIPT" "$OUT_DIR/$PKG_DIR/node_modules"
 fi
-
+_phase_done "Phase 5 (hoisted links)"
 
 # Dereference @prisma/client symlinks so TypeScript resolves .prisma/client locally.
 # Previously done in per-runner templates; centralized here for all consumers.
@@ -214,7 +228,7 @@ if [ -n "$PKG_DIR" ] && [ -d "$OUT_DIR/$PKG_DIR/node_modules/.prisma/client" ] &
     rm -rf "$TMP_PRISMA"
 fi
 
-
+echo "[materialize] Total: $(($(_ts) - _T_START))ms" >&2
 """
 
 def collect_all_npm_sources(deps):

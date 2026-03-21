@@ -198,9 +198,18 @@ The final report should read as if it was written correctly the first time — t
 
 ### Phase 6: Deliver
 
-- If the report exceeds ~100 lines, write to a file (default: `~/.claude/research/[topic-slug].md`) and present a concise summary inline with the file path. If the report is short enough to scan in a terminal, present inline. When writing to a file, mention the path to the user.
-- Offer to go deeper on any sub-topic
-- If the research revealed actionable next steps, highlight them
+Every research report is delivered in three formats: Markdown (`.md`), Typst (`.typ`), and PDF (`.pdf`).
+
+1. **Create output directory** — Run `mkdir -p ~/.claude/research/` to ensure the directory exists.
+2. **Write Markdown** — Save the final report to `~/.claude/research/[topic-slug].md`.
+3. **Write Typst** — Convert the final Markdown report to Typst format using the **Typst Output Reference** section below as a starting point. Save to `~/.claude/research/[topic-slug].typ`.
+4. **Compile PDF** — Run `typst compile ~/.claude/research/[topic-slug].typ ~/.claude/research/[topic-slug].pdf`. If compilation fails, fix the Typst source (common issues: unescaped special characters `#`, `@`, `$` need `\#`, `\@`, `\$` in content text) and retry.
+5. **Open PDF** — Run `open ~/.claude/research/[topic-slug].pdf` to open the rendered PDF for the user. This step is mandatory — always open the PDF. **Only open the PDF once the entire research process is 100% complete** — all phases finished, editorial synthesis done, quality checklist passed, and final PDF compiled without errors. Never open intermediate or draft versions.
+6. **Present summary** — Show a concise inline summary with:
+   - The report title and key findings (3-5 bullets)
+   - File paths for all three outputs
+   - An offer to go deeper on any sub-topic
+   - Any actionable next steps the research revealed
 
 ## Parallelization Strategy
 
@@ -221,6 +230,8 @@ When launching parallel sub-agents, give each a focused prompt:
 - Instructions to return distilled findings (not raw page content)
 - A reminder to include source URLs for every claim
 
+**Important:** Do not use `SendMessage` to communicate status updates about background agents. Plain text output is directly visible to the user — just output text normally. SendMessage is for team communication between agents, not for status updates to the user.
+
 ## Quality Checklist
 
 Before delivering the final report, verify:
@@ -233,6 +244,7 @@ Before delivering the final report, verify:
 - [ ] The summary can stand alone for a reader who skips the details
 - [ ] The adversarial review was completed and all critical/major findings addressed
 - [ ] A Methodology & Limitations section is present
+- [ ] All three output files (.md, .typ, .pdf) were generated and the PDF compiled without errors
 
 ## Adaptation by Research Type
 
@@ -249,3 +261,5 @@ Adjust source priorities and report structure to match the research type. For co
 ## Additional Resources
 
 - **`references/research-patterns.md`** — Source evaluation heuristics, iteration patterns, and report structure templates by research type
+
+When generating Typst output, load the `typst-authoring` skill for language reference and document templates.

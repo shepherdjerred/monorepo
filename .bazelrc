@@ -40,6 +40,11 @@ build --experimental_disk_cache_gc_max_age=14d
 build --skyframe_high_water_mark_threshold=85
 build --heuristically_drop_nodes
 
+# Performance — always-on profiling (low overhead, ~2%)
+build --profile=~/.cache/bazel-profile.gz
+build --noslim_profile
+build --experimental_collect_load_average_in_profiler
+
 # Convenience
 build --color=yes
 test --color=yes

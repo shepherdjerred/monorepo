@@ -577,6 +577,7 @@ def _bun_install_impl(rctx):
             rctx.symlink(f, f.name)
 
     # Run bun install
+    print("[bun_install] Running bun install (%d package.json files)..." % len(rctx.attr.package_jsons))
     result = rctx.execute(
         [bun, "install", "--frozen-lockfile", "--ignore-scripts"],
         timeout = 300,
@@ -594,8 +595,10 @@ def _bun_install_impl(rctx):
                 result.stdout,
                 result.stderr,
             ))
+    print("[bun_install] bun install complete")
 
     # Parse bun.lock to get workspace deps mapping
+    print("[bun_install] Parsing bun.lock...")
     parse_script = rctx.path("_parse_lock.ts")
     rctx.file("_parse_lock.ts", _PARSE_LOCK_SCRIPT)
 
@@ -622,7 +625,10 @@ def _bun_install_impl(rctx):
     for pkg_name in rctx.attr.bins.keys():
         all_packages[pkg_name] = True
 
+    print("[bun_install] Parsed %d workspace entries" % len(workspace_deps))
+
     # Map packages to paths and extract npm dependency graph
+    print("[bun_install] Mapping npm package graph...")
     map_script = rctx.path("_map_packages.ts")
     rctx.file("_map_packages.ts", _MAP_PACKAGES_SCRIPT)
 
@@ -653,7 +659,10 @@ def _bun_install_impl(rctx):
         for dep in npm_deps[pkg_name]:
             all_packages[dep] = True
 
+    print("[bun_install] Found %d npm packages" % len(all_packages))
+
     # Generate files
+    print("[bun_install] Generating BUILD.bazel + defs.bzl...")
     rctx.file("package_rule.bzl", _PACKAGE_RULE_BZL)
     rctx.file("BUILD.bazel", _generate_build_file(all_packages, bun_keys, all_keys_by_pkg))
     rctx.file("defs.bzl", _generate_defs_bzl(workspace_deps, npm_deps, all_packages, hoisted_keys, workspace_refs, alias_to_real))
@@ -666,6 +675,8 @@ def _bun_install_impl(rctx):
 
     # Generate symlink script (inter-entry deps + top-level hoisted)
     rctx.file("hoisted_links.sh", _generate_hoisted_links_script(bun_keys, entry_deps, primary_by_key, alias_to_real))
+
+    print("[bun_install] Generated BUILD.bazel (%d packages), defs.bzl, hoisted_links.sh" % len(all_packages))
 
     # Clean up temp files
     rctx.delete("_parse_lock.ts")

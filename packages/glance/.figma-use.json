@@ -1,0 +1,22 @@
+{
+  "lint": {
+    "preset": "recommended"
+  },
+  "storybook": {
+    "out": "./stories",
+    "matchIcons": false,
+    "preferIcons": [
+      "lucide",
+      "tabler"
+    ],
+    "iconThreshold": 0.85,
+    "framework": "react"
+  },
+  "format": {
+    "pretty": true,
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "none"
+  }
+}
