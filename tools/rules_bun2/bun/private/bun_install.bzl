@@ -113,6 +113,13 @@ def _bun_install_impl(rctx):
             }
 
             fs.writeFileSync('package.json', JSON.stringify(rootPkg, null, 2));
+
+            // Delete sub-package package.json files now that deps are merged.
+            // If left on disk, bun install auto-detects them as workspace packages
+            // and creates dangling symlinks in node_modules.
+            for (const pkgPath of pkgJsons) {
+                try { fs.unlinkSync(pkgPath); } catch {}
+            }
         """] + [
             "%s/package.json" % p.package
             for p in rctx.attr.package_jsons
@@ -137,33 +144,6 @@ def _bun_install_impl(rctx):
             result.stdout,
             result.stderr,
         ))
-
-    # Bun auto-detects sub-package package.json files and creates workspace-style
-    # symlinks in node_modules (e.g., node_modules/@scope/pkg -> ../../packages/pkg).
-    # These are dangling symlinks pointing outside node_modules and must be removed.
-    # We only want npm dependencies in node_modules, not workspace packages.
-    rctx.execute(
-        [bun_path, "-e", """
-            const fs = require('fs');
-            const path = require('path');
-            function cleanDir(dir) {
-                for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-                    const full = path.join(dir, entry.name);
-                    if (entry.isSymbolicLink()) {
-                        const target = fs.readlinkSync(full);
-                        // Remove symlinks pointing outside node_modules (workspace package links)
-                        if (!target.startsWith('.bun/') && !target.includes('node_modules/')) {
-                            fs.unlinkSync(full);
-                        }
-                    } else if (entry.isDirectory() && entry.name.startsWith('@')) {
-                        cleanDir(full);
-                    }
-                }
-            }
-            cleanDir('node_modules');
-        """],
-        timeout = 10,
-    )
 
     # With BAZEL_TRACK_SOURCE_DIRECTORIES=1, Bazel treats source directories
     # as TreeArtifacts. We can reference node_modules/ directly — no filegroup,

@@ -2,7 +2,7 @@ load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("@bun_modules2//:defs.bzl", bun2_link = "npm_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_binary", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_prisma_generate", "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
-load("//tools/rules_bun2/bun:defs.bzl", bun2_eslint_test = "bun_eslint_test", bun2_library = "bun_library", bun2_test = "bun_test", bun2_typecheck_test = "bun_typecheck_test")
+load("//tools/rules_bun2/bun:defs.bzl", bun2_eslint_test = "bun_eslint_test", bun2_library = "bun_library", bun2_prisma_brand = "bun_prisma_brand", bun2_test = "bun_test", bun2_typecheck_test = "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
 bun2_link(name = "node_modules2")
@@ -15,14 +15,19 @@ filegroup(
     visibility = ["//packages/scout-for-lol/packages/data:__pkg__"],
 )
 
-# Prisma client generation with branded types post-processing.
+# Prisma client generation (raw, unbranded types).
 bun_prisma_generate(
     name = "prisma_generate",
-    post_generate_deps = [
-        "src/logger.ts",
-    ],
-    post_generate_script = "scripts/brand-prisma-types.ts",
     schema = "prisma/schema.prisma",
+)
+
+# Post-process Prisma types: replace raw number/string with branded IDs.
+bun2_prisma_brand(
+    name = "prisma_branded",
+    deps = ["src/logger.ts"],
+    node_modules = ":node_modules2",
+    prisma_client = ":prisma_generate",
+    script = "scripts/brand-prisma-types.ts",
 )
 
 bun_library(
@@ -144,7 +149,7 @@ bun2_typecheck_test(
         "//packages/scout-for-lol:tsconfig.base.json",
         "//:tsconfig.base.json",
     ],
-    generated_dirs = {":prisma_generate": "generated/prisma/client"},
+    generated_dirs = {":prisma_branded": "generated/prisma/client"},
     node_modules = ":node_modules2",
     deps = [
         ":pkg2",
@@ -165,7 +170,7 @@ bun2_eslint_test(
         "//packages/scout-for-lol:tsconfig.base.json",
         "//:tsconfig.base.json",
     ],
-    generated_dirs = {":prisma_generate": "generated/prisma/client"},
+    generated_dirs = {":prisma_branded": "generated/prisma/client"},
     node_modules = ":node_modules2",
     deps = [
         ":pkg2",
@@ -190,7 +195,7 @@ bun2_test(
         "//packages/scout-for-lol:tsconfig.base.json",
         "//:tsconfig.base.json",
     ],
-    generated_dirs = {":prisma_generate": "generated/prisma/client"},
+    generated_dirs = {":prisma_branded": "generated/prisma/client"},
     node_modules = ":node_modules2",
     deps = [
         ":pkg2",

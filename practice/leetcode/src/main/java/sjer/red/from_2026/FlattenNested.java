@@ -1,27 +1,13 @@
 package sjer.red.from_2026;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
 public class FlattenNested implements Iterator<Integer> {
 
 
-    // This is the interface that allows for creating nested lists.
-    // You should not implement it, or speculate about its implementation
-    public interface NestedInteger {
-        // @return true if this NestedInteger holds a single integer, rather than a nested list.
-        public boolean isInteger();
-
-        // @return the single integer that this NestedInteger holds, if it holds a single integer
-        // Return null if this NestedInteger holds a nested list
-        public Integer getInteger();
-
-        // @return the nested list that this NestedInteger holds, if it holds a nested list
-        // Return empty list if this NestedInteger holds a single integer
-        public List<NestedInteger> getList();
-    }
+    Stack<Iterator<NestedInteger>> stack = new Stack<>();
 
     // basic idea
     // we have a list of integers nested arbitrarily deep
@@ -54,11 +40,8 @@ public class FlattenNested implements Iterator<Integer> {
     // my thought:
     // push an iterator when entering a list
     // pop when exiting
-
-    Stack<Iterator<NestedInteger>> stack = new Stack<>();
     List<NestedInteger> list;
     NestedInteger nextVal = null;
-
     public FlattenNested(List<NestedInteger> nestedList) {
         this.list = nestedList;
         stack.push(nestedList.iterator());
@@ -70,10 +53,6 @@ public class FlattenNested implements Iterator<Integer> {
         nextVal = null;
         return val;
     }
-
-    // [[]]
-    // got caught on this for 5-10min, had to ask Claude
-    // best solution: have hasNext prime next such that next is a simpler lookup
 
     @Override
     public boolean hasNext() {
@@ -99,6 +78,25 @@ public class FlattenNested implements Iterator<Integer> {
         }
 
         return !stack.isEmpty();
+    }
+
+    // [[]]
+    // got caught on this for 5-10min, had to ask Claude
+    // best solution: have hasNext prime next such that next is a simpler lookup
+
+    // This is the interface that allows for creating nested lists.
+    // You should not implement it, or speculate about its implementation
+    public interface NestedInteger {
+        // @return true if this NestedInteger holds a single integer, rather than a nested list.
+        boolean isInteger();
+
+        // @return the single integer that this NestedInteger holds, if it holds a single integer
+        // Return null if this NestedInteger holds a nested list
+        Integer getInteger();
+
+        // @return the nested list that this NestedInteger holds, if it holds a nested list
+        // Return empty list if this NestedInteger holds a single integer
+        List<NestedInteger> getList();
     }
 
     /**

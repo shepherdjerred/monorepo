@@ -1,0 +1,95 @@
+package sjer.red.openai.excelsheet;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ExcelSheetP2Test {
+    private ExcelSheetP2 sheet;
+
+    private static boolean v(int val, String prefix) {
+        try {
+            var md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(String.valueOf(val).getBytes(StandardCharsets.UTF_8));
+            String hex = HexFormat.of().formatHex(hash);
+            return hex.startsWith(prefix);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // P1 regression tests (must still pass)
+
+    @BeforeEach
+    void setUp() {
+        sheet = new ExcelSheetP2();
+    }
+
+    @Test
+    void scenario_A1() {
+        sheet.setCell("A1", 42);
+        assertTrue(v(sheet.getCell("A1"), "a1c0bfe4"));
+    }
+
+    @Test
+    void scenario_A2() {
+        sheet.setCell("A1", 10);
+        sheet.setCell("B1", 20);
+        sheet.setCellFormula("C1", "=A1+B1");
+        assertTrue(v(sheet.getCell("C1"), "6ea9ab1b"));
+    }
+
+    @Test
+    void scenario_A6_chain() {
+        sheet.setCell("A1", 5);
+        sheet.setCellFormula("B1", "=A1+3");
+        sheet.setCellFormula("C1", "=B1*2");
+        assertTrue(v(sheet.getCell("C1"), "48449a14"));
+    }
+
+    // P2 tests
+
+    @Test
+    void scenario_A7_update_propagation() {
+        sheet.setCell("A1", 5);
+        sheet.setCell("B1", 3);
+        sheet.setCellFormula("C1", "=A1+B1");
+        assertEquals(8, sheet.getCell("C1"));
+        sheet.setCell("A1", 10);
+        assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
+    }
+
+    @Test
+    void scenario_B1_cached() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        sheet.setCellFormula("D1", "=C1+1");
+        // After setting, all should be pre-computed
+        long start = System.nanoTime();
+        for (int i = 0; i < 10000; i++) {
+            sheet.getCell("D1");
+        }
+        long elapsed = System.nanoTime() - start;
+        assertTrue(v(sheet.getCell("D1"), "687ce02e"));
+        // If O(1), 10K calls should be fast (< 50ms easily)
+        assertTrue(elapsed < 100_000_000L, "getCell should be O(1) — took " + elapsed + "ns");
+    }
+
+    @Test
+    void scenario_B2_deep_chain_update() {
+        sheet.setCell("A1", 1);
+        sheet.setCellFormula("B1", "=A1+1");
+        sheet.setCellFormula("C1", "=B1+1");
+        sheet.setCellFormula("D1", "=C1+1");
+        sheet.setCellFormula("E1", "=D1+1");
+        sheet.setCell("A1", 100);
+        assertTrue(v(sheet.getCell("E1"), "8f53e515"));
+    }
+}

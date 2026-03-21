@@ -67,6 +67,17 @@ Always verify changes:
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 
+## Bazel Debugging
+
+- Never pipe build/test commands through `grep`, `tail`, or `head` inline. Run the command raw, get the full output, then reason about it. A missed grep pattern means re-running the entire build (30-60s wasted).
+- When a test fails, Bazel prints `see /path/to/test.log`. **Read that file with the Read tool.** Do not grep or tail the bazel stderr output.
+- When a build action fails, use `--sandbox_debug` to retain the sandbox, then inspect it.
+- When debugging `run_shell` actions, add `set -x` to the script to trace execution.
+- Never use `bazel clean`, `--expunge`, `shutdown`, or `--force fetch` as debugging steps. If Bazel seems stale, the bug is in your code.
+- Never run build tools (`bun install`, `prisma generate`, `tsc`, etc.) outside Bazel.
+- Never tag targets `manual` to hide failures. Fix the root cause.
+- Stop after 2 failed iterations of debugging a shell script in a Bazel action. Step back and reconsider the approach.
+
 ## Bazel Conventions
 
 - Use `@types/bun`, never `bun-types` in BUILD.bazel deps

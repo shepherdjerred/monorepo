@@ -1,7 +1,5 @@
 package sjer.red.from_2026;
 
-import sjer.red.from_2024.Balance;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +18,17 @@ public class TimeBasedKeyValueStore {
     // lookup could be reduce to log(m) with binary search
     Map<String, List<Entry>> map = new HashMap<>();
 
-    record Entry(String value, int timestamp) {
+    // assumptions: don't have to deal with nulls
+    // there will always be a valid return value
+    public static void main(String[] args) {
+        var store = new TimeBasedKeyValueStore();
+        store.set("test", "hi", 1);
+        store.set("test", "there", 4);
+
+        System.out.println(store.get("test", 4)); // there
+        System.out.println(store.get("test", 5)); // there
+
+        System.out.println("ok");
     }
 
     public void set(String key, String value, int timestamp) {
@@ -79,16 +87,6 @@ public class TimeBasedKeyValueStore {
         return last;
     }
 
-    // assumptions: don't have to deal with nulls
-    // there will always be a valid return value
-    public static void main(String[] args) {
-        var store = new TimeBasedKeyValueStore();
-        store.set("test", "hi", 1);
-        store.set("test", "there", 4);
-
-        System.out.println(store.get("test", 4)); // there
-        System.out.println(store.get("test", 5)); // there
-
-        System.out.println("ok");
+    record Entry(String value, int timestamp) {
     }
 }

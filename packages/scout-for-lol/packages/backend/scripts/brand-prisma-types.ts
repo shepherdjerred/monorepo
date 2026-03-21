@@ -22,9 +22,13 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("brand-prisma-types");
 
-// Allow Bazel to override the base directory (import.meta.dir points to
-// the source tree, but in a sandbox we need to read/write in $WORK).
-const BASE_DIR = process.env["BRAND_TYPES_BASE_DIR"] ?? import.meta.dir;
+// BRAND_TYPES_INPUT_DIR: directory containing the raw Prisma client (index.d.ts).
+// BRAND_TYPES_OUTPUT_DIR: directory to write branded output. If unset, saves in-place.
+// Both default to the standard local dev paths relative to this script.
+const INPUT_DIR =
+  process.env["BRAND_TYPES_INPUT_DIR"] ??
+  `${import.meta.dir}/../generated/prisma/client`;
+const OUTPUT_DIR = process.env["BRAND_TYPES_OUTPUT_DIR"] ?? INPUT_DIR;
 
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
@@ -33,11 +37,10 @@ function main() {
   logger.info("🔧 Branding Prisma types with AST transformation...");
 
   const project = new Project({
-    tsConfigFilePath: `${BASE_DIR}/../tsconfig.json`,
     skipAddingFilesFromTsConfig: true, // Avoid loading all files to prevent stack overflow
   });
 
-  const prismaTypesPath = `${BASE_DIR}/../generated/prisma/client/index.d.ts`;
+  const prismaTypesPath = `${INPUT_DIR}/index.d.ts`;
   const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
 
   logger.info(`📄 Processing: ${prismaTypesPath}`);
@@ -119,9 +122,13 @@ function main() {
     `Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`,
   );
 
-  // Save the transformed file
-  sourceFile.saveSync();
-  logger.info("Save completed");
+  // Write branded output. When OUTPUT_DIR differs from INPUT_DIR (Bazel),
+  // this writes to a separate directory without modifying the read-only input.
+  const fs = require("node:fs");
+  const outputPath = `${OUTPUT_DIR}/index.d.ts`;
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  fs.writeFileSync(outputPath, sourceFile.getFullText());
+  logger.info(`Save completed: ${outputPath}`);
 
   logger.info(`✅ Transformed ${transformCount.toString()} properties`);
   logger.info(`✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`);

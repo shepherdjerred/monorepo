@@ -1,0 +1,122 @@
+package sjer.red.openai.inmemorydatabase;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class InMemoryDatabaseP3Test {
+    private InMemoryDatabaseP3 db;
+
+    private static List<String[]> w(String col, String op, String val) {
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{col, op, val});
+        return list;
+    }
+
+    // --- Regression from Part 1 ---
+
+    private static List<String[]> o(String col, String dir) {
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{col, dir});
+        return list;
+    }
+
+    // --- Regression from Part 2 ---
+
+    private static String h(String val) {
+        try {
+            var md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(val.getBytes(StandardCharsets.UTF_8));
+            var sb = new StringBuilder();
+            for (int i = 0; i < 4; i++) sb.append(String.format("%02x", hash[i]));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // --- Part 3: ORDER BY ---
+
+    @BeforeEach
+    void setUp() {
+        db = new InMemoryDatabaseP3();
+    }
+
+    @Test
+    void scenario_A1_create_and_query() {
+        db.createTable("users", List.of("name", "age", "city"));
+        db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
+        db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
+        var results = db.query("users");
+        assertEquals(2, results.size());
+        assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
+        assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
+    }
+
+    @Test
+    void scenario_B1_equality() {
+        seedUsers();
+        var results = db.query("users", w("name", "=", "Alice"));
+        assertEquals(1, results.size());
+        assertEquals("30", results.get(0).get("age"));
+    }
+
+    @Test
+    void scenario_C1_sort_ascending() {
+        seedUsers();
+        var results = db.query("users", new ArrayList<>(), o("age", "ASC"));
+        assertEquals(3, results.size());
+        assertTrue(h(results.get(0).get("name")).startsWith("cd99")); // Bob, 25
+        assertTrue(h(results.get(2).get("name")).startsWith("79c7")); // Charlie, 35
+    }
+
+    // --- Helpers ---
+
+    @Test
+    void scenario_C2_sort_descending() {
+        seedUsers();
+        var results = db.query("users", new ArrayList<>(), o("age", "DESC"));
+        assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie first
+    }
+
+    @Test
+    void scenario_C3_multi_column_sort() {
+        db.createTable("data", List.of("group", "value", "label"));
+        db.insert("data", Map.of("group", "A", "value", "2", "label", "x"));
+        db.insert("data", Map.of("group", "B", "value", "1", "label", "y"));
+        db.insert("data", Map.of("group", "A", "value", "1", "label", "z"));
+        db.insert("data", Map.of("group", "B", "value", "2", "label", "w"));
+        List<String[]> orderBy = new ArrayList<>();
+        orderBy.add(new String[]{"group", "ASC"});
+        orderBy.add(new String[]{"value", "ASC"});
+        var results = db.query("data", new ArrayList<>(), orderBy);
+        // A-1, A-2, B-1, B-2
+        assertEquals("z", results.get(0).get("label"));
+        assertEquals("x", results.get(1).get("label"));
+        assertEquals("y", results.get(2).get("label"));
+        assertEquals("w", results.get(3).get("label"));
+    }
+
+    @Test
+    void scenario_C4_where_plus_order() {
+        seedUsers();
+        var results = db.query("users", w("age", ">=", "25"), o("age", "DESC"));
+        assertEquals(3, results.size());
+        assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie=35 first
+    }
+
+    private void seedUsers() {
+        db.createTable("users", List.of("name", "age", "city"));
+        db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
+        db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
+        db.insert("users", Map.of("name", "Charlie", "age", "35", "city", "Chicago"));
+    }
+}

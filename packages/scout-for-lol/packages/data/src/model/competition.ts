@@ -1,6 +1,8 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
+import type { DiscordAccountId, DiscordChannelId, DiscordGuildId } from "#src/model/discord.ts";
 import { RankSchema } from "#src/model/rank.ts";
+import type { SeasonId } from "#src/seasons.ts";
 import { getSeasonById } from "#src/seasons.ts";
 
 /**
@@ -26,23 +28,23 @@ import { getSeasonById } from "#src/seasons.ts";
  *   cannot silently pass typecheck.
  */
 export type Competition = {
-  id: number;
-  serverId: string;
-  ownerId: string;
+  id: CompetitionId;
+  serverId: DiscordGuildId;
+  ownerId: DiscordAccountId;
   title: string;
   description: string;
-  channelId: string;
+  channelId: DiscordChannelId;
   isCancelled: boolean;
-  visibility: string;
+  visibility: CompetitionVisibility;
   criteriaType: string;
   criteriaConfig: string;
   maxParticipants: number;
   startDate: Date | null;
   endDate: Date | null;
-  seasonId: string | null;
+  seasonId: SeasonId | null;
   startProcessedAt: Date | null;
   endProcessedAt: Date | null;
-  creatorDiscordId: string;
+  creatorDiscordId: DiscordAccountId;
   createdTime: Date;
   updatedTime: Date;
 };
