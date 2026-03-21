@@ -221,7 +221,7 @@ def _bun_install_impl(rctx):
         timeout = 10,
     )
 
-    # Delete leftover empty scoped dirs after workspace symlink removal
+    # Remove empty scoped dirs after workspace symlink removal (v6)
     rctx.execute(
         ["find", "node_modules", "-maxdepth", "1", "-type", "d", "-name", "@*", "-empty", "-delete"],
         timeout = 5,

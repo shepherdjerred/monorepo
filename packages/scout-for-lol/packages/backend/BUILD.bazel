@@ -195,10 +195,15 @@ bun2_test(
         ],
         allow_empty = True,
     ),
-    data = ["src/testing/template.db"],
+    data = [
+        "src/testing/template.db",
+    ] + glob(["src/**/testdata/**"]),
     # DATABASE_URL needed for module-level Prisma client initialization.
     # Integration tests create isolated databases via createTestDatabase().
-    env = {"DATABASE_URL": "file:./test-init.db"},
+    env = {
+        "DATABASE_URL": "file:./test-init.db",
+        "S3_BUCKET_NAME": "test-bucket",
+    },
     extra_files = [
         "tsconfig.json",
         "//packages/scout-for-lol:tsconfig.base.json",

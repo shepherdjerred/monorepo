@@ -1,10 +1,5 @@
 package sjer.red.openai.cddirectory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
-
 /**
  * PROBLEM: cd (Change Directory)
  * <p>
@@ -25,54 +20,7 @@ import java.util.Stack;
  */
 public class CdDirectoryP2 {
 
-    public String cd(String currentDir, String newDir,  String homeDir) {
-        var currentParts = Arrays.asList(currentDir.split("/"));
-        var newParts = new ArrayList<>(Arrays.asList(newDir.split("/")));
-        var homeParts = Arrays.asList(homeDir.split("/"));
-
-        // keeps track of resolved path
-        var stack = new Stack<String>();
-
-        // first, seed the stack IFF `newDir` is not abs
-        switch (newDir.charAt(0)) {
-            case '/' -> {
-                // noop
-            }
-            case '~' -> {
-                newParts.removeFirst();
-                stack.addAll(homeParts);
-            }
-            default -> {
-                stack.addAll(currentParts);
-            }
-        }
-
-        // note: ideally we'd have an existence + permission check at each step
-        for (String part : newParts) {
-            switch (part) {
-                case "." -> {
-                    // noop
-                }
-                case ".." -> {
-                    // match the behavior of real `cd`
-                    // .. at root means nothing happens
-                    if (stack.isEmpty()) {
-                        // noop
-                    } else {
-                        stack.pop();
-                    }
-                }
-                default -> stack.push(part);
-            }
-        }
-
-        // at this point we are done. we know that we have a _somewhat_ valid path
-
-        // would be nice if we could get rid of this condition
-        if (stack.size() < 2) {
-            return "/";
-        } else {
-            return String.join("/", stack);
-        }
+    public String cd(String currentDir, String newDir, String homeDir) {
+        throw new UnsupportedOperationException("TODO");
     }
 }

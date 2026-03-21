@@ -148,10 +148,17 @@ for src in $SOURCE_FILES; do
     cp "$WS_ROOT/$src" "$WORK/$src"
 done
 
-# Link node_modules from external repo
+# Link node_modules from external repo.
+# Remove any workspace symlinks that bun may have created in the shared
+# node_modules during previous test executions. These point to temp dirs
+# and break Bazel's TreeArtifact handling.
 NM_REAL=$(cd "$WS_ROOT" && cd "$(dirname "{nm_root}")" && pwd)/$(basename "{nm_root}")
+for ws_link in "$NM_REAL"/@*/*; do
+    [ -L "$ws_link" ] || continue
+    target=$(readlink "$ws_link")
+    case "$target" in /*|../*) rm -f "$ws_link" 2>/dev/null || true ;; esac
+done
 ln -sfn "$NM_REAL" "$WORK/node_modules"
-
 
 # Link workspace deps into node_modules
 {workspace_dep_links}

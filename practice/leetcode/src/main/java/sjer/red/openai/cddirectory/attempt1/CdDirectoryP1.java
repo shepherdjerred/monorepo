@@ -1,4 +1,4 @@
-package sjer.red.openai.cddirectory;
+package sjer.red.openai.cddirectory.attempt1;
 
 import java.util.Stack;
 
@@ -28,6 +28,37 @@ public class CdDirectoryP1 {
      * Resolve newDir relative to currentDir and return the absolute path.
      */
     public String cd(String currentDir, String newDir) {
-        throw new UnsupportedOperationException("TODO");
+        var currentParts = currentDir.split("/");
+        var newParts = newDir.split("/");
+        var stack = new Stack<String>();
+
+        // first, seed the stack IFF `newDir` is not abs
+        if (newDir.charAt(0) != '/') {
+            for (String part : currentParts) {
+                stack.push(part);
+            }
+        }
+
+        for (String part : newParts) {
+            switch (part) {
+                case "." -> {
+                    // noop
+                }
+                case ".." -> {
+                    if (stack.isEmpty()) {
+                        // noop
+                    } else {
+                        stack.pop();
+                    }
+                }
+                default -> stack.push(part);
+            }
+        }
+
+        if (stack.size() < 2) {
+            return "/";
+        } else {
+            return String.join("/", stack);
+        }
     }
 }

@@ -143,7 +143,7 @@ bun2_typecheck_test(
     # Backend sources use #generated/prisma/client — needed when tsc follows
     # the frontend → backend type dependency chain via tRPC router types.
     # Path is relative to the frontend package dir, so ../../backend/ reaches the backend.
-    generated_dirs = {"//packages/scout-for-lol/packages/backend:prisma_branded": "../../backend/generated/prisma/client"},
+    generated_dirs = {"//packages/scout-for-lol/packages/backend:prisma_branded": "../backend/generated/prisma/client"},
     node_modules = ":node_modules2",
     deps = [
         ":pkg2",
