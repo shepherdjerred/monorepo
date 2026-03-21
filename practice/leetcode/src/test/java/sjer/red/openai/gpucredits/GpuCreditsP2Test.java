@@ -3,8 +3,7 @@ package sjer.red.openai.gpucredits;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GpuCreditsP2Test {
     private GpuCreditsP2 credits;
@@ -14,7 +13,7 @@ class GpuCreditsP2Test {
         credits = new GpuCreditsP2();
     }
 
-    // Regression
+    // Regression (A1-A3)
 
     @Test
     void scenario_A1_simple_add_and_spend() {
@@ -23,7 +22,21 @@ class GpuCreditsP2Test {
         assertEquals(50, credits.availableCredits(1));
     }
 
-    // New
+    @Test
+    void scenario_A2_insufficient_credits() {
+        credits.addCredit(0, 10, 30);
+        assertFalse(credits.processCost(1, 50));
+        assertEquals(30, credits.availableCredits(1));
+    }
+
+    @Test
+    void scenario_A3_exact_deduction() {
+        credits.addCredit(0, 10, 50);
+        assertTrue(credits.processCost(1, 50));
+        assertEquals(0, credits.availableCredits(1));
+    }
+
+    // New (B1-B2)
 
     @Test
     void scenario_B1_fifo_order() {

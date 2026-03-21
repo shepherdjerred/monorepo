@@ -8,8 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ResumableIteratorP2Test {
 
@@ -36,7 +35,7 @@ class ResumableIteratorP2Test {
         }
     }
 
-    // Regression
+    // --- A1-A3 (from P1) ---
     @Test
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(10, 20, 30));
@@ -44,7 +43,21 @@ class ResumableIteratorP2Test {
         assertEquals(sig(List.of(10, 20, 30)), sig(acc));
     }
 
-    // New
+    @Test
+    void scenario_A2_empty_list() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A3_single_element() {
+        var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(99));
+        assertTrue(it.hasNext());
+        assertEquals(99, it.next());
+        assertFalse(it.hasNext());
+    }
+
+    // --- A4-A5 (new in P2) ---
     @Test
     void scenario_A4_save_restore() {
         var it = new ResumableIteratorP2.ResumableListIterator<>(List.of(1, 2, 3, 4, 5));

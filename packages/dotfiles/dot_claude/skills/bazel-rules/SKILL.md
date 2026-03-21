@@ -179,6 +179,20 @@ See `references/version-guide.md` for migration checklists.
 
 ---
 
+## Hard Rules
+
+These are non-negotiable principles learned from real failures:
+
+1. **Never tag targets `manual` to hide failures.** If a target fails, fix the root cause. The user expects CI to actually run. Adding manual tags silently disables CI.
+
+2. **Bazel guarantees correctness — never blame cache.** If Bazel seems to not pick up .bzl changes, the bug is in YOUR code (wrong inputs, syntax errors, misread output). Never run `bazel clean`, `--expunge`, `--force fetch`, or `shutdown` as a debugging step. These waste time and mask the real issue.
+
+3. **Never run build tools outside Bazel.** Don't run `bunx prisma generate`, `bun install`, `tsc`, etc. outside Bazel to "quick fix" things. This creates files in the source tree that Bazel doesn't track, polluting the build graph and violating hermeticity. All code generation must happen inside Bazel rules.
+
+4. **Stop after 2 failed iterations.** If a shell script in a Bazel action needs more than 2 rounds of debugging (path errors, dangling symlinks, copy-to-self, etc.), the approach is wrong. Step back, re-evaluate the architecture, and present the constraint to the user rather than piling on workarounds.
+
+---
+
 ## Reference Files
 
 | File | Use When |

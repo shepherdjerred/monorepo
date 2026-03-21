@@ -8,8 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ResumableIteratorP3Test {
 
@@ -36,7 +35,29 @@ class ResumableIteratorP3Test {
         }
     }
 
-    // Regression
+    // --- A1-A3 (from P1) ---
+    @Test
+    void scenario_A1_basic_iteration() {
+        var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(10, 20, 30));
+        var acc = drain(it);
+        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
+    }
+
+    @Test
+    void scenario_A2_empty_list() {
+        var it = new ResumableIteratorP3.ResumableListIterator<>(List.of());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A3_single_element() {
+        var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(99));
+        assertTrue(it.hasNext());
+        assertEquals(99, it.next());
+        assertFalse(it.hasNext());
+    }
+
+    // --- A4-A5 (from P2) ---
     @Test
     void scenario_A4_save_restore() {
         var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(1, 2, 3, 4, 5));
@@ -53,7 +74,21 @@ class ResumableIteratorP3Test {
         assertFalse(it.hasNext());
     }
 
-    // New
+    @Test
+    void scenario_A5_multiple_saves() {
+        var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(10, 20, 30, 40));
+        var s1 = it.getState();
+        it.next(); // 10
+        var s2 = it.getState();
+        it.next(); // 20
+        it.next(); // 30
+        it.setState(s1);
+        assertEquals(10, it.next());
+        it.setState(s2);
+        assertEquals(20, it.next());
+    }
+
+    // --- B1-B4 (new in P3) ---
     @Test
     void scenario_B1_across_files() {
         var files = List.of(

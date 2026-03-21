@@ -13,7 +13,7 @@ class GpuCreditsP3Test {
         credits = new GpuCreditsP3();
     }
 
-    // Regression
+    // Regression (A1-A3)
 
     @Test
     void scenario_A1_simple_add_and_spend() {
@@ -23,6 +23,22 @@ class GpuCreditsP3Test {
     }
 
     @Test
+    void scenario_A2_insufficient_credits() {
+        credits.addCredit(0, 10, 30);
+        assertFalse(credits.processCost(1, 50));
+        assertEquals(30, credits.availableCredits(1));
+    }
+
+    @Test
+    void scenario_A3_exact_deduction() {
+        credits.addCredit(0, 10, 50);
+        assertTrue(credits.processCost(1, 50));
+        assertEquals(0, credits.availableCredits(1));
+    }
+
+    // Regression (B1-B2)
+
+    @Test
     void scenario_B1_fifo_order() {
         credits.addCredit(0, 10, 50);
         credits.addCredit(1, 5, 30);
@@ -30,7 +46,15 @@ class GpuCreditsP3Test {
         assertEquals(0x14, credits.availableCredits(2));
     }
 
-    // New
+    @Test
+    void scenario_B2_partial_batch() {
+        credits.addCredit(0, 10, 100);
+        credits.addCredit(1, 15, 100);
+        assertTrue(credits.processCost(2, 70));
+        assertEquals(Integer.parseInt("82", 16), credits.availableCredits(2));
+    }
+
+    // New (C1-C6)
 
     @Test
     void scenario_C1_expired_credits_ignored() {

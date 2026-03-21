@@ -51,8 +51,8 @@ def _bun_install_impl(rctx):
         sha256 = sha256,
     )
 
-    # Copy all package.json files maintaining directory structure.
-    rctx.symlink(rctx.attr.bun_lock, "bun.lock")
+    # Copy bun.lock as a regular file (not symlink) so we can strip workspace entries.
+    rctx.file("bun.lock", rctx.read(rctx.attr.bun_lock))
     for pkg_json in rctx.attr.package_jsons:
         pkg_path = pkg_json.package
         if pkg_path:
@@ -70,9 +70,10 @@ def _bun_install_impl(rctx):
 
     bun_path = str(rctx.path("_bun/bun"))
 
-    # Strip workspaces from root package.json so bun installs everything flat.
-    # Also remove workspace:* deps and merge all workspace deps into root.
-    rctx.execute(
+    # Strip workspaces from package.json and bun.lock so bun installs everything
+    # flat with no workspace symlinks. Merge workspace deps into root package.json,
+    # remove workspace entries from bun.lock, and delete sub-package package.json files.
+    prep_result = rctx.execute(
         [bun_path, "-e", """
             const fs = require('fs');
             const rootPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -89,9 +90,7 @@ def _bun_install_impl(rctx):
                         if (pkg[depKey]) {
                             if (!rootPkg[depKey]) rootPkg[depKey] = {};
                             for (const [name, version] of Object.entries(pkg[depKey])) {
-                                // Skip workspace:* deps
                                 if (typeof version === 'string' && version.startsWith('workspace:')) continue;
-                                // Keep first version seen (root wins)
                                 if (!(name in rootPkg[depKey])) {
                                     rootPkg[depKey][name] = version;
                                 }
@@ -114,21 +113,69 @@ def _bun_install_impl(rctx):
 
             fs.writeFileSync('package.json', JSON.stringify(rootPkg, null, 2));
 
-            // Delete sub-package package.json files now that deps are merged.
-            // If left on disk, bun install auto-detects them as workspace packages
-            // and creates dangling symlinks in node_modules.
-            for (const pkgPath of pkgJsons) {
-                try { fs.unlinkSync(pkgPath); } catch {}
+            // Strip workspace entries from bun.lock so bun doesn't create
+            // workspace symlinks in node_modules. The lockfile has two sections
+            // that reference workspaces:
+            // 1. "workspaces" keys like "packages/foo" (non-root workspace packages)
+            // 2. Resolution entries like "@scope/pkg@workspace:packages/foo"
+            const lock = JSON.parse(fs.readFileSync('bun.lock', 'utf8'));
+
+            // Remove non-root workspace entries (keep "" which is the root)
+            if (lock.workspaces) {
+                for (const key of Object.keys(lock.workspaces)) {
+                    if (key !== '') delete lock.workspaces[key];
+                }
             }
+
+            // Remove workspace resolution entries from packages
+            if (lock.packages) {
+                for (const [name, entries] of Object.entries(lock.packages)) {
+                    if (Array.isArray(entries)) {
+                        const filtered = entries.filter(e =>
+                            typeof e !== 'string' || !e.includes('@workspace:')
+                        );
+                        if (filtered.length === 0) {
+                            delete lock.packages[name];
+                        } else {
+                            lock.packages[name] = filtered;
+                        }
+                    }
+                }
+            }
+
+            fs.writeFileSync('bun.lock', JSON.stringify(lock, null, 2));
+
         """] + [
             "%s/package.json" % p.package
             for p in rctx.attr.package_jsons
-            if p.package  # skip root
+            if p.package  # skip root — these are passed as argv for dep merging
         ],
         timeout = 30,
     )
 
-    # Run bun install — produces a flat node_modules with all deps hoisted
+    if prep_result.return_code != 0:
+        fail("Preprocessing failed (exit %d):\nstdout:\n%s\nstderr:\n%s" % (
+            prep_result.return_code,
+            prep_result.stdout,
+            prep_result.stderr,
+        ))
+
+    # Delete sub-package package.json files and their parent directories so bun
+    # doesn't auto-detect workspaces from directory structure. Also remove the
+    # rewritten bun.lock — bun install works fine without it (just slower resolution).
+    sub_pkg_paths = [
+        "%s/package.json" % p.package
+        for p in rctx.attr.package_jsons
+        if p.package  # skip root
+    ]
+    if sub_pkg_paths:
+        rm_result = rctx.execute(["rm", "-f"] + sub_pkg_paths, timeout = 10)
+        if rm_result.return_code != 0:
+            fail("Failed to delete sub-package package.json files: %s" % rm_result.stderr)
+
+    # Run bun install — produces a flat node_modules with all deps hoisted.
+    # Note: we keep bun.lock (stripped of workspace entries) to ensure reproducible
+    # resolution. Without it, bun resolves from the registry.
     result = rctx.execute(
         [bun_path, "install"],
         environment = {
@@ -144,6 +191,37 @@ def _bun_install_impl(rctx):
             result.stdout,
             result.stderr,
         ))
+
+    # Remove workspace symlinks from node_modules. Bun creates these for workspace
+    # packages referenced in the lockfile, even after stripping workspace config from
+    # package.json and bun.lock. These symlinks point to temp dirs with nested
+    # symlinks that Bazel can't represent in a TreeArtifact. Downstream rules link
+    # workspace deps via collect_workspace_dep_links() instead.
+    ws_cleanup = rctx.execute(
+        [bun_path, "-e", """
+            const fs = require('fs');
+            const path = require('path');
+            function removeWorkspaceLinks(dir) {
+                for (const entry of fs.readdirSync(dir)) {
+                    const full = path.join(dir, entry);
+                    const stat = fs.lstatSync(full);
+                    if (entry.startsWith('@') && stat.isDirectory()) {
+                        removeWorkspaceLinks(full);
+                        if (fs.readdirSync(full).length === 0) fs.rmdirSync(full);
+                    } else if (stat.isSymbolicLink()) {
+                        const target = fs.readlinkSync(full);
+                        if (path.isAbsolute(target) || target.startsWith('..')) {
+                            fs.unlinkSync(full);
+                        }
+                    }
+                }
+            }
+            removeWorkspaceLinks('node_modules');
+        """],
+        timeout = 10,
+    )
+    if ws_cleanup.return_code != 0:
+        fail("Workspace symlink removal failed: %s" % ws_cleanup.stderr)
 
     # With BAZEL_TRACK_SOURCE_DIRECTORIES=1, Bazel treats source directories
     # as TreeArtifacts. We can reference node_modules/ directly — no filegroup,

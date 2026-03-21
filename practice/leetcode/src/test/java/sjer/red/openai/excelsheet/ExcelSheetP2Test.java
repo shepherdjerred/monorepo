@@ -24,12 +24,12 @@ class ExcelSheetP2Test {
         }
     }
 
-    // P1 regression tests (must still pass)
-
     @BeforeEach
     void setUp() {
         sheet = new ExcelSheetP2();
     }
+
+    // P1 regression tests (A1-A7)
 
     @Test
     void scenario_A1() {
@@ -46,14 +46,34 @@ class ExcelSheetP2Test {
     }
 
     @Test
+    void scenario_A3() {
+        sheet.setCell("A1", 100);
+        sheet.setCellFormula("B1", "=A1-37");
+        assertTrue(v(sheet.getCell("B1"), "ea5d2f1c"));
+    }
+
+    @Test
+    void scenario_A4() {
+        sheet.setCell("A1", 7);
+        sheet.setCell("B1", 6);
+        sheet.setCellFormula("C1", "=A1*B1");
+        assertTrue(v(sheet.getCell("C1"), "a1c0bfe4"));
+    }
+
+    @Test
+    void scenario_A5() {
+        sheet.setCell("A1", 100);
+        sheet.setCellFormula("B1", "=A1/3");
+        assertTrue(v(sheet.getCell("B1"), "5f0b48b6"));
+    }
+
+    @Test
     void scenario_A6_chain() {
         sheet.setCell("A1", 5);
         sheet.setCellFormula("B1", "=A1+3");
         sheet.setCellFormula("C1", "=B1*2");
         assertTrue(v(sheet.getCell("C1"), "48449a14"));
     }
-
-    // P2 tests
 
     @Test
     void scenario_A7_update_propagation() {
@@ -64,6 +84,8 @@ class ExcelSheetP2Test {
         sheet.setCell("A1", 10);
         assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
     }
+
+    // P2 tests (B1-B2)
 
     @Test
     void scenario_B1_cached() {
