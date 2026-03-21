@@ -19,14 +19,14 @@ class WebCrawlerP2Test {
         graph = new HashMap<>();
     }
 
-    // P1 regression tests
+    // A tests: unlimited depth via Integer.MAX_VALUE
 
     @Test
     void scenario_A1_simple_graph() {
         graph.put("https://a.com", List.of("https://a.com/x", "https://a.com/y"));
         graph.put("https://a.com/x", List.of("https://a.com/y"));
         graph.put("https://a.com/y", List.of());
-        var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
+        var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE);
         assertEquals(3, result.size());
         assertTrue(result.contains("https://a.com"));
         assertTrue(result.contains("https://a.com/x"));
@@ -38,12 +38,51 @@ class WebCrawlerP2Test {
         graph.put("https://a.com", List.of("https://a.com/p", "https://b.com/q"));
         graph.put("https://a.com/p", List.of());
         graph.put("https://b.com/q", List.of("https://b.com/r"));
-        var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
+        var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE);
         assertEquals(2, result.size());
         assertFalse(result.contains("https://b.com/q"));
     }
 
-    // P2 tests
+    @Test
+    void scenario_A3_cycle() {
+        graph.put("https://c.com", List.of("https://c.com/a"));
+        graph.put("https://c.com/a", List.of("https://c.com/b"));
+        graph.put("https://c.com/b", List.of("https://c.com"));
+        var result = crawler.crawl("https://c.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE);
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    void scenario_A4_isolated() {
+        graph.put("https://solo.com", List.of());
+        var result = crawler.crawl("https://solo.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE);
+        assertEquals(1, result.size());
+        assertTrue(result.contains("https://solo.com"));
+    }
+
+    @Test
+    void scenario_A5_dedup() {
+        graph.put("https://d.com", List.of("https://d.com/a", "https://d.com/b"));
+        graph.put("https://d.com/a", List.of("https://d.com/c"));
+        graph.put("https://d.com/b", List.of("https://d.com/c"));
+        graph.put("https://d.com/c", List.of());
+        var result = crawler.crawl("https://d.com", url -> graph.getOrDefault(url, List.of()), Integer.MAX_VALUE);
+        assertEquals(4, result.size());
+    }
+
+    // E tests: getDomain
+
+    @Test
+    void scenario_E1_domain() {
+        assertEquals("example.com", crawler.getDomain("https://example.com/path/to/page"));
+    }
+
+    @Test
+    void scenario_E2_domain_with_port() {
+        assertEquals("localhost:8080", crawler.getDomain("http://localhost:8080/api"));
+    }
+
+    // B tests: depth limiting
 
     @Test
     void scenario_B1_depth_zero() {

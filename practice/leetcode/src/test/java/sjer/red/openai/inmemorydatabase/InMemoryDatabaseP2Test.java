@@ -21,8 +21,6 @@ class InMemoryDatabaseP2Test {
         return list;
     }
 
-    // --- Regression from Part 1 ---
-
     private static String h(String val) {
         try {
             var md = MessageDigest.getInstance("SHA-256");
@@ -35,23 +33,38 @@ class InMemoryDatabaseP2Test {
         }
     }
 
-    // --- Part 2: WHERE filtering ---
-
     @BeforeEach
     void setUp() {
         db = new InMemoryDatabaseP2();
     }
+
+    // --- Regression from Part 1 ---
 
     @Test
     void scenario_A1_create_and_query() {
         db.createTable("users", List.of("name", "age", "city"));
         db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
         db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
-        var results = db.query("users");
+        var results = db.query("users", new ArrayList<>());
         assertEquals(2, results.size());
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
     }
+
+    @Test
+    void scenario_A2_empty_table() {
+        db.createTable("items", List.of("sku", "price"));
+        assertEquals(0, db.query("items", new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_A3_multiple_inserts() {
+        db.createTable("t", List.of("x"));
+        for (int i = 0; i < 100; i++) db.insert("t", Map.of("x", String.valueOf(i)));
+        assertEquals(100, db.query("t", new ArrayList<>()).size());
+    }
+
+    // --- Part 2: WHERE filtering ---
 
     @Test
     void scenario_B1_equality() {
@@ -88,8 +101,6 @@ class InMemoryDatabaseP2Test {
         assertTrue(results.stream().noneMatch(r -> "Bob".equals(r.get("name"))));
     }
 
-    // --- Helpers ---
-
     @Test
     void scenario_B5_less_than_or_equal() {
         seedUsers();
@@ -104,6 +115,8 @@ class InMemoryDatabaseP2Test {
         var results = db.query("users", w("age", ">", "100"));
         assertEquals(0, results.size());
     }
+
+    // --- Helpers ---
 
     private void seedUsers() {
         db.createTable("users", List.of("name", "age", "city"));

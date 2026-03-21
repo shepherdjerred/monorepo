@@ -20,10 +20,10 @@ import java.util.function.Function;
 public class DependencyVersionCheckP1 {
 
     /**
-     * Part 1: Find earliest supporting version assuming monotonicity.
+     * Find earliest supporting version assuming monotonicity.
      * Use binary search. Return null if no version supports the feature.
      */
-    public String findEarliestMonotonic(List<String> versions, Function<String, Boolean> supportsFeature) {
+    public String findEarliest(List<String> versions, Function<String, Boolean> supportsFeature) {
         // TODO: implement with binary search
         throw new UnsupportedOperationException("Not yet implemented");
     }

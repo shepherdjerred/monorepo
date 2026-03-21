@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ResumableIteratorP4Test {
 
@@ -35,7 +35,60 @@ class ResumableIteratorP4Test {
         }
     }
 
-    // Regression
+    // --- A1-A3 (from P1) ---
+    @Test
+    void scenario_A1_basic_iteration() {
+        var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(10, 20, 30));
+        var acc = drain(it);
+        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
+    }
+
+    @Test
+    void scenario_A2_empty_list() {
+        var it = new ResumableIteratorP4.ResumableListIterator<>(List.of());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A3_single_element() {
+        var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(99));
+        assertTrue(it.hasNext());
+        assertEquals(99, it.next());
+        assertFalse(it.hasNext());
+    }
+
+    // --- A4-A5 (from P2) ---
+    @Test
+    void scenario_A4_save_restore() {
+        var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(1, 2, 3, 4, 5));
+        it.next(); // 1
+        it.next(); // 2
+        var state = it.getState();
+        assertEquals(3, it.next()); // 3
+        assertEquals(4, it.next()); // 4
+        it.setState(state);
+        // Should replay from position after 2
+        assertEquals(3, it.next());
+        assertEquals(4, it.next());
+        assertEquals(5, it.next());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_A5_multiple_saves() {
+        var it = new ResumableIteratorP4.ResumableListIterator<>(List.of(10, 20, 30, 40));
+        var s1 = it.getState();
+        it.next(); // 10
+        var s2 = it.getState();
+        it.next(); // 20
+        it.next(); // 30
+        it.setState(s1);
+        assertEquals(10, it.next());
+        it.setState(s2);
+        assertEquals(20, it.next());
+    }
+
+    // --- B1-B4 (from P3) ---
     @Test
     void scenario_B1_across_files() {
         var files = List.of(
@@ -48,7 +101,47 @@ class ResumableIteratorP4Test {
         assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
     }
 
-    // New
+    @Test
+    void scenario_B2_empty_files() {
+        var files = List.of(
+                List.<Integer>of(),
+                List.of(1),
+                List.<Integer>of(),
+                List.<Integer>of(),
+                List.of(2, 3),
+                List.<Integer>of()
+        );
+        var it = new ResumableIteratorP4.MultiFileIterator<>(files);
+        var acc = drain(it);
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
+    }
+
+    @Test
+    void scenario_B3_all_empty() {
+        var files = List.of(
+                List.<Integer>of(),
+                List.<Integer>of()
+        );
+        var it = new ResumableIteratorP4.MultiFileIterator<>(files);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    void scenario_B4_save_across_boundary() {
+        var files = List.of(List.of(1, 2), List.of(3, 4));
+        var it = new ResumableIteratorP4.MultiFileIterator<>(files);
+        it.next(); // 1
+        it.next(); // 2
+        var state = it.getState();
+        assertEquals(3, it.next());
+        assertEquals(4, it.next());
+        it.setState(state);
+        assertEquals(3, it.next());
+        assertEquals(4, it.next());
+        assertFalse(it.hasNext());
+    }
+
+    // --- C1-C3 (new in P4) ---
     @Test
     void scenario_C1_2d_basic() {
         var data = List.of(

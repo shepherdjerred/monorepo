@@ -9,8 +9,7 @@ import java.util.Map;
  * PART 2: WHERE Filtering
  * - createTable(name, columns) — define a table with named columns
  * - insert(table, values) — insert a row (map of column->value)
- * - query(table) — return all rows
- * - query(table, where) — return rows matching WHERE conditions
+ * - query(table, where) — return rows matching WHERE conditions (empty where = all rows)
  * - Support conditions: =, !=, <, >, <=, >=
  * - Multiple WHERE conditions are AND-ed together
  * - Values can be strings or integers (compare appropriately)
@@ -45,17 +44,10 @@ public class InMemoryDatabaseP2 {
     }
 
     /**
-     * Query all rows from a table.
-     */
-    public List<Map<String, String>> query(String table) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
      * Query with WHERE conditions.
      * Each condition is [column, operator, value] where operator is one of: =, !=, <, >, <=, >=
      * Multiple conditions are AND-ed.
+     * Pass an empty list to return all rows.
      */
     public List<Map<String, String>> query(String table, List<String[]> where) {
         // TODO: implement

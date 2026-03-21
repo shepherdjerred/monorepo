@@ -21,15 +21,11 @@ class InMemoryDatabaseP4Test {
         return list;
     }
 
-    // --- Regression from Part 1 ---
-
     private static List<String[]> o(String col, String dir) {
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{col, dir});
         return list;
     }
-
-    // --- Regression from Part 3 ---
 
     private static String h(String val) {
         try {
@@ -43,25 +39,90 @@ class InMemoryDatabaseP4Test {
         }
     }
 
-    // --- Part 4: DELETE and UPDATE ---
-
     @BeforeEach
     void setUp() {
         db = new InMemoryDatabaseP4();
     }
+
+    // --- Regression from Part 1 ---
 
     @Test
     void scenario_A1_create_and_query() {
         db.createTable("users", List.of("name", "age", "city"));
         db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
         db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
-        var results = db.query("users");
+        var results = db.query("users", new ArrayList<>(), new ArrayList<>());
         assertEquals(2, results.size());
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
     }
 
-    // --- Helpers ---
+    @Test
+    void scenario_A2_empty_table() {
+        db.createTable("items", List.of("sku", "price"));
+        assertEquals(0, db.query("items", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    @Test
+    void scenario_A3_multiple_inserts() {
+        db.createTable("t", List.of("x"));
+        for (int i = 0; i < 100; i++) db.insert("t", Map.of("x", String.valueOf(i)));
+        assertEquals(100, db.query("t", new ArrayList<>(), new ArrayList<>()).size());
+    }
+
+    // --- Regression from Part 2 ---
+
+    @Test
+    void scenario_B1_equality() {
+        seedUsers();
+        var results = db.query("users", w("name", "=", "Alice"), new ArrayList<>());
+        assertEquals(1, results.size());
+        assertEquals("30", results.get(0).get("age"));
+    }
+
+    @Test
+    void scenario_B2_greater_than() {
+        seedUsers();
+        var results = db.query("users", w("age", ">", "27"), new ArrayList<>());
+        // Alice=30, Charlie=35
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    void scenario_B3_multiple_conditions() {
+        seedUsers();
+        List<String[]> where = new ArrayList<>();
+        where.add(new String[]{"age", ">", "20"});
+        where.add(new String[]{"city", "=", "NYC"});
+        var results = db.query("users", where, new ArrayList<>());
+        // Only Alice (30, NYC)
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    void scenario_B4_not_equals() {
+        seedUsers();
+        var results = db.query("users", w("name", "!=", "Bob"), new ArrayList<>());
+        assertEquals(2, results.size());
+        assertTrue(results.stream().noneMatch(r -> "Bob".equals(r.get("name"))));
+    }
+
+    @Test
+    void scenario_B5_less_than_or_equal() {
+        seedUsers();
+        var results = db.query("users", w("age", "<=", "30"), new ArrayList<>());
+        // Bob=25, Alice=30
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    void scenario_B6_no_matches() {
+        seedUsers();
+        var results = db.query("users", w("age", ">", "100"), new ArrayList<>());
+        assertEquals(0, results.size());
+    }
+
+    // --- Regression from Part 3 ---
 
     @Test
     void scenario_C1_sort_ascending() {
@@ -73,11 +134,46 @@ class InMemoryDatabaseP4Test {
     }
 
     @Test
+    void scenario_C2_sort_descending() {
+        seedUsers();
+        var results = db.query("users", new ArrayList<>(), o("age", "DESC"));
+        assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie first
+    }
+
+    @Test
+    void scenario_C3_multi_column_sort() {
+        db.createTable("data", List.of("group", "value", "label"));
+        db.insert("data", Map.of("group", "A", "value", "2", "label", "x"));
+        db.insert("data", Map.of("group", "B", "value", "1", "label", "y"));
+        db.insert("data", Map.of("group", "A", "value", "1", "label", "z"));
+        db.insert("data", Map.of("group", "B", "value", "2", "label", "w"));
+        List<String[]> orderBy = new ArrayList<>();
+        orderBy.add(new String[]{"group", "ASC"});
+        orderBy.add(new String[]{"value", "ASC"});
+        var results = db.query("data", new ArrayList<>(), orderBy);
+        // A-1, A-2, B-1, B-2
+        assertEquals("z", results.get(0).get("label"));
+        assertEquals("x", results.get(1).get("label"));
+        assertEquals("y", results.get(2).get("label"));
+        assertEquals("w", results.get(3).get("label"));
+    }
+
+    @Test
+    void scenario_C4_where_plus_order() {
+        seedUsers();
+        var results = db.query("users", w("age", ">=", "25"), o("age", "DESC"));
+        assertEquals(3, results.size());
+        assertTrue(h(results.get(0).get("name")).startsWith("79c7")); // Charlie=35 first
+    }
+
+    // --- Part 4: DELETE and UPDATE ---
+
+    @Test
     void scenario_D1_delete() {
         seedUsers();
         int deleted = db.delete("users", w("name", "=", "Bob"));
         assertEquals(1, deleted);
-        assertEquals(2, db.query("users").size());
+        assertEquals(2, db.query("users", new ArrayList<>(), new ArrayList<>()).size());
     }
 
     @Test
@@ -85,9 +181,11 @@ class InMemoryDatabaseP4Test {
         seedUsers();
         int updated = db.update("users", w("name", "=", "Alice"), Map.of("city", "SF"));
         assertEquals(1, updated);
-        var results = db.query("users", w("name", "=", "Alice"));
+        var results = db.query("users", w("name", "=", "Alice"), new ArrayList<>());
         assertTrue(h(results.get(0).get("city")).startsWith("ab56"));
     }
+
+    // --- Helpers ---
 
     private void seedUsers() {
         db.createTable("users", List.of("name", "age", "city"));

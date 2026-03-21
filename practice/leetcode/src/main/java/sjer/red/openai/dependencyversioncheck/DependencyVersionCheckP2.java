@@ -8,13 +8,6 @@ import java.util.function.Function;
  * <p>
  * Find the earliest version of a dependency that supports a given feature.
  * <p>
- * PART 1:
- * - Given a sorted list of versions (strings like "1.0", "1.1", "2.0", etc.)
- * - Given a function supportsFeature(version) → boolean
- * - Assumption: if version N supports the feature, all versions > N also support it (monotonic)
- * - Find the earliest version that supports the feature
- * - Optimize: use binary search (don't check every version)
- * <p>
  * PART 2 (THE TWIST):
  * - Monotonicity assumption is BROKEN
  * - Version N+1 may NOT support a feature that version N supports
@@ -37,20 +30,11 @@ import java.util.function.Function;
 public class DependencyVersionCheckP2 {
 
     /**
-     * Part 1: Find earliest supporting version assuming monotonicity.
-     * Use binary search. Return null if no version supports the feature.
-     */
-    public String findEarliestMonotonic(List<String> versions, Function<String, Boolean> supportsFeature) {
-        // TODO: implement with binary search
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Part 2: Find earliest supporting version WITHOUT monotonicity assumption.
+     * Find earliest supporting version WITHOUT monotonicity assumption.
      * Must check all versions (or be clever about it).
      * Return null if no version supports the feature.
      */
-    public String findEarliestNonMonotonic(List<String> versions, Function<String, Boolean> supportsFeature) {
+    public String findEarliest(List<String> versions, Function<String, Boolean> supportsFeature) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemented");
     }

@@ -14,15 +14,9 @@ import java.util.Map;
  * - Communication is via sendAsyncMessage(targetId, message) and receiveMessage()
  * - Messages are strings; you define the protocol
  * <p>
- * PART 1:
- * - Implement countNodes() on the root node that returns total machine count
- * - Root sends "count" request down to children
- * - Leaves respond with 1
- * - Internal nodes wait for all children, sum up, add 1 for self, respond to parent
- * <p>
  * PART 2:
- * - Handle the case where a node might not respond (timeout)
- * - Still return the count of reachable machines
+ * - Handle timeout: if a node doesn't respond within timeoutMs, exclude it
+ * - Still return the count of reachable/responsive machines
  * <p>
  * KEY INSIGHT:
  * - This is NOT a normal tree traversal — you simulate distributed message passing
@@ -33,21 +27,11 @@ import java.util.Map;
 public class NodeCountingP2 {
 
     /**
-     * Count total nodes in the tree starting from the root.
-     * You must implement the distributed protocol — each node only communicates
-     * with its direct parent and children.
+     * Count total reachable nodes in the tree starting from the root.
+     * Handle timeout: if a node doesn't respond within timeoutMs, exclude
+     * unresponsive nodes from the count.
      */
-    public int countNodes(Map<Integer, TreeNode> nodes, int rootId) {
-        // TODO: implement distributed counting protocol
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
-     * Count total reachable nodes in the tree, handling nodes that might not respond.
-     * If a node doesn't respond within timeoutMs, skip it and still return the count
-     * of reachable machines.
-     */
-    public int countNodesWithTimeout(Map<Integer, TreeNode> nodes, int rootId, long timeoutMs) {
+    public int countNodes(Map<Integer, TreeNode> nodes, int rootId, long timeoutMs) {
         // TODO: implement distributed counting protocol with timeout handling
         throw new UnsupportedOperationException("Not yet implemented");
     }

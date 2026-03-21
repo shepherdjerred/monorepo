@@ -192,7 +192,7 @@ def _bun_install_impl(rctx):
             result.stderr,
         ))
 
-    # Remove workspace symlinks from node_modules. Bun creates these for workspace
+    # Remove workspace symlinks from node_modules. Bun always creates these for workspace
     # packages referenced in the lockfile, even after stripping workspace config from
     # package.json and bun.lock. These symlinks point to temp dirs with nested
     # symlinks that Bazel can't represent in a TreeArtifact. Downstream rules link

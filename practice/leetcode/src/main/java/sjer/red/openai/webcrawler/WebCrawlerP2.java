@@ -10,7 +10,6 @@ import java.util.function.Function;
  * PART 2: Depth Limiting
  * - Add depth limiting — only crawl up to maxDepth levels from startUrl
  * - startUrl is depth 0
- * - crawl(startUrl, getLinks) still works as before (unlimited depth)
  * - crawl(startUrl, getLinks, maxDepth) limits traversal depth
  * <p>
  * Example:
@@ -25,17 +24,9 @@ import java.util.function.Function;
 public class WebCrawlerP2 {
 
     /**
-     * Single-threaded BFS web crawler (unlimited depth).
-     * Only crawl URLs with the same domain as startUrl.
-     */
-    public Set<String> crawl(String startUrl, Function<String, List<String>> getLinks) {
-        // TODO: implement BFS with deduplication
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    /**
      * BFS with depth limiting.
      * startUrl is depth 0. Only follow links up to maxDepth levels.
+     * Only crawl URLs with the same domain as startUrl.
      */
     public Set<String> crawl(String startUrl, Function<String, List<String>> getLinks, int maxDepth) {
         // TODO: implement with depth tracking

@@ -1,5 +1,5 @@
 ---
-name: Typst Authoring
+name: typst-authoring
 description: This skill should be used when the user asks to "write Typst", "create a Typst document", "format in Typst", "convert to Typst", "Typst syntax", "Typst template", "Typst math", "Typst table", or works with .typ files. Provides comprehensive Typst markup, scripting, math, layout, and styling reference for authoring documents. Also use proactively when generating .typ output files (e.g., in deep-research reports).
 ---
 

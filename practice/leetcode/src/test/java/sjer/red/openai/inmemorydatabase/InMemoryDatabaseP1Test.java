@@ -48,8 +48,6 @@ class InMemoryDatabaseP1Test {
         assertEquals(0, db.query("items").size());
     }
 
-    // --- Helpers ---
-
     @Test
     void scenario_A3_multiple_inserts() {
         db.createTable("t", List.of("x"));
