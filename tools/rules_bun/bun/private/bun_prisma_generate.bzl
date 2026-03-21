@@ -30,11 +30,14 @@ def _bun_prisma_generate_impl(ctx):
             # Copy post-generate deps into $WORK
             {copy_deps}
 
-            # Copy generated client into $WORK/generated/prisma/client/
-            # (the script expects this layout)
+            # Ensure generated client is at $WORK/generated/prisma/client/
+            # (the script expects this layout). If prisma used a custom output
+            # path, the files may already be there; otherwise copy them.
             POST_CLIENT="$WORK/generated/prisma/client"
-            mkdir -p "$POST_CLIENT"
-            cp -R "$GENERATED"/* "$POST_CLIENT/"
+            if [ "$GENERATED" != "$POST_CLIENT" ]; then
+                mkdir -p "$POST_CLIENT"
+                cp -R "$GENERATED"/* "$POST_CLIENT/"
+            fi
 
             # tsconfig for #src/* and #generated/* path aliases
             echo '{{"compilerOptions":{{"paths":{{"#src/*":["./src/*"],"#generated/*":["./generated/*"]}}}}}}' > "$WORK/tsconfig.json"
@@ -47,7 +50,7 @@ def _bun_prisma_generate_impl(ctx):
             (cd "$WORK" && BRAND_TYPES_BASE_DIR="$WORK/scripts" "$ROOT_DIR/$BUN" "$ROOT_DIR/{script}") \
                 || {{ echo "ERROR: post-generate script failed" >&2; exit 1; }}
 
-            # Point GENERATED to the branded copy
+            # Point GENERATED to the (now branded) output
             GENERATED="$POST_CLIENT"
         """.format(
             script = ctx.file.post_generate_script.path,
