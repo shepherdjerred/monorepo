@@ -38,6 +38,20 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 - When researching topics, emphasize **GitHub**, **Hacker News**, and **Wikipedia** as primary sources.
 - Prefer a mix of authoritative first-party sources (official docs, Wikipedia, project READMEs) with real-world anecdotes and discussion from Hacker News.
 
+## Plan Mode — Typst PDF Export
+
+In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
+1. Load the `typst-authoring` skill for Typst language reference
+2. Read the plan `.md` file
+3. Convert to a well-formatted Typst document (headings, lists, tables as appropriate)
+4. Save to `~/.claude/plans/[topic-slug].typ` (next to the `.md` file)
+5. Compile with `typst compile` to PDF
+6. Open the PDF with `open`
+7. If compilation fails, fix the Typst source and retry
+8. Then call ExitPlanMode
+
+This is an **explicit exception** to plan mode's read-only restriction: writing `.typ` files to `~/.claude/plans/` and running `typst compile` are permitted during plan mode.
+
 ## Chezmoi Dotfiles — Dual Edit Rule
 
 - When changing any preference, setting, or config file, **edit both the live copy and the chezmoi source** (`packages/dotfiles/`) if the file is managed by chezmoi.

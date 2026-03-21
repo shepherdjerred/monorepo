@@ -1,0 +1,2 @@
+# rules_bun2 — monolithic bun install approach
+# Reuses toolchain_type from rules_bun

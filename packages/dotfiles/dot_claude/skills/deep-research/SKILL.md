@@ -18,6 +18,9 @@ allowed-tools:
   - Agent
   - WebSearch
   - WebFetch
+  - TaskCreate
+  - TaskUpdate
+  - TaskList
 ---
 
 # Deep Research
@@ -28,6 +31,40 @@ Conduct thorough, multi-source research on a topic with iterative investigation,
 
 Deep research goes beyond a single search query. It decomposes a question into sub-topics, investigates each through multiple sources, identifies gaps, iterates to fill them, and synthesizes findings into a structured report with citations. The process is designed for transparency — the user sees the plan, approves it, and can steer the investigation.
 
+## Task Tracking
+
+Use `TaskCreate` and `TaskUpdate` throughout the research process to give the user visibility into progress. This is mandatory — do not skip task creation.
+
+1. **At the start of Phase 2**, create a task for each sub-question from the research plan (e.g., "Investigate: [sub-question]"). Use `activeForm` to show what's happening in the spinner (e.g., "Investigating [sub-question]").
+2. **At the start of each subsequent phase** (Draft, Adversarial Review, Editorial Synthesis, Deliver), create a task for that phase.
+3. **Mark tasks `in_progress`** when you begin working on them and `completed` when done.
+4. **For sub-agents**, create their tasks before launching them so the user can see parallel work in progress.
+
+Keep task subjects short and specific. The description field should include enough context to understand scope.
+
+## Effort Levels
+
+Research intensity is controlled by an effort parameter: **low**, **medium** (default), **high**, or **ultra**. This acts as an exponential multiplier across the entire process.
+
+| Parameter | Low | Medium | High | Ultra |
+|-----------|-----|--------|------|-------|
+| Sub-questions | 3-5 | 5-7 | 8-12 | 15-20 |
+| Parallel agents | 2 | 3-4 | 6-8 | 10+ |
+| Sources per question | ~4 | ~8 | ~15 | ~25+ |
+| Iteration rounds (max) | 2 | 3 | 4 | 6 |
+| Adversarial review | Lightweight (no source verification) | Full | Full + source verification | Full + multiple reviewers + source verification |
+| Output format | Markdown + PDF | Markdown + PDF | Markdown + PDF | Markdown + PDF (detailed) |
+| Report length | 3-5 pages | 6-12 pages | 15-25 pages | 30+ pages |
+
+**Determining effort:**
+- "quick research", "brief overview" → **low**
+- No qualifier (default) → **medium**
+- "thorough", "comprehensive", "deep dive" → **high**
+- "exhaustive", "leave no stone unturned", explicit "ultra" → **ultra**
+- User can also specify explicitly (e.g., `/deep-research high: topic`)
+
+All parameters in the workflow below (sub-question count, agent count, iteration limits, etc.) must follow the effort level table. When launching sub-agents, pass the effort level so they calibrate their depth accordingly.
+
 ## Core Workflow
 
 Execute these phases in order. Do not skip Phase 1 or Phase 2.
@@ -37,7 +74,7 @@ Execute these phases in order. Do not skip Phase 1 or Phase 2.
 Before any searching, decompose the user's question:
 
 1. **Clarify scope** — If the query is ambiguous, ask 1-2 focused questions (not more) to narrow down what the user actually needs. Skip if the intent is already clear.
-2. **Decompose into sub-questions** — Break the topic into 3-7 specific, answerable sub-questions. Each should target a distinct angle (e.g., "how does X work?", "what are alternatives to X?", "what do practitioners say about X?").
+2. **Decompose into sub-questions** — Break the topic into sub-questions per the effort level table. Each should target a distinct angle (e.g., "how does X work?", "what are alternatives to X?", "what do practitioners say about X?").
 3. **Identify source types** — For each sub-question, note where to look: official docs, GitHub repos, HN discussions, academic papers, blog posts, Wikipedia, etc.
 4. **Present the plan** — Show the user the research plan as a numbered list of sub-questions with source strategies. Ask for approval or modifications before proceeding.
 
@@ -49,10 +86,11 @@ Before any searching, decompose the user's question:
 2. [Sub-question] — Sources: [where to look]
 ...
 
-### Estimated depth
-- Breadth: [N] sub-questions
+### Effort: [low/medium/high/ultra]
+- Sub-questions: [N] (per effort table)
 - Sources per question: ~[M]
-- Expected iterations: [1-3]
+- Parallel agents: [P]
+- Max iterations: [I]
 
 Proceed with this plan?
 ```
@@ -89,7 +127,7 @@ SEARCH → READ → EXTRACT → EVALUATE → (iterate if gaps remain)
 **Gap analysis after each round:**
 - List what is now known vs. what remains unanswered
 - If significant gaps remain, formulate new search queries targeting those gaps
-- Limit to 3 iterations maximum to avoid runaway cost — after 3 rounds, synthesize with what is available and note remaining unknowns
+- Limit iterations to the maximum specified by the effort level table — after reaching the limit, synthesize with what is available and note remaining unknowns
 
 **Context management:**
 - After extracting findings from a source, distill them into bullet points — do not carry full page content forward
@@ -148,7 +186,7 @@ Compile findings into a structured markdown draft report:
 
 ### Phase 4: Adversarial Review
 
-After drafting the report, launch an adversarial review via a sub-agent. This is a separate, critical pass whose sole job is to find problems. The adversary has no attachment to the draft — it exists to stress-test it.
+After drafting the report, perform an adversarial review scaled to the effort level (see effort table: lightweight at low, full at medium, full + source verification at high, full + multiple reviewers at ultra). This is a separate, critical pass whose sole job is to find problems. The adversary has no attachment to the draft — it exists to stress-test it.
 
 **Launch a review sub-agent with this mandate:**
 

@@ -31,7 +31,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "#src/model/discord.ts";
-import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { Competition } from "#src/model/competition.ts";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {

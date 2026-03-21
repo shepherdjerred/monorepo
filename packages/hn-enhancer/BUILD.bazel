@@ -1,8 +1,11 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
+load("@bun_modules2//:defs.bzl", bun2_link = "npm_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test", "bun_vite_build")
+load("//tools/rules_bun2/bun:defs.bzl", bun2_library = "bun_library", bun2_test = "bun_test")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
+bun2_link(name = "node_modules2")
 
 exports_files(["package.json"])
 
@@ -65,4 +68,17 @@ bun_typecheck_test(
 bun_test(
     name = "test",
     prepared_tree = ":tree",
+)
+
+# POC: rules_bun2 test — monolithic bun install approach
+bun2_library(
+    name = "pkg2",
+    srcs = glob(["src/**/*.ts"]),
+)
+
+bun2_test(
+    name = "test2",
+    srcs = glob(["src/**/*.test.ts"]),
+    node_modules = ":node_modules2",
+    deps = [":pkg2"],
 )

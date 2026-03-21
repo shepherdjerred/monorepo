@@ -1,8 +1,28 @@
 load("@bun_modules//:defs.bzl", "bun_link_all_packages")
 load("//tools/rules_bun/bun:defs.bzl", "bun_eslint_test", "bun_library", "bun_prepared_tree", "bun_test")
+load("//tools/rules_bun2/bun:defs.bzl", bun2_library = "bun_library")
 load("//tools/rules_bun/ts:defs.bzl", "bun_typecheck_test")
 
 bun_link_all_packages(name = "node_modules")
+
+bun2_library(
+    name = "pkg2",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/**/*.test.ts"],
+    ) + glob(
+        ["dist/**"],
+        allow_empty = True,
+        exclude = ["dist/**/*.map"],
+    ) + [
+        "local.d.ts",
+        "local.ts",
+        "local-rules.ts",
+        "package.json",
+    ],
+    package_name = "@shepherdjerred/eslint-config",
+    visibility = ["//visibility:public"],
+)
 
 exports_files([
     "package.json",

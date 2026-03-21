@@ -16,6 +16,7 @@ AI-maintained knowledge base for the monorepo.
 
 ## Decisions
 
+- [rules_bun2 Architecture](decisions/2026-03-20_rules-bun2-architecture.md) - Monolithic bun install for Bazel: 6 approaches tried, what worked, what failed, and why
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 

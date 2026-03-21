@@ -2,7 +2,50 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { RankSchema } from "#src/model/rank.ts";
 import { getSeasonById } from "#src/seasons.ts";
-import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+
+/**
+ * Competition database row shape — mirrors backend/prisma/schema.prisma.
+ *
+ * Why this is here instead of importing from Prisma:
+ *   `data` is the base package in the dependency graph. `backend` depends on
+ *   `data`, not the other way around. The old import
+ *   `from "@scout-for-lol/backend/generated/prisma/client"` created a circular
+ *   dependency that broke Bazel sandboxing (and was already tagged `manual` in
+ *   the v1 BUILD targets).
+ *
+ *   Extracting Prisma into its own package was considered, but the
+ *   `brand-prisma-types` post-generation script imports branded IDs FROM this
+ *   package (`@scout-for-lol/data`), so a separate prisma package would just
+ *   recreate the cycle: prisma → data → prisma.
+ *
+ * Why this is safe:
+ *   Backend passes Prisma query results (typed by the generated client) into
+ *   `parseCompetition(raw: Competition)` exported from this package. TypeScript's
+ *   structural type system means any schema drift — added, removed, or retyped
+ *   columns — causes a compile error at every call site in backend. The drift
+ *   cannot silently pass typecheck.
+ */
+export type Competition = {
+  id: number;
+  serverId: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  channelId: string;
+  isCancelled: boolean;
+  visibility: string;
+  criteriaType: string;
+  criteriaConfig: string;
+  maxParticipants: number;
+  startDate: Date | null;
+  endDate: Date | null;
+  seasonId: string | null;
+  startProcessedAt: Date | null;
+  endProcessedAt: Date | null;
+  creatorDiscordId: string;
+  createdTime: Date;
+  updatedTime: Date;
+};
 
 // ============================================================================
 // Branded ID Types

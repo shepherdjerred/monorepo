@@ -204,6 +204,69 @@ bun_modules.install(
 use_repo(bun_modules, "bun_modules")
 
 ##############################################################################
+# POC: rules_bun2 — monolithic bun install approach
+##############################################################################
+
+bun_modules2 = use_extension("//tools/rules_bun2/bun:extensions.bzl", "bun_modules")
+bun_modules2.install(
+    name = "bun_modules2",
+    bun_lock = "//:bun.lock",
+    data = [
+        "//:patches/monarch-money-api@0.0.5.patch",
+        "//:patches/react-native-sound@0.13.0.patch",
+        "//packages/homelab:patches/@digital-alchemy%2Ftype-writer@25.10.12.patch",
+        "//packages/scout-for-lol:patches/satori@0.18.3.patch",
+    ],
+    package_jsons = [
+        "//:package.json",
+        "//packages/astro-opengraph-images:package.json",
+        "//packages/better-skill-capped:package.json",
+        "//packages/better-skill-capped/fetcher:package.json",
+        "//packages/birmel:package.json",
+        "//packages/bun-decompile:package.json",
+        "//packages/clauderon/docs:package.json",
+        "//packages/clauderon/mobile:package.json",
+        "//packages/clauderon/web/client:package.json",
+        "//packages/clauderon/web/frontend:package.json",
+        "//packages/clauderon/web/shared:package.json",
+        "//packages/cooklang-rich-preview:package.json",
+        "//packages/cooklang-for-obsidian:package.json",
+        "//packages/discord-plays-pokemon:package.json",
+        "//packages/discord-plays-pokemon/packages/backend:package.json",
+        "//packages/discord-plays-pokemon/packages/common:package.json",
+        "//packages/discord-plays-pokemon/packages/frontend:package.json",
+        "//packages/eslint-config:package.json",
+        "//packages/hn-enhancer:package.json",
+        "//packages/homelab:package.json",
+        "//packages/homelab/src/cdk8s:package.json",
+        "//packages/homelab/src/deps-email:package.json",
+        "//packages/homelab/src/ha:package.json",
+        "//packages/homelab/src/helm-types:package.json",
+        "//packages/monarch:package.json",
+        "//packages/resume:package.json",
+        "//packages/scout-for-lol:package.json",
+        "//packages/scout-for-lol/packages/backend:package.json",
+        "//packages/scout-for-lol/packages/data:package.json",
+        "//packages/scout-for-lol/packages/desktop:package.json",
+        "//packages/scout-for-lol/packages/frontend:package.json",
+        "//packages/scout-for-lol/packages/report:package.json",
+        "//packages/scout-for-lol/packages/ui:package.json",
+        "//packages/sentinel:package.json",
+        "//packages/sentinel/web:package.json",
+        "//packages/sjer.red:package.json",
+        "//packages/starlight-karma-bot:package.json",
+        "//packages/status-page/api:package.json",
+        "//packages/status-page/web:package.json",
+        "//packages/tasknotes-server:package.json",
+        "//packages/tasknotes-types:package.json",
+        "//packages/tasks-for-obsidian:package.json",
+        "//packages/tools:package.json",
+        "//packages/webring:package.json",
+    ],
+)
+use_repo(bun_modules2, "bun_modules2")
+
+##############################################################################
 # Container base images (rules_oci)
 ##############################################################################
 

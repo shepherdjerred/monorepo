@@ -22,6 +22,10 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("brand-prisma-types");
 
+// Allow Bazel to override the base directory (import.meta.dir points to
+// the source tree, but in a sandbox we need to read/write in $WORK).
+const BASE_DIR = process.env["BRAND_TYPES_BASE_DIR"] ?? import.meta.dir;
+
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
 
@@ -29,11 +33,11 @@ function main() {
   logger.info("🔧 Branding Prisma types with AST transformation...");
 
   const project = new Project({
-    tsConfigFilePath: `${import.meta.dir}/../tsconfig.json`,
+    tsConfigFilePath: `${BASE_DIR}/../tsconfig.json`,
     skipAddingFilesFromTsConfig: true, // Avoid loading all files to prevent stack overflow
   });
 
-  const prismaTypesPath = `${import.meta.dir}/../generated/prisma/client/index.d.ts`;
+  const prismaTypesPath = `${BASE_DIR}/../generated/prisma/client/index.d.ts`;
   const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
 
   logger.info(`📄 Processing: ${prismaTypesPath}`);
