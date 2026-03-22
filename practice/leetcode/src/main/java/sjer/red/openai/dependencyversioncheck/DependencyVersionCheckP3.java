@@ -24,7 +24,6 @@ public class DependencyVersionCheckP3 {
      * @return best guess for earliest supporting version, or null
      */
     public String findEarliest(List<String> versions, Function<String, Boolean> supportsFeature, int maxCalls) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return versions.stream().filter(supportsFeature::apply).findFirst().orElse(null);
     }
 }

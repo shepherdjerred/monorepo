@@ -7,17 +7,17 @@ MODE=$(defaults read -g AppleInterfaceStyle 2>/dev/null || echo "Light")
 THEME_MODE=$([[ "$MODE" == "Dark" ]] && echo dark || echo light)
 
 # Zellij
-sed -i '' "s/catppuccin-\(latte\|frappe\|macchiato\|mocha\)/catppuccin-$M/" ~/.config/zellij/config.kdl 2>/dev/null || true
+sed -E -i '' "s/catppuccin-(latte|frappe|macchiato|mocha)/catppuccin-$M/" ~/.config/zellij/config.kdl 2>/dev/null || true
 
 # btop (handles both macOS and Linux path formats)
-sed -i '' "s/catppuccin_\(latte\|frappe\|macchiato\|mocha\)/catppuccin_$M/g" ~/.config/btop/btop.conf 2>/dev/null || true
+sed -E -i '' "s/catppuccin_(latte|frappe|macchiato|mocha)/catppuccin_$M/g" ~/.config/btop/btop.conf 2>/dev/null || true
 pkill -USR2 btop 2>/dev/null || true
 
 # starship (only change the palette = line, not the section headers)
-sed -i '' "s/^palette = \"catppuccin_\(latte\|frappe\|macchiato\|mocha\)\"/palette = \"catppuccin_$M\"/" ~/.config/starship.toml 2>/dev/null || true
+sed -E -i '' "s/^palette = \"catppuccin_(latte|frappe|macchiato|mocha)\"/palette = \"catppuccin_$M\"/" ~/.config/starship.toml 2>/dev/null || true
 
 # Atuin (sed replacement like starship)
-sed -i '' "s/catppuccin-\(latte\|frappe\|macchiato\|mocha\)/catppuccin-$M/" ~/.config/atuin/config.toml 2>/dev/null || true
+sed -E -i '' "s/catppuccin-(latte|frappe|macchiato|mocha)/catppuccin-$M/" ~/.config/atuin/config.toml 2>/dev/null || true
 
 # eza (macOS - symlink theme file)
 EZA_DIR=~/Library/"Application Support"/eza

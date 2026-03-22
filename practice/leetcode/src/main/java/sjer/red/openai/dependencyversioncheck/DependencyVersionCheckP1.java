@@ -30,7 +30,7 @@ public class DependencyVersionCheckP1 {
 
         while (right >= left) {
             var middle = left + (right - left) / 2;
-            if (supportsFeature.apply(versions.get(middle)) == true) {
+            if (supportsFeature.apply(versions.get(middle))) {
                 right = middle - 1;
                 min = middle;
             } else {

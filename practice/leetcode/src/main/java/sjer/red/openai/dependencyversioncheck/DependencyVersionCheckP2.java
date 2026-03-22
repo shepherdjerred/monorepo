@@ -35,7 +35,12 @@ public class DependencyVersionCheckP2 {
      * Return null if no version supports the feature.
      */
     public String findEarliest(List<String> versions, Function<String, Boolean> supportsFeature) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        /*
+         * We no longer have a guarantee about ordering
+         * I am assuming versions is still sorted since it was in Part 1
+         * In which case... we could just search the list?
+         * ATM I don't see how we could get faster than O(n) w/o the list being pre-sorted
+         */
+        return versions.stream().filter(supportsFeature::apply).findFirst().orElse(null);
     }
 }

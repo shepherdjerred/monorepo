@@ -52,6 +52,7 @@ Score each dimension using the detailed rubric in `references/grading-rubric.md`
 - Do comments explain *why*, not *what*?
 - Is the API design clear (method signatures, return types, Javadoc)?
 - Is reasoning visible in the code (approach comments, tradeoff notes)?
+- **Template exclusion:** The class-level Javadoc problem header is template-provided, not user-written. Do not credit it. Only evaluate user-authored communication: naming choices, structural clarity, inline comments, method-level Javadoc they added, and tradeoff notes.
 - *Limitation:* Verbal fluency and live interviewer interaction cannot be assessed from written code. Note this in the grade sheet.
 
 **Dimension 4 -- Testing**
@@ -59,6 +60,7 @@ Score each dimension using the detailed rubric in `references/grading-rubric.md`
 - Are boundary conditions addressed (empty collections, zero, negative, overflow)?
 - Are error conditions handled gracefully (exceptions, invalid input)?
 - Is there evidence of thinking about what could go wrong?
+- **Contract vs boundary distinction:** Only penalize missing null handling for *boundary inputs* (user-facing data, external API responses). When null represents a broken caller contract (e.g., a `Function<>` parameter returning null), an NPE is the correct failure mode -- do not penalize its absence.
 
 ### Step 3: Assess Follow-up Readiness
 

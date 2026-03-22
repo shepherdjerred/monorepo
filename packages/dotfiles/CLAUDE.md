@@ -52,6 +52,15 @@ In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
 
 This is an **explicit exception** to plan mode's read-only restriction: writing `.typ` files to `~/.claude/plans/` and running `typst compile` are permitted during plan mode.
 
+## Typst Files — Always Render to PDF
+
+When asked to show, display, or present a `.typ` file, **always render it to PDF and open it** rather than just showing the source. Steps:
+1. Compile with `typst compile <file>.typ`
+2. Open the resulting PDF with `open <file>.pdf`
+3. If compilation fails, fix the Typst source and retry
+
+Never just print or read Typst source as the final output — the user wants to see the rendered result.
+
 ## Chezmoi Dotfiles — Dual Edit Rule
 
 - When changing any preference, setting, or config file, **edit both the live copy and the chezmoi source** (`packages/dotfiles/`) if the file is managed by chezmoi.

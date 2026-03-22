@@ -94,8 +94,8 @@ In a live interview, Communication evaluates verbal reasoning. For written code 
   - Bad: `// loop through the list`
 - Javadoc on public methods describes contract, parameters, return values, exceptions
 - Tradeoff reasoning visible: `// Considered X but chose Y because...`
-- Problem understanding visible: Javadoc header explains the problem and constraints
 - API design is intuitive: method signatures tell you what they do
+- **Note:** Template-provided Javadoc (class-level problem header) does NOT count. Only evaluate user-authored communication signals.
 
 ### Score 3 (Hire)
 - Code is mostly self-documenting through naming
@@ -121,8 +121,8 @@ In a live interview, Communication evaluates verbal reasoning. For written code 
 Since we grade implementation only (not test files), Testing evaluates how defensively the code is written and how well it handles edge cases *within the implementation*.
 
 ### Score 4 (Strong Hire)
-- Input validation at method entry points
-- Null checks where appropriate (or documented non-null contract)
+- Input validation at *boundary* entry points (user-facing data, external API responses)
+- Null checks for boundary inputs; internal contract violations (e.g., a Function parameter returning null) should fail with NPE -- do not penalize absence of guards for these
 - Boundary conditions explicitly handled (empty collections, zero, max values)
 - Error conditions throw meaningful exceptions with descriptive messages
 - Edge cases from the problem statement are all addressed
@@ -137,13 +137,13 @@ Since we grade implementation only (not test files), Testing evaluates how defen
 
 ### Score 2 (Lean No Hire)
 - Minimal edge case handling
-- No input validation
+- No input validation at boundary points (user-facing data, external inputs)
 - Exceptions are generic or absent
-- Code assumes happy-path inputs
+- Code assumes happy-path inputs even at system boundaries
 
 ### Score 1 (Strong No Hire)
 - No defensive coding whatsoever
-- Would crash on null, empty, or boundary inputs
+- Would crash on boundary inputs (user-facing null, empty, or invalid data)
 - No error handling
 
 ---
