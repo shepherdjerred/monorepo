@@ -31,21 +31,21 @@ class DependencyVersionCheckP3Test {
     void scenario_A1_basic() {
         var versions = List.of("1.0", "1.1", "1.2", "1.3", "2.0");
         Function<String, Boolean> check = v -> v.compareTo("1.2") >= 0;
-assertTrue(b("MS4y").equals(solver.findEarliest(versions, check, Integer.MAX_VALUE)));
+        assertEquals(b("MS4y"), solver.findEarliest(versions, check, Integer.MAX_VALUE));
     }
 
     @Test
     void scenario_A2_first_version() {
         var versions = List.of("1.0", "2.0", "3.0");
         Function<String, Boolean> check = v -> true;
-assertTrue(b("MS4w").equals(solver.findEarliest(versions, check, Integer.MAX_VALUE)));
+        assertEquals(b("MS4w"), solver.findEarliest(versions, check, Integer.MAX_VALUE));
     }
 
     @Test
     void scenario_A3_last_version() {
         var versions = List.of("1.0", "2.0", "3.0");
         Function<String, Boolean> check = v -> v.equals("3.0");
-assertTrue(b("My4w").equals(solver.findEarliest(versions, check, Integer.MAX_VALUE)));
+        assertEquals(b("My4w"), solver.findEarliest(versions, check, Integer.MAX_VALUE));
     }
 
     @Test
@@ -64,7 +64,7 @@ assertTrue(b("My4w").equals(solver.findEarliest(versions, check, Integer.MAX_VAL
             calls.incrementAndGet();
             return Integer.parseInt(v) >= 500;
         };
-assertTrue("500".equals(solver.findEarliest(versions, check, Integer.MAX_VALUE)));
+        assertEquals("500", solver.findEarliest(versions, check, Integer.MAX_VALUE));
     }
 
     // --- Regression: Part 2 (B tests - non-monotonic, unlimited budget) ---
@@ -75,8 +75,7 @@ assertTrue("500".equals(solver.findEarliest(versions, check, Integer.MAX_VALUE))
         Map<String, Boolean> support = Map.of(
                 "1.0", false, "1.1", true, "1.2", false,
                 "1.3", true, "1.4", true, "2.0", true);
-        assertTrue(b("MS4x").equals(
-                solver.findEarliest(versions, support::get, Integer.MAX_VALUE)));
+        assertEquals(b("MS4x"), solver.findEarliest(versions, support::get, Integer.MAX_VALUE));
     }
 
     @Test
@@ -84,8 +83,7 @@ assertTrue("500".equals(solver.findEarliest(versions, check, Integer.MAX_VALUE))
         var versions = List.of("1.0", "2.0", "3.0", "4.0");
         Map<String, Boolean> support = Map.of(
                 "1.0", false, "2.0", false, "3.0", false, "4.0", true);
-        assertTrue(b("NC4w").equals(
-                solver.findEarliest(versions, support::get, Integer.MAX_VALUE)));
+        assertEquals(b("NC4w"), solver.findEarliest(versions, support::get, Integer.MAX_VALUE));
     }
 
     @Test
@@ -94,7 +92,7 @@ assertTrue("500".equals(solver.findEarliest(versions, check, Integer.MAX_VALUE))
         Map<String, Boolean> support = Map.of(
                 "1", true, "2", false, "3", true,
                 "4", false, "5", true, "6", false);
-assertTrue("1".equals(solver.findEarliest(versions, support::get, Integer.MAX_VALUE)));
+        assertEquals("1", solver.findEarliest(versions, support::get, Integer.MAX_VALUE));
     }
 
     @Test
@@ -116,7 +114,7 @@ assertTrue("1".equals(solver.findEarliest(versions, support::get, Integer.MAX_VA
             return support.get(v);
         };
         var result = solver.findEarliest(versions, check, 5);
-assertTrue("3".equals(result));
+        assertEquals("3", result);
         assertTrue(calls.get() <= 5);
     }
 
@@ -158,7 +156,7 @@ assertTrue("3".equals(result));
         };
         var result = solver.findEarliest(versions, check, 0);
         assertNull(result);
-        assertTrue(calls.get() == 0, "Should not call with zero budget, got " + calls.get());
+        assertEquals(0, calls.get(), "Should not call with zero budget, got " + calls.get());
     }
 
     @Test
@@ -172,7 +170,7 @@ assertTrue("3".equals(result));
             return support.get(v);
         };
         var result = solver.findEarliest(versions, check, 5);
-assertTrue("b".equals(result));
+        assertEquals("b", result);
         assertTrue(calls.get() <= 5, "Budget exceeded: " + calls.get() + " calls");
     }
 
@@ -187,7 +185,7 @@ assertTrue("b".equals(result));
             return support.get(v);
         };
         var result = solver.findEarliest(versions, check, 10);
-assertTrue("a".equals(result));
+        assertEquals("a", result);
         assertTrue(calls.get() <= 3, "Should not over-call, got " + calls.get());
     }
 

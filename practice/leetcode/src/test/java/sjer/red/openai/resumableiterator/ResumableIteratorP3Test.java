@@ -7,7 +7,6 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,7 +41,7 @@ class ResumableIteratorP3Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
+        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
     }
 
     @Test
@@ -55,7 +54,7 @@ assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP3.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-assertTrue(99 == it.next());
+        assertEquals(99, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -66,13 +65,13 @@ assertTrue(99 == it.next());
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-        assertTrue(3 == it.next()); // 3
-        assertTrue(4 == it.next()); // 4
+        assertEquals(3, (int) it.next()); // 3
+        assertEquals(4, (int) it.next()); // 4
         it.setState(state);
         // Should replay from position after 2
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
-assertTrue(5 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
+        assertEquals(5, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -85,9 +84,9 @@ assertTrue(5 == it.next());
         it.next(); // 20
         it.next(); // 30
         it.setState(s1);
-assertTrue(10 == it.next());
+        assertEquals(10, (int) it.next());
         it.setState(s2);
-assertTrue(20 == it.next());
+        assertEquals(20, (int) it.next());
     }
 
     // --- B1-B4 (new in P3) ---
@@ -100,7 +99,7 @@ assertTrue(20 == it.next());
         );
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
     }
 
     @Test
@@ -115,7 +114,7 @@ assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
         );
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -135,11 +134,11 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         it.setState(state);
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -148,7 +147,7 @@ assertTrue(4 == it.next());
         var files = List.of(List.of(1, 2, 3));
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -156,7 +155,7 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         var files = List.of(List.<Integer>of(), List.of(1, 2));
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2)), sig(acc));
     }
 
     @Test
@@ -164,7 +163,7 @@ assertTrue(sig(List.of(1, 2)).equals(sig(acc)));
         var files = List.of(List.of(1, 2), List.<Integer>of());
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2)), sig(acc));
         assertFalse(it.hasNext());
     }
 
@@ -172,11 +171,11 @@ assertTrue(sig(List.of(1, 2)).equals(sig(acc)));
     void scenario_B8_save_at_file_boundary() {
         var files = List.of(List.of(1), List.of(2));
         var it = new ResumableIteratorP3.MultiFileIterator<>(files);
-assertTrue(1 == it.next());
+        assertEquals(1, (int) it.next());
         var state = it.getState();
-assertTrue(2 == it.next());
+        assertEquals(2, (int) it.next());
         it.setState(state);
-assertTrue(2 == it.next());
+        assertEquals(2, (int) it.next());
         assertFalse(it.hasNext());
     }
 

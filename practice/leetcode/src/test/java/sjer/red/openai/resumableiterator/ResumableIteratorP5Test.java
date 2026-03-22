@@ -40,7 +40,7 @@ class ResumableIteratorP5Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP5.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
+        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
     }
 
     @Test
@@ -53,7 +53,7 @@ assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP5.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-assertTrue(99 == it.next());
+        assertEquals(99, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -64,13 +64,13 @@ assertTrue(99 == it.next());
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-        assertTrue(3 == it.next()); // 3
-        assertTrue(4 == it.next()); // 4
+        assertEquals(3, (int) it.next()); // 3
+        assertEquals(4, (int) it.next()); // 4
         it.setState(state);
         // Should replay from position after 2
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
-assertTrue(5 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
+        assertEquals(5, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -83,9 +83,9 @@ assertTrue(5 == it.next());
         it.next(); // 20
         it.next(); // 30
         it.setState(s1);
-assertTrue(10 == it.next());
+        assertEquals(10, (int) it.next());
         it.setState(s2);
-assertTrue(20 == it.next());
+        assertEquals(20, (int) it.next());
     }
 
     // --- B1-B4 (from P3) ---
@@ -98,7 +98,7 @@ assertTrue(20 == it.next());
         );
         var it = new ResumableIteratorP5.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
     }
 
     @Test
@@ -113,7 +113,7 @@ assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
         );
         var it = new ResumableIteratorP5.MultiFileIterator<>(files);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -133,11 +133,11 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         it.setState(state);
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -151,7 +151,7 @@ assertTrue(4 == it.next());
         );
         var it = new ResumableIteratorP5.ResumableIterator2D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
     }
 
     @Test
@@ -164,7 +164,7 @@ assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
         );
         var it = new ResumableIteratorP5.ResumableIterator2D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -176,9 +176,9 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         it.next(); // 20
         it.next(); // 30
         it.setState(state);
-assertTrue(20 == it.next());
-assertTrue(30 == it.next());
-assertTrue(40 == it.next());
+        assertEquals(20, (int) it.next());
+        assertEquals(30, (int) it.next());
+        assertEquals(40, (int) it.next());
     }
 
     // --- D1-D3 (new in P5) ---
@@ -190,7 +190,7 @@ assertTrue(40 == it.next());
         );
         var it = new ResumableIteratorP5.ResumableIterator3D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3, 4, 5, 6)), sig(acc));
     }
 
     @Test
@@ -202,7 +202,7 @@ assertTrue(sig(List.of(1, 2, 3, 4, 5, 6)).equals(sig(acc)));
         );
         var it = new ResumableIteratorP5.ResumableIterator3D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -215,11 +215,11 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         it.setState(state);
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -249,7 +249,7 @@ assertTrue(4 == it.next());
         );
         var it = new ResumableIteratorP5.ResumableIterator3D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -261,7 +261,7 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         );
         var it = new ResumableIteratorP5.ResumableIterator3D<>(data);
         var acc = drain(it);
-assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
+        assertEquals(sig(List.of(1, 2, 3)), sig(acc));
     }
 
     @Test
@@ -274,12 +274,12 @@ assertTrue(sig(List.of(1, 2, 3)).equals(sig(acc)));
         it.next(); // 1
         it.next(); // 2
         var state = it.getState();
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         assertFalse(it.hasNext());
         it.setState(state);
-assertTrue(3 == it.next());
-assertTrue(4 == it.next());
+        assertEquals(3, (int) it.next());
+        assertEquals(4, (int) it.next());
         assertFalse(it.hasNext());
     }
 }

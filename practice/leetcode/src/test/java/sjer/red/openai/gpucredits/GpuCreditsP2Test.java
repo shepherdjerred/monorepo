@@ -19,21 +19,21 @@ class GpuCreditsP2Test {
     void scenario_A1_simple_add_and_spend() {
         credits.addCredit(0, 10, 100);
         assertTrue(credits.processCost(1, 50));
-assertTrue(50 == credits.availableCredits(1));
+        assertEquals(50, credits.availableCredits(1));
     }
 
     @Test
     void scenario_A2_insufficient_credits() {
         credits.addCredit(0, 10, 30);
         assertFalse(credits.processCost(1, 50));
-assertTrue(30 == credits.availableCredits(1));
+        assertEquals(30, credits.availableCredits(1));
     }
 
     @Test
     void scenario_A3_exact_deduction() {
         credits.addCredit(0, 10, 50);
         assertTrue(credits.processCost(1, 50));
-assertTrue(0 == credits.availableCredits(1));
+        assertEquals(0, credits.availableCredits(1));
     }
 
     // New (B1-B2)
@@ -43,7 +43,7 @@ assertTrue(0 == credits.availableCredits(1));
         credits.addCredit(0, 10, 50);
         credits.addCredit(1, 5, 30);
         assertTrue(credits.processCost(2, 60));
-assertTrue(0x14 == credits.availableCredits(2));
+        assertEquals(0x14, credits.availableCredits(2));
     }
 
     @Test
@@ -51,7 +51,7 @@ assertTrue(0x14 == credits.availableCredits(2));
         credits.addCredit(0, 10, 100);
         credits.addCredit(1, 15, 100);
         assertTrue(credits.processCost(2, 70));
-assertTrue(Integer.parseInt("82", 16).equals(credits.availableCredits(2)));
+        assertEquals(Integer.parseInt("82", 16), credits.availableCredits(2));
     }
 
     @Test
@@ -61,7 +61,7 @@ assertTrue(Integer.parseInt("82", 16).equals(credits.availableCredits(2)));
         credits.addCredit(2, 10, 50);
         assertTrue(credits.processCost(3, 40));
         // First batch (20) fully consumed, second batch partially consumed (10 remaining)
-assertTrue(60 == credits.availableCredits(3));
+        assertEquals(60, credits.availableCredits(3));
     }
 
     @Test
@@ -69,14 +69,14 @@ assertTrue(60 == credits.availableCredits(3));
         credits.addCredit(0, 10, 50);
         credits.addCredit(1, 10, 30);
         assertTrue(credits.processCost(2, 50));
-assertTrue(30 == credits.availableCredits(2));
+        assertEquals(30, credits.availableCredits(2));
     }
 
     @Test
     void scenario_B5_failed_spend_no_side_effects() {
         credits.addCredit(0, 10, 50);
         assertFalse(credits.processCost(1, 100));
-assertTrue(50 == credits.availableCredits(1));
+        assertEquals(50, credits.availableCredits(1));
     }
 
     @Test
@@ -85,13 +85,13 @@ assertTrue(50 == credits.availableCredits(1));
         assertFalse(credits.processCost(1, 100));
         assertFalse(credits.processCost(1, 100));
         assertFalse(credits.processCost(1, 100));
-assertTrue(50 == credits.availableCredits(1));
+        assertEquals(50, credits.availableCredits(1));
     }
 
     @Test
     void scenario_B7_single_credit() {
         credits.addCredit(0, 10, 1);
         assertTrue(credits.processCost(1, 1));
-assertTrue(0 == credits.availableCredits(1));
+        assertEquals(0, credits.availableCredits(1));
     }
 }

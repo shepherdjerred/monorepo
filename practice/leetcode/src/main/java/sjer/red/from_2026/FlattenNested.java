@@ -42,6 +42,7 @@ public class FlattenNested implements Iterator<Integer> {
     // pop when exiting
     List<NestedInteger> list;
     NestedInteger nextVal = null;
+
     public FlattenNested(List<NestedInteger> nestedList) {
         this.list = nestedList;
         stack.push(nestedList.iterator());

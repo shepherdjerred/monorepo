@@ -80,7 +80,7 @@ class ExcelSheetP2Test {
         sheet.setCell("A1", 5);
         sheet.setCell("B1", 3);
         sheet.setCellFormula("C1", "=A1+B1");
-assertTrue(8 == sheet.getCell("C1"));
+        assertEquals(8, sheet.getCell("C1"));
         sheet.setCell("A1", 10);
         assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
     }

@@ -17,21 +17,21 @@ class GpuCreditsP1Test {
     void scenario_A1_simple_add_and_spend() {
         credits.addCredit(0, 10, 100);
         assertTrue(credits.processCost(1, 50));
-assertTrue(50 == credits.availableCredits(1));
+        assertEquals(50, credits.availableCredits(1));
     }
 
     @Test
     void scenario_A2_insufficient_credits() {
         credits.addCredit(0, 10, 30);
         assertFalse(credits.processCost(1, 50));
-assertTrue(30 == credits.availableCredits(1));
+        assertEquals(30, credits.availableCredits(1));
     }
 
     @Test
     void scenario_A3_exact_deduction() {
         credits.addCredit(0, 10, 50);
         assertTrue(credits.processCost(1, 50));
-assertTrue(0 == credits.availableCredits(1));
+        assertEquals(0, credits.availableCredits(1));
     }
 
     @Test
@@ -42,13 +42,13 @@ assertTrue(0 == credits.availableCredits(1));
 
     @Test
     void scenario_A5_available_credits_with_nothing_added() {
-assertTrue(0 == credits.availableCredits(0));
+        assertEquals(0, credits.availableCredits(0));
     }
 
     @Test
     void scenario_A6_add_zero_credits() {
         credits.addCredit(0, 10, 0);
-assertTrue(0 == credits.availableCredits(0));
+        assertEquals(0, credits.availableCredits(0));
     }
 
     @Test
@@ -56,6 +56,6 @@ assertTrue(0 == credits.availableCredits(0));
         credits.addCredit(0, 10, 30);
         credits.addCredit(1, 10, 40);
         credits.addCredit(2, 10, 50);
-assertTrue(120 == credits.availableCredits(3));
+        assertEquals(120, credits.availableCredits(3));
     }
 }

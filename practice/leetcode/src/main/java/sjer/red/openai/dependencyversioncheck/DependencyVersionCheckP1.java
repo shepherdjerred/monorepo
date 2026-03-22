@@ -24,7 +24,24 @@ public class DependencyVersionCheckP1 {
      * Use binary search. Return null if no version supports the feature.
      */
     public String findEarliest(List<String> versions, Function<String, Boolean> supportsFeature) {
-        // TODO: implement with binary search
-        throw new UnsupportedOperationException("Not yet implemented");
+        var left = 0;
+        var right = versions.size() - 1;
+        Integer min = null;
+
+        while (right >= left) {
+            var middle = left + (right - left) / 2;
+            if (supportsFeature.apply(versions.get(middle)) == true) {
+                right = middle - 1;
+                min = middle;
+            } else {
+                left = middle + 1;
+            }
+        }
+
+        if (min != null) {
+            return versions.get(min);
+        } else {
+            return null;
+        }
     }
 }

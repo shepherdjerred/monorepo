@@ -9,18 +9,18 @@ import java.util.Map;
  * - cd(currentDir, newDir, homeDir, symlinks) — resolve symbolic links
  * - After resolving the path, check if it matches any symlink source
  * - Use longest-match: if both "/usr" and "/usr/local/bin" are symlinks,
- *   prefer "/usr/local/bin" for path "/usr/local/bin/foo"
+ * prefer "/usr/local/bin" for path "/usr/local/bin/foo"
  * - Detect symlink cycles and throw IllegalArgumentException
  * - Symlinks only apply to the final resolved path (not during resolution)
  * <p>
  * Examples:
  * cd("/home", "/usr/bin", "/home/default", {"/usr/bin"→"/opt/bin"})
- *   → "/opt/bin"
+ * → "/opt/bin"
  * cd("/", "/usr/local/bin", "/home/default",
- *   {"/usr/local/bin"→"/opt/local/bin", "/usr"→"/system/usr"})
- *   → "/opt/local/bin"  (longest match wins)
+ * {"/usr/local/bin"→"/opt/local/bin", "/usr"→"/system/usr"})
+ * → "/opt/local/bin"  (longest match wins)
  * cd("/", "/a", "/home/default", {"/a"→"/b", "/b"→"/a"})
- *   → throws IllegalArgumentException (cycle detected)
+ * → throws IllegalArgumentException (cycle detected)
  * <p>
  * TIME TARGET: ~15 minutes (cumulative ~35-40 minutes)
  */

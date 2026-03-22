@@ -25,7 +25,7 @@ class WebCrawlerP1Test {
         graph.put("https://a.com/x", List.of("https://a.com/y"));
         graph.put("https://a.com/y", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(3 == result.size());
+        assertEquals(3, result.size());
         assertTrue(result.contains("https://a.com"));
         assertTrue(result.contains("https://a.com/x"));
         assertTrue(result.contains("https://a.com/y"));
@@ -37,7 +37,7 @@ assertTrue(3 == result.size());
         graph.put("https://a.com/p", List.of());
         graph.put("https://b.com/q", List.of("https://b.com/r"));
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(2 == result.size());
+        assertEquals(2, result.size());
         assertFalse(result.contains("https://b.com/q"));
     }
 
@@ -47,14 +47,14 @@ assertTrue(2 == result.size());
         graph.put("https://c.com/a", List.of("https://c.com/b"));
         graph.put("https://c.com/b", List.of("https://c.com"));
         var result = crawler.crawl("https://c.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(3 == result.size());
+        assertEquals(3, result.size());
     }
 
     @Test
     void scenario_A4_isolated() {
         graph.put("https://solo.com", List.of());
         var result = crawler.crawl("https://solo.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(1 == result.size());
+        assertEquals(1, result.size());
         assertTrue(result.contains("https://solo.com"));
     }
 
@@ -65,17 +65,17 @@ assertTrue(1 == result.size());
         graph.put("https://d.com/b", List.of("https://d.com/c"));
         graph.put("https://d.com/c", List.of());
         var result = crawler.crawl("https://d.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(4 == result.size());
+        assertEquals(4, result.size());
     }
 
     @Test
     void scenario_E1_domain() {
-assertTrue("example.com".equals(crawler.getDomain("https://example.com/path/to/page")));
+        assertEquals("example.com", crawler.getDomain("https://example.com/path/to/page"));
     }
 
     @Test
     void scenario_E2_domain_with_port() {
-assertTrue("localhost:8080".equals(crawler.getDomain("http://localhost:8080/api")));
+        assertEquals("localhost:8080", crawler.getDomain("http://localhost:8080/api"));
     }
 
     // F tests: edge cases
@@ -84,7 +84,7 @@ assertTrue("localhost:8080".equals(crawler.getDomain("http://localhost:8080/api"
     void scenario_F1_self_loop() {
         graph.put("https://a.com", List.of("https://a.com"));
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(1 == result.size());
+        assertEquals(1, result.size());
         assertTrue(result.contains("https://a.com"));
     }
 
@@ -94,7 +94,7 @@ assertTrue(1 == result.size());
         graph.put("https://b.com", List.of());
         graph.put("https://c.com", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(1 == result.size());
+        assertEquals(1, result.size());
         assertTrue(result.contains("https://a.com"));
     }
 
@@ -107,7 +107,7 @@ assertTrue(1 == result.size());
         }
         graph.put("https://a.com", links);
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(21 == result.size());
+        assertEquals(21, result.size());
     }
 
     @Test
@@ -117,14 +117,14 @@ assertTrue(21 == result.size());
         }
         graph.put("https://a.com/9", List.of());
         var result = crawler.crawl("https://a.com/0", url -> graph.getOrDefault(url, List.of()));
-assertTrue(10 == result.size());
+        assertEquals(10, result.size());
     }
 
     @Test
     void scenario_F5_start_no_links() {
         graph.put("https://a.com", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(1 == result.size());
+        assertEquals(1, result.size());
         assertTrue(result.contains("https://a.com"));
     }
 
@@ -133,7 +133,7 @@ assertTrue(1 == result.size());
         graph.put("https://a.com", List.of("https://sub.a.com/page"));
         graph.put("https://sub.a.com/page", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(1 == result.size());
+        assertEquals(1, result.size());
         assertTrue(result.contains("https://a.com"));
     }
 
@@ -141,13 +141,13 @@ assertTrue(1 == result.size());
     void scenario_F7_different_protocol_same_domain() {
         graph.put("https://a.com", List.of("http://a.com/page"));
         graph.put("http://a.com/page", List.of());
-assertTrue("a.com".equals(crawler.getDomain("https://a.com")));
-assertTrue("a.com".equals(crawler.getDomain("http://a.com/page")));
+        assertEquals("a.com", crawler.getDomain("https://a.com"));
+        assertEquals("a.com", crawler.getDomain("http://a.com/page"));
     }
 
     @Test
     void scenario_F8_domain_no_path() {
-assertTrue("example.com".equals(crawler.getDomain("https://example.com")));
+        assertEquals("example.com", crawler.getDomain("https://example.com"));
     }
 
     @Test
@@ -155,7 +155,7 @@ assertTrue("example.com".equals(crawler.getDomain("https://example.com")));
         graph.put("https://a.com", List.of("https://a.com/x", "https://a.com/x", "https://a.com/x"));
         graph.put("https://a.com/x", List.of());
         var result = crawler.crawl("https://a.com", url -> graph.getOrDefault(url, List.of()));
-assertTrue(2 == result.size());
+        assertEquals(2, result.size());
         assertTrue(result.contains("https://a.com"));
         assertTrue(result.contains("https://a.com/x"));
     }

@@ -7,7 +7,6 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -43,7 +42,7 @@ class ResumableIteratorP1Test {
     void scenario_A1_basic_iteration() {
         var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(10, 20, 30));
         var acc = drain(it);
-assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
+        assertEquals(sig(List.of(10, 20, 30)), sig(acc));
     }
 
     @Test
@@ -56,7 +55,7 @@ assertTrue(sig(List.of(10, 20, 30)).equals(sig(acc)));
     void scenario_A3_single_element() {
         var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(99));
         assertTrue(it.hasNext());
-assertTrue(99 == it.next());
+        assertEquals(99, (int) it.next());
         assertFalse(it.hasNext());
     }
 
@@ -76,15 +75,15 @@ assertTrue(99 == it.next());
             assertTrue(it.hasNext());
         }
         // Should still return first element
-assertTrue(1 == it.next());
+        assertEquals(1, (int) it.next());
     }
 
     @Test
     void scenario_A6_next_without_hasNext() {
         var it = new ResumableIteratorP1.ResumableListIterator<>(List.of(10, 20, 30));
-assertTrue(10 == it.next());
-assertTrue(20 == it.next());
-assertTrue(30 == it.next());
+        assertEquals(10, (int) it.next());
+        assertEquals(20, (int) it.next());
+        assertEquals(30, (int) it.next());
     }
 
     @Test
@@ -92,8 +91,8 @@ assertTrue(30 == it.next());
         var data = IntStream.rangeClosed(1, 1000).boxed().collect(Collectors.toList());
         var it = new ResumableIteratorP1.ResumableListIterator<>(data);
         var acc = drain(it);
-assertTrue(sig(data).equals(sig(acc)));
-assertTrue(1000 == acc.size());
-assertTrue(1000 == acc.get(999));
+        assertEquals(sig(data), sig(acc));
+        assertEquals(1000, acc.size());
+        assertEquals(1000, (int) acc.get(999));
     }
 }

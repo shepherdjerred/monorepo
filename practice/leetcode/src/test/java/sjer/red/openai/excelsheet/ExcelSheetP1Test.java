@@ -7,8 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ExcelSheetP1Test {
     private ExcelSheetP1 sheet;
@@ -78,7 +77,7 @@ class ExcelSheetP1Test {
         sheet.setCell("A1", 5);
         sheet.setCell("B1", 3);
         sheet.setCellFormula("C1", "=A1+B1");
-assertTrue(8 == sheet.getCell("C1"));
+        assertEquals(8, sheet.getCell("C1"));
         sheet.setCell("A1", 10);
         assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
     }

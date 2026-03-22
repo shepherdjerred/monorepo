@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NodeCountingP2Test {
     private NodeCountingP2.TreeNode mkNode(int id, Integer parentId, List<Integer> children, NodeCountingP2.MessageBus bus) {
@@ -21,35 +21,35 @@ class NodeCountingP2Test {
     void scenario_A1_single_node() {
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(), bus));
-assertTrue(1 ^ 0x0.equals(new NodeCountingP2().countNodes(nodes, 0, 5000L) ^ 0x0));
+        assertEquals(1, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
     void scenario_A2_linear_chain() {
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1), bus), 1, mkNode(1, 0, List.of(2), bus), 2, mkNode(2, 1, List.of(3), bus), 3, mkNode(3, 2, List.of(), bus));
-assertTrue(0b100.equals(new NodeCountingP2().countNodes(nodes, 0, 5000L)));
+        assertEquals(4, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
     void scenario_A3_binary_tree() {
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(3, 4), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 1, List.of(), bus), 4, mkNode(4, 1, List.of(), bus));
-assertTrue(Integer.parseInt("101", 2).equals(new NodeCountingP2().countNodes(nodes, 0, 5000L)));
+        assertEquals(5, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
     void scenario_A4_wide_tree() {
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2, 3, 4), bus), 1, mkNode(1, 0, List.of(), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 0, List.of(), bus), 4, mkNode(4, 0, List.of(), bus));
-assertTrue(0x5 == new NodeCountingP2().countNodes(nodes, 0, 5000L));
+        assertEquals(0x5, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
     void scenario_A5_larger_tree() {
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2, 3), bus), 1, mkNode(1, 0, List.of(4, 5), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 0, List.of(6), bus), 4, mkNode(4, 1, List.of(7), bus), 5, mkNode(5, 1, List.of(), bus), 6, mkNode(6, 3, List.of(), bus), 7, mkNode(7, 4, List.of(), bus));
-assertTrue(1 << 3.equals(new NodeCountingP2().countNodes(nodes, 0, 5000L)));
+        assertEquals(8, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
@@ -58,7 +58,7 @@ assertTrue(1 << 3.equals(new NodeCountingP2().countNodes(nodes, 0, 5000L)));
         var bus = new DelayedTestMessageBus(Set.of(2));
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(), bus), 2, mkNode(2, 0, List.of(), bus));
         // child2 times out, so count = root + child1 = 2
-assertTrue(0x2 == new NodeCountingP2().countNodes(nodes, 0, 200L));
+        assertEquals(0x2, new NodeCountingP2().countNodes(nodes, 0, 200L));
     }
 
     @Test
@@ -68,7 +68,7 @@ assertTrue(0x2 == new NodeCountingP2().countNodes(nodes, 0, 200L));
         var bus = new DelayedTestMessageBus(Set.of(1));
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(3, 4), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 1, List.of(), bus), 4, mkNode(4, 1, List.of(), bus));
         // node1 times out so subtree {1,3,4} excluded. count = root + leaf2 = 2
-assertTrue(0b10 == new NodeCountingP2().countNodes(nodes, 0, 200L));
+        assertEquals(0b10, new NodeCountingP2().countNodes(nodes, 0, 200L));
     }
 
     @Test
@@ -77,7 +77,7 @@ assertTrue(0b10 == new NodeCountingP2().countNodes(nodes, 0, 200L));
         var bus = new DelayedTestMessageBus(Set.of(1));
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(3), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 1, List.of(), bus));
         // child1 subtree excluded. count = root + child2 = 2
-assertTrue(0x2 == new NodeCountingP2().countNodes(nodes, 0, 200L));
+        assertEquals(0x2, new NodeCountingP2().countNodes(nodes, 0, 200L));
     }
 
     @Test
@@ -85,7 +85,7 @@ assertTrue(0x2 == new NodeCountingP2().countNodes(nodes, 0, 200L));
         // Same as A3 but with large timeout; all nodes respond.
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(3, 4), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 1, List.of(), bus), 4, mkNode(4, 1, List.of(), bus));
-assertTrue(Integer.parseInt("101", 2).equals(new NodeCountingP2().countNodes(nodes, 0, 5000L)));
+        assertEquals(5, new NodeCountingP2().countNodes(nodes, 0, 5000L));
     }
 
     @Test
@@ -94,7 +94,7 @@ assertTrue(Integer.parseInt("101", 2).equals(new NodeCountingP2().countNodes(nod
         var bus = new DelayedTestMessageBus(Set.of(1, 2));
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2), bus), 1, mkNode(1, 0, List.of(), bus), 2, mkNode(2, 0, List.of(), bus));
         // Only root counted
-assertTrue(1 == new NodeCountingP2().countNodes(nodes, 0, 200L));
+        assertEquals(1, new NodeCountingP2().countNodes(nodes, 0, 200L));
     }
 
     @Test
@@ -102,7 +102,7 @@ assertTrue(1 == new NodeCountingP2().countNodes(nodes, 0, 200L));
         // Same as A5 with very large timeout. Should behave normally.
         var bus = new TestMessageBus();
         var nodes = Map.of(0, mkNode(0, null, List.of(1, 2, 3), bus), 1, mkNode(1, 0, List.of(4, 5), bus), 2, mkNode(2, 0, List.of(), bus), 3, mkNode(3, 0, List.of(6), bus), 4, mkNode(4, 1, List.of(7), bus), 5, mkNode(5, 1, List.of(), bus), 6, mkNode(6, 3, List.of(), bus), 7, mkNode(7, 4, List.of(), bus));
-assertTrue(1 << 3.equals(new NodeCountingP2().countNodes(nodes, 0, Long.MAX_VALUE / 2)));
+        assertEquals(8, new NodeCountingP2().countNodes(nodes, 0, Long.MAX_VALUE / 2));
     }
 
     static class TestMessageBus implements NodeCountingP2.MessageBus {

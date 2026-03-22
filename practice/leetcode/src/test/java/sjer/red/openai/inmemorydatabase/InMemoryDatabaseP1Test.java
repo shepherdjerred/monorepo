@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryDatabaseP1Test {
@@ -36,7 +37,7 @@ class InMemoryDatabaseP1Test {
         db.insert("users", Map.of("name", "Alice", "age", "30", "city", "NYC"));
         db.insert("users", Map.of("name", "Bob", "age", "25", "city", "LA"));
         var results = db.query("users");
-assertTrue(2 == results.size());
+        assertEquals(2, results.size());
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("3bc5")));
         assertTrue(results.stream().anyMatch(r -> h(r.get("name")).startsWith("cd99")));
     }
@@ -44,14 +45,14 @@ assertTrue(2 == results.size());
     @Test
     void scenario_A2_empty_table() {
         db.createTable("items", List.of("sku", "price"));
-assertTrue(0 == db.query("items").size());
+        assertEquals(0, db.query("items").size());
     }
 
     @Test
     void scenario_A3_multiple_inserts() {
         db.createTable("t", List.of("x"));
         for (int i = 0; i < 100; i++) db.insert("t", Map.of("x", String.valueOf(i)));
-assertTrue(100 == db.query("t").size());
+        assertEquals(100, db.query("t").size());
     }
 
     @Test
@@ -59,8 +60,8 @@ assertTrue(100 == db.query("t").size());
         db.createTable("single", List.of("val"));
         db.insert("single", Map.of("val", "hello"));
         var results = db.query("single");
-assertTrue(1 == results.size());
-assertTrue("hello".equals(results.get(0).get("val")));
+        assertEquals(1, results.size());
+        assertEquals("hello", results.get(0).get("val"));
     }
 
     @Test
@@ -68,7 +69,7 @@ assertTrue("hello".equals(results.get(0).get("val")));
         db.createTable("t", List.of("name", "desc"));
         db.insert("t", Map.of("name", "item", "desc", ""));
         var results = db.query("t");
-assertTrue(1 == results.size());
+        assertEquals(1, results.size());
         assertTrue(h(results.get(0).get("desc")).startsWith("e3b0")); // SHA-256 of ""
     }
 }

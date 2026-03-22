@@ -1,7 +1,5 @@
 package sjer.red.openai.cddirectory;
 
-import java.util.Stack;
-
 /**
  * PROBLEM: cd (Change Directory)
  * <p>
