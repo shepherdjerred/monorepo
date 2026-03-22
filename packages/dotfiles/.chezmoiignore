@@ -11,3 +11,7 @@ AppData_*
 {{- if ne .chezmoi.os "darwin" }}
 Library/
 {{- end }}
+
+_summary.md
+BUILD.bazel
+scripts

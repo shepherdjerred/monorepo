@@ -1,4 +1,4 @@
-package sjer.red.openai.dependencyversioncheck;
+package sjer.red.openai.dependencyversioncheck.attempt1;
 
 import java.util.List;
 import java.util.function.Function;

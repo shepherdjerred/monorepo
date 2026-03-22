@@ -2,10 +2,12 @@ package sjer.red.openai.dependencyversioncheck;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import sjer.red.openai.dependencyversioncheck.attempt1.DependencyVersionCheckP2;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,85 +58,108 @@ class DependencyVersionCheckP2Test {
         assertNull(solver.findEarliest(versions, check));
     }
 
-    @Test
-    void scenario_A5_efficiency() {
-        var versions = new ArrayList<String>();
-        for (int i = 0; i < 1000; i++) versions.add(String.valueOf(i));
-        AtomicInteger calls = new AtomicInteger(0);
-        Function<String, Boolean> check = v -> {
-            calls.incrementAndGet();
-            return Integer.parseInt(v) >= 500;
-        };
-        assertEquals("500", solver.findEarliest(versions, check));
-    }
-
-    // --- Part 2: Non-monotonic ---
+    // --- Part 2: Non-monotonic with semver-style versions ---
+    // These test cases reveal that global monotonicity is broken.
+    // The candidate should observe from the data that the LAST version
+    // of each major group behaves monotonically across groups.
 
     @Test
-    void scenario_B1_broken_monotonicity() {
-        var versions = List.of("1.0", "1.1", "1.2", "1.3", "1.4", "2.0");
-        Map<String, Boolean> support = Map.of(
-                "1.0", false, "1.1", true, "1.2", false,
-                "1.3", true, "1.4", true, "2.0", true);
-        assertEquals(b("MS4x"), solver.findEarliest(versions, support::get));
+    void scenario_B1_broken_monotonicity_semver() {
+        // 103.003.02 supports, but 103.003.03 does NOT — breaks binary search!
+        var versions = List.of("103.003.02", "103.003.03", "203.003.02");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("103.003.02", true);
+        support.put("103.003.03", false);
+        support.put("203.003.02", true);
+        // Answer: 103.003.02
+        assertEquals(b("MTAzLjAwMy4wMg=="), solver.findEarliest(versions, support::get));
     }
 
     @Test
-    void scenario_B2_only_last() {
-        var versions = List.of("1.0", "2.0", "3.0", "4.0");
-        Map<String, Boolean> support = Map.of(
-                "1.0", false, "2.0", false, "3.0", false, "4.0", true);
-        assertEquals(b("NC4w"), solver.findEarliest(versions, support::get));
+    void scenario_B2_support_flips_within_major() {
+        // Within major 1: support flips between patches
+        // But last version of major 1 (1.1.1) supports, last of major 2 (2.1.1) supports
+        var versions = List.of("1.0.0", "1.0.1", "1.1.0", "1.1.1", "2.0.0", "2.0.1", "2.1.0", "2.1.1");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("1.0.0", false);
+        support.put("1.0.1", true);   // earliest!
+        support.put("1.1.0", false);  // broken monotonicity
+        support.put("1.1.1", true);
+        support.put("2.0.0", true);
+        support.put("2.0.1", false);  // broken again
+        support.put("2.1.0", true);
+        support.put("2.1.1", true);
+        // Answer: 1.0.1
+        assertEquals(b("MS4wLjE="), solver.findEarliest(versions, support::get));
     }
 
     @Test
-    void scenario_B3_alternating() {
-        var versions = List.of("1", "2", "3", "4", "5", "6");
-        Map<String, Boolean> support = Map.of(
-                "1", true, "2", false, "3", true,
-                "4", false, "5", true, "6", false);
-        assertEquals("1", solver.findEarliest(versions, support::get));
+    void scenario_B3_first_major_no_support() {
+        // Major 1 has no support at all, major 2 has some
+        var versions = List.of("1.0.0", "1.0.1", "1.1.0", "2.0.0", "2.0.1", "2.1.0");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("1.0.0", false);
+        support.put("1.0.1", false);
+        support.put("1.1.0", false);
+        support.put("2.0.0", false);
+        support.put("2.0.1", true);  // earliest!
+        support.put("2.1.0", true);
+        // Answer: 2.0.1
+        assertEquals(b("Mi4wLjE="), solver.findEarliest(versions, support::get));
     }
 
     @Test
-    void scenario_B4_none_support() {
-        var versions = List.of("a", "b", "c");
-        assertNull(solver.findEarliest(versions, v -> false));
+    void scenario_B4_all_majors_some_support() {
+        // Every major has at least one supporting version
+        var versions = List.of("1.0.0", "1.0.1", "2.0.0", "2.0.1", "3.0.0", "3.0.1");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("1.0.0", true);   // earliest!
+        support.put("1.0.1", false);
+        support.put("2.0.0", false);
+        support.put("2.0.1", true);
+        support.put("3.0.0", true);
+        support.put("3.0.1", false);
+        assertEquals(b("MS4wLjA="), solver.findEarliest(versions, support::get));
     }
 
     @Test
-    void scenario_B5_single_supports() {
-        var versions = List.of("x");
-        Map<String, Boolean> support = Map.of("x", true);
-        assertEquals("x", solver.findEarliest(versions, support::get));
-    }
-
-    @Test
-    void scenario_B6_single_no_support() {
-        var versions = List.of("x");
-        Map<String, Boolean> support = Map.of("x", false);
+    void scenario_B5_none_support() {
+        var versions = List.of("1.0.0", "1.0.1", "2.0.0");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("1.0.0", false);
+        support.put("1.0.1", false);
+        support.put("2.0.0", false);
         assertNull(solver.findEarliest(versions, support::get));
     }
 
     @Test
-    void scenario_B7_empty_list() {
+    void scenario_B6_single_version_supports() {
+        var versions = List.of("5.0.0");
+        assertEquals("5.0.0", solver.findEarliest(versions, v -> true));
+    }
+
+    @Test
+    void scenario_B7_single_version_no_support() {
+        var versions = List.of("5.0.0");
+        assertNull(solver.findEarliest(versions, v -> false));
+    }
+
+    @Test
+    void scenario_B8_empty_list() {
         var versions = List.<String>of();
         assertNull(solver.findEarliest(versions, v -> true));
     }
 
     @Test
-    void scenario_B8_only_first_supports() {
-        var versions = List.of("a", "b", "c", "d");
-        Map<String, Boolean> support = Map.of(
-                "a", true, "b", false, "c", false, "d", false);
-        assertEquals("a", solver.findEarliest(versions, support::get));
-    }
-
-    @Test
     void scenario_B9_only_middle_supports() {
-        var versions = List.of("a", "b", "c", "d", "e");
-        Map<String, Boolean> support = Map.of(
-                "a", false, "b", false, "c", true, "d", false, "e", false);
-        assertEquals("c", solver.findEarliest(versions, support::get));
+        // Only one version in the middle supports — would fool binary search
+        var versions = List.of("1.0.0", "1.0.1", "1.0.2", "1.0.3", "1.0.4");
+        Map<String, Boolean> support = new LinkedHashMap<>();
+        support.put("1.0.0", false);
+        support.put("1.0.1", false);
+        support.put("1.0.2", true);  // only this one
+        support.put("1.0.3", false);
+        support.put("1.0.4", false);
+        assertEquals(b("MS4wLjI="), solver.findEarliest(versions, support::get));
     }
 }

@@ -104,7 +104,7 @@ class CdDirectoryP3Test {
     @Test
     void scenario_C2() {
         var symlinks = Map.of("/usr/local/bin", "/opt/local/bin", "/usr", "/system/usr");
-        assertEquals(d("L29wdC9sb2NhbC9iaW4="), solver.cd("/", "/usr/local/bin", "/home/default", symlinks));
+        assertEquals(d("L3N5c3RlbS91c3IvbG9jYWwvYmlu"), solver.cd("/", "/usr/local/bin", "/home/default", symlinks));
     }
 
     @Test
@@ -152,7 +152,7 @@ class CdDirectoryP3Test {
     @Test
     void scenario_C10() {
         var symlinks = Map.of("/usr", "/opt", "/opt/bin", "/tools");
-        assertEquals(d("L29wdA=="), solver.cd("/", "/usr/bin", "/home/default", symlinks));
+        assertEquals(d("L3Rvb2xz"), solver.cd("/", "/usr/bin", "/home/default", symlinks));
     }
 
     @Test

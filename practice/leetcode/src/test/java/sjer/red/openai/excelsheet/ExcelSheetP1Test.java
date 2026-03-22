@@ -31,7 +31,7 @@ class ExcelSheetP1Test {
     @Test
     void scenario_A1() {
         sheet.setCell("A1", 42);
-        assertTrue(v(sheet.getCell("A1"), "a1c0bfe4"));
+        assertTrue(v(sheet.getCell("A1"), "73475cb4"));
     }
 
     @Test
@@ -39,14 +39,14 @@ class ExcelSheetP1Test {
         sheet.setCell("A1", 10);
         sheet.setCell("B1", 20);
         sheet.setCellFormula("C1", "=A1+B1");
-        assertTrue(v(sheet.getCell("C1"), "6ea9ab1b"));
+        assertTrue(v(sheet.getCell("C1"), "624b60c5"));
     }
 
     @Test
     void scenario_A3() {
         sheet.setCell("A1", 100);
         sheet.setCellFormula("B1", "=A1-37");
-        assertTrue(v(sheet.getCell("B1"), "ea5d2f1c"));
+        assertTrue(v(sheet.getCell("B1"), "da4ea2a5"));
     }
 
     @Test
@@ -54,14 +54,14 @@ class ExcelSheetP1Test {
         sheet.setCell("A1", 7);
         sheet.setCell("B1", 6);
         sheet.setCellFormula("C1", "=A1*B1");
-        assertTrue(v(sheet.getCell("C1"), "a1c0bfe4"));
+        assertTrue(v(sheet.getCell("C1"), "73475cb4"));
     }
 
     @Test
     void scenario_A5() {
         sheet.setCell("A1", 100);
         sheet.setCellFormula("B1", "=A1/3");
-        assertTrue(v(sheet.getCell("B1"), "5f0b48b6"));
+        assertTrue(v(sheet.getCell("B1"), "c6f3ac57"));
     }
 
     @Test
@@ -69,7 +69,7 @@ class ExcelSheetP1Test {
         sheet.setCell("A1", 5);
         sheet.setCellFormula("B1", "=A1+3");
         sheet.setCellFormula("C1", "=B1*2");
-        assertTrue(v(sheet.getCell("C1"), "48449a14"));
+        assertTrue(v(sheet.getCell("C1"), "b17ef6d1"));
     }
 
     @Test
@@ -79,7 +79,7 @@ class ExcelSheetP1Test {
         sheet.setCellFormula("C1", "=A1+B1");
         assertEquals(8, sheet.getCell("C1"));
         sheet.setCell("A1", 10);
-        assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
+        assertTrue(v(sheet.getCell("C1"), "3fdba35f"));
     }
 
     @Test
@@ -112,6 +112,7 @@ class ExcelSheetP1Test {
 
     @Test
     void scenario_A12_get_unset_cell() {
+        System.out.println();
         assertTrue(v(sheet.getCell("Z99"), "5feceb66"));
     }
 

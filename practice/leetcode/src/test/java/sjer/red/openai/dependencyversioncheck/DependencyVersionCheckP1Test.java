@@ -2,6 +2,7 @@ package sjer.red.openai.dependencyversioncheck;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import sjer.red.openai.dependencyversioncheck.attempt1.DependencyVersionCheckP1;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
