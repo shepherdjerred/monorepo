@@ -1,5 +1,8 @@
 package sjer.red.openai.gpucredits;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * PROBLEM: GPU Credit Tracking
  * <p>
@@ -20,36 +23,73 @@ package sjer.red.openai.gpucredits;
  * TIME TARGET: ~10-15 minutes (cumulative ~30-45)
  */
 public class GpuCreditsP3 {
+    // part 3 was already implemented in part 1
 
-    public GpuCreditsP3() {
-        // TODO: initialize data structures
-    }
+    List<Credit> credits = new ArrayList<>();
 
     /**
      * Add credits that become available at `time` and expire at `expireTime`.
      */
     public void addCredit(int time, int expireTime, int amount) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        credits.add(new Credit(time, expireTime, amount));
     }
 
     /**
      * Try to deduct `amount` credits at the given `time`.
-     * Consume oldest credits first. Ignore expired credits.
      * If insufficient credits, return false and deduct nothing.
      *
      * @return true if the cost was successfully processed
      */
     public boolean processCost(int time, int amount) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        var canAfford = availableCredits(time) >= amount;
+        if (!canAfford) {
+            return false;
+        }
+
+        while (amount > 0 && !credits.isEmpty()) {
+            var credit = credits.getFirst();
+
+            // check if credits have expired or are empty
+            if (credit.expire <= time || credit.amount == 0) {
+                credits.removeFirst();
+            } else {
+                // cases
+                // they have enough in this grant
+                // possibly could simplify this?
+                if (credit.amount >= amount) {
+                    credit.amount -= amount;
+                    amount = 0;
+                } else {
+                    amount -= credit.amount;
+                    credit.amount = 0;
+                }
+
+                // remove credit if it is now exhausted
+                if (credit.amount == 0) {
+                    credits.removeFirst();
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
      * Return the total non-expired credits available at the given time.
      */
     public int availableCredits(int time) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return credits.stream().filter(credit -> credit.expire > time).map(credit -> credit.amount).reduce(Integer::sum).orElse(0);
+    }
+
+    class Credit {
+        Integer time;
+        Integer expire;
+        Integer amount;
+
+        Credit(Integer time, Integer expire, Integer amount) {
+            this.time = time;
+            this.expire = expire;
+            this.amount = amount;
+        }
     }
 }

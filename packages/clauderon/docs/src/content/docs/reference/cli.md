@@ -42,8 +42,9 @@ clauderon daemon [OPTIONS]
 | `--enable-ai-metadata`        | `true`  | AI-generated session titles from prompts         |
 | `--enable-auto-reconcile`     | `true`  | Sync database with backends on startup           |
 | `--enable-usage-tracking`     | `false` | Track Claude API usage per session               |
-| `--enable-kubernetes-backend` | `false` | Enable Kubernetes backend (experimental)         |
 | `--enable-proxy-port-reuse`   | `false` | Reuse proxy ports across sessions (experimental) |
+| `--enable-experimental-models` | `false` | Enable experimental AI models (Codex, Gemini)    |
+| `--enable-readonly-mode`      | `false` | Enable read-only mode (experimental)              |
 
 See [Feature Flags Reference](/reference/feature-flags/) for detailed documentation.
 
@@ -56,8 +57,6 @@ clauderon daemon
 # Start with AI-generated session titles
 clauderon daemon --enable-ai-metadata
 
-# Start with Kubernetes backend enabled
-clauderon daemon --enable-kubernetes-backend
 ```
 
 ---
@@ -82,7 +81,7 @@ clauderon create --repo <PATH> --prompt <TEXT> [OPTIONS]
 **Options:**
 
 ```
---backend <BACKEND>          Backend: zellij (default), docker, kubernetes, sprites, apple
+--backend <BACKEND>          Backend: zellij (default), docker
 --agent <AGENT>              Agent: claude (default), codex, gemini
 --access-mode <MODE>         Access mode: read-write (default), read-only
 --no-plan-mode               Skip plan mode, go straight to implementation
@@ -216,20 +215,6 @@ clauderon archive <NAME>
 - `<NAME>` - Session name
 
 Archived sessions are hidden from `clauderon list` but can be seen with `clauderon list --archived`. Use this to keep completed sessions without cluttering your active list.
-
----
-
-### clauderon unarchive
-
-Restore an archived session.
-
-```bash
-clauderon unarchive <NAME>
-```
-
-**Arguments:**
-
-- `<NAME>` - Session name
 
 ---
 
@@ -413,8 +398,9 @@ Feature flags can also be set via environment variables:
 | `CLAUDERON_FEATURE_ENABLE_AI_METADATA`        | `true`  | AI-generated session titles |
 | `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE`     | `true`  | Auto-reconcile on startup   |
 | `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING`     | `false` | Claude usage tracking       |
-| `CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND` | `false` | Kubernetes backend          |
 | `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE`   | `false` | Proxy port reuse            |
+| `CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS` | `false` | Experimental AI models      |
+| `CLAUDERON_FEATURE_ENABLE_READONLY_MODE`      | `false` | Read-only mode              |
 
 Values: `1`, `true`, `yes`, `on` to enable; `0`, `false`, `no`, `off` to disable.
 

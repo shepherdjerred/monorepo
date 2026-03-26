@@ -37,7 +37,7 @@ public class ExcelSheetP2 {
 
     /**
      * Set a cell to a formula string (e.g. "=A1+B2").
-     * Must propagate updates to all downstream dependents.
+     * Must update dependency graph and propagate updates.
      */
     public void setCellFormula(String cell, String formula) {
         // TODO: implement

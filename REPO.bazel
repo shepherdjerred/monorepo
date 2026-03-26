@@ -1,3 +1,0 @@
-"""Repository-level Bazel configuration."""
-
-ignore_directories(["**/node_modules"])

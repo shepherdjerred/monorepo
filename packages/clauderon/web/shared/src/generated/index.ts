@@ -780,12 +780,16 @@ export enum AgentState {
 
 /** Model selection for Claude Code agent */
 export enum ClaudeModel {
-	/** Claude Opus 4.5 (most capable, best for complex workflows) */
-	Opus4_5 = "Opus4_5",
-	/** Claude Sonnet 4.5 (default, balanced performance for agents and coding) */
-	Sonnet4_5 = "Sonnet4_5",
+	/** Claude Opus 4.6 (most capable, 1M context) */
+	Opus4_6 = "Opus4_6",
+	/** Claude Sonnet 4.6 (default, balanced performance, 1M context) */
+	Sonnet4_6 = "Sonnet4_6",
 	/** Claude Haiku 4.5 (fastest, optimized for low latency) */
 	Haiku4_5 = "Haiku4_5",
+	/** Claude Opus 4.5 (previous generation, still capable) */
+	Opus4_5 = "Opus4_5",
+	/** Claude Sonnet 4.5 (previous generation balanced) */
+	Sonnet4_5 = "Sonnet4_5",
 	/** Claude Opus 4.1 (focused on agentic tasks and reasoning) */
 	Opus4_1 = "Opus4_1",
 	/** Claude Opus 4 (previous generation flagship) */
@@ -796,26 +800,42 @@ export enum ClaudeModel {
 
 /** Model selection for Codex agent */
 export enum CodexModel {
-	/** GPT-5.2-Codex (default, most advanced for software engineering) */
-	Gpt5_2Codex = "Gpt5_2Codex",
-	/** GPT-5.2 (most capable for professional knowledge work) */
-	Gpt5_2 = "Gpt5_2",
-	/** GPT-5.2 Instant (fast variant) */
-	Gpt5_2Instant = "Gpt5_2Instant",
-	/** GPT-5.2 Thinking (reasoning variant) */
-	Gpt5_2Thinking = "Gpt5_2Thinking",
-	/** GPT-5.2 Pro (premium variant) */
-	Gpt5_2Pro = "Gpt5_2Pro",
-	/** GPT-5.1 (previous flagship) */
-	Gpt5_1 = "Gpt5_1",
-	/** GPT-5.1 Instant (fast variant) */
-	Gpt5_1Instant = "Gpt5_1Instant",
-	/** GPT-5.1 Thinking (reasoning variant) */
-	Gpt5_1Thinking = "Gpt5_1Thinking",
-	/** GPT-4.1 (specialized for coding) */
-	Gpt4_1 = "Gpt4_1",
-	/** o3-mini (small reasoning model for science/math/coding) */
+	/** GPT-5.3-Codex (default, agentic coding model) */
+	Gpt5_3Codex = "Gpt5_3Codex",
+	/** GPT-5.4 (flagship, most capable) */
+	Gpt5_4 = "Gpt5_4",
+	/** GPT-5.4-mini (fast variant) */
+	Gpt5_4Mini = "Gpt5_4Mini",
+	/** GPT-5.4-nano (cost-effective variant) */
+	Gpt5_4Nano = "Gpt5_4Nano",
+	/** GPT-5.4-pro (premium variant) */
+	Gpt5_4Pro = "Gpt5_4Pro",
+	/** o3 (reasoning model) */
+	O3 = "O3",
+	/** o3-pro (premium reasoning model) */
+	O3Pro = "O3Pro",
+	/** o4-mini (fast reasoning model) */
+	O4Mini = "O4Mini",
+	/** o3-mini (small reasoning model) */
 	O3Mini = "O3Mini",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_2Codex = "Gpt5_2Codex",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_2 = "Gpt5_2",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_2Instant = "Gpt5_2Instant",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_2Thinking = "Gpt5_2Thinking",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_2Pro = "Gpt5_2Pro",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_1 = "Gpt5_1",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_1Instant = "Gpt5_1Instant",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt5_1Thinking = "Gpt5_1Thinking",
+	/** @deprecated Legacy variant for database compatibility */
+	Gpt4_1 = "Gpt4_1",
 }
 
 /** Real-time events from the server */
@@ -921,13 +941,19 @@ export type EventType =
 
 /** Model selection for Gemini agent */
 export enum GeminiModel {
-	/** Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context) */
-	Gemini3Pro = "Gemini3Pro",
-	/** Gemini 3 Flash (fast frontier-class performance at lower cost) */
+	/** Gemini 3.1 Pro (default, most advanced reasoning with 1M context) */
+	Gemini3_1Pro = "Gemini3_1Pro",
+	/** Gemini 3 Flash (fast frontier-class performance) */
 	Gemini3Flash = "Gemini3Flash",
+	/** Gemini 3.1 Flash-Lite (cost-effective frontier performance) */
+	Gemini3_1FlashLite = "Gemini3_1FlashLite",
 	/** Gemini 2.5 Pro (production tier) */
 	Gemini2_5Pro = "Gemini2_5Pro",
-	/** Gemini 2.0 Flash (previous generation fast model) */
+	/** Gemini 2.5 Flash (fast legacy model) */
+	Gemini2_5Flash = "Gemini2_5Flash",
+	/** @deprecated Legacy variant for database compatibility */
+	Gemini3Pro = "Gemini3Pro",
+	/** @deprecated Legacy variant for database compatibility */
 	Gemini2_0Flash = "Gemini2_0Flash",
 }
 

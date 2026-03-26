@@ -831,13 +831,19 @@ impl CreateDialogState {
 
         self.model = match self.agent {
             AgentType::ClaudeCode => match &self.model {
-                Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)) => {
-                    Some(SessionModel::Claude(ClaudeModel::Opus4_5))
+                Some(SessionModel::Claude(ClaudeModel::Sonnet4_6)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus4_6))
                 }
-                Some(SessionModel::Claude(ClaudeModel::Opus4_5)) => {
+                Some(SessionModel::Claude(ClaudeModel::Opus4_6)) => {
                     Some(SessionModel::Claude(ClaudeModel::Haiku4_5))
                 }
                 Some(SessionModel::Claude(ClaudeModel::Haiku4_5)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Opus4_5))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Opus4_5)) => {
+                    Some(SessionModel::Claude(ClaudeModel::Sonnet4_5))
+                }
+                Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)) => {
                     Some(SessionModel::Claude(ClaudeModel::Opus4_1))
                 }
                 Some(SessionModel::Claude(ClaudeModel::Opus4_1)) => {
@@ -847,51 +853,51 @@ impl CreateDialogState {
                     Some(SessionModel::Claude(ClaudeModel::Sonnet4))
                 }
                 Some(SessionModel::Claude(ClaudeModel::Sonnet4)) => None,
-                _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_5)),
+                _ => Some(SessionModel::Claude(ClaudeModel::Sonnet4_6)),
             },
             AgentType::Codex => match &self.model {
-                Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2))
+                Some(SessionModel::Codex(CodexModel::Gpt5_3Codex)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_2)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Instant))
+                Some(SessionModel::Codex(CodexModel::Gpt5_4)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Mini))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_2Instant)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Thinking))
+                Some(SessionModel::Codex(CodexModel::Gpt5_4Mini)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Nano))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_2Thinking)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Pro))
+                Some(SessionModel::Codex(CodexModel::Gpt5_4Nano)) => {
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Pro))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_2Pro)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_1))
+                Some(SessionModel::Codex(CodexModel::Gpt5_4Pro)) => {
+                    Some(SessionModel::Codex(CodexModel::O3))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_1)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_1Instant))
+                Some(SessionModel::Codex(CodexModel::O3)) => {
+                    Some(SessionModel::Codex(CodexModel::O3Pro))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_1Instant)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt5_1Thinking))
+                Some(SessionModel::Codex(CodexModel::O3Pro)) => {
+                    Some(SessionModel::Codex(CodexModel::O4Mini))
                 }
-                Some(SessionModel::Codex(CodexModel::Gpt5_1Thinking)) => {
-                    Some(SessionModel::Codex(CodexModel::Gpt4_1))
-                }
-                Some(SessionModel::Codex(CodexModel::Gpt4_1)) => {
+                Some(SessionModel::Codex(CodexModel::O4Mini)) => {
                     Some(SessionModel::Codex(CodexModel::O3Mini))
                 }
                 Some(SessionModel::Codex(CodexModel::O3Mini)) => None,
-                _ => Some(SessionModel::Codex(CodexModel::Gpt5_2Codex)),
+                _ => Some(SessionModel::Codex(CodexModel::Gpt5_3Codex)),
             },
             AgentType::Gemini => match &self.model {
-                Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)) => {
+                Some(SessionModel::Gemini(GeminiModel::Gemini3_1Pro)) => {
                     Some(SessionModel::Gemini(GeminiModel::Gemini3Flash))
                 }
                 Some(SessionModel::Gemini(GeminiModel::Gemini3Flash)) => {
+                    Some(SessionModel::Gemini(GeminiModel::Gemini3_1FlashLite))
+                }
+                Some(SessionModel::Gemini(GeminiModel::Gemini3_1FlashLite)) => {
                     Some(SessionModel::Gemini(GeminiModel::Gemini2_5Pro))
                 }
                 Some(SessionModel::Gemini(GeminiModel::Gemini2_5Pro)) => {
-                    Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash))
+                    Some(SessionModel::Gemini(GeminiModel::Gemini2_5Flash))
                 }
-                Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash)) => None,
-                _ => Some(SessionModel::Gemini(GeminiModel::Gemini3Pro)),
+                Some(SessionModel::Gemini(GeminiModel::Gemini2_5Flash)) => None,
+                _ => Some(SessionModel::Gemini(GeminiModel::Gemini3_1Pro)),
             },
         };
     }

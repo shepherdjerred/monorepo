@@ -1,17 +1,11 @@
 {
-  "name": "@shepherdjerred/share",
-  "type": "module",
+  "name": "@shepherdjerred/monorepo",
   "private": true,
   "workspaces": [
     "packages/*",
-    "packages/better-skill-capped/*",
-    "packages/clauderon/web/*",
-    "packages/clauderon/docs",
-    "packages/discord-plays-pokemon/packages/*",
-    "packages/homelab/src/*",
-    "packages/scout-for-lol/packages/*",
-    "packages/sentinel/web",
-    "packages/status-page/*"
+    "packages/*/packages/*",
+    "packages/*/src/*",
+    "packages/*/*"
   ],
   "scripts": {
     "build": "bun run scripts/run-package-script.ts build",
@@ -19,28 +13,7 @@
     "typecheck": "bun run scripts/run-package-script.ts typecheck",
     "lint": "bun run scripts/run-package-script.ts lint",
     "guard:migration": "bun run scripts/guard-no-package-exclusions.ts",
-    "docs:dev": "bun run --filter='./packages/clauderon/docs' dev",
-    "docs:build": "bun run --filter='./packages/clauderon/docs' build",
-    "docs:preview": "bun run --filter='./packages/clauderon/docs' preview",
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true"
-  },
-  "devDependencies": {
-    "@dagger.io/dagger": "^0.19.0",
-    "@shepherdjerred/eslint-config": "workspace:*",
-    "@types/bun": "^1.3.5",
-    "@types/node": "^22.15.0",
-    "bun-types": "^1.3.10",
-    "eslint": "^9.30.1",
-    "eslint-import-resolver-typescript": "^4.4.3",
-    "eslint-import-resolver-typescript-bun": "^0.0.104",
-    "lefthook": "^2.1.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.35.1",
-    "undici-types": "~6.21.0"
-  },
-  "dependencies": {
-    "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/plugin-dialog": "^2.6.0"
   },
   "patchedDependencies": {
     "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch",

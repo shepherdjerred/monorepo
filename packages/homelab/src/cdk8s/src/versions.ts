@@ -121,6 +121,8 @@ const versions = {
     "1.28.0@sha256:5664f42e37e7101c824806d8f73cbc97c8f406ce043bbdb8d39d4ff1e7f2ad11",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s": "0.37.1",
+  // renovate: datasource=docker registryUrl=https://registry.dagger.io versioning=semver packageName=dagger-helm
+  "dagger-helm": "0.20.3",
   // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
   kueue: "0.16.3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker

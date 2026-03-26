@@ -33,7 +33,7 @@ class ExcelSheetP3Test {
     @Test
     void scenario_A1() {
         sheet.setCell("A1", 42);
-        assertTrue(v(sheet.getCell("A1"), "a1c0bfe4"));
+        assertTrue(v(sheet.getCell("A1"), "73475cb4"));
     }
 
     @Test
@@ -41,14 +41,14 @@ class ExcelSheetP3Test {
         sheet.setCell("A1", 10);
         sheet.setCell("B1", 20);
         sheet.setCellFormula("C1", "=A1+B1");
-        assertTrue(v(sheet.getCell("C1"), "6ea9ab1b"));
+        assertTrue(v(sheet.getCell("C1"), "624b60c5"));
     }
 
     @Test
     void scenario_A3() {
         sheet.setCell("A1", 100);
         sheet.setCellFormula("B1", "=A1-37");
-        assertTrue(v(sheet.getCell("B1"), "ea5d2f1c"));
+        assertTrue(v(sheet.getCell("B1"), "da4ea2a5"));
     }
 
     @Test
@@ -56,14 +56,14 @@ class ExcelSheetP3Test {
         sheet.setCell("A1", 7);
         sheet.setCell("B1", 6);
         sheet.setCellFormula("C1", "=A1*B1");
-        assertTrue(v(sheet.getCell("C1"), "a1c0bfe4"));
+        assertTrue(v(sheet.getCell("C1"), "73475cb4"));
     }
 
     @Test
     void scenario_A5() {
         sheet.setCell("A1", 100);
         sheet.setCellFormula("B1", "=A1/3");
-        assertTrue(v(sheet.getCell("B1"), "5f0b48b6"));
+        assertTrue(v(sheet.getCell("B1"), "c6f3ac57"));
     }
 
     @Test
@@ -71,7 +71,7 @@ class ExcelSheetP3Test {
         sheet.setCell("A1", 5);
         sheet.setCellFormula("B1", "=A1+3");
         sheet.setCellFormula("C1", "=B1*2");
-        assertTrue(v(sheet.getCell("C1"), "48449a14"));
+        assertTrue(v(sheet.getCell("C1"), "b17ef6d1"));
     }
 
     @Test
@@ -81,7 +81,7 @@ class ExcelSheetP3Test {
         sheet.setCellFormula("C1", "=A1+B1");
         assertEquals(8, sheet.getCell("C1"));
         sheet.setCell("A1", 10);
-        assertTrue(v(sheet.getCell("C1"), "65d1b15b"));
+        assertTrue(v(sheet.getCell("C1"), "3fdba35f"));
     }
 
     // P2 regression tests (B1-B2)
@@ -98,7 +98,7 @@ class ExcelSheetP3Test {
             sheet.getCell("D1");
         }
         long elapsed = System.nanoTime() - start;
-        assertTrue(v(sheet.getCell("D1"), "687ce02e"));
+        assertTrue(v(sheet.getCell("D1"), "4b227777"));
         // If O(1), 10K calls should be fast (< 50ms easily)
         assertTrue(elapsed < 100_000_000L, "getCell should be O(1) — took " + elapsed + "ns");
     }
@@ -111,7 +111,7 @@ class ExcelSheetP3Test {
         sheet.setCellFormula("D1", "=C1+1");
         sheet.setCellFormula("E1", "=D1+1");
         sheet.setCell("A1", 100);
-        assertTrue(v(sheet.getCell("E1"), "8f53e515"));
+        assertTrue(v(sheet.getCell("E1"), "5ef6fdf3"));
     }
 
     // P3 tests (C1-C3)
@@ -123,7 +123,7 @@ class ExcelSheetP3Test {
         assertThrows(IllegalArgumentException.class, () ->
                 sheet.setCellFormula("A1", "=B1+1"));
         // A1 should retain its original value
-        assertTrue(v(sheet.getCell("A1"), "56b92da4"));
+        assertTrue(v(sheet.getCell("A1"), "6b86b273"));
     }
 
     @Test

@@ -54,10 +54,7 @@ export default defineConfig({
           label: "Backends",
           items: [
             { label: "Docker", slug: "guides/docker" },
-            { label: "Kubernetes", slug: "guides/kubernetes" },
             { label: "Zellij", slug: "guides/zellij" },
-            { label: "Sprites", slug: "guides/sprites" },
-            { label: "Apple Container", slug: "guides/apple-container" },
             { label: "Custom Images", slug: "guides/custom-images" },
           ],
         },

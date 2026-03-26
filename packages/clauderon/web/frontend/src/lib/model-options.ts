@@ -13,16 +13,24 @@ type ModelOption = {
 
 const CLAUDE_MODELS: ModelOption[] = [
   {
-    value: { type: "Claude", content: ClaudeModel.Sonnet4_5 },
-    label: "Sonnet 4.5 (Default - Balanced)",
+    value: { type: "Claude", content: ClaudeModel.Sonnet4_6 },
+    label: "Sonnet 4.6 (Default - Balanced, 1M Context)",
   },
   {
-    value: { type: "Claude", content: ClaudeModel.Opus4_5 },
-    label: "Opus 4.5 (Most Capable)",
+    value: { type: "Claude", content: ClaudeModel.Opus4_6 },
+    label: "Opus 4.6 (Most Capable, 1M Context)",
   },
   {
     value: { type: "Claude", content: ClaudeModel.Haiku4_5 },
     label: "Haiku 4.5 (Fastest)",
+  },
+  {
+    value: { type: "Claude", content: ClaudeModel.Opus4_5 },
+    label: "Opus 4.5",
+  },
+  {
+    value: { type: "Claude", content: ClaudeModel.Sonnet4_5 },
+    label: "Sonnet 4.5",
   },
   {
     value: { type: "Claude", content: ClaudeModel.Opus4_1 },
@@ -40,40 +48,36 @@ const CLAUDE_MODELS: ModelOption[] = [
 
 const CODEX_MODELS: ModelOption[] = [
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_2Codex },
-    label: "GPT-5.2-Codex (Default - Best for Code)",
+    value: { type: "Codex", content: CodexModel.Gpt5_3Codex },
+    label: "GPT-5.3-Codex (Default - Agentic Coding)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_2 },
-    label: "GPT-5.2",
+    value: { type: "Codex", content: CodexModel.Gpt5_4 },
+    label: "GPT-5.4 (Flagship)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_2Instant },
-    label: "GPT-5.2 Instant (Fast)",
+    value: { type: "Codex", content: CodexModel.Gpt5_4Mini },
+    label: "GPT-5.4 Mini (Fast)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_2Thinking },
-    label: "GPT-5.2 Thinking (Reasoning)",
+    value: { type: "Codex", content: CodexModel.Gpt5_4Nano },
+    label: "GPT-5.4 Nano (Cost-Effective)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_2Pro },
-    label: "GPT-5.2 Pro (Premium)",
+    value: { type: "Codex", content: CodexModel.Gpt5_4Pro },
+    label: "GPT-5.4 Pro (Premium)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_1 },
-    label: "GPT-5.1",
+    value: { type: "Codex", content: CodexModel.O3 },
+    label: "o3 (Reasoning)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_1Instant },
-    label: "GPT-5.1 Instant",
+    value: { type: "Codex", content: CodexModel.O3Pro },
+    label: "o3-pro (Premium Reasoning)",
   },
   {
-    value: { type: "Codex", content: CodexModel.Gpt5_1Thinking },
-    label: "GPT-5.1 Thinking",
-  },
-  {
-    value: { type: "Codex", content: CodexModel.Gpt4_1 },
-    label: "GPT-4.1 (Coding Specialist)",
+    value: { type: "Codex", content: CodexModel.O4Mini },
+    label: "o4-mini (Fast Reasoning)",
   },
   {
     value: { type: "Codex", content: CodexModel.O3Mini },
@@ -83,20 +87,24 @@ const CODEX_MODELS: ModelOption[] = [
 
 const GEMINI_MODELS: ModelOption[] = [
   {
-    value: { type: "Gemini", content: GeminiModel.Gemini3Pro },
-    label: "Gemini 3 Pro (Default - 1M Context)",
+    value: { type: "Gemini", content: GeminiModel.Gemini3_1Pro },
+    label: "Gemini 3.1 Pro (Default - 1M Context)",
   },
   {
     value: { type: "Gemini", content: GeminiModel.Gemini3Flash },
     label: "Gemini 3 Flash (Fast)",
   },
   {
+    value: { type: "Gemini", content: GeminiModel.Gemini3_1FlashLite },
+    label: "Gemini 3.1 Flash-Lite (Cost-Effective)",
+  },
+  {
     value: { type: "Gemini", content: GeminiModel.Gemini2_5Pro },
     label: "Gemini 2.5 Pro",
   },
   {
-    value: { type: "Gemini", content: GeminiModel.Gemini2_0Flash },
-    label: "Gemini 2.0 Flash",
+    value: { type: "Gemini", content: GeminiModel.Gemini2_5Flash },
+    label: "Gemini 2.5 Flash",
   },
 ];
 

@@ -94,7 +94,7 @@
       {Georgia Institute of Technology}{Atlanta, GA}
       {Master of Science in Computer Science (OMSCS, Part-time)}{August 2022 -- Present}
       \resumeItemListStart
-        \resumeItem{Coursework}{Advanced Operating Systems, Distributed Systems, Compilers}
+        \resumeItem{Coursework}{Distributed Systems, Compilers, Advanced Operating Systems}
       \resumeItemListEnd
     \resumeSubheading
       {Harding University}{Searcy, AR}
@@ -110,21 +110,22 @@
     {Pinterest}{Seattle, WA}
     {Software Engineer II}{September 2024 - Present}
     \resumeItemListStart
-      \resumeItem{Measurement Hub}{Led frontend development of Pinterest's advertiser measurement platform from concept to GA. Achieved 99\% report reliability (up from 50\%) by replacing synchronous APIs with async jobs, adding retry logic, and surfacing errors in UI.}
-      % TODO: add scale metric - platform has 20k+ studies over 10 years, hundreds to thousands of active advertisers
-      \resumeItem{Engineering influence}{Setting frontend patterns adopted by 15 engineers across 3 teams: strong static typing, Zod validation, type-safe data fetching, integration testing, and accessibility standards. Leading knowledge sharing on code quality and best practices.}
-      \resumeItem{Conversion Lift}{Owning end-to-end migration of Pinterest Conversion Lift as sole technical lead. Driving TypeSpec adoption for API schemas (previously untyped) and database normalization from JSON blob to relational model. Directing 3 engineers across full-stack implementation.}
-      % TODO: add scale (study count or advertiser count) when available
+      % Scale: thousands of studies/experiments active at any time, each operating on millions of users
+      % Platform influences hundreds of millions of dollars of ad revenue
+      \resumeItem{Measurement Hub}{Leading frontend migration of advertiser measurement platform from 10-year-old POC to production-grade system, directing 5 engineers across thousands of experiments and millions of users. Achieved 99\% report reliability (up from 50\%). Used LLMs extensively for implementation, design docs, and bug fixes.}
+      \resumeItem{Engineering influence}{Set frontend patterns adopted by 30 engineers across 4 teams: strong typing, validation at boundaries, integration testing, and accessibility.}
+      \resumeItem{Conversion Lift}{Owning end-to-end migration of Pinterest Conversion Lift as sole technical lead. Driving API schema adoption (previously untyped) and database normalization from JSON blob to relational model. Directing 3 engineers across full-stack implementation.}
+      \resumeItem{AI tooling \& adoption}{Built internal tools giving LLMs safe access to internal systems and data. Drove org-wide AI adoption through presentations and hands-on enablement. Authored coding agent skills, guidelines, and CLI tools automating oncall. Established static analysis guardrails for AI-assisted development.}
     \resumeItemListEnd
 
     \resumeSubheading
       {Posit Software}{Remote}
       {Software Engineer}{September 2021 - June 2024}
       \resumeItemListStart
-        \resumeItem{Frontend}{Led rewrite of Package Manager's frontend to Vue 3 \& TypeScript. Eliminated 70\% of dependencies and reduced bundle size by 90\%. Led UI redesign improving first-use experience and accessibility.}
-        \resumeItem{Testing infrastructure}{Designed containerized testing framework enabling isolated local testing of any product component, improving team velocity and confidence.}
-        \resumeItem{macOS cross-compiler}{Created proof-of-concept cross-compiler toolchain targeting arm64 macOS using Kubernetes. Guided team to production, enabling R package builds with C/C++/Fortran/Rust.}
-        \resumeItem{Developer experience}{Shortened feedback loops by speeding up CI and improving dev environments. Set up automated linters, formatters, and dependency updates.}
+        \resumeItem{Frontend}{Led rewrite of Package Manager frontend to Vue 3 \& TypeScript, cutting 70\% of dependencies and 90\% of bundle size. Led UI redesign improving first-use experience and accessibility.}
+        \resumeItem{Testing infrastructure}{Designed containerized framework enabling isolated local testing of any component.}
+        \resumeItem{macOS cross-compiler}{Built cross-compiler toolchain targeting arm64 macOS on Kubernetes. Guided team to production, enabling R package builds with C/C++/Fortran/Rust.}
+        \resumeItem{Developer experience}{Shortened feedback loops by speeding up CI and dev environments. Set up automated linters, formatters, and dependency updates.}
         \resumeItem{Backend}{Built Go backend APIs for authentication token generation. Migrated to portable static binary, simplifying deployment across Linux/macOS.}
       \resumeItemListEnd
 
@@ -132,24 +133,24 @@
       {Amazon Web Services}{Seattle, WA}
       {Software Development Engineer}{July 2019 - August 2021}
       \resumeItemListStart
+        \resumeItem{Backend}{Implemented features using distributed state machine with DynamoDB, SQS, Lambda, S3. Optimized fleet configuration for 66\% reduction in server costs.}
         \resumeItem{Process automation}{Built tool to automatically root-cause issues using metrics and logs, reducing weekly manual effort from 4 hours to minutes.}
         \resumeItem{Operations}{On-call for service managing tens of millions of EC2 instances at thousands of requests per second. Root-caused incidents and resolved customer issues.}
-        \resumeItem{Backend}{Implemented features using distributed state machine with DynamoDB, SQS, Lambda, S3. Optimized fleet configuration for 66\% reduction in server costs.}
         \resumeItemListEnd
 
   \resumeSubHeadingListEnd
 
 \section{Skills}
-  \textbf{Languages:} TypeScript, Go, Java, Python, SQL \\
-  \textbf{Platform:} Kubernetes, AWS, DynamoDB, React
+  TypeScript, Go, Java, Python, SQL, React, Vue, Astro, Bun, Kubernetes, Docker, AWS
 
 %-----------PROJECTS-----------------
 \section{Projects}
   \resumeSubHeadingListStart
+    \resumeSubItem{\href{https://clauderon.com}{Clauderon}}{A session manager for AI coding agents (Claude Code, Codex, Gemini). Daemon architecture enables controlling all sessions from native apps (iOS, macOS) or web, with isolated Docker/K8s execution and zero-credential security.}
+    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab}{Kubernetes Homelab}}{A k3s cluster running on hardware at my home. Managed with cdk8s and ArgoCD.}
     \resumeSubItem{Compiler}{Implemented a compiler from scratch for the Tiger language targeting MIPS assembly.}
     \resumeSubItem{Paxos}{Implemented the Paxos consensus algorithm from scratch.}
-    \resumeSubItem{\href{https://github.com/shepherdjerred/castle-casters}{Game Engine}}{A cross-platform game using OpenGL.}
-    \resumeSubItem{\href{https://github.com/shepherdjerred/homelab}{Kubernetes Homelab}}{A k3s cluster running on hardware at my home. Managed with cdk8s and ArgoCD.}
+    \resumeSubItem{\href{https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters}{Game Engine}}{Cross-platform Java game with OpenGL rendering, alpha-beta AI, A* pathfinding, and networking.}
   \resumeSubHeadingListEnd
 
 %-------------------------------------------

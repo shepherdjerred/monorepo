@@ -596,13 +596,17 @@ impl AgentType {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ClaudeModel {
-    /// Claude Opus 4.5 (most capable, best for complex workflows)
-    Opus4_5,
-    /// Claude Sonnet 4.5 (default, balanced performance for agents and coding)
+    /// Claude Opus 4.6 (most capable, 1M context)
+    Opus4_6,
+    /// Claude Sonnet 4.6 (default, balanced performance, 1M context)
     #[default]
-    Sonnet4_5,
+    Sonnet4_6,
     /// Claude Haiku 4.5 (fastest, optimized for low latency)
     Haiku4_5,
+    /// Claude Opus 4.5 (previous generation, still capable)
+    Opus4_5,
+    /// Claude Sonnet 4.5 (previous generation balanced)
+    Sonnet4_5,
     /// Claude Opus 4.1 (focused on agentic tasks and reasoning)
     Opus4_1,
     /// Claude Opus 4 (previous generation flagship)
@@ -616,9 +620,11 @@ impl ClaudeModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
+            Self::Opus4_6 => "opus-4-6",
+            Self::Sonnet4_6 => "sonnet-4-6",
+            Self::Haiku4_5 => "haiku-4-5",
             Self::Opus4_5 => "opus-4-5",
             Self::Sonnet4_5 => "sonnet-4-5",
-            Self::Haiku4_5 => "haiku-4-5",
             Self::Opus4_1 => "opus-4-1",
             Self::Opus4 => "opus-4",
             Self::Sonnet4 => "sonnet-4",
@@ -630,27 +636,46 @@ impl ClaudeModel {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CodexModel {
-    /// GPT-5.2-Codex (default, most advanced for software engineering)
+    /// GPT-5.3-Codex (default, agentic coding model)
     #[default]
-    Gpt5_2Codex,
-    /// GPT-5.2 (most capable for professional knowledge work)
-    Gpt5_2,
-    /// GPT-5.2 Instant (fast variant)
-    Gpt5_2Instant,
-    /// GPT-5.2 Thinking (reasoning variant)
-    Gpt5_2Thinking,
-    /// GPT-5.2 Pro (premium variant)
-    Gpt5_2Pro,
-    /// GPT-5.1 (previous flagship)
-    Gpt5_1,
-    /// GPT-5.1 Instant (fast variant)
-    Gpt5_1Instant,
-    /// GPT-5.1 Thinking (reasoning variant)
-    Gpt5_1Thinking,
-    /// GPT-4.1 (specialized for coding)
-    Gpt4_1,
-    /// o3-mini (small reasoning model for science/math/coding)
+    Gpt5_3Codex,
+    /// GPT-5.4 (flagship, most capable)
+    Gpt5_4,
+    /// GPT-5.4-mini (fast variant)
+    Gpt5_4Mini,
+    /// GPT-5.4-nano (cost-effective variant)
+    Gpt5_4Nano,
+    /// GPT-5.4-pro (premium variant)
+    Gpt5_4Pro,
+    /// o3 (reasoning model)
+    O3,
+    /// o3-pro (premium reasoning model)
+    O3Pro,
+    /// o4-mini (fast reasoning model)
+    O4Mini,
+    /// o3-mini (small reasoning model)
     O3Mini,
+
+    // Legacy variants kept for database compatibility (sessions may reference these).
+    // These map to Gpt5_3Codex at runtime.
+    #[doc(hidden)]
+    Gpt5_2Codex,
+    #[doc(hidden)]
+    Gpt5_2,
+    #[doc(hidden)]
+    Gpt5_2Instant,
+    #[doc(hidden)]
+    Gpt5_2Thinking,
+    #[doc(hidden)]
+    Gpt5_2Pro,
+    #[doc(hidden)]
+    Gpt5_1,
+    #[doc(hidden)]
+    Gpt5_1Instant,
+    #[doc(hidden)]
+    Gpt5_1Thinking,
+    #[doc(hidden)]
+    Gpt4_1,
 }
 
 impl CodexModel {
@@ -658,16 +683,42 @@ impl CodexModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gpt5_2Codex => "gpt-5-2-codex",
-            Self::Gpt5_2 => "gpt-5-2",
-            Self::Gpt5_2Instant => "gpt-5-2-instant",
-            Self::Gpt5_2Thinking => "gpt-5-2-thinking",
-            Self::Gpt5_2Pro => "gpt-5-2-pro",
-            Self::Gpt5_1 => "gpt-5-1",
-            Self::Gpt5_1Instant => "gpt-5-1-instant",
-            Self::Gpt5_1Thinking => "gpt-5-1-thinking",
-            Self::Gpt4_1 => "gpt-4-1",
+            Self::Gpt5_3Codex => "gpt-5-3-codex",
+            Self::Gpt5_4 => "gpt-5-4",
+            Self::Gpt5_4Mini => "gpt-5-4-mini",
+            Self::Gpt5_4Nano => "gpt-5-4-nano",
+            Self::Gpt5_4Pro => "gpt-5-4-pro",
+            Self::O3 => "o3",
+            Self::O3Pro => "o3-pro",
+            Self::O4Mini => "o4-mini",
             Self::O3Mini => "o3-mini",
+            // Legacy variants map to current default
+            Self::Gpt5_2Codex
+            | Self::Gpt5_2
+            | Self::Gpt5_2Instant
+            | Self::Gpt5_2Thinking
+            | Self::Gpt5_2Pro
+            | Self::Gpt5_1
+            | Self::Gpt5_1Instant
+            | Self::Gpt5_1Thinking
+            | Self::Gpt4_1 => "gpt-5-3-codex",
+        }
+    }
+
+    /// Normalize legacy model variants to their current equivalents
+    #[must_use]
+    pub const fn normalize(self) -> Self {
+        match self {
+            Self::Gpt5_2Codex
+            | Self::Gpt5_2
+            | Self::Gpt5_2Instant
+            | Self::Gpt5_2Thinking
+            | Self::Gpt5_2Pro
+            | Self::Gpt5_1
+            | Self::Gpt5_1Instant
+            | Self::Gpt5_1Thinking
+            | Self::Gpt4_1 => Self::Gpt5_3Codex,
+            other => other,
         }
     }
 }
@@ -676,14 +727,22 @@ impl CodexModel {
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum GeminiModel {
-    /// Gemini 3 Pro (default, state-of-the-art reasoning with 1M token context)
+    /// Gemini 3.1 Pro (default, most advanced reasoning with 1M context)
     #[default]
-    Gemini3Pro,
-    /// Gemini 3 Flash (fast frontier-class performance at lower cost)
+    Gemini3_1Pro,
+    /// Gemini 3 Flash (fast frontier-class performance)
     Gemini3Flash,
+    /// Gemini 3.1 Flash-Lite (cost-effective frontier performance)
+    Gemini3_1FlashLite,
     /// Gemini 2.5 Pro (production tier)
     Gemini2_5Pro,
-    /// Gemini 2.0 Flash (previous generation fast model)
+    /// Gemini 2.5 Flash (fast legacy model)
+    Gemini2_5Flash,
+
+    // Legacy variants kept for database compatibility
+    #[doc(hidden)]
+    Gemini3Pro,
+    #[doc(hidden)]
     Gemini2_0Flash,
 }
 
@@ -692,10 +751,24 @@ impl GeminiModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gemini3Pro => "gemini-3-pro",
+            Self::Gemini3_1Pro => "gemini-3-1-pro",
             Self::Gemini3Flash => "gemini-3-flash",
+            Self::Gemini3_1FlashLite => "gemini-3-1-flash-lite",
             Self::Gemini2_5Pro => "gemini-2-5-pro",
-            Self::Gemini2_0Flash => "gemini-2-0-flash",
+            Self::Gemini2_5Flash => "gemini-2-5-flash",
+            // Legacy variants map to current equivalents
+            Self::Gemini3Pro => "gemini-3-1-pro",
+            Self::Gemini2_0Flash => "gemini-2-5-flash",
+        }
+    }
+
+    /// Normalize legacy model variants to their current equivalents
+    #[must_use]
+    pub const fn normalize(self) -> Self {
+        match self {
+            Self::Gemini3Pro => Self::Gemini3_1Pro,
+            Self::Gemini2_0Flash => Self::Gemini2_5Flash,
+            other => other,
         }
     }
 }

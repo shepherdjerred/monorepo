@@ -10,6 +10,7 @@ import {
 // - "zfs-hdd" is backed by SATA SSDs
 export const NVME_STORAGE_CLASS = "zfs-ssd";
 export const SATA_STORAGE_CLASS = "zfs-hdd";
+export const BUILDCACHE_STORAGE_CLASS = "zfs-ssd-buildcache";
 
 export function createStorageClasses(chart: Chart) {
   new KubeStorageClass(chart, "host-zfs-ssd", {
@@ -42,6 +43,25 @@ export function createStorageClasses(chart: Chart) {
       dedup: "off",
       recordsize: "128k",
       shared: "yes",
+    },
+    volumeBindingMode: "WaitForFirstConsumer",
+  });
+
+  // Optimized for Dagger/BuildKit cache: high-throughput, no durability guarantees needed
+  new KubeStorageClass(chart, "host-zfs-ssd-buildcache", {
+    metadata: { name: BUILDCACHE_STORAGE_CLASS },
+    provisioner: "zfs.csi.openebs.io",
+    allowVolumeExpansion: true,
+    reclaimPolicy: "Retain",
+    parameters: {
+      fstype: "zfs",
+      poolname: "zfspv-pool-nvme",
+      compression: "lz4",
+      dedup: "off",
+      recordsize: "128k",
+      sync: "disabled",
+      logbias: "throughput",
+      atime: "off",
     },
     volumeBindingMode: "WaitForFirstConsumer",
   });

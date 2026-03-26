@@ -298,10 +298,24 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         AgentType::ClaudeCode => vec![
             ("Default", dialog.model.is_none()),
             (
-                "Sonnet 4.5",
+                "Sonnet 4.6",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Claude(ClaudeModel::Sonnet4_5))
+                    Some(SessionModel::Claude(ClaudeModel::Sonnet4_6))
+                ),
+            ),
+            (
+                "Opus 4.6",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Claude(ClaudeModel::Opus4_6))
+                ),
+            ),
+            (
+                "Haiku 4.5",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Claude(ClaudeModel::Haiku4_5))
                 ),
             ),
             (
@@ -312,10 +326,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
                 ),
             ),
             (
-                "Haiku 4.5",
+                "Sonnet 4.5",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Claude(ClaudeModel::Haiku4_5))
+                    Some(SessionModel::Claude(ClaudeModel::Sonnet4_5))
                 ),
             ),
             (
@@ -340,58 +354,48 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         AgentType::Codex => vec![
             ("Default", dialog.model.is_none()),
             (
-                "GPT-5.2-Codex",
+                "GPT-5.3-Codex",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Codex))
+                    Some(SessionModel::Codex(CodexModel::Gpt5_3Codex))
                 ),
             ),
             (
-                "GPT-5.2",
-                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt5_2))),
+                "GPT-5.4",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt5_4))),
             ),
             (
-                "GPT-5.2 Instant",
+                "GPT-5.4 Mini",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Instant))
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Mini))
                 ),
             ),
             (
-                "GPT-5.2 Thinking",
+                "GPT-5.4 Nano",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Thinking))
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Nano))
                 ),
             ),
             (
-                "GPT-5.2 Pro",
+                "GPT-5.4 Pro",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_2Pro))
+                    Some(SessionModel::Codex(CodexModel::Gpt5_4Pro))
                 ),
             ),
             (
-                "GPT-5.1",
-                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt5_1))),
+                "o3",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::O3))),
             ),
             (
-                "GPT-5.1 Instant",
-                matches!(
-                    dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_1Instant))
-                ),
+                "o3-pro",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::O3Pro))),
             ),
             (
-                "GPT-5.1 Thinking",
-                matches!(
-                    dialog.model,
-                    Some(SessionModel::Codex(CodexModel::Gpt5_1Thinking))
-                ),
-            ),
-            (
-                "GPT-4.1",
-                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::Gpt4_1))),
+                "o4-mini",
+                matches!(dialog.model, Some(SessionModel::Codex(CodexModel::O4Mini))),
             ),
             (
                 "o3-mini",
@@ -401,10 +405,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         AgentType::Gemini => vec![
             ("Default", dialog.model.is_none()),
             (
-                "3 Pro",
+                "3.1 Pro",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Gemini(GeminiModel::Gemini3Pro))
+                    Some(SessionModel::Gemini(GeminiModel::Gemini3_1Pro))
                 ),
             ),
             (
@@ -415,6 +419,13 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
                 ),
             ),
             (
+                "3.1 Flash-Lite",
+                matches!(
+                    dialog.model,
+                    Some(SessionModel::Gemini(GeminiModel::Gemini3_1FlashLite))
+                ),
+            ),
+            (
                 "2.5 Pro",
                 matches!(
                     dialog.model,
@@ -422,10 +433,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
                 ),
             ),
             (
-                "2.0 Flash",
+                "2.5 Flash",
                 matches!(
                     dialog.model,
-                    Some(SessionModel::Gemini(GeminiModel::Gemini2_0Flash))
+                    Some(SessionModel::Gemini(GeminiModel::Gemini2_5Flash))
                 ),
             ),
         ],
