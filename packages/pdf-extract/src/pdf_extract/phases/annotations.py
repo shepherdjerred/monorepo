@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import base64
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 from pdf_extract.lib import get_logger
 

@@ -1,6 +1,8 @@
 import { parseArgs } from "node:util";
 import type { Config } from "#config";
 import { startLeetcodeSession } from "#commands/leetcode/start.ts";
+import { resumeLeetcodeSession } from "#commands/leetcode/resume.ts";
+import { showLeetcodeHistory } from "#commands/leetcode/history.ts";
 
 export async function handleLeetcodeCommand(
   subcommand: string | undefined,
@@ -11,16 +13,22 @@ export async function handleLeetcodeCommand(
     case "start":
       return handleStart(args, config);
     case "resume":
-      console.error("Resume not yet implemented (Phase 4)");
-      return process.exit(1);
+      return handleResume(args, config);
     case "history":
-      console.error("History not yet implemented (Phase 4)");
+      return showLeetcodeHistory(config);
+    case undefined:
+      console.error("Usage: interview-practice leetcode [start|resume|history]");
       return process.exit(1);
     default:
-      console.error(`Unknown subcommand: ${subcommand ?? "(none)"}`);
+      console.error(`Unknown subcommand: ${subcommand}`);
       console.error("Usage: interview-practice leetcode [start|resume|history]");
       process.exit(1);
   }
+}
+
+function parseDifficulty(val: string | undefined): "easy" | "medium" | "hard" | undefined {
+  if (val === "easy" || val === "medium" || val === "hard") return val;
+  return undefined;
 }
 
 async function handleStart(args: string[], config: Config): Promise<void> {
@@ -36,17 +44,34 @@ async function handleStart(args: string[], config: Config): Promise<void> {
     allowPositionals: true,
   });
 
-  const difficulty = values.difficulty as
-    | "easy"
-    | "medium"
-    | "hard"
-    | undefined;
+  const difficulty = parseDifficulty(values.difficulty);
 
   await startLeetcodeSession(config, {
     difficulty,
-    language: values.language ?? "ts",
-    time: values.time ? Number.parseInt(values.time, 10) : undefined,
-    voice: values.voice ?? false,
+    language: values.language,
+    time: values.time === undefined ? undefined : Number.parseInt(values.time, 10),
+    voice: values.voice,
     question: values.question,
+  });
+}
+
+async function handleResume(args: string[], config: Config): Promise<void> {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      "export-report": { type: "string" },
+    },
+    allowPositionals: true,
+  });
+
+  const sessionId = positionals[0];
+  if (sessionId === undefined || sessionId === "") {
+    console.error("Usage: interview-practice leetcode resume <session-id> [--export-report <path>]");
+    process.exit(1);
+  }
+
+  await resumeLeetcodeSession(config, {
+    sessionId,
+    exportReport: values["export-report"],
   });
 }

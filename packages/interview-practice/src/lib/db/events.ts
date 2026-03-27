@@ -1,11 +1,21 @@
 import type { Database } from "bun:sqlite";
+import { z } from "zod/v4";
 
-export type SessionEvent = {
-  id: number;
-  event: string;
-  data: string | null;
-  timestamp: number;
+const SessionEventSchema = z.object({
+  id: z.number(),
+  event: z.string(),
+  data: z.string().nullable(),
+  timestamp: z.number(),
+});
+
+export type SessionEvent = z.infer<typeof SessionEventSchema>;
+
+function parseEventRows(rows: unknown[]): SessionEvent[] {
+  return rows.map((row) => SessionEventSchema.parse(row));
 }
+
+const CountSchema = z.object({ count: z.number() });
+const AvgSchema = z.object({ avg: z.number().nullable() });
 
 export function insertEvent(
   db: Database,
@@ -24,24 +34,26 @@ export function queryEvents(
   eventType?: string,
   limit = 100,
 ): SessionEvent[] {
-  if (eventType) {
+  if (eventType !== undefined) {
     const stmt = db.prepare(
       "SELECT id, event, data, timestamp FROM events WHERE event = ? ORDER BY id DESC LIMIT ?",
     );
-    return stmt.all(eventType, limit) as SessionEvent[];
+    return parseEventRows(stmt.all(eventType, limit));
   }
   const stmt = db.prepare(
     "SELECT id, event, data, timestamp FROM events ORDER BY id DESC LIMIT ?",
   );
-  return stmt.all(limit) as SessionEvent[];
+  return parseEventRows(stmt.all(limit));
 }
 
 export function countEvents(db: Database, eventType: string): number {
   const stmt = db.prepare(
     "SELECT COUNT(*) as count FROM events WHERE event = ?",
   );
-  const row = stmt.get(eventType) as { count: number } | null;
-  return row?.count ?? 0;
+  const raw = stmt.get(eventType);
+  if (raw == null) return 0;
+  const row = CountSchema.parse(raw);
+  return row.count;
 }
 
 export function avgMetric(
@@ -52,6 +64,8 @@ export function avgMetric(
   const stmt = db.prepare(
     `SELECT AVG(json_extract(data, ?)) as avg FROM events WHERE event = ? AND json_extract(data, ?) IS NOT NULL`,
   );
-  const row = stmt.get(jsonPath, eventType, jsonPath) as { avg: number | null } | null;
-  return row?.avg ?? null;
+  const raw = stmt.get(jsonPath, eventType, jsonPath);
+  if (raw == null) return null;
+  const row = AvgSchema.parse(raw);
+  return row.avg;
 }

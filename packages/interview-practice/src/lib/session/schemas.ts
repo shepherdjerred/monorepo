@@ -17,13 +17,13 @@ export const SessionStatusSchema = z.enum([
 ]);
 
 export const SessionMetadataSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   type: SessionTypeSchema,
-  questionId: z.string().uuid(),
+  questionId: z.uuid(),
   questionTitle: z.string(),
   status: SessionStatusSchema,
-  startedAt: z.string().datetime(),
-  endedAt: z.string().datetime().optional(),
+  startedAt: z.iso.datetime(),
+  endedAt: z.iso.datetime().optional(),
   currentPart: z.number().int().min(1),
   language: z.string(),
   workspacePath: z.string(),

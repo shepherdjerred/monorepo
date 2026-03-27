@@ -69,21 +69,21 @@ class APIMetrics:
     def estimate_cost(self) -> float:
         """Rough cost estimate based on current pricing (per MTok)."""
         cost = 0.0
-        # Gemini 2.5 Flash: $0.30/$2.50
-        cost += self.gemini_input_tokens * 0.30 / 1_000_000
-        cost += self.gemini_output_tokens * 2.50 / 1_000_000
-        # Gemini 2.5 Pro: $1.25/$10.00
-        cost += self.gemini_pro_input_tokens * 1.25 / 1_000_000
-        cost += self.gemini_pro_output_tokens * 10.00 / 1_000_000
+        # Gemini 3.1 Pro: $2.00/$12.00
+        cost += self.gemini_input_tokens * 2.00 / 1_000_000
+        cost += self.gemini_output_tokens * 12.00 / 1_000_000
+        # Gemini 3.1 Pro (handwriting): same pricing
+        cost += self.gemini_pro_input_tokens * 2.00 / 1_000_000
+        cost += self.gemini_pro_output_tokens * 12.00 / 1_000_000
         # Claude Sonnet 4.6: $3.00/$15.00
         cost += self.claude_sonnet_input_tokens * 3.00 / 1_000_000
         cost += self.claude_sonnet_output_tokens * 15.00 / 1_000_000
         # Claude Opus 4.6: $5.00/$25.00
         cost += self.claude_opus_input_tokens * 5.00 / 1_000_000
         cost += self.claude_opus_output_tokens * 25.00 / 1_000_000
-        # GPT-4o: $2.50/$10.00
+        # GPT-5.4: $2.50/$15.00
         cost += self.gpt4o_input_tokens * 2.50 / 1_000_000
-        cost += self.gpt4o_output_tokens * 10.00 / 1_000_000
+        cost += self.gpt4o_output_tokens * 15.00 / 1_000_000
         self.estimated_cost_usd = cost
         return cost
 

@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { z } from "zod/v4";
 import { Database } from "bun:sqlite";
 import { initializeSchema } from "#lib/db/schema.ts";
 import {
@@ -50,7 +51,8 @@ describe("transcript", () => {
 
     const all = getAllTranscript(db);
     expect(all).toHaveLength(1);
-    const meta = JSON.parse(all[0]?.metadata ?? "{}") as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(all[0]?.metadata ?? "{}");
+    const meta = z.record(z.string(), z.unknown()).parse(parsed);
     expect(meta["tokensIn"]).toBe(100);
   });
 

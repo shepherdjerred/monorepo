@@ -4,7 +4,7 @@ from __future__ import annotations
 import io
 from typing import Any
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 import structlog
 
 log = structlog.get_logger(__name__)

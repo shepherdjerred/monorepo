@@ -1,0 +1,73 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "elements": [
+    {
+      "id": "rect1",
+      "type": "rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 80,
+      "boundElements": [
+        { "id": "text1", "type": "text" },
+        { "id": "arrow1", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "text1",
+      "type": "text",
+      "x": 120,
+      "y": 120,
+      "width": 160,
+      "height": 40,
+      "text": "API Gateway",
+      "containerId": "rect1"
+    },
+    {
+      "id": "rect2",
+      "type": "rectangle",
+      "x": 500,
+      "y": 100,
+      "width": 200,
+      "height": 80,
+      "boundElements": [
+        { "id": "text2", "type": "text" },
+        { "id": "arrow1", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "text2",
+      "type": "text",
+      "x": 520,
+      "y": 120,
+      "width": 160,
+      "height": 40,
+      "text": "Database",
+      "containerId": "rect2"
+    },
+    {
+      "id": "arrow1",
+      "type": "arrow",
+      "x": 300,
+      "y": 140,
+      "width": 200,
+      "height": 0,
+      "startBinding": { "elementId": "rect1" },
+      "endBinding": { "elementId": "rect2" },
+      "boundElements": [
+        { "id": "arrowLabel1", "type": "text" }
+      ]
+    },
+    {
+      "id": "arrowLabel1",
+      "type": "text",
+      "x": 370,
+      "y": 110,
+      "width": 60,
+      "height": 20,
+      "text": "queries",
+      "containerId": "arrow1"
+    }
+  ]
+}

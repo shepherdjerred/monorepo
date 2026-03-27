@@ -1,20 +1,19 @@
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import path from "node:path";
 import type { IOSpec } from "./schemas.ts";
 
-const TEMPLATES_DIR = join(dirname(import.meta.dir), "..", "templates");
+const TEMPLATES_DIR = path.join(path.dirname(import.meta.dir), "..", "templates");
 
-export function generateStarterCode(
+export async function generateStarterCode(
   language: string,
   io: IOSpec,
   problemTitle: string,
-): string {
+): Promise<string> {
   const ext = language.startsWith(".") ? language : `.${language}`;
   const templateName = getTemplateName(ext);
-  const templatePath = join(TEMPLATES_DIR, templateName);
+  const templatePath = path.join(TEMPLATES_DIR, templateName);
 
   try {
-    let template = readFileSync(templatePath, "utf-8");
+    let template = await Bun.file(templatePath).text();
     template = template.replaceAll('{{TITLE}}', problemTitle);
     template = template.replaceAll('{{INPUT_FORMAT}}', io.inputFormat);
     template = template.replaceAll('{{OUTPUT_FORMAT}}', io.outputFormat);

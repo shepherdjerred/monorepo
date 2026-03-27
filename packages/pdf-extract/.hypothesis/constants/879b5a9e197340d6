@@ -1,0 +1,4 @@
+# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/lib/gemini.py
+# hypothesis_version: 6.151.9
+
+[60.0, 120.0, 1000, 'gemini', 'gemini_request', 'image/png', 'pro', 'prompt_token_count', 'usage_metadata']

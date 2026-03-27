@@ -1,0 +1,167 @@
+{
+  "id": "75f6c56a-97b7-45b6-9d75-96e84511dd70",
+  "title": "News Feed",
+  "slug": "news-feed",
+  "category": "distributed-systems",
+  "difficulty": "senior",
+  "prompt": "Design a social media news feed system like Facebook's or Twitter's timeline. Users should see a personalized feed of posts from people they follow, ranked by relevance and recency.",
+  "requirements": {
+    "functional": [
+      "Users can create posts (text, images, links)",
+      "Users can follow/unfollow other users",
+      "Users see a personalized feed of posts from followed users",
+      "Feed is ranked by a combination of recency and relevance",
+      "Support likes, comments, and shares",
+      "Support pagination (infinite scroll)"
+    ],
+    "nonFunctional": [
+      "Feed generation < 500ms p99",
+      "New posts appear in followers' feeds within 5 seconds",
+      "High availability (99.99%)",
+      "Handle celebrity users with millions of followers",
+      "Feed should be eventually consistent"
+    ],
+    "scale": {
+      "users": "1B monthly active users, 200M daily active",
+      "qps": "10K new posts/sec, 500K feed reads/sec",
+      "storage": "~10 billion posts/year"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What types of content? Text only or multimedia?",
+        "How should posts be ranked? Pure chronological or relevance?",
+        "How many users does a typical user follow?",
+        "Do we need to handle celebrity users (millions of followers)?",
+        "What is the acceptable latency for feed generation?",
+        "Do we need real-time updates or is pull-to-refresh acceptable?"
+      ],
+      "timeTarget": 6
+    },
+    "estimation": {
+      "keyCalculations": [
+        "10K posts/sec write, 500K feed reads/sec (50:1 read:write)",
+        "Average user follows 200 users",
+        "Celebrity user: 10M followers => fan-out cost",
+        "Feed cache: 200M DAU * 500 posts cache = 100B cached entries",
+        "Storage: 10B posts * 1KB avg = 10TB/year text, much more with media"
+      ],
+      "timeTarget": 5
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/posts { content, mediaIds[] }",
+        "GET /api/v1/feed?cursor=...&limit=20",
+        "POST /api/v1/users/{id}/follow",
+        "DELETE /api/v1/users/{id}/follow",
+        "POST /api/v1/posts/{id}/like"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "users: id, name, avatar",
+        "posts: id, author_id, content, media_urls[], created_at",
+        "follows: follower_id, followee_id, created_at",
+        "feed_cache: user_id, post_id, score, created_at (materialized feed)",
+        "interactions: id, user_id, post_id, type (like/comment/share)"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Post Service (create, store posts)",
+        "Feed Generation Service (fan-out)",
+        "Feed Cache (per-user materialized feed in Redis)",
+        "Ranking Service (scoring and ordering)",
+        "Social Graph Service (follow relationships)",
+        "Media Service (upload, CDN)",
+        "Notification Service"
+      ],
+      "timeTarget": 12
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Fan-out on write vs fan-out on read (hybrid approach for celebrities)",
+        "Feed ranking algorithm and real-time re-ranking",
+        "Cache design: pre-computed feed lists in Redis sorted sets",
+        "Celebrity user problem: threshold-based hybrid fan-out",
+        "Post deletion and feed consistency",
+        "Sharding strategy for social graph"
+      ],
+      "timeTarget": 15
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about feed ranking strategy",
+        "Clarified content types",
+        "Discussed celebrity user scenario",
+        "Asked about acceptable staleness",
+        "Considered real-time vs pull-to-refresh"
+      ],
+      "anchors": {
+        "1": "Skipped requirements and started drawing boxes",
+        "2": "Asked about basic features but missed celebrity problem or ranking",
+        "3": "Covered functional requirements, ranking, scale, and celebrity edge case",
+        "4": "Identified fan-out challenge upfront, asked about consistency requirements, and quantified scale"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Separated post ingestion from feed generation",
+        "Included feed caching layer",
+        "Addressed fan-out mechanism",
+        "Included ranking component",
+        "Considered media storage (CDN)"
+      ],
+      "anchors": {
+        "1": "Direct database query for feed on each request, no caching",
+        "2": "Basic architecture with post store and simple query-based feed",
+        "3": "Pre-computed feed cache, fan-out mechanism, separate ranking service",
+        "4": "Hybrid fan-out architecture with justified component boundaries and failure isolation"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Fan-out strategy with celebrity handling",
+        "Feed cache structure and update mechanism",
+        "Ranking algorithm approach",
+        "Handling post updates/deletes in cached feeds",
+        "Database partitioning for social graph"
+      ],
+      "anchors": {
+        "1": "No concrete implementation details for any component",
+        "2": "Described fan-out at surface level without celebrity handling",
+        "3": "Detailed hybrid fan-out strategy, concrete cache design, ranking approach",
+        "4": "Quantitative analysis of fan-out costs, cache hit ratios, ranking feature engineering"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Fan-out on write vs read (latency vs storage)",
+        "Pre-computed vs on-demand feed",
+        "Chronological vs ranked feed (freshness vs engagement)",
+        "Consistency vs availability for feed updates",
+        "Cache memory cost vs query latency"
+      ],
+      "anchors": {
+        "1": "Could not articulate any design trade-offs",
+        "2": "Mentioned fan-out trade-off without quantitative reasoning",
+        "3": "Analyzed 2-3 trade-offs with clear justification for chosen approach",
+        "4": "Systematic analysis with numbers (e.g., fan-out cost per celebrity post) and justified hybrid approaches"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Pure fan-out on write without handling celebrity users (10M follower fan-out on every post)",
+    "Not pre-computing feeds (querying social graph + posts on every feed request)",
+    "Ignoring feed consistency when posts are deleted or edited",
+    "Not considering ranking and just showing reverse chronological",
+    "Using a single relational database for the social graph at scale",
+    "Not addressing cache invalidation when users unfollow"
+  ],
+  "source": "Classic system design interview question"
+}

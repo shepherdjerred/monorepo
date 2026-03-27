@@ -1,0 +1,21 @@
+{
+  "id": "64ad44aa-16c7-4b2c-97e2-fd0ab5c62d66",
+  "type": "leetcode",
+  "questionId": "c94f6dd5-01d5-44f1-9ba3-bcef9842a71a",
+  "questionTitle": "Two Sum",
+  "status": "in-progress",
+  "startedAt": "2026-03-27T04:17:47.440Z",
+  "currentPart": 1,
+  "language": "ts",
+  "workspacePath": "data/sessions/64ad44aa-16c7-4b2c-97e2-fd0ab5c62d66",
+  "voiceEnabled": true,
+  "mode": "text_ai",
+  "timer": {
+    "durationMs": 300000,
+    "elapsedMs": 9619,
+    "warningsEmitted": [],
+    "lastCheckpointMs": 1774585077065
+  },
+  "hintsGiven": 0,
+  "testsRun": 0
+}

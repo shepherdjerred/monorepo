@@ -21,55 +21,28 @@ def _init_clients(
     config: PipelineConfig,
     metrics: PipelineMetrics,
 ) -> dict[str, GeminiClient | ClaudeClient | OpenAIClient]:
-    """Initialize all LLM clients from config. Only creates clients whose keys are available."""
-    clients: dict[str, GeminiClient | ClaudeClient | OpenAIClient] = {}
+    """Initialize all LLM clients from config. All API keys are required."""
+    google_key = config.resolve_api_key("gemini")
+    anthropic_key = config.resolve_api_key("claude")
+    openai_key = config.resolve_api_key("openai")
 
-    # Gemini Flash — used by anchored verification, image classification, handwriting detection
-    try:
-        google_key = config.resolve_api_key("gemini")
-        clients["gemini_flash"] = GeminiClient(
-            api_key=google_key,
-            model=config.anchored_model,
-            metrics=metrics,
-        )
-        # Gemini Pro — used by handwriting extraction
-        clients["gemini_pro"] = GeminiClient(
-            api_key=google_key,
-            model=config.handwriting_extract_model,
-            metrics=metrics,
-        )
-    except ValueError:
-        log.warning("gemini.no_api_key", msg="Gemini clients not initialized — GOOGLE_API_KEY missing")
-
-    # Claude Sonnet — used by MEDIUM escalation
-    try:
-        anthropic_key = config.resolve_api_key("claude")
-        clients["claude_sonnet"] = ClaudeClient(
-            api_key=anthropic_key,
-            model=config.medium_model,
-            metrics=metrics,
-        )
-        # Claude Opus — used by unresolved escalation
-        clients["claude_opus"] = ClaudeClient(
-            api_key=anthropic_key,
-            model=config.unresolved_model,
-            metrics=metrics,
-        )
-    except ValueError:
-        log.warning("claude.no_api_key", msg="Claude clients not initialized — ANTHROPIC_API_KEY missing")
-
-    # GPT-4o — used by LOW escalation
-    try:
-        openai_key = config.resolve_api_key("openai")
-        clients["openai"] = OpenAIClient(
-            api_key=openai_key,
-            model="gpt-4o",
-            metrics=metrics,
-        )
-    except ValueError:
-        log.warning("openai.no_api_key", msg="OpenAI client not initialized — OPENAI_API_KEY missing")
-
-    return clients
+    return {
+        "gemini_flash": GeminiClient(
+            api_key=google_key, model=config.anchored_model, metrics=metrics,
+        ),
+        "gemini_pro": GeminiClient(
+            api_key=google_key, model=config.handwriting_extract_model, metrics=metrics,
+        ),
+        "claude_sonnet": ClaudeClient(
+            api_key=anthropic_key, model=config.medium_model, metrics=metrics,
+        ),
+        "claude_opus": ClaudeClient(
+            api_key=anthropic_key, model=config.unresolved_model, metrics=metrics,
+        ),
+        "openai": OpenAIClient(
+            api_key=openai_key, model="gpt-5.4", metrics=metrics,
+        ),
+    }
 
 
 async def extract_pdf(pdf_path: str, config: PipelineConfig) -> tuple[str, PipelineMetrics]:
@@ -121,40 +94,34 @@ async def extract_pdf(pdf_path: str, config: PipelineConfig) -> tuple[str, Pipel
     # Phase 4: Handwriting
     handwriting: dict[int, str] = {}
     if config.handwriting_enabled:
-        gemini_flash = clients.get("gemini_flash")
-        gemini_pro = clients.get("gemini_pro")
-        if gemini_flash and gemini_pro:
-            from pdf_extract.phases.handwriting import detect_and_extract_handwriting
+        from pdf_extract.phases.handwriting import detect_and_extract_handwriting
 
-            phase = PhaseMetrics(name="handwriting")
-            phase.start()
-            handwriting = await detect_and_extract_handwriting(
-                pdf_path, config, metrics, gemini_flash, gemini_pro,
-            )
-            phase.stop()
-            metrics.phases.append(phase)
-            metrics.handwriting_pages = list(handwriting.keys())
-            log.info("phase.complete", phase="handwriting", pages_found=len(handwriting))
-        else:
-            log.warning("handwriting.skipped", reason="Gemini clients not available")
+        gemini_flash_hw = clients["gemini_flash"]
+        gemini_pro_hw = clients["gemini_pro"]
+        phase = PhaseMetrics(name="handwriting")
+        phase.start()
+        handwriting = await detect_and_extract_handwriting(
+            pdf_path, config, metrics, gemini_flash_hw, gemini_pro_hw,  # type: ignore[arg-type]
+        )
+        phase.stop()
+        metrics.phases.append(phase)
+        metrics.handwriting_pages = list(handwriting.keys())
+        log.info("phase.complete", phase="handwriting", pages_found=len(handwriting))
 
     # Phase 5: Image understanding
     image_replacements: dict[str, str] = {}
     if images:
-        gemini_flash = clients.get("gemini_flash")
-        if gemini_flash:
-            from pdf_extract.phases.images import process_images
+        from pdf_extract.phases.images import process_images
 
-            phase = PhaseMetrics(name="images")
-            phase.start()
-            image_replacements = await process_images(
-                images, config, metrics, gemini_flash,
-            )
-            phase.stop()
-            metrics.phases.append(phase)
-            log.info("phase.complete", phase="images", processed=len(image_replacements))
-        else:
-            log.warning("images.skipped", reason="Gemini client not available")
+        gemini_flash_img = clients["gemini_flash"]
+        phase = PhaseMetrics(name="images")
+        phase.start()
+        image_replacements = await process_images(
+            images, config, metrics, gemini_flash_img,  # type: ignore[arg-type]
+        )
+        phase.stop()
+        metrics.phases.append(phase)
+        log.info("phase.complete", phase="images", processed=len(image_replacements))
 
     # Phase 6: Verification stack
     if config.verify_enabled:

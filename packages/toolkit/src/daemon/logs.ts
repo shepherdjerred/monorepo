@@ -88,7 +88,7 @@ async function tailFollow(
       const lines = content.trim().split("\n").filter(Boolean);
       const recent = lines.slice(-10);
       for (const line of recent) {
-        if (matchesFilters(line, options.level, undefined)) {
+        if (matchesFilters(line, options.level)) {
           console.log(options.json ? line : formatLogLine(line));
         }
       }
@@ -129,7 +129,7 @@ async function tailFollow(
 
       const newLines = newContent.trim().split("\n").filter(Boolean);
       for (const line of newLines) {
-        if (matchesFilters(line, options.level, undefined)) {
+        if (matchesFilters(line, options.level)) {
           console.log(options.json ? line : formatLogLine(line));
         }
       }
@@ -151,7 +151,7 @@ async function tailFollow(
 function matchesFilters(
   line: string,
   level: string | undefined,
-  sinceTs: string | undefined,
+  sinceTs?: string,
 ): boolean {
   if (level != null || sinceTs != null) {
     try {

@@ -1,10 +1,11 @@
 """Mermaid diagram helpers: validation, rendering, extraction."""
 from __future__ import annotations
 
-import base64
 import re
+import shutil
 import subprocess
-import zlib
+import tempfile
+from pathlib import Path
 
 import structlog
 
@@ -12,64 +13,66 @@ log = structlog.get_logger(__name__)
 
 
 def validate_mermaid_syntax(code: str) -> bool:
-    """Validate Mermaid syntax using merval CLI.
+    """Validate Mermaid syntax by attempting to render with mmdc.
 
-    Falls back to a basic syntax check if merval is not installed.
+    Returns True if the code is valid Mermaid, False otherwise.
     """
-    try:
-        result = subprocess.run(
-            ["merval", "--input", "-"],
-            input=code,
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        valid = result.returncode == 0
-        if not valid:
-            log.debug("mermaid.validate.fail", stderr=result.stderr[:200])
-        return valid
-    except FileNotFoundError:
-        log.debug("mermaid.validate.merval_not_found, using_basic_check")
-        return _basic_syntax_check(code)
-    except subprocess.TimeoutExpired:
-        log.warning("mermaid.validate.timeout")
-        return False
+    if not shutil.which("mmdc"):
+        msg = "mmdc (mermaid-cli) not found on PATH. Install with: npm install -g @mermaid-js/mermaid-cli"
+        raise RuntimeError(msg)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        input_path = Path(tmp) / "validate.mmd"
+        output_path = Path(tmp) / "validate.svg"
+        input_path.write_text(code)
+
+        try:
+            result = subprocess.run(
+                ["mmdc", "-i", str(input_path), "-o", str(output_path), "--quiet"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            valid = result.returncode == 0
+            if not valid:
+                log.debug("mermaid.validate.fail", stderr=result.stderr[:200])
+            return valid
+        except subprocess.TimeoutExpired:
+            log.warning("mermaid.validate.timeout")
+            return False
 
 
-def _basic_syntax_check(code: str) -> bool:
-    """Minimal Mermaid syntax validation: check for a known diagram type keyword."""
-    code_stripped = code.strip()
-    known_types = (
-        "graph", "flowchart", "sequenceDiagram", "classDiagram",
-        "stateDiagram", "erDiagram", "gantt", "pie", "mindmap",
-        "gitgraph", "journey", "quadrantChart", "sankey",
-    )
-    first_line = code_stripped.split("\n", 1)[0].strip()
-    return any(first_line.startswith(t) for t in known_types)
-
-
-def render_mermaid_kroki(code: str) -> bytes | None:
-    """Render Mermaid code to PNG via the Kroki API.
+def render_mermaid(code: str) -> bytes | None:
+    """Render Mermaid code to PNG via mmdc (mermaid-cli).
 
     Returns PNG bytes on success, None on failure.
     """
-    import urllib.error
-    import urllib.request
+    if not shutil.which("mmdc"):
+        msg = "mmdc (mermaid-cli) not found on PATH. Install with: npm install -g @mermaid-js/mermaid-cli"
+        raise RuntimeError(msg)
 
-    try:
-        compressed = zlib.compress(code.encode("utf-8"), level=9)
-        encoded = base64.urlsafe_b64encode(compressed).decode("ascii")
-        url = f"https://kroki.io/mermaid/png/{encoded}"
+    with tempfile.TemporaryDirectory() as tmp:
+        input_path = Path(tmp) / "input.mmd"
+        output_path = Path(tmp) / "output.png"
+        input_path.write_text(code)
 
-        req = urllib.request.Request(url, method="GET")
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            png_bytes: bytes = resp.read()
+        try:
+            result = subprocess.run(
+                ["mmdc", "-i", str(input_path), "-o", str(output_path), "-b", "white", "--quiet"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            if result.returncode != 0:
+                log.warning("mermaid.render.fail", stderr=result.stderr[:200])
+                return None
 
-        log.debug("mermaid.render.ok", size=len(png_bytes))
-        return png_bytes
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        log.warning("mermaid.render.fail", error=str(exc))
-        return None
+            png_bytes = output_path.read_bytes()
+            log.debug("mermaid.render.ok", size=len(png_bytes))
+            return png_bytes
+        except subprocess.TimeoutExpired:
+            log.warning("mermaid.render.timeout")
+            return None
 
 
 def extract_mermaid_from_text(text: str) -> str | None:

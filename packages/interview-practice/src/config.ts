@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { join } from "node:path";
+import path from "node:path";
 import { homedir } from "node:os";
 
 const AiProviderSchema = z.enum(["anthropic", "openai", "google"]);
@@ -30,46 +30,46 @@ const DEFAULT_MODELS: Record<string, string> = {
   google: "gemini-3.1-flash-lite",
 };
 
-function resolveDataDir(envValue: string | undefined): string {
-  const raw = envValue ?? "~/.interview-practice";
+function resolveDataDir(envValue = "~/.interview-practice"): string {
+  const raw = envValue;
   if (raw.startsWith("~")) {
-    return join(homedir(), raw.slice(1));
+    return path.join(homedir(), raw.slice(1));
   }
   return raw;
 }
 
 export function loadConfig(): Config {
-  const provider = (process.env["AI_PROVIDER"] ?? "anthropic");
-  const dataDir = resolveDataDir(process.env["DATA_DIR"]);
+  const provider = (Bun.env["AI_PROVIDER"] ?? "anthropic");
+  const dataDir = resolveDataDir(Bun.env["DATA_DIR"]);
 
   return ConfigSchema.parse({
     aiProvider: provider,
-    anthropicApiKey: process.env["ANTHROPIC_API_KEY"],
-    openaiApiKey: process.env["OPENAI_API_KEY"],
-    googleApiKey: process.env["GOOGLE_API_KEY"],
+    anthropicApiKey: Bun.env["ANTHROPIC_API_KEY"],
+    openaiApiKey: Bun.env["OPENAI_API_KEY"],
+    googleApiKey: Bun.env["GOOGLE_API_KEY"],
     conversationModel:
-      process.env["CONVERSATION_MODEL"] ?? DEFAULT_MODELS[provider],
-    realtimeModel: process.env["REALTIME_MODEL"] ?? "gpt-realtime-mini",
-    realtimeVoice: process.env["REALTIME_VOICE"] ?? "ash",
+      Bun.env["CONVERSATION_MODEL"] ?? DEFAULT_MODELS[provider],
+    realtimeModel: Bun.env["REALTIME_MODEL"] ?? "gpt-realtime-mini",
+    realtimeVoice: Bun.env["REALTIME_VOICE"] ?? "ash",
     leetcodeTimeMinutes: Number.parseInt(
-      process.env["LEETCODE_TIME_MINUTES"] ?? "25",
+      Bun.env["LEETCODE_TIME_MINUTES"] ?? "25",
       10,
     ),
     systemDesignTimeMinutes: Number.parseInt(
-      process.env["SYSTEM_DESIGN_TIME_MINUTES"] ?? "45",
+      Bun.env["SYSTEM_DESIGN_TIME_MINUTES"] ?? "45",
       10,
     ),
     transcriptWindowSize: Number.parseInt(
-      process.env["TRANSCRIPT_WINDOW_SIZE"] ?? "20",
+      Bun.env["TRANSCRIPT_WINDOW_SIZE"] ?? "20",
       10,
     ),
     dataDir,
-    logLevel: process.env["LOG_LEVEL"] ?? "info",
+    logLevel: Bun.env["LOG_LEVEL"] ?? "info",
     excalidrawPort: Number.parseInt(
-      process.env["EXCALIDRAW_PORT"] ?? "8080",
+      Bun.env["EXCALIDRAW_PORT"] ?? "8080",
       10,
     ),
     excalidrawImage:
-      process.env["EXCALIDRAW_IMAGE"] ?? "excalidraw/excalidraw:latest",
+      Bun.env["EXCALIDRAW_IMAGE"] ?? "excalidraw/excalidraw:latest",
   });
 }

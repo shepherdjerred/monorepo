@@ -89,4 +89,4 @@ class TestDefaults:
 
     def test_low_models_default(self) -> None:
         config = PipelineConfig()
-        assert "gpt-4o" in config.low_models
+        assert "gpt-5.4" in config.low_models

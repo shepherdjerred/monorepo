@@ -2,6 +2,7 @@
 
 import { loadConfig } from "./config.ts";
 import { handleLeetcodeCommand } from "./handlers/leetcode.ts";
+import { handleSystemDesignCommand } from "./handlers/system-design.ts";
 import { handleQuestionsCommand } from "./handlers/questions.ts";
 
 function printUsage(): void {
@@ -22,6 +23,12 @@ Commands:
   leetcode resume <id>         Resume a previous session
   leetcode history             List past sessions
 
+  system-design start [options] Start a system design interview session
+    -d, --difficulty <level>   junior | mid | senior | staff
+    -t, --time <minutes>       Session duration (default: 45)
+    -q, --question <slug>      Specific question slug
+    --voice                    Enable voice mode (OpenAI Realtime, ~$5/session)
+
   questions list               List available questions
 
 Options:
@@ -36,6 +43,7 @@ Environment Variables:
 Examples:
   interview-practice leetcode start -d medium -l java
   interview-practice leetcode start -q two-sum -l ts
+  interview-practice system-design start -d senior -q url-shortener
   interview-practice questions list
 `);
 }
@@ -60,6 +68,9 @@ async function main(): Promise<void> {
   switch (command) {
     case "leetcode":
       await handleLeetcodeCommand(subcommand, args.slice(2), config);
+      break;
+    case "system-design":
+      await handleSystemDesignCommand(subcommand, args.slice(2), config);
       break;
     case "questions":
       await handleQuestionsCommand(subcommand, args.slice(2), config);

@@ -406,6 +406,33 @@ export class Monorepo {
       .stdout()
   }
 
+  /** Generate/update Playwright snapshot baselines. Returns the snapshots directory. */
+  @func()
+  playwrightUpdate(source: Directory, pkg: string): Directory {
+    return dag
+      .container()
+      .from(PLAYWRIGHT_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "unzip"])
+      .withExec(["bash", "-c", "curl -fsSL https://bun.sh/install | bash"])
+      .withEnvVariable("PATH", "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+      .withEnvVariable("CI", "true")
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir("/workspace/packages/eslint-config")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/astro-opengraph-images")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/webring")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bunx", "astro", "build"])
+      .withExec(["bunx", "playwright", "test", "--update-snapshots"])
+      .directory(`/workspace/packages/${pkg}/test`)
+  }
+
   // ---------------------------------------------------------------------------
   // Quality gates
   // ---------------------------------------------------------------------------
@@ -434,5 +461,78 @@ export class Monorepo {
       .withDirectory("/workspace", source, { include: ["**/*.sh"], exclude: ["**/archive/**", "**/node_modules/**"] })
       .withExec(["sh", "-c", "find /workspace -name '*.sh' -print0 | xargs -0 shellcheck"])
       .stdout()
+  }
+
+  // ---------------------------------------------------------------------------
+  // Full CI validation
+  // ---------------------------------------------------------------------------
+
+  /** Run lint/typecheck/test for all TS packages in parallel. Returns results summary. */
+  @func()
+  async ciAll(source: Directory): Promise<string> {
+    const tsPackages = [
+      "webring", "bun-decompile", "eslint-config", "resume",
+      "astro-opengraph-images", "cooklang-for-obsidian", "cooklang-rich-preview",
+      "birmel", "starlight-karma-bot", "sentinel", "tasknotes-server",
+      "tasknotes-types", "better-skill-capped", "hn-enhancer", "monarch",
+      "discord-plays-pokemon", "tasks-for-obsidian", "toolkit",
+      "status-page/api", "status-page/web",
+    ]
+
+    const base = this.bunBase(source, "webring") // any pkg, just to get the base
+
+    const results: string[] = []
+
+    // Run all TS packages in parallel
+    const tsResults = await Promise.allSettled(
+      tsPackages.flatMap(pkg => {
+        const container = base.withWorkdir(`/workspace/packages/${pkg}`)
+        return [
+          container.withExec(["bun", "run", "lint"]).sync()
+            .then(() => `${pkg}: lint=PASS`)
+            .catch((e: Error) => `${pkg}: lint=FAIL (${e.message.slice(0, 80)})`),
+          container.withExec(["bun", "run", "typecheck"]).sync()
+            .then(() => `${pkg}: typecheck=PASS`)
+            .catch((e: Error) => `${pkg}: typecheck=FAIL (${e.message.slice(0, 80)})`),
+          container.withExec(["bun", "run", "test"]).sync()
+            .then(() => `${pkg}: test=PASS`)
+            .catch((e: Error) => `${pkg}: test=FAIL (${e.message.slice(0, 80)})`),
+        ]
+      })
+    )
+
+    for (const r of tsResults) {
+      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+    }
+
+    // Rust checks
+    const rustBase = this.rustBase(source)
+    const rustResults = await Promise.allSettled([
+      rustBase.withExec(["rustup", "component", "add", "rustfmt"]).withExec(["cargo", "fmt", "--check"]).sync()
+        .then(() => "clauderon: fmt=PASS").catch((e: Error) => `clauderon: fmt=FAIL (${e.message.slice(0, 80)})`),
+      rustBase.withExec(["rustup", "component", "add", "clippy"]).withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]).sync()
+        .then(() => "clauderon: clippy=PASS").catch((e: Error) => `clauderon: clippy=FAIL (${e.message.slice(0, 80)})`),
+      rustBase.withExec(["cargo", "test", "--all-features"]).sync()
+        .then(() => "clauderon: test=PASS").catch((e: Error) => `clauderon: test=FAIL (${e.message.slice(0, 80)})`),
+    ])
+    for (const r of rustResults) {
+      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+    }
+
+    // Go checks
+    const goB = this.goBase(source)
+    const goResults = await Promise.allSettled([
+      goB.withExec(["go", "build", "./..."]).sync()
+        .then(() => "go: build=PASS").catch((e: Error) => `go: build=FAIL (${e.message.slice(0, 80)})`),
+      goB.withExec(["go", "test", "./...", "-v"]).sync()
+        .then(() => "go: test=PASS").catch((e: Error) => `go: test=FAIL (${e.message.slice(0, 80)})`),
+      goB.withExec(["go", "install", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"]).withExec(["golangci-lint", "run", "./..."]).sync()
+        .then(() => "go: lint=PASS").catch((e: Error) => `go: lint=FAIL (${e.message.slice(0, 80)})`),
+    ])
+    for (const r of goResults) {
+      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+    }
+
+    return results.join("\n")
   }
 }

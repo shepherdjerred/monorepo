@@ -5,7 +5,7 @@ log_level = "INFO"
 log_json = false
 
 [extraction]
-docling_vlm = true
+docling_vlm = false
 mineru_backend = "hybrid-auto-engine"
 
 [preprocessing]
@@ -16,19 +16,19 @@ min_contrast_threshold = 50
 
 [handwriting]
 enabled = true
-detect_model = "gemini-2.5-flash"
-extract_model = "gemini-2.5-pro"
+detect_model = "gemini-3.1-pro-preview"
+extract_model = "gemini-3.1-pro-preview"
 
 [images]
-classify_model = "gemini-2.5-flash"
-diagram_model = "gemini-2.5-flash"
+classify_model = "gemini-3.1-pro-preview"
+diagram_model = "gemini-3.1-pro-preview"
 mermaid_self_correct = "hand_drawn_only"
 mermaid_validator = "merval"
-mermaid_renderer = "kroki"
+mermaid_renderer = "mmdc"
 
 [verification]
 enabled = true
-anchored_model = "gemini-2.5-flash"
+anchored_model = "gemini-3.1-pro-preview"
 anchored_all_pages = true
 table_cell_verification = true
 geometric_risk_controller = true
@@ -37,7 +37,7 @@ grc_consensus_threshold = 3
 
 [escalation]
 medium_model = "claude-sonnet-4-6"
-low_models = ["claude-sonnet-4-6", "gpt-4o"]
+low_models = ["claude-sonnet-4-6", "gpt-5.4"]
 unresolved_model = "claude-opus-4-6"
 max_opus_calls = 10
 

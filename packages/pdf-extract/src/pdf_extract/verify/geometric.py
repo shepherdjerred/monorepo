@@ -63,7 +63,7 @@ def _generate_geometric_views(
 
     if k >= 4:
         # View 3: Upscaled 2x
-        scaled = img.resize((w * 2, h * 2), Image.LANCZOS)
+        scaled = img.resize((w * 2, h * 2), Image.Resampling.LANCZOS)
         buf = io.BytesIO()
         scaled.save(buf, format="PNG")
         views.append(buf.getvalue())
@@ -104,10 +104,10 @@ async def geometric_risk_control(
     results: list[str] = []
     max_len = len(current_text) * 3
     for r in raw_results:
-        if isinstance(r, Exception):
+        if isinstance(r, BaseException):
             log.debug("grc.view_error", error=str(r))
             continue
-        if len(r) <= max_len:
+        if isinstance(r, str) and len(r) <= max_len:
             results.append(r)
 
     if not results:

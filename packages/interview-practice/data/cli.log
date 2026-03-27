@@ -1,1 +1,5 @@
-{"ts":"2026-03-27T00:59:37.048Z","level":"info","component":"cli","sessionId":"cli","event":"questions_loaded","count":5}
+{"ts":"2026-03-27T03:59:36.211Z","level":"info","component":"cli","sessionId":"cli","event":"questions_loaded","count":10}
+ile":"word-break.json","errors":["Invalid option: expected one of \"constraint-addition\"|\"static-to-dynamic\"|\"existence-to-enumeration\"|\"single-to-distributed\"|\"concrete-to-symbolic\"|\"specific-to-general\""]}
+{"ts":"2026-03-27T03:58:11.558Z","level":"warn","component":"cli","sessionId":"cli","event":"question_validation_failed","file":"expression-parser.json","errors":["Invalid option: expected one of \"constraint-addition\"|\"static-to-dynamic\"|\"existence-to-enumeration\"|\"single-to-distributed\"|\"concrete-to-symbolic\"|\"specific-to-general\""]}
+{"ts":"2026-03-27T03:58:11.559Z","level":"warn","component":"cli","sessionId":"cli","event":"question_validation_failed","file":"word-search.json","errors":["Invalid option: expected one of \"constraint-addition\"|\"static-to-dynamic\"|\"existence-to-enumeration\"|\"single-to-distributed\"|\"concrete-to-symbolic\"|\"specific-to-general\""]}
+{"ts":"2026-03-27T03:58:11.559Z","level":"info","component":"cli","sessionId":"cli","event":"questions_loaded","count":7}

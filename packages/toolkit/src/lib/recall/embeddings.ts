@@ -4,24 +4,23 @@ import { EMBEDDING_DIM } from "./config.ts";
 const ReadyMessage = z.object({ error: z.string().optional(), ready: z.boolean().optional() });
 const EmbedResponse = z.object({ embeddings: z.array(z.array(z.number())).optional(), error: z.string().optional() });
 
-interface StdinWriter {
-  write(data: string): void;
-  flush(): void;
-  end(): void;
+type StdinWriter = {
+  write: (data: string) => void;
+  flush: () => void;
+  end: () => void;
 }
 
-interface ReadResult {
+type ReadResult = {
   value: Uint8Array | undefined;
   done: boolean;
 }
 
-interface TypedReader {
-  read(): Promise<ReadResult>;
+type TypedReader = {
+  read: () => Promise<ReadResult>;
 }
 
-function getReader(stdout: unknown): TypedReader {
-  const stream = stdout as ReadableStream<Uint8Array>;
-  const raw = stream.getReader();
+function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
+  const raw = stdout.getReader();
   return {
     async read(): Promise<ReadResult> {
       const result = await raw.read();
@@ -30,8 +29,12 @@ function getReader(stdout: unknown): TypedReader {
   };
 }
 
-function getStdinWriter(stdin: unknown): StdinWriter {
-  return stdin as StdinWriter;
+function getStdinWriter(proc: ReturnType<typeof Bun.spawn>): StdinWriter {
+  const stdin = proc.stdin;
+  if (stdin == null || typeof stdin === "number") {
+    throw new Error("Process stdin not available");
+  }
+  return stdin;
 }
 
 const EMBED_SERVER_SCRIPT = `
@@ -168,7 +171,11 @@ export class EmbeddingClient {
     });
 
     // Keep a single reader for the lifetime of the process
-    this.reader = getReader(this.proc.stdout);
+    const stdout = this.proc.stdout;
+    if (stdout == null || typeof stdout === "number") {
+      throw new Error("Embedding server stdout not available");
+    }
+    this.reader = getReader(stdout);
 
     const firstLine = await this.readLine();
     if (firstLine == null) {
@@ -196,7 +203,7 @@ export class EmbeddingClient {
     }
 
     const request = JSON.stringify({ texts }) + "\n";
-    const stdin = getStdinWriter(this.proc.stdin);
+    const stdin = getStdinWriter(this.proc);
     stdin.write(request);
     stdin.flush();
 
@@ -209,10 +216,10 @@ export class EmbeddingClient {
     try {
       response = EmbedResponse.parse(JSON.parse(responseLine));
     } catch {
-      // If Zod parse fails, try raw JSON
-      const raw = JSON.parse(responseLine) as Record<string, unknown>;
-      if (typeof raw["error"] === "string") {
-        throw new Error(`Embedding error: ${raw["error"]}`);
+      // If Zod parse fails, try raw JSON for error field
+      const rawResult = z.record(z.string(), z.unknown()).safeParse(JSON.parse(responseLine));
+      if (rawResult.success && typeof rawResult.data["error"] === "string") {
+        throw new TypeError(`Embedding error: ${rawResult.data["error"]}`);
       }
       throw new Error(`Invalid embedding response: ${responseLine.slice(0, 200)}`);
     }
@@ -228,7 +235,7 @@ export class EmbeddingClient {
     return response.embeddings;
   }
 
-  private async readLine(timeoutMs: number = 30_000): Promise<string | null> {
+  private async readLine(timeoutMs = 30_000): Promise<string | null> {
     if (this.reader == null) return null;
 
     const deadline = Date.now() + timeoutMs;
@@ -248,7 +255,7 @@ export class EmbeddingClient {
       const result = await Promise.race([
         this.reader.read(),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Embedding server read timeout")), Math.max(1000, deadline - Date.now())),
+          setTimeout(() => { reject(new Error("Embedding server read timeout")); }, Math.max(1000, deadline - Date.now())),
         ),
       ]);
 
@@ -264,7 +271,7 @@ export class EmbeddingClient {
   shutdown(): void {
     if (this.proc != null) {
       try {
-        const stdin = getStdinWriter(this.proc.stdin);
+        const stdin = getStdinWriter(this.proc);
         stdin.end();
       } catch {
         // ignore

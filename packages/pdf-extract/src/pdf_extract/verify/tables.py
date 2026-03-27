@@ -146,7 +146,7 @@ async def verify_tables(
     if not tables_info:
         return markdown
 
-    import fitz  # type: ignore[import-untyped]
+    import fitz
 
     from pdf_extract.lib.pdf import render_page
 
@@ -155,7 +155,8 @@ async def verify_tables(
     updated_markdown = markdown
 
     for table in tables_info:
-        page_idx = int(table.get("page_idx", 0))
+        raw_idx = table.get("page_idx", 0)
+        page_idx = int(raw_idx) if isinstance(raw_idx, (int, float, str)) else 0
         bbox = table.get("bbox")
         table_md = str(table.get("table_md", ""))
 
@@ -208,10 +209,12 @@ async def verify_tables(
             _, num_cols = _count_md_table_dims(table_md)
             col_types = _infer_column_types(cells, num_cols)
             for cell in cells:
-                row = int(cell.get("row", 0))
+                raw_row = cell.get("row", 0)
+                row = int(raw_row) if isinstance(raw_row, (int, float, str)) else 0
                 if row == 0:
                     continue  # Skip header
-                col = int(cell.get("col", 0))
+                raw_col = cell.get("col", 0)
+                col = int(raw_col) if isinstance(raw_col, (int, float, str)) else 0
                 text = str(cell.get("text", ""))
                 if col in col_types and not _matches_column_type(text, col_types[col]):
                     metrics.verification.table_mismatches += 1

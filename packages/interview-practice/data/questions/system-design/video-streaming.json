@@ -1,0 +1,175 @@
+{
+  "id": "a83ceee3-657d-4bfe-a3a5-1d7d8faa54d0",
+  "title": "Video Streaming Platform",
+  "slug": "video-streaming",
+  "category": "distributed-systems",
+  "difficulty": "senior",
+  "prompt": "Design a video streaming platform like YouTube or Netflix. Users should be able to upload videos, which are transcoded into multiple formats and resolutions. Viewers should be able to stream videos with adaptive bitrate. Optionally support live streaming.",
+  "requirements": {
+    "functional": [
+      "Upload videos (up to 50GB)",
+      "Transcode videos into multiple resolutions (240p, 480p, 720p, 1080p, 4K) and codecs (H.264, H.265, VP9)",
+      "Adaptive bitrate streaming (switch quality based on network conditions)",
+      "Video search and discovery (title, tags, recommendations)",
+      "User interactions: likes, comments, subscriptions",
+      "Optional: live streaming with low latency"
+    ],
+    "nonFunctional": [
+      "Playback start time < 2 seconds",
+      "High availability (99.99%)",
+      "Support global distribution with low latency worldwide",
+      "Transcoding should complete within minutes for typical videos",
+      "Cost-efficient storage for petabyte-scale video data"
+    ],
+    "scale": {
+      "users": "2 billion MAU, 500M DAU",
+      "qps": "500 uploads/sec, 1M concurrent streams",
+      "storage": "500 PB total video storage, 500 hours of video uploaded per minute"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What video formats and resolutions do we need to support?",
+        "Do we need live streaming or only video-on-demand?",
+        "What is the maximum upload size?",
+        "Do we need DRM/content protection?",
+        "What regions need to be served with low latency?",
+        "Do we need video recommendations?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Upload rate: 500 hrs/min * 60 = 30K hours of video/hour",
+        "Storage per video: 1 hour raw = ~10 GB, transcoded to 5 resolutions = ~15 GB total",
+        "Daily upload storage: 500 hrs/min * 1440 min * 15 GB = ~10 PB/day",
+        "Streaming bandwidth: 1M concurrent * 5 Mbps avg = 5 Tbps",
+        "Transcode compute: 500 hrs/min of video, each needing ~2x real-time = 1000 CPU-hours/min",
+        "CDN cache: top 10% of videos serve 90% of views => cache ~50 PB at edge"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/videos/upload/init { title, description, tags } => { uploadId, uploadUrl }",
+        "PUT /api/v1/videos/upload/{uploadId} (chunked upload)",
+        "POST /api/v1/videos/upload/{uploadId}/complete => { videoId, status: 'processing' }",
+        "GET /api/v1/videos/{videoId} => { metadata, manifestUrl }",
+        "GET /api/v1/videos/{videoId}/manifest.m3u8 => HLS manifest with quality variants",
+        "GET /api/v1/videos/{videoId}/segments/{quality}/{segmentNumber}.ts => video segment",
+        "GET /api/v1/search?q={query}&page={n} => { results[] }",
+        "POST /api/v1/videos/{videoId}/like => { status }"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "videos: id, uploader_id, title, description, tags[], status (processing/ready/failed), duration, upload_time",
+        "video_variants: id, video_id, resolution, codec, bitrate, storage_url, segment_count",
+        "segments: video_variant_id, segment_number, duration, size, storage_url",
+        "users: id, name, subscriber_count, channel_description",
+        "interactions: id, user_id, video_id, type (like/dislike/comment), content, timestamp",
+        "view_events: video_id, user_id, timestamp, watch_duration, quality, region"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Load Balancer / API Gateway",
+        "Upload Service (chunked upload to object storage)",
+        "Transcoding Pipeline (distributed job queue with GPU workers)",
+        "Object Storage (S3-like for raw and transcoded video segments)",
+        "Video Metadata Service + Database",
+        "Streaming Service (HLS/DASH manifest generation, segment serving)",
+        "CDN (global edge network for video segment delivery)",
+        "Search Service (Elasticsearch for video discovery)",
+        "Recommendation Engine",
+        "Analytics Pipeline (view counts, watch time aggregation)"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Transcoding pipeline: DAG-based job orchestration, parallel segment transcoding, priority queues",
+        "Adaptive bitrate streaming: HLS vs DASH, segment duration trade-offs, player-side ABR algorithms",
+        "CDN architecture: multi-tier caching (edge -> regional -> origin), cache warming for viral content",
+        "Live streaming: RTMP ingest, real-time transcoding, HLS low-latency extensions, edge push",
+        "Cost optimization: storage tiering (hot/warm/cold), just-in-time transcoding for long-tail content",
+        "Content delivery: pre-fetching next segments, buffering strategy"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about supported formats and resolutions",
+        "Clarified live vs on-demand requirements",
+        "Discussed content protection/DRM needs",
+        "Asked about global distribution requirements",
+        "Estimated upload volume and storage growth"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, jumped to architecture without understanding video-specific needs",
+        "2": "Asked about basic upload/playback but missed transcoding, CDN, or scale requirements",
+        "3": "Covered upload, transcoding, streaming, and CDN requirements with scale estimates",
+        "4": "Proactively identified live streaming latency constraints, codec trade-offs, DRM needs, and cost implications of storage growth"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Separated upload and streaming paths",
+        "Included async transcoding pipeline",
+        "Designed CDN-based content delivery",
+        "Used object storage for video data",
+        "Included adaptive bitrate streaming"
+      ],
+      "anchors": {
+        "1": "Single server serving raw uploaded files with no transcoding or CDN",
+        "2": "Basic upload + transcode + serve but no CDN, no adaptive streaming",
+        "3": "Upload pipeline, distributed transcoding, CDN delivery, adaptive bitrate with HLS/DASH",
+        "4": "Multi-tier CDN, DAG-based transcoding orchestration, segment-level parallelism, and clear separation of hot/cold paths"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained transcoding pipeline architecture",
+        "Discussed adaptive bitrate streaming mechanics",
+        "Addressed CDN caching and cache warming strategies",
+        "Considered live streaming architecture if applicable",
+        "Discussed storage cost optimization"
+      ],
+      "anchors": {
+        "1": "No depth on transcoding, streaming protocol, or CDN strategy",
+        "2": "Basic discussion of one component but no concrete implementation details",
+        "3": "Deep dive into transcoding pipeline + CDN strategy or ABR streaming with trade-offs",
+        "4": "Thorough analysis of segment-parallel transcoding, HLS low-latency extensions, multi-tier CDN with quantitative cache analysis"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "HLS vs DASH streaming protocols",
+        "Eager transcoding (all formats upfront) vs lazy transcoding (on-demand)",
+        "Segment duration: shorter (lower latency) vs longer (better compression)",
+        "H.264 vs H.265 vs VP9 codec trade-offs",
+        "CDN push vs pull caching model"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs in the design",
+        "2": "Mentioned one trade-off without deeper analysis",
+        "3": "Discussed 2-3 trade-offs with pros/cons covering streaming, transcoding, or CDN",
+        "4": "Systematically evaluated codec, protocol, caching, and cost trade-offs with bandwidth and latency modeling"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Serving raw uploaded files without transcoding to multiple resolutions",
+    "Not using adaptive bitrate streaming, forcing all users to same quality",
+    "Synchronous transcoding that blocks upload completion",
+    "Ignoring CDN and serving all video from origin servers",
+    "Not segmenting videos, requiring full download before playback",
+    "Underestimating the compute cost of transcoding at scale"
+  ],
+  "source": "Classic system design interview question"
+}

@@ -1,4 +1,4 @@
-import { dirname, basename } from "node:path";
+import path from "node:path";
 import { getLanguageConfig } from "./languages.ts";
 import type { TestCase } from "#lib/questions/schemas.ts";
 
@@ -23,7 +23,7 @@ function interpolateCmd(
   template: string,
   filePath: string,
 ): string {
-  const dir = dirname(filePath);
+  const dir = path.dirname(filePath);
   const file = filePath;
   return template.replaceAll('{file}', file).replaceAll('{dir}', dir);
 }
@@ -36,7 +36,7 @@ async function compileFile(
   const cmd = interpolateCmd(compileCmd, filePath);
   const parts = cmd.split(" ");
   const proc = Bun.spawn(parts, {
-    cwd: dirname(filePath),
+    cwd: path.dirname(filePath),
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -47,7 +47,7 @@ async function compileFile(
 
   if (exitCode !== 0) {
     const stderr = await new Response(proc.stderr).text();
-    return stderr || `Compilation failed with exit code ${exitCode}`;
+    return stderr || `Compilation failed with exit code ${String(exitCode)}`;
   }
   return null;
 }
@@ -63,7 +63,7 @@ async function runWithInput(
   const start = Date.now();
 
   const proc = Bun.spawn(parts, {
-    cwd: dirname(filePath),
+    cwd: path.dirname(filePath),
     stdin: new Response(input).body,
     stdout: "pipe",
     stderr: "pipe",
@@ -89,7 +89,7 @@ export async function runTests(
   solutionPath: string,
   testCases: TestCase[],
 ): Promise<TestRunResult> {
-  const ext = "." + basename(solutionPath).split(".").pop();
+  const ext = "." + (path.basename(solutionPath).split(".").pop() ?? "");
   const langConfig = getLanguageConfig(ext);
 
   if (!langConfig) {
@@ -109,13 +109,13 @@ export async function runTests(
     };
   }
 
-  if (langConfig.compile) {
+  if (langConfig.compile !== null) {
     const compileError = await compileFile(
       langConfig.compile,
       solutionPath,
       langConfig.compileTimeout,
     );
-    if (compileError) {
+    if (compileError !== null) {
       return {
         passed: 0,
         failed: testCases.length,

@@ -22,7 +22,7 @@ class PipelineConfig:
     output_dir: Path = field(default_factory=lambda: Path("output"))
 
     # Extraction
-    docling_vlm: bool = True
+    docling_vlm: bool = False
     mineru_backend: str = "hybrid-auto-engine"
 
     # Preprocessing
@@ -33,15 +33,15 @@ class PipelineConfig:
 
     # Handwriting
     handwriting_enabled: bool = True
-    handwriting_detect_model: str = "gemini-2.5-flash"
-    handwriting_extract_model: str = "gemini-2.5-pro"
+    handwriting_detect_model: str = "gemini-3.1-pro-preview"
+    handwriting_extract_model: str = "gemini-3.1-pro-preview"
 
     # Images
     mermaid_self_correct: str = "hand_drawn_only"
     mermaid_validator: str = "merval"
-    mermaid_renderer: str = "kroki"
-    classify_model: str = "gemini-2.5-flash"
-    diagram_model: str = "gemini-2.5-flash"
+    mermaid_renderer: str = "mmdc"
+    classify_model: str = "gemini-3.1-pro-preview"
+    diagram_model: str = "gemini-3.1-pro-preview"
 
     # Verification
     verify_enabled: bool = True
@@ -50,11 +50,11 @@ class PipelineConfig:
     geometric_risk_controller: bool = True
     grc_num_views: int = 5
     grc_consensus_threshold: int = 3
-    anchored_model: str = "gemini-2.5-flash"
+    anchored_model: str = "gemini-3.1-pro-preview"
 
     # Escalation
     medium_model: str = "claude-sonnet-4-6"
-    low_models: list[str] = field(default_factory=lambda: ["claude-sonnet-4-6", "gpt-4o"])
+    low_models: list[str] = field(default_factory=lambda: ["claude-sonnet-4-6", "gpt-5.4"])
     unresolved_model: str = "claude-opus-4-6"
     max_opus_calls: int = 10
 

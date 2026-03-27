@@ -47,7 +47,7 @@ ${timerInstructions}`);
 
   // QUESTION
   sections.push(`CURRENT PROBLEM: "${ctx.question.title}" (${ctx.question.difficulty})
-Part ${ctx.currentPart.partNumber} of ${ctx.totalParts}
+Part ${String(ctx.currentPart.partNumber)} of ${String(ctx.totalParts)}
 
 ${ctx.currentPart.prompt}
 
@@ -56,8 +56,8 @@ Expected complexity: Time ${ctx.currentPart.expectedComplexity.time}, Space ${ct
 
 Internal notes (never share with candidate): ${ctx.currentPart.internalNotes}
 
-Hints given so far: ${ctx.hintsGiven}
-Tests run so far: ${ctx.testsRun}`);
+Hints given so far: ${String(ctx.hintsGiven)}
+Tests run so far: ${String(ctx.testsRun)}`);
 
   // TRANSITION CRITERIA
   if (ctx.currentPart.transitionCriteria) {
@@ -69,7 +69,7 @@ Frame the transition as: "${tc.transitionPrompt}"`);
   }
 
   // CODE SNAPSHOT
-  if (ctx.codeSnapshot) {
+  if (ctx.codeSnapshot !== null) {
     sections.push(`CANDIDATE'S CURRENT CODE (latest snapshot):
 \`\`\`
 ${ctx.codeSnapshot}

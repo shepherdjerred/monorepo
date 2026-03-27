@@ -3,12 +3,30 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
+import shutil
 import sys
 from pathlib import Path
 
 from pdf_extract import __version__
 from pdf_extract.config import PipelineConfig
 from pdf_extract.lib import get_logger, setup_logging
+
+
+def _load_dotenv() -> None:
+    """Load .env file from package root if it exists. No external deps."""
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,7 +57,44 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _check_requirements(config: PipelineConfig) -> None:
+    """Validate all required external tools and API keys are available."""
+    errors: list[str] = []
+
+    # Extraction backend
+    backend = config.backend
+    if not shutil.which(backend):
+        install_hint = "pip install docling" if backend == "docling" else "pip install mineru[all]"
+        errors.append(f"{backend} CLI not found on PATH. Install with: {install_hint}")
+
+    # API keys
+    try:
+        config.resolve_api_key("gemini")
+    except ValueError:
+        errors.append("GOOGLE_API_KEY not set. Required for Gemini Flash/Pro.")
+    try:
+        config.resolve_api_key("claude")
+    except ValueError:
+        errors.append("ANTHROPIC_API_KEY not set. Required for Claude Sonnet/Opus.")
+    try:
+        config.resolve_api_key("openai")
+    except ValueError:
+        errors.append("OPENAI_API_KEY not set. Required for GPT-5.4.")
+
+    # mmdc (Mermaid validation + rendering)
+    if not shutil.which("mmdc"):
+        errors.append("mmdc (mermaid-cli) not found on PATH. Install with: npm install -g @mermaid-js/mermaid-cli")
+
+    if errors:
+        print("Missing required dependencies:\n", file=sys.stderr)
+        for err in errors:
+            print(f"  - {err}", file=sys.stderr)
+        print("\nAll dependencies are required for maximum-fidelity extraction.", file=sys.stderr)
+        sys.exit(1)
+
+
 def main(args: list[str] | None = None) -> None:
+    _load_dotenv()
     parser = build_parser()
     parsed = parser.parse_args(args)
 
@@ -73,6 +128,10 @@ def main(args: list[str] | None = None) -> None:
 
     setup_logging(config.log_level, json=config.log_json)
     log = get_logger("cli")
+
+    # Validate all required dependencies upfront
+    _check_requirements(config)
+
     log.info("pipeline.start", pdf=str(parsed.pdf), backend=config.backend, fast=parsed.fast)
 
     # Import here to avoid slow imports on --help

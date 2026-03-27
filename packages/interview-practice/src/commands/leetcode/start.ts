@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import path from "node:path";
 import type { Config } from "#config";
 import { createLogger } from "#logger";
 import { createAIClient } from "#lib/ai/client.ts";
@@ -8,6 +8,7 @@ import { loadQuestionStore } from "#lib/questions/store.ts";
 import { createTimer } from "#lib/timer/countdown.ts";
 import { runInterviewerTurn } from "#lib/ai/interviewer.ts";
 import { insertEvent } from "#lib/db/events.ts";
+import { generateReport, formatReport } from "#lib/report/generate.ts";
 import {
   createReadline,
   promptUser,
@@ -21,6 +22,7 @@ import {
   formatSessionStart,
   formatSessionEnd,
 } from "#lib/output/formatter.ts";
+import { runVoiceSession } from "./voice.ts";
 
 export type LeetcodeStartOptions = {
   difficulty?: "easy" | "medium" | "hard" | undefined;
@@ -34,21 +36,21 @@ export async function startLeetcodeSession(
   config: Config,
   options: LeetcodeStartOptions,
 ): Promise<void> {
-  const questionsDir = join(config.dataDir, "questions", "leetcode");
+  const questionsDir = path.join(config.dataDir, "questions", "leetcode");
 
   // Temporary logger for startup
   const tempLogger = createLogger({
     level: config.logLevel,
     sessionId: "startup",
-    logFilePath: join(config.dataDir, "startup.log"),
+    logFilePath: path.join(config.dataDir, "startup.log"),
     component: "cli",
   });
 
   // Load question store
-  const store = loadQuestionStore(questionsDir, tempLogger);
+  const store = await loadQuestionStore(questionsDir, tempLogger);
 
   // Select question
-  const question = options.question
+  const question = options.question !== undefined && options.question !== ""
     ? store.getBySlug(options.question)
     : store.getRandom({ difficulty: options.difficulty });
 
@@ -61,7 +63,7 @@ export async function startLeetcodeSession(
 
   // Create session
   const timeMinutes = options.time ?? config.leetcodeTimeMinutes;
-  const session = createSession({
+  const session = await createSession({
     dataDir: config.dataDir,
     question,
     language: options.language,
@@ -73,7 +75,7 @@ export async function startLeetcodeSession(
   const logger = createLogger({
     level: config.logLevel,
     sessionId: session.metadata.id,
-    logFilePath: join(session.workspacePath, "session.log"),
+    logFilePath: path.join(session.workspacePath, "session.log"),
     component: "cli",
   });
 
@@ -93,7 +95,7 @@ export async function startLeetcodeSession(
   });
 
   // Scaffold workspace
-  const { solutionPath } = scaffoldLeetcodeWorkspace(
+  const { solutionPath } = await scaffoldLeetcodeWorkspace(
     session.workspacePath,
     question,
     options.language,
@@ -102,10 +104,14 @@ export async function startLeetcodeSession(
 
   // Create AI client
   const model = config.conversationModel ?? "claude-sonnet-4-6-20260217";
+  const apiKeyForProvider =
+    config.aiProvider === "anthropic" ? config.anthropicApiKey :
+    config.aiProvider === "openai" ? config.openaiApiKey :
+    config.googleApiKey;
   const client = createAIClient(
     config.aiProvider,
     model,
-    config.anthropicApiKey,
+    apiKeyForProvider,
   );
 
   // Create timer
@@ -113,14 +119,26 @@ export async function startLeetcodeSession(
 
   // Display session start
   console.log(
-    formatSessionStart(
-      question.title,
-      question.difficulty,
-      options.language,
-      session.workspacePath,
+    formatSessionStart({
+      questionTitle: question.title,
+      difficulty: question.difficulty,
+      language: options.language,
+      workspacePath: session.workspacePath,
       timeMinutes,
-    ),
+    }),
   );
+
+  if (options.voice) {
+    await runVoiceSession({
+      config,
+      session,
+      question,
+      timer,
+      solutionPath,
+      logger,
+    });
+    return;
+  }
 
   // Get initial interviewer message
   const introResult = await runInterviewerTurn(
@@ -153,7 +171,7 @@ export async function startLeetcodeSession(
         session.metadata.status = "completed";
         session.metadata.endedAt = new Date().toISOString();
         session.metadata.timer = timer.getState();
-        saveSession(session);
+        await saveSession(session);
         insertEvent(session.db, "session_end", {
           duration_s: Math.floor(timer.getElapsedMs() / 1000),
           hintsGiven: session.metadata.hintsGiven,
@@ -171,10 +189,15 @@ export async function startLeetcodeSession(
             solutionPath,
             logger: logger.child("interviewer"),
             onOutput: (text) => process.stdout.write(text),
-            onTimerWarning: () => {},
+            onTimerWarning: (_w: string) => { /* closing remarks -- no timer warnings */ },
           },
         );
         console.log(formatInterviewerMessage(closingResult.aiText));
+
+        // Show post-session report
+        const report = generateReport(session.db, session.metadata);
+        console.log(formatReport(report));
+
         console.log(formatSessionEnd());
         break;
       }
@@ -246,7 +269,7 @@ export async function startLeetcodeSession(
 
         if (result.partAdvanced) {
           console.log(
-            `\u001B[32mAdvanced to Part ${session.metadata.currentPart}/${question.parts.length}\u001B[0m`,
+            `\u001B[32mAdvanced to Part ${String(session.metadata.currentPart)}/${String(question.parts.length)}\u001B[0m`,
           );
         }
 
@@ -254,7 +277,7 @@ export async function startLeetcodeSession(
           running = false;
           session.metadata.status = "completed";
           session.metadata.endedAt = new Date().toISOString();
-          saveSession(session);
+          await saveSession(session);
           console.log(formatSessionEnd());
         }
         break;

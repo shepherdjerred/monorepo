@@ -1,33 +1,40 @@
-import { join } from "node:path";
+import path from "node:path";
+import { parseArgs } from "node:util";
 import type { Config } from "#config";
 import { loadQuestionStore } from "#lib/questions/store.ts";
 import { createLogger } from "#logger";
+import { generateQuestion } from "#commands/questions/generate.ts";
 
 export async function handleQuestionsCommand(
   subcommand: string | undefined,
-  _args: string[],
+  args: string[],
   config: Config,
 ): Promise<void> {
   switch (subcommand) {
     case "list":
-      { handleList(config); return; }
+      { await handleList(config); return; }
+    case "generate":
+      { await handleGenerate(args, config); return; }
+    case undefined:
+      console.error("Usage: interview-practice questions [list|generate]");
+      return process.exit(1);
     default:
-      console.error(`Unknown subcommand: ${subcommand ?? "(none)"}`);
-      console.error("Usage: interview-practice questions [list]");
+      console.error(`Unknown subcommand: ${subcommand}`);
+      console.error("Usage: interview-practice questions [list|generate]");
       process.exit(1);
   }
 }
 
-function handleList(config: Config): void {
+async function handleList(config: Config): Promise<void> {
   const logger = createLogger({
     level: config.logLevel,
     sessionId: "cli",
-    logFilePath: join(config.dataDir, "cli.log"),
+    logFilePath: path.join(config.dataDir, "cli.log"),
     component: "cli",
   });
 
-  const store = loadQuestionStore(
-    join(config.dataDir, "questions", "leetcode"),
+  const store = await loadQuestionStore(
+    path.join(config.dataDir, "questions", "leetcode"),
     logger,
   );
 
@@ -35,7 +42,7 @@ function handleList(config: Config): void {
 
   if (questions.length === 0) {
     console.log("No questions found. Add JSON files to:");
-    console.log(`  ${join(config.dataDir, "questions", "leetcode")}`);
+    console.log(`  ${path.join(config.dataDir, "questions", "leetcode")}`);
     return;
   }
 
@@ -47,5 +54,48 @@ function handleList(config: Config): void {
       `${q.slug.padEnd(30)} ${q.difficulty.padEnd(12)} ${String(q.parts.length).padEnd(8)} ${q.tags.join(", ")}`,
     );
   }
-  console.log(`\nTotal: ${questions.length} questions`);
+  console.log(`\nTotal: ${String(questions.length)} questions`);
+}
+
+async function handleGenerate(args: string[], config: Config): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: {
+      title: { type: "string", short: "t" },
+      description: { type: "string", short: "d" },
+      difficulty: { type: "string" },
+      tags: { type: "string" },
+      "out-dir": { type: "string", short: "o" },
+    },
+    allowPositionals: true,
+  });
+
+  if (values.title === undefined || values.title === "") {
+    console.error("Usage: interview-practice questions generate --title <title> --description <desc> [--difficulty easy|medium|hard] [--tags tag1,tag2] [--out-dir <path>]");
+    process.exit(1);
+  }
+
+  if (values.description === undefined || values.description === "") {
+    console.error("--description is required");
+    process.exit(1);
+  }
+
+  const difficulty = values.difficulty;
+  const parsedDifficulty =
+    difficulty === "easy" || difficulty === "medium" || difficulty === "hard"
+      ? difficulty
+      : undefined;
+
+  const tags =
+    values.tags !== undefined && values.tags !== ""
+      ? values.tags.split(",").map((t) => t.trim())
+      : undefined;
+
+  await generateQuestion(config, {
+    title: values.title,
+    description: values.description,
+    difficulty: parsedDifficulty,
+    tags,
+    outDir: values["out-dir"],
+  });
 }

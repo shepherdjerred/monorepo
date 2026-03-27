@@ -46,6 +46,68 @@ export const GIVE_HINT_TOOL: ToolDefinition = {
   },
 };
 
+export const PAUSE_AND_THINK_TOOL: ToolDefinition = {
+  name: "pause_and_think",
+  description:
+    "Pause the conversation to think deeply about the candidate's progress. This triggers the reflection model for a thorough synchronous analysis before you respond. Use this when the candidate asks a complex question, when you're unsure whether to advance to the next part, or when you need to reassess strategy. Shows 'Let me think about that...' to the candidate.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      reason: {
+        type: "string",
+        description:
+          "Why you need to pause and think (e.g., 'Candidate asked about optimization, need to assess if brute force is complete')",
+      },
+    },
+    required: ["reason"],
+  },
+};
+
+export const TRANSITION_PHASE_TOOL: ToolDefinition = {
+  name: "transition_phase",
+  description:
+    "Transition the system design interview to the next phase. Only call this when the candidate has sufficiently covered the current phase. Phases progress in order: requirements → estimation → api-design → data-model → high-level → deep-dive → trade-offs.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      nextPhase: {
+        type: "string",
+        enum: [
+          "requirements",
+          "estimation",
+          "api-design",
+          "data-model",
+          "high-level",
+          "deep-dive",
+          "trade-offs",
+        ],
+        description: "The phase to transition to.",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Brief explanation of why transitioning (e.g., 'Candidate covered all key requirements')",
+      },
+    },
+    required: ["nextPhase", "reason"],
+  },
+};
+
+export const REVIEW_DIAGRAM_TOOL: ToolDefinition = {
+  name: "review_diagram",
+  description:
+    "Review the candidate's current system design diagram. Returns a semantic summary of the diagram's components and connections. Use this when the candidate mentions updating their diagram or when you want to check their architectural progress.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {},
+    required: [],
+  },
+};
+
 export function getLeetcodeTools(): ToolDefinition[] {
-  return [RUN_TESTS_TOOL, REVEAL_NEXT_PART_TOOL, GIVE_HINT_TOOL];
+  return [RUN_TESTS_TOOL, REVEAL_NEXT_PART_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL];
+}
+
+export function getSystemDesignTools(): ToolDefinition[] {
+  return [TRANSITION_PHASE_TOOL, REVIEW_DIAGRAM_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL];
 }

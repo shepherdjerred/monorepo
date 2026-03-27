@@ -1,0 +1,162 @@
+{
+  "id": "9899669e-a7d6-46ff-a05d-715d88d45924",
+  "title": "Rate Limiter",
+  "slug": "rate-limiter",
+  "category": "distributed-systems",
+  "difficulty": "mid",
+  "prompt": "Design a distributed rate limiter that can be used to throttle API requests. It should support different rate limiting rules per client, API endpoint, or combination, and work correctly across multiple servers.",
+  "requirements": {
+    "functional": [
+      "Limit requests per client per time window",
+      "Support different limits per API endpoint",
+      "Support multiple rate limiting algorithms (fixed window, sliding window, token bucket)",
+      "Return appropriate HTTP 429 responses with Retry-After header",
+      "Support whitelisting certain clients",
+      "Rate limit rules configurable at runtime"
+    ],
+    "nonFunctional": [
+      "Ultra-low latency (< 1ms p99 for rate check)",
+      "Accurate across distributed servers (no significant over-counting or under-counting)",
+      "High availability (rate limiter failure should not block requests)",
+      "Minimal memory footprint per client",
+      "Atomic operations to prevent race conditions"
+    ],
+    "scale": {
+      "users": "10M API clients",
+      "qps": "1M rate limit checks/sec across all servers",
+      "storage": "Counter state for 10M clients across multiple endpoints"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What granularity of rate limiting? Per user, per IP, per API key?",
+        "Should rate limiting be exact or approximate?",
+        "What happens when the rate limiter itself is unavailable?",
+        "Do we need burst handling?",
+        "Should rules be configurable at runtime?",
+        "Do we need distributed rate limiting across multiple data centers?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "1M checks/sec => sub-millisecond per check required",
+        "10M clients * 10 endpoints = 100M counters",
+        "Each counter ~50 bytes => 5GB memory for all counters",
+        "Redis single instance: ~100K ops/sec => need 10+ Redis instances",
+        "Network round-trip to Redis: ~0.5ms per check"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "Internal: checkRateLimit(clientId, endpoint) => { allowed: bool, remaining: int, retryAfter?: int }",
+        "Admin: PUT /api/v1/rate-limits/rules { clientId?, endpoint?, limit, window }",
+        "Admin: GET /api/v1/rate-limits/rules",
+        "HTTP headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "rate_limit_rules: id, client_pattern, endpoint_pattern, max_requests, window_seconds",
+        "counters (Redis): key = {client_id}:{endpoint}:{window}, value = count, TTL = window_seconds",
+        "whitelist: client_id, reason, created_at"
+      ],
+      "timeTarget": 4
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Rate Limit Middleware (integrated into API gateway)",
+        "Redis Cluster (distributed counter storage)",
+        "Rules Engine (evaluate which rules apply)",
+        "Configuration Service (manage rules)",
+        "Monitoring Dashboard (track rate limit hits)"
+      ],
+      "timeTarget": 8
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Rate limiting algorithms: fixed window, sliding window log, sliding window counter, token bucket, leaky bucket",
+        "Distributed counting: Redis INCR + EXPIRE atomicity, Lua scripts",
+        "Race conditions: concurrent requests from same client",
+        "Failure mode: fail-open vs fail-closed",
+        "Multi-data-center rate limiting: local vs global counters",
+        "Memory optimization: approximate counting with probabilistic data structures"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Clarified rate limit granularity",
+        "Asked about exactness requirements",
+        "Discussed failure mode preference",
+        "Asked about burst handling",
+        "Considered multi-DC scenario"
+      ],
+      "anchors": {
+        "1": "Jumped to implementation without understanding requirements",
+        "2": "Asked about basic rate limiting but missed distributed or failure aspects",
+        "3": "Covered granularity, distributed challenge, failure mode, and accuracy requirements",
+        "4": "Proactively identified race conditions, multi-DC challenge, and fail-open vs fail-closed trade-off"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Middleware/gateway integration point",
+        "Centralized counter store (Redis)",
+        "Rules configuration system",
+        "Appropriate algorithm choice",
+        "Failure handling strategy"
+      ],
+      "anchors": {
+        "1": "In-memory counters per server with no synchronization",
+        "2": "Redis-based but single instance, no failure handling",
+        "3": "Redis cluster with middleware integration, rules engine, and fail-open strategy",
+        "4": "Layered approach with local + distributed counters, justified algorithm choice, clear failure modes"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Compared rate limiting algorithms with trade-offs",
+        "Addressed atomicity of increment + check",
+        "Discussed race condition handling",
+        "Explained failure mode strategy",
+        "Considered memory optimization"
+      ],
+      "anchors": {
+        "1": "No understanding of rate limiting algorithms beyond basic counting",
+        "2": "Described one algorithm without trade-off analysis",
+        "3": "Compared 2+ algorithms, addressed atomicity with Redis Lua scripts, discussed failure modes",
+        "4": "Deep analysis of algorithm trade-offs, Lua script implementation, sliding window optimization, multi-DC synchronization"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Fixed window vs sliding window (accuracy vs memory)",
+        "Token bucket vs leaky bucket (burst handling)",
+        "Fail-open vs fail-closed",
+        "Local vs distributed counters (latency vs accuracy)",
+        "Exact vs approximate counting"
+      ],
+      "anchors": {
+        "1": "No trade-off awareness",
+        "2": "Mentioned one algorithm difference without analysis",
+        "3": "Compared 2-3 approaches with clear reasoning for selection",
+        "4": "Quantitative comparison of algorithms with memory/accuracy/latency analysis"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Using non-atomic read-then-write pattern (race condition)",
+    "Fixed window boundary problem (2x burst at window edges)",
+    "Not considering what happens when Redis is down",
+    "Per-server rate limiting without global coordination",
+    "Not using TTL on Redis keys (memory leak)",
+    "Ignoring the latency cost of a network round-trip for every request"
+  ],
+  "source": "Classic system design interview question"
+}

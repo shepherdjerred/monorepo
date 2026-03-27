@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 import * as lancedb from "@lancedb/lancedb";
 import { mkdir } from "node:fs/promises";
+import { z } from "zod";
 import {
   LANCE_DIR,
   SQLITE_PATH,
@@ -11,13 +12,19 @@ import {
 const SCHEMA_VERSION = 1;
 const LANCE_TABLE = "chunks";
 
-export type ChunkRow = {
-  id: string;
-  doc_path: string;
-  chunk_index: number;
-  text: string;
-  vector: number[];
-};
+const ChunkRowSchema = z.object({
+  id: z.string(),
+  doc_path: z.string(),
+  chunk_index: z.number(),
+  text: z.string(),
+  vector: z.array(z.number()),
+});
+
+export type ChunkRow = z.infer<typeof ChunkRowSchema>;
+
+const VectorSearchResultSchema = ChunkRowSchema.extend({
+  _distance: z.number(),
+});
 
 export type MetadataRow = {
   path: string;
@@ -230,11 +237,12 @@ export class RecallDb {
     limit: number,
   ): Promise<(ChunkRow & { _distance: number })[]> {
     const table = await this.getLanceTable();
-    const results = await table
+    const raw = await table
       .vectorSearch(queryVector)
       .limit(limit)
       .toArray();
-    return results as (ChunkRow & { _distance: number })[];
+    // LanceDB returns untyped records — validate with Zod
+    return raw.map((row) => VectorSearchResultSchema.parse(row));
   }
 
   // Aggregate queries

@@ -1,13 +1,12 @@
-import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Database } from "bun:sqlite";
 import { openDatabase } from "#lib/db/connection.ts";
 import { initializeSchema } from "#lib/db/schema.ts";
 import { SessionMetadataSchema } from "./schemas.ts";
 import type { SessionMetadata } from "./schemas.ts";
-import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
 import type { TimerState } from "#lib/timer/schemas.ts";
+import type { SessionType } from "./schemas.ts";
 
 export type Session = {
   metadata: SessionMetadata;
@@ -15,18 +14,19 @@ export type Session = {
   workspacePath: string;
 }
 
-export function createSession(options: {
+export async function createSession(options: {
   dataDir: string;
-  question: LeetcodeQuestion;
+  question: { id: string; title: string };
   language: string;
   durationMinutes: number;
   voiceEnabled: boolean;
-}): Session {
+  type?: SessionType | undefined;
+}): Promise<Session> {
   const id = randomUUID();
-  const workspacePath = join(options.dataDir, "sessions", id);
-  mkdirSync(workspacePath, { recursive: true });
+  const workspacePath = path.join(options.dataDir, "sessions", id);
+  Bun.spawnSync(["mkdir", "-p", workspacePath]);
 
-  const dbPath = join(workspacePath, "session.db");
+  const dbPath = path.join(workspacePath, "session.db");
   const db = openDatabase(dbPath);
   initializeSchema(db);
 
@@ -40,7 +40,7 @@ export function createSession(options: {
 
   const metadata: SessionMetadata = {
     id,
-    type: "leetcode",
+    type: options.type ?? "leetcode",
     questionId: options.question.id,
     questionTitle: options.question.title,
     status: "in-progress",
@@ -55,52 +55,56 @@ export function createSession(options: {
     testsRun: 0,
   };
 
-  writeFileSync(
-    join(workspacePath, "metadata.json"),
+  await Bun.write(
+    path.join(workspacePath, "metadata.json"),
     JSON.stringify(metadata, null, 2),
   );
 
   return { metadata, db, workspacePath };
 }
 
-export function saveSession(session: Session): void {
-  writeFileSync(
-    join(session.workspacePath, "metadata.json"),
+export async function saveSession(session: Session): Promise<void> {
+  await Bun.write(
+    path.join(session.workspacePath, "metadata.json"),
     JSON.stringify(session.metadata, null, 2),
   );
 }
 
-export function loadSession(dataDir: string, sessionId: string): Session | null {
-  const workspacePath = join(dataDir, "sessions", sessionId);
-  const metadataPath = join(workspacePath, "metadata.json");
+export async function loadSession(dataDir: string, sessionId: string): Promise<Session | null> {
+  const workspacePath = path.join(dataDir, "sessions", sessionId);
+  const metadataPath = path.join(workspacePath, "metadata.json");
 
-  if (!existsSync(metadataPath)) return null;
+  const file = Bun.file(metadataPath);
+  if (!(await file.exists())) return null;
 
-  const raw = readFileSync(metadataPath, "utf-8");
+  const raw = await file.text();
   const parsed = JSON.parse(raw) as unknown;
   const result = SessionMetadataSchema.safeParse(parsed);
   if (!result.success) return null;
 
-  const dbPath = join(workspacePath, "session.db");
+  const dbPath = path.join(workspacePath, "session.db");
   const db = openDatabase(dbPath);
 
   return { metadata: result.data, db, workspacePath };
 }
 
-export function listSessions(dataDir: string): SessionMetadata[] {
-  const sessionsDir = join(dataDir, "sessions");
-  if (!existsSync(sessionsDir)) return [];
+export async function listSessions(dataDir: string): Promise<SessionMetadata[]> {
+  const sessionsDir = path.join(dataDir, "sessions");
+
+  let files: string[];
+  try {
+    const glob = new Bun.Glob("*/metadata.json");
+    files = [...glob.scanSync(sessionsDir)];
+  } catch {
+    return [];
+  }
 
   const sessions: SessionMetadata[] = [];
-  const dirs = readdirSync(sessionsDir, { withFileTypes: true });
 
-  for (const dir of dirs) {
-    if (!dir.isDirectory()) continue;
-    const metadataPath = join(sessionsDir, dir.name, "metadata.json");
-    if (!existsSync(metadataPath)) continue;
-
+  for (const relPath of files) {
+    const metadataPath = path.join(sessionsDir, relPath);
     try {
-      const raw = readFileSync(metadataPath, "utf-8");
+      const raw = await Bun.file(metadataPath).text();
       const parsed = JSON.parse(raw) as unknown;
       const result = SessionMetadataSchema.safeParse(parsed);
       if (result.success) {
@@ -111,7 +115,7 @@ export function listSessions(dataDir: string): SessionMetadata[] {
     }
   }
 
-  return sessions.sort(
+  return sessions.toSorted(
     (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
   );
 }

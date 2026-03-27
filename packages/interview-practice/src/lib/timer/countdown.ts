@@ -1,4 +1,7 @@
+import { z } from "zod/v4";
 import type { TimerPhase, TimerState } from "./schemas.ts";
+
+const WarningKeySchema = z.enum(["50%", "75%", "5min"]);
 
 export type Timer = {
   getElapsedMs: () => number;
@@ -8,6 +11,13 @@ export type Timer = {
   checkWarnings: () => string[];
   getState: () => TimerState;
   resume: (state: TimerState) => void;
+}
+
+function formatMs(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes)}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export function createTimer(durationMinutes: number): Timer {
@@ -33,13 +43,6 @@ export function createTimer(durationMinutes: number): Timer {
     if (elapsed >= durationMs * 0.75) return "past_75";
     if (elapsed >= durationMs * 0.5) return "past_50";
     return "first_half";
-  }
-
-  function formatMs(ms: number): string {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
   function getDisplayTime(): string {
@@ -76,7 +79,10 @@ export function createTimer(durationMinutes: number): Timer {
     return {
       durationMs,
       elapsedMs: getElapsedMs(),
-      warningsEmitted: [...warningsEmitted] as TimerState["warningsEmitted"],
+      warningsEmitted: [...warningsEmitted]
+        .map((w) => WarningKeySchema.safeParse(w))
+        .filter((r) => r.success)
+        .map((r) => r.data),
       lastCheckpointMs: Date.now(),
     };
   }

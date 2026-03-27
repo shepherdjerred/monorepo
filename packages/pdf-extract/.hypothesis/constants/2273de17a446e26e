@@ -1,0 +1,4 @@
+# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/verify/escalation.py
+# hypothesis_version: 6.151.9
+
+[200, 'LOW', 'MEDIUM', 'UNRESOLVED', '```', '```json', 'claude', 'claude_opus', 'claude_sonnet', 'confidence', 'corrected', 'corrections', 'escalation.medium', 'escalation.opus', 'generate', 'gpt', 'gpt-4o', 'missing', 'openai', 'original', 'unreadable_regions', 'verify.escalation']

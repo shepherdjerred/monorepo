@@ -1,0 +1,187 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "elements": [
+    {
+      "id": "client",
+      "type": "rectangle",
+      "x": 50,
+      "y": 50,
+      "width": 150,
+      "height": 60,
+      "boundElements": [
+        { "id": "client-text", "type": "text" },
+        { "id": "arrow-client-lb", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "client-text",
+      "type": "text",
+      "x": 70,
+      "y": 65,
+      "width": 110,
+      "height": 30,
+      "text": "Client",
+      "containerId": "client"
+    },
+    {
+      "id": "lb",
+      "type": "ellipse",
+      "x": 300,
+      "y": 50,
+      "width": 150,
+      "height": 60,
+      "boundElements": [
+        { "id": "lb-text", "type": "text" },
+        { "id": "arrow-client-lb", "type": "arrow" },
+        { "id": "arrow-lb-api", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "lb-text",
+      "type": "text",
+      "x": 320,
+      "y": 65,
+      "width": 110,
+      "height": 30,
+      "text": "Load Balancer",
+      "containerId": "lb"
+    },
+    {
+      "id": "api",
+      "type": "rectangle",
+      "x": 550,
+      "y": 50,
+      "width": 150,
+      "height": 60,
+      "boundElements": [
+        { "id": "api-text", "type": "text" },
+        { "id": "arrow-lb-api", "type": "arrow" },
+        { "id": "arrow-api-cache", "type": "arrow" },
+        { "id": "arrow-api-db", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "api-text",
+      "type": "text",
+      "x": 570,
+      "y": 65,
+      "width": 110,
+      "height": 30,
+      "text": "API Server",
+      "containerId": "api"
+    },
+    {
+      "id": "cache",
+      "type": "diamond",
+      "x": 400,
+      "y": 200,
+      "width": 150,
+      "height": 60,
+      "boundElements": [
+        { "id": "cache-text", "type": "text" },
+        { "id": "arrow-api-cache", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "cache-text",
+      "type": "text",
+      "x": 420,
+      "y": 215,
+      "width": 110,
+      "height": 30,
+      "text": "Redis Cache",
+      "containerId": "cache"
+    },
+    {
+      "id": "db",
+      "type": "rectangle",
+      "x": 650,
+      "y": 200,
+      "width": 150,
+      "height": 60,
+      "boundElements": [
+        { "id": "db-text", "type": "text" },
+        { "id": "arrow-api-db", "type": "arrow" }
+      ]
+    },
+    {
+      "id": "db-text",
+      "type": "text",
+      "x": 670,
+      "y": 215,
+      "width": 110,
+      "height": 30,
+      "text": "PostgreSQL",
+      "containerId": "db"
+    },
+    {
+      "id": "arrow-client-lb",
+      "type": "arrow",
+      "x": 200,
+      "y": 80,
+      "width": 100,
+      "height": 0,
+      "startBinding": { "elementId": "client" },
+      "endBinding": { "elementId": "lb" },
+      "boundElements": []
+    },
+    {
+      "id": "arrow-lb-api",
+      "type": "arrow",
+      "x": 450,
+      "y": 80,
+      "width": 100,
+      "height": 0,
+      "startBinding": { "elementId": "lb" },
+      "endBinding": { "elementId": "api" },
+      "boundElements": [
+        { "id": "arrow-lb-api-label", "type": "text" }
+      ]
+    },
+    {
+      "id": "arrow-lb-api-label",
+      "type": "text",
+      "x": 470,
+      "y": 55,
+      "width": 60,
+      "height": 20,
+      "text": "HTTP",
+      "containerId": "arrow-lb-api"
+    },
+    {
+      "id": "arrow-api-cache",
+      "type": "arrow",
+      "x": 600,
+      "y": 110,
+      "width": 100,
+      "height": 100,
+      "startBinding": { "elementId": "api" },
+      "endBinding": { "elementId": "cache" },
+      "boundElements": []
+    },
+    {
+      "id": "arrow-api-db",
+      "type": "arrow",
+      "x": 650,
+      "y": 110,
+      "width": 100,
+      "height": 100,
+      "startBinding": { "elementId": "api" },
+      "endBinding": { "elementId": "db" },
+      "boundElements": [
+        { "id": "arrow-api-db-label", "type": "text" }
+      ]
+    },
+    {
+      "id": "arrow-api-db-label",
+      "type": "text",
+      "x": 680,
+      "y": 150,
+      "width": 40,
+      "height": 20,
+      "text": "SQL",
+      "containerId": "arrow-api-db"
+    }
+  ]
+}

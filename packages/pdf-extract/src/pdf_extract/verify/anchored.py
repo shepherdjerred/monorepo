@@ -5,7 +5,7 @@ import asyncio
 import json
 from typing import TYPE_CHECKING
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 from pdf_extract.lib import get_logger
 from pdf_extract.lib.gemini import GeminiClient
@@ -130,9 +130,11 @@ async def verify_pages_anchored(
 
     verified: list[tuple[int, dict[str, object]]] = []
     for result in results:
-        if isinstance(result, Exception):
+        if isinstance(result, BaseException):
             log.error("anchored.page_failed", error=str(result))
             metrics.verification.unreadable_regions += 1
+            continue
+        if not isinstance(result, tuple):
             continue
         page_idx, data = result
         verified.append((page_idx, data))

@@ -4,7 +4,7 @@ from __future__ import annotations
 import tempfile
 from typing import TYPE_CHECKING
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 from pdf_extract.lib import get_logger
 from pdf_extract.lib.imaging import check_contrast, denoise, deskew, detect_skew_angle, estimate_dpi, upscale_fsrcnn
@@ -40,10 +40,13 @@ async def run_preprocessing(
 
     enhanced_path = _preprocess_pages(pdf_path, failed_pages, config)
 
-    # Re-extract the enhanced PDF
+    # Re-extract the enhanced PDF with VLM mode (standard pipeline already failed)
+    from dataclasses import replace
+
     from pdf_extract.phases.extract import run_extraction
 
-    new_markdown, new_images, _tables = await run_extraction(enhanced_path, config, metrics)
+    vlm_config = replace(config, docling_vlm=True)
+    new_markdown, new_images, _tables = await run_extraction(enhanced_path, vlm_config, metrics)
 
     # Merge: replace content for preprocessed pages, keep original for others
     # For simplicity, if preprocessing was triggered, use the new extraction
@@ -52,19 +55,19 @@ async def run_preprocessing(
 
 
 def _detect_failed_pages(pdf_path: str, markdown: str) -> list[int]:
-    """Detect pages that likely failed extraction (very little text produced).
+    """Detect pages that need preprocessing.
 
-    Heuristic: pages where extracted text is less than 20 characters are
-    considered failed (likely scanned/degraded).
+    Strategy: check if each PDF page has an embedded text layer via PyMuPDF.
+    Pages with no text layer (scanned/image-only) are likely scans that need
+    preprocessing. Digital pages with text layers don't need preprocessing
+    regardless of extraction output quality.
     """
     failed: list[int] = []
     with fitz.open(pdf_path) as doc:
-        # Split markdown by page separators if present
-        page_texts = markdown.split("\n---\n") if "\n---\n" in markdown else [markdown]
-
-        for i in range(len(doc)):
-            page_text = page_texts[i].strip() if i < len(page_texts) else ""
-            if len(page_text) < 20:
+        for i, page in enumerate(doc):
+            text = page.get_text().strip()
+            if len(text) < 20:
+                # No meaningful text layer — this page is likely a scan
                 failed.append(i)
 
     if failed:

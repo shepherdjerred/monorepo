@@ -1,0 +1,4 @@
+# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/pipeline.py
+# hypothesis_version: 6.151.9
+
+[1000, '\n---\n', 'annotations', 'claude', 'claude.no_api_key', 'claude_opus', 'claude_sonnet', 'extraction', 'gemini', 'gemini.no_api_key', 'gemini_flash', 'gemini_pro', 'generate', 'gpt-4o', 'handwriting', 'handwriting.skipped', 'images', 'images.skipped', 'never', 'openai', 'openai.no_api_key', 'phase.complete', 'pipeline', 'pipeline.complete', 'preprocessing', 'verification']

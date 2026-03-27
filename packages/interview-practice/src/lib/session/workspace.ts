@@ -1,29 +1,28 @@
-import { writeFileSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 import { generateStarterCode, getSolutionFilename, getFileExtension } from "#lib/questions/starter-code.ts";
 import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
 
-export function scaffoldLeetcodeWorkspace(
+export async function scaffoldLeetcodeWorkspace(
   workspacePath: string,
   question: LeetcodeQuestion,
   language: string,
   currentPart: number,
-): { solutionPath: string; problemPath: string } {
+): Promise<{ solutionPath: string; problemPath: string }> {
   const ext = getFileExtension(language);
   const solutionFilename = getSolutionFilename(ext);
-  const solutionPath = join(workspacePath, solutionFilename);
-  const problemPath = join(workspacePath, "problem.md");
+  const solutionPath = path.join(workspacePath, solutionFilename);
+  const problemPath = path.join(workspacePath, "problem.md");
 
-  const starterCode = generateStarterCode(ext, question.io, question.title);
-  writeFileSync(solutionPath, starterCode);
+  const starterCode = await generateStarterCode(ext, question.io, question.title);
+  await Bun.write(solutionPath, starterCode);
 
   const problemContent = buildProblemMarkdown(question, currentPart);
-  writeFileSync(problemPath, problemContent);
+  await Bun.write(problemPath, problemContent);
 
   // Write go.mod for Go projects
   if (ext === ".go") {
-    writeFileSync(
-      join(workspacePath, "go.mod"),
+    await Bun.write(
+      path.join(workspacePath, "go.mod"),
       `module solution\n\ngo 1.22\n`,
     );
   }
@@ -53,7 +52,7 @@ function buildProblemMarkdown(
   parts.push(`## Input/Output\n`);
   parts.push(`- **Input:** ${question.io.inputFormat}`);
   parts.push(`- **Output:** ${question.io.outputFormat}`);
-  if (question.io.parseHint) {
+  if (question.io.parseHint !== undefined) {
     parts.push(`- **Format:** ${question.io.parseHint}`);
   }
   parts.push("");
@@ -61,7 +60,7 @@ function buildProblemMarkdown(
   const visibleParts = question.parts.filter((p) => p.partNumber <= upToPart);
   for (const part of visibleParts) {
     if (part.partNumber > 1) {
-      parts.push(`## Part ${part.partNumber}\n`);
+      parts.push(`## Part ${String(part.partNumber)}\n`);
       parts.push(part.prompt + "\n");
     }
   }
@@ -69,19 +68,19 @@ function buildProblemMarkdown(
   return parts.join("\n");
 }
 
-export function updateProblemForNewPart(
+export async function updateProblemForNewPart(
   workspacePath: string,
   question: LeetcodeQuestion,
   newPart: number,
-): void {
-  const problemPath = join(workspacePath, "problem.md");
+): Promise<void> {
+  const problemPath = path.join(workspacePath, "problem.md");
   const content = buildProblemMarkdown(question, newPart);
-  writeFileSync(problemPath, content);
+  await Bun.write(problemPath, content);
 }
 
-export function readSolutionFile(solutionPath: string): string | null {
+export async function readSolutionFile(solutionPath: string): Promise<string | null> {
   try {
-    return Bun.file(solutionPath).text() as unknown as string;
+    return await Bun.file(solutionPath).text();
   } catch {
     return null;
   }

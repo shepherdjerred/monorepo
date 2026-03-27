@@ -1,0 +1,171 @@
+{
+  "id": "c93f2188-f1a1-49f0-8d3d-f5a2548fb89a",
+  "title": "Distributed Cache",
+  "slug": "distributed-cache",
+  "category": "distributed-systems",
+  "difficulty": "staff",
+  "prompt": "Design a distributed caching system like Memcached or Redis Cluster. The system should provide low-latency key-value lookups, support LRU eviction, use consistent hashing for data distribution, and handle replication for fault tolerance.",
+  "requirements": {
+    "functional": [
+      "GET/SET/DELETE key-value operations",
+      "TTL (time-to-live) support for automatic expiration",
+      "LRU eviction when memory limit is reached",
+      "Consistent hashing for distributing keys across nodes",
+      "Replication for fault tolerance (configurable replication factor)",
+      "Support atomic operations (CAS — compare-and-swap)"
+    ],
+    "nonFunctional": [
+      "Sub-millisecond latency for GET/SET (< 1ms p99)",
+      "High throughput (1M+ ops/sec per node)",
+      "High availability (99.999%) — cache downtime causes cascading failures",
+      "Linear horizontal scalability",
+      "Graceful handling of node failures without data loss for replicated keys"
+    ],
+    "scale": {
+      "users": "10K application servers as clients",
+      "qps": "100M cache operations/sec across cluster",
+      "storage": "100 TB total cached data across 1000 nodes, each with 128 GB RAM"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What consistency model is required (strong vs eventual)?",
+        "What is the expected read:write ratio?",
+        "Do we need persistence or is this purely in-memory?",
+        "What is the acceptable cache miss rate?",
+        "How should the system behave during node failures (serve stale vs miss)?",
+        "Do we need support for complex data structures (lists, sets, sorted sets)?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Total ops: 100M ops/sec across 1000 nodes = 100K ops/sec per node",
+        "Memory per node: 128 GB RAM, ~100 GB usable for cache data",
+        "Average value size: 1 KB => 100M keys per node, 100B keys total",
+        "Network bandwidth per node: 100K ops * 1 KB = 100 MB/sec (within 10 Gbps NIC)",
+        "Replication overhead: RF=3 means 3x write amplification, 300M writes/sec cluster-wide for 100M client writes",
+        "Hash ring: 1000 physical nodes * 100 virtual nodes = 100K points on ring"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "GET(key) => { value, metadata } or MISS",
+        "SET(key, value, ttl?) => OK",
+        "DELETE(key) => OK or NOT_FOUND",
+        "CAS(key, expectedValue, newValue) => OK or CONFLICT",
+        "MGET(keys[]) => { results[] } (batch get for reduced round trips)",
+        "MSET(entries[]) => OK (batch set)",
+        "Client discovery: GET /cluster/topology => { nodes[], hashRing }"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "cache_entry: key (bytes), value (bytes), ttl_expiry_timestamp, cas_version, created_at, last_accessed_at",
+        "hash_ring: virtual_node_id, physical_node_id, hash_range_start, hash_range_end",
+        "node_metadata: node_id, host, port, status (active/draining/dead), memory_used, memory_total",
+        "replication_group: group_id, primary_node_id, replica_node_ids[], replication_factor",
+        "eviction_queue: doubly-linked list per node for LRU ordering"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Client Library (consistent hash routing, connection pooling, retry logic)",
+        "Cache Node (in-memory hash table + LRU eviction)",
+        "Consistent Hash Ring (virtual nodes for balanced distribution)",
+        "Replication Manager (sync/async replication to replica nodes)",
+        "Cluster Coordinator (node membership, failure detection via gossip/heartbeat)",
+        "Configuration Service (Zookeeper/etcd for cluster topology)",
+        "Monitoring / Health Check Service",
+        "Hot Key Detector (identify and mitigate hot keys)"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Consistent hashing: virtual nodes, bounded load balancing, handling node addition/removal with minimal redistribution",
+        "LRU eviction: exact LRU (doubly-linked list + hash map) vs approximated LRU (sampling) for performance",
+        "Replication: sync vs async, quorum reads/writes (R + W > N), conflict resolution for eventual consistency",
+        "Hot key mitigation: client-side caching, key splitting/sharding, local read replicas",
+        "Failure handling: detecting node failure (phi accrual failure detector), re-replication, consistent hashing keyspace takeover",
+        "Memory management: slab allocation, avoiding fragmentation, jemalloc vs tcmalloc"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about consistency requirements",
+        "Clarified read:write ratio",
+        "Discussed persistence needs",
+        "Asked about failure behavior (stale vs miss)",
+        "Estimated ops/sec and memory requirements"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, started designing without understanding consistency or scale needs",
+        "2": "Asked about data size but missed consistency model or failure behavior",
+        "3": "Covered consistency, scale, eviction policy, and failure handling requirements",
+        "4": "Proactively identified hot key risks, cache stampede scenarios, replication consistency trade-offs, and client-side caching needs"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Used consistent hashing for key distribution",
+        "Included replication for fault tolerance",
+        "Designed LRU eviction mechanism",
+        "Included cluster coordination for membership",
+        "Addressed client-side routing and connection management"
+      ],
+      "anchors": {
+        "1": "Single cache server with no distribution, replication, or eviction strategy",
+        "2": "Multiple cache nodes with simple hash partitioning but no consistent hashing or replication",
+        "3": "Consistent hashing with virtual nodes, replication, LRU eviction, and cluster coordination",
+        "4": "Smart client routing, bounded-load consistent hashing, quorum-based replication, hot key detection, and graceful node draining"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained consistent hashing with virtual nodes",
+        "Discussed LRU implementation trade-offs",
+        "Addressed replication consistency (quorum, sync vs async)",
+        "Considered hot key detection and mitigation",
+        "Discussed node failure detection and recovery"
+      ],
+      "anchors": {
+        "1": "No depth on consistent hashing, eviction, or replication mechanisms",
+        "2": "Basic consistent hashing explanation but no discussion of virtual nodes, eviction, or replication",
+        "3": "Deep dive into 2+ areas: consistent hashing + replication or eviction with concrete algorithms",
+        "4": "Thorough analysis covering virtual node balancing, approximated LRU performance, quorum tuning, phi accrual failure detection, and memory management"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Exact LRU vs approximated LRU (sampling)",
+        "Sync vs async replication",
+        "Strong vs eventual consistency",
+        "Client-side vs server-side routing",
+        "Memory efficiency vs lookup speed"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs in the design",
+        "2": "Mentioned one trade-off without analysis",
+        "3": "Discussed 2-3 trade-offs with pros/cons covering replication, eviction, or consistency",
+        "4": "Systematically evaluated consistency, performance, and availability trade-offs with quantitative analysis of latency impact"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Using simple modular hashing instead of consistent hashing, causing massive redistribution on node changes",
+    "Ignoring hot keys that concentrate load on a single node",
+    "Not considering cache stampede (thundering herd) when a popular key expires",
+    "Choosing synchronous replication without understanding the latency cost",
+    "Implementing exact LRU with global locks, destroying throughput",
+    "Not addressing split-brain scenarios during network partitions"
+  ],
+  "source": "Classic system design interview question"
+}

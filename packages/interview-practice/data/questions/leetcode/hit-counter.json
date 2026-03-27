@@ -1,0 +1,74 @@
+{
+  "id": "78eb1fa8-4beb-4829-b454-041f52a57b72",
+  "title": "Hit Counter",
+  "slug": "hit-counter",
+  "difficulty": "medium",
+  "tags": ["design", "queue", "circular-buffer"],
+  "description": "Design a hit counter that counts the number of hits received in the past 5 minutes (300 seconds).\n\nYour system should accept a `hit(timestamp)` function that records a hit at the given timestamp (in seconds), and a `getHits(timestamp)` function that returns the number of hits in the past 300 seconds (including the current second).\n\nTimestamps are given in increasing order.",
+  "parts": [
+    {
+      "partNumber": 1,
+      "prompt": "Design a hit counter that supports hit(timestamp) and getHits(timestamp). getHits should return the total number of hits in the past 300 seconds. Timestamps are in increasing order.",
+      "internalNotes": "Multiple approaches: (1) Queue — store all timestamps, dequeue expired ones on getHits. Simple but O(n) space. (2) Circular buffer of size 300 — timestamps[] and counts[] arrays. On hit, if timestamps[t % 300] == t, increment count; else reset to 1. On getHits, sum counts where timestamp is within window. Watch for: not handling multiple hits at the same timestamp, not cleaning up stale entries in the circular buffer approach.",
+      "hints": [
+        { "level": "subtle", "content": "What's the maximum time window you care about? Can you use that as a fixed-size structure?" },
+        { "level": "moderate", "content": "Consider a circular buffer of size 300. How would you map a timestamp to a bucket?" },
+        { "level": "explicit", "content": "Use two arrays of size 300: timestamps[i] stores the last timestamp that mapped to bucket i (via t % 300), and counts[i] stores the hit count. On hit(t): if timestamps[t%300] == t, increment; else reset to 1. On getHits(t): sum all counts[i] where t - timestamps[i] < 300." }
+      ],
+      "testCases": [
+        { "input": "hit 1\nhit 2\nhit 3\ngetHits 4\nhit 300\ngetHits 300\ngetHits 301", "expected": "3\n4\n3", "explanation": "At t=4: hits at 1,2,3 all within window. At t=300: all 4 hits in window. At t=301: hit at 1 expired, 3 remain." },
+        { "input": "hit 1\nhit 1\nhit 1\ngetHits 1\ngetHits 300\ngetHits 301", "expected": "3\n3\n0", "explanation": "Multiple hits at same timestamp. All expire at t=301." },
+        { "input": "hit 1\nhit 2\nhit 3\nhit 4\nhit 5\ngetHits 300\ngetHits 301\ngetHits 302\ngetHits 305", "expected": "5\n4\n3\n0", "explanation": "Hits expire one by one as the window moves." },
+        { "input": "getHits 1\nhit 100\ngetHits 100\ngetHits 400", "expected": "0\n1\n0", "explanation": "getHits before any hit returns 0. Hit at 100 expires at t=400." }
+      ],
+      "followUps": [
+        "What's the time complexity of hit and getHits?",
+        "What's the space complexity? Can you bound it regardless of total hits?",
+        "What are the trade-offs between a queue approach and a circular buffer?"
+      ],
+      "expectedApproach": "Circular buffer with two arrays of size 300: timestamps[] and counts[]. hit(t): bucket = t % 300; if timestamps[bucket] == t, counts[bucket]++; else timestamps[bucket] = t, counts[bucket] = 1. getHits(t): sum counts[i] for all i where t - timestamps[i] < 300.",
+      "expectedComplexity": { "time": "O(1) hit, O(300) = O(1) getHits", "space": "O(300) = O(1)" },
+      "transitionCriteria": {
+        "minApproachQuality": "optimal",
+        "mustExplainComplexity": true,
+        "transitionPrompt": "Great. Now imagine this hit counter is used in a high-throughput distributed system where multiple threads call hit() concurrently. How would you make it thread-safe while maintaining high performance?"
+      }
+    },
+    {
+      "partNumber": 2,
+      "prompt": "Now consider that hit() may be called concurrently from multiple threads. Discuss and implement a thread-safe version of your hit counter. Focus on correctness and performance under contention.",
+      "internalNotes": "This is a design discussion part. Key approaches: (1) Global lock — simple but high contention. (2) Per-bucket locks — lock only timestamps[t%300], reduces contention. (3) Atomic operations — use CAS on the timestamp, atomic increment on count. (4) Read-write lock for getHits vs hit. Watch for: candidates who just say 'add synchronized' without thinking about contention. Good candidates will discuss lock granularity and atomic alternatives.",
+      "hints": [
+        { "level": "subtle", "content": "A single global lock works but might be a bottleneck. What's the actual scope of each operation?" },
+        { "level": "moderate", "content": "Each hit() only touches one bucket. Do concurrent hits to different buckets actually conflict?" },
+        { "level": "explicit", "content": "Use per-bucket locks or atomic operations. For hit(t): only lock/CAS bucket t%300. For getHits: acquire read locks or iterate with atomic reads. This allows concurrent hits to different buckets." }
+      ],
+      "testCases": [
+        { "input": "concurrent_hit 1 1000\ngetHits 1", "expected": "1000", "explanation": "1000 concurrent hits at timestamp 1 should all be counted." },
+        { "input": "concurrent_hit 1 500\nconcurrent_hit 2 500\ngetHits 2", "expected": "1000", "explanation": "Concurrent hits to different timestamps — both should be fully counted." },
+        { "input": "concurrent_hit 1 100\nconcurrent_hit 301 100\ngetHits 301", "expected": "100", "explanation": "Hits at t=1 expire by t=301. Only the 100 hits at t=301 remain." }
+      ],
+      "followUps": [
+        "What are the trade-offs between per-bucket locks and a global lock?",
+        "How does CAS (compare-and-swap) help here?",
+        "What about getHits — can it run concurrently with hit?",
+        "In a distributed system (multiple machines), how would you aggregate hits?"
+      ],
+      "expectedApproach": "Per-bucket locking or atomic operations. hit(t): lock only bucket t%300, check/update timestamp and count atomically. getHits(t): iterate all 300 buckets with consistent reads. Discuss trade-offs between lock granularity, atomic ops, and read-write locks.",
+      "expectedComplexity": { "time": "O(1) hit, O(300) getHits", "space": "O(300)" }
+    }
+  ],
+  "constraints": [
+    "1 <= timestamp <= 2 * 10^9",
+    "Timestamps are in non-decreasing order within a single thread",
+    "At most 300 unique timestamps in any 300-second window",
+    "Calls to hit and getHits are at most 5 * 10^4 total"
+  ],
+  "io": {
+    "inputFormat": "One operation per line: hit timestamp | getHits timestamp | concurrent_hit timestamp count (Part 2)",
+    "outputFormat": "One line per getHits operation with the returned count",
+    "parseHint": "Each line is an operation. 'hit' and 'concurrent_hit' produce no output. 'getHits' produces one line of output."
+  },
+  "source": "LeetCode #362",
+  "escalationPattern": "constraint-addition"
+}

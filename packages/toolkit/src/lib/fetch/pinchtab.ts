@@ -19,7 +19,7 @@ export async function fetchWithPinchtab(
     { stdout: "ignore", stderr: "pipe" },
   );
 
-  const navTimer = setTimeout(() => navProc.kill(), TIMEOUT_MS);
+  const navTimer = setTimeout(() => { navProc.kill(); }, TIMEOUT_MS);
   try {
     const navStderr = await new Response(navProc.stderr).text();
     const navExit = await navProc.exited;
@@ -45,7 +45,7 @@ export async function fetchWithPinchtab(
     stderr: "pipe",
   });
 
-  const textTimer = setTimeout(() => textProc.kill(), TIMEOUT_MS);
+  const textTimer = setTimeout(() => { textProc.kill(); }, TIMEOUT_MS);
   try {
     const [stdout, textStderr] = await Promise.all([
       new Response(textProc.stdout).text(),

@@ -41,8 +41,9 @@ export default defineConfig({
       use: { ...devices["iPhone 12"] },
     },
     // msedge and chrome channels require separate browser installs (not in CI container)
-    ...(!isCI
-      ? [
+    ...(isCI
+      ? []
+      : [
           {
             name: "Microsoft Edge",
             use: { ...devices["Desktop Edge"], channel: "msedge" as const },
@@ -51,8 +52,7 @@ export default defineConfig({
             name: "Google Chrome",
             use: { ...devices["Desktop Chrome"], channel: "chrome" as const },
           },
-        ]
-      : []),
+        ]),
 
     {
       name: "chromium (Dark)",
@@ -74,8 +74,9 @@ export default defineConfig({
       name: "Mobile Safari (Dark)",
       use: { ...devices["iPhone 12"], colorScheme: "dark" as const },
     },
-    ...(!isCI
-      ? [
+    ...(isCI
+      ? []
+      : [
           {
             name: "Microsoft Edge (Dark)",
             use: {
@@ -92,8 +93,7 @@ export default defineConfig({
               colorScheme: "dark" as const,
             },
           },
-        ]
-      : []),
+        ]),
   ],
   webServer: {
     // Use bun for both local and CI (CI container now has Bun installed)

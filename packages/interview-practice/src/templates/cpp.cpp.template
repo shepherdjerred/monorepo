@@ -1,0 +1,16 @@
+// {{TITLE}}
+// Input: {{INPUT_FORMAT}}
+// Output: {{OUTPUT_FORMAT}}
+// {{PARSE_HINT}}
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+int main() {
+    // TODO: Parse input and solve
+    cout << "TODO" << endl;
+    return 0;
+}

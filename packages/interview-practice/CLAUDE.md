@@ -13,8 +13,12 @@ interview-practice questions list [--type leetcode] [--difficulty hard]
 
 ## Architecture
 
-- Phase 1 (current): Single conversation model (Sonnet), in-memory state, text input
-- Conversation model builds context with token budgets, calls tools (run_tests, reveal_next_part, give_hint)
+- Dual-model architecture: fast conversation model + accurate background reflection model
+- Reflection queue: in-memory `Reflection[]` — reflection model pushes, conversation model drains at turn start
+- Context builder assembles prompts with token budgets: persona (1000), timer+question (600), reflections (400), transcript (2000), code (500)
+- `pause_and_think` tool: synchronous front-loaded call to reflection model before responding
+- `next_move` structured payloads enable deterministic part advancement without model judgment
+- Conversation model builds context with token budgets, calls tools (run_tests, reveal_next_part, give_hint, pause_and_think)
 - Tests are ALWAYS hidden from user. AI hints verbally but never reveals test cases.
 - Starter code generated from IO schema + per-language templates
 - SQLite for archival only (transcript, events). Live state is in-memory.
@@ -24,7 +28,8 @@ interview-practice questions list [--type leetcode] [--difficulty hard]
 
 ```
 AI_PROVIDER=anthropic|openai|google
-CONVERSATION_MODEL=claude-sonnet-4-6-20260217
+CONVERSATION_MODEL=claude-haiku-4-5-20251001    # fast conversation
+REFLECTION_MODEL=claude-sonnet-4-6-20260217     # accurate background reflection
 ANTHROPIC_API_KEY=...
 ```
 

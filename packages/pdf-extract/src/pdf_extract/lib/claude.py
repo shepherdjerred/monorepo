@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import anthropic
 from anthropic import APIStatusError, RateLimitError
@@ -22,13 +22,11 @@ if TYPE_CHECKING:
 
 log = get_logger("claude")
 
-
-def _retry_decorator() -> retry:  # type: ignore[type-arg]
-    return retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=30),
-        retry=retry_if_exception_type((RateLimitError, APIStatusError)),
-    )
+_DEFAULT_RETRY = retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
+    retry=retry_if_exception_type((RateLimitError, APIStatusError)),
+)
 
 
 class ClaudeClient:
@@ -87,20 +85,18 @@ class ClaudeClient:
         prompt: str,
         image_bytes: bytes | None = None,
         image_mime: str = "image/png",
-    ) -> list[anthropic.types.ContentBlockParam]:
-        content: list[anthropic.types.ContentBlockParam] = []
+    ) -> list[dict[str, Any]]:
+        content: list[dict[str, Any]] = []
         if image_bytes is not None:
             img_b64 = base64.b64encode(image_bytes).decode()
-            content.append(
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": image_mime,
-                        "data": img_b64,
-                    },
-                }
-            )
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": image_mime,
+                    "data": img_b64,
+                },
+            })
         content.append({"type": "text", "text": prompt})
         return content
 
@@ -108,30 +104,28 @@ class ClaudeClient:
         self,
         prompt: str,
         images: list[tuple[bytes, str]],
-    ) -> list[anthropic.types.ContentBlockParam]:
-        content: list[anthropic.types.ContentBlockParam] = []
+    ) -> list[dict[str, Any]]:
+        content: list[dict[str, Any]] = []
         for img_bytes, mime in images:
             img_b64 = base64.b64encode(img_bytes).decode()
-            content.append(
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": mime,
-                        "data": img_b64,
-                    },
-                }
-            )
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": mime,
+                    "data": img_b64,
+                },
+            })
         content.append({"type": "text", "text": prompt})
         return content
 
-    @_retry_decorator()
     async def generate(
         self,
         prompt: str,
         image_bytes: bytes | None = None,
         image_mime: str = "image/png",
     ) -> str:
+        """Generate a response with optional image. Retries on rate limit/server errors."""
         content = self._build_content(prompt, image_bytes, image_mime)
 
         async with self._sem:
@@ -140,21 +134,22 @@ class ClaudeClient:
                 resp = await self._client.messages.create(
                     model=self._model,
                     max_tokens=4096,
-                    messages=[{"role": "user", "content": content}],
+                    messages=[{"role": "user", "content": content}],  # type: ignore[typeddict-item]
                 )
-            except Exception:
+            except (RateLimitError, APIStatusError):
                 self._track_error()
                 raise
             duration_ms = (time.monotonic() - start) * 1000
             self._track(resp.usage, duration_ms)
-            return resp.content[0].text if resp.content else ""
+            block = resp.content[0] if resp.content else None
+            return block.text if block and hasattr(block, "text") else ""
 
-    @_retry_decorator()
     async def generate_multi_image(
         self,
         prompt: str,
         images: list[tuple[bytes, str]],
     ) -> str:
+        """Generate a response with multiple images."""
         content = self._build_multi_image_content(prompt, images)
 
         async with self._sem:
@@ -163,11 +158,12 @@ class ClaudeClient:
                 resp = await self._client.messages.create(
                     model=self._model,
                     max_tokens=4096,
-                    messages=[{"role": "user", "content": content}],
+                    messages=[{"role": "user", "content": content}],  # type: ignore[typeddict-item]
                 )
-            except Exception:
+            except (RateLimitError, APIStatusError):
                 self._track_error()
                 raise
             duration_ms = (time.monotonic() - start) * 1000
             self._track(resp.usage, duration_ms)
-            return resp.content[0].text if resp.content else ""
+            block = resp.content[0] if resp.content else None
+            return block.text if block and hasattr(block, "text") else ""

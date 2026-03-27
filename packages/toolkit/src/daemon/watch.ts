@@ -7,9 +7,12 @@ import { EmbeddingClient } from "#lib/recall/embeddings.ts";
 import { indexFile, removeFile } from "#lib/recall/pipeline.ts";
 import { reindexAll } from "#lib/recall/reindex.ts";
 import { WATCHED_DIRS } from "#lib/recall/config.ts";
+import type { RecallDb } from "#lib/recall/db.ts";
 import { Logger } from "./logger.ts";
 
 const DEBOUNCE_MS = 2000;
+
+type QueueItem = { filePath: string; source: string };
 
 export async function runWatcher(verbose: boolean): Promise<void> {
   const logger = new Logger();
@@ -46,65 +49,39 @@ export async function runWatcher(verbose: boolean): Promise<void> {
     );
   }
 
+  // Serial write queue — LanceDB doesn't support concurrent writers
+  const writeQueue: QueueItem[] = [];
+  let processing = false;
+
+  async function processQueue(): Promise<void> {
+    if (processing) return;
+    processing = true;
+
+    while (writeQueue.length > 0) {
+      const item = writeQueue.shift();
+      if (item == null) break;
+      await processItem(item, { db, embedder: useEmbedder, logger, verbose });
+    }
+
+    processing = false;
+  }
+
   // Set up debounced file watchers
   const pending = new Map<string, ReturnType<typeof setTimeout>>();
 
   const handleFileChange = (filePath: string, source: string) => {
-    // Clear any pending debounce for this file
     const existing = pending.get(filePath);
     if (existing != null) clearTimeout(existing);
 
     pending.set(
       filePath,
       setTimeout(() => {
-        void (async () => {
         pending.delete(filePath);
-        try {
-          const exists = await stat(filePath).catch(() => null);
-          if (exists == null) {
-            // File deleted
-            const removed = await removeFile(db, filePath, verbose);
-            if (removed) {
-              await logger.info("watch", "removed", { path: filePath });
-              if (verbose) console.error(`[watch] removed: ${filePath}`);
-            }
-          } else if (filePath.endsWith(".md") || filePath.endsWith(".jsonl")) {
-            // File changed — reindex
-            const start = performance.now();
-            const indexResult = await indexFile({
-              db,
-              embedder: useEmbedder,
-              filePath,
-              source,
-              verbose,
-            });
-            const ms = performance.now() - start;
-
-            if (!indexResult.skipped) {
-              await logger.info("watch", "indexed", {
-                path: filePath,
-                chunks: indexResult.chunksCreated,
-                ms: Math.round(ms),
-              });
-              if (verbose) {
-                console.error(
-                  `[watch] indexed: ${filePath} (${String(indexResult.chunksCreated)} chunks, ${String(Math.round(ms))}ms)`,
-                );
-              }
-            }
-          }
-        } catch (error) {
-          try {
-            await logger.error("watch", "index_error", {
-              path: filePath,
-              error: String(error),
-            });
-          } catch { /* don't let logger failures crash the watcher */ }
-          if (verbose) console.error(`[watch] error: ${filePath}: ${String(error)}`);
+        // Deduplicate: don't queue if already in the queue
+        if (!writeQueue.some((item) => item.filePath === filePath)) {
+          writeQueue.push({ filePath, source });
         }
-        })().catch((err: unknown) => {
-          console.error(`[watch] unhandled error: ${String(err)}`);
-        });
+        void processQueue();
       }, DEBOUNCE_MS),
     );
   };
@@ -127,7 +104,6 @@ export async function runWatcher(verbose: boolean): Promise<void> {
         if (filename == null) return;
         const fullPath = path.join(dir.directory, filename);
 
-        // Apply pattern filter
         const matchesPattern = dir.patterns.some((p) => {
           if (p === "*.md") return fullPath.endsWith(".md");
           if (p === "*.jsonl") return fullPath.endsWith(".jsonl");
@@ -135,7 +111,6 @@ export async function runWatcher(verbose: boolean): Promise<void> {
         });
         if (!matchesPattern) return;
 
-        // Apply path filter
         if (dir.pathFilter != null && !dir.pathFilter(fullPath)) return;
 
         handleFileChange(fullPath, dir.source);
@@ -165,19 +140,71 @@ export async function runWatcher(verbose: boolean): Promise<void> {
     console.error("\n[watch] shutting down...");
     for (const w of watchers) w.close();
     for (const timer of pending.values()) clearTimeout(timer);
+    writeQueue.length = 0;
     embedder.shutdown();
-    // Best-effort log, then exit regardless
-    void logger.info("watch", "daemon_stop", { pid: process.pid }).catch(() => {}).finally(() => {
-      db.close();
-      process.exit(0);
-    });
-    // Force exit after 3s if logger hangs
+    void (async () => {
+      try {
+        await logger.info("watch", "daemon_stop", { pid: process.pid });
+      } catch {
+        // ignore logger failures during shutdown
+      } finally {
+        db.close();
+        process.exit(0);
+      }
+    })();
     setTimeout(() => { db.close(); process.exit(0); }, 3000);
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  // Keep process alive
   await new Promise(() => { /* never resolves — keeps process alive */ });
+}
+
+async function processItem(
+  item: QueueItem,
+  deps: { db: RecallDb; embedder: EmbeddingClient | null; logger: Logger; verbose: boolean },
+): Promise<void> {
+  const { db, embedder, logger, verbose } = deps;
+  try {
+    const exists = await stat(item.filePath).catch(() => null);
+    if (exists == null) {
+      const removed = await removeFile(db, item.filePath, verbose);
+      if (removed) {
+        await logger.info("watch", "removed", { path: item.filePath });
+        if (verbose) console.error(`[watch] removed: ${item.filePath}`);
+      }
+    } else if (item.filePath.endsWith(".md") || item.filePath.endsWith(".jsonl")) {
+      const start = performance.now();
+      const indexResult = await indexFile({
+        db,
+        embedder,
+        filePath: item.filePath,
+        source: item.source,
+        verbose,
+      });
+      const ms = performance.now() - start;
+
+      if (!indexResult.skipped) {
+        await logger.info("watch", "indexed", {
+          path: item.filePath,
+          chunks: indexResult.chunksCreated,
+          ms: Math.round(ms),
+        });
+        if (verbose) {
+          console.error(
+            `[watch] indexed: ${item.filePath} (${String(indexResult.chunksCreated)} chunks, ${String(Math.round(ms))}ms)`,
+          );
+        }
+      }
+    }
+  } catch (error) {
+    try {
+      await logger.error("watch", "index_error", {
+        path: item.filePath,
+        error: String(error),
+      });
+    } catch { /* don't let logger failures crash the watcher */ }
+    if (verbose) console.error(`[watch] error: ${item.filePath}: ${String(error)}`);
+  }
 }

@@ -1,0 +1,4 @@
+{"ts":"2026-03-27T04:19:11.513Z","level":"info","component":"voice","sessionId":"098c24d5-6484-4572-b189-0975b28af90c","event":"ws_connected","model":"gpt-realtime-mini"}
+{"ts":"2026-03-27T04:19:11.515Z","level":"info","component":"voice","sessionId":"098c24d5-6484-4572-b189-0975b28af90c","event":"mic_started"}
+{"ts":"2026-03-27T04:19:11.516Z","level":"info","component":"voice","sessionId":"098c24d5-6484-4572-b189-0975b28af90c","event":"speaker_started"}
+{"ts":"2026-03-27T04:19:13.666Z","level":"info","component":"voice","sessionId":"098c24d5-6484-4572-b189-0975b28af90c","event":"user_transcript","transcript":"Tá."}

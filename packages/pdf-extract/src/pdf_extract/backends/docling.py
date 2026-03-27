@@ -43,8 +43,8 @@ async def extract_with_docling(
 
     cmd = [
         "docling",
+        "--to", "md",
         "--output", str(out),
-        "--export-md",
     ]
 
     if config.docling_vlm:

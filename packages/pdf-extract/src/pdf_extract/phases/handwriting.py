@@ -5,7 +5,7 @@ import json
 import re
 from typing import TYPE_CHECKING
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 from pdf_extract.lib import get_logger
 from pdf_extract.lib.pdf import render_page

@@ -1,0 +1,167 @@
+{
+  "id": "5a2d58e0-b4be-4660-950a-8c8c9a7284a6",
+  "title": "Search Autocomplete",
+  "slug": "search-autocomplete",
+  "category": "distributed-systems",
+  "difficulty": "mid",
+  "prompt": "Design a search autocomplete system like Google's search suggestions. As the user types a query, the system should suggest the most relevant completions in real-time, based on popular searches and optionally personalized to the user.",
+  "requirements": {
+    "functional": [
+      "Return top-k suggestions as the user types each character",
+      "Rank suggestions by popularity (search frequency)",
+      "Support personalized suggestions based on user search history",
+      "Update suggestion rankings as search trends change",
+      "Filter out inappropriate or offensive suggestions",
+      "Support multi-language queries"
+    ],
+    "nonFunctional": [
+      "Ultra-low latency (< 50ms p99 per keystroke)",
+      "High availability (99.99%)",
+      "Suggestions should reflect recent trends within minutes",
+      "Graceful degradation: serve stale suggestions if real-time data is unavailable"
+    ],
+    "scale": {
+      "users": "1 billion daily active users",
+      "qps": "60K searches/sec, ~300K autocomplete requests/sec (5 keystrokes per search avg)",
+      "storage": "~10 billion unique query prefixes"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "How many suggestions should we return per keystroke (top 5? top 10?)",
+        "Do we need personalized suggestions or only popularity-based?",
+        "How fresh should the trending data be (real-time vs hourly)?",
+        "Do we need to support spelling correction or fuzzy matching?",
+        "How do we handle offensive or inappropriate suggestions?",
+        "What languages need to be supported?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Autocomplete QPS: 1B DAU * 5 searches/day * 5 keystrokes / 86400 = ~300K/sec",
+        "Trie size: 10B unique prefixes * 50 bytes avg = 500 GB",
+        "Per-node memory: with sharding across 100 nodes = 5 GB per node (fits in RAM)",
+        "Search log volume: 60K searches/sec * 100 bytes = 6 MB/sec = 500 GB/day",
+        "Cache hit ratio: top 10K prefixes cover 80% of queries => high cache effectiveness"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "GET /api/v1/autocomplete?q={prefix}&limit=10&lang=en => { suggestions: [{ text, score }] }",
+        "GET /api/v1/autocomplete?q={prefix}&userId={id} => { suggestions[] } (personalized)",
+        "POST /api/v1/search/log { query, userId, timestamp } => (async search logging)",
+        "PUT /api/v1/autocomplete/blocklist { term } => (content moderation)"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "trie_nodes: prefix, children[], top_suggestions[], score",
+        "search_logs: query, user_id, timestamp, region",
+        "aggregated_counts: query, time_window, count, decay_score",
+        "user_history: user_id, query, timestamp, click_result",
+        "blocklist: term, reason, added_at, added_by"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "API Gateway / Load Balancer",
+        "Autocomplete Service (trie lookup, in-memory)",
+        "Trie Builder (offline MapReduce job to rebuild trie from search logs)",
+        "Search Log Collector (Kafka-based pipeline)",
+        "Aggregation Service (count queries per time window, apply decay)",
+        "Personalization Service (blend user history with global popularity)",
+        "Content Filter (blocklist check before returning results)",
+        "Zookeeper / Config Service (shard mapping, feature flags)",
+        "CDN / Edge Cache (cache popular prefixes at edge)"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Trie data structure: compressed trie vs ternary search tree, memory optimization",
+        "Ranking algorithm: frequency decay (exponential time-weighted scoring) for trending queries",
+        "Sharding strategy: prefix-based sharding vs hash-based, handling hot prefixes",
+        "Real-time updates: streaming pipeline (Kafka + Flink) to update trie without full rebuild",
+        "Personalization: blending global popularity with user history (alpha * global + (1-alpha) * personal)",
+        "Edge caching: caching top prefixes at CDN edge for sub-10ms latency"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about number of suggestions to return",
+        "Clarified personalization requirements",
+        "Discussed freshness of trending data",
+        "Asked about content moderation needs",
+        "Estimated scale (QPS per keystroke, not just per search)"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, immediately started drawing a trie",
+        "2": "Asked 1-2 questions but missed latency requirements or personalization scope",
+        "3": "Covered latency, scale, personalization, and content moderation requirements",
+        "4": "Proactively identified per-keystroke QPS amplification, trending freshness needs, and multi-language complexity"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Used trie or similar prefix-optimized data structure",
+        "Separated online serving from offline trie building",
+        "Included data collection pipeline for search logs",
+        "Addressed caching at multiple levels",
+        "Included content moderation in the serving path"
+      ],
+      "anchors": {
+        "1": "Database LIKE query for every keystroke with no caching",
+        "2": "Trie-based lookup but monolithic system with no pipeline for updates",
+        "3": "In-memory trie serving, offline build pipeline, caching layer, and log collection",
+        "4": "Multi-layer architecture with edge caching, streaming updates, personalization blending, and graceful degradation"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained trie structure and memory optimization",
+        "Discussed ranking/scoring algorithm with time decay",
+        "Addressed trie update strategy (rebuild vs streaming)",
+        "Considered sharding and hot prefix handling",
+        "Discussed personalization implementation"
+      ],
+      "anchors": {
+        "1": "No depth on trie implementation or ranking algorithm",
+        "2": "Basic trie explanation but no discussion of updates, sharding, or ranking",
+        "3": "Deep dive into trie optimization + ranking algorithm or update strategy with trade-offs",
+        "4": "Thorough analysis covering compressed tries, streaming updates, frequency decay math, and sharding with hot-prefix mitigation"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Trie vs inverted index for prefix lookups",
+        "Full trie rebuild vs incremental streaming updates",
+        "Memory vs disk for trie storage",
+        "Global vs personalized ranking",
+        "Freshness vs consistency of suggestions"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs",
+        "2": "Mentioned one trade-off without analysis",
+        "3": "Discussed 2-3 trade-offs with pros/cons and justified choices",
+        "4": "Systematically evaluated data structure, update strategy, and caching trade-offs with latency and cost analysis"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Using database LIKE queries instead of a trie, leading to unacceptable latency",
+    "Not accounting for per-keystroke QPS (5-10x amplification over search QPS)",
+    "Rebuilding the entire trie on every search instead of batched/streaming updates",
+    "Ignoring content moderation, allowing offensive suggestions to surface",
+    "Not considering hot prefixes (e.g., 'a', 'th') that concentrate load on specific shards",
+    "Treating personalization as a simple filter instead of a blended ranking signal"
+  ],
+  "source": "Classic system design interview question"
+}

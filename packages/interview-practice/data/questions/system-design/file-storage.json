@@ -1,0 +1,175 @@
+{
+  "id": "786f5fc9-f7f7-49da-84f9-44265e198ac6",
+  "title": "File Storage System",
+  "slug": "file-storage",
+  "category": "storage",
+  "difficulty": "senior",
+  "prompt": "Design a cloud file storage system like Google Drive or Dropbox. Users should be able to upload and download files, share files with others, sync files across devices, and the system should handle deduplication to save storage.",
+  "requirements": {
+    "functional": [
+      "Upload and download files (up to 10GB)",
+      "Organize files in folders/directories",
+      "Share files and folders with other users (view/edit permissions)",
+      "Sync files across multiple devices in near real-time",
+      "File versioning and revision history",
+      "Content-based deduplication to reduce storage costs"
+    ],
+    "nonFunctional": [
+      "High durability (99.999999999% — 11 nines)",
+      "High availability (99.9%)",
+      "Upload/download latency proportional to file size, not system load",
+      "Consistency: all devices eventually see the same state within seconds",
+      "Support resumable uploads for large files"
+    ],
+    "scale": {
+      "users": "500M registered users, 100M DAU",
+      "qps": "10K uploads/sec, 50K downloads/sec, 100K metadata reads/sec",
+      "storage": "1 exabyte total, average 2GB per user"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What is the maximum file size we need to support?",
+        "Do we need real-time collaboration or just sync?",
+        "What sharing models are required (link sharing, user-based)?",
+        "Do we need file versioning? How many versions to keep?",
+        "What platforms need sync support (desktop, mobile, web)?",
+        "Is deduplication per-user or global?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Storage: 500M users * 2GB avg = 1 EB raw, with dedup ~500 PB",
+        "Upload QPS: 100M DAU * 5 uploads/day / 86400 = ~6K/sec",
+        "Download QPS: 100M DAU * 25 reads/day / 86400 = ~30K/sec",
+        "Metadata DB: 500M users * 200 files avg * 1KB = 100 TB metadata",
+        "Bandwidth: 10K uploads * 5MB avg = 50 GB/sec upload bandwidth",
+        "Chunk size: 4MB chunks => 10GB file = 2500 chunks"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/files/upload/init { fileName, fileSize, parentId } => { uploadId, chunkUrls[] }",
+        "PUT /api/v1/files/upload/{uploadId}/chunks/{chunkIndex} => { status }",
+        "POST /api/v1/files/upload/{uploadId}/complete => { fileId, metadata }",
+        "GET /api/v1/files/{fileId}/download => pre-signed URL or stream",
+        "GET /api/v1/files/{fileId}/metadata => { name, size, versions[], ... }",
+        "POST /api/v1/files/{fileId}/share { userId, permission } => { shareId }",
+        "GET /api/v1/sync?cursor={cursor} => { changes[], nextCursor }",
+        "DELETE /api/v1/files/{fileId} => { status }"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "users: id, email, name, storage_used, storage_limit, created_at",
+        "files: id, owner_id, parent_folder_id, name, size, content_hash, is_folder, created_at, updated_at",
+        "file_versions: id, file_id, version_number, content_hash, size, created_at, created_by",
+        "chunks: content_hash, size, storage_location, ref_count",
+        "shares: id, file_id, shared_with_user_id, permission (view/edit), created_at",
+        "sync_events: id, user_id, file_id, event_type, timestamp, device_id"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Load Balancer / API Gateway",
+        "File Metadata Service",
+        "Upload Service (chunked upload orchestration)",
+        "Download Service (chunk assembly, pre-signed URLs)",
+        "Block Storage Service (S3-like object store for chunks)",
+        "Dedup Service (content-addressable storage with hash lookup)",
+        "Sync Service (long-polling or WebSocket for device sync)",
+        "Metadata Database (SQL for file tree, permissions)",
+        "Message Queue (upload processing, sync event fan-out)",
+        "CDN (for frequently accessed files)"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Chunking strategy: fixed-size vs content-defined chunking (Rabin fingerprint) for dedup efficiency",
+        "Sync protocol: conflict resolution when two devices edit the same file offline",
+        "Deduplication: per-user vs global, hash collision handling, security implications of cross-user dedup",
+        "Resumable uploads: how to handle partial chunk uploads and network failures",
+        "Consistency model: how to ensure all devices converge to the same state",
+        "Storage tiering: hot/warm/cold storage for cost optimization"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about maximum file size",
+        "Clarified sync vs collaboration requirements",
+        "Discussed sharing permission models",
+        "Asked about versioning requirements",
+        "Estimated scale and storage needs"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, jumped straight to architecture without understanding scope",
+        "2": "Asked about file size limits but missed sync model or sharing requirements",
+        "3": "Covered upload/download, sharing, sync, and estimated storage needs",
+        "4": "Proactively identified dedup scope, conflict resolution needs, platform constraints, and storage cost implications"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Separated metadata and content storage",
+        "Included chunked upload mechanism",
+        "Designed sync notification system",
+        "Addressed deduplication at storage layer",
+        "Included CDN for downloads"
+      ],
+      "anchors": {
+        "1": "Monolithic service storing files directly in database with no chunking",
+        "2": "Separated file storage from metadata but no chunking, sync, or dedup",
+        "3": "Chunked uploads, object storage, metadata DB, sync service with clear data flow",
+        "4": "Content-addressable storage with dedup, resumable uploads, efficient sync protocol, and clear separation of read/write paths"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained chunking strategy with trade-offs",
+        "Discussed sync conflict resolution",
+        "Addressed dedup implementation details",
+        "Considered resumable upload failure modes",
+        "Discussed storage tiering for cost"
+      ],
+      "anchors": {
+        "1": "No depth on any component, hand-waved chunking and sync",
+        "2": "Basic discussion of chunking but no conflict resolution or dedup details",
+        "3": "Deep dive into chunking + dedup or sync with concrete algorithms and trade-offs",
+        "4": "Thorough analysis of content-defined chunking, vector clocks for sync, cross-user dedup security, and storage cost modeling"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Fixed-size vs content-defined chunking",
+        "Per-user vs global deduplication",
+        "Strong vs eventual consistency for sync",
+        "SQL vs NoSQL for metadata",
+        "Pre-signed URLs vs proxy downloads"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs in the design",
+        "2": "Mentioned one trade-off (e.g., SQL vs NoSQL) without deeper analysis",
+        "3": "Discussed 2-3 trade-offs with clear pros/cons and justified decisions",
+        "4": "Systematically evaluated trade-offs across storage, consistency, and cost with quantitative reasoning"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Storing entire files as single objects instead of chunking for large file support",
+    "Not addressing sync conflicts when the same file is edited on multiple devices offline",
+    "Ignoring security implications of cross-user deduplication (side-channel attacks)",
+    "Using polling instead of push-based sync, leading to high QPS and latency",
+    "Not designing resumable uploads for large files over unreliable networks",
+    "Treating metadata and file content with the same storage strategy"
+  ],
+  "source": "Classic system design interview question"
+}

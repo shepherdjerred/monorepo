@@ -48,7 +48,7 @@ export const EscalationPatternSchema = z.enum([
 ]);
 
 export const LeetcodeQuestionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   title: z.string(),
   slug: z.string(),
   difficulty: z.enum(["easy", "medium", "hard"]),
@@ -67,3 +67,108 @@ export type TestCase = z.infer<typeof TestCaseSchema>;
 export type Hint = z.infer<typeof HintSchema>;
 export type IOSpec = z.infer<typeof IOSchema>;
 export type TransitionCriteria = z.infer<typeof TransitionCriteriaSchema>;
+
+// System Design schemas
+
+export const ScoringAnchorSchema = z.object({
+  1: z.string(),
+  2: z.string(),
+  3: z.string(),
+  4: z.string(),
+});
+
+export const SystemDesignCategorySchema = z.enum([
+  "distributed-systems",
+  "api-design",
+  "data-pipeline",
+  "storage",
+  "real-time",
+  "ml-system",
+]);
+
+export const SystemDesignDifficultySchema = z.enum([
+  "junior",
+  "mid",
+  "senior",
+  "staff",
+]);
+
+export const SystemDesignPhaseSchema = z.enum([
+  "requirements",
+  "estimation",
+  "api-design",
+  "data-model",
+  "high-level",
+  "deep-dive",
+  "trade-offs",
+]);
+
+export const SystemDesignQuestionSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  slug: z.string(),
+  category: SystemDesignCategorySchema,
+  difficulty: SystemDesignDifficultySchema,
+  prompt: z.string(),
+  requirements: z.object({
+    functional: z.array(z.string()),
+    nonFunctional: z.array(z.string()),
+    scale: z.object({
+      users: z.string().optional(),
+      qps: z.string().optional(),
+      storage: z.string().optional(),
+    }),
+  }),
+  phases: z.object({
+    requirements: z.object({
+      keyQuestions: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+    estimation: z.object({
+      keyCalculations: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+    apiDesign: z.object({
+      expectedEndpoints: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+    dataModel: z.object({
+      expectedEntities: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+    highLevel: z.object({
+      expectedComponents: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+    deepDive: z.object({
+      suggestedTopics: z.array(z.string()),
+      timeTarget: z.number(),
+    }),
+  }),
+  rubric: z.object({
+    requirementGathering: z.object({
+      checklist: z.array(z.string()),
+      anchors: ScoringAnchorSchema,
+    }),
+    highLevelDesign: z.object({
+      checklist: z.array(z.string()),
+      anchors: ScoringAnchorSchema,
+    }),
+    deepDive: z.object({
+      checklist: z.array(z.string()),
+      anchors: ScoringAnchorSchema,
+    }),
+    tradeoffs: z.object({
+      checklist: z.array(z.string()),
+      anchors: ScoringAnchorSchema,
+    }),
+  }),
+  commonMistakes: z.array(z.string()),
+  source: z.string(),
+});
+
+export type SystemDesignQuestion = z.infer<typeof SystemDesignQuestionSchema>;
+export type ScoringAnchor = z.infer<typeof ScoringAnchorSchema>;
+export type SystemDesignCategory = z.infer<typeof SystemDesignCategorySchema>;
+export type SystemDesignDifficulty = z.infer<typeof SystemDesignDifficultySchema>;
+export type SystemDesignPhase = z.infer<typeof SystemDesignPhaseSchema>;

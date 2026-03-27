@@ -115,7 +115,7 @@ export function ActiveIncidentRow({
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Select value={newStatus} onValueChange={setNewStatus}>
+              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value as typeof newStatus)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -126,7 +126,7 @@ export function ActiveIncidentRow({
                   <SelectItem value="resolved">Resolved</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={newImpact} onValueChange={setNewImpact}>
+              <Select value={newImpact} onValueChange={(value: string) => setNewImpact(value as typeof newImpact)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Impact" />
                 </SelectTrigger>
@@ -151,7 +151,7 @@ export function ActiveIncidentRow({
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Add Update</p>
-              <Select value={updateStatus} onValueChange={setUpdateStatus}>
+              <Select value={updateStatus} onValueChange={(value: string) => setUpdateStatus(value as typeof updateStatus)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>

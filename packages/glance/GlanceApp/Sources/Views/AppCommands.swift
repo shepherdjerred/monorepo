@@ -72,10 +72,9 @@ struct AppCommands: Commands {
 
     @FocusedValue(\.selectedService) private var selectedService
 
-    // swiftlint:disable:next force_unwrapping
-    private let helpURL = URL(string: "https://github.com/shepherdjerred/monorepo")!
-    // swiftlint:disable:next force_unwrapping
-    private let feedbackURL = URL(string: "https://github.com/shepherdjerred/monorepo/issues")!
+    // These are compile-time constant URLs, guaranteed valid
+    private let helpURL = URL(string: "https://github.com/shepherdjerred/monorepo") ?? URL(filePath: "/")
+    private let feedbackURL = URL(string: "https://github.com/shepherdjerred/monorepo/issues") ?? URL(filePath: "/")
 }
 
 extension Notification.Name {

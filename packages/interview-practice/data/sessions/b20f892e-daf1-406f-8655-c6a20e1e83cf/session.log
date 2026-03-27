@@ -1,0 +1,3 @@
+{"ts":"2026-03-27T04:10:41.395Z","level":"info","component":"interviewer","sessionId":"b20f892e-daf1-406f-8655-c6a20e1e83cf","event":"turn_complete","latencyMs":420,"tokensIn":1552,"tokensOut":14,"toolsCalled":[],"reflectionsUsed":0}
+}
+y","language":"ts"}

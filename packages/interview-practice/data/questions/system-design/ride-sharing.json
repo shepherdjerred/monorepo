@@ -1,0 +1,177 @@
+{
+  "id": "c55a87a4-20ec-4d82-80f0-08f110e6dcf1",
+  "title": "Ride Sharing Service",
+  "slug": "ride-sharing",
+  "category": "real-time",
+  "difficulty": "senior",
+  "prompt": "Design a ride sharing service like Uber or Lyft. Riders should be able to request a ride, the system matches them with nearby drivers, provides real-time ETA and tracking, and handles dynamic pricing (surge pricing) during high-demand periods.",
+  "requirements": {
+    "functional": [
+      "Riders request rides by specifying pickup and dropoff locations",
+      "Match riders with the nearest available driver",
+      "Real-time location tracking of driver en route and during trip",
+      "Estimated time of arrival (ETA) calculation",
+      "Dynamic/surge pricing based on supply and demand",
+      "Trip history and receipts for riders and drivers",
+      "Driver and rider ratings"
+    ],
+    "nonFunctional": [
+      "Matching latency < 10 seconds in normal conditions",
+      "Location updates every 3-5 seconds",
+      "High availability (99.99%) — downtime means stranded riders",
+      "ETA accuracy within 20% of actual arrival time",
+      "Surge pricing updates within 1 minute of demand changes"
+    ],
+    "scale": {
+      "users": "100M riders, 5M drivers, 20M daily trips",
+      "qps": "5K ride requests/sec, 1M location updates/sec from active drivers",
+      "storage": "100 TB trip history, 10 TB location data per day"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What types of rides do we support (solo, shared/pool, scheduled)?",
+        "How should we handle areas with no nearby drivers?",
+        "Do we need real-time tracking during the trip?",
+        "How granular should surge pricing be (city-wide, zone-based, hex-based)?",
+        "Do we need to support scheduled rides in advance?",
+        "What payment methods do we support?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Ride request QPS: 20M trips/day / 86400 = ~230/sec avg, 5K/sec peak",
+        "Location updates: 5M drivers * 20% active = 1M drivers sending updates every 4 sec = 250K/sec",
+        "Geospatial index size: 1M active drivers * 100 bytes = 100 MB (fits in memory)",
+        "Trip storage: 20M trips/day * 2KB = 40 GB/day = 15 TB/year",
+        "Location history: 1M drivers * 1 update/4s * 50 bytes = 12.5 MB/sec = 1 TB/day",
+        "ETA computation: need routing engine capable of 10K route calculations/sec"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/rides/estimate { pickup, dropoff } => { estimatedFare, surgeMultiplier, eta }",
+        "POST /api/v1/rides/request { pickup, dropoff, rideType } => { rideId, status, driverInfo }",
+        "GET /api/v1/rides/{rideId}/status => { status, driverLocation, eta }",
+        "PUT /api/v1/drivers/{driverId}/location { lat, lng, timestamp } => { status }",
+        "PUT /api/v1/drivers/{driverId}/availability { available: bool } => { status }",
+        "POST /api/v1/rides/{rideId}/complete => { fare, receipt }",
+        "POST /api/v1/rides/{rideId}/rate { rating, comment } => { status }",
+        "WebSocket /ws/rides/{rideId}/track => real-time location stream"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "riders: id, name, email, phone, payment_method_id, rating",
+        "drivers: id, name, vehicle_info, license, rating, status (available/busy/offline)",
+        "rides: id, rider_id, driver_id, pickup_location, dropoff_location, status, fare, surge_multiplier, created_at, started_at, completed_at",
+        "driver_locations: driver_id, lat, lng, heading, speed, timestamp (time-series)",
+        "surge_zones: zone_id (H3 hex), demand_count, supply_count, surge_multiplier, updated_at",
+        "payments: id, ride_id, amount, method, status, processed_at"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Load Balancer / API Gateway",
+        "Ride Matching Service (geospatial nearest-driver lookup)",
+        "Location Service (ingest and index driver locations)",
+        "Geospatial Index (QuadTree, GeoHash, or H3 hexagonal grid)",
+        "ETA / Routing Service (graph-based shortest path)",
+        "Surge Pricing Service (supply/demand ratio per zone)",
+        "Trip Service (ride lifecycle management)",
+        "Payment Service",
+        "Notification Service (push notifications to rider and driver)",
+        "Real-time Tracking (WebSocket gateway for live updates)",
+        "Analytics Pipeline (trip data, demand forecasting)"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Geospatial indexing: QuadTree vs GeoHash vs H3 for driver location lookup and surge zones",
+        "Matching algorithm: nearest-driver vs dispatch optimization (minimize total wait time across all requests)",
+        "Surge pricing: supply/demand ratio computation, smoothing to prevent oscillation, zone granularity",
+        "ETA calculation: pre-computed routing tables, real-time traffic adjustment, ML-based predictions",
+        "Location ingestion at scale: handling 250K updates/sec with in-memory geospatial index",
+        "Consistency: what happens when two riders are matched to the same driver simultaneously"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about ride types (solo, shared, scheduled)",
+        "Clarified real-time tracking requirements",
+        "Discussed surge pricing granularity",
+        "Asked about geographic scope and driver density",
+        "Estimated scale for location updates"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, jumped to database schema without understanding matching or pricing needs",
+        "2": "Asked about basic ride flow but missed real-time or surge pricing requirements",
+        "3": "Covered matching, tracking, surge pricing, and scale with reasonable estimates",
+        "4": "Proactively identified edge cases: no nearby drivers, concurrent matching conflicts, ride cancellations, and payment failure handling"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Included geospatial index for driver lookup",
+        "Separated location ingestion from matching",
+        "Designed surge pricing as independent service",
+        "Included real-time communication channel",
+        "Addressed ride lifecycle state machine"
+      ],
+      "anchors": {
+        "1": "Simple CRUD app with database queries for nearest driver, no real-time component",
+        "2": "Basic matching with database queries, no geospatial index or real-time tracking",
+        "3": "Geospatial index, separate matching and location services, WebSocket for tracking, surge pricing service",
+        "4": "Optimized dispatch with batch matching, H3-based surge zones, pre-computed routing, and clear failure handling"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained geospatial indexing approach",
+        "Discussed matching algorithm beyond nearest-driver",
+        "Addressed surge pricing computation and smoothing",
+        "Considered concurrent matching race conditions",
+        "Discussed ETA accuracy improvements"
+      ],
+      "anchors": {
+        "1": "No depth on geospatial indexing, matching, or pricing algorithms",
+        "2": "Basic geospatial discussion but no matching optimization or surge pricing details",
+        "3": "Deep dive into geospatial index + matching or surge pricing with concrete algorithms",
+        "4": "Thorough analysis of H3 indexing, dispatch optimization, surge smoothing algorithms, and ML-based ETA with failure mode handling"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "QuadTree vs GeoHash vs H3 for geospatial indexing",
+        "Nearest-driver vs globally optimal matching",
+        "Real-time surge vs smoothed/delayed pricing",
+        "Push vs pull for driver location updates",
+        "Pre-computed vs on-demand route calculation"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs in the design",
+        "2": "Mentioned one trade-off without analysis",
+        "3": "Discussed 2-3 trade-offs with pros/cons covering matching, pricing, or geospatial",
+        "4": "Systematically evaluated geospatial, algorithmic, and real-time trade-offs with latency and fairness analysis"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Using SQL queries with distance calculations instead of a geospatial index for driver lookup",
+    "Not handling the race condition where two ride requests match to the same driver",
+    "Implementing surge pricing at city level instead of fine-grained zones (H3 hexagons)",
+    "Polling for driver location instead of using push-based updates",
+    "Not considering what happens when no drivers are available in the area",
+    "Ignoring ETA accuracy — assuming straight-line distance instead of actual road routing"
+  ],
+  "source": "Classic system design interview question"
+}

@@ -1,0 +1,157 @@
+{
+  "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "title": "URL Shortener",
+  "slug": "url-shortener",
+  "category": "distributed-systems",
+  "difficulty": "mid",
+  "prompt": "Design a URL shortening service like bit.ly. Users should be able to submit a long URL and receive a short URL. When someone visits the short URL, they should be redirected to the original long URL.",
+  "requirements": {
+    "functional": [
+      "Shorten a long URL to a unique short URL",
+      "Redirect short URL to original long URL",
+      "Optional: custom short aliases",
+      "Optional: URL expiration",
+      "Analytics: click count per short URL"
+    ],
+    "nonFunctional": [
+      "Low latency redirects (< 100ms p99)",
+      "High availability (99.99%)",
+      "Short URLs should be as short as possible",
+      "Redirects should not break under load"
+    ],
+    "scale": {
+      "users": "100M monthly active users",
+      "qps": "1000 writes/sec, 100K reads/sec (100:1 read:write ratio)",
+      "storage": "~1 billion URLs over 5 years"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "What is the expected read:write ratio?",
+        "Do URLs expire?",
+        "Do we need analytics?",
+        "Can users choose custom aliases?",
+        "What is the expected scale?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "Write QPS: 1000/sec => ~30B/year",
+        "Read QPS: 100K/sec",
+        "Storage per URL: ~500 bytes => 500GB for 1B URLs",
+        "Short URL length: base62, 7 chars = 62^7 = 3.5 trillion possibilities",
+        "Cache: 20% of URLs get 80% of traffic => cache top 20% = 100GB"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/urls { longUrl, customAlias?, expiresAt? } => { shortUrl }",
+        "GET /{shortCode} => 301/302 redirect",
+        "GET /api/v1/urls/{shortCode}/stats => { clicks, createdAt, ... }"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "urls: id, short_code, long_url, user_id, created_at, expires_at",
+        "clicks: id, url_id, timestamp, ip, user_agent, referer"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Load Balancer",
+        "API Service (write path)",
+        "Redirect Service (read path)",
+        "Database (URL storage)",
+        "Cache (Redis/Memcached for hot URLs)",
+        "ID Generator / Key Generation Service"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Key generation: hash vs counter-based, collision handling",
+        "Caching strategy: cache-aside, write-through, eviction policy",
+        "Database choice: SQL vs NoSQL, sharding strategy",
+        "301 vs 302 redirect trade-offs",
+        "Rate limiting to prevent abuse"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Asked about read:write ratio",
+        "Clarified URL expiration",
+        "Discussed custom aliases",
+        "Estimated scale numbers",
+        "Considered analytics needs"
+      ],
+      "anchors": {
+        "1": "Skipped requirements, jumped straight to architecture",
+        "2": "Asked 1-2 questions but missed read:write ratio or scale",
+        "3": "Covered functional + 2+ non-functional requirements, asked about scale",
+        "4": "Proactively identified read-heavy workload, edge cases (duplicate URLs, custom alias conflicts), and clarified ambiguities"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Separated read and write paths",
+        "Included caching layer",
+        "Addressed key generation",
+        "Considered database choice",
+        "Included load balancer"
+      ],
+      "anchors": {
+        "1": "Single monolithic service with no caching or scaling considerations",
+        "2": "Basic client-server with database, but no caching or separated read/write",
+        "3": "Separated read/write services, cache layer, reasonable database choice",
+        "4": "Clean separation of concerns, justified component choices, addressed failure modes"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Explained key generation approach with collision handling",
+        "Discussed caching strategy and eviction",
+        "Addressed database sharding or partitioning",
+        "Considered consistency vs availability trade-offs",
+        "Discussed 301 vs 302 implications"
+      ],
+      "anchors": {
+        "1": "No depth on any component, hand-waved implementation details",
+        "2": "Shallow discussion of 1 component, no trade-off analysis",
+        "3": "Deep dive into 2+ components with concrete approaches and trade-offs",
+        "4": "Thorough analysis with quantitative reasoning, failure modes, and alternative approaches compared"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Consistency vs availability",
+        "SQL vs NoSQL",
+        "Hash vs counter-based keys",
+        "301 vs 302 redirects",
+        "Cache hit ratio vs memory cost"
+      ],
+      "anchors": {
+        "1": "Could not identify any trade-offs in the design",
+        "2": "Mentioned 1 trade-off without analysis",
+        "3": "Discussed 2-3 trade-offs with pros/cons and justified choices",
+        "4": "Systematically evaluated trade-offs across multiple dimensions with data-driven reasoning"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Not separating read and write paths despite 100:1 ratio",
+    "Using MD5/SHA hash without addressing collision handling",
+    "Forgetting to discuss 301 vs 302 redirect implications for analytics",
+    "Not considering how to handle custom alias conflicts",
+    "Ignoring cache invalidation on URL expiration",
+    "Not addressing hot key problem (viral URLs)"
+  ],
+  "source": "Classic system design interview question"
+}

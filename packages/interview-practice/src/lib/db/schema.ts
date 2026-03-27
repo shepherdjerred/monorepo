@@ -36,5 +36,5 @@ CREATE TABLE IF NOT EXISTS metadata (
 `;
 
 export function initializeSchema(db: Database): void {
-  db.exec(SCHEMA);
+  db.run(SCHEMA);
 }

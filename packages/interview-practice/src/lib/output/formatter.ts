@@ -5,12 +5,12 @@ export function formatInterviewerMessage(text: string): string {
 }
 
 export function formatTestSummary(result: TestRunResult): string {
-  if (result.compileError) {
+  if (result.compileError !== null) {
     return `\n\u001B[31mCompilation Error\u001B[0m\n${result.compileError}\n`;
   }
 
   const color = result.failed === 0 ? "\u001B[32m" : "\u001B[33m";
-  return `\n${color}Tests: ${result.passed}/${result.total} passing\u001B[0m\n`;
+  return `\n${color}Tests: ${String(result.passed)}/${String(result.total)} passing\u001B[0m\n`;
 }
 
 export function formatTimerWarning(warning: string): string {
@@ -30,34 +30,34 @@ export function formatScore(scores: {
 }): string {
   return `
 \u001B[1mCurrent Assessment:\u001B[0m
-  Communication:  ${"★".repeat(scores.communication)}${"☆".repeat(4 - scores.communication)} (${scores.communication}/4)
-  Problem Solving: ${"★".repeat(scores.problemSolving)}${"☆".repeat(4 - scores.problemSolving)} (${scores.problemSolving}/4)
-  Technical:      ${"★".repeat(scores.technical)}${"☆".repeat(4 - scores.technical)} (${scores.technical}/4)
-  Testing:        ${"★".repeat(scores.testing)}${"☆".repeat(4 - scores.testing)} (${scores.testing}/4)
+  Communication:  ${"★".repeat(scores.communication)}${"☆".repeat(4 - scores.communication)} (${String(scores.communication)}/4)
+  Problem Solving: ${"★".repeat(scores.problemSolving)}${"☆".repeat(4 - scores.problemSolving)} (${String(scores.problemSolving)}/4)
+  Technical:      ${"★".repeat(scores.technical)}${"☆".repeat(4 - scores.technical)} (${String(scores.technical)}/4)
+  Testing:        ${"★".repeat(scores.testing)}${"☆".repeat(4 - scores.testing)} (${String(scores.testing)}/4)
 
 \u001B[90m${scores.feedback}\u001B[0m
 `;
 }
 
-export function formatSessionStart(
-  questionTitle: string,
-  difficulty: string,
-  language: string,
-  workspacePath: string,
-  timeMinutes: number,
-): string {
+export function formatSessionStart(options: {
+  questionTitle: string;
+  difficulty: string;
+  language: string;
+  workspacePath: string;
+  timeMinutes: number;
+}): string {
   return `
 \u001B[1m═══════════════════════════════════════════════════\u001B[0m
 \u001B[1m  Interview Practice Session\u001B[0m
 \u001B[1m═══════════════════════════════════════════════════\u001B[0m
 
-  Question:   ${questionTitle}
-  Difficulty: ${difficulty}
-  Language:   ${language}
-  Time:       ${timeMinutes} minutes
+  Question:   ${options.questionTitle}
+  Difficulty: ${options.difficulty}
+  Language:   ${options.language}
+  Time:       ${String(options.timeMinutes)} minutes
 
   \u001B[90mOpen in your editor:\u001B[0m
-  ${workspacePath}
+  ${options.workspacePath}
 
   \u001B[90mType /help for commands\u001B[0m
 \u001B[1m═══════════════════════════════════════════════════\u001B[0m

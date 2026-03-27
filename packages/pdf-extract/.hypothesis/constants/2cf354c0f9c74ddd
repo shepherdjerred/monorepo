@@ -1,0 +1,4 @@
+# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/lib/mermaid.py
+# hypothesis_version: 6.151.9
+
+[200, '--quiet', '-b', '-i', '-o', 'input.mmd', 'mermaid.render.fail', 'mermaid.render.ok', 'mmdc', 'output.png', 'validate.mmd', 'validate.svg', 'white']

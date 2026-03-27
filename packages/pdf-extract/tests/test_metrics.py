@@ -39,17 +39,17 @@ class TestAPIMetrics:
         assert cost == 0.0
         assert api.estimated_cost_usd == 0.0
 
-    def test_estimate_cost_gemini_flash(self) -> None:
+    def test_estimate_cost_gemini(self) -> None:
         api = APIMetrics(gemini_input_tokens=1_000_000, gemini_output_tokens=1_000_000)
         cost = api.estimate_cost()
-        # Flash: $0.30/MTok input + $2.50/MTok output = $2.80
-        assert abs(cost - 2.80) < 0.01
+        # Gemini 3.1 Pro: $2.00/MTok input + $12.00/MTok output = $14.00
+        assert abs(cost - 14.00) < 0.01
 
     def test_estimate_cost_gemini_pro(self) -> None:
         api = APIMetrics(gemini_pro_input_tokens=1_000_000, gemini_pro_output_tokens=1_000_000)
         cost = api.estimate_cost()
-        # Pro: $1.25/MTok input + $10.00/MTok output = $11.25
-        assert abs(cost - 11.25) < 0.01
+        # Gemini 3.1 Pro (handwriting): $2.00/MTok input + $12.00/MTok output = $14.00
+        assert abs(cost - 14.00) < 0.01
 
     def test_estimate_cost_claude_sonnet(self) -> None:
         api = APIMetrics(claude_sonnet_input_tokens=1_000_000, claude_sonnet_output_tokens=1_000_000)

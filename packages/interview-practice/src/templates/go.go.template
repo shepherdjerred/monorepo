@@ -1,0 +1,19 @@
+// {{TITLE}}
+// Input: {{INPUT_FORMAT}}
+// Output: {{OUTPUT_FORMAT}}
+// {{PARSE_HINT}}
+
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	_ = reader
+	// TODO: Parse input and solve
+	fmt.Println("TODO")
+}

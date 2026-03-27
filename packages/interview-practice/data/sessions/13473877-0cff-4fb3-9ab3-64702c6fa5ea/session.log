@@ -1,0 +1,4 @@
+{"ts":"2026-03-27T04:14:18.677Z","level":"info","component":"voice","sessionId":"13473877-0cff-4fb3-9ab3-64702c6fa5ea","event":"ws_connected","model":"gpt-realtime-mini"}
+{"ts":"2026-03-27T04:14:18.678Z","level":"info","component":"voice","sessionId":"13473877-0cff-4fb3-9ab3-64702c6fa5ea","event":"mic_started"}
+{"ts":"2026-03-27T04:14:18.679Z","level":"info","component":"voice","sessionId":"13473877-0cff-4fb3-9ab3-64702c6fa5ea","event":"speaker_started"}
+{"ts":"2026-03-27T04:14:21.602Z","level":"info","component":"voice","sessionId":"13473877-0cff-4fb3-9ab3-64702c6fa5ea","event":"user_transcript","transcript":"Halo."}

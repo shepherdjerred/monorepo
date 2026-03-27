@@ -1,4 +1,7 @@
+import { z } from "zod/v4";
 import type { AiProvider } from "#config";
+import { createOpenAIClient } from "./openai.ts";
+import { createGoogleClient } from "./google.ts";
 
 export type Message = {
   role: "user" | "assistant" | "system";
@@ -43,9 +46,9 @@ export function createAIClient(
     case "anthropic":
       return createAnthropicClient(model, apiKey);
     case "openai":
-      throw new Error("OpenAI text client not yet implemented (Phase 2)");
+      return createOpenAIClient(model, apiKey);
     case "google":
-      throw new Error("Google text client not yet implemented (Phase 2)");
+      return createGoogleClient(model, apiKey);
   }
 }
 
@@ -55,7 +58,8 @@ function createAnthropicClient(
 ): AIClient {
   return {
     async chat(options) {
-      const Anthropic = (await import("@anthropic-ai/sdk")).default;
+      const sdk = await import("@anthropic-ai/sdk");
+      const Anthropic = sdk.default;
       const client = new Anthropic({ apiKey });
 
       const tools =
@@ -63,9 +67,9 @@ function createAnthropicClient(
           ? options.tools.map((t) => ({
               name: t.name,
               description: t.description,
-              input_schema: t.inputSchema as {
-                type: "object";
-                properties?: Record<string, unknown>;
+              input_schema: {
+                type: "object" as const,
+                ...t.inputSchema,
               },
             }))
           : undefined;
@@ -93,16 +97,13 @@ function createAnthropicClient(
 
       return {
         text: textBlocks
-          .map((b) => (b.type === "text" ? b.text : ""))
+          .map((b) => b.text)
           .join(""),
-        toolCalls: toolBlocks.map((b) => {
-          if (b.type !== "tool_use") throw new Error("Unexpected block type");
-          return {
-            id: b.id,
-            name: b.name,
-            input: b.input as Record<string, unknown>,
-          };
-        }),
+        toolCalls: toolBlocks.map((b) => ({
+          id: b.id,
+          name: b.name,
+          input: z.record(z.string(), z.unknown()).parse(b.input),
+        })),
         tokensIn: response.usage.input_tokens,
         tokensOut: response.usage.output_tokens,
         stopReason: response.stop_reason ?? "end_turn",

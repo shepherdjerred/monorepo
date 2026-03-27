@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 from pdf_extract.lib import get_logger
 from pdf_extract.lib.claude import ClaudeClient
@@ -98,7 +98,7 @@ async def _escalate_medium(
 ) -> str | None:
     """MEDIUM tier: Claude Sonnet second opinion."""
     sonnet = clients.get("claude_sonnet")
-    if not isinstance(sonnet, ClaudeClient):
+    if sonnet is None or not hasattr(sonnet, "generate"):
         sonnet = ClaudeClient(
             api_key=config.resolve_api_key("claude"),
             model=config.medium_model,
@@ -108,12 +108,13 @@ async def _escalate_medium(
     raw = await sonnet.generate(prompt, image_bytes=page_img)
     result = _parse_vlm_response(raw)
 
-    corrections = result.get("corrections", [])
+    raw_corrections = result.get("corrections", [])
+    corrections = list(raw_corrections) if isinstance(raw_corrections, list) else []
     if not corrections:
         return None
 
     log.info("escalation.medium", corrections=len(corrections))
-    return _apply_corrections(current_md, corrections)  # type: ignore[arg-type]
+    return _apply_corrections(current_md, corrections)
 
 
 async def _escalate_low(
@@ -129,7 +130,7 @@ async def _escalate_low(
     import asyncio
 
     sonnet = clients.get("claude_sonnet")
-    if not isinstance(sonnet, ClaudeClient):
+    if sonnet is None or not hasattr(sonnet, "generate"):
         sonnet = ClaudeClient(
             api_key=config.resolve_api_key("claude"),
             model=config.medium_model,
@@ -137,8 +138,8 @@ async def _escalate_low(
         )
 
     gpt = clients.get("openai")
-    if not isinstance(gpt, OpenAIClient):
-        openai_model = "gpt-4o"
+    if gpt is None or not hasattr(gpt, "generate"):
+        openai_model = "gpt-5.4"
         for m in config.low_models:
             if "gpt" in m.lower():
                 openai_model = m
@@ -198,7 +199,7 @@ async def _escalate_unresolved(
         return None
 
     opus = clients.get("claude_opus")
-    if not isinstance(opus, ClaudeClient):
+    if opus is None or not hasattr(opus, "generate"):
         opus = ClaudeClient(
             api_key=config.resolve_api_key("claude"),
             model=config.unresolved_model,
@@ -210,12 +211,13 @@ async def _escalate_unresolved(
     raw = await opus.generate(prompt, image_bytes=page_img)
     result = _parse_vlm_response(raw)
 
-    corrections = result.get("corrections", [])
+    raw_corrections = result.get("corrections", [])
+    corrections = list(raw_corrections) if isinstance(raw_corrections, list) else []
     if not corrections:
         return None
 
     log.info("escalation.opus", corrections=len(corrections))
-    return _apply_corrections(current_md, corrections)  # type: ignore[arg-type]
+    return _apply_corrections(current_md, corrections)
 
 
 def _apply_corrections(

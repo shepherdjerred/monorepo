@@ -92,7 +92,7 @@ async def run_verification_stack(
     for _page_idx, page_result in anchored_results:
         corrections = page_result.get("corrections", [])
         if isinstance(corrections, list) and corrections:
-            result = _apply_verified_corrections(result, corrections, config, metrics)  # type: ignore[arg-type]
+            result = _apply_verified_corrections(result, corrections, config, metrics)
 
     # Layer 2: Table verification
     if tables_info and config.table_cell_verification:

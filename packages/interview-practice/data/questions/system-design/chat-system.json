@@ -1,0 +1,167 @@
+{
+  "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+  "title": "Chat System",
+  "slug": "chat-system",
+  "category": "real-time",
+  "difficulty": "senior",
+  "prompt": "Design a real-time chat system like Slack or WhatsApp. Users should be able to send messages in 1:1 conversations and group chats, see online status, and receive messages in real-time.",
+  "requirements": {
+    "functional": [
+      "1:1 messaging between users",
+      "Group chat (up to 500 members)",
+      "Online/offline/last-seen status",
+      "Message delivery receipts (sent, delivered, read)",
+      "Push notifications for offline users",
+      "Message history and search"
+    ],
+    "nonFunctional": [
+      "Real-time delivery (< 500ms for online users)",
+      "Message ordering guarantees within a conversation",
+      "High availability (99.99%)",
+      "Messages must not be lost (durability)",
+      "Support offline message delivery"
+    ],
+    "scale": {
+      "users": "500M monthly active users, 50M concurrent",
+      "qps": "50K messages/sec, 500K status updates/sec",
+      "storage": "~100 billion messages/year"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "1:1 only or group chat too? Max group size?",
+        "Do we need read receipts?",
+        "Do we need message editing/deletion?",
+        "What about media (images, files)?",
+        "End-to-end encryption?",
+        "How long do we store messages?"
+      ],
+      "timeTarget": 6
+    },
+    "estimation": {
+      "keyCalculations": [
+        "50M concurrent users => 50M WebSocket connections",
+        "50K messages/sec, avg 200 bytes => 10MB/sec write throughput",
+        "Storage: 100B messages * 200 bytes = 20TB/year for text only",
+        "Fan-out for group messages: avg group 50 members => 2.5M deliveries/sec",
+        "Connection servers: 50M connections / 100K per server = 500 servers"
+      ],
+      "timeTarget": 5
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "WebSocket: connect, send_message, typing_indicator, presence",
+        "POST /api/v1/messages { conversationId, content, type }",
+        "GET /api/v1/conversations/{id}/messages?before=cursor&limit=50",
+        "GET /api/v1/conversations",
+        "POST /api/v1/conversations { participants[] }"
+      ],
+      "timeTarget": 6
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "users: id, name, avatar, last_seen",
+        "conversations: id, type (1:1|group), name, created_at",
+        "conversation_members: conversation_id, user_id, joined_at, last_read_message_id",
+        "messages: id, conversation_id, sender_id, content, type, created_at, sequence_num"
+      ],
+      "timeTarget": 6
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "WebSocket Gateway (stateful connections)",
+        "Chat Service (message routing, persistence)",
+        "Presence Service (online status via heartbeats)",
+        "Push Notification Service",
+        "Message Queue (async delivery, fan-out)",
+        "Message Store (database + blob storage for media)",
+        "User Service",
+        "Session Registry (which server has which user's connection)"
+      ],
+      "timeTarget": 12
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "WebSocket connection management and session routing",
+        "Message ordering: per-conversation sequence numbers",
+        "Fan-out strategy for group messages (push vs pull)",
+        "Presence system: heartbeat-based with gossip protocol",
+        "Offline message delivery and push notification pipeline",
+        "Database partitioning: by conversation_id for locality"
+      ],
+      "timeTarget": 15
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Clarified 1:1 vs group chat scope",
+        "Asked about message ordering requirements",
+        "Discussed real-time delivery expectations",
+        "Considered offline users",
+        "Asked about media support"
+      ],
+      "anchors": {
+        "1": "Jumped to design without understanding chat vs messaging distinction",
+        "2": "Asked about basic features but missed ordering or offline delivery",
+        "3": "Covered 1:1 + group, real-time delivery, offline support, and scale",
+        "4": "Proactively identified fan-out challenges, ordering complexities, and presence at scale"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "WebSocket layer for real-time",
+        "Session registry for connection routing",
+        "Message queue for async delivery",
+        "Separated presence from messaging",
+        "Included push notification path"
+      ],
+      "anchors": {
+        "1": "HTTP polling with single database, no real-time consideration",
+        "2": "WebSocket but no connection routing, single-server assumption",
+        "3": "Multi-server WebSocket with session registry, message queue, and presence",
+        "4": "Clean layered architecture with failure isolation, justified each component choice"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "WebSocket session management across servers",
+        "Message ordering mechanism",
+        "Group message fan-out strategy",
+        "Presence system design",
+        "Database partitioning approach"
+      ],
+      "anchors": {
+        "1": "No concrete implementation for any component",
+        "2": "Surface-level discussion of WebSocket or database without trade-offs",
+        "3": "Detailed design of 2+ components with concrete approaches",
+        "4": "Deep analysis of ordering guarantees, fan-out trade-offs, presence protocol with failure handling"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "Push vs pull for group delivery",
+        "Consistency vs availability for message ordering",
+        "WebSocket vs long polling vs SSE",
+        "SQL vs NoSQL for message storage",
+        "In-memory vs persistent presence"
+      ],
+      "anchors": {
+        "1": "No awareness of design trade-offs",
+        "2": "Mentioned one trade-off without depth",
+        "3": "Analyzed 2-3 trade-offs with clear reasoning for choices",
+        "4": "Comprehensive trade-off analysis across real-time, storage, and delivery dimensions"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Using HTTP polling instead of persistent connections for real-time",
+    "Not addressing how to route messages when users connect to different servers",
+    "Ignoring message ordering in distributed system",
+    "Fan-out on write for large groups (should use fan-out on read for 500+ member groups)",
+    "Not separating presence from messaging (presence generates much higher traffic)",
+    "Storing messages in a single unpartitioned database"
+  ],
+  "source": "Classic system design interview question"
+}

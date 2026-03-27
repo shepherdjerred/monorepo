@@ -1,9 +1,9 @@
 import { describe, test, expect } from "bun:test";
-import { join } from "node:path";
+import path from "node:path";
 import { loadQuestionStore } from "#lib/questions/store.ts";
 import { createLogger } from "#logger";
 
-const DATA_DIR = join(import.meta.dir, "../../../data/questions/leetcode");
+const DATA_DIR = path.join(import.meta.dir, "../../../data/questions/leetcode");
 
 const logger = createLogger({
   level: "error",
@@ -13,14 +13,14 @@ const logger = createLogger({
 });
 
 describe("question store", () => {
-  test("loads questions from data directory", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("loads questions from data directory", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const all = store.getAll();
     expect(all.length).toBeGreaterThanOrEqual(5);
   });
 
-  test("filters by difficulty", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("filters by difficulty", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const easy = store.filter({ difficulty: "easy" });
     const medium = store.filter({ difficulty: "medium" });
 
@@ -32,15 +32,15 @@ describe("question store", () => {
     }
   });
 
-  test("finds by slug", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("finds by slug", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const q = store.getBySlug("two-sum");
     expect(q).toBeDefined();
     expect(q?.title).toBe("Two Sum");
   });
 
-  test("finds by id", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("finds by id", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const all = store.getAll();
     if (all.length > 0) {
       const first = all[0];
@@ -50,27 +50,27 @@ describe("question store", () => {
     }
   });
 
-  test("getRandom returns a question", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("getRandom returns a question", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const q = store.getRandom();
     expect(q).toBeDefined();
   });
 
-  test("getRandom with filter", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("getRandom with filter", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     const q = store.getRandom({ difficulty: "easy" });
     if (q) {
       expect(q.difficulty).toBe("easy");
     }
   });
 
-  test("handles missing directory gracefully", () => {
-    const store = loadQuestionStore("/nonexistent/path", logger);
+  test("handles missing directory gracefully", async () => {
+    const store = await loadQuestionStore("/nonexistent/path", logger);
     expect(store.getAll()).toHaveLength(0);
   });
 
-  test("each question has valid parts", () => {
-    const store = loadQuestionStore(DATA_DIR, logger);
+  test("each question has valid parts", async () => {
+    const store = await loadQuestionStore(DATA_DIR, logger);
     for (const q of store.getAll()) {
       expect(q.parts.length).toBeGreaterThanOrEqual(1);
       expect(q.parts.length).toBeLessThanOrEqual(4);

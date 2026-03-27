@@ -503,6 +503,8 @@
       },
       "dependencies": {
         "@anthropic-ai/sdk": "latest",
+        "@google/generative-ai": "latest",
+        "openai": "latest",
         "zod": "^4.3.6",
       },
       "devDependencies": {

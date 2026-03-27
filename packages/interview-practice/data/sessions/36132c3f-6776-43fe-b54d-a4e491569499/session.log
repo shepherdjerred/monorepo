@@ -1,0 +1,5 @@
+{"ts":"2026-03-27T04:12:08.974Z","level":"info","component":"voice","sessionId":"36132c3f-6776-43fe-b54d-a4e491569499","event":"ws_connected","model":"gpt-realtime-mini"}
+{"ts":"2026-03-27T04:12:08.977Z","level":"info","component":"voice","sessionId":"36132c3f-6776-43fe-b54d-a4e491569499","event":"mic_started"}
+{"ts":"2026-03-27T04:12:08.980Z","level":"info","component":"voice","sessionId":"36132c3f-6776-43fe-b54d-a4e491569499","event":"speaker_started"}
+{"ts":"2026-03-27T04:12:18.197Z","level":"info","component":"voice","sessionId":"36132c3f-6776-43fe-b54d-a4e491569499","event":"user_transcript","transcript":"Hello."}
+{"ts":"2026-03-27T04:12:24.401Z","level":"info","component":"voice","sessionId":"36132c3f-6776-43fe-b54d-a4e491569499","event":"user_transcript","transcript":"So what do I need to do?"}

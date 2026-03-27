@@ -1,0 +1,169 @@
+{
+  "id": "f0283e9f-cea5-4682-a5d3-75e58cca2dcf",
+  "title": "Notification System",
+  "slug": "notification-system",
+  "category": "distributed-systems",
+  "difficulty": "mid",
+  "prompt": "Design a notification system that can send notifications to users via multiple channels: push notifications (iOS/Android), SMS, email, and in-app. The system should support different notification types, user preferences, rate limiting, and template management.",
+  "requirements": {
+    "functional": [
+      "Send notifications via push, SMS, email, and in-app channels",
+      "User notification preferences (opt-in/opt-out per channel and type)",
+      "Notification templates with variable substitution",
+      "Priority levels (urgent, high, normal, low)",
+      "Scheduled notifications (send at a specific time)",
+      "Notification history and read status"
+    ],
+    "nonFunctional": [
+      "High throughput (millions of notifications per day)",
+      "Reliable delivery with retry and DLQ",
+      "At-least-once delivery guarantee",
+      "Latency: urgent < 30s, normal < 5min",
+      "No duplicate notifications to the same user for same event",
+      "Graceful degradation when a channel provider is down"
+    ],
+    "scale": {
+      "users": "100M users",
+      "qps": "10K notification events/sec, fan-out to 100K deliveries/sec",
+      "storage": "Notification history: ~10B records/year"
+    }
+  },
+  "phases": {
+    "requirements": {
+      "keyQuestions": [
+        "Which notification channels are required?",
+        "Do users control their notification preferences?",
+        "Do we need rate limiting to prevent notification fatigue?",
+        "What are the latency requirements per priority level?",
+        "Do we need scheduled/delayed notifications?",
+        "What about notification grouping/batching?"
+      ],
+      "timeTarget": 5
+    },
+    "estimation": {
+      "keyCalculations": [
+        "10K events/sec, average fan-out to 10 channels/users = 100K deliveries/sec",
+        "Email: 100K/sec peak via SES/SendGrid",
+        "Push: 100K/sec via FCM/APNs",
+        "SMS: most expensive, rate limited by providers to ~1K/sec",
+        "Storage: 10B notifications * 500 bytes = 5TB/year"
+      ],
+      "timeTarget": 4
+    },
+    "apiDesign": {
+      "expectedEndpoints": [
+        "POST /api/v1/notifications/send { userId/userIds/topic, templateId, data, channels[], priority, scheduledAt? }",
+        "GET /api/v1/notifications?userId=...&status=unread",
+        "PUT /api/v1/notifications/{id}/read",
+        "PUT /api/v1/users/{id}/preferences { email: bool, push: bool, sms: bool, ... }",
+        "CRUD /api/v1/templates"
+      ],
+      "timeTarget": 5
+    },
+    "dataModel": {
+      "expectedEntities": [
+        "notifications: id, user_id, template_id, channel, status, priority, created_at, sent_at, read_at",
+        "templates: id, name, channel, subject_template, body_template, variables[]",
+        "user_preferences: user_id, channel, notification_type, enabled",
+        "device_tokens: user_id, platform (ios/android/web), token, active"
+      ],
+      "timeTarget": 5
+    },
+    "highLevel": {
+      "expectedComponents": [
+        "Notification Service (API, validation, preference check)",
+        "Message Queue (Kafka/SQS per channel)",
+        "Channel Workers (email worker, push worker, SMS worker, in-app worker)",
+        "Template Engine",
+        "User Preference Service",
+        "Device Token Registry",
+        "Rate Limiter (per-user notification throttling)",
+        "Scheduler (for delayed notifications)",
+        "Dead Letter Queue + Retry Handler"
+      ],
+      "timeTarget": 10
+    },
+    "deepDive": {
+      "suggestedTopics": [
+        "Reliability: retry strategy, DLQ, idempotency keys",
+        "Rate limiting per user to prevent notification fatigue",
+        "Priority queue implementation for urgent notifications",
+        "Provider failover: FCM down => fallback to APNs or SMS",
+        "Deduplication: exactly-once delivery despite at-least-once infrastructure",
+        "Batch notifications: grouping multiple events into digest"
+      ],
+      "timeTarget": 12
+    }
+  },
+  "rubric": {
+    "requirementGathering": {
+      "checklist": [
+        "Clarified which channels are needed",
+        "Asked about user preferences and opt-out",
+        "Discussed priority levels and latency requirements",
+        "Asked about notification rate limiting",
+        "Considered batch/digest notifications"
+      ],
+      "anchors": {
+        "1": "Started designing without understanding channel requirements or scale",
+        "2": "Asked about channels but missed preferences, priorities, or reliability",
+        "3": "Covered channels, preferences, priorities, and reliability requirements",
+        "4": "Proactively identified deduplication, rate limiting, provider failover, and digest scenarios"
+      }
+    },
+    "highLevelDesign": {
+      "checklist": [
+        "Per-channel message queues",
+        "Channel-specific workers",
+        "Preference checking before delivery",
+        "Rate limiting component",
+        "DLQ for failed deliveries"
+      ],
+      "anchors": {
+        "1": "Direct synchronous calls to each channel provider, no queuing",
+        "2": "Single queue with workers but no per-channel separation or retry logic",
+        "3": "Per-channel queues, workers with retry, preference service, rate limiter",
+        "4": "Priority-aware queuing, graceful provider failover, batch processing pipeline, clean separation"
+      }
+    },
+    "deepDive": {
+      "checklist": [
+        "Retry strategy with exponential backoff",
+        "Deduplication mechanism",
+        "Provider failover handling",
+        "Rate limiting implementation",
+        "Priority queue design"
+      ],
+      "anchors": {
+        "1": "No concrete implementation for reliability or delivery guarantees",
+        "2": "Basic retry without DLQ or deduplication",
+        "3": "Retry with DLQ, deduplication via idempotency keys, provider failover",
+        "4": "Comprehensive reliability design with metrics, alerting, circuit breaker for providers, and digest batching"
+      }
+    },
+    "tradeoffs": {
+      "checklist": [
+        "At-least-once vs exactly-once delivery cost",
+        "Per-channel queues vs single queue (isolation vs complexity)",
+        "Push vs pull for in-app notifications",
+        "Immediate vs batched delivery (user experience vs cost)",
+        "Third-party provider vs self-hosted (email)"
+      ],
+      "anchors": {
+        "1": "No trade-off awareness in the design",
+        "2": "Mentioned one trade-off without analysis",
+        "3": "Analyzed 2-3 trade-offs with reasoning for each choice",
+        "4": "Systematic trade-off analysis including cost implications and user experience impact"
+      }
+    }
+  },
+  "commonMistakes": [
+    "Synchronous delivery to channel providers (no queuing)",
+    "Not checking user preferences before sending",
+    "No deduplication causing duplicate notifications",
+    "Single queue for all channels (one slow provider blocks all)",
+    "Not handling provider rate limits (e.g., SMS providers throttle)",
+    "Ignoring notification fatigue (too many notifications drive users away)"
+  ],
+  "source": "Classic system design interview question"
+}
