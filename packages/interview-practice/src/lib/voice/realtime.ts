@@ -8,7 +8,13 @@ export type RealtimeClientEvent =
   | { type: "input_audio_buffer.append"; audio: string }
   | { type: "input_audio_buffer.commit" }
   | { type: "response.create" }
-  | { type: "conversation.item.create"; item: ConversationItem };
+  | { type: "conversation.item.create"; item: ConversationItem | FunctionCallOutputItem };
+
+export type FunctionCallOutputItem = {
+  type: "function_call_output";
+  call_id: string;
+  output: string;
+};
 
 export type ConversationItem = {
   type: "message";
@@ -399,14 +405,9 @@ export function createRealtimeClient(logger: Logger): RealtimeClient {
       send({
         type: "conversation.item.create",
         item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `[Function result for ${callId}]: ${result}`,
-            },
-          ],
+          type: "function_call_output",
+          call_id: callId,
+          output: result,
         },
       });
       send({ type: "response.create" });

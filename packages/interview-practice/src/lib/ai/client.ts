@@ -56,11 +56,19 @@ function createAnthropicClient(
   model: string,
   apiKey: string | undefined,
 ): AIClient {
+  let cachedClient: InstanceType<typeof import("@anthropic-ai/sdk").default> | null = null;
+
+  async function getClient() {
+    if (cachedClient !== null) return cachedClient;
+    const sdk = await import("@anthropic-ai/sdk");
+    const Anthropic = sdk.default;
+    cachedClient = new Anthropic({ apiKey });
+    return cachedClient;
+  }
+
   return {
     async chat(options) {
-      const sdk = await import("@anthropic-ai/sdk");
-      const Anthropic = sdk.default;
-      const client = new Anthropic({ apiKey });
+      const client = await getClient();
 
       const tools =
         options.tools && options.tools.length > 0

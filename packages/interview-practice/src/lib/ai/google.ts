@@ -3,7 +3,6 @@ import type {
   FunctionDeclaration,
   FunctionDeclarationSchemaProperty,
   SchemaType,
-  SimpleStringSchema,
 } from "@google/generative-ai";
 import type { AIClient } from "./client.ts";
 
@@ -28,17 +27,22 @@ export function createGoogleClient(
   model: string,
   apiKey: string | undefined,
 ): AIClient {
+  let cachedGenAI: InstanceType<typeof import("@google/generative-ai").GoogleGenerativeAI> | null = null;
+
+  async function getGenAI() {
+    if (cachedGenAI !== null) return cachedGenAI;
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    if (apiKey === undefined) {
+      throw new Error("GOOGLE_API_KEY is required for the Google provider");
+    }
+    cachedGenAI = new GoogleGenerativeAI(apiKey);
+    return cachedGenAI;
+  }
+
   return {
     async chat(options) {
-      const { GoogleGenerativeAI, SchemaType } = await import(
-        "@google/generative-ai"
-      );
-
-      if (apiKey === undefined) {
-        throw new Error("GOOGLE_API_KEY is required for the Google provider");
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const { SchemaType } = await import("@google/generative-ai");
+      const genAI = await getGenAI();
 
       const functionDeclarations: FunctionDeclaration[] | undefined =
         options.tools && options.tools.length > 0
@@ -124,11 +128,12 @@ function buildFunctionDeclarations(
 
     const properties: Record<string, FunctionDeclarationSchemaProperty> = {};
     for (const [k, v] of Object.entries(props)) {
-      // All our tool parameters are strings; build SimpleStringSchema objects
-      const prop: SimpleStringSchema = v.description === undefined
-        ? { type: stringType }
-        : { type: stringType, description: v.description };
-      properties[k] = prop;
+      // Google's SDK type system requires specific schema subtypes.
+      // Tool parameters in this app are all strings/enums, so STRING is correct.
+      properties[k] = {
+        type: stringType,
+        description: v.description ?? "",
+      };
     }
 
     return {

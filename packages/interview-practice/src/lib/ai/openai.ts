@@ -14,10 +14,18 @@ export function createOpenAIClient(
   model: string,
   apiKey: string | undefined,
 ): AIClient {
+  let cachedClient: InstanceType<typeof import("openai").default> | null = null;
+
+  async function getClient() {
+    if (cachedClient !== null) return cachedClient;
+    const { default: OpenAI } = await import("openai");
+    cachedClient = new OpenAI({ apiKey });
+    return cachedClient;
+  }
+
   return {
     async chat(options) {
-      const { default: OpenAI } = await import("openai");
-      const client = new OpenAI({ apiKey });
+      const client = await getClient();
 
       const tools =
         options.tools && options.tools.length > 0
@@ -83,7 +91,7 @@ export function createOpenAIClient(
         toolCalls,
         tokensIn: response.usage?.prompt_tokens ?? 0,
         tokensOut: response.usage?.completion_tokens ?? 0,
-        stopReason: choice.finish_reason,
+        stopReason: choice.finish_reason ?? "stop",
       };
     },
   };

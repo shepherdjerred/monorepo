@@ -18,6 +18,7 @@ const baseMetadata: SessionMetadata = {
   type: "leetcode",
   questionId: "00000000-0000-0000-0000-000000000002",
   questionTitle: "Two Sum",
+  difficulty: "medium",
   status: "completed",
   startedAt: "2026-01-15T10:00:00.000Z",
   endedAt: "2026-01-15T10:25:00.000Z",

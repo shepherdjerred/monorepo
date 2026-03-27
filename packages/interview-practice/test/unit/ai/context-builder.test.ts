@@ -156,12 +156,12 @@ describe("truncateCodeSnapshot", () => {
     expect(truncateCodeSnapshot(code, 100)).toBe(code);
   });
 
-  test("keeps last lines and adds truncation marker", () => {
+  test("keeps first lines and adds truncation marker", () => {
     const lines = Array.from({ length: 50 }, (_, i) => `line ${String(i)}`);
     const code = lines.join("\n");
     const result = truncateCodeSnapshot(code, 10); // small budget
-    expect(result).toContain("[...earlier code truncated]");
-    expect(result).toContain("line 49"); // last line should be present
+    expect(result).toContain("[...remaining code truncated]");
+    expect(result).toContain("line 0"); // first line should be present
   });
 });
 
