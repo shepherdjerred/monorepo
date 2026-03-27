@@ -104,4 +104,5 @@ Start before use: `figma-use mcp serve`
 ## Additional Resources
 
 For the complete command reference, style shorthands, components, variants, diffs, queries, analyze, and lint commands, consult:
+
 - **`references/commands.md`** — Full figma-use command reference and style shorthand tables

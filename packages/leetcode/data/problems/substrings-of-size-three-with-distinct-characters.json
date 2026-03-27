@@ -14,10 +14,7 @@
   "dislikes": 57,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"xyzzaz\"",
-    "\"aababcabc\""
-  ],
+  "exampleTestcaseList": ["\"xyzzaz\"", "\"aababcabc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -14,10 +14,7 @@
   "dislikes": 512,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Hills and Valleys in an Array\", \"titleSlug\": \"count-hills-and-valleys-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,3,10,9,8]",
-    "[4,4,7,6,7]"
-  ],
+  "exampleTestcaseList": ["[4,3,10,9,8]", "[4,4,7,6,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"mercari\", \"name\": \"Mercari\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

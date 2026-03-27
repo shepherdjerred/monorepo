@@ -16,10 +16,7 @@
   "dislikes": 52,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aaaba\"",
-    "\"aaaaaaaaaa\""
-  ],
+  "exampleTestcaseList": ["\"aaaba\"", "\"aaaaaaaaaa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"virtu\", \"name\": \"Virtu Financial\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

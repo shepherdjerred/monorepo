@@ -46,17 +46,18 @@ Keep task subjects short and specific. The description field should include enou
 
 Research intensity is controlled by an effort parameter: **low**, **medium** (default), **high**, or **ultra**. This acts as an exponential multiplier across the entire process.
 
-| Parameter | Low | Medium | High | Ultra |
-|-----------|-----|--------|------|-------|
-| Sub-questions | 3-5 | 5-7 | 8-12 | 15-20 |
-| Parallel agents | 2 | 3-4 | 6-8 | 10+ |
-| Sources per question | ~4 | ~8 | ~15 | ~25+ |
-| Iteration rounds (max) | 2 | 3 | 4 | 6 |
-| Adversarial review | Lightweight (no source verification) | Full | Full + source verification | Full + multiple reviewers + source verification |
-| Output format | Markdown + PDF | Markdown + PDF | Markdown + PDF | Markdown + PDF (detailed) |
-| Report length | 3-5 pages | 6-12 pages | 15-25 pages | 30+ pages |
+| Parameter              | Low                                  | Medium         | High                       | Ultra                                           |
+| ---------------------- | ------------------------------------ | -------------- | -------------------------- | ----------------------------------------------- |
+| Sub-questions          | 3-5                                  | 5-7            | 8-12                       | 15-20                                           |
+| Parallel agents        | 2                                    | 3-4            | 6-8                        | 10+                                             |
+| Sources per question   | ~4                                   | ~8             | ~15                        | ~25+                                            |
+| Iteration rounds (max) | 2                                    | 3              | 4                          | 6                                               |
+| Adversarial review     | Lightweight (no source verification) | Full           | Full + source verification | Full + multiple reviewers + source verification |
+| Output format          | Markdown + PDF                       | Markdown + PDF | Markdown + PDF             | Markdown + PDF (detailed)                       |
+| Report length          | 3-5 pages                            | 6-12 pages     | 15-25 pages                | 30+ pages                                       |
 
 **Determining effort:**
+
 - "quick research", "brief overview" → **low**
 - No qualifier (default) → **medium**
 - "thorough", "comprehensive", "deep dive" → **high**
@@ -82,11 +83,13 @@ Before any searching, decompose the user's question:
 ## Research Plan: [Topic]
 
 ### Sub-questions
+
 1. [Sub-question] — Sources: [where to look]
 2. [Sub-question] — Sources: [where to look]
-...
+   ...
 
 ### Effort: [low/medium/high/ultra]
+
 - Sub-questions: [N] (per effort table)
 - Sources per question: ~[M]
 - Parallel agents: [P]
@@ -104,6 +107,7 @@ SEARCH → READ → EXTRACT → EVALUATE → (iterate if gaps remain)
 ```
 
 **Search strategy:**
+
 - Start with `WebSearch` for broad discovery
 - Use lightpanda for full page content extraction per global instructions
 - Fall back to `WebFetch` if lightpanda fails on a particular URL
@@ -112,6 +116,7 @@ SEARCH → READ → EXTRACT → EVALUATE → (iterate if gaps remain)
 - For GitHub-specific research, use `gh search repos`, `gh search code`, and browse READMEs directly
 
 **Source priorities** (per user preferences):
+
 1. GitHub repositories and READMEs
 2. Hacker News discussions and comments
 3. Wikipedia
@@ -120,16 +125,19 @@ SEARCH → READ → EXTRACT → EVALUATE → (iterate if gaps remain)
 6. Academic papers (when relevant)
 
 **Per-source extraction:**
+
 - Extract key claims, data points, and quotes
 - Note the source URL and a brief credibility assessment
 - Flag disagreements between sources explicitly
 
 **Gap analysis after each round:**
+
 - List what is now known vs. what remains unanswered
 - If significant gaps remain, formulate new search queries targeting those gaps
 - Limit iterations to the maximum specified by the effort level table — after reaching the limit, synthesize with what is available and note remaining unknowns
 
 **Context management:**
+
 - After extracting findings from a source, distill them into bullet points — do not carry full page content forward
 - Use a running findings list organized by sub-question
 - When context grows large, summarize completed sub-questions to free up space
@@ -153,31 +161,38 @@ Compile findings into a structured markdown draft report:
 # [Research Topic]
 
 ## Summary
+
 [2-3 paragraph executive summary of key findings]
 
 ## Findings
 
 ### [Sub-topic 1]
+
 [Synthesized findings with inline citations as numbered references, e.g. [1]]
 
 ### [Sub-topic 2]
+
 ...
 
 ## Key Takeaways
+
 - [Actionable insight 1]
 - [Actionable insight 2]
 - ...
 
 ## Open Questions
+
 - [What remains unknown or contested]
 
 ## Sources
+
 1. [Title](URL) — [brief description]
 2. [Title](URL) — [brief description]
-...
+   ...
 ```
 
 **Synthesis principles:**
+
 - Cross-verify claims that appear in multiple sources; note conflicts
 - Distinguish between widely-agreed facts and individual opinions
 - Lead with what matters most to the user's original question
@@ -207,6 +222,7 @@ After drafting the report, perform an adversarial review scaled to the effort le
 > 3 most critical factual claims directly.
 
 **The adversary must NOT:**
+
 - Suggest rewording for style or tone
 - Praise the report
 - Hedge its criticisms
@@ -217,13 +233,14 @@ Take the original draft report and the adversarial critique, and produce the fin
 
 **For each adversarial finding:**
 
-| Severity | Action |
-|----------|--------|
+| Severity     | Action                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Critical** | Must be resolved — correct the claim, add the missing evidence, or remove the unsupported assertion. If resolution requires additional research, do a targeted follow-up search. |
-| **Major** | Should be resolved — add the missing perspective, strengthen the sourcing, or add a caveat. |
-| **Minor** | Use judgment — fix if straightforward, otherwise note in Open Questions. |
+| **Major**    | Should be resolved — add the missing perspective, strengthen the sourcing, or add a caveat.                                                                                      |
+| **Minor**    | Use judgment — fix if straightforward, otherwise note in Open Questions.                                                                                                         |
 
 **Editorial principles:**
+
 - Do not simply append disclaimers to dodge criticisms — fix the underlying issue
 - If the adversary identified a genuinely missing perspective, research it briefly and incorporate it
 - If a claim cannot be adequately sourced after the adversary challenged it, downgrade it from a finding to an open question
@@ -240,14 +257,14 @@ Every research report is delivered in three formats: Markdown (`.md`), Typst (`.
 
 1. **Create output directory** — Run `mkdir -p ~/.claude/research/` to ensure the directory exists.
 2. **Write Markdown** — Save the final report to `~/.claude/research/[topic-slug].md`.
-3. **Write Typst** — Do not mechanically convert Markdown to Typst. The Typst document should be *designed for the reader*. Load the `typst-authoring` skill (especially `references/visualizations.md`) and invest effort in:
+3. **Write Typst** — Do not mechanically convert Markdown to Typst. The Typst document should be _designed for the reader_. Load the `typst-authoring` skill (especially `references/visualizations.md`) and invest effort in:
    - **Comparison tables** instead of prose listing pros/cons
    - **Diagrams** (via fletcher, CeTZ, or pintorita) for architecture, flows, and relationships
    - **Callout boxes** (via gentle-clues) to highlight key findings, warnings, and recommendations
    - **Charts** (via lilaq or CeTZ) when presenting data, benchmarks, or trends
    - **Timeline diagrams** (via timeliney) for roadmaps or chronological analysis
    - **Visual hierarchy** — use color, spacing, and layout to guide the reader's eye
-   The reader should be able to understand the core findings by scanning the document for 60 seconds. Save to `~/.claude/research/[topic-slug].typ`.
+     The reader should be able to understand the core findings by scanning the document for 60 seconds. Save to `~/.claude/research/[topic-slug].typ`.
 4. **Compile PDF** — Run `typst compile ~/.claude/research/[topic-slug].typ ~/.claude/research/[topic-slug].pdf`. If compilation fails, fix the Typst source (common issues: unescaped special characters `#`, `@`, `$` need `\#`, `\@`, `\$` in content text) and retry.
 5. **Open PDF** — Run `open ~/.claude/research/[topic-slug].pdf` to open the rendered PDF for the user. This step is mandatory — always open the PDF. **Only open the PDF once the entire research process is 100% complete** — all phases finished, editorial synthesis done, quality checklist passed, and final PDF compiled without errors. Never open intermediate or draft versions.
 6. **Present summary** — Show a concise inline summary with:
@@ -260,16 +277,17 @@ Every research report is delivered in three formats: Markdown (`.md`), Typst (`.
 
 Maximize throughput by running independent work concurrently:
 
-| Task | Parallelizable? | How |
-|------|-----------------|-----|
-| Investigating unrelated sub-questions | Yes | Launch multiple Agent sub-agents |
-| Searching + reading within one sub-question | Sequential | Each search informs the next |
-| Cross-verifying a claim across sources | Yes | Fetch multiple URLs in parallel |
-| Gap analysis | Sequential | Requires all prior findings |
-| Adversarial review | Yes | Launch as sub-agent while preparing delivery notes |
-| Editorial fixes requiring new research | Yes | Targeted searches in parallel |
+| Task                                        | Parallelizable? | How                                                |
+| ------------------------------------------- | --------------- | -------------------------------------------------- |
+| Investigating unrelated sub-questions       | Yes             | Launch multiple Agent sub-agents                   |
+| Searching + reading within one sub-question | Sequential      | Each search informs the next                       |
+| Cross-verifying a claim across sources      | Yes             | Fetch multiple URLs in parallel                    |
+| Gap analysis                                | Sequential      | Requires all prior findings                        |
+| Adversarial review                          | Yes             | Launch as sub-agent while preparing delivery notes |
+| Editorial fixes requiring new research      | Yes             | Targeted searches in parallel                      |
 
 When launching parallel sub-agents, give each a focused prompt:
+
 - The specific sub-question to investigate
 - The source types to prioritize
 - Instructions to return distilled findings (not raw page content)
@@ -293,13 +311,13 @@ Before delivering the final report, verify:
 
 ## Adaptation by Research Type
 
-| Research Type | Emphasis | Example |
-|---------------|----------|---------|
-| **Technology comparison** | Feature matrices, trade-offs, community sentiment | "Compare X vs Y vs Z" |
-| **Best practices survey** | Consensus patterns, anti-patterns, practitioner advice | "How do teams handle X?" |
-| **Landscape survey** | Categorization, major players, trends | "What tools exist for X?" |
-| **Deep dive** | Architecture, implementation details, edge cases | "How does X work internally?" |
-| **Decision support** | Pros/cons, risk assessment, recommendations | "Should we use X?" |
+| Research Type             | Emphasis                                               | Example                       |
+| ------------------------- | ------------------------------------------------------ | ----------------------------- |
+| **Technology comparison** | Feature matrices, trade-offs, community sentiment      | "Compare X vs Y vs Z"         |
+| **Best practices survey** | Consensus patterns, anti-patterns, practitioner advice | "How do teams handle X?"      |
+| **Landscape survey**      | Categorization, major players, trends                  | "What tools exist for X?"     |
+| **Deep dive**             | Architecture, implementation details, edge cases       | "How does X work internally?" |
+| **Decision support**      | Pros/cons, risk assessment, recommendations            | "Should we use X?"            |
 
 Adjust source priorities and report structure to match the research type. For comparisons, use tables. For best practices, lead with the consensus view. For landscape surveys, categorize before detailing.
 

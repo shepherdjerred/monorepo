@@ -11,17 +11,46 @@
       "prompt": "Evaluate a fully parenthesized mathematical expression. Every binary operation is wrapped in parentheses, e.g., '((2+3)*4)'. The expression contains non-negative integers, +, -, *, /, and parentheses. Division is integer division (truncate toward zero).",
       "internalNotes": "With full parenthesization, precedence is explicit. Two approaches: (1) Recursive descent — when you see '(', recurse, parse left operand, operator, right operand, closing ')'. (2) Stack-based — push operands and operators, evaluate when you see ')'. Common mistakes: not handling multi-digit numbers, not handling integer division truncation toward zero (Java/Python differ), not handling negative intermediate results.",
       "hints": [
-        { "level": "subtle", "content": "Since every operation has explicit parentheses, you don't need to worry about precedence. What does that simplify?" },
-        { "level": "moderate", "content": "Think about what happens when you encounter '(' and ')'. Can you use a stack or recursion?" },
-        { "level": "explicit", "content": "Use a stack. Push numbers. When you see an operator, remember it. When you see ')', pop two numbers, apply the operator, push the result. Or use recursive descent: parse() checks for '(' and recurses." }
+        {
+          "level": "subtle",
+          "content": "Since every operation has explicit parentheses, you don't need to worry about precedence. What does that simplify?"
+        },
+        {
+          "level": "moderate",
+          "content": "Think about what happens when you encounter '(' and ')'. Can you use a stack or recursion?"
+        },
+        {
+          "level": "explicit",
+          "content": "Use a stack. Push numbers. When you see an operator, remember it. When you see ')', pop two numbers, apply the operator, push the result. Or use recursive descent: parse() checks for '(' and recurses."
+        }
       ],
       "testCases": [
         { "args": ["(2+3)"], "expected": 5, "explanation": "Simple addition." },
-        { "args": ["((2+3)*4)"], "expected": 20, "explanation": "(2+3)=5, 5*4=20." },
-        { "args": ["((10/(3-1))+1)"], "expected": 6, "explanation": "(3-1)=2, 10/2=5, 5+1=6." },
-        { "args": ["((2*(3+4))-(8/2))"], "expected": 10, "explanation": "(3+4)=7, 2*7=14, 8/2=4, 14-4=10." },
-        { "args": ["42"], "expected": 42, "explanation": "Single number, no operators." },
-        { "args": ["((7-10)/2)"], "expected": -1, "explanation": "7-10=-3, -3/2=-1 (truncate toward zero)." }
+        {
+          "args": ["((2+3)*4)"],
+          "expected": 20,
+          "explanation": "(2+3)=5, 5*4=20."
+        },
+        {
+          "args": ["((10/(3-1))+1)"],
+          "expected": 6,
+          "explanation": "(3-1)=2, 10/2=5, 5+1=6."
+        },
+        {
+          "args": ["((2*(3+4))-(8/2))"],
+          "expected": 10,
+          "explanation": "(3+4)=7, 2*7=14, 8/2=4, 14-4=10."
+        },
+        {
+          "args": ["42"],
+          "expected": 42,
+          "explanation": "Single number, no operators."
+        },
+        {
+          "args": ["((7-10)/2)"],
+          "expected": -1,
+          "explanation": "7-10=-3, -3/2=-1 (truncate toward zero)."
+        }
       ],
       "followUps": [
         "What's the time and space complexity?",
@@ -41,19 +70,56 @@
       "prompt": "Now evaluate expressions without full parenthesization. Standard operator precedence applies: * and / have higher precedence than + and -. Parentheses override precedence. Operators of the same precedence are left-associative. The expression contains non-negative integers, +, -, *, /, and optional parentheses.",
       "internalNotes": "Two classic approaches: (1) Recursive descent with grammar: expr = term ((+|-) term)*, term = factor ((*|/) factor)*, factor = number | '(' expr ')'. (2) Shunting-yard algorithm (Dijkstra): two stacks, output and operator. Push numbers to output. For operators, pop higher-precedence operators to output first. '(' pushes to operator stack, ')' pops until '('. Common mistakes: wrong precedence handling, not handling left-associativity (same precedence operators should evaluate left-to-right), not handling unary minus.",
       "hints": [
-        { "level": "subtle", "content": "Without full parenthesization, you need to encode precedence rules. How do you decide when to evaluate an operator?" },
-        { "level": "moderate", "content": "Think about parsing in layers: first handle + and -, then * and /. Each layer calls the next. What pattern is this?" },
-        { "level": "explicit", "content": "Use recursive descent with a grammar: expr() handles +/-, calls term(). term() handles *// calls factor(). factor() handles numbers and '(' expr ')'. This naturally encodes precedence." }
+        {
+          "level": "subtle",
+          "content": "Without full parenthesization, you need to encode precedence rules. How do you decide when to evaluate an operator?"
+        },
+        {
+          "level": "moderate",
+          "content": "Think about parsing in layers: first handle + and -, then * and /. Each layer calls the next. What pattern is this?"
+        },
+        {
+          "level": "explicit",
+          "content": "Use recursive descent with a grammar: expr() handles +/-, calls term(). term() handles *// calls factor(). factor() handles numbers and '(' expr ')'. This naturally encodes precedence."
+        }
       ],
       "testCases": [
-        { "args": ["2+3*4"], "expected": 14, "explanation": "3*4=12, 2+12=14. Multiplication before addition." },
-        { "args": ["(2+3)*4"], "expected": 20, "explanation": "Parentheses override: (2+3)=5, 5*4=20." },
-        { "args": ["3+2*2-1"], "expected": 6, "explanation": "2*2=4, 3+4-1=6." },
-        { "args": ["10/3"], "expected": 3, "explanation": "Integer division truncates toward zero." },
-        { "args": ["2*(3+4*(5-2))"], "expected": 30, "explanation": "(5-2)=3, 4*3=12, 3+12=15, 2*15=30." },
+        {
+          "args": ["2+3*4"],
+          "expected": 14,
+          "explanation": "3*4=12, 2+12=14. Multiplication before addition."
+        },
+        {
+          "args": ["(2+3)*4"],
+          "expected": 20,
+          "explanation": "Parentheses override: (2+3)=5, 5*4=20."
+        },
+        {
+          "args": ["3+2*2-1"],
+          "expected": 6,
+          "explanation": "2*2=4, 3+4-1=6."
+        },
+        {
+          "args": ["10/3"],
+          "expected": 3,
+          "explanation": "Integer division truncates toward zero."
+        },
+        {
+          "args": ["2*(3+4*(5-2))"],
+          "expected": 30,
+          "explanation": "(5-2)=3, 4*3=12, 3+12=15, 2*15=30."
+        },
         { "args": ["100"], "expected": 100, "explanation": "Single number." },
-        { "args": ["1+2*3-4/2+5"], "expected": 10, "explanation": "2*3=6, 4/2=2, then 1+6-2+5=10." },
-        { "args": ["((1+2))"], "expected": 3, "explanation": "Redundant parentheses." }
+        {
+          "args": ["1+2*3-4/2+5"],
+          "expected": 10,
+          "explanation": "2*3=6, 4/2=2, then 1+6-2+5=10."
+        },
+        {
+          "args": ["((1+2))"],
+          "expected": 3,
+          "explanation": "Redundant parentheses."
+        }
       ],
       "followUps": [
         "What's the time and space complexity?",
@@ -62,7 +128,10 @@
         "What's the Shunting-yard algorithm and how does it compare to recursive descent?"
       ],
       "expectedApproach": "Recursive descent parser with grammar encoding precedence: expr = term ((+|-) term)*, term = factor ((*|/) factor)*, factor = number | '(' expr ')'. Alternative: Shunting-yard with operator/output stacks.",
-      "expectedComplexity": { "time": "O(n)", "space": "O(n) for stack/recursion" }
+      "expectedComplexity": {
+        "time": "O(n)",
+        "space": "O(n) for stack/recursion"
+      }
     }
   ],
   "constraints": [
@@ -74,9 +143,7 @@
   ],
   "functionSignature": {
     "name": "calculate",
-    "params": [
-      { "name": "expression", "type": "string" }
-    ],
+    "params": [{ "name": "expression", "type": "string" }],
     "returnType": "number"
   },
   "source": "LeetCode #224 / #227 / #772",

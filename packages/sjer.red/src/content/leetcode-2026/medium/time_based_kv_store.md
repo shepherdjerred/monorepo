@@ -22,9 +22,9 @@ class TimeMap {
     Map<String, ArrayList<Node>> map = new HashMap<>();
 
     public TimeMap() {
-        
+
     }
-    
+
     public void set(String key, String value, int timestamp) {
         var node = new Node(value, timestamp);
         if (map.containsKey(key)) {
@@ -33,7 +33,7 @@ class TimeMap {
             map.put(key, new ArrayList<>(List.of(node)));
         }
     }
-    
+
     public String get(String key, int timestamp) {
         if (!map.containsKey(key)) {
             return "";

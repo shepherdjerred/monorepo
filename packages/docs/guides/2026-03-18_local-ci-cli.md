@@ -13,11 +13,11 @@ uv run ci-local --dry-run homelab-deploy --target scout   # preview a deploy
 
 ## Global Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag                | Description                                                                |
+| ------------------- | -------------------------------------------------------------------------- |
 | `--version VERSION` | Override auto-generated version (default: `1.1.<patch>-local.<timestamp>`) |
-| `--dry-run` | Show what would happen without executing. Env var checks are skipped. |
-| `--verbose` | Print version, git SHA, branch, and run directory at startup |
+| `--dry-run`         | Show what would happen without executing. Env var checks are skipped.      |
+| `--verbose`         | Print version, git SHA, branch, and run directory at startup               |
 
 ## Commands
 
@@ -32,19 +32,20 @@ ci-local --dry-run homelab-deploy --target birmel --skip-images   # re-push char
 ci-local --dry-run homelab-deploy --all                 # everything
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--target NAME [NAME...]` | Target names or aliases |
-| `--all` | Deploy all 30 targets |
-| `--skip-images` | Skip image push and versions.ts update |
-| `--skip-helm` | Skip Helm chart push |
-| `--skip-argocd` | Skip ArgoCD sync |
-| `--auto-commit` | Commit versions.ts changes (does not push) |
-| `--wait-healthy` | Poll ArgoCD until apps report Healthy |
+| Flag                      | Description                                |
+| ------------------------- | ------------------------------------------ |
+| `--target NAME [NAME...]` | Target names or aliases                    |
+| `--all`                   | Deploy all 30 targets                      |
+| `--skip-images`           | Skip image push and versions.ts update     |
+| `--skip-helm`             | Skip Helm chart push                       |
+| `--skip-argocd`           | Skip ArgoCD sync                           |
+| `--auto-commit`           | Commit versions.ts changes (does not push) |
+| `--wait-healthy`          | Poll ArgoCD until apps report Healthy      |
 
 **Env vars**: `GH_TOKEN`, `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`, `ARGOCD_AUTH_TOKEN`
 
 **Steps executed** (in order):
+
 1. Resolve targets (expand aliases, map to images/charts/argo apps)
 2. Push container images via `bazel run --stamp`, store digests
 3. Update `packages/homelab/src/cdk8s/src/versions.ts` with new digests
@@ -61,8 +62,8 @@ Push specific container images to GHCR.
 ci-local --dry-run image-push --target birmel sentinel
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag                      | Description                                 |
+| ------------------------- | ------------------------------------------- |
 | `--target NAME [NAME...]` | Image names (13 available: 9 app + 4 infra) |
 
 **Env vars**: `GH_TOKEN`
@@ -75,8 +76,8 @@ Package and push Helm charts to ChartMuseum.
 ci-local --dry-run helm-push --target scout-beta apps
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag                      | Description                |
+| ------------------------- | -------------------------- |
 | `--target NAME [NAME...]` | Chart names (29 available) |
 
 **Env vars**: `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`
@@ -89,11 +90,11 @@ Trigger ArgoCD sync for specific applications.
 ci-local --dry-run argocd-sync --app birmel --wait-healthy
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--app NAME [NAME...]` | ArgoCD application names |
-| `--wait-healthy` | Poll until Healthy |
-| `--timeout SECONDS` | Health check timeout (default: 300) |
+| Flag                   | Description                         |
+| ---------------------- | ----------------------------------- |
+| `--app NAME [NAME...]` | ArgoCD application names            |
+| `--wait-healthy`       | Poll until Healthy                  |
+| `--timeout SECONDS`    | Health check timeout (default: 300) |
 
 **Env vars**: `ARGOCD_AUTH_TOKEN`
 
@@ -105,8 +106,8 @@ Apply OpenTofu infrastructure stacks.
 ci-local --dry-run tofu-apply --target cloudflare
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag                      | Description                                      |
+| ------------------------- | ------------------------------------------------ |
 | `--target NAME [NAME...]` | Stack names: `cloudflare`, `github`, `seaweedfs` |
 
 ### `site-deploy`
@@ -117,8 +118,8 @@ Build and deploy static sites to S3 (SeaweedFS) or R2 (Cloudflare).
 ci-local --dry-run site-deploy --target sjer.red webring
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag                      | Description              |
+| ------------------------- | ------------------------ |
 | `--target NAME [NAME...]` | Site names (6 available) |
 
 **Env vars**: `SEAWEEDFS_ACCESS_KEY_ID`, `SEAWEEDFS_SECRET_ACCESS_KEY` (for S3 targets); `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` (for R2)
@@ -132,11 +133,11 @@ ci-local --dry-run cooklang-release --version 2.0.0
 ci-local cooklang-release --version 2.0.0 --confirm      # for real
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--version VERSION` | Release version (required) |
-| `--confirm` | Required for non-dry-run (pushes to external repo) |
-| `--token TOKEN` | GitHub token override |
+| Flag                | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| `--version VERSION` | Release version (required)                         |
+| `--confirm`         | Required for non-dry-run (pushes to external repo) |
+| `--token TOKEN`     | GitHub token override                              |
 
 **Env vars**: `GH_TOKEN` (or `--token`, or `gh auth token`)
 
@@ -149,10 +150,10 @@ ci-local --dry-run clauderon-release --version 1.0.0                  # native o
 ci-local --dry-run clauderon-release --version 1.0.0 --all-targets    # cross-compile Linux
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--version VERSION` | Release version (required) |
-| `--all-targets` | Cross-compile for Linux x86_64 + arm64 (requires `cross`) |
+| Flag                | Description                                               |
+| ------------------- | --------------------------------------------------------- |
+| `--version VERSION` | Release version (required)                                |
+| `--all-targets`     | Cross-compile for Linux x86_64 + arm64 (requires `cross`) |
 
 **Env vars**: `GH_TOKEN` (or `gh auth token`)
 
@@ -164,8 +165,8 @@ Create a git tag and GitHub release.
 ci-local --dry-run tag-release --tag v1.2.3
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag         | Description         |
+| ------------ | ------------------- |
 | `--tag NAME` | Tag name (required) |
 
 **Env vars**: `GH_TOKEN` or `GH_TOKEN`
@@ -178,8 +179,8 @@ Publish NPM packages.
 ci-local --dry-run npm-publish --target bun-decompile
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag                      | Description                 |
+| ------------------------- | --------------------------- |
 | `--target NAME [NAME...]` | Package names (4 available) |
 
 **Env vars**: `NPM_TOKEN`
@@ -198,10 +199,10 @@ Print all available targets grouped by category. No flags.
 
 Aliases expand to multiple concrete targets:
 
-| Alias | Expands to |
-|-------|------------|
-| `scout` | `scout-beta`, `scout-prod` |
-| `tasks` | `tasknotes` |
+| Alias   | Expands to                                             |
+| ------- | ------------------------------------------------------ |
+| `scout` | `scout-beta`, `scout-prod`                             |
+| `tasks` | `tasknotes`                                            |
 | `karma` | `starlight-karma-bot-beta`, `starlight-karma-bot-prod` |
 
 ### Deploy Targets
@@ -211,6 +212,7 @@ Each deploy target maps a logical name to its images, Helm charts, and ArgoCD ap
 Targets with custom images push those images first, then update `versions.ts` with the digest before synthesis. Targets without images (chart-only) just push the chart and sync.
 
 Notable mappings:
+
 - `tasknotes` pushes **two** images: `tasknotes-server` + `obsidian-headless`
 - `pokemon` pushes the `discord-plays-pokemon` image
 - `home` pushes the `homelab` infra image
@@ -283,12 +285,12 @@ The `test_catalog.py` tests verify that `VERSION_KEYS` matches all push targets,
 
 Key source files:
 
-| File | Purpose |
-|------|---------|
-| `scripts/ci/src/ci/local.py` | CLI entry point, argparse setup, command dispatch |
-| `scripts/ci/src/ci/lib/catalog.py` | All target catalogs, aliases, `DeployTarget` mapping |
-| `scripts/ci/src/ci/lib/config.py` | `ReleaseConfig.for_local()`, version generation |
-| `scripts/ci/src/ci/lib/runner.py` | Dry-run-aware subprocess/HTTP wrappers |
-| `scripts/ci/src/ci/lib/buildkite.py` | Metadata and artifact storage (Buildkite agent or local JSON) |
-| `scripts/ci/src/ci/local_commands/*.py` | 12 command modules |
-| `scripts/ci/pyproject.toml` | `[project.scripts]` entry point: `ci-local = "ci.local:main"` |
+| File                                    | Purpose                                                       |
+| --------------------------------------- | ------------------------------------------------------------- |
+| `scripts/ci/src/ci/local.py`            | CLI entry point, argparse setup, command dispatch             |
+| `scripts/ci/src/ci/lib/catalog.py`      | All target catalogs, aliases, `DeployTarget` mapping          |
+| `scripts/ci/src/ci/lib/config.py`       | `ReleaseConfig.for_local()`, version generation               |
+| `scripts/ci/src/ci/lib/runner.py`       | Dry-run-aware subprocess/HTTP wrappers                        |
+| `scripts/ci/src/ci/lib/buildkite.py`    | Metadata and artifact storage (Buildkite agent or local JSON) |
+| `scripts/ci/src/ci/local_commands/*.py` | 12 command modules                                            |
+| `scripts/ci/pyproject.toml`             | `[project.scripts]` entry point: `ci-local = "ci.local:main"` |

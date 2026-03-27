@@ -15,10 +15,7 @@
   "dislikes": 101,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Common Subsequence\", \"titleSlug\": \"longest-common-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest String That Contains Three Strings\", \"titleSlug\": \"shortest-string-that-contains-three-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abac\"\n\"cab\"",
-    "\"aaaaaaaa\"\n\"aaaaaaaa\""
-  ],
+  "exampleTestcaseList": ["\"abac\"\n\"cab\"", "\"aaaaaaaa\"\n\"aaaaaaaa\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -16,11 +16,7 @@
   "dislikes": 2799,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Capitalize the Title\", \"titleSlug\": \"capitalize-the-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"Hello\"",
-    "\"here\"",
-    "\"LOVELY\""
-  ],
+  "exampleTestcaseList": ["\"Hello\"", "\"here\"", "\"LOVELY\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 80,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Buildings With an Ocean View\", \"titleSlug\": \"buildings-with-an-ocean-view\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[2,2],[6,3],[5,4]]",
-    "[[1,3],[1,3]]"
-  ],
+  "exampleTestcaseList": ["[[2,2],[6,3],[5,4]]", "[[1,3],[1,3]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

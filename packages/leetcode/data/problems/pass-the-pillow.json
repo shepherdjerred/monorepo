@@ -15,10 +15,7 @@
   "dislikes": 59,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Student that Will Replace the Chalk\", \"titleSlug\": \"find-the-student-that-will-replace-the-chalk\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4\n5",
-    "3\n2"
-  ],
+  "exampleTestcaseList": ["4\n5", "3\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

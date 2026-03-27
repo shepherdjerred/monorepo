@@ -1,7 +1,12 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
 import { initializeSchema } from "#lib/db/schema.ts";
-import { insertEvent, queryEvents, countEvents, avgMetric } from "#lib/db/events.ts";
+import {
+  insertEvent,
+  queryEvents,
+  countEvents,
+  avgMetric,
+} from "#lib/db/events.ts";
 
 let db: Database;
 

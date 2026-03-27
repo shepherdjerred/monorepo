@@ -14,10 +14,7 @@
   "dislikes": 977,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Encode and Decode Strings\", \"titleSlug\": \"encode-and-decode-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Substrings With Fixed Ratio\", \"titleSlug\": \"number-of-substrings-with-fixed-ratio\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Substrings With Dominant Ones\", \"titleSlug\": \"count-the-number-of-substrings-with-dominant-ones\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"00110011\"",
-    "\"10101\""
-  ],
+  "exampleTestcaseList": ["\"00110011\"", "\"10101\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"dell\", \"name\": \"Dell\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"weride\", \"name\": \"WeRide\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"helix\", \"name\": \"Helix\"}]}",
   "topicTags": [
     {

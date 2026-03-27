@@ -15,10 +15,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Fair Distribution of Cookies\", \"titleSlug\": \"fair-distribution-of-cookies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Choose Numbers From Two Arrays in Range\", \"titleSlug\": \"choose-numbers-from-two-arrays-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum AND Sum of Array\", \"titleSlug\": \"maximum-and-sum-of-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2]\n[2,3]",
-    "[1,0,3]\n[5,3,4]"
-  ],
+  "exampleTestcaseList": ["[1,2]\n[2,3]", "[1,0,3]\n[5,3,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

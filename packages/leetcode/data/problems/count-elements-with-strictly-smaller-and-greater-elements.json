@@ -16,10 +16,7 @@
   "dislikes": 46,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Smallest Letter Greater Than Target\", \"titleSlug\": \"find-smallest-letter-greater-than-target\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[11,7,2,15]",
-    "[-3,3,3,90]"
-  ],
+  "exampleTestcaseList": ["[11,7,2,15]", "[-3,3,3,90]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

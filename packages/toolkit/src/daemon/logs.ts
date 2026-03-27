@@ -26,7 +26,9 @@ export async function viewLogs(options: LogViewOptions): Promise<void> {
     console.error("No log files found in ~/.recall/logs/");
     process.exit(1);
   }
-  await (options.follow ? tailFollow(firstFile.name, options) : showRecent(logFiles, options));
+  await (options.follow
+    ? tailFollow(firstFile.name, options)
+    : showRecent(logFiles, options));
 }
 
 async function showRecent(
@@ -103,39 +105,39 @@ async function tailFollow(
 
   const interval = setInterval(() => {
     void (async () => {
-    try {
-      // Check for date rollover every 60s
-      if (Date.now() - rolloverCheck > 60_000) {
-        rolloverCheck = Date.now();
-        const today = new Date().toISOString().slice(0, 10);
-        const todayFile = path.join(LOGS_DIR, `recall-${today}.log`);
-        if (todayFile !== currentFilePath) {
-          const todayExists = await stat(todayFile).catch(() => null);
-          if (todayExists != null) {
-            currentFilePath = todayFile;
-            offset = 0;
-            console.error(`\n[logs] switched to ${todayFile}`);
+      try {
+        // Check for date rollover every 60s
+        if (Date.now() - rolloverCheck > 60_000) {
+          rolloverCheck = Date.now();
+          const today = new Date().toISOString().slice(0, 10);
+          const todayFile = path.join(LOGS_DIR, `recall-${today}.log`);
+          if (todayFile !== currentFilePath) {
+            const todayExists = await stat(todayFile).catch(() => null);
+            if (todayExists != null) {
+              currentFilePath = todayFile;
+              offset = 0;
+              console.error(`\n[logs] switched to ${todayFile}`);
+            }
           }
         }
-      }
 
-      const currentStat = await stat(currentFilePath).catch(() => null);
-      if (currentStat == null || currentStat.size <= offset) return;
+        const currentStat = await stat(currentFilePath).catch(() => null);
+        if (currentStat == null || currentStat.size <= offset) return;
 
-      const fd = Bun.file(currentFilePath);
-      const content = await fd.text();
-      const newContent = content.slice(offset);
-      offset = currentStat.size;
+        const fd = Bun.file(currentFilePath);
+        const content = await fd.text();
+        const newContent = content.slice(offset);
+        offset = currentStat.size;
 
-      const newLines = newContent.trim().split("\n").filter(Boolean);
-      for (const line of newLines) {
-        if (matchesFilters(line, options.level)) {
-          console.log(options.json ? line : formatLogLine(line));
+        const newLines = newContent.trim().split("\n").filter(Boolean);
+        for (const line of newLines) {
+          if (matchesFilters(line, options.level)) {
+            console.log(options.json ? line : formatLogLine(line));
+          }
         }
+      } catch {
+        // ignore read errors
       }
-    } catch {
-      // ignore read errors
-    }
     })();
   }, 500);
 
@@ -145,7 +147,9 @@ async function tailFollow(
     process.exit(0);
   });
 
-  await new Promise(() => { /* never resolves — keeps process alive */ });
+  await new Promise(() => {
+    /* never resolves — keeps process alive */
+  });
 }
 
 function matchesFilters(
@@ -156,7 +160,8 @@ function matchesFilters(
   if (level != null || sinceTs != null) {
     try {
       const entry = z.record(z.string(), z.unknown()).parse(JSON.parse(line));
-      const entryLevel = typeof entry["level"] === "string" ? entry["level"] : undefined;
+      const entryLevel =
+        typeof entry["level"] === "string" ? entry["level"] : undefined;
       const entryTs = typeof entry["ts"] === "string" ? entry["ts"] : undefined;
       if (level != null && entryLevel !== level) return false;
       if (sinceTs != null && entryTs != null && entryTs < sinceTs) return false;
@@ -175,7 +180,9 @@ function formatLogLine(line: string): string {
     const rawMod = entry["mod"];
     const rawMsg = entry["msg"];
     const ts = (typeof rawTs === "string" ? rawTs : "").slice(11, 19); // HH:MM:SS
-    const level = (typeof rawLevel === "string" ? rawLevel : "").toUpperCase().padEnd(5);
+    const level = (typeof rawLevel === "string" ? rawLevel : "")
+      .toUpperCase()
+      .padEnd(5);
     const mod = (typeof rawMod === "string" ? rawMod : "").padEnd(8);
     const msg = typeof rawMsg === "string" ? rawMsg : "";
 

@@ -15,11 +15,7 @@
   "dislikes": 48,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,1,6,4]",
-    "[1,1,1]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[2,1,6,4]", "[1,1,1]", "[1,2,3]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"twilio\", \"name\": \"Twilio\"}, {\"timesEncountered\": 2, \"slug\": \"dunzo\", \"name\": \"Dunzo\"}, {\"timesEncountered\": 2, \"slug\": \"flatiron-health\", \"name\": \"Flatiron Health\"}], \"three_months\": []}",
   "topicTags": [
     {

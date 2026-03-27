@@ -14,10 +14,7 @@
   "dislikes": 461,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,2,3],[4,5,6],[7,8,9]]",
-    "[[1,2,3],[4,5,6]]"
-  ],
+  "exampleTestcaseList": ["[[1,2,3],[4,5,6],[7,8,9]]", "[[1,2,3],[4,5,6]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
   "topicTags": [
     {

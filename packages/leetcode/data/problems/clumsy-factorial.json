@@ -12,10 +12,7 @@
   "dislikes": 366,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Computer Unlocking Permutations\", \"titleSlug\": \"count-the-number-of-computer-unlocking-permutations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "10"
-  ],
+  "exampleTestcaseList": ["4", "10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

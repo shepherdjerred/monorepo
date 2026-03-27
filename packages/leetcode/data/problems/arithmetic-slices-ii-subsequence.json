@@ -12,10 +12,7 @@
   "dislikes": 165,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Arithmetic Slices\", \"titleSlug\": \"arithmetic-slices\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Destroy Sequential Targets\", \"titleSlug\": \"destroy-sequential-targets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Palindromic Subsequences\", \"titleSlug\": \"count-palindromic-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,6,8,10]",
-    "[7,7,7,7,7]"
-  ],
+  "exampleTestcaseList": ["[2,4,6,8,10]", "[7,7,7,7,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

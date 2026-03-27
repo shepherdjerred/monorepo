@@ -38,6 +38,7 @@ tokio-test, proptest, tempfile, assert_cmd, predicates
 ### Patterns
 
 **Unit tests** (colocated):
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -48,6 +49,7 @@ mod tests {
 ```
 
 **Conditional E2E** (skip when Docker unavailable):
+
 ```rust
 #[tokio::test]
 #[ignore]
@@ -85,7 +87,9 @@ Uses **Bun's native `bun:test`** runner.
 ```typescript
 import { describe, test, expect } from "bun:test";
 describe("Component", () => {
-  test("should work", () => { /* ... */ });
+  test("should work", () => {
+    /* ... */
+  });
 });
 ```
 
@@ -125,9 +129,9 @@ dagger call ci
 
 ## Troubleshooting
 
-| Problem | Solution |
-| ------- | -------- |
-| nextest not found | `mise run setup-tools` |
-| Tests fail in CI, pass locally | Check Docker: `docker ps`; E2E tests skip gracefully |
-| E2E tests always skip | Expected without Docker; run with `--run-ignored all` |
-| Web test timing issues | Use `await new Promise(resolve => setTimeout(resolve, 0))` |
+| Problem                        | Solution                                                   |
+| ------------------------------ | ---------------------------------------------------------- |
+| nextest not found              | `mise run setup-tools`                                     |
+| Tests fail in CI, pass locally | Check Docker: `docker ps`; E2E tests skip gracefully       |
+| E2E tests always skip          | Expected without Docker; run with `--run-ignored all`      |
+| Web test timing issues         | Use `await new Promise(resolve => setTimeout(resolve, 0))` |

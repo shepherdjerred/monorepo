@@ -16,10 +16,7 @@
   "dislikes": 51,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3]\n[6,5]",
-    "[12]\n[4]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]\n[6,5]", "[12]\n[4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"mobisy\", \"name\": \"Mobisy\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

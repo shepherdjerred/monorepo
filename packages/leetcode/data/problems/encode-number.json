@@ -15,10 +15,7 @@
   "dislikes": 258,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Convert to Base -2\", \"titleSlug\": \"convert-to-base-2\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "23",
-    "107"
-  ],
+  "exampleTestcaseList": ["23", "107"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

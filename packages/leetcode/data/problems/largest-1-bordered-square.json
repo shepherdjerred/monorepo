@@ -15,10 +15,7 @@
   "dislikes": 118,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,1,1],[1,0,1],[1,1,1]]",
-    "[[1,1,0,0]]"
-  ],
+  "exampleTestcaseList": ["[[1,1,1],[1,0,1],[1,1,1]]", "[[1,1,0,0]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"zs-associates\", \"name\": \"ZS Associates\"}, {\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

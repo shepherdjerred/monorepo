@@ -5,20 +5,14 @@
   "titleSlug": "number-of-steps-to-reduce-a-number-to-zero",
   "difficulty": "Easy",
   "content": "<p>Given an integer <code>num</code>, return <em>the number of steps to reduce it to zero</em>.</p>\n\n<p>In one step, if the current number is even, you have to divide it by <code>2</code>, otherwise, you have to subtract <code>1</code> from it.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 14\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>&nbsp;\nStep 1) 14 is even; divide by 2 and obtain 7.&nbsp;\nStep 2) 7 is odd; subtract 1 and obtain 6.\nStep 3) 6 is even; divide by 2 and obtain 3.&nbsp;\nStep 4) 3 is odd; subtract 1 and obtain 2.&nbsp;\nStep 5) 2 is even; divide by 2 and obtain 1.&nbsp;\nStep 6) 1 is odd; subtract 1 and obtain 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 8\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>&nbsp;\nStep 1) 8 is even; divide by 2 and obtain 4.&nbsp;\nStep 2) 4 is even; divide by 2 and obtain 2.&nbsp;\nStep 3) 2 is even; divide by 2 and obtain 1.&nbsp;\nStep 4) 1 is odd; subtract 1 and obtain 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 123\n<strong>Output:</strong> 12\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= num &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
-  "hints": [
-    "Simulate the process to get the final answer."
-  ],
+  "hints": ["Simulate the process to get the final answer."],
   "metaData": "{\n  \"name\": \"numberOfSteps\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"911.9K\", \"totalSubmission\": \"1.1M\", \"totalAcceptedRaw\": 911886, \"totalSubmissionRaw\": 1063223, \"acRate\": \"85.8%\"}",
   "likes": 4276,
   "dislikes": 181,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Moves to Reach Target Score\", \"titleSlug\": \"minimum-moves-to-reach-target-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Operations to Obtain Zero\", \"titleSlug\": \"count-operations-to-obtain-zero\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "14",
-    "8",
-    "123"
-  ],
+  "exampleTestcaseList": ["14", "8", "123"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}], \"three_months\": []}",
   "topicTags": [
     {

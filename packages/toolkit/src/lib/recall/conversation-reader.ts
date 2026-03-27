@@ -8,7 +8,10 @@ export type ConversationMessage = {
 
 const ContentBlock = z.object({ type: z.string(), text: z.string() });
 
-function getStringProp(obj: Record<string, unknown>, key: string): string | undefined {
+function getStringProp(
+  obj: Record<string, unknown>,
+  key: string,
+): string | undefined {
   const val = obj[key];
   return typeof val === "string" ? val : undefined;
 }

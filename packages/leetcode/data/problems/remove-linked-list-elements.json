@@ -12,11 +12,7 @@
   "dislikes": 293,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Element\", \"titleSlug\": \"remove-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Delete Node in a Linked List\", \"titleSlug\": \"delete-node-in-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete the Middle Node of a Linked List\", \"titleSlug\": \"delete-the-middle-node-of-a-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Delete Nodes From Linked List Present in Array\", \"titleSlug\": \"delete-nodes-from-linked-list-present-in-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Convert Doubly Linked List to Array I\", \"titleSlug\": \"convert-doubly-linked-list-to-array-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Convert Doubly Linked List to Array II\", \"titleSlug\": \"convert-doubly-linked-list-to-array-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,6,3,4,5,6]\n6",
-    "[]\n1",
-    "[7,7,7,7]\n7"
-  ],
+  "exampleTestcaseList": ["[1,2,6,3,4,5,6]\n6", "[]\n1", "[7,7,7,7]\n7"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
   "topicTags": [
     {

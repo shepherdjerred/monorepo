@@ -15,10 +15,7 @@
   "dislikes": 71,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Units on a Truck\", \"titleSlug\": \"maximum-units-on-a-truck\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,4,5]\n[1,2,4,4]\n2",
-    "[10,2,2]\n[2,2,0]\n100"
-  ],
+  "exampleTestcaseList": ["[2,3,4,5]\n[1,2,4,4]\n2", "[10,2,2]\n[2,2,0]\n100"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 49,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Finding Pairs With a Certain Sum\", \"titleSlug\": \"finding-pairs-with-a-certain-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Equal and Divisible Pairs in an Array\", \"titleSlug\": \"count-equal-and-divisible-pairs-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Fair Pairs\", \"titleSlug\": \"count-the-number-of-fair-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,2,1]\n1",
-    "[1,3]\n3",
-    "[3,2,1,5,4]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,2,1]\n1", "[1,3]\n3", "[3,2,1,5,4]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

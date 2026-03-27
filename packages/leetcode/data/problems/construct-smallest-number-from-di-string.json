@@ -15,10 +15,7 @@
   "dislikes": 89,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"DI String Match\", \"titleSlug\": \"di-string-match\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"IIIDIDDD\"",
-    "\"DDD\""
-  ],
+  "exampleTestcaseList": ["\"IIIDIDDD\"", "\"DDD\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

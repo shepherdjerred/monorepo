@@ -31,7 +31,7 @@ class SQL {
             tables.put(names.get(i),t);
         }
     }
-    
+
     public boolean ins(String name, List<String> row) {
         if (!tables.containsKey(name)) {
             return false;
@@ -47,7 +47,7 @@ class SQL {
         t.autoincrement += 1;
         return true;
     }
-    
+
     public void rmv(String name, int rowId) {
         if (!tables.containsKey(name)) {
             return;
@@ -56,7 +56,7 @@ class SQL {
         var t = tables.get(name);
         t.rows.remove(rowId);
     }
-    
+
     public String sel(String name, int rowId, int columnId) {
         if (!tables.containsKey(name)) {
             return "<null>";
@@ -70,7 +70,7 @@ class SQL {
         }
         return t.rows.get(rowId).get(columnId - 1);
     }
-    
+
     public List<String> exp(String name) {
         if (!tables.containsKey(name)) {
             return List.of();

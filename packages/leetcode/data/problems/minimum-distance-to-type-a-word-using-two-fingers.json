@@ -15,10 +15,7 @@
   "dislikes": 39,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Time to Type Word Using Special Typewriter\", \"titleSlug\": \"minimum-time-to-type-word-using-special-typewriter\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"CAKE\"",
-    "\"HAPPY\""
-  ],
+  "exampleTestcaseList": ["\"CAKE\"", "\"HAPPY\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 67,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Nim Game\", \"titleSlug\": \"nim-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Flip Game\", \"titleSlug\": \"flip-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Guess Number Higher or Lower II\", \"titleSlug\": \"guess-number-higher-or-lower-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Can I Win\", \"titleSlug\": \"can-i-win\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"++++\"",
-    "\"+\""
-  ],
+  "exampleTestcaseList": ["\"++++\"", "\"+\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 39,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Flips to Make a OR b Equal to c\", \"titleSlug\": \"minimum-flips-to-make-a-or-b-equal-to-c\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Make Array XOR Equal to K\", \"titleSlug\": \"minimum-number-of-operations-to-make-array-xor-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Number With All Set Bits\", \"titleSlug\": \"smallest-number-with-all-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "10\n7",
-    "3\n4"
-  ],
+  "exampleTestcaseList": ["10\n7", "3\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"persistent-systems\", \"name\": \"persistent systems\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

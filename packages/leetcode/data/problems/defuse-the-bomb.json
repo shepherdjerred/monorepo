@@ -15,11 +15,7 @@
   "dislikes": 183,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Circular Sentence\", \"titleSlug\": \"circular-sentence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Shortest Distance to Target String in a Circular Array\", \"titleSlug\": \"shortest-distance-to-target-string-in-a-circular-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Take K of Each Character From Left and Right\", \"titleSlug\": \"take-k-of-each-character-from-left-and-right\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,7,1,4]\n3",
-    "[1,2,3,4]\n0",
-    "[2,4,9,3]\n-2"
-  ],
+  "exampleTestcaseList": ["[5,7,1,4]\n3", "[1,2,3,4]\n0", "[2,4,9,3]\n-2"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

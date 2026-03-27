@@ -11,10 +11,11 @@ import { createTimer } from "#lib/timer/countdown.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
 import { createInterviewSession } from "#lib/ai/session-loop.ts";
 import { insertEvent } from "#lib/db/events.ts";
-import { getFileExtension, getSolutionFilename } from "#lib/questions/starter-code.ts";
 import {
-  formatInterviewerMessage,
-} from "#lib/output/formatter.ts";
+  getFileExtension,
+  getSolutionFilename,
+} from "#lib/questions/starter-code.ts";
+import { formatInterviewerMessage } from "#lib/output/formatter.ts";
 import { runInterviewLoop } from "./interview-loop.ts";
 
 export type LeetcodeResumeOptions = {
@@ -42,7 +43,9 @@ export async function resumeLeetcodeSession(
   const session = await loadSession(config.dataDir, options.sessionId);
   if (session === null) {
     console.error(`Session not found: ${options.sessionId}`);
-    console.error(`Sessions are stored in: ${path.join(config.dataDir, "sessions")}`);
+    console.error(
+      `Sessions are stored in: ${path.join(config.dataDir, "sessions")}`,
+    );
     process.exit(1);
   }
 
@@ -63,7 +66,9 @@ export async function resumeLeetcodeSession(
   const question = store.getById(session.metadata.questionId);
 
   if (question === undefined) {
-    console.error(`Question not found for session: ${session.metadata.questionId}`);
+    console.error(
+      `Question not found for session: ${session.metadata.questionId}`,
+    );
     process.exit(1);
   }
 
@@ -81,7 +86,10 @@ export async function resumeLeetcodeSession(
   });
 
   const ext = getFileExtension(session.metadata.language);
-  const solutionPath = path.join(session.workspacePath, getSolutionFilename(ext));
+  const solutionPath = path.join(
+    session.workspacePath,
+    getSolutionFilename(ext),
+  );
 
   const model = config.conversationModel ?? "claude-sonnet-4-6-20260217";
   const client = createAIClient(config.aiProvider, model, getApiKey(config));
@@ -167,4 +175,3 @@ function displayResumeHeader(
 \u001B[1m═══════════════════════════════════════════════════\u001B[0m
 `);
 }
-

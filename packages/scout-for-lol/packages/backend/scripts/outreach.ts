@@ -81,7 +81,9 @@ async function backfillGuildInstalls(): Promise<void> {
       },
     });
     created++;
-    logger.info(`[Backfill] Created GuildInstall for ${guild.name} (${guild.id})`);
+    logger.info(
+      `[Backfill] Created GuildInstall for ${guild.name} (${guild.id})`,
+    );
   }
 
   logger.info(
@@ -281,7 +283,9 @@ async function buildOutreachGroups(): Promise<OutreachGroup[]> {
       });
       usersInGroup.add(owner.id);
     } catch {
-      logger.warn(`[Outreach] Could not fetch owner for guild ${guild.name} (${guild.id})`);
+      logger.warn(
+        `[Outreach] Could not fetch owner for guild ${guild.name} (${guild.id})`,
+      );
     }
   }
 
@@ -320,7 +324,8 @@ async function main(): Promise<void> {
     logger.info("=".repeat(60));
 
     for (const user of group.users) {
-      const isTargeted = ONLY_USER === undefined || user.discordId === ONLY_USER;
+      const isTargeted =
+        ONLY_USER === undefined || user.discordId === ONLY_USER;
       logger.info(`  ${user.discordId} — ${user.context}`);
       logger.info(`  Message: ${user.message.substring(0, 100)}...`);
 

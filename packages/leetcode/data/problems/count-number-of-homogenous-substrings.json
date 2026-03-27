@@ -15,11 +15,7 @@
   "dislikes": 104,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Consecutive Characters\", \"titleSlug\": \"consecutive-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Substrings With Only 1s\", \"titleSlug\": \"number-of-substrings-with-only-1s\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Ranges\", \"titleSlug\": \"sum-of-subarray-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Good Subarrays\", \"titleSlug\": \"count-the-number-of-good-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abbcccaa\"",
-    "\"xy\"",
-    "\"zzzzz\""
-  ],
+  "exampleTestcaseList": ["\"abbcccaa\"", "\"xy\"", "\"zzzzz\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"virtu\", \"name\": \"Virtu Financial\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -18,11 +18,7 @@
   "dislikes": 11,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Minimum Number of Food Buckets to Feed the Hamsters\", \"titleSlug\": \"minimum-number-of-food-buckets-to-feed-the-hamsters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,1,0,1,0]\n3",
-    "[1]\n1",
-    "[0]\n1"
-  ],
+  "exampleTestcaseList": ["[0,1,0,1,0]\n3", "[1]\n1", "[0]\n1"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 151,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[34,23,1,24,75,33,54,8]",
-    "[99,77,33,66,55]"
-  ],
+  "exampleTestcaseList": ["[34,23,1,24,75,33,54,8]", "[99,77,33,66,55]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

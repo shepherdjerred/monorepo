@@ -15,11 +15,7 @@
   "dislikes": 184,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Kth Largest Element in an Array\", \"titleSlug\": \"kth-largest-element-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize Sum Of Array After K Negations\", \"titleSlug\": \"maximize-sum-of-array-after-k-negations\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Integers by The Number of 1 Bits\", \"titleSlug\": \"sort-integers-by-the-number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Difference in Sums After Removal of Elements\", \"titleSlug\": \"minimum-difference-in-sums-after-removal-of-elements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,1,3,3]\n2",
-    "[-1,-2,3,4]\n3",
-    "[3,4,3,3]\n2"
-  ],
+  "exampleTestcaseList": ["[2,1,3,3]\n2", "[-1,-2,3,4]\n3", "[3,4,3,3]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"2 Keys Keyboard\", \"titleSlug\": \"2-keys-keyboard\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Ways to Make Array With Product\", \"titleSlug\": \"count-ways-to-make-array-with-product\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Distinct Prime Factors of Product of Array\", \"titleSlug\": \"distinct-prime-factors-of-product-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Division Operations to Make Array Non Decreasing\", \"titleSlug\": \"minimum-division-operations-to-make-array-non-decreasing\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "15",
-    "3"
-  ],
+  "exampleTestcaseList": ["15", "3"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

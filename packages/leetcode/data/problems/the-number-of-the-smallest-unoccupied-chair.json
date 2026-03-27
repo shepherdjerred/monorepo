@@ -15,10 +15,7 @@
   "dislikes": 78,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,4],[2,3],[4,6]]\n1",
-    "[[3,10],[1,5],[2,6]]\n0"
-  ],
+  "exampleTestcaseList": ["[[1,4],[2,3],[4,6]]\n1", "[[3,10],[1,5],[2,6]]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"spinny\", \"name\": \"spinny\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

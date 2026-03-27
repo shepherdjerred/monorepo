@@ -16,10 +16,7 @@
   "dislikes": 49,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Jump Game II\", \"titleSlug\": \"jump-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game\", \"titleSlug\": \"jump-game\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game III\", \"titleSlug\": \"jump-game-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game IV\", \"titleSlug\": \"jump-game-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Jump Game V\", \"titleSlug\": \"jump-game-v\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Jump Game VI\", \"titleSlug\": \"jump-game-vi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game VII\", \"titleSlug\": \"jump-game-vii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Jump Game VIII\", \"titleSlug\": \"jump-game-viii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4,4,1]\n[3,7,6,4,2]",
-    "[0,1,2]\n[1,1,1]"
-  ],
+  "exampleTestcaseList": ["[3,2,4,4,1]\n[3,7,6,4,2]", "[0,1,2]\n[1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

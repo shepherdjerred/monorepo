@@ -16,10 +16,7 @@
   "dislikes": 1892,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Number of Ways to Reach the K-th Stair\", \"titleSlug\": \"find-number-of-ways-to-reach-the-k-th-stair\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[10,15,20]",
-    "[1,100,1,1,1,100,1,1,100,1]"
-  ],
+  "exampleTestcaseList": ["[10,15,20]", "[1,100,1,1,1,100,1,1,100,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
   "topicTags": [
     {

@@ -11,7 +11,7 @@ export type Timer = {
   checkWarnings: () => string[];
   getState: () => TimerState;
   resume: (state: TimerState) => void;
-}
+};
 
 function formatMs(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -47,7 +47,8 @@ export function createTimer(durationMinutes: number): Timer {
 
   function getDisplayTime(): string {
     const remaining = getRemainingMs();
-    if (remaining <= 0) return "OVERTIME +" + formatMs(getElapsedMs() - durationMs);
+    if (remaining <= 0)
+      return "OVERTIME +" + formatMs(getElapsedMs() - durationMs);
     return formatMs(remaining) + " remaining";
   }
 

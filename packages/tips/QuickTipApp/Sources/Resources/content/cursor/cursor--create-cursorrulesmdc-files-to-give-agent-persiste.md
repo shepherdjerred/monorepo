@@ -6,4 +6,4 @@ website: https://cursor.com
 category: Rules & Context
 ---
 
-- Create .cursor/rules/*.mdc files to give Agent persistent, version-controlled instructions — code style, architecture constraints, or migration patterns — scoped to file globs.
+- Create .cursor/rules/\*.mdc files to give Agent persistent, version-controlled instructions — code style, architecture constraints, or migration patterns — scoped to file globs.

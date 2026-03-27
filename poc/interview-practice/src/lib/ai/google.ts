@@ -21,13 +21,19 @@ const PropertySchema = z.object({
 const InputSchemaPropertiesSchema = z.record(z.string(), PropertySchema);
 const InputSchemaRequiredSchema = z.array(z.string());
 
-type ToolDefinition = { name: string; description: string; inputSchema: Record<string, unknown> };
+type ToolDefinition = {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+};
 
 export function createGoogleClient(
   model: string,
   apiKey: string | undefined,
 ): AIClient {
-  let cachedGenAI: InstanceType<typeof import("@google/generative-ai").GoogleGenerativeAI> | null = null;
+  let cachedGenAI: InstanceType<
+    typeof import("@google/generative-ai").GoogleGenerativeAI
+  > | null = null;
 
   async function getGenAI() {
     if (cachedGenAI !== null) return cachedGenAI;
@@ -46,7 +52,11 @@ export function createGoogleClient(
 
       const functionDeclarations: FunctionDeclaration[] | undefined =
         options.tools && options.tools.length > 0
-          ? buildFunctionDeclarations(options.tools, SchemaType.OBJECT, SchemaType.STRING)
+          ? buildFunctionDeclarations(
+              options.tools,
+              SchemaType.OBJECT,
+              SchemaType.STRING,
+            )
           : undefined;
 
       const genModel = genAI.getGenerativeModel({
@@ -62,9 +72,7 @@ export function createGoogleClient(
         parts: [
           {
             text:
-              m.role === "system"
-                ? `[System context] ${m.content}`
-                : m.content,
+              m.role === "system" ? `[System context] ${m.content}` : m.content,
           },
         ],
       }));
@@ -90,9 +98,7 @@ export function createGoogleClient(
         (p) => "functionCall" in p,
       );
 
-      const text = textParts
-        .map((p) => ("text" in p ? p.text : ""))
-        .join("");
+      const text = textParts.map((p) => ("text" in p ? p.text : "")).join("");
 
       const toolCalls = functionCallParts.map((p, i) => {
         const validated = FunctionCallPartSchema.parse(p);

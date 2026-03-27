@@ -245,14 +245,14 @@ Do not require every local workflow to go through Bazel before the rule surface 
 
 ## Risks
 
-| Risk | Why it matters | Mitigation |
-| --- | --- | --- |
-| Bun path-resolution regressions | Bun follows real paths aggressively | hardlink regular files; avoid symlinked source trees |
-| Silent partial-tree failures | current materializer tolerates some filesystem failures | tighten error handling while rewriting link/copy logic |
-| Hardlink portability | hardlinks may fail across filesystems or sandbox modes | hardlink-first with copy fallback |
-| Framework-specific churn in core rules | Vite/Astro behavior changes over time | keep generic `bun_build` small; put only framework-specific launch logic in thin wrappers |
-| Migration breaks from undeclared inputs | current local-only rules hide missing inputs | pilot on simple packages first and add explicit attrs for config/data files |
-| Split-brain local vs CI behavior | Bazel and direct Bun commands can diverge | use Bazel as CI source of truth; keep package scripts aligned with Bazel rule commands |
+| Risk                                    | Why it matters                                          | Mitigation                                                                                |
+| --------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Bun path-resolution regressions         | Bun follows real paths aggressively                     | hardlink regular files; avoid symlinked source trees                                      |
+| Silent partial-tree failures            | current materializer tolerates some filesystem failures | tighten error handling while rewriting link/copy logic                                    |
+| Hardlink portability                    | hardlinks may fail across filesystems or sandbox modes  | hardlink-first with copy fallback                                                         |
+| Framework-specific churn in core rules  | Vite/Astro behavior changes over time                   | keep generic `bun_build` small; put only framework-specific launch logic in thin wrappers |
+| Migration breaks from undeclared inputs | current local-only rules hide missing inputs            | pilot on simple packages first and add explicit attrs for config/data files               |
+| Split-brain local vs CI behavior        | Bazel and direct Bun commands can diverge               | use Bazel as CI source of truth; keep package scripts aligned with Bazel rule commands    |
 
 ## Verification
 

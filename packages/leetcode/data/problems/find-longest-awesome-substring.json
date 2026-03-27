@@ -16,11 +16,7 @@
   "dislikes": 16,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"3242415\"",
-    "\"12345678\"",
-    "\"213123\""
-  ],
+  "exampleTestcaseList": ["\"3242415\"", "\"12345678\"", "\"213123\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"directi\", \"name\": \"Directi\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

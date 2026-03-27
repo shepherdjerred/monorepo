@@ -6,4 +6,4 @@ website: https://www.chezmoi.io
 category: Scripts
 ---
 
-- A run_onchange_ script can react to another file's changes by embedding its hash: # hash: {{ include "other.conf" | sha256sum }}.
+- A run*onchange* script can react to another file's changes by embedding its hash: # hash: {{ include "other.conf" | sha256sum }}.

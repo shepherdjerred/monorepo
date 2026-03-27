@@ -120,6 +120,7 @@ toolkit recall search "interview prep system design"
 ```
 
 This searches:
+
 - All past Claude conversations (`.jsonl` files)
 - Claude plans and research (`~/.claude/plans/`, `~/.claude/research/`)
 - Claude memories (`~/.claude/projects/*/memory/`)

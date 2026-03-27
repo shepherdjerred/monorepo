@@ -15,10 +15,7 @@
   "dislikes": 116,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Reverse Vowels of a String\", \"titleSlug\": \"reverse-vowels-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove Digit From Number to Maximize Result\", \"titleSlug\": \"remove-digit-from-number-to-maximize-result\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"leetcodeisacommunityforcoders\"",
-    "\"aeiou\""
-  ],
+  "exampleTestcaseList": ["\"leetcodeisacommunityforcoders\"", "\"aeiou\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

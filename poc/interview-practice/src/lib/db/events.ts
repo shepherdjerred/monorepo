@@ -25,7 +25,11 @@ export function insertEvent(
   const stmt = db.prepare(
     "INSERT INTO events (event, data, timestamp) VALUES (?, ?, ?)",
   );
-  const result = stmt.run(event, data ? JSON.stringify(data) : null, Date.now());
+  const result = stmt.run(
+    event,
+    data ? JSON.stringify(data) : null,
+    Date.now(),
+  );
   return Number(result.lastInsertRowid);
 }
 

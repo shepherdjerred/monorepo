@@ -15,10 +15,7 @@
   "dislikes": 112,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Replace Non-Coprime Numbers in Array\", \"titleSlug\": \"replace-non-coprime-numbers-in-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,7,8,15,3,5]",
-    "[4,7,15,8,3,5]"
-  ],
+  "exampleTestcaseList": ["[4,7,8,15,3,5]", "[4,7,15,8,3,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -1,6 +1,9 @@
 import { z } from "zod/v4";
 import { SystemDesignPhaseSchema } from "#lib/questions/schemas.ts";
-import type { SystemDesignPhase, SystemDesignQuestion } from "#lib/questions/schemas.ts";
+import type {
+  SystemDesignPhase,
+  SystemDesignQuestion,
+} from "#lib/questions/schemas.ts";
 import type { Session } from "#lib/session/manager.ts";
 import type { Logger } from "#logger";
 import type { AIClient } from "#lib/ai/client.ts";
@@ -47,7 +50,7 @@ export type DispatchSystemDesignToolOptions = {
   reflectionClient?: AIClient | undefined;
   question?: SystemDesignQuestion | undefined;
   recentTranscript?: TranscriptEntry[] | undefined;
-}
+};
 
 export async function dispatchSystemDesignTool(
   opts: DispatchSystemDesignToolOptions,
@@ -137,7 +140,12 @@ export async function dispatchSystemDesignTool(
 
         const response = await opts.reflectionClient.chat({
           systemPrompt: reflectionPrompt,
-          messages: [{ role: "user", content: `Analyze the current interview state. Reason: ${reason}` }],
+          messages: [
+            {
+              role: "user",
+              content: `Analyze the current interview state. Reason: ${reason}`,
+            },
+          ],
           maxTokens: 1024,
         });
 

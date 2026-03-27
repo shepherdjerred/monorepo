@@ -16,10 +16,7 @@
   "dislikes": 100,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Distances in Tree\", \"titleSlug\": \"sum-of-distances-in-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Delete Nodes And Return Forest\", \"titleSlug\": \"delete-nodes-and-return-forest\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Product of Splitted Binary Tree\", \"titleSlug\": \"maximum-product-of-splitted-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-1,2,0,2,0]",
-    "[-1,2,0]"
-  ],
+  "exampleTestcaseList": ["[-1,2,0,2,0]", "[-1,2,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

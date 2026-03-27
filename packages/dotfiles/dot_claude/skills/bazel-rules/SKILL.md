@@ -21,12 +21,12 @@ Comprehensive guide for writing custom Bazel rules, providers, toolchains, macro
 
 ## Rules vs Macros vs Aspects
 
-| Mechanism | Use When | Visibility | Phase |
-|-----------|----------|------------|-------|
-| **Rule** | Custom build actions, providers, or toolchain access needed | Full target in query/IDE | Analysis + Execution |
-| **Macro** | Simple composition of existing rules; leaf-node convenience wrappers | Expanded before analysis; invisible to `bazel query` | Loading |
-| **Symbolic Macro** (8+) | Typed, composable wrappers with controlled visibility | Macro-aware visibility; protected internal targets | Loading |
-| **Aspect** | Cross-cutting concerns (linting, IDE support) across the entire graph | Propagates across deps | Analysis |
+| Mechanism               | Use When                                                              | Visibility                                           | Phase                |
+| ----------------------- | --------------------------------------------------------------------- | ---------------------------------------------------- | -------------------- |
+| **Rule**                | Custom build actions, providers, or toolchain access needed           | Full target in query/IDE                             | Analysis + Execution |
+| **Macro**               | Simple composition of existing rules; leaf-node convenience wrappers  | Expanded before analysis; invisible to `bazel query` | Loading              |
+| **Symbolic Macro** (8+) | Typed, composable wrappers with controlled visibility                 | Macro-aware visibility; protected internal targets   | Loading              |
+| **Aspect**              | Cross-cutting concerns (linting, IDE support) across the entire graph | Propagates across deps                               | Analysis             |
 
 Prefer rules over macros whenever possible. Macros expand during loading and are invisible to `bazel query`, breaking IDE tooling and debugging. Safe macro uses: leaf nodes like test permutations.
 
@@ -64,6 +64,7 @@ my_rule = rule(
 ```
 
 Key elements:
+
 - `_impl(ctx)` — Implementation function receives analysis context
 - `attrs` — Typed attribute declarations (`attr.label`, `attr.string`, `attr.label_list`, etc.)
 - `_` prefix on attrs — Hidden attributes with defaults (implicit dependencies)
@@ -100,6 +101,7 @@ def _lib_impl(ctx):
 ```
 
 **Depset rules:**
+
 - Pass depsets directly to `inputs` — never flatten to lists in library rules
 - Call `to_list()` only in terminal rules (binaries), never in libraries (avoids O(n^2))
 - Use `providers = [MyLibInfo]` on `attr.label_list` to enforce correct deps
@@ -133,30 +135,30 @@ See `references/patterns.md` for the full 4-step walkthrough with code.
 
 ## Key Anti-Patterns
 
-| Anti-Pattern | Consequence | Fix |
-|---|---|---|
-| `depset.to_list()` in library rules | O(n^2) time/space across build graph | Only call `to_list()` in terminal rules |
-| Building depsets in a loop | Deeply nested structures, poor performance | Collect all transitive depsets, merge once |
-| Flattening depsets for action inputs | Defeats lazy evaluation, wastes memory | Pass `depset` directly to `inputs` |
-| `run_shell` when `run` suffices | Non-portable, quoting bugs | Use `run()` with an executable tool |
-| Complex logic in Starlark analysis | Can't read files, can't be cached/distributed | Write a builder binary, invoke via `run()` |
-| Not declaring all action inputs | Breaks hermeticity, sandbox, caching | Explicitly list every input file |
-| Macros for complex build logic | Invisible to query/aspects, hard to debug | Convert to a rule |
-| Returning mutable/large objects in providers | Hashing overhead, memory waste | Use small immutable structs |
+| Anti-Pattern                                 | Consequence                                   | Fix                                        |
+| -------------------------------------------- | --------------------------------------------- | ------------------------------------------ |
+| `depset.to_list()` in library rules          | O(n^2) time/space across build graph          | Only call `to_list()` in terminal rules    |
+| Building depsets in a loop                   | Deeply nested structures, poor performance    | Collect all transitive depsets, merge once |
+| Flattening depsets for action inputs         | Defeats lazy evaluation, wastes memory        | Pass `depset` directly to `inputs`         |
+| `run_shell` when `run` suffices              | Non-portable, quoting bugs                    | Use `run()` with an executable tool        |
+| Complex logic in Starlark analysis           | Can't read files, can't be cached/distributed | Write a builder binary, invoke via `run()` |
+| Not declaring all action inputs              | Breaks hermeticity, sandbox, caching          | Explicitly list every input file           |
+| Macros for complex build logic               | Invisible to query/aspects, hard to debug     | Convert to a rule                          |
+| Returning mutable/large objects in providers | Hashing overhead, memory waste                | Use small immutable structs                |
 
 ---
 
 ## Testing Quick Reference
 
-| What to Test | Framework | Key Function |
-|---|---|---|
-| Pure utility functions | Skylib `unittest` | `unittest.make()`, `unittest.suite()` |
-| Rule providers & actions | `rules_testing` or Skylib `analysistest` | `analysis_test()`, `analysistest.make()` |
-| Rule failure behavior | Skylib `analysistest` | `analysistest.make(impl, expect_failure=True)` |
-| Rule output correctness | `sh_test` / custom test rule | Script validates artifacts |
-| Repo rules / module extensions | `rules_bazel_integration_test` | Child workspace + recursive Bazel |
-| Documentation accuracy | Stardoc + `diff_test` | `stardoc_with_diff_test` |
-| Macros | Analysis tests on produced targets | Test the targets the macro creates |
+| What to Test                   | Framework                                | Key Function                                   |
+| ------------------------------ | ---------------------------------------- | ---------------------------------------------- |
+| Pure utility functions         | Skylib `unittest`                        | `unittest.make()`, `unittest.suite()`          |
+| Rule providers & actions       | `rules_testing` or Skylib `analysistest` | `analysis_test()`, `analysistest.make()`       |
+| Rule failure behavior          | Skylib `analysistest`                    | `analysistest.make(impl, expect_failure=True)` |
+| Rule output correctness        | `sh_test` / custom test rule             | Script validates artifacts                     |
+| Repo rules / module extensions | `rules_bazel_integration_test`           | Child workspace + recursive Bazel              |
+| Documentation accuracy         | Stardoc + `diff_test`                    | `stardoc_with_diff_test`                       |
+| Macros                         | Analysis tests on produced targets       | Test the targets the macro creates             |
 
 See `references/testing.md` for detailed examples and patterns.
 
@@ -164,16 +166,16 @@ See `references/testing.md` for detailed examples and patterns.
 
 ## Bazel Version Notes for Rule Authors
 
-| Feature | Version | Impact |
-|---------|---------|--------|
-| Symbolic macros | 8+ | Typed arguments, controlled visibility, rule finalizers |
-| Starlarkification | 8/9 | Built-in rules extracted to external repos; add explicit `load()` statements |
-| WORKSPACE removed | 9 | Must use MODULE.bazel + module extensions |
-| C++ rules to rules_cc | 9 | Completed extraction |
-| `--incompatible_autoload_externally` | 9 (empty), 10 (removed) | Explicit loads required |
-| PROJECT.scl | 9 (experimental) | Project-based build flags |
-| Starlark type annotations | 9 (experimental) | PEP 484-inspired syntax |
-| Type checking | 10 (planned) | Static validation of annotations |
+| Feature                              | Version                 | Impact                                                                       |
+| ------------------------------------ | ----------------------- | ---------------------------------------------------------------------------- |
+| Symbolic macros                      | 8+                      | Typed arguments, controlled visibility, rule finalizers                      |
+| Starlarkification                    | 8/9                     | Built-in rules extracted to external repos; add explicit `load()` statements |
+| WORKSPACE removed                    | 9                       | Must use MODULE.bazel + module extensions                                    |
+| C++ rules to rules_cc                | 9                       | Completed extraction                                                         |
+| `--incompatible_autoload_externally` | 9 (empty), 10 (removed) | Explicit loads required                                                      |
+| PROJECT.scl                          | 9 (experimental)        | Project-based build flags                                                    |
+| Starlark type annotations            | 9 (experimental)        | PEP 484-inspired syntax                                                      |
+| Type checking                        | 10 (planned)            | Static validation of annotations                                             |
 
 See `references/version-guide.md` for migration checklists.
 
@@ -195,9 +197,9 @@ These are non-negotiable principles learned from real failures:
 
 ## Reference Files
 
-| File | Use When |
-|------|----------|
-| `references/patterns.md` | Writing providers, toolchains, actions, aspects, or builder binaries from scratch |
-| `references/testing.md` | Setting up tests for custom rules — unit, analysis, integration, or documentation |
-| `references/module-extensions.md` | Creating module extensions, repository rules, or migrating from WORKSPACE |
-| `references/version-guide.md` | Upgrading Bazel versions or understanding compatibility requirements |
+| File                              | Use When                                                                          |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `references/patterns.md`          | Writing providers, toolchains, actions, aspects, or builder binaries from scratch |
+| `references/testing.md`           | Setting up tests for custom rules — unit, analysis, integration, or documentation |
+| `references/module-extensions.md` | Creating module extensions, repository rules, or migrating from WORKSPACE         |
+| `references/version-guide.md`     | Upgrading Bazel versions or understanding compatibility requirements              |

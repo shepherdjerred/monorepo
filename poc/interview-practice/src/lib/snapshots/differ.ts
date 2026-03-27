@@ -37,7 +37,11 @@ export function codeDiff(oldCode: string, newCode: string): LineDiff {
   return { added, removed };
 }
 
-function connectionKey(from: string, to: string, label: string | undefined): string {
+function connectionKey(
+  from: string,
+  to: string,
+  label: string | undefined,
+): string {
   if (label !== undefined) {
     return `${from} -> ${to} (${label})`;
   }
@@ -48,8 +52,12 @@ export function excalidrawSemanticDiff(
   oldExtraction: DiagramExtraction,
   newExtraction: DiagramExtraction,
 ): SemanticDiff {
-  const oldComponentNames = new Set(oldExtraction.components.map((c) => c.name));
-  const newComponentNames = new Set(newExtraction.components.map((c) => c.name));
+  const oldComponentNames = new Set(
+    oldExtraction.components.map((c) => c.name),
+  );
+  const newComponentNames = new Set(
+    newExtraction.components.map((c) => c.name),
+  );
 
   const addedComponents: string[] = [];
   const removedComponents: string[] = [];
@@ -73,7 +81,10 @@ export function excalidrawSemanticDiff(
   );
   for (const comp of newExtraction.components) {
     const old = oldComponentMap.get(comp.name);
-    if (old !== undefined && (old.type !== comp.type || old.x !== comp.x || old.y !== comp.y)) {
+    if (
+      old !== undefined &&
+      (old.type !== comp.type || old.x !== comp.x || old.y !== comp.y)
+    ) {
       modifiedComponents.push(comp.name);
     }
   }

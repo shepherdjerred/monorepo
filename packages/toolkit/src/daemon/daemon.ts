@@ -105,7 +105,9 @@ export async function daemonStatus(verbose: boolean): Promise<void> {
   const isRunning = proc.exitCode === 0;
 
   console.log("Recall Daemon");
-  console.log(`  Plist:   ${plistExists == null ? "not installed" : "installed"}`);
+  console.log(
+    `  Plist:   ${plistExists == null ? "not installed" : "installed"}`,
+  );
   console.log(`  Status:  ${isRunning ? "running" : "stopped"}`);
 
   if (isRunning && verbose) {
@@ -120,7 +122,9 @@ export async function daemonStatus(verbose: boolean): Promise<void> {
   const stderrLogPath = path.join(LOGS_DIR, "daemon-stderr.log");
   const stderrExists = await stat(stderrLogPath).catch(() => null);
   if (stderrExists != null) {
-    console.log(`  Stderr:  ${stderrLogPath} (${formatBytes(stderrExists.size)})`);
+    console.log(
+      `  Stderr:  ${stderrLogPath} (${formatBytes(stderrExists.size)})`,
+    );
   }
 }
 

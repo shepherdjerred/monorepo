@@ -16,11 +16,7 @@
   "dislikes": 55,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Adjacent Almost-Equal Characters\", \"titleSlug\": \"remove-adjacent-almost-equal-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"0100\"",
-    "\"10\"",
-    "\"1111\""
-  ],
+  "exampleTestcaseList": ["\"0100\"", "\"10\"", "\"1111\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}]}",
   "topicTags": [
     {

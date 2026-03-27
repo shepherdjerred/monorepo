@@ -14,11 +14,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Make Binary Array Elements Equal to One II\", \"titleSlug\": \"minimum-operations-to-make-binary-array-elements-equal-to-one-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"10111\"",
-    "\"101\"",
-    "\"00000\""
-  ],
+  "exampleTestcaseList": ["\"10111\"", "\"101\"", "\"00000\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

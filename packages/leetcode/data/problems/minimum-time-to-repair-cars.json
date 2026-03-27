@@ -15,10 +15,7 @@
   "dislikes": 92,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sort Transformed Array\", \"titleSlug\": \"sort-transformed-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Koko Eating Bananas\", \"titleSlug\": \"koko-eating-bananas\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,3,1]\n10",
-    "[5,1,8]\n6"
-  ],
+  "exampleTestcaseList": ["[4,2,3,1]\n10", "[5,1,8]\n6"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

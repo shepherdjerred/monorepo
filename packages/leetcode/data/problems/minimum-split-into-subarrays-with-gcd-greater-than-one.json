@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Minimum Subarrays in a Valid Split\", \"titleSlug\": \"minimum-subarrays-in-a-valid-split\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[12,6,3,14,8]",
-    "[4,12,6,14]"
-  ],
+  "exampleTestcaseList": ["[12,6,3,14,8]", "[4,12,6,14]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

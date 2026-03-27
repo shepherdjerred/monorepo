@@ -15,11 +15,7 @@
   "dislikes": 34,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Replace Elements with Greatest Element on Right Side\", \"titleSlug\": \"replace-elements-with-greatest-element-on-right-side\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Distance Between a Pair of Values\", \"titleSlug\": \"maximum-distance-between-a-pair-of-values\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Difference Between Increasing Elements\", \"titleSlug\": \"maximum-difference-between-increasing-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,1,6,1,1,1]",
-    "[1,8,3,8,3]",
-    "[0,1]"
-  ],
+  "exampleTestcaseList": ["[1,1,1,6,1,1,1]", "[1,8,3,8,3]", "[0,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

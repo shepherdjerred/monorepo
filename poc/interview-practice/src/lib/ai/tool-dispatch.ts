@@ -56,7 +56,11 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
     case "run_tests": {
       if (!currentPart) return "No current part found.";
       session.metadata.testsRun++;
-      const result = await runTests(solutionPath, currentPart.testCases, question.functionSignature);
+      const result = await runTests(
+        solutionPath,
+        currentPart.testCases,
+        question.functionSignature,
+      );
 
       insertEvent(session.db, "test_run", {
         passed: result.passed,
@@ -81,7 +85,12 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
     }
 
     case "reveal_next_part": {
-      const result = await handleRevealNextPart(input, question, session, logger);
+      const result = await handleRevealNextPart(
+        input,
+        question,
+        session,
+        logger,
+      );
       return result ?? "No more parts — this is the final part of the problem.";
     }
 
@@ -89,9 +98,7 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
       if (!currentPart) return "No current part found.";
       const level =
         typeof input["level"] === "string" ? input["level"] : "subtle";
-      const availableHints = currentPart.hints.filter(
-        (h) => h.level === level,
-      );
+      const availableHints = currentPart.hints.filter((h) => h.level === level);
       const hintIndex = Math.min(
         session.metadata.hintsGiven,
         availableHints.length - 1,
@@ -172,10 +179,14 @@ async function handleEditCode(
   session: Session,
   solutionPath: string,
 ): Promise<string> {
-  const reason = typeof input["reason"] === "string" ? input["reason"] : "unspecified";
-  const fullContent = typeof input["fullContent"] === "string" ? input["fullContent"] : undefined;
-  const search = typeof input["search"] === "string" ? input["search"] : undefined;
-  const replace = typeof input["replace"] === "string" ? input["replace"] : undefined;
+  const reason =
+    typeof input["reason"] === "string" ? input["reason"] : "unspecified";
+  const fullContent =
+    typeof input["fullContent"] === "string" ? input["fullContent"] : undefined;
+  const search =
+    typeof input["search"] === "string" ? input["search"] : undefined;
+  const replace =
+    typeof input["replace"] === "string" ? input["replace"] : undefined;
 
   if (fullContent !== undefined) {
     await Bun.write(solutionPath, fullContent);
@@ -185,7 +196,14 @@ async function handleEditCode(
   }
 
   if (search !== undefined && replace !== undefined) {
-    return applySearchReplace({ solutionPath, search, replace, session, mode: "search_replace", reason });
+    return applySearchReplace({
+      solutionPath,
+      search,
+      replace,
+      session,
+      mode: "search_replace",
+      reason,
+    });
   }
 
   return "edit_code requires either 'fullContent' or both 'search' and 'replace'.";
@@ -199,7 +217,12 @@ async function handleHelpDebug(
   const parsed = HelpDebugInputSchema.safeParse(input);
   const { level, method, description, codeEdit } = parsed.success
     ? parsed.data
-    : { level: "subtle" as const, method: "verbal" as const, description: "", codeEdit: undefined };
+    : {
+        level: "subtle" as const,
+        method: "verbal" as const,
+        description: "",
+        codeEdit: undefined,
+      };
 
   session.metadata.debugHelpsGiven++;
   insertEvent(session.db, "debug_help", { level, method, description });
@@ -233,7 +256,9 @@ async function handleHelpDebug(
   return `Debug help (${level}): ${description}\n\nNote: Could not read solution file for editing.`;
 }
 
-async function applySearchReplace(opts: ApplySearchReplaceOptions): Promise<string> {
+async function applySearchReplace(
+  opts: ApplySearchReplaceOptions,
+): Promise<string> {
   try {
     const currentCode = await Bun.file(opts.solutionPath).text();
     if (!currentCode.includes(opts.search)) {
@@ -242,7 +267,10 @@ async function applySearchReplace(opts: ApplySearchReplaceOptions): Promise<stri
     const updatedCode = currentCode.replace(opts.search, opts.replace);
     await Bun.write(opts.solutionPath, updatedCode);
     opts.session.metadata.editsGiven++;
-    const eventData: Record<string, unknown> = { mode: opts.mode, reason: opts.reason };
+    const eventData: Record<string, unknown> = {
+      mode: opts.mode,
+      reason: opts.reason,
+    };
     if (opts.level !== undefined) {
       eventData["level"] = opts.level;
     }

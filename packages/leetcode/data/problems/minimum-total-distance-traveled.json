@@ -16,10 +16,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Earn Points\", \"titleSlug\": \"number-of-ways-to-earn-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,4,6]\n[[2,2],[6,2]]",
-    "[1,-1]\n[[-2,1],[2,1]]"
-  ],
+  "exampleTestcaseList": ["[0,4,6]\n[[2,2],[6,2]]", "[1,-1]\n[[-2,1],[2,1]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

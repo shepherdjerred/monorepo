@@ -79,9 +79,7 @@
       "minUserTurnsBeforeFeedback": 5,
       "minUserTurnsBetweenFeedback": 25,
       "hideThanksAfterMs": 3000,
-      "onForModels": [
-        "*"
-      ],
+      "onForModels": ["*"],
       "probability": 0.01
     },
     "tengu_penguins_enabled": true,
@@ -151,9 +149,7 @@
     },
     "tengu_mcp_elicitation": true,
     "tengu_log_datadog_events": true,
-    "tengu_tool_search_unsupported_models": [
-      "haiku"
-    ],
+    "tengu_tool_search_unsupported_models": ["haiku"],
     "tengu_bridge_min_version": {
       "minVersion": "2.1.70"
     },
@@ -374,11 +370,7 @@
     "tengu_satin_quoll": {},
     "tengu_pebble_leaf_prune": false,
     "tengu_prompt_cache_1h_config": {
-      "allowlist": [
-        "repl_main_thread*",
-        "sdk",
-        "auto_mode"
-      ]
+      "allowlist": ["repl_main_thread*", "sdk", "auto_mode"]
     },
     "tengu_willow_sentinel_ttl_hours": 1
   },
@@ -392,9 +384,7 @@
   },
   "firstStartTime": "2026-03-18T01:09:44.701Z",
   "githubRepoPaths": {
-    "shepherdjerred/monorepo": [
-      "/Users/jerred/git/monorepo"
-    ]
+    "shepherdjerred/monorepo": ["/Users/jerred/git/monorepo"]
   },
   "groveConfigCache": {
     "07481c26-d17d-4cd0-b875-c6892cde2087": {
@@ -449,10 +439,7 @@
   "projects": {
     "/Users/jerred": {
       "allowedTools": [],
-      "disabledMcpServers": [
-        "claude.ai Gmail",
-        "claude.ai Google Calendar"
-      ],
+      "disabledMcpServers": ["claude.ai Gmail", "claude.ai Google Calendar"],
       "disabledMcpjsonServers": [],
       "enabledMcpjsonServers": [],
       "exampleFiles": [],
@@ -664,10 +651,7 @@
     },
     "/Users/jerred/git/monorepo": {
       "allowedTools": [],
-      "disabledMcpServers": [
-        "claude.ai Gmail",
-        "claude.ai Google Calendar"
-      ],
+      "disabledMcpServers": ["claude.ai Gmail", "claude.ai Google Calendar"],
       "disabledMcpjsonServers": [],
       "enabledMcpjsonServers": [],
       "exampleFiles": [

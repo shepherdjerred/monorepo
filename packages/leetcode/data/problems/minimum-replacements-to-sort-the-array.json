@@ -15,10 +15,7 @@
   "dislikes": 69,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Make the Array Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,9,3]",
-    "[1,2,3,4,5]"
-  ],
+  "exampleTestcaseList": ["[3,9,3]", "[1,2,3,4,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

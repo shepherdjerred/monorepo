@@ -12,10 +12,7 @@
   "dislikes": 142,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Replace All Digits with Characters\", \"titleSlug\": \"replace-all-digits-with-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Shifting Letters II\", \"titleSlug\": \"shifting-letters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After Substring Operation\", \"titleSlug\": \"lexicographically-smallest-string-after-substring-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shift Distance Between Two Strings\", \"titleSlug\": \"shift-distance-between-two-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the K-th Character in String Game I\", \"titleSlug\": \"find-the-k-th-character-in-string-game-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the K-th Character in String Game II\", \"titleSlug\": \"find-the-k-th-character-in-string-game-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n[3,5,9]",
-    "\"aaa\"\n[1,2,3]"
-  ],
+  "exampleTestcaseList": ["\"abc\"\n[3,5,9]", "\"aaa\"\n[1,2,3]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
   "topicTags": [
     {

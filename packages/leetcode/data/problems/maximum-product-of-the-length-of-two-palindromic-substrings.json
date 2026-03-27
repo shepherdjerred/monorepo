@@ -16,10 +16,7 @@
   "dislikes": 43,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Product of the Length of Two Palindromic Subsequences\", \"titleSlug\": \"maximum-product-of-the-length-of-two-palindromic-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equal\", \"titleSlug\": \"minimum-cost-to-make-array-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"ababbb\"",
-    "\"zaaaxbbby\""
-  ],
+  "exampleTestcaseList": ["\"ababbb\"", "\"zaaaxbbby\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 789,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Make Array Non-decreasing or Non-increasing\", \"titleSlug\": \"make-array-non-decreasing-or-non-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Good Days to Rob the Bank\", \"titleSlug\": \"find-good-days-to-rob-the-bank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Non-Decreasing Subarrays After K Operations\", \"titleSlug\": \"count-non-decreasing-subarrays-after-k-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,3]",
-    "[4,2,1]"
-  ],
+  "exampleTestcaseList": ["[4,2,3]", "[4,2,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"turing\", \"name\": \"Turing\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"cashfree\", \"name\": \"Cashfree\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"six_months\": []}",
   "topicTags": [
     {

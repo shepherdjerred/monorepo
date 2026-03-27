@@ -1,11 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const RECALL_DIR = path.join(
-  Bun.env["HOME"] ?? "~",
-  ".recall",
-  "fetched",
-);
+const RECALL_DIR = path.join(Bun.env["HOME"] ?? "~", ".recall", "fetched");
 
 export type SaveOptions = {
   url: string;
@@ -57,10 +53,12 @@ export function extractTitle(content: string, url: string): string {
   }
 
   // Fall back to the first non-empty line
-  const firstLine = content
-    .split("\n")
-    .find((line) => line.trim().length > 0);
-  if (firstLine != null && firstLine.trim().length > 0 && firstLine.trim().length < 200) {
+  const firstLine = content.split("\n").find((line) => line.trim().length > 0);
+  if (
+    firstLine != null &&
+    firstLine.trim().length > 0 &&
+    firstLine.trim().length < 200
+  ) {
     return firstLine.trim();
   }
 

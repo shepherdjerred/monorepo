@@ -25,23 +25,23 @@ Profiles are also auto-generated at `$(bazel info output_base)/command.profile.g
 
 Key rows to examine:
 
-| Row | What It Shows |
-|-----|--------------|
-| `action count` | Concurrent actions over time (should reach `--jobs` value) |
-| `CPU usage (Bazel)` | Per-second CPU utilization |
-| `Critical Path` | Actions on the critical path |
-| `Main Thread` | High-level phases: Launch Blaze, evaluateTargetPatterns, runAnalysisPhase |
-| `Garbage Collector` | Minor and major GC pause events |
+| Row                 | What It Shows                                                             |
+| ------------------- | ------------------------------------------------------------------------- |
+| `action count`      | Concurrent actions over time (should reach `--jobs` value)                |
+| `CPU usage (Bazel)` | Per-second CPU utilization                                                |
+| `Critical Path`     | Actions on the critical path                                              |
+| `Main Thread`       | High-level phases: Launch Blaze, evaluateTargetPatterns, runAnalysisPhase |
+| `Garbage Collector` | Minor and major GC pause events                                           |
 
 ### Step 4: Identify the Bottleneck Type
 
-| Observation | Bottleneck | Next Step |
-|-------------|-----------|-----------|
-| Slow `runAnalysisPhase` | Rule implementation | Profile Starlark with `--starlark_cpu_profile` |
-| One slow action on critical path | Action design | Split action or reduce its deps |
-| Low action concurrency | Parallelism | Finer-grained targets |
-| Heavy GC | Memory | Increase `-Xmx` or use Skyfocus |
-| High `REMOTE_SETUP`/`FETCH` | Infrastructure | Network proximity, compression |
+| Observation                      | Bottleneck          | Next Step                                      |
+| -------------------------------- | ------------------- | ---------------------------------------------- |
+| Slow `runAnalysisPhase`          | Rule implementation | Profile Starlark with `--starlark_cpu_profile` |
+| One slow action on critical path | Action design       | Split action or reduce its deps                |
+| Low action concurrency           | Parallelism         | Finer-grained targets                          |
+| Heavy GC                         | Memory              | Increase `-Xmx` or use Skyfocus                |
+| High `REMOTE_SETUP`/`FETCH`      | Infrastructure      | Network proximity, compression                 |
 
 ---
 
@@ -74,6 +74,7 @@ diff /tmp/exec1.txt /tmp/exec2.txt
 ```
 
 Three formats available (compact is recommended -- smallest files):
+
 - `--execution_log_compact_file=PATH` (recommended)
 - `--execution_log_binary_file=PATH`
 - `--execution_log_json_file=PATH`
@@ -126,6 +127,7 @@ bazel aquery --output=summary //target
 Output formats: `--output=text` (default), `--output=proto`, `--output=textproto`, `--output=jsonproto`, `--output=commands`.
 
 Key options:
+
 - `--include_commandline` (default: true) -- show action command lines
 - `--include_param_files` (default: false) -- include param file contents
 - `--skyframe_state` -- dump from cache without re-running analysis
@@ -201,6 +203,7 @@ bazel clean && bazel build //target --profile=/tmp/after.profile.gz
 ```
 
 Best practices:
+
 - Run on **dedicated physical machines** (not VMs or shared CI)
 - Use **multiple runs** and take the median
 - Control variables: same flags, Bazel version, machine, OS
@@ -213,6 +216,7 @@ Best practices:
 The critical path is the longest sequential chain of actions that determines minimum build time.
 
 ### How to Find It
+
 1. **JSON trace profile**: Dedicated "Critical Path" row
 2. **Build output**: Bazel prints critical path summary at end of build
 3. **Execution graph log** (Bazel 6.0+):
@@ -223,9 +227,11 @@ The critical path is the longest sequential chain of actions that determines min
    ```
 
 ### Drag Analysis
+
 "Drag" = time potentially saved by removing a node from the execution graph. Use this to predict optimization impact before making changes.
 
 ### Optimization Strategies
+
 - Split large critical-path actions into smaller parallel tasks
 - Reduce transitive dependencies of critical-path actions
 - Cache actions (remote cache) to eliminate them entirely
@@ -252,16 +258,19 @@ Use `--nobuild` to isolate analysis-phase cost (no execution phase).
 ## Third-Party Tools
 
 ### BuildBuddy
+
 - **Timing Profile Tab**: Visual breakdown of analysis and execution phases
 - **Cache Tab**: Upload/download volumes, cache miss counts; `AC Misses` filter for root cause
 - **Trends Page**: Build time percentiles, cache hit rates over time
 - **Drilldown Tab**: Common characteristics of slow vs fast builds
 
 ### EngFlow Bazel Invocation Analyzer
+
 - Open-source CLI + web at analyzer.engflow.com
 - Analyzes JSON trace profiles and suggests improvements
 
 ### bazel-bench
+
 - Compare performance across git commits or Bazel versions
 - Best run on dedicated physical machines for consistent results
 
@@ -281,17 +290,17 @@ bazel build --build_event_binary_file=bep.pb //target
 
 Key metrics available via BEP:
 
-| Metric | Description |
-|--------|-------------|
-| `PackageMetrics.packages_loaded` | Packages loaded |
-| `TargetMetrics.targets_configured` | Targets configured |
-| `ActionSummary.actions_created` | Total actions created |
-| `ActionSummary.actions_executed` | Actions actually executed |
-| `ActionData` | Top action types by count (top 20 default) |
-| `CumulativeMetrics.num_analyses` | 1=clean build, >1=incremental |
-| `MemoryMetrics.peak_post_gc_heap_size` | Peak heap (requires `--memory_profile`) |
-| `WorkerMetrics.WorkerStats.worker_memory_in_kb` | Worker memory |
-| `NetworkMetrics.SystemNetworkStats` | Network I/O (requires `--experimental_collect_system_network_usage`) |
+| Metric                                          | Description                                                          |
+| ----------------------------------------------- | -------------------------------------------------------------------- |
+| `PackageMetrics.packages_loaded`                | Packages loaded                                                      |
+| `TargetMetrics.targets_configured`              | Targets configured                                                   |
+| `ActionSummary.actions_created`                 | Total actions created                                                |
+| `ActionSummary.actions_executed`                | Actions actually executed                                            |
+| `ActionData`                                    | Top action types by count (top 20 default)                           |
+| `CumulativeMetrics.num_analyses`                | 1=clean build, >1=incremental                                        |
+| `MemoryMetrics.peak_post_gc_heap_size`          | Peak heap (requires `--memory_profile`)                              |
+| `WorkerMetrics.WorkerStats.worker_memory_in_kb` | Worker memory                                                        |
+| `NetworkMetrics.SystemNetworkStats`             | Network I/O (requires `--experimental_collect_system_network_usage`) |
 
 Use `--experimental_record_metrics_for_all_mnemonics` for comprehensive action type coverage beyond the default top 20.
 
@@ -302,6 +311,7 @@ Use `--experimental_record_metrics_for_all_mnemonics` for comprehensive action t
 Skyframe is Bazel's core evaluation framework -- a DAG of computations.
 
 ### Key Concepts
+
 - **SkyKey**: Identifier for a computation node
 - **SkyValue**: Result of a computation
 - **SkyFunction**: Computes a SkyValue; requests dependencies via `getValue()`
@@ -321,6 +331,7 @@ bazel dump --skyframe=deps
 ```
 
 ### In Trace Profiles
+
 - `skyframe evaluator` sections in analysis phase
 - `skyframe evaluator execution-X` sections in execution phase
 - `package creation` events show external dependency resolution

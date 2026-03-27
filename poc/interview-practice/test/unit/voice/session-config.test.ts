@@ -6,7 +6,8 @@ import type { ToolDefinition } from "#lib/ai/client.ts";
 function makePart(overrides?: Partial<QuestionPart>): QuestionPart {
   return {
     partNumber: 1,
-    prompt: "Given an array of integers, find two numbers that add to a target.",
+    prompt:
+      "Given an array of integers, find two numbers that add to a target.",
     internalNotes: "Hash map approach is optimal.",
     hints: [{ level: "subtle", content: "Think about lookups." }],
     testCases: [{ args: [[2, 7, 11], 9], expected: [0, 1] }],
@@ -27,7 +28,14 @@ function makeQuestion(overrides?: Partial<LeetcodeQuestion>): LeetcodeQuestion {
     description: "Find two numbers...",
     parts: [makePart()],
     constraints: ["2 <= nums.length <= 10^4"],
-    functionSignature: { name: "twoSum", params: [{ name: "nums", type: "number[]" }, { name: "target", type: "number" }], returnType: "number[]" },
+    functionSignature: {
+      name: "twoSum",
+      params: [
+        { name: "nums", type: "number[]" },
+        { name: "target", type: "number" },
+      ],
+      returnType: "number[]",
+    },
     source: "leetcode",
     escalationPattern: "constraint-addition",
     ...overrides,
@@ -82,7 +90,9 @@ describe("buildRealtimeSessionConfig", () => {
     });
 
     expect(config.input_audio_transcription).toBeDefined();
-    expect(config.input_audio_transcription?.model).toBe("gpt-4o-mini-transcribe");
+    expect(config.input_audio_transcription?.model).toBe(
+      "gpt-4o-mini-transcribe",
+    );
   });
 
   test("includes server VAD turn detection", () => {

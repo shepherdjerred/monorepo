@@ -16,11 +16,7 @@
   "dislikes": 252,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Determine if Two Strings Are Close\", \"titleSlug\": \"determine-if-two-strings-are-close\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"xx\"\n\"yy\"",
-    "\"xy\"\n\"yx\"",
-    "\"xx\"\n\"xy\""
-  ],
+  "exampleTestcaseList": ["\"xx\"\n\"yy\"", "\"xy\"\n\"yx\"", "\"xx\"\n\"xy\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

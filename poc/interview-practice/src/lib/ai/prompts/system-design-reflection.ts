@@ -1,4 +1,7 @@
-import type { SystemDesignQuestion, SystemDesignPhase } from "#lib/questions/schemas.ts";
+import type {
+  SystemDesignQuestion,
+  SystemDesignPhase,
+} from "#lib/questions/schemas.ts";
 import type { TranscriptEntry } from "#lib/db/transcript.ts";
 
 export type SystemDesignReflectionContext = {
@@ -6,9 +9,11 @@ export type SystemDesignReflectionContext = {
   currentPhase: SystemDesignPhase;
   recentTranscript: TranscriptEntry[];
   diagramSnapshot: string | null;
-}
+};
 
-export function buildSystemDesignReflectionPrompt(ctx: SystemDesignReflectionContext): string {
+export function buildSystemDesignReflectionPrompt(
+  ctx: SystemDesignReflectionContext,
+): string {
   const sections: string[] = [];
 
   sections.push(`You are a senior interviewer reflection model analyzing a system design interview in progress.

@@ -15,10 +15,7 @@
   "dislikes": 132,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Check If Array Pairs Are Divisible by k\", \"titleSlug\": \"check-if-array-pairs-are-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,2,4,3]\n[9,6,9,3,15]",
-    "[4,3,6]\n[8,2,6,10]"
-  ],
+  "exampleTestcaseList": ["[2,3,2,4,3]\n[9,6,9,3,15]", "[4,3,6]\n[8,2,6,10]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

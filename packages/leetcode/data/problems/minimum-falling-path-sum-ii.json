@@ -16,10 +16,7 @@
   "dislikes": 124,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Falling Path Sum\", \"titleSlug\": \"minimum-falling-path-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2,3],[4,5,6],[7,8,9]]",
-    "[[7]]"
-  ],
+  "exampleTestcaseList": ["[[1,2,3],[4,5,6],[7,8,9]]", "[[7]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

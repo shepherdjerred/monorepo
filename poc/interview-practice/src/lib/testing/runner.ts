@@ -9,7 +9,7 @@ export type TestResult = {
   stderr: string;
   durationMs: number;
   timedOut: boolean;
-}
+};
 
 export type TestRunResult = {
   passed: number;
@@ -17,7 +17,7 @@ export type TestRunResult = {
   total: number;
   results: TestResult[];
   compileError: string | null;
-}
+};
 
 function generateTestHarness(
   solutionPath: string,
@@ -53,13 +53,15 @@ console.log(JSON.stringify(results));
 
 import { z } from "zod/v4";
 
-const harnessResultParser = z.array(z.object({
-  passed: z.boolean(),
-  actual: z.unknown(),
-  expected: z.unknown(),
-  error: z.string().nullable(),
-  durationMs: z.number(),
-}));
+const harnessResultParser = z.array(
+  z.object({
+    passed: z.boolean(),
+    actual: z.unknown(),
+    expected: z.unknown(),
+    error: z.string().nullable(),
+    durationMs: z.number(),
+  }),
+);
 
 export async function runTests(
   solutionPath: string,
@@ -88,7 +90,12 @@ export async function runTests(
 
   // For TypeScript with a function signature, use the test harness approach
   if (ext === ".ts" && signature !== undefined) {
-    return runWithHarness(solutionPath, testCases, signature, langConfig.runTimeout);
+    return runWithHarness(
+      solutionPath,
+      testCases,
+      signature,
+      langConfig.runTimeout,
+    );
   }
 
   // For Java with a function signature, use the Java test harness
@@ -201,7 +208,13 @@ async function runWithHarness(
       });
     }
 
-    return { passed, failed, total: testCases.length, results, compileError: null };
+    return {
+      passed,
+      failed,
+      total: testCases.length,
+      results,
+      compileError: null,
+    };
   } finally {
     // Clean up harness file
     try {
@@ -217,12 +230,12 @@ async function runWithHarness(
 
 function tsTypeToJava(tsType: string): string {
   const map: Record<string, string> = {
-    "number": "int",
+    number: "int",
     "number[]": "int[]",
     "number[][]": "int[][]",
-    "string": "String",
+    string: "String",
     "string[]": "String[]",
-    "boolean": "boolean",
+    boolean: "boolean",
     "boolean[]": "boolean[]",
   };
   return map[tsType] ?? tsType;
@@ -250,7 +263,11 @@ function javaLiteral(value: unknown, tsType: string): string {
   }
 }
 
-function javaDeepEquals(tsType: string, actual: string, expected: string): string {
+function javaDeepEquals(
+  tsType: string,
+  actual: string,
+  expected: string,
+): string {
   if (tsType.includes("[]")) {
     return `java.util.Arrays.deepEquals(box(${actual}), box(${expected}))`;
   }
@@ -259,7 +276,8 @@ function javaDeepEquals(tsType: string, actual: string, expected: string): strin
 
 function javaToJsonString(tsType: string, expr: string): string {
   if (tsType.includes("[][]")) return `deepToString(${expr})`;
-  if (tsType.includes("[]")) return `java.util.Arrays.toString(${expr}).replace(" ", "")`;
+  if (tsType.includes("[]"))
+    return `java.util.Arrays.toString(${expr}).replace(" ", "")`;
   if (tsType === "string") return `"\\"" + ${expr} + "\\""`;
   return `String.valueOf(${expr})`;
 }
@@ -278,9 +296,19 @@ function generateJavaTestHarness(
       return javaLiteral(arg, p.type);
     });
     const expectedLiteral = javaLiteral(tc.expected, signature.returnType);
-    const expectedJson = javaToJsonString(signature.returnType, `expected${String(i)}`);
-    const actualJson = javaToJsonString(signature.returnType, `actual${String(i)}`);
-    const equals = javaDeepEquals(signature.returnType, `actual${String(i)}`, `expected${String(i)}`);
+    const expectedJson = javaToJsonString(
+      signature.returnType,
+      `expected${String(i)}`,
+    );
+    const actualJson = javaToJsonString(
+      signature.returnType,
+      `actual${String(i)}`,
+    );
+    const equals = javaDeepEquals(
+      signature.returnType,
+      `actual${String(i)}`,
+      `expected${String(i)}`,
+    );
 
     cases.push(`
             // Test case ${String(i + 1)}
@@ -372,19 +400,24 @@ async function runWithJavaHarness(
           passed: false,
           actual: "",
           expected: formatExpected(tc.expected),
-          stderr: compileState.timedOut ? "Compilation timed out" : compileStderr,
+          stderr: compileState.timedOut
+            ? "Compilation timed out"
+            : compileStderr,
           durationMs: 0,
           timedOut: compileState.timedOut,
         })),
-        compileError: compileState.timedOut ? "Compilation timed out" : compileStderr,
+        compileError: compileState.timedOut
+          ? "Compilation timed out"
+          : compileStderr,
       };
     }
 
     // Run TestRunner
-    const runProc = Bun.spawn(
-      ["java", "-cp", dir, "TestRunner"],
-      { cwd: dir, stdout: "pipe", stderr: "pipe" },
-    );
+    const runProc = Bun.spawn(["java", "-cp", dir, "TestRunner"], {
+      cwd: dir,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
 
     const runState = { timedOut: false };
     const runTimeoutId = setTimeout(() => {
@@ -407,7 +440,7 @@ async function runWithJavaHarness(
           passed: false,
           actual: "",
           expected: formatExpected(tc.expected),
-          stderr: runState.timedOut ? "Timed out" : (stderr || "Runtime error"),
+          stderr: runState.timedOut ? "Timed out" : stderr || "Runtime error",
           durationMs: runState.timedOut ? langConfig.runTimeout : 0,
           timedOut: runState.timedOut,
         })),
@@ -451,16 +484,32 @@ async function runWithJavaHarness(
       });
     }
 
-    return { passed, failed, total: testCases.length, results, compileError: null };
+    return {
+      passed,
+      failed,
+      total: testCases.length,
+      results,
+      compileError: null,
+    };
   } finally {
     // Clean up generated files
     try {
       const { unlinkSync } = await import("node:fs");
-      const cleanupFiles = ["TestRunner.java", "TestRunner.class", "Solution.class"];
+      const cleanupFiles = [
+        "TestRunner.java",
+        "TestRunner.class",
+        "Solution.class",
+      ];
       for (const f of cleanupFiles) {
-        try { unlinkSync(path.join(dir, f)); } catch { /* ignore */ }
+        try {
+          unlinkSync(path.join(dir, f));
+        } catch {
+          /* ignore */
+        }
       }
-    } catch { /* ignore cleanup errors */ }
+    } catch {
+      /* ignore cleanup errors */
+    }
   }
 }
 

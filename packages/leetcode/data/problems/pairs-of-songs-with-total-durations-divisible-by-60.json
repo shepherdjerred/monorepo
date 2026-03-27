@@ -15,10 +15,7 @@
   "dislikes": 183,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Destroy Sequential Targets\", \"titleSlug\": \"destroy-sequential-targets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Pairs That Form a Complete Day II\", \"titleSlug\": \"count-pairs-that-form-a-complete-day-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[30,20,150,100,40]",
-    "[60,60,60]"
-  ],
+  "exampleTestcaseList": ["[30,20,150,100,40]", "[60,60,60]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 6, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"citrix\", \"name\": \"Citrix\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

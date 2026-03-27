@@ -12,10 +12,7 @@
   "dislikes": 256,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reverse String II\", \"titleSlug\": \"reverse-string-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"Let's take LeetCode contest\"",
-    "\"Mr Ding\""
-  ],
+  "exampleTestcaseList": ["\"Let's take LeetCode contest\"", "\"Mr Ding\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zappos\", \"name\": \"Zappos\"}]}",
   "topicTags": [
     {

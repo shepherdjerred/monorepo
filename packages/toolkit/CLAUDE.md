@@ -56,13 +56,13 @@ src/
 
 ## Environment Variables
 
-| Variable            | Description                                                |
-| ------------------- | ---------------------------------------------------------- |
-| `PAGERDUTY_TOKEN`   | PagerDuty API token                                        |
-| `BUGSINK_URL`       | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
-| `BUGSINK_TOKEN`     | Bugsink API token                                          |
-| `GRAFANA_URL`       | Grafana instance URL                                       |
-| `GRAFANA_API_KEY`   | Grafana API key or service account token                   |
+| Variable          | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `PAGERDUTY_TOKEN` | PagerDuty API token                                        |
+| `BUGSINK_URL`     | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
+| `BUGSINK_TOKEN`   | Bugsink API token                                          |
+| `GRAFANA_URL`     | Grafana instance URL                                       |
+| `GRAFANA_API_KEY` | Grafana API key or service account token                   |
 
 ## Adding New Commands
 

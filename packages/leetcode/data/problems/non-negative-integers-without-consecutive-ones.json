@@ -12,11 +12,7 @@
   "dislikes": 138,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber II\", \"titleSlug\": \"house-robber-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Ones and Zeroes\", \"titleSlug\": \"ones-and-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Generate Binary Strings Without Adjacent Zeros\", \"titleSlug\": \"generate-binary-strings-without-adjacent-zeros\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5",
-    "1",
-    "2"
-  ],
+  "exampleTestcaseList": ["5", "1", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"pocket-gems\", \"name\": \"Pocket Gems\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

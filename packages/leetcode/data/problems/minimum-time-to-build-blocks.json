@@ -19,11 +19,7 @@
   "dislikes": 33,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Find Time Required to Eliminate Bacterial Strains\", \"titleSlug\": \"find-time-required-to-eliminate-bacterial-strains\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1]\n1",
-    "[1,2]\n5",
-    "[1,2,3]\n1"
-  ],
+  "exampleTestcaseList": ["[1]\n1", "[1,2]\n5", "[1,2,3]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

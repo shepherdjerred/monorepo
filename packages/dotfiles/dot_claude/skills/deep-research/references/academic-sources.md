@@ -21,11 +21,13 @@ Sort by relevance (default) or add `&sort=citationCount:desc` for most-cited.
 The most powerful technique for finding relevant literature. Given a seed paper, traverse in both directions:
 
 **Forward citations** (papers that cited this one — "who built on this?"):
+
 ```bash
 curl -s "https://api.semanticscholar.org/graph/v1/paper/{paperId}/citations?fields=title,citationCount,year,url&limit=50" | jq '.data'
 ```
 
 **Backward references** (papers this one cited — "what did this build on?"):
+
 ```bash
 curl -s "https://api.semanticscholar.org/graph/v1/paper/{paperId}/references?fields=title,citationCount,year,url&limit=50" | jq '.data'
 ```
@@ -55,6 +57,7 @@ curl -s "https://export.arxiv.org/api/query?search_query=all:QUERY&max_results=1
 ```
 
 Or parse directly:
+
 ```bash
 curl -s "https://export.arxiv.org/api/query?search_query=all:QUERY&max_results=10&sortBy=relevance"
 ```
@@ -65,14 +68,14 @@ Category-specific search: `cat:cs.AI`, `cat:cs.CL` (NLP), `cat:cs.LG` (machine l
 
 ## When to Use Academic Sources
 
-| Research Topic | Academic Source Priority |
-|---------------|------------------------|
-| Algorithm design, ML/AI techniques | High — arXiv + Semantic Scholar |
-| Medical/health claims | High — PubMed + Semantic Scholar |
-| Performance benchmarks | High — find the original paper, not blog summaries |
-| Software architecture, best practices | Medium — supplement with practitioner sources |
-| Product comparisons, tooling | Low — practitioner sources are more current |
-| Current events, market trends | Skip — academic publishing is too slow |
+| Research Topic                        | Academic Source Priority                           |
+| ------------------------------------- | -------------------------------------------------- |
+| Algorithm design, ML/AI techniques    | High — arXiv + Semantic Scholar                    |
+| Medical/health claims                 | High — PubMed + Semantic Scholar                   |
+| Performance benchmarks                | High — find the original paper, not blog summaries |
+| Software architecture, best practices | Medium — supplement with practitioner sources      |
+| Product comparisons, tooling          | Low — practitioner sources are more current        |
+| Current events, market trends         | Skip — academic publishing is too slow             |
 
 ## Integration with Research Workflow
 

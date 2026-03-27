@@ -15,11 +15,7 @@
   "dislikes": 91,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"011101\"",
-    "\"00111\"",
-    "\"1111\""
-  ],
+  "exampleTestcaseList": ["\"011101\"", "\"00111\"", "\"1111\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -38,14 +38,14 @@ For fast-moving topics, include date constraints:
 
 ### GitHub Repositories
 
-| Signal | High Quality | Low Quality |
-|--------|-------------|-------------|
-| Stars | >1000 for tools, >100 for niche | <10 with no forks |
-| Last commit | Within 3 months | >1 year ago |
-| Issues | Active discussion, triaged | Hundreds open, no responses |
-| README | Thorough, examples, badges | Minimal or auto-generated |
-| License | OSI-approved | None or restrictive |
-| Contributors | Multiple, diverse | Single author only |
+| Signal       | High Quality                    | Low Quality                 |
+| ------------ | ------------------------------- | --------------------------- |
+| Stars        | >1000 for tools, >100 for niche | <10 with no forks           |
+| Last commit  | Within 3 months                 | >1 year ago                 |
+| Issues       | Active discussion, triaged      | Hundreds open, no responses |
+| README       | Thorough, examples, badges      | Minimal or auto-generated   |
+| License      | OSI-approved                    | None or restrictive         |
+| Contributors | Multiple, diverse               | Single author only          |
 
 ### Hacker News Discussions
 
@@ -56,13 +56,13 @@ For fast-moving topics, include date constraints:
 
 ### Blog Posts and Articles
 
-| Signal | Trustworthy | Skeptical |
-|--------|------------|-----------|
-| Author | Named, with credentials/track record | Anonymous or content-farm style |
-| Date | Recent and dated | Undated |
-| Depth | Shows working code, benchmarks, trade-offs | Surface-level overview only |
-| Tone | Acknowledges limitations | Only positive, sales-like |
-| References | Links to primary sources | No external links |
+| Signal     | Trustworthy                                | Skeptical                       |
+| ---------- | ------------------------------------------ | ------------------------------- |
+| Author     | Named, with credentials/track record       | Anonymous or content-farm style |
+| Date       | Recent and dated                           | Undated                         |
+| Depth      | Shows working code, benchmarks, trade-offs | Surface-level overview only     |
+| Tone       | Acknowledges limitations                   | Only positive, sales-like       |
+| References | Links to primary sources                   | No external links               |
 
 ### Wikipedia
 
@@ -93,11 +93,13 @@ NEXT SEARCHES:
 ### Depth-First vs. Breadth-First
 
 **Breadth-first** (default for landscape surveys):
+
 - Cover all sub-questions at surface level first
 - Then deepen on the most relevant ones
 - Prevents rabbit-holing on a single sub-topic
 
 **Depth-first** (better for deep dives):
+
 - Fully investigate one sub-question before moving to the next
 - Follow citation chains: source → its references → their references
 - Good when understanding builds cumulatively
@@ -105,6 +107,7 @@ NEXT SEARCHES:
 ### Diminishing Returns Detection
 
 Stop iterating on a sub-question when:
+
 - New searches return sources already visited
 - New sources repeat the same claims without new evidence
 - The sub-question has 3+ independent, agreeing sources
@@ -158,23 +161,31 @@ Assign numbers as sources are encountered. Reference by number in findings. This
 # Comparison: X vs Y vs Z
 
 ## Summary
+
 [Which to choose and when]
 
 ## Feature Comparison
-| Feature | X | Y | Z |
-|---------|---|---|---|
-| ...     |   |   |   |
+
+| Feature | X   | Y   | Z   |
+| ------- | --- | --- | --- |
+| ...     |     |     |     |
 
 ## Detailed Analysis
+
 ### X
+
 [Strengths, weaknesses, best for]
+
 ### Y
+
 ...
 
 ## Community Sentiment
+
 [What practitioners prefer and why]
 
 ## Recommendation
+
 [For user's specific context]
 ```
 
@@ -184,18 +195,23 @@ Assign numbers as sources are encountered. Reference by number in findings. This
 # Best Practices: [Topic]
 
 ## Summary
+
 [Consensus view]
 
 ## Established Practices
+
 [Things most sources agree on]
 
 ## Emerging Practices
+
 [Newer approaches gaining traction]
 
 ## Anti-Patterns
+
 [What to avoid and why]
 
 ## Context-Dependent Choices
+
 [Practices that depend on situation]
 ```
 
@@ -205,19 +221,25 @@ Assign numbers as sources are encountered. Reference by number in findings. This
 # Landscape: [Domain]
 
 ## Summary
+
 [State of the field]
 
 ## Categories
+
 ### Category A
+
 - Tool 1 — [description, stars, status]
 - Tool 2 — ...
 
 ### Category B
+
 ...
 
 ## Trends
+
 [Where things are heading]
 
 ## Notable Gaps
+
 [What doesn't exist yet but should]
 ```

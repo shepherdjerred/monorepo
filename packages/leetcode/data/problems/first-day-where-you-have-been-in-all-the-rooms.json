@@ -16,11 +16,7 @@
   "dislikes": 104,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0,0]",
-    "[0,0,2]",
-    "[0,1,2,0]"
-  ],
+  "exampleTestcaseList": ["[0,0]", "[0,0,2]", "[0,1,2,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

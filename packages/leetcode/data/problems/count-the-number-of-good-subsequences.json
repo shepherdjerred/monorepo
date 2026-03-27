@@ -16,11 +16,7 @@
   "dislikes": 82,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Number of Music Playlists\", \"titleSlug\": \"number-of-music-playlists\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Ways to Build Rooms in an Ant Colony\", \"titleSlug\": \"count-ways-to-build-rooms-in-an-ant-colony\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aabb\"",
-    "\"leet\"",
-    "\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"aabb\"", "\"leet\"", "\"abcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"ukg\", \"name\": \"UKG\"}, {\"timesEncountered\": 3, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"tusimple\", \"name\": \"TuSimple\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

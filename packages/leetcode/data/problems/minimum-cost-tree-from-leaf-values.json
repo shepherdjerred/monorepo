@@ -15,10 +15,7 @@
   "dislikes": 282,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[6,2,4]",
-    "[4,11]"
-  ],
+  "exampleTestcaseList": ["[6,2,4]", "[4,11]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Maximum Removals From Source String\", \"titleSlug\": \"find-maximum-removals-from-source-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"leeetcode\"",
-    "\"aaabaaaa\"",
-    "\"aab\""
-  ],
+  "exampleTestcaseList": ["\"leeetcode\"", "\"aaabaaaa\"", "\"aab\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

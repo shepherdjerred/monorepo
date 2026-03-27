@@ -16,10 +16,7 @@
   "dislikes": 202,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "2"
-  ],
+  "exampleTestcaseList": ["1", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"nagarro\", \"name\": \"Nagarro\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

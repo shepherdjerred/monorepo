@@ -52,7 +52,8 @@ export async function reindexAll(
       const eta = rate > 0 ? Math.round((total - scanned) / rate) : 0;
       // Truncate filename to fit in terminal
       const basename = file.path.split("/").pop() ?? file.path;
-      const name = basename.length > 40 ? basename.slice(0, 37) + "..." : basename;
+      const name =
+        basename.length > 40 ? basename.slice(0, 37) + "..." : basename;
       const line = `\r[reindex] ${String(scanned)}/${String(total)} (${String(pct)}%) ${String(indexed)} new, ${String(skipped)} skip | ${elapsed.toFixed(0)}s ~${String(eta)}s left | ${name}`;
       process.stderr.write(line + " ".repeat(Math.max(0, 120 - line.length)));
     }
@@ -75,7 +76,9 @@ export async function reindexAll(
     } catch (error) {
       errors++;
       if (verbose) {
-        console.error(`[reindex] error indexing ${file.path}: ${String(error)}`);
+        console.error(
+          `[reindex] error indexing ${file.path}: ${String(error)}`,
+        );
       }
     }
   }
@@ -128,12 +131,13 @@ async function listFiles(watched: WatchedDir): Promise<string[]> {
   }
 
   for (const pattern of watched.patterns) {
-    const globPattern = watched.recursive
-      ? `**/${pattern}`
-      : pattern;
+    const globPattern = watched.recursive ? `**/${pattern}` : pattern;
     const glob = new Glob(globPattern);
 
-    for await (const entry of glob.scan({ cwd: watched.directory, absolute: true })) {
+    for await (const entry of glob.scan({
+      cwd: watched.directory,
+      absolute: true,
+    })) {
       if (watched.pathFilter != null && !watched.pathFilter(entry)) {
         continue;
       }

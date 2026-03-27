@@ -16,11 +16,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Strange Printer II\", \"titleSlug\": \"strange-printer-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Create Sorted Array through Instructions\", \"titleSlug\": \"create-sorted-array-through-instructions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,0,3,1]",
-    "[1,2,3,4,0]",
-    "[1,0,2,4,3]"
-  ],
+  "exampleTestcaseList": ["[4,2,0,3,1]", "[1,2,3,4,0]", "[1,0,2,4,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

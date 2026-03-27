@@ -18,11 +18,7 @@
   "dislikes": 162,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Factorial Trailing Zeroes\", \"titleSlug\": \"factorial-trailing-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Trailing Zeros in a Cornered Path\", \"titleSlug\": \"maximum-trailing-zeros-in-a-cornered-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find All Good Indices\", \"titleSlug\": \"find-all-good-indices\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n4",
-    "2\n11",
-    "371\n375"
-  ],
+  "exampleTestcaseList": ["1\n4", "2\n11", "371\n375"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"avalara\", \"name\": \"Avalara\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

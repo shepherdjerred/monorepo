@@ -16,10 +16,7 @@
   "dislikes": 123,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Distinct Prime Factors of Product of Array\", \"titleSlug\": \"distinct-prime-factors-of-product-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,4,4,5]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[3,4,4,5]", "[1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"medianet\", \"name\": \"Media.net\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

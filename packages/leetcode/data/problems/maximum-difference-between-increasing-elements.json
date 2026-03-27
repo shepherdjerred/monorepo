@@ -15,11 +15,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Two Furthest Houses With Different Colors\", \"titleSlug\": \"two-furthest-houses-with-different-colors\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[7,1,5,4]",
-    "[9,4,3,2]",
-    "[1,5,2,10]"
-  ],
+  "exampleTestcaseList": ["[7,1,5,4]", "[9,4,3,2]", "[1,5,2,10]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

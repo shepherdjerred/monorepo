@@ -12,10 +12,7 @@
   "dislikes": 97,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Hamming Distance\", \"titleSlug\": \"hamming-distance\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digit Differences of All Pairs\", \"titleSlug\": \"sum-of-digit-differences-of-all-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,14,2]",
-    "[4,14,4]"
-  ],
+  "exampleTestcaseList": ["[4,14,2]", "[4,14,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

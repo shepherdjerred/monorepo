@@ -15,11 +15,7 @@
   "dislikes": 338,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Digit Count in Range\", \"titleSlug\": \"digit-count-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Integers With Even Digit Sum\", \"titleSlug\": \"count-integers-with-even-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Number and Its Reverse\", \"titleSlug\": \"sum-of-number-and-its-reverse\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "58\n9",
-    "37\n2",
-    "0\n7"
-  ],
+  "exampleTestcaseList": ["58\n9", "37\n2", "0\n7"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

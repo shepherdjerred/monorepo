@@ -71,10 +71,7 @@ for (const cmd of sequentialCommands) {
 }
 
 // Run parallel commands (including chains that are internally sequential)
-await Promise.all([
-  ...R.pipe(parallelCommands, R.map(run)),
-  updateBrew(),
-]);
+await Promise.all([...R.pipe(parallelCommands, R.map(run)), updateBrew()]);
 
 // Export current brew state
 await run({

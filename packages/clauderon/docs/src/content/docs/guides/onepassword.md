@@ -107,9 +107,9 @@ docker_token = "op://DevOps/Docker Hub/token"
 
 ## Troubleshooting
 
-| Problem | Fix |
-| --- | --- |
-| `op: command not found` | Install: `brew install 1password-cli` |
-| Not signed in | `op signin` (or set `OP_SERVICE_ACCOUNT_TOKEN` for service accounts) |
-| Vault/item not found | Verify names: `op vault list`, `op item get "Name" --vault "Vault"` |
-| Field not found | List fields: `op item get "Name" --vault "Vault" --format json \| jq '.fields'` |
+| Problem                 | Fix                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| `op: command not found` | Install: `brew install 1password-cli`                                           |
+| Not signed in           | `op signin` (or set `OP_SERVICE_ACCOUNT_TOKEN` for service accounts)            |
+| Vault/item not found    | Verify names: `op vault list`, `op item get "Name" --vault "Vault"`             |
+| Field not found         | List fields: `op item get "Name" --vault "Vault" --format json \| jq '.fields'` |

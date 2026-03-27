@@ -15,11 +15,7 @@
   "dislikes": 163,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Incremovable Subarrays II\", \"titleSlug\": \"count-the-number-of-incremovable-subarrays-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Incremovable Subarrays I\", \"titleSlug\": \"count-the-number-of-incremovable-subarrays-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,10,4,2,3,5]",
-    "[5,4,3,2,1]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,10,4,2,3,5]", "[5,4,3,2,1]", "[1,2,3]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"razorpay\", \"name\": \"razorpay\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": []}",
   "topicTags": [
     {

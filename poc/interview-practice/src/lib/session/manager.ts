@@ -13,7 +13,7 @@ export type Session = {
   metadata: SessionMetadata;
   db: Database;
   workspacePath: string;
-}
+};
 
 export async function createSession(options: {
   dataDir: string;
@@ -75,7 +75,10 @@ export async function saveSession(session: Session): Promise<void> {
   );
 }
 
-export async function loadSession(dataDir: string, sessionId: string): Promise<Session | null> {
+export async function loadSession(
+  dataDir: string,
+  sessionId: string,
+): Promise<Session | null> {
   const workspacePath = path.join(dataDir, "sessions", sessionId);
   const metadataPath = path.join(workspacePath, "metadata.json");
 
@@ -93,7 +96,9 @@ export async function loadSession(dataDir: string, sessionId: string): Promise<S
   return { metadata: result.data, db, workspacePath };
 }
 
-export async function listSessions(dataDir: string): Promise<SessionMetadata[]> {
+export async function listSessions(
+  dataDir: string,
+): Promise<SessionMetadata[]> {
   const sessionsDir = path.join(dataDir, "sessions");
 
   let files: string[];

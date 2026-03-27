@@ -15,11 +15,7 @@
   "dislikes": 17,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Distinct Subsequences\", \"titleSlug\": \"distinct-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Distinct Subsequences II\", \"titleSlug\": \"distinct-subsequences-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"001\"",
-    "\"11\"",
-    "\"101\""
-  ],
+  "exampleTestcaseList": ["\"001\"", "\"11\"", "\"101\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

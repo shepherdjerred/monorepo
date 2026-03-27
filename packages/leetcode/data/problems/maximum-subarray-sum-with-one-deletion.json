@@ -16,11 +16,7 @@
   "dislikes": 82,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximize Subarray Sum After Removing All Occurrences of One Element\", \"titleSlug\": \"maximize-subarray-sum-after-removing-all-occurrences-of-one-element\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Unique Subarray Sum After Deletion\", \"titleSlug\": \"maximum-unique-subarray-sum-after-deletion\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,-2,0,3]",
-    "[1,-2,-2,3]",
-    "[-1,-1,-1,-1]"
-  ],
+  "exampleTestcaseList": ["[1,-2,0,3]", "[1,-2,-2,3]", "[-1,-1,-1,-1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}], \"three_months\": []}",
   "topicTags": [
     {

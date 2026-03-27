@@ -15,15 +15,11 @@ export async function handleSystemDesignCommand(
       console.error("Resume not yet implemented (Phase 4)");
       return process.exit(1);
     case undefined:
-      console.error(
-        "Usage: interview-practice system-design [start|resume]",
-      );
+      console.error("Usage: interview-practice system-design [start|resume]");
       return process.exit(1);
     default:
       console.error(`Unknown subcommand: ${subcommand}`);
-      console.error(
-        "Usage: interview-practice system-design [start|resume]",
-      );
+      console.error("Usage: interview-practice system-design [start|resume]");
       process.exit(1);
   }
 }
@@ -59,9 +55,7 @@ async function handleStart(args: string[], config: Config): Promise<void> {
   await startSystemDesignSession(config, {
     difficulty,
     time:
-      values.time === undefined
-        ? undefined
-        : Number.parseInt(values.time, 10),
+      values.time === undefined ? undefined : Number.parseInt(values.time, 10),
     voice: values.voice,
     question: values.question,
   });

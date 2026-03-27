@@ -15,10 +15,7 @@
   "dislikes": 103,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Last Moment Before All Ants Fall Out of a Plank\", \"titleSlug\": \"last-moment-before-all-ants-fall-out-of-a-plank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-2,0,2]\n\"RLL\"\n3",
-    "[1,0]\n\"RL\"\n2"
-  ],
+  "exampleTestcaseList": ["[-2,0,2]\n\"RLL\"\n3", "[1,0]\n\"RL\"\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

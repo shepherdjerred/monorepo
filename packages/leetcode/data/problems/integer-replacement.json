@@ -12,11 +12,7 @@
   "dislikes": 486,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "8",
-    "7",
-    "4"
-  ],
+  "exampleTestcaseList": ["8", "7", "4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

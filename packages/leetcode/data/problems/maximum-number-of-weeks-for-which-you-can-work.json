@@ -15,10 +15,7 @@
   "dislikes": 163,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Task Scheduler\", \"titleSlug\": \"task-scheduler\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[5,2,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[5,2,1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 2, \"slug\": \"sap\", \"name\": \"SAP\"}, {\"timesEncountered\": 2, \"slug\": \"natwest\", \"name\": \"NatWest\"}], \"three_months\": []}",
   "topicTags": [
     {

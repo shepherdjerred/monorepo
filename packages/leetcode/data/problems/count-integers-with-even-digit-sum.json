@@ -15,10 +15,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Numbers With Units Digit K\", \"titleSlug\": \"sum-of-numbers-with-units-digit-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits of String After Convert\", \"titleSlug\": \"sum-of-digits-of-string-after-convert\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Buy Pens and Pencils\", \"titleSlug\": \"number-of-ways-to-buy-pens-and-pencils\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Separate the Digits in an Array\", \"titleSlug\": \"separate-the-digits-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find if Digit Game Can Be Won\", \"titleSlug\": \"find-if-digit-game-can-be-won\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "30"
-  ],
+  "exampleTestcaseList": ["4", "30"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"mindtree\", \"name\": \"MindTree\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

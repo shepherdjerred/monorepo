@@ -14,10 +14,7 @@
   "dislikes": 366,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Restore IP Addresses\", \"titleSlug\": \"restore-ip-addresses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Validate IP Address\", \"titleSlug\": \"validate-ip-address\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"255.0.0.7\"\n10",
-    "\"117.145.102.62\"\n8"
-  ],
+  "exampleTestcaseList": ["\"255.0.0.7\"\n10", "\"117.145.102.62\"\n8"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"databricks\", \"name\": \"Databricks\"}, {\"timesEncountered\": 3, \"slug\": \"openai\", \"name\": \"OpenAI\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"six_months\": []}",
   "topicTags": [
     {

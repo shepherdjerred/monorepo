@@ -15,10 +15,7 @@
   "dislikes": 57,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Decode String\", \"titleSlug\": \"decode-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Letter Case Permutation\", \"titleSlug\": \"letter-case-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Brace Expansion II\", \"titleSlug\": \"brace-expansion-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"{a,b}c{d,e}f\"",
-    "\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"{a,b}c{d,e}f\"", "\"abcd\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"niantic\", \"name\": \"Niantic\"}]}",
   "topicTags": [
     {

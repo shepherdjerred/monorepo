@@ -48,8 +48,8 @@ zellij attach clauderon-<session-name>
 
 ## Troubleshooting
 
-| Problem | Fix |
-| --- | --- |
+| Problem           | Fix                                                               |
+| ----------------- | ----------------------------------------------------------------- |
 | Session not found | `zellij list-sessions` to check; `clauderon reconcile` to sync DB |
-| Proxy env not set | Session may have started without daemon. Delete and recreate. |
-| Zellij not found | `brew install zellij` (macOS) or `cargo install zellij` (Linux) |
+| Proxy env not set | Session may have started without daemon. Delete and recreate.     |
+| Zellij not found  | `brew install zellij` (macOS) or `cargo install zellij` (Linux)   |

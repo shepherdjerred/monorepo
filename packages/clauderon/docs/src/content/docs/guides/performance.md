@@ -5,10 +5,10 @@ description: Optimize Clauderon for faster session creation, agent responses, an
 
 ## Backend Startup Times
 
-| Backend    | Cold Start | Warm Start | Best For             |
-| ---------- | ---------- | ---------- | -------------------- |
+| Backend    | Cold Start | Warm Start | Best For              |
+| ---------- | ---------- | ---------- | --------------------- |
 | **Zellij** | ~100ms     | ~50ms      | Fastest, no isolation |
-| **Docker** | 2-5s       | 1-2s       | Balanced, isolated   |
+| **Docker** | 2-5s       | 1-2s       | Balanced, isolated    |
 
 ## Docker Optimization
 
@@ -46,11 +46,11 @@ Pre-pull images to avoid delays: `docker pull clauderon/agent:latest`
 clauderon create --backend docker --cpu-limit 2
 ```
 
-| Build Type    | No Limit | 2 CPU | 1 CPU |
-| ------------- | -------- | ----- | ----- |
-| Rust (cargo)  | 60s      | 90s   | 180s  |
-| Node (npm)    | 30s      | 40s   | 60s   |
-| Go            | 15s      | 20s   | 30s   |
+| Build Type   | No Limit | 2 CPU | 1 CPU |
+| ------------ | -------- | ----- | ----- |
+| Rust (cargo) | 60s      | 90s   | 180s  |
+| Node (npm)   | 30s      | 40s   | 60s   |
+| Go           | 15s      | 20s   | 30s   |
 
 ### Memory
 
@@ -66,10 +66,10 @@ clauderon create --backend docker --memory-limit 4g
 
 ## Proxy Performance
 
-| Setting | Impact |
-| ------- | ------ |
-| TLS overhead | ~5-10ms per request |
-| Audit logging | +20% latency, -15% throughput |
+| Setting                   | Impact                         |
+| ------------------------- | ------------------------------ |
+| TLS overhead              | ~5-10ms per request            |
+| Audit logging             | +20% latency, -15% throughput  |
 | Port reuse (experimental) | ~100ms faster session creation |
 
 ```toml
@@ -91,10 +91,10 @@ audit_logging = false      # disable for performance
 
 Clauderon automatically creates shared Docker volumes for Cargo and npm/bun caching.
 
-| Tool  | Cold  | Warm      | Savings |
-| ----- | ----- | --------- | ------- |
-| Cargo | 5-10m | 30-60s    | 80-90%  |
-| npm   | 2-5m  | 10-30s    | 70-85%  |
+| Tool  | Cold  | Warm   | Savings |
+| ----- | ----- | ------ | ------- |
+| Cargo | 5-10m | 30-60s | 80-90%  |
+| npm   | 2-5m  | 10-30s | 70-85%  |
 
 ```bash
 clauderon cache clean              # clear all
@@ -123,9 +123,9 @@ clauderon cache size               # check usage
 
 ## Troubleshooting
 
-| Symptom | Solution |
-| ------- | -------- |
+| Symptom                   | Solution                                            |
+| ------------------------- | --------------------------------------------------- |
 | Slow image pulls (30s-5m) | Pre-pull images; use `--pull-policy if-not-present` |
-| High proxy latency | Check `clauderon serve` logs; disable audit logging |
-| Slow git operations (>5s) | Run `git gc`; check for large untracked files |
-| Resource contention | Reduce concurrent sessions; set CPU/memory limits |
+| High proxy latency        | Check `clauderon serve` logs; disable audit logging |
+| Slow git operations (>5s) | Run `git gc`; check for large untracked files       |
+| Resource contention       | Reduce concurrent sessions; set CPU/memory limits   |

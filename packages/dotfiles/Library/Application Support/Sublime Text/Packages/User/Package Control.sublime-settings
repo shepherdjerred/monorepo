@@ -1,11 +1,5 @@
 {
-	"installed_packages":
-	[
-		"Catppuccin",
-		"Package Control"
-	],
-	"bootstrapped": true,
-	"in_process_packages":
-	[
-	]
+  "installed_packages": ["Catppuccin", "Package Control"],
+  "bootstrapped": true,
+  "in_process_packages": [],
 }

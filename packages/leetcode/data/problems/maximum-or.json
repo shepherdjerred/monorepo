@@ -15,10 +15,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[12,9]\n1",
-    "[8,1,2]\n2"
-  ],
+  "exampleTestcaseList": ["[12,9]\n1", "[8,1,2]\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"point72\", \"name\": \"Point72\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}]}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 99,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,1,4]\n[1,0,3]",
-    "[1,null,8]\n[8,1]"
-  ],
+  "exampleTestcaseList": ["[2,1,4]\n[1,0,3]", "[1,null,8]\n[8,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

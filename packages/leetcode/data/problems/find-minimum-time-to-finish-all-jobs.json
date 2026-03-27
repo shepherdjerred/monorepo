@@ -14,10 +14,7 @@
   "dislikes": 39,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Work Sessions to Finish the Tasks\", \"titleSlug\": \"minimum-number-of-work-sessions-to-finish-the-tasks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Time to Finish All Jobs II\", \"titleSlug\": \"find-minimum-time-to-finish-all-jobs-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,3]\n3",
-    "[1,2,4,7,8]\n2"
-  ],
+  "exampleTestcaseList": ["[3,2,3]\n3", "[1,2,4,7,8]\n2"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": []}",
   "topicTags": [
     {

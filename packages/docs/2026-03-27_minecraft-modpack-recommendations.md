@@ -5,6 +5,7 @@ Modpacks with structure, goals, and quest systems for players who prefer guided 
 ## Top Picks
 
 ### 1. All the Mons (ATM10 + Cobblemon) — MC 1.21.1
+
 - Pokemon catching, breeding, and turn-based battling via Cobblemon
 - ATM10 base provides ~500 mods with quest-guided progression
 - Minimal Minecraft combat; Pokemon battles are turn-based
@@ -12,6 +13,7 @@ Modpacks with structure, goals, and quest systems for players who prefer guided 
 - Available on CurseForge
 
 ### 2. FTB StoneBlock 4 — MC 1.21.1
+
 - Underground survival with NPC-guided narrative and branching questlines
 - Core loop is crafting, building, and upgrading through quest chapters
 - Combat exists in optional Vaults but isn't required for progression
@@ -19,18 +21,21 @@ Modpacks with structure, goals, and quest systems for players who prefer guided 
 - Available on CurseForge
 
 ### 3. Better Minecraft (BMC4/BMC5) — MC 1.20.1
+
 - Vanilla+ with exploration, building, and gentle questing
 - Enhances base game without overwhelming — good entry point
 - Set difficulty to Peaceful/Easy to minimize combat
 - Available on CurseForge
 
 ### 4. Create-Focused Packs (e.g., "All of Create") — MC 1.20.1+
+
 - Factory-building and automation with satisfying contraptions
 - Zero combat required; quest books provide structure
 - Automate farming, design machines, build elaborate systems
 - Available on CurseForge
 
 ### 5. FTB Skies 2 — MC 1.21.1
+
 - Skyblock with 1,000+ quests across three progression paths
 - Very satisfying checklist-style progression
 - Full support with FTB Team Bases

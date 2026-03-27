@@ -16,10 +16,7 @@
   "dislikes": 7,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Common Subsequence\", \"titleSlug\": \"longest-common-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abacaba\"\n\"bzaa\"",
-    "\"cde\"\n\"xyz\""
-  ],
+  "exampleTestcaseList": ["\"abacaba\"\n\"bzaa\"", "\"cde\"\n\"xyz\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

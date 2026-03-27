@@ -4,7 +4,12 @@ import type { LeetcodeQuestion, QuestionPart } from "#lib/questions/schemas.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
 import type { Session } from "#lib/session/manager.ts";
 import type { Logger } from "#logger";
-import type { ReflectionQueue, Reflection, NextMovePayload, ReflectionScores } from "./reflection-queue.ts";
+import type {
+  ReflectionQueue,
+  Reflection,
+  NextMovePayload,
+  ReflectionScores,
+} from "./reflection-queue.ts";
 import type { ReflectionLoopOptions } from "./reflection.ts";
 import { insertTranscript, getTranscriptWindow } from "#lib/db/transcript.ts";
 import { insertEvent } from "#lib/db/events.ts";
@@ -49,13 +54,7 @@ export type InterviewSession = {
 export function createInterviewSession(
   options: InterviewSessionOptions,
 ): InterviewSession {
-  const {
-    session,
-    question,
-    timer,
-    solutionPath,
-    logger,
-  } = options;
+  const { session, question, timer, solutionPath, logger } = options;
 
   let lastCodeSnapshot: string | null = null;
   let previousCodeSnapshot: string | null = null;
@@ -95,7 +94,9 @@ export function createInterviewSession(
 
   async function handleUserInput(userInput: string): Promise<TurnResult> {
     if (options.client === undefined) {
-      throw new Error("handleUserInput requires an AI client. Voice mode should use handleToolCall instead.");
+      throw new Error(
+        "handleUserInput requires an AI client. Voice mode should use handleToolCall instead.",
+      );
     }
     const client = options.client;
     const startTime = Date.now();
@@ -125,7 +126,11 @@ export function createInterviewSession(
     const codeSnapshot = await readCodeSnapshot();
     if (codeSnapshot !== null && codeSnapshot !== previousCodeSnapshot) {
       previousCodeSnapshot = codeSnapshot;
-      insertTranscript(session.db, "system", "[Code updated — the candidate's solution file has changed]");
+      insertTranscript(
+        session.db,
+        "system",
+        "[Code updated — the candidate's solution file has changed]",
+      );
     }
 
     // Get recent transcript
@@ -219,7 +224,10 @@ export function createInterviewSession(
 
       for (const toolCall of response.toolCalls) {
         toolsCalled.push(toolCall.name);
-        logger.info("tool_call", { tool: toolCall.name, input: toolCall.input });
+        logger.info("tool_call", {
+          tool: toolCall.name,
+          input: toolCall.input,
+        });
 
         const result = await dispatchTool({
           toolName: toolCall.name,
@@ -312,7 +320,9 @@ export function createInterviewSession(
   ): Promise<string> {
     let input: Record<string, unknown> = {};
     try {
-      const result = z.record(z.string(), z.unknown()).safeParse(JSON.parse(argsJson));
+      const result = z
+        .record(z.string(), z.unknown())
+        .safeParse(JSON.parse(argsJson));
       if (result.success) {
         input = result.data;
       }
@@ -333,7 +343,10 @@ export function createInterviewSession(
       codeSnapshot: lastCodeSnapshot,
     });
 
-    insertTranscript(session.db, "tool_call", name, { tool: name, args: argsJson });
+    insertTranscript(session.db, "tool_call", name, {
+      tool: name,
+      args: argsJson,
+    });
     insertTranscript(session.db, "tool_result", result, { tool: name });
 
     return result;
@@ -413,10 +426,7 @@ function findImmediateNextMove(
   reflections: Reflection[],
 ): NextMovePayload | undefined {
   for (const r of reflections) {
-    if (
-      r.type === "next_move" &&
-      r.nextMove?.condition === "immediate"
-    ) {
+    if (r.type === "next_move" && r.nextMove?.condition === "immediate") {
       return r.nextMove;
     }
   }

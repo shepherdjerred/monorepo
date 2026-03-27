@@ -12,10 +12,7 @@
   "dislikes": 112,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "48",
-    "15"
-  ],
+  "exampleTestcaseList": ["48", "15"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tencent\", \"name\": \"Tencent\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

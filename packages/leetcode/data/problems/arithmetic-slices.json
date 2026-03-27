@@ -12,10 +12,7 @@
   "dislikes": 306,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Arithmetic Slices II - Subsequence\", \"titleSlug\": \"arithmetic-slices-ii-subsequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Arithmetic Subarrays\", \"titleSlug\": \"arithmetic-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Zero-Filled Subarrays\", \"titleSlug\": \"number-of-zero-filled-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Alphabetical Continuous Substring\", \"titleSlug\": \"length-of-the-longest-alphabetical-continuous-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"aetion\", \"name\": \"Aetion\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"six_months\": []}",
   "topicTags": [
     {

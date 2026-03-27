@@ -6,4 +6,4 @@ website: https://orbstack.dev
 category: Kubernetes
 ---
 
-- LoadBalancer and Ingress services are accessible via *.k8s.orb.local wildcard domains.
+- LoadBalancer and Ingress services are accessible via \*.k8s.orb.local wildcard domains.

@@ -12,10 +12,7 @@
   "dislikes": 481,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Nested List Weight Sum\", \"titleSlug\": \"nested-list-weight-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Array Nesting\", \"titleSlug\": \"array-nesting\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,1],2,[1,1]]",
-    "[1,[4,[6]]]"
-  ],
+  "exampleTestcaseList": ["[[1,1],2,[1,1]]", "[1,[4,[6]]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
   "topicTags": [
     {

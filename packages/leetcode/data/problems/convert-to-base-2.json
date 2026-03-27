@@ -14,11 +14,7 @@
   "dislikes": 309,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Encode Number\", \"titleSlug\": \"encode-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Convert Date to Binary\", \"titleSlug\": \"convert-date-to-binary\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "3",
-    "4"
-  ],
+  "exampleTestcaseList": ["2", "3", "4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -34,6 +34,7 @@ server {
 ```
 
 **Direct Binding (testing only):**
+
 ```bash
 CLAUDERON_BIND_ADDR=0.0.0.0 clauderon daemon
 ```
@@ -60,12 +61,12 @@ CLAUDERON_ORIGIN=https://clauderon.yourdomain.com clauderon daemon
 
 ### Prerequisites
 
-| Platform   | Requirements |
-| ---------- | ------------ |
-| All        | Node.js 18+ or Bun, React Native CLI, Git |
-| iOS/iPadOS | macOS, Xcode 14+, CocoaPods |
-| Android    | Android Studio, Android SDK, JDK 17+ |
-| macOS      | macOS, Xcode 14+ |
+| Platform   | Requirements                                  |
+| ---------- | --------------------------------------------- |
+| All        | Node.js 18+ or Bun, React Native CLI, Git     |
+| iOS/iPadOS | macOS, Xcode 14+, CocoaPods                   |
+| Android    | Android Studio, Android SDK, JDK 17+          |
+| macOS      | macOS, Xcode 14+                              |
 | Windows    | Windows 10+, Visual Studio 2019+, Windows SDK |
 
 ### Build
@@ -118,10 +119,10 @@ Multiple servers supported via header server switcher.
 
 ## Troubleshooting
 
-| Problem | Solution |
-| ------- | -------- |
-| Can't connect | Verify URL; `curl https://clauderon.yourdomain.com/health`; check firewall/TLS |
-| Auth failed | Ensure WebAuthn enabled; re-register passkey from desktop |
-| No push notifications | Check device notification permissions; re-enable in app |
-| WebSocket disconnects | App auto-reconnects; check server WebSocket config |
-| App crashes | Update to latest; clear app data and re-authenticate |
+| Problem               | Solution                                                                       |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Can't connect         | Verify URL; `curl https://clauderon.yourdomain.com/health`; check firewall/TLS |
+| Auth failed           | Ensure WebAuthn enabled; re-register passkey from desktop                      |
+| No push notifications | Check device notification permissions; re-enable in app                        |
+| WebSocket disconnects | App auto-reconnects; check server WebSocket config                             |
+| App crashes           | Update to latest; clear app data and re-authenticate                           |

@@ -16,10 +16,7 @@
   "dislikes": 78,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Insertion Steps to Make a String Palindrome\", \"titleSlug\": \"minimum-insertion-steps-to-make-a-string-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Flips to Make Binary Grid Palindromic I\", \"titleSlug\": \"minimum-number-of-flips-to-make-binary-grid-palindromic-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aabb\"",
-    "\"letelt\""
-  ],
+  "exampleTestcaseList": ["\"aabb\"", "\"letelt\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
   "topicTags": [
     {

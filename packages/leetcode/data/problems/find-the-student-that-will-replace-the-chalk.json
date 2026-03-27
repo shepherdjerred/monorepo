@@ -15,10 +15,7 @@
   "dislikes": 134,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Pass the Pillow\", \"titleSlug\": \"pass-the-pillow\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,1,5]\n22",
-    "[3,4,1,2]\n25"
-  ],
+  "exampleTestcaseList": ["[5,1,5]\n22", "[3,4,1,2]\n25"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"6sense\", \"name\": \"6sense\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

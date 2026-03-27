@@ -17,10 +17,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"001101\"",
-    "\"11100\""
-  ],
+  "exampleTestcaseList": ["\"001101\"", "\"11100\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"dream11\", \"name\": \"Dream11\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

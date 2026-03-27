@@ -12,11 +12,7 @@
   "dislikes": 216,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"2 Keys Keyboard\", \"titleSlug\": \"2-keys-keyboard\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make the Integer Zero\", \"titleSlug\": \"minimum-operations-to-make-the-integer-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n3",
-    "5\n8",
-    "3\n10"
-  ],
+  "exampleTestcaseList": ["2\n3", "5\n8", "3\n10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}, {\"timesEncountered\": 2, \"slug\": \"millennium\", \"name\": \"Millennium\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

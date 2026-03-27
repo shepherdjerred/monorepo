@@ -16,10 +16,7 @@
   "dislikes": 21,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Stepping Numbers in Range\", \"titleSlug\": \"count-stepping-numbers-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "0\n21",
-    "10\n15"
-  ],
+  "exampleTestcaseList": ["0\n21", "10\n15"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

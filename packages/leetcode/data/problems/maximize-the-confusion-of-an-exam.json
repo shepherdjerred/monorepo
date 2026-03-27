@@ -15,11 +15,7 @@
   "dislikes": 55,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Repeating Character Replacement\", \"titleSlug\": \"longest-repeating-character-replacement\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Days to Make m Bouquets\", \"titleSlug\": \"minimum-number-of-days-to-make-m-bouquets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"TTFF\"\n2",
-    "\"TFFT\"\n1",
-    "\"TTFTTFTT\"\n1"
-  ],
+  "exampleTestcaseList": ["\"TTFF\"\n2", "\"TFFT\"\n1", "\"TTFTTFTT\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

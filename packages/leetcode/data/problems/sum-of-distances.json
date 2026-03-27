@@ -16,10 +16,7 @@
   "dislikes": 97,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Duplicates from Sorted Array\", \"titleSlug\": \"remove-duplicates-from-sorted-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find All Duplicates in an Array\", \"titleSlug\": \"find-all-duplicates-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make All Array Elements Equal\", \"titleSlug\": \"minimum-operations-to-make-all-array-elements-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,3,1,1,2]",
-    "[0,5,3]"
-  ],
+  "exampleTestcaseList": ["[1,3,1,1,2]", "[0,5,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

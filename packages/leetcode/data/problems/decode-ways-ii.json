@@ -12,11 +12,7 @@
   "dislikes": 825,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Decode Ways\", \"titleSlug\": \"decode-ways\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Separate Numbers\", \"titleSlug\": \"number-of-ways-to-separate-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Divide a Long Corridor\", \"titleSlug\": \"number-of-ways-to-divide-a-long-corridor\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"*\"",
-    "\"1*\"",
-    "\"2*\""
-  ],
+  "exampleTestcaseList": ["\"*\"", "\"1*\"", "\"2*\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

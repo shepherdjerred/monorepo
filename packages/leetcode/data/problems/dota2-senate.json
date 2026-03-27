@@ -12,10 +12,7 @@
   "dislikes": 2084,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Teemo Attacking\", \"titleSlug\": \"teemo-attacking\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"RD\"",
-    "\"RDD\""
-  ],
+  "exampleTestcaseList": ["\"RD\"", "\"RDD\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"valve\", \"name\": \"Valve\"}, {\"timesEncountered\": 2, \"slug\": \"american-airlines\", \"name\": \"American Airlines\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

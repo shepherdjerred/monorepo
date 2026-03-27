@@ -15,11 +15,7 @@
   "dislikes": 108,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Palindromic Subsequences\", \"titleSlug\": \"count-palindromic-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aabca\"",
-    "\"adc\"",
-    "\"bbcbaba\""
-  ],
+  "exampleTestcaseList": ["\"aabca\"", "\"adc\"", "\"bbcbaba\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 13, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
   "topicTags": [
     {

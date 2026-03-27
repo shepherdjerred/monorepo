@@ -15,10 +15,7 @@
   "dislikes": 296,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Palindrome Number\", \"titleSlug\": \"palindrome-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Closest Palindrome\", \"titleSlug\": \"find-the-closest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest Beautiful String\", \"titleSlug\": \"lexicographically-smallest-beautiful-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5,90]\n3",
-    "[2,4,6]\n4"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5,90]\n3", "[2,4,6]\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

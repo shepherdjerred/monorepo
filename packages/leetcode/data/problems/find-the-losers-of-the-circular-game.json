@@ -14,10 +14,7 @@
   "dislikes": 42,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Child Who Has the Ball After K Seconds\", \"titleSlug\": \"find-the-child-who-has-the-ball-after-k-seconds\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n2",
-    "4\n4"
-  ],
+  "exampleTestcaseList": ["5\n2", "4\n4"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

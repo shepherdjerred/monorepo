@@ -57,15 +57,27 @@ export class Logger {
     await appendFile(this.logPath, line, "utf8");
   }
 
-  info(mod: string, msg: string, extra: Record<string, unknown> = {}): Promise<void> {
+  info(
+    mod: string,
+    msg: string,
+    extra: Record<string, unknown> = {},
+  ): Promise<void> {
     return this.log("info", mod, msg, extra);
   }
 
-  warn(mod: string, msg: string, extra: Record<string, unknown> = {}): Promise<void> {
+  warn(
+    mod: string,
+    msg: string,
+    extra: Record<string, unknown> = {},
+  ): Promise<void> {
     return this.log("warn", mod, msg, extra);
   }
 
-  error(mod: string, msg: string, extra: Record<string, unknown> = {}): Promise<void> {
+  error(
+    mod: string,
+    msg: string,
+    extra: Record<string, unknown> = {},
+  ): Promise<void> {
     return this.log("error", mod, msg, extra);
   }
 

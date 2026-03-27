@@ -17,11 +17,7 @@
   "dislikes": 258,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Partition Equal Subset Sum\", \"titleSlug\": \"partition-equal-subset-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split Array With Same Average\", \"titleSlug\": \"split-array-with-same-average\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Tallest Billboard\", \"titleSlug\": \"tallest-billboard\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Last Stone Weight II\", \"titleSlug\": \"last-stone-weight-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Fair Distribution of Cookies\", \"titleSlug\": \"fair-distribution-of-cookies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Closest Subsequence Sum\", \"titleSlug\": \"closest-subsequence-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Split Array\", \"titleSlug\": \"number-of-ways-to-split-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Squared Difference\", \"titleSlug\": \"minimum-sum-of-squared-difference\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split With Minimum Sum\", \"titleSlug\": \"split-with-minimum-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,9,7,3]",
-    "[-36,36]",
-    "[2,-1,0,4,-2,-9]"
-  ],
+  "exampleTestcaseList": ["[3,9,7,3]", "[-36,36]", "[2,-1,0,4,-2,-9]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}, {\"timesEncountered\": 10, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"texas-instruments\", \"name\": \"Texas Instruments\"}]}",
   "topicTags": [
     {

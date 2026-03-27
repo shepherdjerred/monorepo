@@ -12,10 +12,7 @@
   "dislikes": 331,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Inversions\", \"titleSlug\": \"count-the-number-of-inversions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n0",
-    "3\n1"
-  ],
+  "exampleTestcaseList": ["3\n0", "3\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"works-applications\", \"name\": \"Works Applications\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

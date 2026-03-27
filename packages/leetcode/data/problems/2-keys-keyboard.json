@@ -14,10 +14,7 @@
   "dislikes": 247,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"4 Keys Keyboard\", \"titleSlug\": \"4-keys-keyboard\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Broken Calculator\", \"titleSlug\": \"broken-calculator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Value After Replacing With Sum of Prime Factors\", \"titleSlug\": \"smallest-value-after-replacing-with-sum-of-prime-factors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Distinct Prime Factors of Product of Array\", \"titleSlug\": \"distinct-prime-factors-of-product-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3",
-    "1"
-  ],
+  "exampleTestcaseList": ["3", "1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

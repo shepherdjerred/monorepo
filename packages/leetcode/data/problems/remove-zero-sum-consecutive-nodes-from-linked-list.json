@@ -16,11 +16,7 @@
   "dislikes": 226,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Delete N Nodes After M Nodes of a Linked List\", \"titleSlug\": \"delete-n-nodes-after-m-nodes-of-a-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,-3,3,1]",
-    "[1,2,3,-3,4]",
-    "[1,2,3,-3,-2]"
-  ],
+  "exampleTestcaseList": ["[1,2,-3,3,1]", "[1,2,3,-3,4]", "[1,2,3,-3,-2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

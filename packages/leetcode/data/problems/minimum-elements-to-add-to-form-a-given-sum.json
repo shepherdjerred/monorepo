@@ -17,10 +17,7 @@
   "dislikes": 196,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,-1,1]\n3\n-4",
-    "[1,-10,9,1]\n100\n0"
-  ],
+  "exampleTestcaseList": ["[1,-1,1]\n3\n-4", "[1,-10,9,1]\n100\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

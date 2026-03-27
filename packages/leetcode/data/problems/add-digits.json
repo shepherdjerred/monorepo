@@ -17,10 +17,7 @@
   "dislikes": 1980,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Happy Number\", \"titleSlug\": \"happy-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits in the Minimum Number\", \"titleSlug\": \"sum-of-digits-in-the-minimum-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Digits of String After Convert\", \"titleSlug\": \"sum-of-digits-of-string-after-convert\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Four Digit Number After Splitting Digits\", \"titleSlug\": \"minimum-sum-of-four-digit-number-after-splitting-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Calculate Digit Sum of a String\", \"titleSlug\": \"calculate-digit-sum-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Difference Between Element Sum and Digit Sum of an Array\", \"titleSlug\": \"difference-between-element-sum-and-digit-sum-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Alternating Digit Sum\", \"titleSlug\": \"alternating-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "38",
-    "0"
-  ],
+  "exampleTestcaseList": ["38", "0"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 13, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"pega\", \"name\": \"Pega\"}]}",
   "topicTags": [
     {

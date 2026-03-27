@@ -24,6 +24,7 @@ def myhelpers_test_suite(name):
 ```
 
 BUILD file:
+
 ```python
 load(":myhelpers_test.bzl", "myhelpers_test_suite")
 myhelpers_test_suite(name = "myhelpers_tests")
@@ -195,6 +196,7 @@ stardoc(
 ```
 
 Use `stardoc_with_diff_test` to check generated docs match committed files:
+
 1. `stardoc` generates fresh docs
 2. `diff_test` compares against committed `.md` file
 3. An `update_docs` target regenerates when they drift
@@ -224,12 +226,14 @@ my_rules/
 ```
 
 **Naming conventions:**
+
 - Test macro: `_test_foo` (private name so buildifier detects missing tests)
 - Rule type: `foo_test`
 - Impl: `_foo_test_impl`
 - Subject targets: prefixed with `foo_`
 
 **Key rules:**
+
 - Always tag subject targets `manual` to prevent `//...` from building broken targets
 - Source files don't need to exist for analysis tests
 - Use `test_suite` to bundle tests and reduce BUILD boilerplate
@@ -238,12 +242,12 @@ my_rules/
 
 ## Decision Table
 
-| What to Test | Framework | Key Function |
-|---|---|---|
-| Pure utility functions | Skylib `unittest` | `unittest.make()`, `unittest.suite()` |
-| Rule providers & actions | `rules_testing` (preferred) or Skylib `analysistest` | `analysis_test()`, `analysistest.make()` |
-| Rule failure behavior | Skylib `analysistest` | `analysistest.make(impl, expect_failure=True)` |
-| Rule output correctness | `sh_test` / custom test rule | Script validates artifacts |
-| Repo rules / module extensions | `rules_bazel_integration_test` | Child workspace + recursive Bazel |
-| Documentation accuracy | Stardoc + `diff_test` | `stardoc_with_diff_test` |
-| Macros | Analysis tests on produced targets | Test the targets the macro creates |
+| What to Test                   | Framework                                            | Key Function                                   |
+| ------------------------------ | ---------------------------------------------------- | ---------------------------------------------- |
+| Pure utility functions         | Skylib `unittest`                                    | `unittest.make()`, `unittest.suite()`          |
+| Rule providers & actions       | `rules_testing` (preferred) or Skylib `analysistest` | `analysis_test()`, `analysistest.make()`       |
+| Rule failure behavior          | Skylib `analysistest`                                | `analysistest.make(impl, expect_failure=True)` |
+| Rule output correctness        | `sh_test` / custom test rule                         | Script validates artifacts                     |
+| Repo rules / module extensions | `rules_bazel_integration_test`                       | Child workspace + recursive Bazel              |
+| Documentation accuracy         | Stardoc + `diff_test`                                | `stardoc_with_diff_test`                       |
+| Macros                         | Analysis tests on produced targets                   | Test the targets the macro creates             |

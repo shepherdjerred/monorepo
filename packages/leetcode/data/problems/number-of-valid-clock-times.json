@@ -15,11 +15,7 @@
   "dislikes": 247,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Time for Given Digits\", \"titleSlug\": \"largest-time-for-given-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Latest Time by Replacing Hidden Digits\", \"titleSlug\": \"latest-time-by-replacing-hidden-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"?5:00\"",
-    "\"0?:0?\"",
-    "\"??:??\""
-  ],
+  "exampleTestcaseList": ["\"?5:00\"", "\"0?:0?\"", "\"??:??\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

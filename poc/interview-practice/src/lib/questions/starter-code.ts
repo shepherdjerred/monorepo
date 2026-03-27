@@ -1,7 +1,11 @@
 import path from "node:path";
 import type { FunctionSignature } from "./schemas.ts";
 
-const TEMPLATES_DIR = path.join(path.dirname(import.meta.dir), "..", "templates");
+const TEMPLATES_DIR = path.join(
+  path.dirname(import.meta.dir),
+  "..",
+  "templates",
+);
 
 export async function generateStarterCode(
   language: string,
@@ -14,11 +18,14 @@ export async function generateStarterCode(
 
   try {
     let template = await Bun.file(templatePath).text();
-    template = template.replaceAll('{{TITLE}}', problemTitle);
-    template = template.replaceAll('{{FUNCTION_NAME}}', signature.name);
-    template = template.replaceAll('{{PARAMS}}', buildParams(ext, signature));
-    template = template.replaceAll('{{RETURN_TYPE}}', signature.returnType);
-    template = template.replaceAll('{{DEFAULT_RETURN}}', getDefaultReturn(ext, signature.returnType));
+    template = template.replaceAll("{{TITLE}}", problemTitle);
+    template = template.replaceAll("{{FUNCTION_NAME}}", signature.name);
+    template = template.replaceAll("{{PARAMS}}", buildParams(ext, signature));
+    template = template.replaceAll("{{RETURN_TYPE}}", signature.returnType);
+    template = template.replaceAll(
+      "{{DEFAULT_RETURN}}",
+      getDefaultReturn(ext, signature.returnType),
+    );
     return template;
   } catch {
     return getDefaultTemplate(ext, signature, problemTitle);
@@ -30,11 +37,15 @@ function buildParams(ext: string, signature: FunctionSignature): string {
     case ".ts":
       return signature.params.map((p) => `${p.name}: ${p.type}`).join(", ");
     case ".java":
-      return signature.params.map((p) => `${toJavaType(p.type)} ${p.name}`).join(", ");
+      return signature.params
+        .map((p) => `${toJavaType(p.type)} ${p.name}`)
+        .join(", ");
     case ".py":
       return signature.params.map((p) => p.name).join(", ");
     case ".go":
-      return signature.params.map((p) => `${p.name} ${toGoType(p.type)}`).join(", ");
+      return signature.params
+        .map((p) => `${p.name} ${toGoType(p.type)}`)
+        .join(", ");
     default:
       return signature.params.map((p) => `${p.name}: ${p.type}`).join(", ");
   }
@@ -42,12 +53,12 @@ function buildParams(ext: string, signature: FunctionSignature): string {
 
 function toJavaType(tsType: string): string {
   const map: Record<string, string> = {
-    "number": "int",
+    number: "int",
     "number[]": "int[]",
     "number[][]": "int[][]",
-    "string": "String",
+    string: "String",
     "string[]": "String[]",
-    "boolean": "boolean",
+    boolean: "boolean",
     "boolean[]": "boolean[]",
   };
   return map[tsType] ?? tsType;
@@ -55,12 +66,12 @@ function toJavaType(tsType: string): string {
 
 function toGoType(tsType: string): string {
   const map: Record<string, string> = {
-    "number": "int",
+    number: "int",
     "number[]": "[]int",
     "number[][]": "[][]int",
-    "string": "string",
+    string: "string",
     "string[]": "[]string",
-    "boolean": "bool",
+    boolean: "bool",
     "boolean[]": "[]bool",
   };
   return map[tsType] ?? tsType;

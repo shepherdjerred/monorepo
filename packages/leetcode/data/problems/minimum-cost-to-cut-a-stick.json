@@ -15,10 +15,7 @@
   "dislikes": 160,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Ways to Divide a Long Corridor\", \"titleSlug\": \"number-of-ways-to-divide-a-long-corridor\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Divide an Array Into Subarrays With Minimum Cost II\", \"titleSlug\": \"divide-an-array-into-subarrays-with-minimum-cost-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "7\n[1,3,4,5]",
-    "9\n[5,6,1,4,2]"
-  ],
+  "exampleTestcaseList": ["7\n[1,3,4,5]", "9\n[5,6,1,4,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"cyware\", \"name\": \"Cyware\"}, {\"timesEncountered\": 2, \"slug\": \"line\", \"name\": \"LINE\"}], \"six_months\": []}",
   "topicTags": [
     {

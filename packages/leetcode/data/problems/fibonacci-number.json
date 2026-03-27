@@ -12,11 +12,7 @@
   "dislikes": 410,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Split Array into Fibonacci Sequence\", \"titleSlug\": \"split-array-into-fibonacci-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Length of Longest Fibonacci Subsequence\", \"titleSlug\": \"length-of-longest-fibonacci-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"N-th Tribonacci Number\", \"titleSlug\": \"n-th-tribonacci-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "3",
-    "4"
-  ],
+  "exampleTestcaseList": ["2", "3", "4"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"six_months\": [{\"timesEncountered\": 14, \"slug\": \"htc\", \"name\": \"HTC\"}, {\"timesEncountered\": 4, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 7, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"lti\", \"name\": \"LTI\"}, {\"timesEncountered\": 2, \"slug\": \"intel\", \"name\": \"Intel\"}, {\"timesEncountered\": 2, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 2, \"slug\": \"nokia\", \"name\": \"Nokia\"}]}",
   "topicTags": [
     {

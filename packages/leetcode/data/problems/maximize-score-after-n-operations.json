@@ -15,11 +15,7 @@
   "dislikes": 114,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2]",
-    "[3,4,6,8]",
-    "[1,2,3,4,5,6]"
-  ],
+  "exampleTestcaseList": ["[1,2]", "[3,4,6,8]", "[1,2,3,4,5,6]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -14,11 +14,7 @@
   "dislikes": 1228,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Integer to Roman\", \"titleSlug\": \"integer-to-roman\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"III\"",
-    "\"LVIII\"",
-    "\"MCMXCIV\""
-  ],
+  "exampleTestcaseList": ["\"III\"", "\"LVIII\"", "\"MCMXCIV\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 22, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"virtusa\", \"name\": \"Virtusa\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 7, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 6, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 6, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 5, \"slug\": \"amd\", \"name\": \"AMD\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"deltax\", \"name\": \"DeltaX\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}]}",
   "topicTags": [
     {

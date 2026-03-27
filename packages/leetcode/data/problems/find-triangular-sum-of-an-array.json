@@ -15,10 +15,7 @@
   "dislikes": 77,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Pascal's Triangle II\", \"titleSlug\": \"pascals-triangle-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Calculate Digit Sum of a String\", \"titleSlug\": \"calculate-digit-sum-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Min Max Game\", \"titleSlug\": \"min-max-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5]",
-    "[5]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5]", "[5]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

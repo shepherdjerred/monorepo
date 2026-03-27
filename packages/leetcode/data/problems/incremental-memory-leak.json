@@ -15,10 +15,7 @@
   "dislikes": 93,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n2",
-    "8\n11"
-  ],
+  "exampleTestcaseList": ["2\n2", "8\n11"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

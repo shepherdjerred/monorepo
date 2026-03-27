@@ -15,10 +15,7 @@
   "dislikes": 64,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock III\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Two Best Non-Overlapping Events\", \"titleSlug\": \"two-best-non-overlapping-events\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,2,2,3,3,5]\n2",
-    "[1,2,3,4]\n0"
-  ],
+  "exampleTestcaseList": ["[1,1,2,2,3,3,5]\n2", "[1,2,3,4]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

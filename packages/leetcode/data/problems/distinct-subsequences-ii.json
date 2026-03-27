@@ -12,11 +12,7 @@
   "dislikes": 39,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Unique Good Subsequences\", \"titleSlug\": \"number-of-unique-good-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count K-Subsequences of a String With Maximum Beauty\", \"titleSlug\": \"count-k-subsequences-of-a-string-with-maximum-beauty\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"aba\"",
-    "\"aaa\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"aba\"", "\"aaa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

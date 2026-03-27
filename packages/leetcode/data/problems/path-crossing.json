@@ -15,10 +15,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"NES\"",
-    "\"NESWW\""
-  ],
+  "exampleTestcaseList": ["\"NES\"", "\"NESWW\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

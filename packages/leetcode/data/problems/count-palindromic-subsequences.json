@@ -15,11 +15,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Arithmetic Slices II - Subsequence\", \"titleSlug\": \"arithmetic-slices-ii-subsequence\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Different Palindromic Subsequences\", \"titleSlug\": \"count-different-palindromic-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Unique Length-3 Palindromic Subsequences\", \"titleSlug\": \"unique-length-3-palindromic-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"103301\"",
-    "\"0000000\"",
-    "\"9999900000\""
-  ],
+  "exampleTestcaseList": ["\"103301\"", "\"0000000\"", "\"9999900000\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 5, \"slug\": \"millennium\", \"name\": \"Millennium\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

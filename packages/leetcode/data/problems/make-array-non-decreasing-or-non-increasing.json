@@ -16,11 +16,7 @@
   "dislikes": 13,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Non-decreasing Array\", \"titleSlug\": \"non-decreasing-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Array Strictly Increasing\", \"titleSlug\": \"make-array-strictly-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make the Array Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4,5,0]",
-    "[2,2,3,4]",
-    "[0]"
-  ],
+  "exampleTestcaseList": ["[3,2,4,5,0]", "[2,2,3,4]", "[0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

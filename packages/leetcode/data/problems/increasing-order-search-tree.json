@@ -12,10 +12,7 @@
   "dislikes": 685,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[5,3,6,2,4,null,8,1,null,null,null,7,9]",
-    "[5,1,7]"
-  ],
+  "exampleTestcaseList": ["[5,3,6,2,4,null,8,1,null,null,null,7,9]", "[5,1,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

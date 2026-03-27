@@ -15,10 +15,7 @@
   "dislikes": 233,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Backspace String Compare\", \"titleSlug\": \"backspace-string-compare\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove All Adjacent Duplicates In String\", \"titleSlug\": \"remove-all-adjacent-duplicates-in-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"leet**cod*e\"",
-    "\"erase*****\""
-  ],
+  "exampleTestcaseList": ["\"leet**cod*e\"", "\"erase*****\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

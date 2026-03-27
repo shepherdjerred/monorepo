@@ -17,10 +17,7 @@
   "dislikes": 439,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Convert 1D Array Into 2D Array\", \"titleSlug\": \"convert-1d-array-into-2d-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2],[3,4]]\n1\n4",
-    "[[1,2],[3,4]]\n2\n4"
-  ],
+  "exampleTestcaseList": ["[[1,2],[3,4]]\n1\n4", "[[1,2],[3,4]]\n2\n4"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

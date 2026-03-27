@@ -12,10 +12,7 @@
   "dislikes": 178,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[1,0,1],[0,-2,3]]\n2",
-    "[[2,2,-1]]\n3"
-  ],
+  "exampleTestcaseList": ["[[1,0,1],[0,-2,3]]\n2", "[[2,2,-1]]\n3"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"six_months\": []}",
   "topicTags": [
     {

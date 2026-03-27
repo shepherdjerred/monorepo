@@ -19,11 +19,7 @@
   "dislikes": 376,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reverse Nodes in k-Group\", \"titleSlug\": \"reverse-nodes-in-k-group\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Reverse Linked List\", \"titleSlug\": \"reverse-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,2,6,3,9,1,7,3,8,4]",
-    "[1,1,0,6]",
-    "[1,1,0,6,5]"
-  ],
+  "exampleTestcaseList": ["[5,2,6,3,9,1,7,3,8,4]", "[1,1,0,6]", "[1,1,0,6,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

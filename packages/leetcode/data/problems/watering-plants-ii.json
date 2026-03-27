@@ -16,11 +16,7 @@
   "dislikes": 165,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Watering Plants\", \"titleSlug\": \"watering-plants\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,2,3,3]\n5\n5",
-    "[2,2,3,3]\n3\n4",
-    "[5]\n10\n8"
-  ],
+  "exampleTestcaseList": ["[2,2,3,3]\n5\n5", "[2,2,3,3]\n3\n4", "[5]\n10\n8"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

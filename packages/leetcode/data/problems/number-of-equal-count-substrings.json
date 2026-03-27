@@ -17,11 +17,7 @@
   "dislikes": 11,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Substrings With Equal Digit Frequency\", \"titleSlug\": \"unique-substrings-with-equal-digit-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaabcbbcc\"\n3",
-    "\"abcd\"\n2",
-    "\"a\"\n5"
-  ],
+  "exampleTestcaseList": ["\"aaabcbbcc\"\n3", "\"abcd\"\n2", "\"a\"\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

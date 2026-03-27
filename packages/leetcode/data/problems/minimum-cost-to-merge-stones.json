@@ -12,11 +12,7 @@
   "dislikes": 116,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Burst Balloons\", \"titleSlug\": \"burst-balloons\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Connect Sticks\", \"titleSlug\": \"minimum-cost-to-connect-sticks\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4,1]\n2",
-    "[3,2,4,1]\n3",
-    "[3,5,1,2,6]\n3"
-  ],
+  "exampleTestcaseList": ["[3,2,4,1]\n2", "[3,2,4,1]\n3", "[3,5,1,2,6]\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": []}",
   "topicTags": [
     {

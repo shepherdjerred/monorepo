@@ -16,11 +16,7 @@
   "dislikes": 620,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[1,2,0,0,2,1]",
-    "[1,2,0,1,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[1,2,0,0,2,1]", "[1,2,0,1,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"trend-micro\", \"name\": \"Trend Micro\"}], \"six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}]}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 335,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Gas Station\", \"titleSlug\": \"gas-station\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,2,2,4,0,6]\n4",
-    "[2]\n1"
-  ],
+  "exampleTestcaseList": ["[5,2,2,4,0,6]\n4", "[2]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

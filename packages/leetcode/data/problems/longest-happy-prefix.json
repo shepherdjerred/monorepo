@@ -5,19 +5,14 @@
   "titleSlug": "longest-happy-prefix",
   "difficulty": "Hard",
   "content": "<p>A string is called a <strong>happy prefix</strong> if is a <strong>non-empty</strong> prefix which is also a suffix (excluding itself).</p>\n\n<p>Given a string <code>s</code>, return <em>the <strong>longest happy prefix</strong> of</em> <code>s</code>. Return an empty string <code>&quot;&quot;</code> if no such prefix exists.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;level&quot;\n<strong>Output:</strong> &quot;l&quot;\n<strong>Explanation:</strong> s contains 4 prefix excluding itself (&quot;l&quot;, &quot;le&quot;, &quot;lev&quot;, &quot;leve&quot;), and suffix (&quot;l&quot;, &quot;el&quot;, &quot;vel&quot;, &quot;evel&quot;). The largest prefix which is also suffix is given by &quot;l&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ababab&quot;\n<strong>Output:</strong> &quot;abab&quot;\n<strong>Explanation:</strong> &quot;abab&quot; is the largest prefix which is also suffix. They can overlap in the original string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> contains only lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Use Longest Prefix Suffix (KMP-table) or String Hashing."
-  ],
+  "hints": ["Use Longest Prefix Suffix (KMP-table) or String Hashing."],
   "metaData": "{\n  \"name\": \"longestPrefix\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"96.2K\", \"totalSubmission\": \"183.7K\", \"totalAcceptedRaw\": 96164, \"totalSubmissionRaw\": 183736, \"acRate\": \"52.3%\"}",
   "likes": 1584,
   "dislikes": 47,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Scores of Built Strings\", \"titleSlug\": \"sum-of-scores-of-built-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Deletions on a String\", \"titleSlug\": \"maximum-deletions-on-a-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Revert Word to Initial State II\", \"titleSlug\": \"minimum-time-to-revert-word-to-initial-state-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Revert Word to Initial State I\", \"titleSlug\": \"minimum-time-to-revert-word-to-initial-state-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"level\"",
-    "\"ababab\""
-  ],
+  "exampleTestcaseList": ["\"level\"", "\"ababab\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
   "topicTags": [
     {

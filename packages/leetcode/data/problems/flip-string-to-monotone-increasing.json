@@ -12,11 +12,7 @@
   "dislikes": 185,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Cost to Make All Characters Equal\", \"titleSlug\": \"minimum-cost-to-make-all-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"00110\"",
-    "\"010110\"",
-    "\"00011000\""
-  ],
+  "exampleTestcaseList": ["\"00110\"", "\"010110\"", "\"00011000\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

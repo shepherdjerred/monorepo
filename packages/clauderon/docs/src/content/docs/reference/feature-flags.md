@@ -14,14 +14,14 @@ Loaded at daemon startup. Require restart to change.
 
 ## Available Flags
 
-| Flag                         | Default | Description                                          |
-| ---------------------------- | ------- | ---------------------------------------------------- |
-| `enable_webauthn_auth`       | `false` | WebAuthn passwordless authentication                 |
-| `enable_ai_metadata`         | `true`  | AI-generated session titles from prompts             |
-| `enable_auto_reconcile`      | `true`  | Auto-sync database with backends on startup          |
-| `enable_proxy_port_reuse`    | `false` | Reuse proxy ports across sessions (experimental)     |
-| `enable_usage_tracking`      | `false` | Track Claude API usage per session                   |
-| `enable_experimental_models` | `false` | Enable Codex/Gemini models                           |
+| Flag                         | Default | Description                                                  |
+| ---------------------------- | ------- | ------------------------------------------------------------ |
+| `enable_webauthn_auth`       | `false` | WebAuthn passwordless authentication                         |
+| `enable_ai_metadata`         | `true`  | AI-generated session titles from prompts                     |
+| `enable_auto_reconcile`      | `true`  | Auto-sync database with backends on startup                  |
+| `enable_proxy_port_reuse`    | `false` | Reuse proxy ports across sessions (experimental)             |
+| `enable_usage_tracking`      | `false` | Track Claude API usage per session                           |
+| `enable_experimental_models` | `false` | Enable Codex/Gemini models                                   |
 | `enable_readonly_mode`       | `false` | Read-only proxy mode (experimental, known issues #424, #205) |
 
 ## Configuration Examples
@@ -50,10 +50,10 @@ enable_readonly_mode = false
 
 ## Flag Requirements
 
-| Flag                    | Requirements                                      |
-| ----------------------- | ------------------------------------------------- |
-| `enable_webauthn_auth`  | HTTPS or localhost; `CLAUDERON_ORIGIN` for remote  |
-| `enable_ai_metadata`    | Valid Anthropic API credentials                    |
+| Flag                    | Requirements                                                 |
+| ----------------------- | ------------------------------------------------------------ |
+| `enable_webauthn_auth`  | HTTPS or localhost; `CLAUDERON_ORIGIN` for remote            |
+| `enable_ai_metadata`    | Valid Anthropic API credentials                              |
 | `enable_auto_reconcile` | Detects orphaned worktrees, missing backends, stale sessions |
 
 ## Environment Variable Format

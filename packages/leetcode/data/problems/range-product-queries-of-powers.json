@@ -15,10 +15,7 @@
   "dislikes": 152,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "15\n[[0,1],[2,2],[0,3]]",
-    "2\n[[0,0]]"
-  ],
+  "exampleTestcaseList": ["15\n[[0,1],[2,2],[0,3]]", "2\n[[0,0]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

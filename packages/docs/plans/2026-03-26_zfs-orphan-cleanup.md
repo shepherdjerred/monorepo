@@ -10,20 +10,21 @@ The HDD pool was also checked — all 5 datasets there are actively bound to rea
 
 **NVMe pool (`zfspv-pool-nvme`) — 19 orphaned datasets, ~980 GB total:**
 
-| Dataset | Size | Likely origin |
-|---------|------|---------------|
-| `pvc-487bf9d3-e7f8-4b22-9463-e9bf4fcaf095` | 837 GB | Old Dagger engine cache |
-| `pvc-d2b74a08-3073-4747-9b7a-c0415b72c3a7` | 135 GB | Old bazel-remote cache |
-| `pvc-62b11b04-ade5-4efa-8342-957045e3ac82` | 3.93 GB | Unknown |
-| `pvc-e9008df3-135a-4e2f-a280-521c30951449` | 1.28 GB | Unknown |
-| `pvc-ec189531-c617-47b0-960a-cb8f48ff1124` | 1.26 GB | Unknown |
-| 14 others | < 1 GB each | Unknown |
+| Dataset                                    | Size        | Likely origin           |
+| ------------------------------------------ | ----------- | ----------------------- |
+| `pvc-487bf9d3-e7f8-4b22-9463-e9bf4fcaf095` | 837 GB      | Old Dagger engine cache |
+| `pvc-d2b74a08-3073-4747-9b7a-c0415b72c3a7` | 135 GB      | Old bazel-remote cache  |
+| `pvc-62b11b04-ade5-4efa-8342-957045e3ac82` | 3.93 GB     | Unknown                 |
+| `pvc-e9008df3-135a-4e2f-a280-521c30951449` | 1.28 GB     | Unknown                 |
+| `pvc-ec189531-c617-47b0-960a-cb8f48ff1124` | 1.26 GB     | Unknown                 |
+| 14 others                                  | < 1 GB each | Unknown                 |
 
 **HDD pool — no action needed.** All datasets are actively in use.
 
 ## Verification performed (2026-03-26)
 
 For each of the 19 NVMe datasets:
+
 - `kubectl get pv <name>` → NotFound
 - `kubectl get zfsvolume <name> -n openebs` → NotFound
 - `zfs get mounted` → `no`

@@ -14,11 +14,7 @@
   "dislikes": 144,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "5",
-    "7",
-    "10"
-  ],
+  "exampleTestcaseList": ["5", "7", "10"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"cloudera\", \"name\": \"Cloudera\"}], \"six_months\": []}",
   "topicTags": [
     {

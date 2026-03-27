@@ -89,7 +89,9 @@ Internal notes (never share): ${ctx.currentPart.internalNotes}`,
   );
 
   if (ctx.codeSnapshot !== undefined) {
-    sections.push(`CANDIDATE'S CURRENT CODE:\n\`\`\`\n${ctx.codeSnapshot}\n\`\`\``);
+    sections.push(
+      `CANDIDATE'S CURRENT CODE:\n\`\`\`\n${ctx.codeSnapshot}\n\`\`\``,
+    );
   }
 
   if (ctx.reflections !== undefined) {

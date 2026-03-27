@@ -15,10 +15,7 @@
   "dislikes": 24,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Paths With the Given XOR Value\", \"titleSlug\": \"count-paths-with-the-given-xor-value\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,2,7]\n2\n6",
-    "[9,8,4,2,1]\n5\n14"
-  ],
+  "exampleTestcaseList": ["[1,4,2,7]\n2\n6", "[9,8,4,2,1]\n5\n14"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vimeo\", \"name\": \"Vimeo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

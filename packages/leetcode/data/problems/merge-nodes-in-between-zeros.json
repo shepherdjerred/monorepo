@@ -17,10 +17,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Linked List Components\", \"titleSlug\": \"linked-list-components\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,3,1,0,4,5,2,0]",
-    "[0,1,0,3,0,2,2,0]"
-  ],
+  "exampleTestcaseList": ["[0,3,1,0,4,5,2,0]", "[0,1,0,3,0,2,2,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

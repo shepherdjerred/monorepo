@@ -17,10 +17,7 @@
   "dislikes": 1738,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Palindrome With Fixed Length\", \"titleSlug\": \"find-palindrome-with-fixed-length\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Next Palindrome Using Same Digits\", \"titleSlug\": \"next-palindrome-using-same-digits\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Count of Good Integers\", \"titleSlug\": \"find-the-count-of-good-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Largest Palindrome Divisible by K\", \"titleSlug\": \"find-the-largest-palindrome-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"123\"",
-    "\"1\""
-  ],
+  "exampleTestcaseList": ["\"123\"", "\"1\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 11, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"yelp\", \"name\": \"Yelp\"}], \"three_months\": []}",
   "topicTags": [
     {

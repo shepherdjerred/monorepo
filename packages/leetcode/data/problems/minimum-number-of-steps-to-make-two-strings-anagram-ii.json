@@ -16,10 +16,7 @@
   "dislikes": 28,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Steps to Make Two Strings Anagram\", \"titleSlug\": \"minimum-number-of-steps-to-make-two-strings-anagram\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"leetcode\"\n\"coats\"",
-    "\"night\"\n\"thing\""
-  ],
+  "exampleTestcaseList": ["\"leetcode\"\n\"coats\"", "\"night\"\n\"thing\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"wealthfront\", \"name\": \"Wealthfront\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

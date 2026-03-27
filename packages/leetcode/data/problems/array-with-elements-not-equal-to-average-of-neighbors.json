@@ -15,10 +15,7 @@
   "dislikes": 58,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Wiggle Sort\", \"titleSlug\": \"wiggle-sort\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Wiggle Sort II\", \"titleSlug\": \"wiggle-sort-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Neighbor Sum Service\", \"titleSlug\": \"design-neighbor-sum-service\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5]",
-    "[6,2,0,9,7]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5]", "[6,2,0,9,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

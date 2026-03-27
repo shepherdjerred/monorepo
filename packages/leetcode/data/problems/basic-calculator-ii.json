@@ -12,11 +12,7 @@
   "dislikes": 953,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator III\", \"titleSlug\": \"basic-calculator-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Evaluate Valid Expressions\", \"titleSlug\": \"evaluate-valid-expressions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"3+2*2\"",
-    "\" 3/2 \"",
-    "\" 3+5 / 2 \""
-  ],
+  "exampleTestcaseList": ["\"3+2*2\"", "\" 3/2 \"", "\" 3+5 / 2 \""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"rivian\", \"name\": \"Rivian\"}, {\"timesEncountered\": 2, \"slug\": \"ixl\", \"name\": \"IXL\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 8, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 7, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 7, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 7, \"slug\": \"rokt\", \"name\": \"Rokt\"}, {\"timesEncountered\": 6, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 4, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 4, \"slug\": \"zoox\", \"name\": \"Zoox\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}]}",
   "topicTags": [
     {

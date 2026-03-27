@@ -12,11 +12,7 @@
   "dislikes": 899,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,-1,1,2,2]",
-    "[-1,-2,-3,-4,-5,6]",
-    "[1,-1,5,1,4]"
-  ],
+  "exampleTestcaseList": ["[2,-1,1,2,2]", "[-1,-2,-3,-4,-5,6]", "[1,-1,5,1,4]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
   "topicTags": [
     {

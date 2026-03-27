@@ -12,10 +12,7 @@
   "dislikes": 494,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Out of Boundary Paths\", \"titleSlug\": \"out-of-boundary-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Moves to Kill All Pawns\", \"titleSlug\": \"maximum-number-of-moves-to-kill-all-pawns\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2\n0\n0",
-    "1\n0\n0\n0"
-  ],
+  "exampleTestcaseList": ["3\n2\n0\n0", "1\n0\n0\n0"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"spinny\", \"name\": \"spinny\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
   "topicTags": [
     {

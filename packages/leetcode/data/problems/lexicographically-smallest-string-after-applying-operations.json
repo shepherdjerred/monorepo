@@ -16,11 +16,7 @@
   "dislikes": 320,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Lexicographically Smallest String After Substring Operation\", \"titleSlug\": \"lexicographically-smallest-string-after-substring-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After a Swap\", \"titleSlug\": \"lexicographically-smallest-string-after-a-swap\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"5525\"\n9\n2",
-    "\"74\"\n5\n1",
-    "\"0011\"\n4\n2"
-  ],
+  "exampleTestcaseList": ["\"5525\"\n9\n2", "\"74\"\n5\n1", "\"0011\"\n4\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

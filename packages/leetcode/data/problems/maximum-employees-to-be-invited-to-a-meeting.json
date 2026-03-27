@@ -16,11 +16,7 @@
   "dislikes": 70,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Redundant Connection\", \"titleSlug\": \"redundant-connection\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses III\", \"titleSlug\": \"parallel-courses-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Process Restricted Friend Requests\", \"titleSlug\": \"process-restricted-friend-requests\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,2,1,2]",
-    "[1,2,0]",
-    "[3,0,1,4,1]"
-  ],
+  "exampleTestcaseList": ["[2,2,1,2]", "[1,2,0]", "[3,0,1,4,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

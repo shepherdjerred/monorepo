@@ -14,10 +14,7 @@
   "dislikes": 758,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Make Array Continuous\", \"titleSlug\": \"minimum-number-of-operations-to-make-array-continuous\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[7,4,9]",
-    "[6,5,4,3,10]"
-  ],
+  "exampleTestcaseList": ["[7,4,9]", "[6,5,4,3,10]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

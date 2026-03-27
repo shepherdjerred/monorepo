@@ -16,10 +16,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Skips to Arrive at Meeting On Time\", \"titleSlug\": \"minimum-skips-to-arrive-at-meeting-on-time\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[2,3],[3,4]]\n5\n4",
-    "[[1,10],[2,2],[3,4]]\n6\n5"
-  ],
+  "exampleTestcaseList": ["[[2,3],[3,4]]\n5\n4", "[[1,10],[2,2],[3,4]]\n6\n5"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

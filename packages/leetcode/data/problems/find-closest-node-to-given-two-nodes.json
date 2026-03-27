@@ -15,10 +15,7 @@
   "dislikes": 470,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,2,3,-1]\n0\n1",
-    "[1,2,-1]\n0\n2"
-  ],
+  "exampleTestcaseList": ["[2,2,3,-1]\n0\n1", "[1,2,-1]\n0\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"juspay\", \"name\": \"Juspay\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

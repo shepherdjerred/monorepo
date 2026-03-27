@@ -16,7 +16,8 @@ const HEADERS: Record<string, string> = {
   Referer: "https://leetcode.com/problemset/",
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.7559.133 Safari/537.36",
-  "sec-ch-ua": '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
+  "sec-ch-ua":
+    '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
   "sec-ch-ua-mobile": "?0",
   "sec-ch-ua-platform": '"macOS"',
   "sec-fetch-dest": "empty",
@@ -42,7 +43,8 @@ export class LeetCodeClient {
   private async rateLimit(): Promise<void> {
     const now = Date.now();
     const elapsed = now - this.lastRequestTime;
-    const delay = this.minDelay + Math.random() * (this.maxDelay - this.minDelay);
+    const delay =
+      this.minDelay + Math.random() * (this.maxDelay - this.minDelay);
     const remaining = delay - elapsed;
     if (remaining > 0) {
       await Bun.sleep(remaining);
@@ -70,11 +72,15 @@ export class LeetCodeClient {
         const msg = err instanceof Error ? err.message : String(err);
         if (attempt < maxRetries) {
           const backoff = 10_000 * (attempt + 1);
-          console.error(`  [network error] ${msg} — retrying in ${backoff / 1000}s`);
+          console.error(
+            `  [network error] ${msg} — retrying in ${backoff / 1000}s`,
+          );
           await Bun.sleep(backoff);
           continue;
         }
-        throw new Error(`Network error after ${maxRetries + 1} attempts: ${msg}`);
+        throw new Error(
+          `Network error after ${maxRetries + 1} attempts: ${msg}`,
+        );
       }
 
       const elapsed = Math.round(performance.now() - start);
@@ -86,7 +92,9 @@ export class LeetCodeClient {
 
       if (resp.status === 429) {
         const backoff = Math.min(30_000 * 2 ** attempt, 300_000);
-        console.error(`  [429] Rate limited — backing off ${backoff / 1000}s (attempt ${attempt + 1})`);
+        console.error(
+          `  [429] Rate limited — backing off ${backoff / 1000}s (attempt ${attempt + 1})`,
+        );
         await Bun.sleep(backoff);
         continue;
       }
@@ -101,16 +109,22 @@ export class LeetCodeClient {
       if (resp.status >= 500) {
         if (attempt < maxRetries) {
           const backoff = 10_000 * (attempt + 1);
-          console.error(`  [${resp.status}] Server error — retrying in ${backoff / 1000}s`);
+          console.error(
+            `  [${resp.status}] Server error — retrying in ${backoff / 1000}s`,
+          );
           await Bun.sleep(backoff);
           continue;
         }
         const body = await resp.text().catch(() => "");
-        throw new Error(`Server error ${resp.status} after ${maxRetries + 1} attempts: ${body.substring(0, 200)}`);
+        throw new Error(
+          `Server error ${resp.status} after ${maxRetries + 1} attempts: ${body.substring(0, 200)}`,
+        );
       }
 
       const body = await resp.text().catch(() => "");
-      throw new Error(`Unexpected status ${resp.status}: ${body.substring(0, 200)}`);
+      throw new Error(
+        `Unexpected status ${resp.status}: ${body.substring(0, 200)}`,
+      );
     }
 
     throw new Error("Exhausted retries");

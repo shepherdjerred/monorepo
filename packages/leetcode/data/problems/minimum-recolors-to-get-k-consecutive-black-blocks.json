@@ -15,10 +15,7 @@
   "dislikes": 38,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Points You Can Obtain from Cards\", \"titleSlug\": \"maximum-points-you-can-obtain-from-cards\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Vowels in a Substring of Given Length\", \"titleSlug\": \"maximum-number-of-vowels-in-a-substring-of-given-length\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"WBBWWBBWBW\"\n7",
-    "\"WBWBBBW\"\n2"
-  ],
+  "exampleTestcaseList": ["\"WBBWWBBWBW\"\n7", "\"WBWBBBW\"\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"hp\", \"name\": \"HP\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"dailyhunt\", \"name\": \"DailyHunt\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

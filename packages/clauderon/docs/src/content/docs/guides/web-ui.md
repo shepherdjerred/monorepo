@@ -58,11 +58,13 @@ webauthn_auth = true
 ## Remote Access
 
 **SSH Tunnel:**
+
 ```bash
 ssh -L 3030:localhost:3030 user@server
 ```
 
 **Reverse Proxy (nginx):**
+
 ```nginx
 server {
     listen 443 ssl;
@@ -99,9 +101,9 @@ clauderon daemon --dev   # serves frontend from filesystem with hot reload
 
 ## Troubleshooting
 
-| Problem | Solution |
-| ------- | -------- |
-| Page not loading | `curl http://localhost:3030/health` |
-| WebSocket disconnected | Auto-reconnects |
-| Session not appearing | Refresh or `clauderon list` |
-| Slow performance | Archive old sessions |
+| Problem                | Solution                            |
+| ---------------------- | ----------------------------------- |
+| Page not loading       | `curl http://localhost:3030/health` |
+| WebSocket disconnected | Auto-reconnects                     |
+| Session not appearing  | Refresh or `clauderon list`         |
+| Slow performance       | Archive old sessions                |

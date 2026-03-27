@@ -16,10 +16,7 @@
   "dislikes": 296,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Knight Probability in Chessboard\", \"titleSlug\": \"knight-probability-in-chessboard\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Execution of All Suffix Instructions Staying in a Grid\", \"titleSlug\": \"execution-of-all-suffix-instructions-staying-in-a-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n2\n2\n0\n0",
-    "1\n3\n3\n0\n1"
-  ],
+  "exampleTestcaseList": ["2\n2\n2\n0\n0", "1\n3\n3\n0\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"baidu\", \"name\": \"Baidu\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

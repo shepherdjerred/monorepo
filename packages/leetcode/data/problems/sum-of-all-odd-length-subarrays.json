@@ -14,11 +14,7 @@
   "dislikes": 330,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Squares of Special Elements \", \"titleSlug\": \"sum-of-squares-of-special-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,2,5,3]",
-    "[1,2]",
-    "[10,11,12]"
-  ],
+  "exampleTestcaseList": ["[1,4,2,5,3]", "[1,2]", "[10,11,12]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

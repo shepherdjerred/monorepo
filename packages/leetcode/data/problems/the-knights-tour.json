@@ -12,10 +12,7 @@
   "dislikes": 16,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "1\n1\n0\n0",
-    "3\n4\n0\n0"
-  ],
+  "exampleTestcaseList": ["1\n1\n0\n0", "3\n4\n0\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

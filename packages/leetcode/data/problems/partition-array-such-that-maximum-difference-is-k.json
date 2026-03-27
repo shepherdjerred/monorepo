@@ -16,11 +16,7 @@
   "dislikes": 47,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit\", \"titleSlug\": \"longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Beauty of an Array After Applying Operation\", \"titleSlug\": \"maximum-beauty-of-an-array-after-applying-operation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,6,1,2,5]\n2",
-    "[1,2,3]\n1",
-    "[2,2,4,5]\n0"
-  ],
+  "exampleTestcaseList": ["[3,6,1,2,5]\n2", "[1,2,3]\n1", "[2,2,4,5]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

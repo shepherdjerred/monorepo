@@ -139,8 +139,7 @@ Use this UUID for the id: ${randomUUID()}`;
 
   const question = result.data;
   const outDir =
-    options.outDir ??
-    path.join(config.dataDir, "questions", "generated");
+    options.outDir ?? path.join(config.dataDir, "questions", "generated");
 
   Bun.spawnSync(["mkdir", "-p", outDir]);
 

@@ -12,10 +12,7 @@
   "dislikes": 132,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Best Meeting Point\", \"titleSlug\": \"best-meeting-point\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Equal Array Elements\", \"titleSlug\": \"minimum-moves-to-equal-array-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make a Uni-Value Grid\", \"titleSlug\": \"minimum-operations-to-make-a-uni-value-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Removing Minimum Number of Magic Beans\", \"titleSlug\": \"removing-minimum-number-of-magic-beans\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equal\", \"titleSlug\": \"minimum-cost-to-make-array-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make All Array Elements Equal\", \"titleSlug\": \"minimum-operations-to-make-all-array-elements-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equalindromic\", \"titleSlug\": \"minimum-cost-to-make-array-equalindromic\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Subarray Elements Equal\", \"titleSlug\": \"minimum-operations-to-make-subarray-elements-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Elements Within K Subarrays Equal\", \"titleSlug\": \"minimum-operations-to-make-elements-within-k-subarrays-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[1,10,2,9]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[1,10,2,9]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"myntra\", \"name\": \"Myntra\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

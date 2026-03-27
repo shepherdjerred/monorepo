@@ -15,11 +15,7 @@
   "dislikes": 225,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"QWER\"",
-    "\"QQWE\"",
-    "\"QQQW\""
-  ],
+  "exampleTestcaseList": ["\"QWER\"", "\"QQWE\"", "\"QQQW\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"accolite\", \"name\": \"Accolite\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

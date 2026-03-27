@@ -17,11 +17,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Number of People That Can Be Caught in Tag\", \"titleSlug\": \"maximum-number-of-people-that-can-be-caught-in-tag\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Brightest Position on Street\", \"titleSlug\": \"brightest-position-on-street\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"H..H\"",
-    "\".H.H.\"",
-    "\".HHH.\""
-  ],
+  "exampleTestcaseList": ["\"H..H\"", "\".H.H.\"", "\".HHH.\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"geico\", \"name\": \"Geico\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"palo-alto-networks\", \"name\": \"Palo Alto Networks\"}, {\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}], \"six_months\": []}",
   "topicTags": [
     {

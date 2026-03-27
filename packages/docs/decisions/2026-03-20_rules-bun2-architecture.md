@@ -122,19 +122,19 @@ Running `bun ./node_modules/typescript/bin/tsc` bypasses the shebang entirely â€
 
 ## Performance
 
-| Scenario | Time |
-|----------|------|
-| Cold (after `bazel clean --expunge`) | 70s |
-| After `bazel clean` (disk cache warm) | 33s |
-| Hot (day-to-day development) | **1.4s** |
+| Scenario                              | Time     |
+| ------------------------------------- | -------- |
+| Cold (after `bazel clean --expunge`)  | 70s      |
+| After `bazel clean` (disk cache warm) | 33s      |
+| Hot (day-to-day development)          | **1.4s** |
 
 Per-target execution (hot):
 
-| Target | Time |
-|--------|------|
-| bun test (webring) | 1.4s |
+| Target                 | Time |
+| ---------------------- | ---- |
+| bun test (webring)     | 1.4s |
 | tsc --noEmit (webring) | 1.0s |
-| eslint (webring) | 2.6s |
+| eslint (webring)       | 2.6s |
 
 Native baseline (no Bazel): bun test ~1.5s, tsc ~1.0s, eslint ~2.5s. Bazel adds <0.5s overhead on hot builds.
 

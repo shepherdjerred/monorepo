@@ -12,10 +12,7 @@
   "dislikes": 1914,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Moves to Equal Array Elements II\", \"titleSlug\": \"minimum-moves-to-equal-array-elements-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Running Time of N Computers\", \"titleSlug\": \"maximum-running-time-of-n-computers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Pour Water Between Buckets to Make Water Levels Equal\", \"titleSlug\": \"pour-water-between-buckets-to-make-water-levels-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Divide Players Into Teams of Equal Skill\", \"titleSlug\": \"divide-players-into-teams-of-equal-skill\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Operations to Make All Elements Divisible by Three\", \"titleSlug\": \"find-minimum-operations-to-make-all-elements-divisible-by-three\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[1,1,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}, {\"timesEncountered\": 2, \"slug\": \"coursera\", \"name\": \"Coursera\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

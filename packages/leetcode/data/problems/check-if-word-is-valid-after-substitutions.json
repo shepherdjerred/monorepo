@@ -12,11 +12,7 @@
   "dislikes": 473,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Valid Parentheses\", \"titleSlug\": \"valid-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aabcbc\"",
-    "\"abcabcababcc\"",
-    "\"abccba\""
-  ],
+  "exampleTestcaseList": ["\"aabcbc\"", "\"abcabcababcc\"", "\"abccba\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

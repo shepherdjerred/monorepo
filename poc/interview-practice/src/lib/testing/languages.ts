@@ -3,7 +3,7 @@ export type LanguageConfig = {
   run: string;
   compileTimeout: number;
   runTimeout: number;
-}
+};
 
 const LANGUAGES: Record<string, LanguageConfig> = {
   ".ts": {

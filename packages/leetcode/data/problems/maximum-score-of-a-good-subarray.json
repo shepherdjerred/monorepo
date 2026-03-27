@@ -15,10 +15,7 @@
   "dislikes": 50,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Rectangle in Histogram\", \"titleSlug\": \"largest-rectangle-in-histogram\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,3,7,4,5]\n3",
-    "[5,5,4,5,4,1,1,1]\n0"
-  ],
+  "exampleTestcaseList": ["[1,4,3,7,4,5]\n3", "[5,5,4,5,4,1,1,1]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

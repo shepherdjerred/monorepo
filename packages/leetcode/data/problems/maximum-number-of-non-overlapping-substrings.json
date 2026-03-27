@@ -17,10 +17,7 @@
   "dislikes": 88,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Number of Non-overlapping Palindrome Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-palindrome-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"adefaddaccc\"",
-    "\"abbaccd\""
-  ],
+  "exampleTestcaseList": ["\"adefaddaccc\"", "\"abbaccd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

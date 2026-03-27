@@ -11,7 +11,8 @@ export function createPriorityClasses(chart: Chart) {
     value: 1_000_000,
     globalDefault: false,
     preemptionPolicy: "PreemptLowerPriority",
-    description: "Critical infrastructure: monitoring, logging, storage CSI, ArgoCD",
+    description:
+      "Critical infrastructure: monitoring, logging, storage CSI, ArgoCD",
   });
 
   new KubePriorityClass(chart, "service-standard", {

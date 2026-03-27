@@ -16,11 +16,7 @@
   "dislikes": 175,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[4,1,5,20,3]",
-    "[2,10,8]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[4,1,5,20,3]", "[2,10,8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

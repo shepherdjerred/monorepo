@@ -14,10 +14,7 @@
   "dislikes": 98,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reconstruct a 2-Row Binary Matrix\", \"titleSlug\": \"reconstruct-a-2-row-binary-matrix\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,8]\n[4,7]",
-    "[5,7,10]\n[8,6,8]"
-  ],
+  "exampleTestcaseList": ["[3,8]\n[4,7]", "[5,7,10]\n[8,6,8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

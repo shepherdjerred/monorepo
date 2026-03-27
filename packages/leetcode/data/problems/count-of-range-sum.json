@@ -12,10 +12,7 @@
   "dislikes": 266,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count of Smaller Numbers After Self\", \"titleSlug\": \"count-of-smaller-numbers-after-self\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Reverse Pairs\", \"titleSlug\": \"reverse-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Fair Pairs\", \"titleSlug\": \"count-the-number-of-fair-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Copy Arrays\", \"titleSlug\": \"find-the-number-of-copy-arrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-2,5,-1]\n-2\n2",
-    "[0]\n0\n0"
-  ],
+  "exampleTestcaseList": ["[-2,5,-1]\n-2\n2", "[0]\n0\n0"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": []}",
   "topicTags": [
     {

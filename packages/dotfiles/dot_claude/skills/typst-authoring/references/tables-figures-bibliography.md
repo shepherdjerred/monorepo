@@ -121,6 +121,7 @@ Parameters: position (`y`/`x`), `start`, `end`, `stroke`, `position` (top/bottom
 ### Grid vs Table
 
 Both share the same layout engine. Differences:
+
 - `table` defaults: `stroke: 1pt + black`, `inset: 0% + 5pt`
 - `grid` defaults: `stroke: none`, `inset: 0pt`
 - Set/show rules on one don't affect the other

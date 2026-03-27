@@ -16,6 +16,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 ## Dimension 1: Problem Solving
 
 ### Score 4 (Strong Hire)
+
 - Optimal or near-optimal algorithm chosen with clear justification
 - Data structures perfectly matched to the problem (e.g., `TreeMap` for time-versioned lookups, `ArrayDeque` for stack operations)
 - Time and space complexity are optimal; candidate clearly understands why
@@ -25,6 +26,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Follow-up parts handled gracefully without redesigning from scratch
 
 ### Score 3 (Hire)
+
 - Correct algorithm that solves the problem
 - Reasonable data structure choices (may not be optimal but are defensible)
 - Complexity is acceptable even if not optimal
@@ -32,6 +34,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Some follow-up parts handled, but design may strain under later parts
 
 ### Score 2 (Lean No Hire)
+
 - Algorithm is partially correct but has logical errors
 - Data structure choices are suboptimal (e.g., `ArrayList` where `HashMap` is needed for O(1) lookup)
 - Missing complexity awareness -- O(n^2) where O(n log n) is straightforward
@@ -39,6 +42,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Follow-up parts require significant rewrite of earlier code
 
 ### Score 1 (Strong No Hire)
+
 - Cannot produce a working solution
 - Fundamental misunderstanding of the problem
 - Data structures chosen randomly or incorrectly
@@ -49,6 +53,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 ## Dimension 2: Code Quality
 
 ### Score 4 (Strong Hire)
+
 - Every variable name communicates intent: `resolvedPath`, `expirationTime`, `cellDependencies`
 - Logic decomposed into well-named helper methods: `resolveSymlinks()`, `detectCycle()`, `consumeOldestCredits()`
 - Single responsibility per method -- no method does "too much"
@@ -59,6 +64,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Defensive programming: validates inputs, handles nulls, uses appropriate exceptions
 
 ### Score 3 (Hire)
+
 - Most names are meaningful; occasional `temp` or `result` is acceptable
 - Some helper methods exist but logic could be further decomposed
 - Edge cases mostly handled, perhaps missing 1-2 corner cases
@@ -67,6 +73,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Occasional code smell that doesn't affect correctness
 
 ### Score 2 (Lean No Hire)
+
 - Poor naming: `m`, `d`, `arr`, `x`, `temp` used for important variables
 - Monolithic methods: one method does everything (50+ lines of logic)
 - Edge cases mostly ignored -- empty input, null, boundaries not handled
@@ -75,6 +82,7 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 - Debug output left in (`System.out.println` for debugging)
 
 ### Score 1 (Strong No Hire)
+
 - Incomprehensible variable names
 - No structure -- all code in one method/block
 - No edge case handling at all
@@ -88,8 +96,9 @@ Half-point increments (3.5, 2.5, etc.) are used for borderline cases.
 In a live interview, Communication evaluates verbal reasoning. For written code review, evaluate the code's ability to communicate intent and reasoning to a reader.
 
 ### Score 4 (Strong Hire)
+
 - Code is self-documenting: naming and structure make the algorithm obvious
-- Comments explain *why* decisions were made, not *what* the code does
+- Comments explain _why_ decisions were made, not _what_ the code does
   - Good: `// Using TreeMap for O(log n) floor lookup by timestamp`
   - Bad: `// loop through the list`
 - Javadoc on public methods describes contract, parameters, return values, exceptions
@@ -98,18 +107,21 @@ In a live interview, Communication evaluates verbal reasoning. For written code 
 - **Note:** Template-provided Javadoc (class-level problem header) does NOT count. Only evaluate user-authored communication signals.
 
 ### Score 3 (Hire)
+
 - Code is mostly self-documenting through naming
 - Some helpful comments exist but reasoning isn't always visible
 - Method signatures are reasonable
 - Code structure communicates the algorithm's flow
 
 ### Score 2 (Lean No Hire)
+
 - Code requires significant effort to understand
 - Comments are absent or useless (`// process data`, `// do stuff`)
 - Method signatures are unclear (e.g., `void process(Object data)`)
 - No visible reasoning about approach or tradeoffs
 
 ### Score 1 (Strong No Hire)
+
 - Code is incomprehensible without verbal explanation
 - No comments, no documentation
 - Method signatures are misleading or confusing
@@ -118,10 +130,11 @@ In a live interview, Communication evaluates verbal reasoning. For written code 
 
 ## Dimension 4: Testing (Defensive Coding)
 
-Since we grade implementation only (not test files), Testing evaluates how defensively the code is written and how well it handles edge cases *within the implementation*.
+Since we grade implementation only (not test files), Testing evaluates how defensively the code is written and how well it handles edge cases _within the implementation_.
 
 ### Score 4 (Strong Hire)
-- Input validation at *boundary* entry points (user-facing data, external API responses)
+
+- Input validation at _boundary_ entry points (user-facing data, external API responses)
 - Null checks for boundary inputs; internal contract violations (e.g., a Function parameter returning null) should fail with NPE -- do not penalize absence of guards for these
 - Boundary conditions explicitly handled (empty collections, zero, max values)
 - Error conditions throw meaningful exceptions with descriptive messages
@@ -130,18 +143,21 @@ Since we grade implementation only (not test files), Testing evaluates how defen
 - Guard clauses prevent invalid state
 
 ### Score 3 (Hire)
+
 - Most important edge cases handled
 - Some input validation present
 - Error handling exists but may not cover all paths
 - Boundary conditions mostly addressed
 
 ### Score 2 (Lean No Hire)
+
 - Minimal edge case handling
 - No input validation at boundary points (user-facing data, external inputs)
 - Exceptions are generic or absent
 - Code assumes happy-path inputs even at system boundaries
 
 ### Score 1 (Strong No Hire)
+
 - No defensive coding whatsoever
 - Would crash on boundary inputs (user-facing null, empty, or invalid data)
 - No error handling
@@ -153,17 +169,20 @@ Since we grade implementation only (not test files), Testing evaluates how defen
 This is not scored numerically but assessed as Yes/No/Partial.
 
 ### Yes (Code is follow-up ready)
+
 - Clear abstractions that can be extended
 - Logic is separated into layers (parsing, processing, output)
 - Adding a new feature (concurrency, persistence, new operations) would require adding code, not rewriting existing code
 - Interfaces or abstract patterns make extension natural
 
 ### Partial (Some refactoring needed)
+
 - Core logic is sound but tightly coupled in places
 - Adding the next part would require refactoring 1-2 methods but not a full rewrite
 - Some abstractions exist but aren't quite at the right level
 
 ### No (Rewrite required)
+
 - Logic is monolithic -- everything is in one method
 - Adding the next part's requirements would require starting over
 - No separation of concerns
@@ -176,10 +195,10 @@ This is not scored numerically but assessed as Yes/No/Partial.
 The overall verdict is determined by the **lowest dimension score**, because OAI treats coding as a gate:
 
 | Lowest Dimension Score | Overall Verdict |
-|------------------------|-----------------|
-| >= 3.5 | Strong Hire |
-| 3.0 - 3.4 | Hire |
-| 2.0 - 2.9 | Lean No Hire |
-| < 2.0 | Strong No Hire |
+| ---------------------- | --------------- |
+| >= 3.5                 | Strong Hire     |
+| 3.0 - 3.4              | Hire            |
+| 2.0 - 2.9              | Lean No Hire    |
+| < 2.0                  | Strong No Hire  |
 
 One failing dimension (< 3.0) means the overall verdict cannot be Hire or better, regardless of how strong the other dimensions are. This mirrors OAI's gating behavior where a weak coding score blocks the candidate.

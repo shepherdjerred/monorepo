@@ -87,9 +87,7 @@ ${ctx.codeSnapshot}
   return sections.join("\n\n---\n\n");
 }
 
-export function buildReflectionUserPrompt(
-  entries: TranscriptEntry[],
-): string {
+export function buildReflectionUserPrompt(entries: TranscriptEntry[]): string {
   if (entries.length === 0) {
     return "No transcript entries yet. The session just started.";
   }

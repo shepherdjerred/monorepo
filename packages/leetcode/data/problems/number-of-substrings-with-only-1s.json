@@ -14,11 +14,7 @@
   "dislikes": 42,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Number of Homogenous Substrings\", \"titleSlug\": \"count-number-of-homogenous-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Vowel Substrings of a String\", \"titleSlug\": \"count-vowel-substrings-of-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"0110111\"",
-    "\"101\"",
-    "\"111111\""
-  ],
+  "exampleTestcaseList": ["\"0110111\"", "\"101\"", "\"111111\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
   "topicTags": [
     {

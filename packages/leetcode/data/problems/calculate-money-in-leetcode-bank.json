@@ -14,11 +14,7 @@
   "dislikes": 64,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Distribute Money to Maximum Children\", \"titleSlug\": \"distribute-money-to-maximum-children\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "10",
-    "20"
-  ],
+  "exampleTestcaseList": ["4", "10", "20"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

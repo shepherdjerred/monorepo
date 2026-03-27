@@ -203,7 +203,9 @@ export function ResultsPanel(props: ResultsPanelProps) {
     costTracker,
     onResultGenerated,
   } = props;
-  const [activeGenerations, setActiveGenerations] = useState(new Map<string, ActiveGeneration>());
+  const [activeGenerations, setActiveGenerations] = useState(
+    new Map<string, ActiveGeneration>(),
+  );
   const [selectedHistoryId, setSelectedHistoryId] = useState<
     string | undefined
   >();

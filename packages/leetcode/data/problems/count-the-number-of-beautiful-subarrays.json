@@ -16,10 +16,7 @@
   "dislikes": 23,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum XOR for Each Query\", \"titleSlug\": \"maximum-xor-for-each-query\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Ideal Arrays\", \"titleSlug\": \"count-the-number-of-ideal-arrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,3,1,2,4]",
-    "[1,10,4]"
-  ],
+  "exampleTestcaseList": ["[4,3,1,2,4]", "[1,10,4]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

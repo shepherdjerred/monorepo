@@ -12,10 +12,7 @@
   "dislikes": 1257,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"1+1i\"\n\"1+1i\"",
-    "\"1+-1i\"\n\"1+-1i\""
-  ],
+  "exampleTestcaseList": ["\"1+1i\"\n\"1+1i\"", "\"1+-1i\"\n\"1+-1i\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

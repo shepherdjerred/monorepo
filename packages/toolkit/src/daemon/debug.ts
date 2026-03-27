@@ -1,7 +1,12 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { Glob } from "bun";
-import { LANCE_DIR, SQLITE_PATH, LOGS_DIR, WATCHED_DIRS } from "#lib/recall/config.ts";
+import {
+  LANCE_DIR,
+  SQLITE_PATH,
+  LOGS_DIR,
+  WATCHED_DIRS,
+} from "#lib/recall/config.ts";
 import { EmbeddingClient } from "#lib/recall/embeddings.ts";
 import { Logger } from "./logger.ts";
 
@@ -28,22 +33,21 @@ async function checkDatabase(check: CheckFn): Promise<void> {
       const { Database } = await import("bun:sqlite");
       const db = new Database(SQLITE_PATH, { readonly: true });
       const docCount =
-        db
-          .query<{ c: number }, []>("SELECT COUNT(*) as c FROM metadata")
-          .get()?.c ?? 0;
+        db.query<{ c: number }, []>("SELECT COUNT(*) as c FROM metadata").get()
+          ?.c ?? 0;
       const chunkCount =
         db
-          .query<{ c: number }, []>(
-            "SELECT COALESCE(SUM(chunk_count), 0) as c FROM metadata",
-          )
+          .query<
+            { c: number },
+            []
+          >("SELECT COALESCE(SUM(chunk_count), 0) as c FROM metadata")
           .get()?.c ?? 0;
       check(true, `metadata table: ${String(docCount)} documents`);
       check(true, `total chunks: ${String(chunkCount)}`);
 
       const ftsCount =
-        db
-          .query<{ c: number }, []>("SELECT COUNT(*) as c FROM docs_fts")
-          .get()?.c ?? 0;
+        db.query<{ c: number }, []>("SELECT COUNT(*) as c FROM docs_fts").get()
+          ?.c ?? 0;
       check(true, `FTS5 table: ${String(ftsCount)} rows`);
 
       db.close();
@@ -104,7 +108,10 @@ async function checkWatchedDirs(check: CheckFn): Promise<void> {
     for (const pattern of dir.patterns) {
       const globPattern = dir.recursive ? `**/${pattern}` : pattern;
       const glob = new Glob(globPattern);
-      for await (const entry of glob.scan({ cwd: dir.directory, absolute: true })) {
+      for await (const entry of glob.scan({
+        cwd: dir.directory,
+        absolute: true,
+      })) {
         if (dir.pathFilter != null && !dir.pathFilter(entry)) continue;
         count++;
       }
@@ -141,14 +148,20 @@ async function checkDaemonAndLogs(check: CheckFn): Promise<void> {
     "com.shepherdjerred.toolkit-recall.plist",
   );
   const plistExists = await stat(plistPath).catch(() => null);
-  check(plistExists != null, `launchctl plist ${plistExists == null ? "not installed" : "installed"}`);
+  check(
+    plistExists != null,
+    `launchctl plist ${plistExists == null ? "not installed" : "installed"}`,
+  );
 
   const daemonProc = Bun.spawn(
     ["launchctl", "list", "com.shepherdjerred.toolkit-recall"],
     { stdout: "pipe", stderr: "pipe" },
   );
   await daemonProc.exited;
-  check(daemonProc.exitCode === 0, `daemon ${daemonProc.exitCode === 0 ? "running" : "not running"}`);
+  check(
+    daemonProc.exitCode === 0,
+    `daemon ${daemonProc.exitCode === 0 ? "running" : "not running"}`,
+  );
 
   console.log();
 
@@ -169,10 +182,7 @@ async function checkDaemonAndLogs(check: CheckFn): Promise<void> {
       const errorCount = content
         .split("\n")
         .filter((line) => line.includes('"level":"error"')).length;
-      check(
-        errorCount === 0,
-        `${String(errorCount)} errors in ${latest.name}`,
-      );
+      check(errorCount === 0, `${String(errorCount)} errors in ${latest.name}`);
     } catch {
       // ignore
     }
@@ -204,7 +214,11 @@ export async function runDebug(): Promise<void> {
   await checkDaemonAndLogs(check);
 
   console.log();
-  console.log(failures === 0 ? "All checks passed." : `${String(failures)} check(s) failed.`);
+  console.log(
+    failures === 0
+      ? "All checks passed."
+      : `${String(failures)} check(s) failed.`,
+  );
 }
 
 function formatBytes(bytes: number): string {

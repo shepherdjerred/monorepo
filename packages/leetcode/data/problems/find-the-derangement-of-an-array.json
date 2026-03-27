@@ -12,10 +12,7 @@
   "dislikes": 167,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "3",
-    "2"
-  ],
+  "exampleTestcaseList": ["3", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"ixl\", \"name\": \"IXL\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

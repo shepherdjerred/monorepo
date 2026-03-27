@@ -17,10 +17,7 @@
   "dislikes": 36,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Majority Element\", \"titleSlug\": \"majority-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Majority Element II\", \"titleSlug\": \"majority-element-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,5,5,5,5,5,6,6]\n5",
-    "[10,100,101,101]\n101"
-  ],
+  "exampleTestcaseList": ["[2,4,5,5,5,5,5,6,6]\n5", "[10,100,101,101]\n101"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

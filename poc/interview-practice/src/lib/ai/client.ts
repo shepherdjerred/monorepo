@@ -6,19 +6,19 @@ import { createGoogleClient } from "./google.ts";
 export type Message = {
   role: "user" | "assistant" | "system";
   content: string;
-}
+};
 
 export type ToolDefinition = {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
-}
+};
 
 export type ToolCall = {
   id: string;
   name: string;
   input: Record<string, unknown>;
-}
+};
 
 export type AIResponse = {
   text: string;
@@ -26,7 +26,7 @@ export type AIResponse = {
   tokensIn: number;
   tokensOut: number;
   stopReason: string;
-}
+};
 
 export type AIClient = {
   chat: (options: {
@@ -35,12 +35,12 @@ export type AIClient = {
     tools?: ToolDefinition[] | undefined;
     maxTokens?: number | undefined;
   }) => Promise<AIResponse>;
-}
+};
 
 export function createAIClient(
   provider: AiProvider,
   model: string,
-  apiKey?: string  ,
+  apiKey?: string,
 ): AIClient {
   switch (provider) {
     case "anthropic":
@@ -56,7 +56,9 @@ function createAnthropicClient(
   model: string,
   apiKey: string | undefined,
 ): AIClient {
-  let cachedClient: InstanceType<typeof import("@anthropic-ai/sdk").default> | null = null;
+  let cachedClient: InstanceType<
+    typeof import("@anthropic-ai/sdk").default
+  > | null = null;
 
   async function getClient() {
     if (cachedClient !== null) return cachedClient;
@@ -83,7 +85,7 @@ function createAnthropicClient(
           : undefined;
 
       const messages = options.messages.map((m) => ({
-        role: (m.role === "system" ? "user" : m.role),
+        role: m.role === "system" ? "user" : m.role,
         content:
           m.role === "system" ? `[System context] ${m.content}` : m.content,
       }));
@@ -96,17 +98,11 @@ function createAnthropicClient(
         ...(tools ? { tools } : {}),
       });
 
-      const textBlocks = response.content.filter(
-        (b) => b.type === "text",
-      );
-      const toolBlocks = response.content.filter(
-        (b) => b.type === "tool_use",
-      );
+      const textBlocks = response.content.filter((b) => b.type === "text");
+      const toolBlocks = response.content.filter((b) => b.type === "tool_use");
 
       return {
-        text: textBlocks
-          .map((b) => b.text)
-          .join(""),
+        text: textBlocks.map((b) => b.text).join(""),
         toolCalls: toolBlocks.map((b) => ({
           id: b.id,
           name: b.name,

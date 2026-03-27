@@ -12,10 +12,7 @@
   "dislikes": 193,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Strobogrammatic Number\", \"titleSlug\": \"strobogrammatic-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Strobogrammatic Number II\", \"titleSlug\": \"strobogrammatic-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"50\"\n\"100\"",
-    "\"0\"\n\"0\""
-  ],
+  "exampleTestcaseList": ["\"50\"\n\"100\"", "\"0\"\n\"0\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 1554,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[\"gin\",\"zen\",\"gig\",\"msg\"]",
-    "[\"a\"]"
-  ],
+  "exampleTestcaseList": ["[\"gin\",\"zen\",\"gig\",\"msg\"]", "[\"a\"]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}], \"three_months\": []}",
   "topicTags": [
     {

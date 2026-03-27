@@ -15,10 +15,7 @@
   "dislikes": 143,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Peak Element\", \"titleSlug\": \"find-peak-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Monotonic Array\", \"titleSlug\": \"monotonic-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Subsequence in Non-Increasing Order\", \"titleSlug\": \"minimum-subsequence-in-non-increasing-order\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,1,1,6,5]",
-    "[6,6,5,5,4,1]"
-  ],
+  "exampleTestcaseList": ["[2,4,1,1,6,5]", "[6,6,5,5,4,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

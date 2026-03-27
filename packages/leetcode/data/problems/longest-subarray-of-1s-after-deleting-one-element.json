@@ -5,20 +5,14 @@
   "titleSlug": "longest-subarray-of-1s-after-deleting-one-element",
   "difficulty": "Medium",
   "content": "<p>Given a binary array <code>nums</code>, you should delete one element from it.</p>\n\n<p>Return <em>the size of the longest non-empty subarray containing only </em><code>1</code><em>&#39;s in the resulting array</em>. Return <code>0</code> if there is no such subarray.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,0,1]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> After deleting the number in position 2, [1,1,1] contains 3 numbers with value of 1&#39;s.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,1,1,1,0,1,1,0,1]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> After deleting the number in position 4, [0,1,1,1,1,1,0,1] longest subarray with value of 1&#39;s is [1,1,1,1,1].\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> You must delete one element.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
-  "hints": [
-    "Maintain a sliding window where there is at most one zero in it."
-  ],
+  "hints": ["Maintain a sliding window where there is at most one zero in it."],
   "metaData": "{\n  \"name\": \"longestSubarray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"633.4K\", \"totalSubmission\": \"890.7K\", \"totalAcceptedRaw\": 633443, \"totalSubmissionRaw\": 890706, \"acRate\": \"71.1%\"}",
   "likes": 4809,
   "dislikes": 111,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,0,1]",
-    "[0,1,1,1,0,1,1,0,1]",
-    "[1,1,1]"
-  ],
+  "exampleTestcaseList": ["[1,1,0,1]", "[0,1,1,1,0,1,1,0,1]", "[1,1,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"vk\", \"name\": \"VK\"}], \"six_months\": []}",
   "topicTags": [
     {

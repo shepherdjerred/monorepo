@@ -14,11 +14,7 @@
   "dislikes": 44,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,2,1]",
-    "[1,1,5]",
-    "[1,9,4,6,7]"
-  ],
+  "exampleTestcaseList": ["[3,2,1]", "[1,1,5]", "[1,9,4,6,7]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

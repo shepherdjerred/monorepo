@@ -14,10 +14,7 @@
   "dislikes": 139,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Bulb Switcher\", \"titleSlug\": \"bulb-switcher\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Bulb Switcher II\", \"titleSlug\": \"bulb-switcher-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4,1,5]",
-    "[4,1,2,3]"
-  ],
+  "exampleTestcaseList": ["[3,2,4,1,5]", "[4,1,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

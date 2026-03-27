@@ -29,7 +29,9 @@ export function parseCommand(input: string): Command {
   }
 }
 
-export async function promptUser(rl: ReturnType<typeof createInterface>): Promise<string> {
+export async function promptUser(
+  rl: ReturnType<typeof createInterface>,
+): Promise<string> {
   const answer = await rl.question("\n> ");
   return answer;
 }

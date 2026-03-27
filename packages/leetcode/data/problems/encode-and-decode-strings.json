@@ -12,10 +12,7 @@
   "dislikes": 453,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count and Say\", \"titleSlug\": \"count-and-say\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Serialize and Deserialize Binary Tree\", \"titleSlug\": \"serialize-and-deserialize-binary-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Binary Substrings\", \"titleSlug\": \"count-binary-substrings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[\"Hello\",\"World\"]",
-    "[\"\"]"
-  ],
+  "exampleTestcaseList": ["[\"Hello\",\"World\"]", "[\"\"]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 9, \"slug\": \"udemy\", \"name\": \"Udemy\"}, {\"timesEncountered\": 5, \"slug\": \"openai\", \"name\": \"OpenAI\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"crowdstrike\", \"name\": \"CrowdStrike\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"three_months\": []}",
   "topicTags": [
     {

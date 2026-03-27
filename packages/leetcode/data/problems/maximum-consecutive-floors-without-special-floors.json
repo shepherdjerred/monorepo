@@ -17,10 +17,7 @@
   "dislikes": 41,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Consecutive Sequence\", \"titleSlug\": \"longest-consecutive-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Gap\", \"titleSlug\": \"maximum-gap\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Widest Vertical Area Between Two Points Containing No Points\", \"titleSlug\": \"widest-vertical-area-between-two-points-containing-no-points\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n9\n[4,6]",
-    "6\n8\n[7,6,8]"
-  ],
+  "exampleTestcaseList": ["2\n9\n[4,6]", "6\n8\n[7,6,8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

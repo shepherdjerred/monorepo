@@ -16,10 +16,7 @@
   "dislikes": 139,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Cost to Move Chips to The Same Position\", \"titleSlug\": \"minimum-cost-to-move-chips-to-the-same-position\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Spread Stones Over Grid\", \"titleSlug\": \"minimum-moves-to-spread-stones-over-grid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"110\"",
-    "\"001011\""
-  ],
+  "exampleTestcaseList": ["\"110\"", "\"001011\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": []}",
   "topicTags": [
     {

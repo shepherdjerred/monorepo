@@ -6,7 +6,12 @@ import {
   type Component,
 } from "#src/lib/api.ts";
 
-const STATUSES = ["investigating", "identified", "monitoring", "resolved"] as const;
+const STATUSES = [
+  "investigating",
+  "identified",
+  "monitoring",
+  "resolved",
+] as const;
 const IMPACTS = ["none", "minor", "major", "critical"] as const;
 import { Button } from "#src/components/ui/button.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
@@ -62,15 +67,15 @@ export function ActiveIncidentRow({
   const [newImpact, setNewImpact] = useState(incident.impact);
 
   const handleNewStatus = (value: string) => {
-    const found = STATUSES.find(s => s === value);
+    const found = STATUSES.find((s) => s === value);
     if (found !== undefined) setNewStatus(found);
   };
   const handleNewImpact = (value: string) => {
-    const found = IMPACTS.find(s => s === value);
+    const found = IMPACTS.find((s) => s === value);
     if (found !== undefined) setNewImpact(found);
   };
   const handleUpdateStatus = (value: string) => {
-    const found = STATUSES.find(s => s === value);
+    const found = STATUSES.find((s) => s === value);
     if (found !== undefined) setUpdateStatus(found);
   };
 

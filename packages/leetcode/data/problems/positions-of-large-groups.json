@@ -12,11 +12,7 @@
   "dislikes": 127,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Divide a String Into Groups of Size k\", \"titleSlug\": \"divide-a-string-into-groups-of-size-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abbxxxxzzy\"",
-    "\"abc\"",
-    "\"abcdddeeeeaabbbcd\""
-  ],
+  "exampleTestcaseList": ["\"abbxxxxzzy\"", "\"abc\"", "\"abcdddeeeeaabbbcd\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

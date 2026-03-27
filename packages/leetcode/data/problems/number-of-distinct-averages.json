@@ -15,10 +15,7 @@
   "dislikes": 35,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Finding Pairs With a Certain Sum\", \"titleSlug\": \"finding-pairs-with-a-certain-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Average of Smallest and Largest Elements\", \"titleSlug\": \"minimum-average-of-smallest-and-largest-elements\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,1,4,0,3,5]",
-    "[1,100]"
-  ],
+  "exampleTestcaseList": ["[4,1,4,0,3,5]", "[1,100]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

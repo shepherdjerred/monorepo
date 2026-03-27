@@ -12,11 +12,7 @@
   "dislikes": 295,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator II\", \"titleSlug\": \"basic-calculator-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator IV\", \"titleSlug\": \"basic-calculator-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Build Binary Expression Tree From Infix Expression\", \"titleSlug\": \"build-binary-expression-tree-from-infix-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1+1\"",
-    "\"6-4/2\"",
-    "\"2*(5+5*2)/3+(6/2+8)\""
-  ],
+  "exampleTestcaseList": ["\"1+1\"", "\"6-4/2\"", "\"2*(5+5*2)/3+(6/2+8)\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"keeptruckin\", \"name\": \"Motive\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"doordash\", \"name\": \"DoorDash\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"verkada\", \"name\": \"Verkada\"}, {\"timesEncountered\": 2, \"slug\": \"houzz\", \"name\": \"Houzz\"}, {\"timesEncountered\": 2, \"slug\": \"pocket-gems\", \"name\": \"Pocket Gems\"}, {\"timesEncountered\": 2, \"slug\": \"hulu\", \"name\": \"Hulu\"}, {\"timesEncountered\": 2, \"slug\": \"jingchi\", \"name\": \"Jingchi\"}]}",
   "topicTags": [
     {

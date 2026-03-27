@@ -15,11 +15,7 @@
   "dislikes": 35,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Numbers with Unique Digits\", \"titleSlug\": \"count-numbers-with-unique-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K-th Smallest in Lexicographical Order\", \"titleSlug\": \"k-th-smallest-in-lexicographical-order\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "20",
-    "5",
-    "135"
-  ],
+  "exampleTestcaseList": ["20", "5", "135"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

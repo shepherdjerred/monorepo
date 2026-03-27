@@ -15,10 +15,7 @@
   "dislikes": 101,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum One Bit Operations to Make Integers Zero\", \"titleSlug\": \"minimum-one-bit-operations-to-make-integers-zero\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1010\"\n\"0110\"",
-    "\"11\"\n\"00\""
-  ],
+  "exampleTestcaseList": ["\"1010\"\n\"0110\"", "\"11\"\n\"00\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

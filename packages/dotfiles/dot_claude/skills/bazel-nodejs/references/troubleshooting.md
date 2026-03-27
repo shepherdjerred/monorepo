@@ -7,6 +7,7 @@
 **Cause**: rules_js enforces strict dependency isolation (pnpm `hoist=false` mode). Packages can only resolve their declared dependencies, not undeclared transitive ones that happen to be hoisted in a flat `node_modules`.
 
 **Fix**: Add the missing dependency via `pnpm.packageExtensions` in the root `package.json`:
+
 ```json
 {
   "pnpm": {
@@ -20,6 +21,7 @@
   }
 }
 ```
+
 Then regenerate the lockfile with `pnpm install --lockfile-only`.
 
 ## ESM Sandbox Escape (#362)
@@ -51,6 +53,7 @@ Then regenerate the lockfile with `pnpm install --lockfile-only`.
 **Symptom**: `Error: Cannot find module '@scope/package'` in a BUILD target that correctly lists `:node_modules/@scope/package` in deps.
 
 **Debugging steps**:
+
 1. Verify the package exists in `pnpm-lock.yaml`
 2. Check the generated `defs.bzl`: `bazel query @npm//:defs.bzl --output=build`
 3. Verify `npm_link_all_packages()` is called in the BUILD file next to the relevant `package.json`
@@ -63,6 +66,7 @@ Then regenerate the lockfile with `pnpm install --lockfile-only`.
 **Cause**: The package's `package.json` is not listed in `npm_translate_lock`'s scope, or `npm_link_all_packages()` is not called in the BUILD file.
 
 **Fix**:
+
 1. Ensure the workspace's `package.json` is in the `package_jsons` list (for Bzlmod: the `npm.npm_translate_lock()` tag in `MODULE.bazel`)
 2. Add `npm_link_all_packages(name = "node_modules")` to the BUILD file
 3. Run `bazel fetch @npm//...` to verify the package resolves

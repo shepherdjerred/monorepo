@@ -12,10 +12,7 @@
   "dislikes": 1925,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Nesting Depth of the Parentheses\", \"titleSlug\": \"maximum-nesting-depth-of-the-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"(()())\"",
-    "\"()(())()\""
-  ],
+  "exampleTestcaseList": ["\"(()())\"", "\"()(())()\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomreach\", \"name\": \"Bloomreach\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

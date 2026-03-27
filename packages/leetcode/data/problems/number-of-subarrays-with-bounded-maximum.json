@@ -12,10 +12,7 @@
   "dislikes": 135,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Subarrays With Median K\", \"titleSlug\": \"count-subarrays-with-median-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Subarrays Where Boundary Elements Are Maximum\", \"titleSlug\": \"find-the-number-of-subarrays-where-boundary-elements-are-maximum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,1,4,3]\n2\n3",
-    "[2,9,2,5,6]\n2\n8"
-  ],
+  "exampleTestcaseList": ["[2,1,4,3]\n2\n3", "[2,9,2,5,6]\n2\n8"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

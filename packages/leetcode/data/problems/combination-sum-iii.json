@@ -12,11 +12,7 @@
   "dislikes": 125,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Combination Sum\", \"titleSlug\": \"combination-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n7",
-    "3\n9",
-    "4\n1"
-  ],
+  "exampleTestcaseList": ["3\n7", "3\n9", "4\n1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 758,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Meeting Rooms II\", \"titleSlug\": \"meeting-rooms-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Time to Cross a Bridge\", \"titleSlug\": \"time-to-cross-a-bridge\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[17,12,10,2,7,2,11,20,8]\n3\n4",
-    "[1,2,4,1]\n3\n3"
-  ],
+  "exampleTestcaseList": ["[17,12,10,2,7,2,11,20,8]\n3\n4", "[1,2,4,1]\n3\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"gsa-capital\", \"name\": \"GSA Capital\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,11 +16,7 @@
   "dislikes": 127,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Subarray With Maximum Bitwise AND\", \"titleSlug\": \"longest-subarray-with-maximum-bitwise-and\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"AAABABB\"",
-    "\"AA\"",
-    "\"ABBBBBBBAAA\""
-  ],
+  "exampleTestcaseList": ["\"AAABABB\"", "\"AA\"", "\"ABBBBBBBAAA\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"yelp\", \"name\": \"Yelp\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"unity\", \"name\": \"Unity\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

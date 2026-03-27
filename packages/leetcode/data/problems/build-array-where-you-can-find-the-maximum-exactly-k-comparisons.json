@@ -15,11 +15,7 @@
   "dislikes": 95,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n3\n1",
-    "5\n2\n3",
-    "9\n1\n1"
-  ],
+  "exampleTestcaseList": ["2\n3\n1", "5\n2\n3", "9\n1\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"dunzo\", \"name\": \"Dunzo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

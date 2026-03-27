@@ -50,9 +50,7 @@
     },
     "idpi": {
       "enabled": true,
-      "allowedDomains": [
-        "*"
-      ],
+      "allowedDomains": ["*"],
       "strictMode": true,
       "scanContent": true,
       "wrapContent": true,

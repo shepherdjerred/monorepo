@@ -74,17 +74,17 @@ git -C /workspace/lib status       # alternative
 
 ## Backend Notes
 
-| Backend | Behavior |
-| ------- | -------- |
+| Backend | Behavior                                                             |
+| ------- | -------------------------------------------------------------------- |
 | Docker  | Each repo creates a bind mount or volume; volume mode applies to all |
-| Zellij  | Direct filesystem access, no special mounting |
+| Zellij  | Direct filesystem access, no special mounting                        |
 
 ## Troubleshooting
 
-| Problem | Solution |
-| ------- | -------- |
-| Mount name conflict | Ensure unique names |
-| Permission denied on additional repos | Check host permissions: `chmod -R 755 /path/to/repo` |
-| Agent can't find files | Use absolute `/workspace/` paths; verify session health |
-| Git affects wrong repo | Use `git -C /workspace/<name>` or `cd` first |
-| Slow with many repos | Limit to 2-3 repos; use local backends |
+| Problem                               | Solution                                                |
+| ------------------------------------- | ------------------------------------------------------- |
+| Mount name conflict                   | Ensure unique names                                     |
+| Permission denied on additional repos | Check host permissions: `chmod -R 755 /path/to/repo`    |
+| Agent can't find files                | Use absolute `/workspace/` paths; verify session health |
+| Git affects wrong repo                | Use `git -C /workspace/<name>` or `cd` first            |
+| Slow with many repos                  | Limit to 2-3 repos; use local backends                  |

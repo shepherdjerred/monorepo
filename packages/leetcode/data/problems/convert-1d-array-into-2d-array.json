@@ -16,11 +16,7 @@
   "dislikes": 103,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reshape the Matrix\", \"titleSlug\": \"reshape-the-matrix\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]\n2\n2",
-    "[1,2,3]\n1\n3",
-    "[1,2]\n1\n1"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]\n2\n2", "[1,2,3]\n1\n3", "[1,2]\n1\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

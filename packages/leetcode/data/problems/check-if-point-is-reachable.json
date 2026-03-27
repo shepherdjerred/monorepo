@@ -17,10 +17,7 @@
   "dislikes": 52,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reaching Points\", \"titleSlug\": \"reaching-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Check if the Rectangle Corner Is Reachable\", \"titleSlug\": \"check-if-the-rectangle-corner-is-reachable\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "6\n9",
-    "4\n7"
-  ],
+  "exampleTestcaseList": ["6\n9", "4\n7"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

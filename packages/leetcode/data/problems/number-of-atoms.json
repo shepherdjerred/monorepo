@@ -14,11 +14,7 @@
   "dislikes": 411,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Decode String\", \"titleSlug\": \"decode-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Encode String with Shortest Length\", \"titleSlug\": \"encode-string-with-shortest-length\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Parse Lisp Expression\", \"titleSlug\": \"parse-lisp-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"H2O\"",
-    "\"Mg(OH)2\"",
-    "\"K4(ON(SO3)2)2\""
-  ],
+  "exampleTestcaseList": ["\"H2O\"", "\"Mg(OH)2\"", "\"K4(ON(SO3)2)2\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"docusign\", \"name\": \"Docusign\"}, {\"timesEncountered\": 2, \"slug\": \"fastenal\", \"name\": \"Fastenal\"}]}",
   "topicTags": [
     {

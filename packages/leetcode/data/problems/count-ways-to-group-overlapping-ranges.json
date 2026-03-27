@@ -16,10 +16,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[6,10],[5,15]]",
-    "[[1,3],[10,20],[2,5],[4,8]]"
-  ],
+  "exampleTestcaseList": ["[[6,10],[5,15]]", "[[1,3],[10,20],[2,5],[4,8]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

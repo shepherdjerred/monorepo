@@ -12,11 +12,7 @@
   "dislikes": 419,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Regular Expression Matching\", \"titleSlug\": \"regular-expression-matching\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Substring Matching Pattern\", \"titleSlug\": \"substring-matching-pattern\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aa\"\n\"a\"",
-    "\"aa\"\n\"*\"",
-    "\"cb\"\n\"?a\""
-  ],
+  "exampleTestcaseList": ["\"aa\"\n\"a\"", "\"aa\"\n\"*\"", "\"cb\"\n\"?a\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 4, \"slug\": \"instacart\", \"name\": \"Instacart\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"two-sigma\", \"name\": \"Two Sigma\"}]}",
   "topicTags": [
     {

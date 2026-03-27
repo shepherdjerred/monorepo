@@ -12,10 +12,7 @@
   "dislikes": 1079,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Letter Combinations of a Phone Number\", \"titleSlug\": \"letter-combinations-of-a-phone-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Parentheses\", \"titleSlug\": \"valid-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check if a Parentheses String Can Be Valid\", \"titleSlug\": \"check-if-a-parentheses-string-can-be-valid\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3",
-    "1"
-  ],
+  "exampleTestcaseList": ["3", "1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 21, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 9, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 9, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 8, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 6, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 5, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"avito\", \"name\": \"Avito\"}]}",
   "topicTags": [
     {

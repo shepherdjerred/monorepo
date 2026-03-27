@@ -12,10 +12,7 @@
   "dislikes": 82,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"godding\"\n\"gd\"",
-    "\"godding\"\n\"godding\""
-  ],
+  "exampleTestcaseList": ["\"godding\"\n\"gd\"", "\"godding\"\n\"godding\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

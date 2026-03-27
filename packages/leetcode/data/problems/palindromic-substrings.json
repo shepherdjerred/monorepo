@@ -16,10 +16,7 @@
   "dislikes": 257,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Palindromic Substring\", \"titleSlug\": \"longest-palindromic-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Palindromic Subsequence\", \"titleSlug\": \"longest-palindromic-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"aaa\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"aaa\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"pure-storage\", \"name\": \"Pure Storage\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"hcl\", \"name\": \"HCL\"}], \"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 18, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 10, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 8, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 3, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}]}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 87,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Matching of Players With Trainers\", \"titleSlug\": \"maximum-matching-of-players-with-trainers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Decremental String Concatenation\", \"titleSlug\": \"decremental-string-concatenation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"cabaa\"\n\"bcaaa\"",
-    "\"abcabc\"\n\"abdcaba\""
-  ],
+  "exampleTestcaseList": ["\"cabaa\"\n\"bcaaa\"", "\"abcabc\"\n\"abdcaba\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

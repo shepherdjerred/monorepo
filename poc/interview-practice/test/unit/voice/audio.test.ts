@@ -1,5 +1,8 @@
 import { describe, test, expect, mock } from "bun:test";
-import { checkAudioDependencies, createAudioManager } from "#lib/voice/audio.ts";
+import {
+  checkAudioDependencies,
+  createAudioManager,
+} from "#lib/voice/audio.ts";
 import type { Logger } from "#logger";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function -- mock stub

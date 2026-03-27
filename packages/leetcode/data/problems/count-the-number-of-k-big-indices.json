@@ -16,10 +16,7 @@
   "dislikes": 24,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count of Smaller Numbers After Self\", \"titleSlug\": \"count-of-smaller-numbers-after-self\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find All Good Indices\", \"titleSlug\": \"find-all-good-indices\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,6,5,2,3]\n2",
-    "[1,1,1]\n3"
-  ],
+  "exampleTestcaseList": ["[2,3,6,5,2,3]\n2", "[1,1,1]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

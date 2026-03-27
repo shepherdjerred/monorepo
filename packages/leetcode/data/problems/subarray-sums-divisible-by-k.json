@@ -12,10 +12,7 @@
   "dislikes": 345,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subarray Sum Equals K\", \"titleSlug\": \"subarray-sum-equals-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Sum Divisible by P\", \"titleSlug\": \"make-sum-divisible-by-p\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Divisibility Array of a String\", \"titleSlug\": \"find-the-divisibility-array-of-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count of Interesting Subarrays\", \"titleSlug\": \"count-of-interesting-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Subarray Sum With Length Divisible by K\", \"titleSlug\": \"maximum-subarray-sum-with-length-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,5,0,-2,-3,1]\n5",
-    "[5]\n9"
-  ],
+  "exampleTestcaseList": ["[4,5,0,-2,-3,1]\n5", "[5]\n9"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"hashedin\", \"name\": \"HashedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}]}",
   "topicTags": [
     {

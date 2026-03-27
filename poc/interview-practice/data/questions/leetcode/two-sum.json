@@ -11,16 +11,45 @@
       "prompt": "Given an array of integers and a target sum, return the indices of two numbers that add up to the target.",
       "internalNotes": "Most candidates start with brute force O(n²). The optimal approach is a hash map for O(n). Watch for: off-by-one errors, not handling the case where the same element can't be used twice, returning indices vs values.",
       "hints": [
-        { "level": "subtle", "content": "Think about what information you need to look up quickly." },
-        { "level": "moderate", "content": "What data structure gives you O(1) lookups?" },
-        { "level": "explicit", "content": "For each number, check if (target - number) exists in a hash map." }
+        {
+          "level": "subtle",
+          "content": "Think about what information you need to look up quickly."
+        },
+        {
+          "level": "moderate",
+          "content": "What data structure gives you O(1) lookups?"
+        },
+        {
+          "level": "explicit",
+          "content": "For each number, check if (target - number) exists in a hash map."
+        }
       ],
       "testCases": [
-        { "args": [[2, 7, 11, 15], 9], "expected": [0, 1], "explanation": "nums[0] + nums[1] = 2 + 7 = 9" },
-        { "args": [[3, 2, 4], 6], "expected": [1, 2], "explanation": "nums[1] + nums[2] = 2 + 4 = 6" },
-        { "args": [[3, 3], 6], "expected": [0, 1], "explanation": "Duplicate values edge case" },
-        { "args": [[1, 5, 3, 7], 8], "expected": [1, 2], "explanation": "5 + 3 = 8, not adjacent" },
-        { "args": [[-1, -2, -3, -4, -5], -8], "expected": [2, 4], "explanation": "Negative numbers" }
+        {
+          "args": [[2, 7, 11, 15], 9],
+          "expected": [0, 1],
+          "explanation": "nums[0] + nums[1] = 2 + 7 = 9"
+        },
+        {
+          "args": [[3, 2, 4], 6],
+          "expected": [1, 2],
+          "explanation": "nums[1] + nums[2] = 2 + 4 = 6"
+        },
+        {
+          "args": [[3, 3], 6],
+          "expected": [0, 1],
+          "explanation": "Duplicate values edge case"
+        },
+        {
+          "args": [[1, 5, 3, 7], 8],
+          "expected": [1, 2],
+          "explanation": "5 + 3 = 8, not adjacent"
+        },
+        {
+          "args": [[-1, -2, -3, -4, -5], -8],
+          "expected": [2, 4],
+          "explanation": "Negative numbers"
+        }
       ],
       "followUps": [
         "What's the time complexity of your solution?",
@@ -40,9 +69,18 @@
       "prompt": "Now the input array is sorted in ascending order. Can you solve it with O(1) extra space?",
       "internalNotes": "Two-pointer approach: left=0, right=n-1. If sum < target, move left. If sum > target, move right. O(n) time, O(1) space. Watch for: not leveraging the sorted property, still using a hash map.",
       "hints": [
-        { "level": "subtle", "content": "The array is sorted — how can you use that property?" },
-        { "level": "moderate", "content": "Think about starting from both ends of the array." },
-        { "level": "explicit", "content": "Use two pointers, one at the start and one at the end. Move them inward based on whether the sum is too small or too large." }
+        {
+          "level": "subtle",
+          "content": "The array is sorted — how can you use that property?"
+        },
+        {
+          "level": "moderate",
+          "content": "Think about starting from both ends of the array."
+        },
+        {
+          "level": "explicit",
+          "content": "Use two pointers, one at the start and one at the end. Move them inward based on whether the sum is too small or too large."
+        }
       ],
       "testCases": [
         { "args": [[2, 7, 11, 15], 9], "expected": [0, 1] },

@@ -7,6 +7,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Collections & Data Structures
 
 ### Positive Signals
+
 - [ ] `ArrayDeque` used for stack/queue operations (not legacy `Stack` or `LinkedList`)
 - [ ] `TreeMap` with `floorEntry()`/`ceilingEntry()` for time-versioned or range-based lookups
 - [ ] `LinkedHashMap` with access-order for LRU cache implementations
@@ -18,6 +19,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] Correct initial capacity hints for `HashMap`/`ArrayList` when size is known
 
 ### Negative Signals
+
 - [ ] Legacy `Stack` class used (should be `ArrayDeque`)
 - [ ] `Vector` or `Hashtable` used (should be `ArrayList`/`HashMap`)
 - [ ] `LinkedList` used as a general-purpose list (should be `ArrayList` unless frequent head insertion)
@@ -29,6 +31,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Modern Java Features (21+)
 
 ### Positive Signals
+
 - [ ] `var` for local variable type inference where type is obvious from RHS
 - [ ] `record` for immutable value objects (cells, nodes, entries, coordinates)
 - [ ] Switch expressions with arrow syntax and pattern matching
@@ -38,6 +41,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] `instanceof` pattern matching: `if (obj instanceof String s)` instead of cast
 
 ### Negative Signals
+
 - [ ] Verbose type declarations where `var` is obvious: `HashMap<String, List<Integer>> map = new HashMap<String, List<Integer>>()`
 - [ ] Mutable POJO where `record` is appropriate (no mutation needed)
 - [ ] Verbose if-else chains where switch expression is cleaner
@@ -48,6 +52,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Generics & Type Safety
 
 ### Positive Signals
+
 - [ ] Proper generic type parameters on all collections
 - [ ] PECS rule applied (Producer-Extends, Consumer-Super) for method parameters
 - [ ] Bounded generics where appropriate: `<T extends Comparable<T>>`
@@ -55,6 +60,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] `Optional.map`/`flatMap`/`orElse` instead of `isPresent()` + `get()`
 
 ### Negative Signals
+
 - [ ] Raw types: `List` instead of `List<String>` -- MAJOR red flag
 - [ ] Unchecked casts without justification
 - [ ] `Optional` used as method parameter, field, or in collections
@@ -65,6 +71,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Immutability & Defensive Coding
 
 ### Positive Signals
+
 - [ ] `final` on local variables that don't change (or `var` which is effectively final)
 - [ ] Defensive copies on mutable input: `new ArrayList<>(input)` or `List.copyOf(input)`
 - [ ] Unmodifiable views returned: `Collections.unmodifiableList()` or `List.copyOf()`
@@ -72,6 +79,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] No exposed mutable internal state
 
 ### Negative Signals
+
 - [ ] Returning internal mutable collections directly (caller can modify internal state)
 - [ ] Storing mutable parameters without copying (caller's mutations affect internal state)
 - [ ] Public mutable fields
@@ -82,6 +90,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Concurrency (When Applicable)
 
 ### Positive Signals
+
 - [ ] `ReentrantReadWriteLock` for read-heavy concurrent access
 - [ ] `ConcurrentHashMap` for lock-free concurrent maps
 - [ ] `ExecutorService` / `Executors` for thread pool management
@@ -91,6 +100,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] `volatile` for visibility guarantees on shared variables
 
 ### Negative Signals
+
 - [ ] Raw `synchronized` blocks where `java.util.concurrent` utilities are better
 - [ ] `wait()`/`notify()` instead of higher-level concurrency primitives
 - [ ] Missing synchronization on shared mutable state
@@ -102,6 +112,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Resource Management & I/O
 
 ### Positive Signals
+
 - [ ] `try-with-resources` for all `AutoCloseable` resources
 - [ ] `DataOutputStream`/`DataInputStream` for binary serialization
 - [ ] `ByteBuffer` for efficient binary data manipulation
@@ -109,6 +120,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] `Path` and `Files` API instead of legacy `File` class
 
 ### Negative Signals
+
 - [ ] Manual `close()` in `finally` block instead of try-with-resources
 - [ ] Resources not closed at all (stream/reader/writer leaks)
 - [ ] Legacy `File` API instead of `Path`/`Files`
@@ -119,6 +131,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Naming & Structure
 
 ### Positive Signals
+
 - [ ] Variables named for meaning: `resolvedPath`, `expirationTime`, `cellDependencies`
 - [ ] Methods named for behavior: `resolveSymlinks()`, `detectCycle()`, `consumeOldestCredits()`
 - [ ] Boolean methods/variables use is/has/can/should: `isExpired()`, `hasCircularDependency()`
@@ -127,6 +140,7 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 - [ ] Constants extracted: `private static final int MAX_RETRIES = 3` not magic numbers
 
 ### Negative Signals
+
 - [ ] Single-letter names for important variables: `m`, `d`, `x`, `n` (loop indices `i`, `j` are fine)
 - [ ] Generic names: `data`, `result`, `temp`, `obj`, `process()`
 - [ ] Methods over 40 lines of logic
@@ -139,12 +153,14 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 ## Exception Handling
 
 ### Positive Signals
+
 - [ ] Specific exception types thrown: `IllegalArgumentException`, `NoSuchElementException`
 - [ ] Descriptive exception messages: `throw new IllegalArgumentException("Cycle detected: " + path)`
 - [ ] Custom exceptions for domain-specific errors when appropriate
 - [ ] Exception handling at the right level (not too early, not swallowed)
 
 ### Negative Signals
+
 - [ ] Empty catch blocks -- MAJOR red flag
 - [ ] Catching `Exception` or `Throwable` broadly
 - [ ] Generic `RuntimeException` thrown without specificity
@@ -170,15 +186,15 @@ Concrete checklist of Java-specific items to evaluate when grading solutions. Ea
 
 These patterns are particularly relevant for the common OAI interview problems:
 
-| Problem Type | Expected Java Pattern |
-|-------------|----------------------|
-| Time-versioned KV store | `HashMap<K, TreeMap<Long, V>>` with `floorEntry()` |
-| LRU Cache | `LinkedHashMap` with access-order, or manual `HashMap` + doubly-linked list |
-| Path resolution (cd) | `ArrayDeque<String>` as stack, `split("/")` |
+| Problem Type              | Expected Java Pattern                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| Time-versioned KV store   | `HashMap<K, TreeMap<Long, V>>` with `floorEntry()`                                    |
+| LRU Cache                 | `LinkedHashMap` with access-order, or manual `HashMap` + doubly-linked list           |
+| Path resolution (cd)      | `ArrayDeque<String>` as stack, `split("/")`                                           |
 | Spreadsheet with formulas | `Map<String, Set<String>>` dependency graph, DFS cycle detection with 3-color marking |
-| Resumable iterator | Implement `Iterator<T>` interface, `record` for state checkpoint |
-| In-memory database | `Map<String, List<Map<String, String>>>` with stream-based filter/sort |
-| GPU credit ledger | `TreeMap<Integer, CreditBatch>` or `PriorityQueue` ordered by timestamp |
-| Custom serialization | `DataOutputStream`/`DataInputStream` with `writeUTF`/`readUTF` |
-| Concurrent structures | `ReentrantReadWriteLock` for read-heavy, `ConcurrentHashMap` for simple |
-| Cycle detection | 3-color DFS (WHITE/GRAY/BLACK) via enum or `Set<Node>` visited/inProgress |
+| Resumable iterator        | Implement `Iterator<T>` interface, `record` for state checkpoint                      |
+| In-memory database        | `Map<String, List<Map<String, String>>>` with stream-based filter/sort                |
+| GPU credit ledger         | `TreeMap<Integer, CreditBatch>` or `PriorityQueue` ordered by timestamp               |
+| Custom serialization      | `DataOutputStream`/`DataInputStream` with `writeUTF`/`readUTF`                        |
+| Concurrent structures     | `ReentrantReadWriteLock` for read-heavy, `ConcurrentHashMap` for simple               |
+| Cycle detection           | 3-color DFS (WHITE/GRAY/BLACK) via enum or `Set<Node>` visited/inProgress             |

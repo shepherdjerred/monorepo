@@ -79,13 +79,13 @@ chmod 600 ~/.clauderon/secrets/google_api_key
 
 ## Choosing an Agent
 
-| Task                    | Recommended           |
-| ----------------------- | --------------------- |
-| Complex refactoring     | Claude Code           |
-| Quick fixes             | Claude Code or Codex  |
-| Large codebase analysis | Gemini                |
-| Code generation         | Codex                 |
-| Architecture planning   | Claude Code           |
+| Task                    | Recommended          |
+| ----------------------- | -------------------- |
+| Complex refactoring     | Claude Code          |
+| Quick fixes             | Claude Code or Codex |
+| Large codebase analysis | Gemini               |
+| Code generation         | Codex                |
+| Architecture planning   | Claude Code          |
 
 ## Multiple Agents
 

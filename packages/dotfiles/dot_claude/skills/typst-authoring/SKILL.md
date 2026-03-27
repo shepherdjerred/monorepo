@@ -15,19 +15,19 @@ Typst is a modern typesetting language with three syntactic modes: **markup** (d
 
 ## Essential Syntax Quick Reference
 
-| Element | Syntax |
-|---------|--------|
-| Bold / Italic | `*bold*` / `_italic_` |
-| Heading | `= H1`, `== H2`, `=== H3` |
-| Lists | `- bullet`, `+ numbered`, `/ Term: def` |
-| Link | `https://...` or `#link("url")[text]` |
-| Label / Reference | `<name>` / `@name` |
-| Code expression | `#expr` |
-| Line break | `\` |
-| Comment | `// line` or `/* block */` |
-| Non-breaking space | `~` |
-| Dashes | `--` (en), `---` (em) |
-| Escape | `\#`, `\@`, `\$`, `\*`, etc. |
+| Element            | Syntax                                  |
+| ------------------ | --------------------------------------- |
+| Bold / Italic      | `*bold*` / `_italic_`                   |
+| Heading            | `= H1`, `== H2`, `=== H3`               |
+| Lists              | `- bullet`, `+ numbered`, `/ Term: def` |
+| Link               | `https://...` or `#link("url")[text]`   |
+| Label / Reference  | `<name>` / `@name`                      |
+| Code expression    | `#expr`                                 |
+| Line break         | `\`                                     |
+| Comment            | `// line` or `/* block */`              |
+| Non-breaking space | `~`                                     |
+| Dashes             | `--` (en), `---` (em)                   |
+| Escape             | `\#`, `\@`, `\$`, `\*`, etc.            |
 
 ## Set Rules and Show Rules
 
@@ -165,12 +165,12 @@ Characters requiring `\` escape in content text: `#`, `@`, `$`, `<`, `>`. When c
 
 ### Markdown-to-Typst Conversion
 
-| Markdown | Typst |
-|----------|-------|
-| `# Heading` | `= Heading` |
-| `**bold**` | `*bold*` |
-| `*italic*` | `_italic_` |
-| `1. item` | `+ item` |
-| `[text](url)` | `#link("url")[text]` |
-| `> quote` | `#blockquote[text]` (custom helper) |
-| `[1]` refs | `#super[1]` |
+| Markdown      | Typst                               |
+| ------------- | ----------------------------------- |
+| `# Heading`   | `= Heading`                         |
+| `**bold**`    | `*bold*`                            |
+| `*italic*`    | `_italic_`                          |
+| `1. item`     | `+ item`                            |
+| `[text](url)` | `#link("url")[text]`                |
+| `> quote`     | `#blockquote[text]` (custom helper) |
+| `[1]` refs    | `#super[1]`                         |

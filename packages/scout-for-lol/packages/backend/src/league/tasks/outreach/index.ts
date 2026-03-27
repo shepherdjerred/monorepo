@@ -125,8 +125,7 @@ async function runFourteenDayOutreach(client: Client): Promise<void> {
 
     if (subCount >= 3) {
       const compCount = await getCompetitionCount(guildId);
-      const compMention =
-        compCount > 0 ? " and running competitions" : "";
+      const compMention = compCount > 0 ? " and running competitions" : "";
 
       const message = truncateDiscordMessage(
         `👋 Hey there! You've been using Scout for LoL on **${guild.serverName}** for a couple weeks now${compMention}. ` +

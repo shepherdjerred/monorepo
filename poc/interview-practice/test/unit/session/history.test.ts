@@ -44,7 +44,12 @@ describe("session history", () => {
         workspacePath: sessionDir1,
         voiceEnabled: false,
         mode: "text_ai",
-        timer: { durationMs: 1_500_000, elapsedMs: 900_000, warningsEmitted: [], lastCheckpointMs: 0 },
+        timer: {
+          durationMs: 1_500_000,
+          elapsedMs: 900_000,
+          warningsEmitted: [],
+          lastCheckpointMs: 0,
+        },
         hintsGiven: 1,
         testsRun: 2,
         editsGiven: 0,
@@ -67,7 +72,12 @@ describe("session history", () => {
         workspacePath: sessionDir2,
         voiceEnabled: false,
         mode: "text_ai",
-        timer: { durationMs: 1_500_000, elapsedMs: 600_000, warningsEmitted: [], lastCheckpointMs: 0 },
+        timer: {
+          durationMs: 1_500_000,
+          elapsedMs: 600_000,
+          warningsEmitted: [],
+          lastCheckpointMs: 0,
+        },
         hintsGiven: 0,
         testsRun: 5,
         editsGiven: 0,
@@ -87,10 +97,7 @@ describe("session history", () => {
     const sessionDir = path.join(testDir, "sessions", id);
     Bun.spawnSync(["mkdir", "-p", sessionDir]);
 
-    await Bun.write(
-      path.join(sessionDir, "metadata.json"),
-      "invalid json {{{",
-    );
+    await Bun.write(path.join(sessionDir, "metadata.json"), "invalid json {{{");
 
     const sessions = await listSessions(testDir);
     expect(sessions).toHaveLength(0);

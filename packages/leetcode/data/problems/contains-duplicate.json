@@ -12,11 +12,7 @@
   "dislikes": 1367,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Contains Duplicate II\", \"titleSlug\": \"contains-duplicate-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Contains Duplicate III\", \"titleSlug\": \"contains-duplicate-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Make Array Zero by Subtracting Equal Amounts\", \"titleSlug\": \"make-array-zero-by-subtracting-equal-amounts\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Valid Pair of Adjacent Digits in String\", \"titleSlug\": \"find-valid-pair-of-adjacent-digits-in-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,1]",
-    "[1,2,3,4]",
-    "[1,1,1,3,3,4,3,2,4,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,1]", "[1,2,3,4]", "[1,1,1,3,3,4,3,2,4,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"netflix\", \"name\": \"Netflix\"}, {\"timesEncountered\": 4, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}, {\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}]}",
   "topicTags": [
     {

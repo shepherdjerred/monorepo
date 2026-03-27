@@ -16,11 +16,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Valid Subarrays\", \"titleSlug\": \"number-of-valid-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Zero-Filled Subarrays\", \"titleSlug\": \"number-of-zero-filled-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,1,4]",
-    "[8,6,7,7]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[3,2,1,4]", "[8,6,7,7]", "[1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

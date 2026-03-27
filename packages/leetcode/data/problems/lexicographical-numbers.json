@@ -12,10 +12,7 @@
   "dislikes": 214,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "13",
-    "2"
-  ],
+  "exampleTestcaseList": ["13", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 15, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"barclays\", \"name\": \"Barclays\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

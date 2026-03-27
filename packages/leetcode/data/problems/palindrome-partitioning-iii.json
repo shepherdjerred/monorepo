@@ -15,11 +15,7 @@
   "dislikes": 19,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Palindrome Partitioning IV\", \"titleSlug\": \"palindrome-partitioning-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Non-overlapping Palindrome Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-palindrome-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Changes to Make K Semi-palindromes\", \"titleSlug\": \"minimum-changes-to-make-k-semi-palindromes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n2",
-    "\"aabbc\"\n3",
-    "\"leetcode\"\n8"
-  ],
+  "exampleTestcaseList": ["\"abc\"\n2", "\"aabbc\"\n3", "\"leetcode\"\n8"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

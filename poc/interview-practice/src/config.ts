@@ -37,7 +37,7 @@ function resolveDataDir(envValue = "~/.interview-practice"): string {
 }
 
 export function loadConfig(): Config {
-  const provider = (Bun.env["AI_PROVIDER"] ?? "anthropic");
+  const provider = Bun.env["AI_PROVIDER"] ?? "anthropic";
   const dataDir = resolveDataDir(Bun.env["DATA_DIR"]);
 
   return ConfigSchema.parse({

@@ -101,9 +101,13 @@ function main() {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertTag = db.prepare(`INSERT OR IGNORE INTO topic_tags (name, slug) VALUES (?, ?)`);
+  const insertTag = db.prepare(
+    `INSERT OR IGNORE INTO topic_tags (name, slug) VALUES (?, ?)`,
+  );
   const getTagId = db.prepare(`SELECT id FROM topic_tags WHERE slug = ?`);
-  const insertProblemTag = db.prepare(`INSERT OR IGNORE INTO problem_tags (problem_id, tag_id) VALUES (?, ?)`);
+  const insertProblemTag = db.prepare(
+    `INSERT OR IGNORE INTO problem_tags (problem_id, tag_id) VALUES (?, ?)`,
+  );
   const insertSnippet = db.prepare(
     `INSERT INTO code_snippets (problem_id, lang, lang_slug, code) VALUES (?, ?, ?, ?)`,
   );
@@ -122,7 +126,10 @@ function main() {
       try {
         const raw = Bun.file(join(PROBLEMS_DIR, file)).json() as unknown;
         // Bun.file().json() returns a promise in some contexts, but in sync transaction we need sync read
-        const text = require("fs").readFileSync(join(PROBLEMS_DIR, file), "utf-8");
+        const text = require("fs").readFileSync(
+          join(PROBLEMS_DIR, file),
+          "utf-8",
+        );
         const q = JSON.parse(text) as Record<string, unknown>;
 
         const questionId = Number(q.questionId);
@@ -135,10 +142,14 @@ function main() {
         const dislikes = Number(q.dislikes ?? 0);
         const content = q.content ? String(q.content) : null;
         const hints = q.hints ? JSON.stringify(q.hints) : null;
-        const exampleTestcases = q.exampleTestcaseList ? JSON.stringify(q.exampleTestcaseList) : null;
+        const exampleTestcases = q.exampleTestcaseList
+          ? JSON.stringify(q.exampleTestcaseList)
+          : null;
         const metaData = q.metaData ? String(q.metaData) : null;
         const stats = q.stats ? String(q.stats) : null;
-        const similarQuestions = q.similarQuestions ? String(q.similarQuestions) : null;
+        const similarQuestions = q.similarQuestions
+          ? String(q.similarQuestions)
+          : null;
 
         insertProblem.run(
           questionId,
@@ -159,7 +170,10 @@ function main() {
         );
 
         // Topic tags
-        const topicTags = q.topicTags as Array<{ name: string; slug: string }> | null;
+        const topicTags = q.topicTags as Array<{
+          name: string;
+          slug: string;
+        }> | null;
         if (topicTags) {
           for (const tag of topicTags) {
             insertTag.run(tag.name, tag.slug);
@@ -169,7 +183,11 @@ function main() {
         }
 
         // Code snippets
-        const snippets = q.codeSnippets as Array<{ lang: string; langSlug: string; code: string }> | null;
+        const snippets = q.codeSnippets as Array<{
+          lang: string;
+          langSlug: string;
+          code: string;
+        }> | null;
         if (snippets) {
           for (const s of snippets) {
             insertSnippet.run(questionId, s.lang, s.langSlug, s.code);
@@ -177,7 +195,11 @@ function main() {
         }
 
         // Editorial
-        const solution = q.solution as { content: string | null; canSeeDetail: boolean; paidOnly: boolean } | null;
+        const solution = q.solution as {
+          content: string | null;
+          canSeeDetail: boolean;
+          paidOnly: boolean;
+        } | null;
         if (solution) {
           insertEditorial.run(
             questionId,
@@ -192,11 +214,21 @@ function main() {
           try {
             const companyData = JSON.parse(q.companyTagStatsV2) as Record<
               string,
-              Array<{ taggedByAdmin: boolean; name: string; slug: string; timesEncountered: number }>
+              Array<{
+                taggedByAdmin: boolean;
+                name: string;
+                slug: string;
+                timesEncountered: number;
+              }>
             >;
             for (const [timePeriod, companies] of Object.entries(companyData)) {
               for (const company of companies) {
-                insertCompanyTag.run(questionId, company.name, company.timesEncountered, timePeriod);
+                insertCompanyTag.run(
+                  questionId,
+                  company.name,
+                  company.timesEncountered,
+                  timePeriod,
+                );
               }
             }
           } catch {
@@ -206,7 +238,9 @@ function main() {
 
         count++;
         if (count % 500 === 0) {
-          console.log(`[${timestamp()}] Processed ${count}/${files.length} problems`);
+          console.log(
+            `[${timestamp()}] Processed ${count}/${files.length} problems`,
+          );
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

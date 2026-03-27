@@ -14,10 +14,7 @@
   "dislikes": 956,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Keep Multiplying Found Values by Two\", \"titleSlug\": \"keep-multiplying-found-values-by-two\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Largest Number After Digit Swaps by Parity\", \"titleSlug\": \"largest-number-after-digit-swaps-by-parity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,6,1,0]",
-    "[1,2,3,4]"
-  ],
+  "exampleTestcaseList": ["[3,6,1,0]", "[1,2,3,4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
   "topicTags": [
     {

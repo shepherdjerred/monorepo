@@ -17,10 +17,7 @@
   "dislikes": 376,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Array Partition\", \"titleSlug\": \"array-partition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[90]\n1",
-    "[9,4,1,7]\n2"
-  ],
+  "exampleTestcaseList": ["[90]\n1", "[9,4,1,7]\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": []}",
   "topicTags": [
     {

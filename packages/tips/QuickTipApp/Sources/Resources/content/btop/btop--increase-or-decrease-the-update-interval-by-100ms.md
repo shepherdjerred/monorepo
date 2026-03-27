@@ -6,4 +6,4 @@ website: https://github.com/aristocratos/btop
 category: Sorting & Display
 ---
 
-- + / - — Increase or decrease the update interval by 100ms
+- - / - — Increase or decrease the update interval by 100ms

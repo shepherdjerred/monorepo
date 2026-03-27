@@ -15,10 +15,7 @@
   "dislikes": 162,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subarrays with K Different Integers\", \"titleSlug\": \"subarrays-with-k-different-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Number of Nice Subarrays\", \"titleSlug\": \"count-number-of-nice-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray With Elements Greater Than Varying Threshold\", \"titleSlug\": \"subarray-with-elements-greater-than-varying-threshold\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,3,2,2]\n2\n2",
-    "[1,2,3,4]\n4\n1"
-  ],
+  "exampleTestcaseList": ["[2,3,3,2,2]\n2\n2", "[1,2,3,4]\n4\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

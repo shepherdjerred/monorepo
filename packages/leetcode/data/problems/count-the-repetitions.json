@@ -12,10 +12,7 @@
   "dislikes": 369,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"acb\"\n4\n\"ab\"\n2",
-    "\"acb\"\n1\n\"acb\"\n1"
-  ],
+  "exampleTestcaseList": ["\"acb\"\n4\n\"ab\"\n2", "\"acb\"\n1\n\"acb\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

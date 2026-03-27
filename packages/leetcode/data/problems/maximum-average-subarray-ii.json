@@ -12,10 +12,7 @@
   "dislikes": 74,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Maximum Average Subarray I\", \"titleSlug\": \"maximum-average-subarray-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,12,-5,-6,50,3]\n4",
-    "[5]\n1"
-  ],
+  "exampleTestcaseList": ["[1,12,-5,-6,50,3]\n4", "[5]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

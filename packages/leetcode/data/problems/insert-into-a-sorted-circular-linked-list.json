@@ -12,11 +12,7 @@
   "dislikes": 801,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Insertion Sort List\", \"titleSlug\": \"insertion-sort-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,4,1]\n2",
-    "[]\n1",
-    "[1]\n0"
-  ],
+  "exampleTestcaseList": ["[3,4,1]\n2", "[]\n1", "[1]\n0"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 9, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}], \"three_months\": []}",
   "topicTags": [
     {

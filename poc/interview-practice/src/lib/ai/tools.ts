@@ -38,8 +38,7 @@ export const GIVE_HINT_TOOL: ToolDefinition = {
       level: {
         type: "string",
         enum: ["subtle", "moderate", "explicit"],
-        description:
-          "Hint intensity. Start subtle, escalate only if needed.",
+        description: "Hint intensity. Start subtle, escalate only if needed.",
       },
     },
     required: ["level"],
@@ -179,9 +178,22 @@ export const REVIEW_DIAGRAM_TOOL: ToolDefinition = {
 };
 
 export function getLeetcodeTools(): ToolDefinition[] {
-  return [RUN_TESTS_TOOL, REVEAL_NEXT_PART_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL, VIEW_CODE_TOOL, EDIT_CODE_TOOL, HELP_DEBUG_TOOL];
+  return [
+    RUN_TESTS_TOOL,
+    REVEAL_NEXT_PART_TOOL,
+    GIVE_HINT_TOOL,
+    PAUSE_AND_THINK_TOOL,
+    VIEW_CODE_TOOL,
+    EDIT_CODE_TOOL,
+    HELP_DEBUG_TOOL,
+  ];
 }
 
 export function getSystemDesignTools(): ToolDefinition[] {
-  return [TRANSITION_PHASE_TOOL, REVIEW_DIAGRAM_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL];
+  return [
+    TRANSITION_PHASE_TOOL,
+    REVIEW_DIAGRAM_TOOL,
+    GIVE_HINT_TOOL,
+    PAUSE_AND_THINK_TOOL,
+  ];
 }

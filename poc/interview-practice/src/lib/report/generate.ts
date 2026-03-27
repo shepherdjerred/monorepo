@@ -33,11 +33,7 @@ const TestRunDataSchema = z.object({
   failed: z.number().optional(),
 });
 
-function sumMetric(
-  db: Database,
-  eventType: string,
-  jsonPath: string,
-): number {
+function sumMetric(db: Database, eventType: string, jsonPath: string): number {
   const stmt = db.prepare(
     `SELECT COALESCE(SUM(json_extract(data, ?)), 0) as total FROM events WHERE event = ? AND json_extract(data, ?) IS NOT NULL`,
   );
@@ -142,9 +138,7 @@ export function formatReport(report: SessionReport): string {
   lines.push("");
 
   if (report.avgLatencyMs !== null) {
-    lines.push(
-      `  Avg Latency: ${String(Math.round(report.avgLatencyMs))}ms`,
-    );
+    lines.push(`  Avg Latency: ${String(Math.round(report.avgLatencyMs))}ms`);
   }
   lines.push(`  Tokens In:   ${String(report.totalTokensIn)}`);
   lines.push(`  Tokens Out:  ${String(report.totalTokensOut)}`);

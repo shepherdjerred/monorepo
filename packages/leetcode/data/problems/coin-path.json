@@ -12,10 +12,7 @@
   "dislikes": 115,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"House Robber\", \"titleSlug\": \"house-robber\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"House Robber II\", \"titleSlug\": \"house-robber-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,4,-1,2]\n2",
-    "[1,2,4,-1,2]\n1"
-  ],
+  "exampleTestcaseList": ["[1,2,4,-1,2]\n2", "[1,2,4,-1,2]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

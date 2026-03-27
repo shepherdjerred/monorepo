@@ -15,11 +15,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Special Characters II\", \"titleSlug\": \"count-the-number-of-special-characters-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Special Characters I\", \"titleSlug\": \"count-the-number-of-special-characters-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"lEeTcOdE\"",
-    "\"arRAzFif\"",
-    "\"AbCdEfGhIjK\""
-  ],
+  "exampleTestcaseList": ["\"lEeTcOdE\"", "\"arRAzFif\"", "\"AbCdEfGhIjK\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

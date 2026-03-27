@@ -17,10 +17,7 @@
   "dislikes": 35,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "3\n3\n2\n1",
-    "3\n3\n2\n2"
-  ],
+  "exampleTestcaseList": ["3\n3\n2\n1", "3\n3\n2\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

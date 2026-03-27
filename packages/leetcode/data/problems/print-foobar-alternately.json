@@ -12,10 +12,7 @@
   "dislikes": 60,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Print in Order\", \"titleSlug\": \"print-in-order\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Print Zero Even Odd\", \"titleSlug\": \"print-zero-even-odd\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "2"
-  ],
+  "exampleTestcaseList": ["1", "2"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

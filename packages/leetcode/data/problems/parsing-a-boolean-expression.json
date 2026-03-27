@@ -14,11 +14,7 @@
   "dislikes": 86,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"&(|(f))\"",
-    "\"|(f,f,f,t)\"",
-    "\"!(&(f,t))\""
-  ],
+  "exampleTestcaseList": ["\"&(|(f))\"", "\"|(f,f,f,t)\"", "\"!(&(f,t))\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"hilabs\", \"name\": \"HiLabs\"}, {\"timesEncountered\": 2, \"slug\": \"affinity\", \"name\": \"Affinity\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,11 +12,7 @@
   "dislikes": 2291,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Absolute Difference in BST\", \"titleSlug\": \"minimum-absolute-difference-in-bst\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Number of Pairs With Absolute Difference K\", \"titleSlug\": \"count-number-of-pairs-with-absolute-difference-k\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Kth Smallest Product of Two Sorted Arrays\", \"titleSlug\": \"kth-smallest-product-of-two-sorted-arrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Pairs Satisfying Inequality\", \"titleSlug\": \"number-of-pairs-satisfying-inequality\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Absolute Difference Between Elements With Constraint\", \"titleSlug\": \"minimum-absolute-difference-between-elements-with-constraint\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,1,4,1,5]\n2",
-    "[1,2,3,4,5]\n1",
-    "[1,3,1,5,4]\n0"
-  ],
+  "exampleTestcaseList": ["[3,1,4,1,5]\n2", "[1,2,3,4,5]\n1", "[1,3,1,5,4]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

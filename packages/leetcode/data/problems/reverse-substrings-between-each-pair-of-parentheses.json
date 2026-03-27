@@ -16,11 +16,7 @@
   "dislikes": 131,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"(abcd)\"",
-    "\"(u(love)i)\"",
-    "\"(ed(et(oc))el)\""
-  ],
+  "exampleTestcaseList": ["\"(abcd)\"", "\"(u(love)i)\"", "\"(ed(et(oc))el)\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

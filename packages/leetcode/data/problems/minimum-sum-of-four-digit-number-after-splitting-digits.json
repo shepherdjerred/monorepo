@@ -16,10 +16,7 @@
   "dislikes": 148,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Difference Between Element Sum and Digit Sum of an Array\", \"titleSlug\": \"difference-between-element-sum-and-digit-sum-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Alternating Digit Sum\", \"titleSlug\": \"alternating-digit-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2932",
-    "4009"
-  ],
+  "exampleTestcaseList": ["2932", "4009"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

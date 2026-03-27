@@ -12,10 +12,7 @@
   "dislikes": 321,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Unique Good Subsequences\", \"titleSlug\": \"number-of-unique-good-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"rabbbit\"\n\"rabbit\"",
-    "\"babgbag\"\n\"bag\""
-  ],
+  "exampleTestcaseList": ["\"rabbbit\"\n\"rabbit\"", "\"babgbag\"\n\"bag\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 20, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 12, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 2, \"slug\": \"swiggy\", \"name\": \"Swiggy\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}]}",
   "topicTags": [
     {

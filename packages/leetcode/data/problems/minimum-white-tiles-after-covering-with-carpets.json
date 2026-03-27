@@ -16,10 +16,7 @@
   "dislikes": 17,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Edit Distance\", \"titleSlug\": \"edit-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"10110101\"\n2\n2",
-    "\"11111\"\n2\n3"
-  ],
+  "exampleTestcaseList": ["\"10110101\"\n2\n2", "\"11111\"\n2\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

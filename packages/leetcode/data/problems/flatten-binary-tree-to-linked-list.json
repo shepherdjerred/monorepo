@@ -14,11 +14,7 @@
   "dislikes": 601,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Flatten a Multilevel Doubly Linked List\", \"titleSlug\": \"flatten-a-multilevel-doubly-linked-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Correct a Binary Tree\", \"titleSlug\": \"correct-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,5,3,4,null,6]",
-    "[]",
-    "[0]"
-  ],
+  "exampleTestcaseList": ["[1,2,5,3,4,null,6]", "[]", "[0]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 25, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"anduril\", \"name\": \"Anduril\"}, {\"timesEncountered\": 2, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}]}",
   "topicTags": [
     {

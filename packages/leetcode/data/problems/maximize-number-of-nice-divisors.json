@@ -17,10 +17,7 @@
   "dislikes": 171,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Integer Break\", \"titleSlug\": \"integer-break\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5",
-    "8"
-  ],
+  "exampleTestcaseList": ["5", "8"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

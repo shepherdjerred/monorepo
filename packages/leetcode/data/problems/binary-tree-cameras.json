@@ -12,10 +12,7 @@
   "dislikes": 89,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Distribute Coins in Binary Tree\", \"titleSlug\": \"distribute-coins-in-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Choose Edges to Maximize Score in a Tree\", \"titleSlug\": \"choose-edges-to-maximize-score-in-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,0,null,0,0]",
-    "[0,0,null,0,null,0,null,null,0]"
-  ],
+  "exampleTestcaseList": ["[0,0,null,0,0]", "[0,0,null,0,null,0,null,null,0]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"ebay\", \"name\": \"eBay\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"six_months\": [{\"timesEncountered\": 8, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"6sense\", \"name\": \"6sense\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 8, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"dp-world\", \"name\": \"DP world\"}, {\"timesEncountered\": 2, \"slug\": \"graviton\", \"name\": \"Graviton\"}]}",
   "topicTags": [
     {

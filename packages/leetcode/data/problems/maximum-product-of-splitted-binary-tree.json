@@ -14,10 +14,7 @@
   "dislikes": 122,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Nodes With the Highest Score\", \"titleSlug\": \"count-nodes-with-the-highest-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5,6]",
-    "[1,null,2,3,4,null,null,5,6]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5,6]", "[1,null,2,3,4,null,null,5,6]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
   "topicTags": [
     {

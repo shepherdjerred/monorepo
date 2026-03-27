@@ -12,11 +12,7 @@
   "dislikes": 547,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Create Maximum Number\", \"titleSlug\": \"create-maximum-number\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Monotone Increasing Digits\", \"titleSlug\": \"monotone-increasing-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Most Competitive Subsequence\", \"titleSlug\": \"find-the-most-competitive-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Append K Integers With Minimal Sum\", \"titleSlug\": \"append-k-integers-with-minimal-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Digit From Number to Maximize Result\", \"titleSlug\": \"remove-digit-from-number-to-maximize-result\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make a Special Number\", \"titleSlug\": \"minimum-operations-to-make-a-special-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1432219\"\n3",
-    "\"10200\"\n1",
-    "\"10\"\n2"
-  ],
+  "exampleTestcaseList": ["\"1432219\"\n3", "\"10200\"\n1", "\"10\"\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 4, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 4, \"slug\": \"coupang\", \"name\": \"Coupang\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}]}",
   "topicTags": [
     {

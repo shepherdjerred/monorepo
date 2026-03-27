@@ -15,10 +15,7 @@
   "dislikes": 187,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Make Arrays Similar\", \"titleSlug\": \"minimum-number-of-operations-to-make-arrays-similar\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Array Equal II\", \"titleSlug\": \"minimum-operations-to-make-array-equal-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3",
-    "6"
-  ],
+  "exampleTestcaseList": ["3", "6"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

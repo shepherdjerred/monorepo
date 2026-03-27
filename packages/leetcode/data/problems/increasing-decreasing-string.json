@@ -16,10 +16,7 @@
   "dislikes": 878,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aaaabbbbcccc\"",
-    "\"rat\""
-  ],
+  "exampleTestcaseList": ["\"aaaabbbbcccc\"", "\"rat\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"akuna-capital\", \"name\": \"Akuna Capital\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,11 +17,7 @@
   "dislikes": 127,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Decode Ways II\", \"titleSlug\": \"decode-ways-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Cut a Stick\", \"titleSlug\": \"minimum-cost-to-cut-a-stick\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Ways to Split Array Into Three Subarrays\", \"titleSlug\": \"ways-to-split-array-into-three-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"SSPPSPS\"",
-    "\"PPSPSP\"",
-    "\"S\""
-  ],
+  "exampleTestcaseList": ["\"SSPPSPS\"", "\"PPSPSP\"", "\"S\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

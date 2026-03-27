@@ -5,19 +5,14 @@
   "titleSlug": "remove-all-adjacent-duplicates-in-string",
   "difficulty": "Easy",
   "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters. A <strong>duplicate removal</strong> consists of choosing two <strong>adjacent</strong> and <strong>equal</strong> letters and removing them.</p>\n\n<p>We repeatedly make <strong>duplicate removals</strong> on <code>s</code> until we no longer can.</p>\n\n<p>Return <em>the final string after all such duplicate removals have been made</em>. It can be proven that the answer is <strong>unique</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abbaca&quot;\n<strong>Output:</strong> &quot;ca&quot;\n<strong>Explanation:</strong> \nFor example, in &quot;abbaca&quot; we could remove &quot;bb&quot; since the letters are adjacent and equal, and this is the only possible move.  The result of this move is that the string is &quot;aaca&quot;, of which only &quot;aa&quot; is possible, so the final string is &quot;ca&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;azxxzy&quot;\n<strong>Output:</strong> &quot;ay&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
-  "hints": [
-    "Use a stack to process everything greedily."
-  ],
+  "hints": ["Use a stack to process everything greedily."],
   "metaData": "{\n  \"name\": \"removeDuplicates\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"857.5K\", \"totalSubmission\": \"1.2M\", \"totalAcceptedRaw\": 857480, \"totalSubmissionRaw\": 1174840, \"acRate\": \"73.0%\"}",
   "likes": 7084,
   "dislikes": 276,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove All Adjacent Duplicates in String II\", \"titleSlug\": \"remove-all-adjacent-duplicates-in-string-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Removing Stars From a String\", \"titleSlug\": \"removing-stars-from-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize String Length\", \"titleSlug\": \"minimize-string-length\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abbaca\"",
-    "\"azxxzy\""
-  ],
+  "exampleTestcaseList": ["\"abbaca\"", "\"azxxzy\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"whatnot\", \"name\": \"Whatnot\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"ripple\", \"name\": \"Ripple\"}, {\"timesEncountered\": 2, \"slug\": \"fynd\", \"name\": \"fynd\"}, {\"timesEncountered\": 2, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 2, \"slug\": \"paytm\", \"name\": \"Paytm\"}]}",
   "topicTags": [
     {

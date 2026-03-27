@@ -39,10 +39,7 @@ export function estimateTokens(text: string): number {
   return Math.ceil(text.length / CHARS_PER_TOKEN);
 }
 
-export function truncateToTokenBudget(
-  text: string,
-  budget: number,
-): string {
+export function truncateToTokenBudget(text: string, budget: number): string {
   const maxChars = budget * CHARS_PER_TOKEN;
   if (text.length <= maxChars) return text;
   return text.slice(0, maxChars) + "\n[...truncated]";
@@ -82,10 +79,7 @@ export function formatReflectionsForContext(
   return truncateToTokenBudget(text, budget);
 }
 
-export function truncateCodeSnapshot(
-  code: string,
-  budget: number,
-): string {
+export function truncateCodeSnapshot(code: string, budget: number): string {
   const maxChars = budget * CHARS_PER_TOKEN;
   if (code.length <= maxChars) return code;
 
@@ -159,7 +153,9 @@ export function buildContext(options: BuildContextOptions): BuiltContext {
       options.codeSnapshot,
       budgets.codeSnapshot,
     );
-    sections.push(`CANDIDATE'S CURRENT CODE:\n\`\`\`\n${truncatedCode}\n\`\`\``);
+    sections.push(
+      `CANDIDATE'S CURRENT CODE:\n\`\`\`\n${truncatedCode}\n\`\`\``,
+    );
   }
 
   // TRANSCRIPT (truncated to budget, returned separately for message construction)

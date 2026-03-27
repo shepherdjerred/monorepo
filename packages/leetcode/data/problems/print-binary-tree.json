@@ -12,10 +12,7 @@
   "dislikes": 470,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2]",
-    "[1,2,3,null,4]"
-  ],
+  "exampleTestcaseList": ["[1,2]", "[1,2,3,null,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"poynt\", \"name\": \"Poynt\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

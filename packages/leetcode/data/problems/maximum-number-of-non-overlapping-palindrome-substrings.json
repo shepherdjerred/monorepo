@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Palindromic Substring\", \"titleSlug\": \"longest-palindromic-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning\", \"titleSlug\": \"palindrome-partitioning\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning II\", \"titleSlug\": \"palindrome-partitioning-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning III\", \"titleSlug\": \"palindrome-partitioning-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Non-Overlapping Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning IV\", \"titleSlug\": \"palindrome-partitioning-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abaccdbbd\"\n3",
-    "\"adbcda\"\n2"
-  ],
+  "exampleTestcaseList": ["\"abaccdbbd\"\n3", "\"adbcda\"\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"sofi\", \"name\": \"SoFi\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}]}",
   "topicTags": [
     {

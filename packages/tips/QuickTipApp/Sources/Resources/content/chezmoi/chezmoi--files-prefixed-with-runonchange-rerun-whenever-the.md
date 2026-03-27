@@ -6,4 +6,4 @@ website: https://www.chezmoi.io
 category: Scripts
 ---
 
-- Files prefixed with run_onchange_ re-run whenever their content changes, making them ideal for package installs.
+- Files prefixed with run*onchange* re-run whenever their content changes, making them ideal for package installs.

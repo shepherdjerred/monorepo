@@ -15,10 +15,7 @@
   "dislikes": 132,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"cba\"",
-    "\"aabaa\""
-  ],
+  "exampleTestcaseList": ["\"cba\"", "\"aabaa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"samsung\", \"name\": \"Samsung\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

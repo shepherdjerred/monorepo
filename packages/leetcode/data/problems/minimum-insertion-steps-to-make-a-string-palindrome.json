@@ -15,11 +15,7 @@
   "dislikes": 76,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Moves to Make Palindrome\", \"titleSlug\": \"minimum-number-of-moves-to-make-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"zzazz\"",
-    "\"mbadm\"",
-    "\"leetcode\""
-  ],
+  "exampleTestcaseList": ["\"zzazz\"", "\"mbadm\"", "\"leetcode\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}], \"three_months\": []}",
   "topicTags": [
     {

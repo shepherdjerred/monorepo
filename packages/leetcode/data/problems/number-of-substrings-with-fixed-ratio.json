@@ -17,10 +17,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Binary Substrings\", \"titleSlug\": \"count-binary-substrings\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"0110011\"\n1\n2",
-    "\"10101\"\n3\n1"
-  ],
+  "exampleTestcaseList": ["\"0110011\"\n1\n2", "\"10101\"\n3\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

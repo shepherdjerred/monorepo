@@ -15,10 +15,7 @@
   "dislikes": 92,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Painting a Grid With Three Different Colors\", \"titleSlug\": \"painting-a-grid-with-three-different-colors\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "5000"
-  ],
+  "exampleTestcaseList": ["1", "5000"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"fortinet\", \"name\": \"Fortinet\"}], \"three_months\": []}",
   "topicTags": [
     {

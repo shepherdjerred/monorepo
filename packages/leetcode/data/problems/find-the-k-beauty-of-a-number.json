@@ -15,10 +15,7 @@
   "dislikes": 47,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "240\n2",
-    "430043\n2"
-  ],
+  "exampleTestcaseList": ["240\n2", "430043\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}, {\"timesEncountered\": 2, \"slug\": \"postmates\", \"name\": \"Postmates\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

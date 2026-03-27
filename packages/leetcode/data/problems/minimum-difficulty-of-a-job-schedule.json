@@ -15,11 +15,7 @@
   "dislikes": 336,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[6,5,4,3,2,1]\n2",
-    "[9,9,9]\n4",
-    "[1,1,1]\n3"
-  ],
+  "exampleTestcaseList": ["[6,5,4,3,2,1]\n2", "[9,9,9]\n4", "[1,1,1]\n3"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"turvo\", \"name\": \"Turvo\"}], \"six_months\": []}",
   "topicTags": [
     {

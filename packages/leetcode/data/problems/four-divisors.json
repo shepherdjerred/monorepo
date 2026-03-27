@@ -15,11 +15,7 @@
   "dislikes": 223,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[21,4,7]",
-    "[21,21]",
-    "[1,2,3,4,5]"
-  ],
+  "exampleTestcaseList": ["[21,4,7]", "[21,21]", "[1,2,3,4,5]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}]}",
   "topicTags": [
     {

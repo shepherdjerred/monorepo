@@ -16,10 +16,7 @@
   "dislikes": 70,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sort Array By Parity\", \"titleSlug\": \"sort-array-by-parity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Array By Parity II\", \"titleSlug\": \"sort-array-by-parity-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,1,2,3]",
-    "[2,1]"
-  ],
+  "exampleTestcaseList": ["[4,1,2,3]", "[2,1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"three_months\": []}",
   "topicTags": [
     {

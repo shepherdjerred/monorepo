@@ -16,10 +16,7 @@
   "dislikes": 176,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,-10,7,13,6,8]\n5",
-    "[1,-10,7,13,6,8]\n7"
-  ],
+  "exampleTestcaseList": ["[1,-10,7,13,6,8]\n5", "[1,-10,7,13,6,8]\n7"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 5, \"slug\": \"mercari\", \"name\": \"Mercari\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"atlassian\", \"name\": \"Atlassian\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

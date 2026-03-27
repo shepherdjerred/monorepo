@@ -1,5 +1,9 @@
 import path from "node:path";
-import { generateStarterCode, getSolutionFilename, getFileExtension } from "#lib/questions/starter-code.ts";
+import {
+  generateStarterCode,
+  getSolutionFilename,
+  getFileExtension,
+} from "#lib/questions/starter-code.ts";
 import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
 
 export async function scaffoldLeetcodeWorkspace(
@@ -13,7 +17,11 @@ export async function scaffoldLeetcodeWorkspace(
   const solutionPath = path.join(workspacePath, solutionFilename);
   const problemPath = path.join(workspacePath, "problem.md");
 
-  const starterCode = await generateStarterCode(ext, question.functionSignature, question.title);
+  const starterCode = await generateStarterCode(
+    ext,
+    question.functionSignature,
+    question.title,
+  );
   await Bun.write(solutionPath, starterCode);
 
   const problemContent = buildProblemMarkdown(question, currentPart);
@@ -76,7 +84,9 @@ export async function updateProblemForNewPart(
   await Bun.write(problemPath, content);
 }
 
-export async function readSolutionFile(solutionPath: string): Promise<string | null> {
+export async function readSolutionFile(
+  solutionPath: string,
+): Promise<string | null> {
   try {
     return await Bun.file(solutionPath).text();
   } catch {

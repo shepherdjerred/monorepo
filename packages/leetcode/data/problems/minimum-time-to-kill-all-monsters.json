@@ -16,11 +16,7 @@
   "dislikes": 5,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Closest Room\", \"titleSlug\": \"closest-room\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Eliminate Maximum Number of Monsters\", \"titleSlug\": \"eliminate-maximum-number-of-monsters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Build Sturdy Brick Wall\", \"titleSlug\": \"number-of-ways-to-build-sturdy-brick-wall\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,1,4]",
-    "[1,1,4]",
-    "[1,2,4,9]"
-  ],
+  "exampleTestcaseList": ["[3,1,4]", "[1,1,4]", "[1,2,4,9]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"trilogy\", \"name\": \"Trilogy\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

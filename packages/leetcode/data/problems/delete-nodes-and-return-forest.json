@@ -12,10 +12,7 @@
   "dislikes": 145,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Nodes With the Highest Score\", \"titleSlug\": \"count-nodes-with-the-highest-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5,6,7]\n[3,5]",
-    "[1,2,4,null,3]\n[3]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5,6,7]\n[3,5]", "[1,2,4,null,3]\n[3]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"more_than_six_months\": [{\"timesEncountered\": 37, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
   "topicTags": [
     {

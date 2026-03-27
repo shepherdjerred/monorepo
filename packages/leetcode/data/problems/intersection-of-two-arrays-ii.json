@@ -12,10 +12,7 @@
   "dislikes": 1010,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Intersection of Two Arrays\", \"titleSlug\": \"intersection-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Common Characters\", \"titleSlug\": \"find-common-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Difference of Two Arrays\", \"titleSlug\": \"find-the-difference-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Choose Numbers From Two Arrays in Range\", \"titleSlug\": \"choose-numbers-from-two-arrays-in-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Intersection of Multiple Arrays\", \"titleSlug\": \"intersection-of-multiple-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Common Value\", \"titleSlug\": \"minimum-common-value\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,2,1]\n[2,2]",
-    "[4,9,5]\n[9,4,9,8,4]"
-  ],
+  "exampleTestcaseList": ["[1,2,2,1]\n[2,2]", "[4,9,5]\n[9,4,9,8,4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"criteo\", \"name\": \"Criteo\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}]}",
   "topicTags": [
     {

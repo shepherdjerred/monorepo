@@ -16,10 +16,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Check If Two Expression Trees are Equivalent\", \"titleSlug\": \"check-if-two-expression-trees-are-equivalent\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design an Expression Tree With Evaluate Function\", \"titleSlug\": \"design-an-expression-tree-with-evaluate-function\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Evaluate Boolean Binary Tree\", \"titleSlug\": \"evaluate-boolean-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,5,4,2,null,1,1,1,0]\ntrue",
-    "[0]\nfalse"
-  ],
+  "exampleTestcaseList": ["[3,5,4,2,null,1,1,1,0]\ntrue", "[0]\nfalse"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

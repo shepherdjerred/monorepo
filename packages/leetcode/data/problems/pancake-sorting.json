@@ -12,10 +12,7 @@
   "dislikes": 1560,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,2,4,1]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[3,2,4,1]", "[1,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"darwinbox\", \"name\": \"Darwinbox\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

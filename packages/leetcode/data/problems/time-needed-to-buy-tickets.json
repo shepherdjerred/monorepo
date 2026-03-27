@@ -15,10 +15,7 @@
   "dislikes": 169,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Students Unable to Eat Lunch\", \"titleSlug\": \"number-of-students-unable-to-eat-lunch\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,2]\n2",
-    "[5,1,1,1]\n0"
-  ],
+  "exampleTestcaseList": ["[2,3,2]\n2", "[5,1,1,1]\n0"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"innovaccer\", \"name\": \"Innovaccer\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": []}",
   "topicTags": [
     {

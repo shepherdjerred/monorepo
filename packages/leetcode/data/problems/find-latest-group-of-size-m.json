@@ -16,10 +16,7 @@
   "dislikes": 144,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,5,1,2,4]\n1",
-    "[3,1,5,4,2]\n2"
-  ],
+  "exampleTestcaseList": ["[3,5,1,2,4]\n1", "[3,1,5,4,2]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

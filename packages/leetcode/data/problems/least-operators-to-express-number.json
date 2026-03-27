@@ -12,11 +12,7 @@
   "dislikes": 70,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "3\n19",
-    "5\n501",
-    "100\n100000000"
-  ],
+  "exampleTestcaseList": ["3\n19", "5\n501", "100\n100000000"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

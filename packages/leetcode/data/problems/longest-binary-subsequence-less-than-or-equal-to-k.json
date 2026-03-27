@@ -15,10 +15,7 @@
   "dislikes": 79,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Binary String After Change\", \"titleSlug\": \"maximum-binary-string-after-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1001010\"\n5",
-    "\"00101001\"\n1"
-  ],
+  "exampleTestcaseList": ["\"1001010\"\n5", "\"00101001\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

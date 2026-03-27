@@ -12,11 +12,7 @@
   "dislikes": 125,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Subsequence of Length K With the Largest Sum\", \"titleSlug\": \"find-subsequence-of-length-k-with-the-largest-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,3]\n1",
-    "[3,-1,0,2]\n3",
-    "[2,-3,-1,5,-4]\n2"
-  ],
+  "exampleTestcaseList": ["[4,2,3]\n1", "[3,-1,0,2]\n3", "[2,-3,-1,5,-4]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"druva\", \"name\": \"Druva\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

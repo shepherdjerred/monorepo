@@ -42,6 +42,7 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 ## Plan Mode — Typst PDF Export
 
 In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
+
 1. Load the `typst-authoring` skill for Typst language reference
 2. Read the plan `.md` file
 3. Convert to a well-formatted Typst document designed for quick reviewer comprehension. Use tables for structured comparisons, diagrams (fletcher, CeTZ) for architecture and flow, callout boxes (gentle-clues) for key decisions and risks, and clear visual hierarchy. Do not just convert Markdown to Typst — invest effort so the reviewer can scan the plan in 60 seconds
@@ -56,6 +57,7 @@ This is an **explicit exception** to plan mode's read-only restriction: writing 
 ## Typst Files — Always Render to PDF
 
 When asked to show, display, or present a `.typ` file, **always render it to PDF and open it** rather than just showing the source. Steps:
+
 1. Compile with `typst compile <file>.typ`
 2. Open the resulting PDF with `open <file>.pdf`
 3. If compilation fails, fix the Typst source and retry

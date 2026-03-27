@@ -15,10 +15,7 @@
   "dislikes": 39,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Coin Change\", \"titleSlug\": \"coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design an ATM Machine\", \"titleSlug\": \"design-an-atm-machine\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Days Spent Together\", \"titleSlug\": \"count-days-spent-together\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"02:30\"\n\"04:35\"",
-    "\"11:00\"\n\"11:01\""
-  ],
+  "exampleTestcaseList": ["\"02:30\"\n\"04:35\"", "\"11:00\"\n\"11:01\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

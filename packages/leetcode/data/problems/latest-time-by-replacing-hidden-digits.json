@@ -15,11 +15,7 @@
   "dislikes": 188,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Valid Clock Times\", \"titleSlug\": \"number-of-valid-clock-times\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Latest Time You Can Obtain After Replacing Characters\", \"titleSlug\": \"latest-time-you-can-obtain-after-replacing-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"2?:?0\"",
-    "\"0?:3?\"",
-    "\"1?:22\""
-  ],
+  "exampleTestcaseList": ["\"2?:?0\"", "\"0?:3?\"", "\"1?:22\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 49,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Basic Calculator III\", \"titleSlug\": \"basic-calculator-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Check If Two Expression Trees are Equivalent\", \"titleSlug\": \"check-if-two-expression-trees-are-equivalent\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"3*4-2*5\"",
-    "\"2-3/(5*2)+1\"",
-    "\"1+2+3+4+5\""
-  ],
+  "exampleTestcaseList": ["\"3*4-2*5\"", "\"2-3/(5*2)+1\"", "\"1+2+3+4+5\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

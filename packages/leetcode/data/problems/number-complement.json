@@ -12,10 +12,7 @@
   "dislikes": 145,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "5",
-    "1"
-  ],
+  "exampleTestcaseList": ["5", "1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}, {\"timesEncountered\": 2, \"slug\": \"cloudera\", \"name\": \"Cloudera\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -11,7 +11,7 @@ export type LeetcodePromptContext = {
   hintsGiven: number;
   testsRun: number;
   recentTranscript: TranscriptEntry[];
-}
+};
 
 export function buildLeetcodeSystemPrompt(ctx: LeetcodePromptContext): string {
   const sections: string[] = [];

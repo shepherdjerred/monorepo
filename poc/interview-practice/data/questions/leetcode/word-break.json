@@ -11,16 +11,45 @@
       "prompt": "Given a string and a dictionary of words, determine if the string can be segmented into a space-separated sequence of dictionary words. Return true or false.",
       "internalNotes": "Classic DP problem. dp[i] = true if s[0..i) can be segmented. For each i, check all j < i where dp[j] is true and s[j..i) is in the dictionary. Common mistakes: not considering all possible splits (greedy fails), exponential brute force without memoization, not using a set for O(1) dictionary lookup.",
       "hints": [
-        { "level": "subtle", "content": "Think about whether a greedy approach (always matching the longest/shortest word) works for all cases." },
-        { "level": "moderate", "content": "Can you define a subproblem? What does it mean for a prefix of the string to be breakable?" },
-        { "level": "explicit", "content": "Use DP: dp[i] is true if s[0..i) can be segmented. For each position i, check all positions j < i: if dp[j] is true and s[j..i) is in the dictionary, then dp[i] = true." }
+        {
+          "level": "subtle",
+          "content": "Think about whether a greedy approach (always matching the longest/shortest word) works for all cases."
+        },
+        {
+          "level": "moderate",
+          "content": "Can you define a subproblem? What does it mean for a prefix of the string to be breakable?"
+        },
+        {
+          "level": "explicit",
+          "content": "Use DP: dp[i] is true if s[0..i) can be segmented. For each position i, check all positions j < i: if dp[j] is true and s[j..i) is in the dictionary, then dp[i] = true."
+        }
       ],
       "testCases": [
-        { "args": ["leetcode", ["leet", "code"]], "expected": true, "explanation": "'leetcode' = 'leet' + 'code'" },
-        { "args": ["applepenapple", ["apple", "pen"]], "expected": true, "explanation": "'applepenapple' = 'apple' + 'pen' + 'apple'. Reuse of 'apple' is allowed." },
-        { "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]], "expected": false, "explanation": "No valid segmentation exists." },
-        { "args": ["aaaaaaa", ["aaaa", "aaa"]], "expected": true, "explanation": "'aaaaaaa' = 'aaaa' + 'aaa'. Greedy longest-first would fail here." },
-        { "args": ["a", ["a"]], "expected": true, "explanation": "Single character matches single word." }
+        {
+          "args": ["leetcode", ["leet", "code"]],
+          "expected": true,
+          "explanation": "'leetcode' = 'leet' + 'code'"
+        },
+        {
+          "args": ["applepenapple", ["apple", "pen"]],
+          "expected": true,
+          "explanation": "'applepenapple' = 'apple' + 'pen' + 'apple'. Reuse of 'apple' is allowed."
+        },
+        {
+          "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]],
+          "expected": false,
+          "explanation": "No valid segmentation exists."
+        },
+        {
+          "args": ["aaaaaaa", ["aaaa", "aaa"]],
+          "expected": true,
+          "explanation": "'aaaaaaa' = 'aaaa' + 'aaa'. Greedy longest-first would fail here."
+        },
+        {
+          "args": ["a", ["a"]],
+          "expected": true,
+          "explanation": "Single character matches single word."
+        }
       ],
       "followUps": [
         "What's the time complexity of your DP solution?",
@@ -28,7 +57,10 @@
         "Why does a greedy approach fail?"
       ],
       "expectedApproach": "DP array where dp[i] indicates s[0..i) is segmentable. Put dictionary in a HashSet. For each i from 1 to n, for each j from 0 to i-1, check dp[j] && dict.contains(s[j..i)).",
-      "expectedComplexity": { "time": "O(n² * k) where k is max word length for substring comparison", "space": "O(n)" },
+      "expectedComplexity": {
+        "time": "O(n² * k) where k is max word length for substring comparison",
+        "space": "O(n)"
+      },
       "transitionCriteria": {
         "minApproachQuality": "optimal",
         "mustExplainComplexity": true,
@@ -40,15 +72,47 @@
       "prompt": "Return all possible segmentations of the string into dictionary words. Each segmentation should be a space-separated string. Return them as an array sorted lexicographically.",
       "internalNotes": "Backtracking with memoization. Memoize the list of valid segmentations for each suffix s[i..]. Without memo, worst case is exponential (e.g., 'aaaa' with dict ['a','aa','aaa','aaaa']). Watch for: not memoizing (TLE), building strings instead of collecting and joining at the end.",
       "hints": [
-        { "level": "subtle", "content": "Your Part 1 DP tells you which prefixes are valid. Can you reconstruct the paths?" },
-        { "level": "moderate", "content": "Think about recursion with memoization. What should you memoize — and what is the subproblem?" },
-        { "level": "explicit", "content": "Recurse from each index i: for each word in the dictionary that matches starting at i, recurse on i + word.length. Memoize the list of results for each starting index." }
+        {
+          "level": "subtle",
+          "content": "Your Part 1 DP tells you which prefixes are valid. Can you reconstruct the paths?"
+        },
+        {
+          "level": "moderate",
+          "content": "Think about recursion with memoization. What should you memoize — and what is the subproblem?"
+        },
+        {
+          "level": "explicit",
+          "content": "Recurse from each index i: for each word in the dictionary that matches starting at i, recurse on i + word.length. Memoize the list of results for each starting index."
+        }
       ],
       "testCases": [
-        { "args": ["catsanddog", ["cat", "cats", "and", "sand", "dog"]], "expected": ["cat sand dog", "cats and dog"], "explanation": "Two valid segmentations." },
-        { "args": ["pineapplepenapple", ["apple", "pen", "applepen", "pine", "pineapple"]], "expected": ["pine apple pen apple", "pine applepen apple", "pineapple pen apple"], "explanation": "Three valid segmentations." },
-        { "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]], "expected": [], "explanation": "No valid segmentation — empty output." },
-        { "args": ["aaa", ["a", "aa", "aaa"]], "expected": ["a a a", "a aa", "aa a", "aaa"], "explanation": "All possible segmentations of 'aaa' with overlapping words." }
+        {
+          "args": ["catsanddog", ["cat", "cats", "and", "sand", "dog"]],
+          "expected": ["cat sand dog", "cats and dog"],
+          "explanation": "Two valid segmentations."
+        },
+        {
+          "args": [
+            "pineapplepenapple",
+            ["apple", "pen", "applepen", "pine", "pineapple"]
+          ],
+          "expected": [
+            "pine apple pen apple",
+            "pine applepen apple",
+            "pineapple pen apple"
+          ],
+          "explanation": "Three valid segmentations."
+        },
+        {
+          "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]],
+          "expected": [],
+          "explanation": "No valid segmentation — empty output."
+        },
+        {
+          "args": ["aaa", ["a", "aa", "aaa"]],
+          "expected": ["a a a", "a aa", "aa a", "aaa"],
+          "explanation": "All possible segmentations of 'aaa' with overlapping words."
+        }
       ],
       "followUps": [
         "What's the worst-case time complexity? Can you construct an input that triggers it?",
@@ -56,7 +120,10 @@
         "Could you use the Part 1 DP table to prune the search?"
       ],
       "expectedApproach": "Backtracking with memoization. For each starting index, try all dictionary words that match. Recursively solve the remaining suffix. Cache results per index to avoid recomputation.",
-      "expectedComplexity": { "time": "O(n * 2^n) worst case, but memoization prunes heavily in practice", "space": "O(n * 2^n) for storing all segmentations" }
+      "expectedComplexity": {
+        "time": "O(n * 2^n) worst case, but memoization prunes heavily in practice",
+        "space": "O(n * 2^n) for storing all segmentations"
+      }
     }
   ],
   "constraints": [

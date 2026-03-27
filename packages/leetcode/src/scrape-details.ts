@@ -1,6 +1,11 @@
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
-import { CloudflareBlockError, LeetCodeClient, formatDuration, timestamp } from "./lib/leetcode-graphql";
+import {
+  CloudflareBlockError,
+  LeetCodeClient,
+  formatDuration,
+  timestamp,
+} from "./lib/leetcode-graphql";
 
 const DATA_DIR = new URL("../data", import.meta.url).pathname;
 const PROBLEMS_DIR = join(DATA_DIR, "problems");
@@ -52,12 +57,17 @@ function printProgress(current: number, total: number, startTime: number) {
 
 async function main() {
   if (!existsSync(LIST_PATH)) {
-    console.error(`Problem list not found at ${LIST_PATH}. Run scrape:list first.`);
+    console.error(
+      `Problem list not found at ${LIST_PATH}. Run scrape:list first.`,
+    );
     process.exit(1);
   }
 
-  const problemList: Array<{ titleSlug: string }> = await Bun.file(LIST_PATH).json();
-  console.log(`[${timestamp()}] Loaded ${problemList.length} problems from list`);
+  const problemList: Array<{ titleSlug: string }> =
+    await Bun.file(LIST_PATH).json();
+  console.log(
+    `[${timestamp()}] Loaded ${problemList.length} problems from list`,
+  );
 
   // Scan existing files for resume
   const existing = new Set<string>();
@@ -68,14 +78,18 @@ async function main() {
       }
     }
   }
-  console.log(`[${timestamp()}] Found ${existing.size} already fetched — will skip those`);
+  console.log(
+    `[${timestamp()}] Found ${existing.size} already fetched — will skip those`,
+  );
 
   const toFetch = problemList.filter((p) => !existing.has(p.titleSlug));
   const total = problemList.length;
   let current = existing.size;
   stats.skipped = existing.size;
 
-  console.log(`[${timestamp()}] Fetching ${toFetch.length} remaining problems...\n`);
+  console.log(
+    `[${timestamp()}] Fetching ${toFetch.length} remaining problems...\n`,
+  );
 
   const client = new LeetCodeClient(2000, 5000);
   const startTime = Date.now();
@@ -84,7 +98,9 @@ async function main() {
   const shutdown = () => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log(`\n[${timestamp()}] Shutting down gracefully — finishing current request...`);
+    console.log(
+      `\n[${timestamp()}] Shutting down gracefully — finishing current request...`,
+    );
   };
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
@@ -102,7 +118,9 @@ async function main() {
 
       if (result.errors) {
         const msg = result.errors.map((e) => e.message).join("; ");
-        console.log(`[${timestamp()}] [${current}/${total}] ${slug} — GraphQL error: ${msg}`);
+        console.log(
+          `[${timestamp()}] [${current}/${total}] ${slug} — GraphQL error: ${msg}`,
+        );
         await appendErrorLog(slug, `GraphQL error: ${msg}`);
         stats.errors++;
         continue;
@@ -110,7 +128,9 @@ async function main() {
 
       const question = (result.data as Record<string, unknown>)?.question;
       if (!question) {
-        console.log(`[${timestamp()}] [${current}/${total}] ${slug} — null response (premium?)`);
+        console.log(
+          `[${timestamp()}] [${current}/${total}] ${slug} — null response (premium?)`,
+        );
         await appendErrorLog(slug, "null question response");
         stats.errors++;
         continue;
@@ -126,17 +146,23 @@ async function main() {
       await unlink(tmpPath);
 
       stats.ok++;
-      console.log(`[${timestamp()}] [${current}/${total}] ${slug} — 200 OK (${elapsed}ms)`);
+      console.log(
+        `[${timestamp()}] [${current}/${total}] ${slug} — 200 OK (${elapsed}ms)`,
+      );
     } catch (err) {
       if (err instanceof CloudflareBlockError) {
         console.error(`\n[${timestamp()}] [BLOCKED] ${err.message}`);
-        console.error("Cloudflare blocked us. Progress is saved — re-run to continue.");
+        console.error(
+          "Cloudflare blocked us. Progress is saved — re-run to continue.",
+        );
         await appendErrorLog(slug, err.message);
         break;
       }
 
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[${timestamp()}] [${current}/${total}] ${slug} — ERROR: ${msg}`);
+      console.error(
+        `[${timestamp()}] [${current}/${total}] ${slug} — ERROR: ${msg}`,
+      );
       await appendErrorLog(slug, msg);
       stats.errors++;
     }
@@ -150,7 +176,9 @@ async function main() {
   // Final summary
   const elapsed = formatDuration(Date.now() - startTime);
   console.log(`\n${"=".repeat(60)}`);
-  console.log(`[${timestamp()}] Scrape ${shuttingDown ? "interrupted" : "complete"}`);
+  console.log(
+    `[${timestamp()}] Scrape ${shuttingDown ? "interrupted" : "complete"}`,
+  );
   console.log(`  Total:   ${total}`);
   console.log(`  OK:      ${stats.ok}`);
   console.log(`  Skipped: ${stats.skipped} (already existed)`);

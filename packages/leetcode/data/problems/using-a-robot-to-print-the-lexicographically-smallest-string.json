@@ -16,11 +16,7 @@
   "dislikes": 308,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Permutation\", \"titleSlug\": \"find-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"zza\"",
-    "\"bac\"",
-    "\"bdda\""
-  ],
+  "exampleTestcaseList": ["\"zza\"", "\"bac\"", "\"bdda\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"tower-research\", \"name\": \"Tower Research Capital\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

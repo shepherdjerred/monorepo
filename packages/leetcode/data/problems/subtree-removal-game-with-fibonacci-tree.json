@@ -16,11 +16,7 @@
   "dislikes": 50,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Game of Nim\", \"titleSlug\": \"game-of-nim\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3",
-    "1",
-    "2"
-  ],
+  "exampleTestcaseList": ["3", "1", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sony\", \"name\": \"Sony\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

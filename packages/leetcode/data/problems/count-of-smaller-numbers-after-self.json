@@ -12,11 +12,7 @@
   "dislikes": 252,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count of Range Sum\", \"titleSlug\": \"count-of-range-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Queue Reconstruction by Height\", \"titleSlug\": \"queue-reconstruction-by-height\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reverse Pairs\", \"titleSlug\": \"reverse-pairs\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"How Many Numbers Are Smaller Than the Current Number\", \"titleSlug\": \"how-many-numbers-are-smaller-than-the-current-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Good Triplets in an Array\", \"titleSlug\": \"count-good-triplets-in-an-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of K-Big Indices\", \"titleSlug\": \"count-the-number-of-k-big-indices\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,2,6,1]",
-    "[-1]",
-    "[-1,-1]"
-  ],
+  "exampleTestcaseList": ["[5,2,6,1]", "[-1]", "[-1,-1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}]}",
   "topicTags": [
     {

@@ -10,15 +10,15 @@ The root cause: `ResourceQuota` rejects pod **creation** at the API level. The J
 
 ## Alternatives Considered
 
-| Approach | Why rejected |
-|----------|-------------|
-| **Lower `max-in-flight`** | Count-based, not resource-aware. Fixed concurrency wastes capacity — LIGHT jobs (500m CPU) hold slots a HEAVY job (2 CPU) could use. |
-| **Remove ResourceQuota + max-in-flight only** | No hard namespace resource cap. Approximate at best. |
-| **ElasticQuota (scheduler-plugins)** | Requires custom scheduler. No release for K8s 1.35. Alpha API. Pods need `schedulerName` field. |
-| **Kyverno / OPA / admission webhook** | Rejects at admission level — same retry storm as ResourceQuota. |
-| **Volcano / YuniKorn** | Replace/augment default scheduler. Overkill for single-node. |
-| **VPA** | Doesn't support standalone Jobs (only Deployments/StatefulSets). |
-| **Per-pod resource requests tuning** | Leaves performance on the table — a LIGHT job reserves CPU it doesn't use, blocking a HEAVY job that needs it. |
+| Approach                                      | Why rejected                                                                                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Lower `max-in-flight`**                     | Count-based, not resource-aware. Fixed concurrency wastes capacity — LIGHT jobs (500m CPU) hold slots a HEAVY job (2 CPU) could use. |
+| **Remove ResourceQuota + max-in-flight only** | No hard namespace resource cap. Approximate at best.                                                                                 |
+| **ElasticQuota (scheduler-plugins)**          | Requires custom scheduler. No release for K8s 1.35. Alpha API. Pods need `schedulerName` field.                                      |
+| **Kyverno / OPA / admission webhook**         | Rejects at admission level — same retry storm as ResourceQuota.                                                                      |
+| **Volcano / YuniKorn**                        | Replace/augment default scheduler. Overkill for single-node.                                                                         |
+| **VPA**                                       | Doesn't support standalone Jobs (only Deployments/StatefulSets).                                                                     |
+| **Per-pod resource requests tuning**          | Leaves performance on the table — a LIGHT job reserves CPU it doesn't use, blocking a HEAVY job that needs it.                       |
 
 ## Solution: Kueue
 
@@ -53,12 +53,12 @@ The root cause: `ResourceQuota` rejects pod **creation** at the API level. The J
 
 ## Risks
 
-| Risk | Mitigation |
-|------|------------|
-| Zero prior art for Kueue + Buildkite | Verified both codebases: agent-stack-k8s doesn't force-fail suspended Jobs; ActiveDeadlineSeconds counts from pod start |
-| Kueue webhook down → all Job creation blocked | `infrastructure-critical` PriorityClass; single-node so no scheduling concern |
-| `empty-job-grace-period: 5m` might GC suspended Jobs | Monitor; increase grace period if needed |
-| Memory undercount — pods burst beyond requests | Grafana dashboard shows actual vs requested; adjust pipeline tiers |
+| Risk                                                 | Mitigation                                                                                                              |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Zero prior art for Kueue + Buildkite                 | Verified both codebases: agent-stack-k8s doesn't force-fail suspended Jobs; ActiveDeadlineSeconds counts from pod start |
+| Kueue webhook down → all Job creation blocked        | `infrastructure-critical` PriorityClass; single-node so no scheduling concern                                           |
+| `empty-job-grace-period: 5m` might GC suspended Jobs | Monitor; increase grace period if needed                                                                                |
+| Memory undercount — pods burst beyond requests       | Grafana dashboard shows actual vs requested; adjust pipeline tiers                                                      |
 
 ## Observability
 
@@ -72,13 +72,13 @@ Kueue exposes Prometheus metrics via `enableClusterQueueResources: true`.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `packages/homelab/src/cdk8s/src/resources/argo-applications/kueue.ts` | ArgoCD Application (Helm chart, sync-wave 1) |
-| `packages/homelab/src/cdk8s/src/resources/kueue-config.ts` | ClusterQueue, LocalQueue, ResourceFlavor (ApiObject) |
-| `packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts` | Removed ResourceQuota, added namespace label |
-| `packages/homelab/src/cdk8s/grafana/buildkite-dashboard.ts` | Grafana dashboard |
-| `packages/homelab/src/cdk8s/src/versions.ts` | Kueue version (0.16.3) |
+| File                                                                      | Purpose                                              |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `packages/homelab/src/cdk8s/src/resources/argo-applications/kueue.ts`     | ArgoCD Application (Helm chart, sync-wave 1)         |
+| `packages/homelab/src/cdk8s/src/resources/kueue-config.ts`                | ClusterQueue, LocalQueue, ResourceFlavor (ApiObject) |
+| `packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts` | Removed ResourceQuota, added namespace label         |
+| `packages/homelab/src/cdk8s/grafana/buildkite-dashboard.ts`               | Grafana dashboard                                    |
+| `packages/homelab/src/cdk8s/src/versions.ts`                              | Kueue version (0.16.3)                               |
 
 ## Gotchas
 

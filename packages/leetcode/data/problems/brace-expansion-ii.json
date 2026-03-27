@@ -14,10 +14,7 @@
   "dislikes": 295,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Brace Expansion\", \"titleSlug\": \"brace-expansion\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"{a,b}{c,{d,e}}\"",
-    "\"{{a,z},a{b,c},{ab,z}}\""
-  ],
+  "exampleTestcaseList": ["\"{a,b}{c,{d,e}}\"", "\"{{a,z},a{b,c},{ab,z}}\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

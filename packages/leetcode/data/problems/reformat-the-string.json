@@ -15,11 +15,7 @@
   "dislikes": 110,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"a0b1c2\"",
-    "\"leetcode\"",
-    "\"1229857369\""
-  ],
+  "exampleTestcaseList": ["\"a0b1c2\"", "\"leetcode\"", "\"1229857369\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

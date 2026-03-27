@@ -12,10 +12,7 @@
   "dislikes": 289,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Boxes\", \"titleSlug\": \"remove-boxes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Strange Printer II\", \"titleSlug\": \"strange-printer-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaabbb\"",
-    "\"aba\""
-  ],
+  "exampleTestcaseList": ["\"aaabbb\"", "\"aba\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 3, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": [{\"timesEncountered\": 5, \"slug\": \"inmobi\", \"name\": \"InMobi\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"netease\", \"name\": \"NetEase\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}]}",
   "topicTags": [
     {

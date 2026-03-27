@@ -17,10 +17,7 @@
   "dislikes": 224,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Disconnect Path in a Binary Matrix by at Most One Flip\", \"titleSlug\": \"disconnect-path-in-a-binary-matrix-by-at-most-one-flip\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Runes to Add to Cast Spell\", \"titleSlug\": \"minimum-runes-to-add-to-cast-spell\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,1,1,0],[0,1,1,0],[0,0,0,0]]",
-    "[[1,1]]"
-  ],
+  "exampleTestcaseList": ["[[0,1,1,0],[0,1,1,0],[0,0,0,0]]", "[[1,1]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"argo-ai\", \"name\": \"Argo AI\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

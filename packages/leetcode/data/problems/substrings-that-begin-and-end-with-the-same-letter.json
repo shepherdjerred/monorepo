@@ -18,11 +18,7 @@
   "dislikes": 12,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Number of Good Pairs\", \"titleSlug\": \"number-of-good-pairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Beauty of All Substrings\", \"titleSlug\": \"sum-of-beauty-of-all-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Pairs in Two Arrays\", \"titleSlug\": \"count-pairs-in-two-arrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Substrings With Equal Digit Frequency\", \"titleSlug\": \"unique-substrings-with-equal-digit-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcba\"",
-    "\"abacad\"",
-    "\"a\""
-  ],
+  "exampleTestcaseList": ["\"abcba\"", "\"abacad\"", "\"a\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 19,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Next Greater Element III\", \"titleSlug\": \"next-greater-element-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Closest Palindrome\", \"titleSlug\": \"find-the-closest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1221\"",
-    "\"32123\"",
-    "\"45544554\""
-  ],
+  "exampleTestcaseList": ["\"1221\"", "\"32123\"", "\"45544554\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

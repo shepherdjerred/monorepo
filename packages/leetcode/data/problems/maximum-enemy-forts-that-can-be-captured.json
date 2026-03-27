@@ -16,10 +16,7 @@
   "dislikes": 304,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Max Consecutive Ones\", \"titleSlug\": \"max-consecutive-ones\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,0,0,-1,0,0,0,0,1]",
-    "[0,0,1,-1]"
-  ],
+  "exampleTestcaseList": ["[1,0,0,-1,0,0,0,0,1]", "[0,0,1,-1]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

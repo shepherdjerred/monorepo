@@ -16,10 +16,7 @@
   "dislikes": 89,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Rotate Array\", \"titleSlug\": \"rotate-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,1,3]\n2",
-    "[2,5,5,7]\n3"
-  ],
+  "exampleTestcaseList": ["[1,4,1,3]\n2", "[2,5,5,7]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"observeai\", \"name\": \"observe.ai\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

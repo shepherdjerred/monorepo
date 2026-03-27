@@ -7,16 +7,17 @@ Complete guide to Bazel's cache layers, configuration, and cache miss debugging.
 ## Cache Architecture
 
 Bazel uses a two-layer action caching system:
+
 - **Action cache**: Maps action hash (inputs + command + env) to action result metadata
 - **Content-addressable store (CAS)**: Stores actual output files by content hash
 
 Three cache scopes, fastest to slowest:
 
-| Layer | Scope | Persistence | Cost to Lose |
-|-------|-------|-------------|-------------|
-| Analysis cache | In-memory | Lost on server restart or flag change | Very high (full re-analysis) |
-| Disk cache | Per-machine | Survives `bazel clean` | Medium (re-execution) |
-| Remote cache | Team-wide | Shared across machines | Low (just network fetch) |
+| Layer          | Scope       | Persistence                           | Cost to Lose                 |
+| -------------- | ----------- | ------------------------------------- | ---------------------------- |
+| Analysis cache | In-memory   | Lost on server restart or flag change | Very high (full re-analysis) |
+| Disk cache     | Per-machine | Survives `bazel clean`                | Medium (re-execution)        |
+| Remote cache   | Team-wide   | Shared across machines                | Low (just network fetch)     |
 
 ---
 
@@ -105,6 +106,7 @@ build --remote_proxy=unix:/path/to/socket
 ```
 
 ### Protocol
+
 - gRPC preferred over HTTP for performance
 - Action cache at `/ac/`, CAS at `/cas/`
 
@@ -147,6 +149,7 @@ build --fetch=false   # Prevent automatic downloads
 ## Cache Key Computation
 
 An action's cache key is a hash of:
+
 1. All input file contents (by digest)
 2. The command line
 3. Environment variables (only those set via `--action_env`)
@@ -159,17 +162,17 @@ Understanding this helps debug cache misses -- any difference in these inputs pr
 
 ## Cache Hit Rate Killers
 
-| Cause | Symptom | Fix |
-|-------|---------|-----|
-| Environment variable leakage | Different `$PATH` between machines | Use `--action_env` to whitelist only needed vars |
-| Tool outside workspace | Compiler version differs between machines | Use hermetic toolchains |
-| Non-deterministic outputs | Same inputs produce different output hashes | Fix the tool or rule to be deterministic |
-| Input modification during build | Corrupted cache entries | `--experimental_guard_against_concurrent_changes` |
-| Flag differences | Different `--copt`, `--define`, etc. | Standardize `.bazelrc` across team |
-| Platform property mismatch | OS/arch in action key | Configure `--host_platform` and `--platforms` |
-| `tags = ["no-cache"]` on rule | Action marked non-cacheable | Remove tag or fix hermeticity |
-| `--noremote_accept_cached` | Cache reads explicitly disabled | Remove the flag |
-| Coverage reporting | `--coverage` disables test caching | Expected; don't run coverage on every build |
+| Cause                           | Symptom                                     | Fix                                               |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------------- |
+| Environment variable leakage    | Different `$PATH` between machines          | Use `--action_env` to whitelist only needed vars  |
+| Tool outside workspace          | Compiler version differs between machines   | Use hermetic toolchains                           |
+| Non-deterministic outputs       | Same inputs produce different output hashes | Fix the tool or rule to be deterministic          |
+| Input modification during build | Corrupted cache entries                     | `--experimental_guard_against_concurrent_changes` |
+| Flag differences                | Different `--copt`, `--define`, etc.        | Standardize `.bazelrc` across team                |
+| Platform property mismatch      | OS/arch in action key                       | Configure `--host_platform` and `--platforms`     |
+| `tags = ["no-cache"]` on rule   | Action marked non-cacheable                 | Remove tag or fix hermeticity                     |
+| `--noremote_accept_cached`      | Cache reads explicitly disabled             | Remove the flag                                   |
+| Coverage reporting              | `--coverage` disables test caching          | Expected; don't run coverage on every build       |
 
 ---
 
@@ -197,6 +200,7 @@ bazel build //target
 ### Step 1: Check Hit Rate
 
 Look at the INFO line in build output:
+
 ```
 INFO: 6 remote cache hit, 3 internal, 2 remote
 ```

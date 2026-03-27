@@ -14,11 +14,7 @@
   "dislikes": 186,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Equal Sum Arrays With Minimum Number of Operations\", \"titleSlug\": \"equal-sum-arrays-with-minimum-number-of-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Missing Observations\", \"titleSlug\": \"find-missing-observations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n6\n3",
-    "2\n6\n7",
-    "30\n30\n500"
-  ],
+  "exampleTestcaseList": ["1\n6\n3", "2\n6\n7", "30\n30\n500"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"coindcx\", \"name\": \"CoinDCX\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

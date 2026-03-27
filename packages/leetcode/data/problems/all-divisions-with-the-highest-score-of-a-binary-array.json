@@ -16,11 +16,7 @@
   "dislikes": 18,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Ones and Zeroes\", \"titleSlug\": \"ones-and-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones II\", \"titleSlug\": \"max-consecutive-ones-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Subarrays With More Ones Than Zeros\", \"titleSlug\": \"count-subarrays-with-more-ones-than-zeros\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Array Partition\", \"titleSlug\": \"array-partition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Divide Array in Sets of K Consecutive Numbers\", \"titleSlug\": \"divide-array-in-sets-of-k-consecutive-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,0,1,0]",
-    "[0,0,0]",
-    "[1,1]"
-  ],
+  "exampleTestcaseList": ["[0,0,1,0]", "[0,0,0]", "[1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -24,7 +24,9 @@ export type InterviewLoopOptions = {
   exportReport?: string | undefined;
 };
 
-export async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
+export async function runInterviewLoop(
+  opts: InterviewLoopOptions,
+): Promise<void> {
   const { interviewSession, session, question, timer } = opts;
   const rl = createReadline();
   let running = true;

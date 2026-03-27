@@ -12,10 +12,7 @@
   "dislikes": 151,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Using a Robot to Print the Lexicographically Smallest String\", \"titleSlug\": \"using-a-robot-to-print-the-lexicographically-smallest-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"I\"",
-    "\"DI\""
-  ],
+  "exampleTestcaseList": ["\"I\"", "\"DI\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

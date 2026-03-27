@@ -19,10 +19,7 @@
   "dislikes": 163,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Peak Element\", \"titleSlug\": \"find-peak-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Peaks\", \"titleSlug\": \"find-the-peaks\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,4],[3,2]]",
-    "[[10,20,15],[21,30,14],[7,16,32]]"
-  ],
+  "exampleTestcaseList": ["[[1,4],[3,2]]", "[[10,20,15],[21,30,14],[7,16,32]]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"xing\", \"name\": \"Xing\"}], \"three_months\": []}",
   "topicTags": [
     {

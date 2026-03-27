@@ -16,11 +16,7 @@
   "dislikes": 56,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n3\n1\n2",
-    "3\n1\n2\n1",
-    "2\n2\n4\n0"
-  ],
+  "exampleTestcaseList": ["2\n3\n1\n2", "3\n1\n2\n1", "2\n2\n4\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

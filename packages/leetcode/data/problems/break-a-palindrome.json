@@ -17,10 +17,7 @@
   "dislikes": 755,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"abccba\"",
-    "\"a\""
-  ],
+  "exampleTestcaseList": ["\"abccba\"", "\"a\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"dell\", \"name\": \"Dell\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"workday\", \"name\": \"Workday\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}, {\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}]}",
   "topicTags": [
     {

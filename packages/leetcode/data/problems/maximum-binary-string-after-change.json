@@ -14,10 +14,7 @@
   "dislikes": 64,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Binary Subsequence Less Than or Equal to K\", \"titleSlug\": \"longest-binary-subsequence-less-than-or-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"000110\"",
-    "\"01\""
-  ],
+  "exampleTestcaseList": ["\"000110\"", "\"01\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"huawei\", \"name\": \"Huawei\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

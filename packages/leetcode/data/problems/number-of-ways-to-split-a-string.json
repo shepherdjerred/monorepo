@@ -16,11 +16,7 @@
   "dislikes": 88,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Split Array with Equal Sum\", \"titleSlug\": \"split-array-with-equal-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"10101\"",
-    "\"1001\"",
-    "\"0000\""
-  ],
+  "exampleTestcaseList": ["\"10101\"", "\"1001\"", "\"0000\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 132,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Fair Distribution of Cookies\", \"titleSlug\": \"fair-distribution-of-cookies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Split a String\", \"titleSlug\": \"number-of-ways-to-split-a-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,1,2,1,2,1]",
-    "[1,2,1,2,1,2,1,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,1,2,1,2,1]", "[1,2,1,2,1,2,1,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"alibaba\", \"name\": \"Alibaba\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

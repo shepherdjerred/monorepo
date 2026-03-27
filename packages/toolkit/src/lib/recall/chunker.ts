@@ -96,7 +96,10 @@ function splitLargeSection(
       // Split oversized paragraph on sentence boundaries
       const sentences = splitSentences(para);
       for (const sentence of sentences) {
-        if (current.length + sentence.length + 1 > maxChars && current.length > 0) {
+        if (
+          current.length + sentence.length + 1 > maxChars &&
+          current.length > 0
+        ) {
           chunks.push(current);
           const overlapStart = Math.max(0, current.length - overlapChars);
           current = current.slice(overlapStart) + " " + sentence;

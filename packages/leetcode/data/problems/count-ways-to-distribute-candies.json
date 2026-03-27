@@ -17,11 +17,7 @@
   "dislikes": 9,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Distribute Candies Among Children I\", \"titleSlug\": \"distribute-candies-among-children-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Distribute Candies Among Children II\", \"titleSlug\": \"distribute-candies-among-children-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2",
-    "4\n2",
-    "20\n5"
-  ],
+  "exampleTestcaseList": ["3\n2", "4\n2", "20\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

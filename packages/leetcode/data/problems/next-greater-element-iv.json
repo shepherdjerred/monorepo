@@ -16,10 +16,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Replace Elements with Greatest Element on Right Side\", \"titleSlug\": \"replace-elements-with-greatest-element-on-right-side\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Apply Operations to Maximize Score\", \"titleSlug\": \"apply-operations-to-maximize-score\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,0,9,6]",
-    "[3,3]"
-  ],
+  "exampleTestcaseList": ["[2,4,0,9,6]", "[3,3]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

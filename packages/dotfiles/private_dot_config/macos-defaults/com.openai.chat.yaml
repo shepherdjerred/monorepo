@@ -4,5 +4,5 @@ sudo: false
 current_host: false
 data:
   com.openai.chat:
-    KeyboardShortcuts_toggleAttachedLauncher: "{\"carbonKeyCode\":18,\"carbonModifiers\":2560}"
-    KeyboardShortcuts_toggleLauncher: "{\"carbonModifiers\":2048,\"carbonKeyCode\":49}"
+    KeyboardShortcuts_toggleAttachedLauncher: '{"carbonKeyCode":18,"carbonModifiers":2560}'
+    KeyboardShortcuts_toggleLauncher: '{"carbonModifiers":2048,"carbonKeyCode":49}'

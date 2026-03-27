@@ -16,11 +16,7 @@
   "dislikes": 25,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Array Partition\", \"titleSlug\": \"array-partition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Absolute Difference\", \"titleSlug\": \"minimum-absolute-difference\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Satisfy Conditions\", \"titleSlug\": \"minimum-number-of-operations-to-satisfy-conditions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check if Grid Satisfies Conditions\", \"titleSlug\": \"check-if-grid-satisfies-conditions\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[6,5,7,9,2,2]",
-    "[5,5]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[6,5,7,9,2,2]", "[5,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"nokia\", \"name\": \"Nokia\"}, {\"timesEncountered\": 3, \"slug\": \"garmin\", \"name\": \"Garmin\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

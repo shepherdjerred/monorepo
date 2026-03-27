@@ -12,16 +12,15 @@ import {
   buildSystemDesignSystemPrompt,
   buildSystemDesignTranscriptMessages,
 } from "#lib/ai/prompts/system-design-system.ts";
-import type { SystemDesignPhase, SystemDesignQuestion } from "#lib/questions/schemas.ts";
+import type {
+  SystemDesignPhase,
+  SystemDesignQuestion,
+} from "#lib/questions/schemas.ts";
 import type { Session } from "#lib/session/manager.ts";
 import type { AIClient, Message } from "#lib/ai/client.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
 import type { Logger } from "#logger";
-import {
-  createReadline,
-  promptUser,
-  parseCommand,
-} from "#lib/input/prompt.ts";
+import { createReadline, promptUser, parseCommand } from "#lib/input/prompt.ts";
 import {
   parsePhase,
   dispatchSystemDesignTool,
@@ -35,24 +34,23 @@ import {
   formatSessionEnd,
 } from "#lib/output/formatter.ts";
 import { watchExcalidraw } from "#lib/excalidraw/watcher.ts";
-import { parseElements, type DiagramExtraction } from "#lib/excalidraw/parser.ts";
+import {
+  parseElements,
+  type DiagramExtraction,
+} from "#lib/excalidraw/parser.ts";
 
 export type SystemDesignStartOptions = {
   difficulty?: "junior" | "mid" | "senior" | "staff" | undefined;
   time?: number | undefined;
   voice: boolean;
   question?: string | undefined;
-}
+};
 
 export async function startSystemDesignSession(
   config: Config,
   options: SystemDesignStartOptions,
 ): Promise<void> {
-  const questionsDir = path.join(
-    config.dataDir,
-    "questions",
-    "system-design",
-  );
+  const questionsDir = path.join(config.dataDir, "questions", "system-design");
 
   const tempLogger = createLogger({
     level: config.logLevel,
@@ -112,14 +110,12 @@ export async function startSystemDesignSession(
   // Create AI client
   const model = config.conversationModel ?? "claude-sonnet-4-6-20260217";
   const apiKeyForProvider =
-    config.aiProvider === "anthropic" ? config.anthropicApiKey :
-    config.aiProvider === "openai" ? config.openaiApiKey :
-    config.googleApiKey;
-  const client = createAIClient(
-    config.aiProvider,
-    model,
-    apiKeyForProvider,
-  );
+    config.aiProvider === "anthropic"
+      ? config.anthropicApiKey
+      : config.aiProvider === "openai"
+        ? config.openaiApiKey
+        : config.googleApiKey;
+  const client = createAIClient(config.aiProvider, model, apiKeyForProvider);
 
   const timer = createTimer(timeMinutes);
 
@@ -127,20 +123,32 @@ export async function startSystemDesignSession(
   // The .excalidraw file is edited directly by the user (e.g. via VS Code Excalidraw extension)
   // and watched for changes on disk. No Docker container needed.
   let latestDiagramExtraction: DiagramExtraction | undefined;
-  const excalidrawFilePath = path.join(session.workspacePath, "diagram.excalidraw");
+  const excalidrawFilePath = path.join(
+    session.workspacePath,
+    "diagram.excalidraw",
+  );
 
   // Create initial empty excalidraw file
-  await Bun.write(excalidrawFilePath, JSON.stringify({
-    type: "excalidraw",
-    version: 2,
-    source: "interview-practice",
-    elements: [],
-    appState: { gridSize: null },
-    files: {},
-  }, null, 2));
+  await Bun.write(
+    excalidrawFilePath,
+    JSON.stringify(
+      {
+        type: "excalidraw",
+        version: 2,
+        source: "interview-practice",
+        elements: [],
+        appState: { gridSize: null },
+        files: {},
+      },
+      null,
+      2,
+    ),
+  );
 
   console.log(`\n\u001B[36mDiagram file: ${excalidrawFilePath}\u001B[0m`);
-  console.log(`\u001B[90mOpen in VS Code with the Excalidraw extension (saves to disk automatically)\u001B[0m\n`);
+  console.log(
+    `\u001B[90mOpen in VS Code with the Excalidraw extension (saves to disk automatically)\u001B[0m\n`,
+  );
 
   // Watch excalidraw file for changes saved to disk
   const excalidrawWatcher = watchExcalidraw(excalidrawFilePath, (content) => {
@@ -167,7 +175,9 @@ export async function startSystemDesignSession(
     if (connections.length > 0) {
       lines.push("Connections:");
       for (const c of connections) {
-        lines.push(`  - ${c.from} -> ${c.to}${c.label !== undefined ? ` (${c.label})` : ""}`);
+        lines.push(
+          `  - ${c.from} -> ${c.to}${c.label !== undefined ? ` (${c.label})` : ""}`,
+        );
       }
     }
     return lines.join("\n");
@@ -177,7 +187,10 @@ export async function startSystemDesignSession(
   const cleanup = () => {
     excalidrawWatcher.stop();
   };
-  process.on("SIGINT", () => { cleanup(); process.exit(); });
+  process.on("SIGINT", () => {
+    cleanup();
+    process.exit();
+  });
 
   // Track current phase
   let currentPhase: SystemDesignPhase = "requirements";
@@ -336,7 +349,7 @@ type SystemDesignTurnOptions = {
   currentPhase: SystemDesignPhase;
   logger: Logger;
   getDiagramSnapshot: () => string | null;
-}
+};
 
 type SystemDesignTurnResult = {
   aiText: string;
@@ -344,7 +357,7 @@ type SystemDesignTurnResult = {
   phaseTransitioned: boolean;
   newPhase: SystemDesignPhase;
   sessionEnded: boolean;
-}
+};
 
 async function runSystemDesignTurn(
   userInput: string,
@@ -483,4 +496,3 @@ async function runSystemDesignTurn(
     sessionEnded,
   };
 }
-

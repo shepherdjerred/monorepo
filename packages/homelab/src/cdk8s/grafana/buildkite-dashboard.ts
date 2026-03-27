@@ -174,7 +174,9 @@ export function createBuildkiteDashboard() {
   );
 
   // --- Row 2: Resource Sizing ---
-  builder.withRow(new dashboard.RowBuilder("Resource Sizing — Are Jobs Right-Sized?"));
+  builder.withRow(
+    new dashboard.RowBuilder("Resource Sizing — Are Jobs Right-Sized?"),
+  );
 
   builder.withPanel(
     createTimeseriesPanel({

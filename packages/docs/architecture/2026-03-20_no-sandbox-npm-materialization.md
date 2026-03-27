@@ -10,12 +10,12 @@ Previously, ~1,060 `bun_npm_dir` actions wrapped npm package directories as Tree
 
 Profiling shows Bazel's sandbox overhead dominates actual work:
 
-| Phase | With sandbox | Without sandbox (expected) |
-|---|---|---|
-| Sandbox creation (symlinks for inputs) | 11-20s per tree | 0s |
-| Action execution (materialize script) | 5-8s per tree | 5-8s per tree |
-| Output scanning (stat all output files) | 10-17s per tree | reduced |
-| Total per tree | 40-50s | ~5-10s |
+| Phase                                   | With sandbox    | Without sandbox (expected) |
+| --------------------------------------- | --------------- | -------------------------- |
+| Sandbox creation (symlinks for inputs)  | 11-20s per tree | 0s                         |
+| Action execution (materialize script)   | 5-8s per tree   | 5-8s per tree              |
+| Output scanning (stat all output files) | 10-17s per tree | reduced                    |
+| Total per tree                          | 40-50s          | ~5-10s                     |
 
 Removing the `bun_npm_dir` layer eliminates ~1,060 build actions entirely (each created a sandbox, ran `cp -Rc`, tore down the sandbox).
 
@@ -29,7 +29,7 @@ Removing the `bun_npm_dir` layer eliminates ~1,060 build actions entirely (each 
 
 ## What no-sandbox skips
 
-- **Filesystem isolation** — the action runs in the exec root, not a sandboxed directory. It *could* read undeclared files. For npm package copying this is a non-risk.
+- **Filesystem isolation** — the action runs in the exec root, not a sandboxed directory. It _could_ read undeclared files. For npm package copying this is a non-risk.
 - **Output copying** — sandbox normally copies outputs from the sandbox dir to bazel-out. Without sandbox, outputs are written directly to bazel-out.
 - **Input/output stat verification** — sandbox verifies that the action only read declared inputs and only wrote declared outputs.
 
@@ -56,17 +56,17 @@ See also [Bazel issue #5153](https://github.com/bazelbuild/bazel/issues/5153): A
 
 ## Affected actions
 
-| Action | Mnemonic | File | Impact |
-|---|---|---|---|
+| Action               | Mnemonic         | File                                          | Impact                                                       |
+| -------------------- | ---------------- | --------------------------------------------- | ------------------------------------------------------------ |
 | `materialize_tree()` | `BunMaterialize` | `tools/rules_bun/bun/private/materialize.bzl` | All prepared tree targets + inline materialization fallbacks |
 
 ## NOT affected
 
-| Action | Why |
-|---|---|
-| `bun_prisma_generate` | Different action with `requires-network`; needs its own execution_requirements |
-| `bun_build` / `bun_build_test` | Only consume `BunTreeInfo`, don't call `materialize_tree()` |
-| `bun_service_image` | Uses custom genrule, not `materialize_tree()` |
+| Action                                                               | Why                                                                                         |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `bun_prisma_generate`                                                | Different action with `requires-network`; needs its own execution_requirements              |
+| `bun_build` / `bun_build_test`                                       | Only consume `BunTreeInfo`, don't call `materialize_tree()`                                 |
+| `bun_service_image`                                                  | Uses custom genrule, not `materialize_tree()`                                               |
 | `bun_test`, `bun_eslint_test`, `bun_typecheck_test` (test execution) | The test execution itself remains sandboxed; only the materialization action is unsandboxed |
 
 ## CI compatibility

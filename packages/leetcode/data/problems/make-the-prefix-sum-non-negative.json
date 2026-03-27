@@ -15,10 +15,7 @@
   "dislikes": 3,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Furthest Building You Can Reach\", \"titleSlug\": \"furthest-building-you-can-reach\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Transactions Without Negative Balance\", \"titleSlug\": \"maximum-transactions-without-negative-balance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,-5,4]",
-    "[3,-5,-2,6]"
-  ],
+  "exampleTestcaseList": ["[2,3,-5,4]", "[3,-5,-2,6]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

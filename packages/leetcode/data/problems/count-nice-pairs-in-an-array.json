@@ -16,10 +16,7 @@
   "dislikes": 93,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Pairs of Interchangeable Rectangles\", \"titleSlug\": \"number-of-pairs-of-interchangeable-rectangles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Pairs Satisfying Inequality\", \"titleSlug\": \"number-of-pairs-satisfying-inequality\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[42,11,1,97]",
-    "[13,10,35,24,76]"
-  ],
+  "exampleTestcaseList": ["[42,11,1,97]", "[13,10,35,24,76]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": []}",
   "topicTags": [
     {

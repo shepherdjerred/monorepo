@@ -12,11 +12,7 @@
   "dislikes": 1088,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Linked List Cycle\", \"titleSlug\": \"linked-list-cycle\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Duplicate Number\", \"titleSlug\": \"find-the-duplicate-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,0,-4]\n1",
-    "[1,2]\n0",
-    "[1]\n-1"
-  ],
+  "exampleTestcaseList": ["[3,2,0,-4]\n1", "[1,2]\n0", "[1]\n-1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"paytm\", \"name\": \"Paytm\"}, {\"timesEncountered\": 3, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}, {\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}]}",
   "topicTags": [
     {

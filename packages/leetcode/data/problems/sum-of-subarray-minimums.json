@@ -12,10 +12,7 @@
   "dislikes": 739,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Subarray Ranges\", \"titleSlug\": \"sum-of-subarray-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Total Strength of Wizards\", \"titleSlug\": \"sum-of-total-strength-of-wizards\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,1,2,4]",
-    "[11,81,94,43,3]"
-  ],
+  "exampleTestcaseList": ["[3,1,2,4]", "[11,81,94,43,3]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 4, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"avito\", \"name\": \"Avito\"}]}",
   "topicTags": [
     {

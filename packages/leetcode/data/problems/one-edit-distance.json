@@ -12,10 +12,7 @@
   "dislikes": 194,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Edit Distance\", \"titleSlug\": \"edit-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"ab\"\n\"acb\"",
-    "\"\"\n\"\""
-  ],
+  "exampleTestcaseList": ["\"ab\"\n\"acb\"", "\"\"\n\"\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}, {\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"three_months\": []}",
   "topicTags": [
     {

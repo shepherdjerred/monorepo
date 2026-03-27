@@ -14,11 +14,7 @@
   "dislikes": 104,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Remove Adjacent Ones in Matrix\", \"titleSlug\": \"minimum-operations-to-remove-adjacent-ones-in-matrix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Remove All Ones With Row and Column Flips\", \"titleSlug\": \"remove-all-ones-with-row-and-column-flips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove All Ones With Row and Column Flips II\", \"titleSlug\": \"remove-all-ones-with-row-and-column-flips-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,0],[0,1]]",
-    "[[0]]",
-    "[[1,0,0],[1,0,0]]"
-  ],
+  "exampleTestcaseList": ["[[0,0],[0,1]]", "[[0]]", "[[1,0,0],[1,0,0]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

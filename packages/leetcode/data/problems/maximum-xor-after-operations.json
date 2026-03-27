@@ -17,10 +17,7 @@
   "dislikes": 171,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum XOR of Two Numbers in an Array\", \"titleSlug\": \"maximum-xor-of-two-numbers-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Xor Product\", \"titleSlug\": \"maximum-xor-product\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize OR of Remaining Elements Using Operations\", \"titleSlug\": \"minimize-or-of-remaining-elements-using-operations\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,4,6]",
-    "[1,2,3,9,2]"
-  ],
+  "exampleTestcaseList": ["[3,2,4,6]", "[1,2,3,9,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

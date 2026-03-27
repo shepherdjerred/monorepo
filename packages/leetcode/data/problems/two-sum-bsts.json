@@ -16,10 +16,7 @@
   "dislikes": 46,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Two Sum IV - Input is a BST\", \"titleSlug\": \"two-sum-iv-input-is-a-bst\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,1,4]\n[1,0,3]\n5",
-    "[0,-10,10]\n[5,1,7,0,2]\n18"
-  ],
+  "exampleTestcaseList": ["[2,1,4]\n[1,0,3]\n5", "[0,-10,10]\n[5,1,7,0,2]\n18"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Merge Strings Alternately\", \"titleSlug\": \"merge-strings-alternately\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"b\"",
-    "\"aaa\"",
-    "\"abc\""
-  ],
+  "exampleTestcaseList": ["\"b\"", "\"aaa\"", "\"abc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tokopedia\", \"name\": \"tokopedia\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

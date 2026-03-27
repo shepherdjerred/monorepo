@@ -15,10 +15,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Rings and Rods\", \"titleSlug\": \"rings-and-rods\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abacbc\"",
-    "\"aaabb\""
-  ],
+  "exampleTestcaseList": ["\"abacbc\"", "\"aaabb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bolt\", \"name\": \"Bolt\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

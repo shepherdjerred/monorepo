@@ -14,11 +14,7 @@
   "dislikes": 635,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,3,5,1,3]\n3",
-    "[4,2,1,1,2]\n1",
-    "[12,1,12]\n10"
-  ],
+  "exampleTestcaseList": ["[2,3,5,1,3]\n3", "[4,2,1,1,2]\n1", "[12,1,12]\n10"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": []}",
   "topicTags": [
     {

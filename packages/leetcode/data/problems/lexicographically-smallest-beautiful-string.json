@@ -17,10 +17,7 @@
   "dislikes": 28,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest String With Swaps\", \"titleSlug\": \"smallest-string-with-swaps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Palindrome With Fixed Length\", \"titleSlug\": \"find-palindrome-with-fixed-length\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcz\"\n26",
-    "\"dc\"\n4"
-  ],
+  "exampleTestcaseList": ["\"abcz\"\n26", "\"dc\"\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

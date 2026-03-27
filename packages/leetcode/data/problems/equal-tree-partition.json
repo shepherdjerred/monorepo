@@ -12,10 +12,7 @@
   "dislikes": 37,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Create Components With Same Value\", \"titleSlug\": \"create-components-with-same-value\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,10,10,null,null,2,3]",
-    "[1,2,10,null,null,2,20]"
-  ],
+  "exampleTestcaseList": ["[5,10,10,null,null,2,3]", "[1,2,10,null,null,2,20]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

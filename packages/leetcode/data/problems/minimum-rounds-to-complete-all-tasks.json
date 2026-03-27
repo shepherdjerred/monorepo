@@ -16,10 +16,7 @@
   "dislikes": 85,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Odd String Difference\", \"titleSlug\": \"odd-string-difference\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Levels to Gain More Points\", \"titleSlug\": \"minimum-levels-to-gain-more-points\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,2,3,3,2,4,4,4,4,4]",
-    "[2,3,3]"
-  ],
+  "exampleTestcaseList": ["[2,2,3,3,2,4,4,4,4,4]", "[2,3,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"anduril\", \"name\": \"Anduril\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

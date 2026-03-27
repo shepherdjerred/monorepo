@@ -16,10 +16,7 @@
   "dislikes": 212,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aababbb\"",
-    "\"abcde\""
-  ],
+  "exampleTestcaseList": ["\"aababbb\"", "\"abcde\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

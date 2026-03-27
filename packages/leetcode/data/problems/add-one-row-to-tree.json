@@ -12,10 +12,7 @@
   "dislikes": 271,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4,2,6,3,1,5]\n1\n2",
-    "[4,2,null,3,1]\n1\n3"
-  ],
+  "exampleTestcaseList": ["[4,2,6,3,1,5]\n1\n2", "[4,2,null,3,1]\n1\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"gilt-groupe\", \"name\": \"Gilt Groupe\"}], \"three_months\": []}",
   "topicTags": [
     {

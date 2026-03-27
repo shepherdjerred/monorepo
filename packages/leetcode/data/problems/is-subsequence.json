@@ -12,10 +12,7 @@
   "dislikes": 619,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Matching Subsequences\", \"titleSlug\": \"number-of-matching-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Shortest Way to Form String\", \"titleSlug\": \"shortest-way-to-form-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Append Characters to String to Make Subsequence\", \"titleSlug\": \"append-characters-to-string-to-make-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make String a Subsequence Using Cyclic Increments\", \"titleSlug\": \"make-string-a-subsequence-using-cyclic-increments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n\"ahbgdc\"",
-    "\"axc\"\n\"ahbgdc\""
-  ],
+  "exampleTestcaseList": ["\"abc\"\n\"ahbgdc\"", "\"axc\"\n\"ahbgdc\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 29, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 12, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"fractal-analytics\", \"name\": \"Fractal Analytics\"}, {\"timesEncountered\": 4, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 3, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}]}",
   "topicTags": [
     {

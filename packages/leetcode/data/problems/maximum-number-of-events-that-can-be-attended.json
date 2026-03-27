@@ -15,10 +15,7 @@
   "dislikes": 634,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Number of Events That Can Be Attended II\", \"titleSlug\": \"maximum-number-of-events-that-can-be-attended-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Earnings From Taxi\", \"titleSlug\": \"maximum-earnings-from-taxi\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Meeting Rooms III\", \"titleSlug\": \"meeting-rooms-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2],[2,3],[3,4]]",
-    "[[1,2],[2,3],[3,4],[1,2]]"
-  ],
+  "exampleTestcaseList": ["[[1,2],[2,3],[3,4]]", "[[1,2],[2,3],[3,4],[1,2]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 6, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"gopuff\", \"name\": \"Gopuff\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 3, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}]}",
   "topicTags": [
     {

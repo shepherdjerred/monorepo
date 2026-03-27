@@ -15,10 +15,7 @@
   "dislikes": 125,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Partition List\", \"titleSlug\": \"partition-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rearrange Array Elements by Sign\", \"titleSlug\": \"rearrange-array-elements-by-sign\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[9,12,5,10,14,3,10]\n10",
-    "[-3,4,3,2]\n2"
-  ],
+  "exampleTestcaseList": ["[9,12,5,10,14,3,10]\n10", "[-3,4,3,2]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

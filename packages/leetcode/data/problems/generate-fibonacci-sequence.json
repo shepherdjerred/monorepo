@@ -17,10 +17,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Nested Array Generator\", \"titleSlug\": \"nested-array-generator\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Design Cancellable Function\", \"titleSlug\": \"design-cancellable-function\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5",
-    "0"
-  ],
+  "exampleTestcaseList": ["5", "0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

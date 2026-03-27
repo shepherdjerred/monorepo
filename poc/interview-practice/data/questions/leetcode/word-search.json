@@ -11,16 +11,72 @@
       "prompt": "Given a 2D grid of characters and a single word, determine if the word can be found in the grid by moving horizontally or vertically to adjacent cells. Each cell can only be used once per word. Return true or false.",
       "internalNotes": "DFS/backtracking from each cell. Mark visited cells (in-place by modifying the char or with a visited set). Backtrack by restoring the cell. Common mistakes: forgetting to unmark on backtrack, using BFS instead of DFS (BFS doesn't naturally support path tracking), not pruning early when remaining path is impossible.",
       "hints": [
-        { "level": "subtle", "content": "You need to explore paths through the grid. What traversal strategy lets you try a path and backtrack?" },
-        { "level": "moderate", "content": "Start DFS from every cell that matches the first character. How do you track which cells you've already used in the current path?" },
-        { "level": "explicit", "content": "For each cell matching word[0], run DFS. At each step, mark the cell visited, try all 4 neighbors for the next character, then unmark (backtrack). Return true if you match the entire word." }
+        {
+          "level": "subtle",
+          "content": "You need to explore paths through the grid. What traversal strategy lets you try a path and backtrack?"
+        },
+        {
+          "level": "moderate",
+          "content": "Start DFS from every cell that matches the first character. How do you track which cells you've already used in the current path?"
+        },
+        {
+          "level": "explicit",
+          "content": "For each cell matching word[0], run DFS. At each step, mark the cell visited, try all 4 neighbors for the next character, then unmark (backtrack). Return true if you match the entire word."
+        }
       ],
       "testCases": [
-        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "ABCCED"], "expected": true, "explanation": "Path: A(0,0)->B(0,1)->C(0,2)->C(1,2)->E(2,2)->D(2,1)" },
-        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "SEE"], "expected": true, "explanation": "Path: S(1,3)->E(2,3)->E(2,2)" },
-        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "ABCB"], "expected": false, "explanation": "B at (0,1) would need to be reused — not allowed." },
-        { "args": [[["A"]], "A"], "expected": true, "explanation": "Single cell, single character." },
-        { "args": [[["A","B"],["C","D"]], "ABDC"], "expected": true, "explanation": "Path: A(0,0)->B(0,1)->D(1,1)->C(1,0)" }
+        {
+          "args": [
+            [
+              ["A", "B", "C", "E"],
+              ["S", "F", "C", "S"],
+              ["A", "D", "E", "E"]
+            ],
+            "ABCCED"
+          ],
+          "expected": true,
+          "explanation": "Path: A(0,0)->B(0,1)->C(0,2)->C(1,2)->E(2,2)->D(2,1)"
+        },
+        {
+          "args": [
+            [
+              ["A", "B", "C", "E"],
+              ["S", "F", "C", "S"],
+              ["A", "D", "E", "E"]
+            ],
+            "SEE"
+          ],
+          "expected": true,
+          "explanation": "Path: S(1,3)->E(2,3)->E(2,2)"
+        },
+        {
+          "args": [
+            [
+              ["A", "B", "C", "E"],
+              ["S", "F", "C", "S"],
+              ["A", "D", "E", "E"]
+            ],
+            "ABCB"
+          ],
+          "expected": false,
+          "explanation": "B at (0,1) would need to be reused — not allowed."
+        },
+        {
+          "args": [[["A"]], "A"],
+          "expected": true,
+          "explanation": "Single cell, single character."
+        },
+        {
+          "args": [
+            [
+              ["A", "B"],
+              ["C", "D"]
+            ],
+            "ABDC"
+          ],
+          "expected": true,
+          "explanation": "Path: A(0,0)->B(0,1)->D(1,1)->C(1,0)"
+        }
       ],
       "followUps": [
         "What's the time complexity?",
@@ -28,7 +84,10 @@
         "Can you prune the search early?"
       ],
       "expectedApproach": "For each cell, if it matches word[0], start DFS. Mark cell visited (e.g., replace char with '#'), explore 4 directions for next char, backtrack by restoring char. Return true if full word matched.",
-      "expectedComplexity": { "time": "O(m * n * 3^L) where L is word length", "space": "O(L) for recursion stack" },
+      "expectedComplexity": {
+        "time": "O(m * n * 3^L) where L is word length",
+        "space": "O(L) for recursion stack"
+      },
       "transitionCriteria": {
         "minApproachQuality": "optimal",
         "mustExplainComplexity": true,
@@ -40,15 +99,60 @@
       "prompt": "Given the same grid and a list of words, return all words from the list that can be found in the grid. Each cell can only be used once per word, but can be reused across different words.",
       "internalNotes": "Naive approach: run Part 1 for each word — O(k * m * n * 3^L). Optimal: build a Trie from the word list, then DFS from each cell exploring the Trie simultaneously. This shares prefix work across words. Common mistakes: not using a Trie (TLE), not removing found words from Trie (duplicates or TLE), forgetting to backtrack Trie pointer.",
       "hints": [
-        { "level": "subtle", "content": "Running the Part 1 solution for each word separately is wasteful. What structure can share work across words with common prefixes?" },
-        { "level": "moderate", "content": "What if you built a data structure from all the words and explored the grid and the data structure simultaneously?" },
-        { "level": "explicit", "content": "Build a Trie from the word list. DFS from each cell, following Trie edges. When you reach a Trie node that marks a complete word, add it to results. Prune branches where the Trie has no matching edge." }
+        {
+          "level": "subtle",
+          "content": "Running the Part 1 solution for each word separately is wasteful. What structure can share work across words with common prefixes?"
+        },
+        {
+          "level": "moderate",
+          "content": "What if you built a data structure from all the words and explored the grid and the data structure simultaneously?"
+        },
+        {
+          "level": "explicit",
+          "content": "Build a Trie from the word list. DFS from each cell, following Trie edges. When you reach a Trie node that marks a complete word, add it to results. Prune branches where the Trie has no matching edge."
+        }
       ],
       "testCases": [
-        { "args": [[["o","a","a","n"],["e","t","a","e"],["i","h","k","r"]], ["oath", "pea", "eat", "rain"]], "expected": ["eat", "oath"], "explanation": "'eat' and 'oath' can be found in the grid. 'pea' and 'rain' cannot." },
-        { "args": [[["a","b"],["c","d"]], ["abcb", "abdc", "abcd", "dcba"]], "expected": ["abdc"], "explanation": "Only 'abdc' forms a valid path." },
-        { "args": [[["a"]], ["a", "b"]], "expected": ["a"], "explanation": "Single cell grid. Only 'a' is found." },
-        { "args": [[["a","b","c"],["d","e","f"],["g","h","i"]], ["abc", "def", "ghi"]], "expected": ["abc", "def", "ghi"], "explanation": "All three words exist as rows in the grid." }
+        {
+          "args": [
+            [
+              ["o", "a", "a", "n"],
+              ["e", "t", "a", "e"],
+              ["i", "h", "k", "r"]
+            ],
+            ["oath", "pea", "eat", "rain"]
+          ],
+          "expected": ["eat", "oath"],
+          "explanation": "'eat' and 'oath' can be found in the grid. 'pea' and 'rain' cannot."
+        },
+        {
+          "args": [
+            [
+              ["a", "b"],
+              ["c", "d"]
+            ],
+            ["abcb", "abdc", "abcd", "dcba"]
+          ],
+          "expected": ["abdc"],
+          "explanation": "Only 'abdc' forms a valid path."
+        },
+        {
+          "args": [[["a"]], ["a", "b"]],
+          "expected": ["a"],
+          "explanation": "Single cell grid. Only 'a' is found."
+        },
+        {
+          "args": [
+            [
+              ["a", "b", "c"],
+              ["d", "e", "f"],
+              ["g", "h", "i"]
+            ],
+            ["abc", "def", "ghi"]
+          ],
+          "expected": ["abc", "def", "ghi"],
+          "explanation": "All three words exist as rows in the grid."
+        }
       ],
       "followUps": [
         "What's the time complexity with the Trie approach vs running Part 1 for each word?",
@@ -56,7 +160,10 @@
         "Can you optimize by removing words from the Trie once found?"
       ],
       "expectedApproach": "Build a Trie from the word list. DFS from each cell, following the Trie. When a Trie node marks a word end, add to results and optionally remove from Trie. Backtrack visited cells as in Part 1.",
-      "expectedComplexity": { "time": "O(m * n * 3^L) where L is max word length", "space": "O(sum of word lengths for Trie + L for recursion)" }
+      "expectedComplexity": {
+        "time": "O(m * n * 3^L) where L is max word length",
+        "space": "O(sum of word lengths for Trie + L for recursion)"
+      }
     }
   ],
   "constraints": [

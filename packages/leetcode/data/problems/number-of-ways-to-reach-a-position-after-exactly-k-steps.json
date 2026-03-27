@@ -16,10 +16,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Unique Paths\", \"titleSlug\": \"unique-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Climbing Stairs\", \"titleSlug\": \"climbing-stairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Reach a Number\", \"titleSlug\": \"reach-a-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reaching Points\", \"titleSlug\": \"reaching-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Stay in the Same Place After Some Steps\", \"titleSlug\": \"number-of-ways-to-stay-in-the-same-place-after-some-steps\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n2\n3",
-    "2\n5\n10"
-  ],
+  "exampleTestcaseList": ["1\n2\n3", "2\n5\n10"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

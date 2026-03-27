@@ -15,11 +15,7 @@
   "dislikes": 22,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Deletions to Make String Balanced\", \"titleSlug\": \"minimum-deletions-to-make-string-balanced\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check if Array Is Sorted and Rotated\", \"titleSlug\": \"check-if-array-is-sorted-and-rotated\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check if Numbers Are Ascending in a Sentence\", \"titleSlug\": \"check-if-numbers-are-ascending-in-a-sentence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aaabbb\"",
-    "\"abab\"",
-    "\"bbb\""
-  ],
+  "exampleTestcaseList": ["\"aaabbb\"", "\"abab\"", "\"bbb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

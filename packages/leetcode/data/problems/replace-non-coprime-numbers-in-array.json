@@ -16,10 +16,7 @@
   "dislikes": 33,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove All Adjacent Duplicates in String II\", \"titleSlug\": \"remove-all-adjacent-duplicates-in-string-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Pairs of Interchangeable Rectangles\", \"titleSlug\": \"number-of-pairs-of-interchangeable-rectangles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split the Array to Make Coprime Products\", \"titleSlug\": \"split-the-array-to-make-coprime-products\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[6,4,3,2,7,6,2]",
-    "[2,2,1,1,3,3,3]"
-  ],
+  "exampleTestcaseList": ["[6,4,3,2,7,6,2]", "[2,2,1,1,3,3,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 183,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Halve Array Sum\", \"titleSlug\": \"minimum-operations-to-halve-array-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximal Score After Applying K Operations\", \"titleSlug\": \"maximal-score-after-applying-k-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Take Gifts From the Richest Pile\", \"titleSlug\": \"take-gifts-from-the-richest-pile\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,4,9]\n2",
-    "[4,3,6,7]\n3"
-  ],
+  "exampleTestcaseList": ["[5,4,9]\n2", "[4,3,6,7]\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
   "topicTags": [
     {

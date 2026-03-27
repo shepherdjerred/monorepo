@@ -12,11 +12,7 @@
   "dislikes": 220,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Destroy Sequential Targets\", \"titleSlug\": \"destroy-sequential-targets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,6,9,12]",
-    "[9,4,7,2,10]",
-    "[20,1,15,3,10,5,8]"
-  ],
+  "exampleTestcaseList": ["[3,6,9,12]", "[9,4,7,2,10]", "[20,1,15,3,10,5,8]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"turing\", \"name\": \"Turing\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"snapdeal\", \"name\": \"Snapdeal\"}], \"six_months\": []}",
   "topicTags": [
     {

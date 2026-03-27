@@ -11,10 +11,14 @@ export async function handleQuestionsCommand(
   config: Config,
 ): Promise<void> {
   switch (subcommand) {
-    case "list":
-      { await handleList(config); return; }
-    case "generate":
-      { await handleGenerate(args, config); return; }
+    case "list": {
+      await handleList(config);
+      return;
+    }
+    case "generate": {
+      await handleGenerate(args, config);
+      return;
+    }
     case undefined:
       console.error("Usage: interview-practice questions [list|generate]");
       return process.exit(1);
@@ -46,7 +50,9 @@ async function handleList(config: Config): Promise<void> {
     return;
   }
 
-  console.log(`\n${"Slug".padEnd(30)} ${"Difficulty".padEnd(12)} ${"Parts".padEnd(8)} Tags`);
+  console.log(
+    `\n${"Slug".padEnd(30)} ${"Difficulty".padEnd(12)} ${"Parts".padEnd(8)} Tags`,
+  );
   console.log("-".repeat(80));
 
   for (const q of questions) {
@@ -71,7 +77,9 @@ async function handleGenerate(args: string[], config: Config): Promise<void> {
   });
 
   if (values.title === undefined || values.title === "") {
-    console.error("Usage: interview-practice questions generate --title <title> --description <desc> [--difficulty easy|medium|hard] [--tags tag1,tag2] [--out-dir <path>]");
+    console.error(
+      "Usage: interview-practice questions generate --title <title> --description <desc> [--difficulty easy|medium|hard] [--tags tag1,tag2] [--out-dir <path>]",
+    );
     process.exit(1);
   }
 

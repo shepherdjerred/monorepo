@@ -12,10 +12,7 @@
   "dislikes": 265,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[\"abc\",\"xyz\"]",
-    "[\"abc\"]"
-  ],
+  "exampleTestcaseList": ["[\"abc\",\"xyz\"]", "[\"abc\"]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"alibaba\", \"name\": \"Alibaba\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

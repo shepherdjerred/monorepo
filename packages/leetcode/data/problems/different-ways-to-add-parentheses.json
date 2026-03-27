@@ -12,10 +12,7 @@
   "dislikes": 398,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Unique Binary Search Trees II\", \"titleSlug\": \"unique-binary-search-trees-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Expression Add Operators\", \"titleSlug\": \"expression-add-operators\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"The Score of Students Solving Math Expression\", \"titleSlug\": \"the-score-of-students-solving-math-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize Result by Adding Parentheses to Expression\", \"titleSlug\": \"minimize-result-by-adding-parentheses-to-expression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"2-1-1\"",
-    "\"2*3-4*5\""
-  ],
+  "exampleTestcaseList": ["\"2-1-1\"", "\"2*3-4*5\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"deltax\", \"name\": \"DeltaX\"}], \"three_months\": []}",
   "topicTags": [
     {

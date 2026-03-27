@@ -18,10 +18,7 @@
   "dislikes": 1523,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Special Integers\", \"titleSlug\": \"count-special-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Numbers With Unique Digits II\", \"titleSlug\": \"count-numbers-with-unique-digits-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "0"
-  ],
+  "exampleTestcaseList": ["2", "0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,11 +17,7 @@
   "dislikes": 61,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shortest Palindrome\", \"titleSlug\": \"shortest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Longest Happy Prefix\", \"titleSlug\": \"longest-happy-prefix\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Remove All Occurrences of a Substring\", \"titleSlug\": \"remove-all-occurrences-of-a-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcabcdabc\"",
-    "\"aaabaab\"",
-    "\"aaaaa\""
-  ],
+  "exampleTestcaseList": ["\"abcabcdabc\"", "\"aaabaab\"", "\"aaaaa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

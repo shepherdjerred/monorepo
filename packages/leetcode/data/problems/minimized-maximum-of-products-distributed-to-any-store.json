@@ -16,11 +16,7 @@
   "dislikes": 107,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Koko Eating Bananas\", \"titleSlug\": \"koko-eating-bananas\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Smallest Divisor Given a Threshold\", \"titleSlug\": \"find-the-smallest-divisor-given-a-threshold\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Magnetic Force Between Two Balls\", \"titleSlug\": \"magnetic-force-between-two-balls\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Limit of Balls in a Bag\", \"titleSlug\": \"minimum-limit-of-balls-in-a-bag\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Complete Trips\", \"titleSlug\": \"minimum-time-to-complete-trips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "6\n[11,6]",
-    "7\n[15,10,10]",
-    "1\n[100000]"
-  ],
+  "exampleTestcaseList": ["6\n[11,6]", "7\n[15,10,10]", "1\n[100000]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

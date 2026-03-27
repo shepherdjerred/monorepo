@@ -14,10 +14,7 @@
   "dislikes": 76,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"The Skyline Problem\", \"titleSlug\": \"the-skyline-problem\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2],[2,3],[6,1]]",
-    "[[100,100],[200,100]]"
-  ],
+  "exampleTestcaseList": ["[[1,2],[2,3],[6,1]]", "[[100,100],[200,100]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

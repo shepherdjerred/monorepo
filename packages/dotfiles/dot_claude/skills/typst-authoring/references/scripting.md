@@ -27,23 +27,23 @@ Nest arbitrarily. Content blocks can be trailing arguments to functions.
 
 ## Types
 
-| Type | Literal | Notes |
-|------|---------|-------|
-| `none` | `none` | |
-| `auto` | `auto` | |
-| `bool` | `true`, `false` | |
-| `int` | `10`, `0xff`, `0b1010`, `0o17` | |
-| `float` | `3.14`, `1e5` | |
-| `str` | `"hello"` | |
-| `content` | `[*Hello*]` | Content block |
-| `array` | `(1, 2, 3)` | Single-element: `(1,)` |
-| `dictionary` | `(a: "hi", b: 2)` | Empty: `(:)` |
-| `length` | `2pt`, `3mm`, `1em`, `1in` | |
-| `angle` | `90deg`, `1rad` | |
-| `ratio` | `50%` | |
-| `fraction` | `2fr` | Distributes remaining space |
-| `label` | `<intro>` | |
-| `function` | `(x, y) => x + y` | Lambda |
+| Type         | Literal                        | Notes                       |
+| ------------ | ------------------------------ | --------------------------- |
+| `none`       | `none`                         |                             |
+| `auto`       | `auto`                         |                             |
+| `bool`       | `true`, `false`                |                             |
+| `int`        | `10`, `0xff`, `0b1010`, `0o17` |                             |
+| `float`      | `3.14`, `1e5`                  |                             |
+| `str`        | `"hello"`                      |                             |
+| `content`    | `[*Hello*]`                    | Content block               |
+| `array`      | `(1, 2, 3)`                    | Single-element: `(1,)`      |
+| `dictionary` | `(a: "hi", b: 2)`              | Empty: `(:)`                |
+| `length`     | `2pt`, `3mm`, `1em`, `1in`     |                             |
+| `angle`      | `90deg`, `1rad`                |                             |
+| `ratio`      | `50%`                          |                             |
+| `fraction`   | `2fr`                          | Distributes remaining space |
+| `label`      | `<intro>`                      |                             |
+| `function`   | `(x, y) => x + y`              | Lambda                      |
 
 **Gotcha:** `(1)` is a parenthesized expression, not an array. Use `(1,)` for single-element array. Empty array: `()`. Empty dictionary: `(:)`.
 
@@ -162,15 +162,15 @@ Field access syntax: `dict.greet` instead of `dict.at("greet")`.
 
 ## Operators
 
-| Precedence | Operators |
-|-----------|-----------|
-| 7 | `-x`, `+x` (unary) |
-| 6 | `*`, `/` |
-| 5 | `+`, `-` |
-| 4 | `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`, `not` |
-| 3 | `and` |
-| 2 | `or` |
-| 1 | `=`, `+=`, `-=`, `*=`, `/=` |
+| Precedence | Operators                                               |
+| ---------- | ------------------------------------------------------- |
+| 7          | `-x`, `+x` (unary)                                      |
+| 6          | `*`, `/`                                                |
+| 5          | `+`, `-`                                                |
+| 4          | `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`, `not` |
+| 3          | `and`                                                   |
+| 2          | `or`                                                    |
+| 1          | `=`, `+=`, `-=`, `*=`, `/=`                             |
 
 No modulus operator — use `calc.rem()` (remainder, can be negative) or `calc.mod()` (true modulus, always non-negative).
 

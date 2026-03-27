@@ -12,10 +12,7 @@
   "dislikes": 2808,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"owoztneoer\"",
-    "\"fviefuro\""
-  ],
+  "exampleTestcaseList": ["\"owoztneoer\"", "\"fviefuro\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"wix\", \"name\": \"Wix\"}, {\"timesEncountered\": 2, \"slug\": \"netapp\", \"name\": \"NetApp\"}, {\"timesEncountered\": 2, \"slug\": \"kickdrum\", \"name\": \"Kickdrum\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

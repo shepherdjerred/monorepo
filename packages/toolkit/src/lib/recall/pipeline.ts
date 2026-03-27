@@ -24,8 +24,18 @@ export type IndexFileOptions = {
   verbose?: boolean;
 };
 
-export async function indexFile(options: IndexFileOptions): Promise<IndexResult> {
-  const { db, embedder, filePath, source, tags = [], force = false, verbose = false } = options;
+export async function indexFile(
+  options: IndexFileOptions,
+): Promise<IndexResult> {
+  const {
+    db,
+    embedder,
+    filePath,
+    source,
+    tags = [],
+    force = false,
+    verbose = false,
+  } = options;
   const start = performance.now();
   const absPath = path.resolve(filePath);
 
@@ -38,7 +48,9 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
   const rawContent = isConversation ? null : await readFile(absPath, "utf8");
   const contentHash = isConversation
     ? `mtime:${String(fileStat.mtimeMs)}`
-    : createHash("sha256").update(rawContent ?? "").digest("hex");
+    : createHash("sha256")
+        .update(rawContent ?? "")
+        .digest("hex");
 
   // Check if already indexed with same hash
   if (!force) {
@@ -66,9 +78,10 @@ export async function indexFile(options: IndexFileOptions): Promise<IndexResult>
     const { data, content: mdBody } = matter(rawContent ?? "");
     body = mdBody;
     const rawTitle: unknown = data["title"];
-    title = typeof rawTitle === "string"
-      ? rawTitle
-      : path.basename(absPath, path.extname(absPath));
+    title =
+      typeof rawTitle === "string"
+        ? rawTitle
+        : path.basename(absPath, path.extname(absPath));
     const rawTags: unknown = data["tags"];
     fileTags = [
       ...tags,

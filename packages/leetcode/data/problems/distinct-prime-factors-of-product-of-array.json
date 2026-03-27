@@ -16,10 +16,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"2 Keys Keyboard\", \"titleSlug\": \"2-keys-keyboard\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Component Size by Common Factor\", \"titleSlug\": \"largest-component-size-by-common-factor\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Closest Divisors\", \"titleSlug\": \"closest-divisors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Value After Replacing With Sum of Prime Factors\", \"titleSlug\": \"smallest-value-after-replacing-with-sum-of-prime-factors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Square-Free Subsets\", \"titleSlug\": \"count-the-number-of-square-free-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,4,3,7,10,6]",
-    "[2,4,8,16]"
-  ],
+  "exampleTestcaseList": ["[2,4,3,7,10,6]", "[2,4,8,16]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

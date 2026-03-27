@@ -15,11 +15,7 @@
   "dislikes": 718,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"GGLLGG\"",
-    "\"GG\"",
-    "\"GL\""
-  ],
+  "exampleTestcaseList": ["\"GGLLGG\"", "\"GG\"", "\"GL\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}, {\"timesEncountered\": 2, \"slug\": \"blue-origin\", \"name\": \"Blue Origin\"}], \"six_months\": []}",
   "topicTags": [
     {

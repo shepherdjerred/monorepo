@@ -16,10 +16,7 @@
   "dislikes": 45,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Group Anagrams\", \"titleSlug\": \"group-anagrams\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Ways to Build Rooms in an Ant Colony\", \"titleSlug\": \"count-ways-to-build-rooms-in-an-ant-colony\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"too hot\"",
-    "\"aa\""
-  ],
+  "exampleTestcaseList": ["\"too hot\"", "\"aa\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

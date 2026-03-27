@@ -15,10 +15,7 @@
   "dislikes": 23,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Special Binary String\", \"titleSlug\": \"special-binary-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n3\n1\n2",
-    "4\n4\n4\n3"
-  ],
+  "exampleTestcaseList": ["2\n3\n1\n2", "4\n4\n4\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

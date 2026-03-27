@@ -12,10 +12,7 @@
   "dislikes": 75,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Construct Binary Tree from String\", \"titleSlug\": \"construct-binary-tree-from-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Duplicate Subtrees\", \"titleSlug\": \"find-duplicate-subtrees\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[1,2,3,null,4]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[1,2,3,null,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

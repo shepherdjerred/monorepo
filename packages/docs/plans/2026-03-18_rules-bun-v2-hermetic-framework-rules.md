@@ -157,13 +157,13 @@
 
 - The doc must include this explicit target matrix:
 
-| Package | Keep `astro_build` | Keep `astro_check` | Keep `typecheck` | Completion State |
-| --- | --- | --- | --- | --- |
-| `cooklang-rich-preview` | yes | yes | yes | all three non-`manual` |
-| `status-page/web` | yes | yes | yes | all three non-`manual` |
-| `clauderon/docs` | yes | yes | no | `astro_build` and `astro_check` non-`manual` |
-| `scout-for-lol/packages/frontend` | yes | yes | yes | all three non-`manual` |
-| `sjer.red` | yes | yes | yes | all three non-`manual` |
+| Package                           | Keep `astro_build` | Keep `astro_check` | Keep `typecheck` | Completion State                             |
+| --------------------------------- | ------------------ | ------------------ | ---------------- | -------------------------------------------- |
+| `cooklang-rich-preview`           | yes                | yes                | yes              | all three non-`manual`                       |
+| `status-page/web`                 | yes                | yes                | yes              | all three non-`manual`                       |
+| `clauderon/docs`                  | yes                | yes                | no               | `astro_build` and `astro_check` non-`manual` |
+| `scout-for-lol/packages/frontend` | yes                | yes                | yes              | all three non-`manual`                       |
+| `sjer.red`                        | yes                | yes                | yes              | all three non-`manual`                       |
 
 - Every Astro target that remains part of CI coverage after migration must be non-`manual`.
 - If any exception exists, it must be named explicitly with a blocking reason and exit criterion.

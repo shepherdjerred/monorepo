@@ -15,10 +15,7 @@
   "dislikes": 61,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Reverse Integer\", \"titleSlug\": \"reverse-integer\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,13,10,12,31]",
-    "[2,2,2]"
-  ],
+  "exampleTestcaseList": ["[1,13,10,12,31]", "[2,2,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

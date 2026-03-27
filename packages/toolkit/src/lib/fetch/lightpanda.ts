@@ -24,9 +24,7 @@ export async function fetchWithLightpanda(
   ];
 
   if (verbose) {
-    console.error(
-      `[fetch] running: lightpanda ${args.join(" ")}`,
-    );
+    console.error(`[fetch] running: lightpanda ${args.join(" ")}`);
   }
 
   const proc = Bun.spawn(["lightpanda", ...args], {
@@ -65,7 +63,8 @@ export async function fetchWithLightpanda(
     if (exitCode !== 0) {
       return {
         success: false,
-        error: stderr.trim() || `lightpanda exited with code ${String(exitCode)}`,
+        error:
+          stderr.trim() || `lightpanda exited with code ${String(exitCode)}`,
         durationMs,
       };
     }

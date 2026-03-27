@@ -36,15 +36,15 @@ clauderon daemon [OPTIONS]
 
 **Feature Flags:**
 
-| Flag                          | Default | Description                                      |
-| ----------------------------- | ------- | ------------------------------------------------ |
-| `--enable-webauthn-auth`      | `false` | WebAuthn passwordless authentication for web UI  |
-| `--enable-ai-metadata`        | `true`  | AI-generated session titles from prompts         |
-| `--enable-auto-reconcile`     | `true`  | Sync database with backends on startup           |
-| `--enable-usage-tracking`     | `false` | Track Claude API usage per session               |
-| `--enable-proxy-port-reuse`   | `false` | Reuse proxy ports across sessions (experimental) |
+| Flag                           | Default | Description                                      |
+| ------------------------------ | ------- | ------------------------------------------------ |
+| `--enable-webauthn-auth`       | `false` | WebAuthn passwordless authentication for web UI  |
+| `--enable-ai-metadata`         | `true`  | AI-generated session titles from prompts         |
+| `--enable-auto-reconcile`      | `true`  | Sync database with backends on startup           |
+| `--enable-usage-tracking`      | `false` | Track Claude API usage per session               |
+| `--enable-proxy-port-reuse`    | `false` | Reuse proxy ports across sessions (experimental) |
 | `--enable-experimental-models` | `false` | Enable experimental AI models (Codex, Gemini)    |
-| `--enable-readonly-mode`      | `false` | Enable read-only mode (experimental)              |
+| `--enable-readonly-mode`       | `false` | Enable read-only mode (experimental)             |
 
 See [Feature Flags Reference](/reference/feature-flags/) for detailed documentation.
 
@@ -392,15 +392,15 @@ clauderon config credentials
 
 Feature flags can also be set via environment variables:
 
-| Variable                                      | Default | Description                 |
-| --------------------------------------------- | ------- | --------------------------- |
-| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH`      | `false` | WebAuthn passwordless auth  |
-| `CLAUDERON_FEATURE_ENABLE_AI_METADATA`        | `true`  | AI-generated session titles |
-| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE`     | `true`  | Auto-reconcile on startup   |
-| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING`     | `false` | Claude usage tracking       |
-| `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE`   | `false` | Proxy port reuse            |
+| Variable                                       | Default | Description                 |
+| ---------------------------------------------- | ------- | --------------------------- |
+| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH`       | `false` | WebAuthn passwordless auth  |
+| `CLAUDERON_FEATURE_ENABLE_AI_METADATA`         | `true`  | AI-generated session titles |
+| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE`      | `true`  | Auto-reconcile on startup   |
+| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING`      | `false` | Claude usage tracking       |
+| `CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE`    | `false` | Proxy port reuse            |
 | `CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS` | `false` | Experimental AI models      |
-| `CLAUDERON_FEATURE_ENABLE_READONLY_MODE`      | `false` | Read-only mode              |
+| `CLAUDERON_FEATURE_ENABLE_READONLY_MODE`       | `false` | Read-only mode              |
 
 Values: `1`, `true`, `yes`, `on` to enable; `0`, `false`, `no`, `off` to disable.
 

@@ -17,10 +17,7 @@
   "dislikes": 82,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Stones to Minimize the Total\", \"titleSlug\": \"remove-stones-to-minimize-the-total\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[25,64,9,4,100]\n4",
-    "[1,1,1,1]\n4"
-  ],
+  "exampleTestcaseList": ["[25,64,9,4,100]\n4", "[1,1,1,1]\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 196,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"HOH\"",
-    "\"OOHHHH\""
-  ],
+  "exampleTestcaseList": ["\"HOH\"", "\"OOHHHH\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 6, \"slug\": \"tesla\", \"name\": \"Tesla\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

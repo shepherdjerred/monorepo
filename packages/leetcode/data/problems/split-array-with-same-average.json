@@ -12,10 +12,7 @@
   "dislikes": 143,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Partition Array Into Two Arrays to Minimize Sum Difference\", \"titleSlug\": \"partition-array-into-two-arrays-to-minimize-sum-difference\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Average Difference\", \"titleSlug\": \"minimum-average-difference\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5,6,7,8]",
-    "[3,1]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5,6,7,8]", "[3,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -42,7 +42,9 @@ export async function hybridSearch(
       queryVector = vectors[0] ?? [];
     } catch {
       if (verbose) {
-        console.error("[search] embedding failed, falling back to keyword-only");
+        console.error(
+          "[search] embedding failed, falling back to keyword-only",
+        );
       }
       return keywordSearch(db, query, limit, verbose);
     }

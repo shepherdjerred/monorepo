@@ -15,11 +15,7 @@
   "dislikes": 178,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Amount of Time to Fill Cups\", \"titleSlug\": \"minimum-amount-of-time-to-fill-cups\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[9,3,5]",
-    "[1,1,1,2]",
-    "[8,5]"
-  ],
+  "exampleTestcaseList": ["[9,3,5]", "[1,1,1,2]", "[8,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

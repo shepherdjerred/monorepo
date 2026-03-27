@@ -14,10 +14,7 @@
   "dislikes": 496,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"2019-01-09\"",
-    "\"2019-02-10\""
-  ],
+  "exampleTestcaseList": ["\"2019-01-09\"", "\"2019-02-10\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

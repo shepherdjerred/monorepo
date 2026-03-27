@@ -20,7 +20,10 @@ import {
 } from "#lib/output/formatter.ts";
 import { createRealtimeClient } from "#lib/voice/realtime.ts";
 import { buildRealtimeSessionConfig } from "#lib/voice/session-config.ts";
-import { createAudioManager, checkAudioDependencies } from "#lib/voice/audio.ts";
+import {
+  createAudioManager,
+  checkAudioDependencies,
+} from "#lib/voice/audio.ts";
 import { getLeetcodeTools } from "#lib/ai/tools.ts";
 import { createInterviewSession } from "#lib/ai/session-loop.ts";
 
@@ -33,7 +36,9 @@ export type VoiceSessionOptions = {
   logger: Logger;
 };
 
-export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> {
+export async function runVoiceSession(
+  opts: VoiceSessionOptions,
+): Promise<void> {
   const { config, session, question, timer, solutionPath, logger } = opts;
 
   // Check audio dependencies
@@ -62,7 +67,10 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
   console.log("Proceed? [y/N] ");
   const rl = createReadline();
   const answer = await promptUser(rl);
-  if (answer.trim().toLowerCase() !== "y" && answer.trim().toLowerCase() !== "yes") {
+  if (
+    answer.trim().toLowerCase() !== "y" &&
+    answer.trim().toLowerCase() !== "yes"
+  ) {
     console.log("Voice mode cancelled.");
     rl.close();
     process.exit(0);
@@ -172,7 +180,9 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
         console.log(
           "\n\u001B[31mVoice connection failed 3 times. Falling back to text mode.\u001B[0m",
         );
-        console.log("\u001B[33mSession transcript preserved. Restart without --voice.\u001B[0m\n");
+        console.log(
+          "\u001B[33mSession transcript preserved. Restart without --voice.\u001B[0m\n",
+        );
 
         audioManager.stopAll();
         realtimeClient.disconnect();
@@ -216,9 +226,10 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
           model: config.realtimeModel,
           voice: config.realtimeVoice,
           question,
-          currentPart: question.parts.find(
-            (p) => p.partNumber === session.metadata.currentPart,
-          ) ?? currentPart,
+          currentPart:
+            question.parts.find(
+              (p) => p.partNumber === session.metadata.currentPart,
+            ) ?? currentPart,
           totalParts: question.parts.length,
           timerDisplay: timer.getDisplayTime(),
           hintsGiven: session.metadata.hintsGiven,
@@ -255,7 +266,9 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
   });
 }
 
-async function readSolutionSafe(solutionPath: string): Promise<string | undefined> {
+async function readSolutionSafe(
+  solutionPath: string,
+): Promise<string | undefined> {
   try {
     const code = await Bun.file(solutionPath).text();
     return code.trim() === "" ? undefined : code;

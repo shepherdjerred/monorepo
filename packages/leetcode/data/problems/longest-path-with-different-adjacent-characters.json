@@ -15,10 +15,7 @@
   "dislikes": 61,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Diameter of Binary Tree\", \"titleSlug\": \"diameter-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Univalue Path\", \"titleSlug\": \"longest-univalue-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Choose Edges to Maximize Score in a Tree\", \"titleSlug\": \"choose-edges-to-maximize-score-in-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-1,0,0,1,1,2]\n\"abacbe\"",
-    "[-1,0,0,0]\n\"aabc\""
-  ],
+  "exampleTestcaseList": ["[-1,0,0,1,1,2]\n\"abacbe\"", "[-1,0,0,0]\n\"aabc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"target\", \"name\": \"Target\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

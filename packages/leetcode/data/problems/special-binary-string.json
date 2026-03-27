@@ -14,10 +14,7 @@
   "dislikes": 301,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Valid Parenthesis String\", \"titleSlug\": \"valid-parenthesis-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Good Binary Strings\", \"titleSlug\": \"number-of-good-binary-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"11011000\"",
-    "\"10\""
-  ],
+  "exampleTestcaseList": ["\"11011000\"", "\"10\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 2, \"slug\": \"imc\", \"name\": \"IMC\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 9, \"slug\": \"ukg\", \"name\": \"UKG\"}, {\"timesEncountered\": 3, \"slug\": \"bnp-paribas\", \"name\": \"BNP Paribas\"}, {\"timesEncountered\": 2, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 2, \"slug\": \"coursera\", \"name\": \"Coursera\"}]}",
   "topicTags": [
     {

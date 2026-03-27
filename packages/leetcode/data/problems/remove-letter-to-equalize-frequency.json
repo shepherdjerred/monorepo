@@ -15,10 +15,7 @@
   "dislikes": 1358,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Equal Frequency\", \"titleSlug\": \"maximum-equal-frequency\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Deletions to Make Character Frequencies Unique\", \"titleSlug\": \"minimum-deletions-to-make-character-frequencies-unique\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcc\"",
-    "\"aazz\""
-  ],
+  "exampleTestcaseList": ["\"abcc\"", "\"aazz\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}]}",
   "topicTags": [
     {

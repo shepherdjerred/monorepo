@@ -15,11 +15,7 @@
   "dislikes": 61,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Decode Ways\", \"titleSlug\": \"decode-ways\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Decode Ways II\", \"titleSlug\": \"decode-ways-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Restore The Array\", \"titleSlug\": \"restore-the-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Beautiful Partitions\", \"titleSlug\": \"number-of-beautiful-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"327\"",
-    "\"094\"",
-    "\"0\""
-  ],
+  "exampleTestcaseList": ["\"327\"", "\"094\"", "\"0\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

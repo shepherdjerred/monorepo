@@ -16,10 +16,7 @@
   "dislikes": 277,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Asteroid Collision\", \"titleSlug\": \"asteroid-collision\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Car Fleet\", \"titleSlug\": \"car-fleet\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Last Moment Before All Ants Fall Out of a Plank\", \"titleSlug\": \"last-moment-before-all-ants-fall-out-of-a-plank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Car Fleet II\", \"titleSlug\": \"car-fleet-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"RLRSLL\"",
-    "\"LLRR\""
-  ],
+  "exampleTestcaseList": ["\"RLRSLL\"", "\"LLRR\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

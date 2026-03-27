@@ -31,7 +31,9 @@ export async function handleFetchCommand(
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      console.error(`Unsupported URL scheme: ${parsed.protocol}. Only http and https are supported.`);
+      console.error(
+        `Unsupported URL scheme: ${parsed.protocol}. Only http and https are supported.`,
+      );
       process.exit(1);
     }
   } catch {
@@ -56,12 +58,18 @@ export async function handleFetchCommand(
     });
 
     if (values.json) {
-      console.log(JSON.stringify({
-        fetched: result.fetched,
-        errors: result.errors,
-        durationMs: Math.round(result.durationMs),
-        savedPaths: result.savedPaths,
-      }, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            fetched: result.fetched,
+            errors: result.errors,
+            durationMs: Math.round(result.durationMs),
+            savedPaths: result.savedPaths,
+          },
+          null,
+          2,
+        ),
+      );
     } else {
       console.log(`Crawl complete:`);
       console.log(`  Fetched: ${String(result.fetched)} pages`);

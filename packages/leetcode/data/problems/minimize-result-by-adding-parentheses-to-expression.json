@@ -15,11 +15,7 @@
   "dislikes": 345,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Different Ways to Add Parentheses\", \"titleSlug\": \"different-ways-to-add-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Solve the Equation\", \"titleSlug\": \"solve-the-equation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"247+38\"",
-    "\"12+34\"",
-    "\"999+999\""
-  ],
+  "exampleTestcaseList": ["\"247+38\"", "\"12+34\"", "\"999+999\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Number\", \"titleSlug\": \"largest-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "310",
-    "-7605"
-  ],
+  "exampleTestcaseList": ["310", "-7605"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"cognizant\", \"name\": \"Cognizant\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

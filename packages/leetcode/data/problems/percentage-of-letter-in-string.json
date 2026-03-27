@@ -15,10 +15,7 @@
   "dislikes": 64,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sort Characters By Frequency\", \"titleSlug\": \"sort-characters-by-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"foobar\"\n\"o\"",
-    "\"jjjj\"\n\"k\""
-  ],
+  "exampleTestcaseList": ["\"foobar\"\n\"o\"", "\"jjjj\"\n\"k\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

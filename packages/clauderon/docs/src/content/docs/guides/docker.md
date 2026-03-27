@@ -81,9 +81,9 @@ Any Docker image works if it has a shell, curl/wget, and git. Claude Code is aut
 
 ## Troubleshooting
 
-| Problem | Fix |
-| --- | --- |
-| Permission denied | `sudo usermod -aG docker $USER && newgrp docker` |
+| Problem               | Fix                                                                           |
+| --------------------- | ----------------------------------------------------------------------------- |
+| Permission denied     | `sudo usermod -aG docker $USER && newgrp docker`                              |
 | Container won't start | `docker info` to check Docker; `docker ps -a \| grep clauderon` for conflicts |
-| Network issues | `curl -x http://localhost:3030 https://api.anthropic.com` to test proxy |
-| Out of disk space | `docker system df` then `docker system prune -a` |
+| Network issues        | `curl -x http://localhost:3030 https://api.anthropic.com` to test proxy       |
+| Out of disk space     | `docker system df` then `docker system prune -a`                              |

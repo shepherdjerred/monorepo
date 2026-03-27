@@ -15,11 +15,7 @@
   "dislikes": 121,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Next Permutation\", \"titleSlug\": \"next-permutation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"5489355142\"\n4",
-    "\"11112\"\n4",
-    "\"00123\"\n1"
-  ],
+  "exampleTestcaseList": ["\"5489355142\"\n4", "\"11112\"\n4", "\"00123\"\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

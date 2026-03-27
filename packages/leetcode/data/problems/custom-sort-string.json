@@ -12,10 +12,7 @@
   "dislikes": 431,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sort the Students by Their Kth Score\", \"titleSlug\": \"sort-the-students-by-their-kth-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"cba\"\n\"abcd\"",
-    "\"bcafg\"\n\"abcd\""
-  ],
+  "exampleTestcaseList": ["\"cba\"\n\"abcd\"", "\"bcafg\"\n\"abcd\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 206,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"1-23-45 6\"",
-    "\"123 4-567\"",
-    "\"123 4-5678\""
-  ],
+  "exampleTestcaseList": ["\"1-23-45 6\"", "\"123 4-567\"", "\"123 4-5678\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"activision\", \"name\": \"Activision\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

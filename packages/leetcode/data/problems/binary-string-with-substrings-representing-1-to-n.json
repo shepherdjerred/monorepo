@@ -14,10 +14,7 @@
   "dislikes": 540,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"0110\"\n3",
-    "\"0110\"\n4"
-  ],
+  "exampleTestcaseList": ["\"0110\"\n3", "\"0110\"\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"gartner\", \"name\": \"Gartner\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

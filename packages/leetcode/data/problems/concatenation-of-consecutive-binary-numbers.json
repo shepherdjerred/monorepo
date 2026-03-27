@@ -14,11 +14,7 @@
   "dislikes": 450,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Possible Number by Binary Concatenation\", \"titleSlug\": \"maximum-possible-number-by-binary-concatenation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "3",
-    "12"
-  ],
+  "exampleTestcaseList": ["1", "3", "12"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

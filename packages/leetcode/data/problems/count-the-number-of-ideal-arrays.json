@@ -16,10 +16,7 @@
   "dislikes": 133,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Ways to Make Array With Product\", \"titleSlug\": \"count-ways-to-make-array-with-product\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Beautiful Subarrays\", \"titleSlug\": \"count-the-number-of-beautiful-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n5",
-    "5\n3"
-  ],
+  "exampleTestcaseList": ["2\n5", "5\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

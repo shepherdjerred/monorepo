@@ -15,11 +15,7 @@
   "dislikes": 101,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Moves to Reach Target Score\", \"titleSlug\": \"minimum-moves-to-reach-target-score\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1101\"",
-    "\"10\"",
-    "\"1\""
-  ],
+  "exampleTestcaseList": ["\"1101\"", "\"10\"", "\"1\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"general-motors\", \"name\": \"General Motors\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"geico\", \"name\": \"Geico\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}]}",
   "topicTags": [
     {

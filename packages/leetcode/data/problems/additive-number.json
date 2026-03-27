@@ -12,10 +12,7 @@
   "dislikes": 828,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Split Array into Fibonacci Sequence\", \"titleSlug\": \"split-array-into-fibonacci-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"112358\"",
-    "\"199100199\""
-  ],
+  "exampleTestcaseList": ["\"112358\"", "\"199100199\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
   "topicTags": [
     {

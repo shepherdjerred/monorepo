@@ -16,11 +16,7 @@
   "dislikes": 86,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Zero Array Transformation II\", \"titleSlug\": \"zero-array-transformation-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Zero Array Transformation III\", \"titleSlug\": \"zero-array-transformation-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,4,3]\n4",
-    "[1,2,2,1]\n2",
-    "[1,2,1,2]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,4,3]\n4", "[1,2,2,1]\n2", "[1,2,1,2]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"curefit\", \"name\": \"CureFit\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -42,7 +42,7 @@ For HTTPS, clauderon generates a CA that signs certificates on-the-fly per domai
 | PagerDuty       | `PAGERDUTY_TOKEN`         | `pagerduty_token`       |
 | Sentry          | `SENTRY_AUTH_TOKEN`       | `sentry_auth_token`     |
 | Grafana         | `GRAFANA_API_KEY`         | `grafana_api_key`       |
-| npm             | `NPM_TOKEN`              | `npm_token`             |
+| npm             | `NPM_TOKEN`               | `npm_token`             |
 | Docker Hub      | `DOCKER_TOKEN`            | `docker_token`          |
 | Talos           | `TALOS_TOKEN`             | `talos_token`           |
 
@@ -138,8 +138,8 @@ anthropic_oauth_token = ""
 
 ## Troubleshooting
 
-| Problem | Fix |
-| --- | --- |
-| Certificate errors | `rm ~/.clauderon/proxy-ca*.pem && clauderon daemon` |
+| Problem                   | Fix                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| Certificate errors        | `rm ~/.clauderon/proxy-ca*.pem && clauderon daemon`                               |
 | Credentials not injecting | Check `clauderon config credentials` and `tail -f ~/.clauderon/audit.jsonl \| jq` |
-| Proxy unreachable | Verify daemon: `curl http://localhost:3030/health` |
+| Proxy unreachable         | Verify daemon: `curl http://localhost:3030/health`                                |

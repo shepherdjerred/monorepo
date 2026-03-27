@@ -15,10 +15,7 @@
   "dislikes": 100,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Excel Sheet Column Title\", \"titleSlug\": \"excel-sheet-column-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Excel Sheet Column Number\", \"titleSlug\": \"excel-sheet-column-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Matrix Cells in Distance Order\", \"titleSlug\": \"matrix-cells-in-distance-order\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"K1:L2\"",
-    "\"A1:F1\""
-  ],
+  "exampleTestcaseList": ["\"K1:L2\"", "\"A1:F1\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

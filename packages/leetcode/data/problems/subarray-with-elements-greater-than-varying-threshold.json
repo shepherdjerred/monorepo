@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Subarray Min-Product\", \"titleSlug\": \"maximum-subarray-min-product\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest K-Length Subsequence With Occurrences of a Letter\", \"titleSlug\": \"smallest-k-length-subsequence-with-occurrences-of-a-letter\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"K Divisible Elements Subarrays\", \"titleSlug\": \"k-divisible-elements-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,3,4,3,1]\n6",
-    "[6,5,6,5,8]\n7"
-  ],
+  "exampleTestcaseList": ["[1,3,4,3,1]\n6", "[6,5,6,5,8]\n7"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 30, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"instabase\", \"name\": \"instabase\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

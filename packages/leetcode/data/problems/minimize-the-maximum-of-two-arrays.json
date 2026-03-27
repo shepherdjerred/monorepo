@@ -15,11 +15,7 @@
   "dislikes": 103,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n7\n1\n3",
-    "3\n5\n2\n1",
-    "2\n4\n8\n2"
-  ],
+  "exampleTestcaseList": ["2\n7\n1\n3", "3\n5\n2\n1", "2\n4\n8\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

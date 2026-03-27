@@ -14,10 +14,7 @@
   "dislikes": 187,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[4000,3000,1000,2000]",
-    "[1000,2000,3000]"
-  ],
+  "exampleTestcaseList": ["[4000,3000,1000,2000]", "[1000,2000,3000]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"netsuite\", \"name\": \"Netsuite\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

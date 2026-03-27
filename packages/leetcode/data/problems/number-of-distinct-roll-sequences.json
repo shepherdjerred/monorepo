@@ -16,10 +16,7 @@
   "dislikes": 20,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Dice Roll Simulation\", \"titleSlug\": \"dice-roll-simulation\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Paint House III\", \"titleSlug\": \"paint-house-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4",
-    "2"
-  ],
+  "exampleTestcaseList": ["4", "2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

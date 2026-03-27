@@ -118,12 +118,14 @@ Use `--toolchain_resolution_debug` to troubleshoot selection issues.
 Push complex logic to the execution phase via a builder binary written in a general-purpose language (Go, Rust, Python). This is the most important pattern for non-trivial rulesets.
 
 **Why:**
+
 - Starlark (loading/analysis) should remain simple — declare files, actions, and inputs
 - Complex logic (parsing, code generation, file filtering) needs full I/O
 - Builder runs during execution — benefits from remote execution and caching
 - Can be written in any language with access to standard libraries
 
 **How:**
+
 - Write a single builder binary that handles multiple "verbs" (compile, link, test)
 - Define a bootstrap rule (`go_tool_binary` / `rust_tool_binary`) to compile the builder itself
 - All user-facing rules invoke the builder via `ctx.actions.run()`

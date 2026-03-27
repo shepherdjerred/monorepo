@@ -60,7 +60,10 @@ describe("excalidrawSemanticDiff", () => {
     };
 
     const result = excalidrawSemanticDiff(emptyDiagram, newDiagram);
-    expect(result.addedComponents.toSorted()).toEqual(["API Server", "Database"]);
+    expect(result.addedComponents.toSorted()).toEqual([
+      "API Server",
+      "Database",
+    ]);
     expect(result.removedComponents).toHaveLength(0);
   });
 
@@ -74,22 +77,21 @@ describe("excalidrawSemanticDiff", () => {
     };
 
     const result = excalidrawSemanticDiff(oldDiagram, emptyDiagram);
-    expect(result.removedComponents.toSorted()).toEqual(["API Server", "Cache"]);
+    expect(result.removedComponents.toSorted()).toEqual([
+      "API Server",
+      "Cache",
+    ]);
     expect(result.addedComponents).toHaveLength(0);
   });
 
   test("detects modified components (position change)", () => {
     const oldDiagram: DiagramExtraction = {
-      components: [
-        { name: "Server", type: "rectangle", x: 0, y: 0 },
-      ],
+      components: [{ name: "Server", type: "rectangle", x: 0, y: 0 }],
       connections: [],
     };
 
     const newDiagram: DiagramExtraction = {
-      components: [
-        { name: "Server", type: "rectangle", x: 100, y: 200 },
-      ],
+      components: [{ name: "Server", type: "rectangle", x: 100, y: 200 }],
       connections: [],
     };
 
@@ -138,9 +140,7 @@ describe("excalidrawSemanticDiff", () => {
 
   test("handles no changes", () => {
     const diagram: DiagramExtraction = {
-      components: [
-        { name: "Server", type: "rectangle", x: 10, y: 20 },
-      ],
+      components: [{ name: "Server", type: "rectangle", x: 10, y: 20 }],
       connections: [{ from: "Server", to: "DB", label: "SQL" }],
     };
 

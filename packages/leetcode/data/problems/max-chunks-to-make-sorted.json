@@ -14,10 +14,7 @@
   "dislikes": 367,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Max Chunks To Make Sorted II\", \"titleSlug\": \"max-chunks-to-make-sorted-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,3,2,1,0]",
-    "[1,0,2,3,4]"
-  ],
+  "exampleTestcaseList": ["[4,3,2,1,0]", "[1,0,2,3,4]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"poshmark\", \"name\": \"Poshmark\"}], \"three_months\": []}",
   "topicTags": [
     {

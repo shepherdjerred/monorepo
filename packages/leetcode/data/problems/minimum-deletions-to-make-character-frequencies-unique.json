@@ -16,11 +16,7 @@
   "dislikes": 76,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Deletions to Make Array Beautiful\", \"titleSlug\": \"minimum-deletions-to-make-array-beautiful\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Removing Minimum and Maximum From Array\", \"titleSlug\": \"removing-minimum-and-maximum-from-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Letter To Equalize Frequency\", \"titleSlug\": \"remove-letter-to-equalize-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Deletions to Make String K-Special\", \"titleSlug\": \"minimum-deletions-to-make-string-k-special\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aab\"",
-    "\"aaabbbcc\"",
-    "\"ceabaacb\""
-  ],
+  "exampleTestcaseList": ["\"aab\"", "\"aaabbbcc\"", "\"ceabaacb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"american-express\", \"name\": \"American Express\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"smartnews\", \"name\": \"smartnews\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

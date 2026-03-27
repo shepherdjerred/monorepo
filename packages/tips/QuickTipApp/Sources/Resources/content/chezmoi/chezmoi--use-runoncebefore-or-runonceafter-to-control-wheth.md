@@ -6,4 +6,4 @@ website: https://www.chezmoi.io
 category: Scripts
 ---
 
-- Use run_once_before_ or run_once_after_ to control whether a script runs before or after dotfiles are applied.
+- Use run*once_before* or run*once_after* to control whether a script runs before or after dotfiles are applied.

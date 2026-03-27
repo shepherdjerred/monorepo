@@ -16,10 +16,7 @@
   "dislikes": 83,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Score Words Formed by Letters\", \"titleSlug\": \"maximum-score-words-formed-by-letters\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[2,1,2],[1,2,2],[2,0,2]]",
-    "[[2,0],[0,2]]"
-  ],
+  "exampleTestcaseList": ["[[2,1,2],[1,2,2],[2,0,2]]", "[[2,0],[0,2]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tusimple\", \"name\": \"TuSimple\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

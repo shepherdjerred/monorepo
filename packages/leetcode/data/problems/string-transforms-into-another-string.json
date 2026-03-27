@@ -19,10 +19,7 @@
   "dislikes": 339,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aabcc\"\n\"ccdee\"",
-    "\"leetcode\"\n\"codeleet\""
-  ],
+  "exampleTestcaseList": ["\"aabcc\"\n\"ccdee\"", "\"leetcode\"\n\"codeleet\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

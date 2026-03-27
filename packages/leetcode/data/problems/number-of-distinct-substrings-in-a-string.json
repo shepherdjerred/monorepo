@@ -17,10 +17,7 @@
   "dislikes": 44,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"aabbaba\"",
-    "\"abcdefg\""
-  ],
+  "exampleTestcaseList": ["\"aabbaba\"", "\"abcdefg\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"intuit\", \"name\": \"Intuit\"}, {\"timesEncountered\": 2, \"slug\": \"dunzo\", \"name\": \"Dunzo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

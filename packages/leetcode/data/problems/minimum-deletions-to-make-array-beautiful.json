@@ -15,10 +15,7 @@
   "dislikes": 96,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Deletions to Make Character Frequencies Unique\", \"titleSlug\": \"minimum-deletions-to-make-character-frequencies-unique\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make the Array Alternating\", \"titleSlug\": \"minimum-operations-to-make-the-array-alternating\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,2,3,5]",
-    "[1,1,2,2,3,3]"
-  ],
+  "exampleTestcaseList": ["[1,1,2,3,5]", "[1,1,2,2,3,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

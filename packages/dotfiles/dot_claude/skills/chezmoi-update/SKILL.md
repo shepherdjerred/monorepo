@@ -27,12 +27,13 @@ The live filesystem is always the source of truth. The chezmoi source (repo) is 
 chezmoi source-path ~/.example/config.json
 ```
 
-| Source filename pattern | Type | Sync method |
-|---|---|---|
-| `*.tmpl` | Template | Edit template directly |
-| Plain file (no special prefix) | Plain file | `chezmoi re-add` |
+| Source filename pattern        | Type       | Sync method            |
+| ------------------------------ | ---------- | ---------------------- |
+| `*.tmpl`                       | Template   | Edit template directly |
+| Plain file (no special prefix) | Plain file | `chezmoi re-add`       |
 
 Also check for **permission diffs** (`old mode`/`new mode` in diff output):
+
 - Mode `100600` = private (needs `private_` in filename)
 - Mode `100644` = normal (no `private_` prefix)
 

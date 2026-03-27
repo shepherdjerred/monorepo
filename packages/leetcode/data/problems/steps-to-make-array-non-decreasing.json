@@ -16,10 +16,7 @@
   "dislikes": 149,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove One Element to Make the Array Strictly Increasing\", \"titleSlug\": \"remove-one-element-to-make-the-array-strictly-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,3,4,4,7,3,6,11,8,5,11]",
-    "[4,5,7,7,13]"
-  ],
+  "exampleTestcaseList": ["[5,3,4,4,7,3,6,11,8,5,11]", "[4,5,7,7,13]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

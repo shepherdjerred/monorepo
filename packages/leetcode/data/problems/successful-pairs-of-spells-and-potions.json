@@ -16,10 +16,7 @@
   "dislikes": 105,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Most Profit Assigning Work\", \"titleSlug\": \"most-profit-assigning-work\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Subsequence With Limited Sum\", \"titleSlug\": \"longest-subsequence-with-limited-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Matching of Players With Trainers\", \"titleSlug\": \"maximum-matching-of-players-with-trainers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,1,3]\n[1,2,3,4,5]\n7",
-    "[3,1,2]\n[8,5,8]\n16"
-  ],
+  "exampleTestcaseList": ["[5,1,3]\n[1,2,3,4,5]\n7", "[3,1,2]\n[8,5,8]\n16"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": []}",
   "topicTags": [
     {

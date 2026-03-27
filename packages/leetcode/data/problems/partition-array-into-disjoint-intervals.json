@@ -12,10 +12,7 @@
   "dislikes": 83,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of Beauty in the Array\", \"titleSlug\": \"sum-of-beauty-in-the-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Optimal Partition of String\", \"titleSlug\": \"optimal-partition-of-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Index of a Valid Split\", \"titleSlug\": \"minimum-index-of-a-valid-split\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Strength of K Disjoint Subarrays\", \"titleSlug\": \"maximum-strength-of-k-disjoint-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,0,3,8,6]",
-    "[1,1,1,0,6,12]"
-  ],
+  "exampleTestcaseList": ["[5,0,3,8,6]", "[1,1,1,0,6,12]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

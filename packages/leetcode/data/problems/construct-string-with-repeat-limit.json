@@ -15,10 +15,7 @@
   "dislikes": 102,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Rearrange String k Distance Apart\", \"titleSlug\": \"rearrange-string-k-distance-apart\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"cczazcc\"\n3",
-    "\"aababab\"\n2"
-  ],
+  "exampleTestcaseList": ["\"cczazcc\"\n3", "\"aababab\"\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 3, \"slug\": \"fortinet\", \"name\": \"Fortinet\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
   "topicTags": [
     {

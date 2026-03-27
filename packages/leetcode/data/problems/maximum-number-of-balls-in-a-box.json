@@ -15,11 +15,7 @@
   "dislikes": 171,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Number of Distinct Colors Among the Balls\", \"titleSlug\": \"find-the-number-of-distinct-colors-among-the-balls\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n10",
-    "5\n15",
-    "19\n28"
-  ],
+  "exampleTestcaseList": ["1\n10", "5\n15", "19\n28"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 2, \"slug\": \"appdynamics\", \"name\": \"AppDynamics\"}, {\"timesEncountered\": 2, \"slug\": \"lucid\", \"name\": \"Lucid\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

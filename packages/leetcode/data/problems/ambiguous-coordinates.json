@@ -12,11 +12,7 @@
   "dislikes": 668,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"(123)\"",
-    "\"(0123)\"",
-    "\"(00011)\""
-  ],
+  "exampleTestcaseList": ["\"(123)\"", "\"(0123)\"", "\"(00011)\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 443,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Fizz Buzz\", \"titleSlug\": \"fizz-buzz\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Print Zero Even Odd\", \"titleSlug\": \"print-zero-even-odd\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "15",
-    "5"
-  ],
+  "exampleTestcaseList": ["15", "5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"gartner\", \"name\": \"Gartner\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

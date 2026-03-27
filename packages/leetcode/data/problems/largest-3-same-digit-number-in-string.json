@@ -15,11 +15,7 @@
   "dislikes": 55,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Odd Number in String\", \"titleSlug\": \"largest-odd-number-in-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"6777133339\"",
-    "\"2300019\"",
-    "\"42352338\""
-  ],
+  "exampleTestcaseList": ["\"6777133339\"", "\"2300019\"", "\"42352338\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"paypay\", \"name\": \"PayPay\"}, {\"timesEncountered\": 2, \"slug\": \"opentext\", \"name\": \"opentext\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

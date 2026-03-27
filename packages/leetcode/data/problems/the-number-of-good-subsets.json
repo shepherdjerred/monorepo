@@ -15,10 +15,7 @@
   "dislikes": 17,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest Sufficient Team\", \"titleSlug\": \"smallest-sufficient-team\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Fair Distribution of Cookies\", \"titleSlug\": \"fair-distribution-of-cookies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Wear Different Hats to Each Other\", \"titleSlug\": \"number-of-ways-to-wear-different-hats-to-each-other\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[4,2,3,15]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[4,2,3,15]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"medianet\", \"name\": \"Media.net\"}, {\"timesEncountered\": 2, \"slug\": \"lowe\", \"name\": \"Lowe's\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

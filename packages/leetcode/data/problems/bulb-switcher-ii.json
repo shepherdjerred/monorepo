@@ -12,11 +12,7 @@
   "dislikes": 246,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Bulb Switcher\", \"titleSlug\": \"bulb-switcher\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Times Binary String Is Prefix-Aligned\", \"titleSlug\": \"number-of-times-binary-string-is-prefix-aligned\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n1",
-    "2\n1",
-    "3\n1"
-  ],
+  "exampleTestcaseList": ["1\n1", "2\n1", "3\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

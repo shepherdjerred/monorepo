@@ -4,15 +4,15 @@ Typst has a rich ecosystem of visualization packages. Use these to make document
 
 ## When to Use What
 
-| Need | Package | Why |
-|------|---------|-----|
-| Flowcharts, architecture diagrams, node-arrow figures | `fletcher` | Declarative node/edge API, built on CeTZ |
-| Custom drawings, geometric figures, coordinate graphics | `cetz` | TikZ-like general-purpose drawing |
-| Data plots (line, scatter, bar, contour, boxplot) | `lilaq` | Publication-quality scientific plots |
-| Graphviz DOT diagrams | `diagraph` | Renders DOT with Typst-native labels |
-| Sequence, ERD, component, activity, mind map, Gantt | `pintorita` | Pintora-based multi-diagram tool |
-| Gantt charts, project timelines | `timeliney` | Dedicated Gantt chart layout |
-| Info/warning/tip callout boxes | `gentle-clues` | Predefined admonition styles |
+| Need                                                    | Package        | Why                                      |
+| ------------------------------------------------------- | -------------- | ---------------------------------------- |
+| Flowcharts, architecture diagrams, node-arrow figures   | `fletcher`     | Declarative node/edge API, built on CeTZ |
+| Custom drawings, geometric figures, coordinate graphics | `cetz`         | TikZ-like general-purpose drawing        |
+| Data plots (line, scatter, bar, contour, boxplot)       | `lilaq`        | Publication-quality scientific plots     |
+| Graphviz DOT diagrams                                   | `diagraph`     | Renders DOT with Typst-native labels     |
+| Sequence, ERD, component, activity, mind map, Gantt     | `pintorita`    | Pintora-based multi-diagram tool         |
+| Gantt charts, project timelines                         | `timeliney`    | Dedicated Gantt chart layout             |
+| Info/warning/tip callout boxes                          | `gentle-clues` | Predefined admonition styles             |
 
 ## Package Imports
 
@@ -45,6 +45,7 @@ Best for: architecture diagrams, flowcharts, state machines, dependency graphs.
 ```
 
 Key features:
+
 - Nodes placed on a coordinate grid
 - Edges with labels, arrow styles (`"->""`, `"<->"`, `"--"`, `"=>"`)
 - Named nodes via `name: <label>` for readable edge definitions
@@ -66,6 +67,7 @@ Best for: geometric figures, custom diagrams, coordinate-based graphics.
 ```
 
 Sub-libraries:
+
 - `cetz-plot` — Line plots, bar charts within CeTZ canvas
 - `cetz-venn` — Venn diagrams
 

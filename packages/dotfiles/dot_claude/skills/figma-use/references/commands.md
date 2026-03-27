@@ -4,95 +4,97 @@
 
 ### Size & Position
 
-| Short | Full | Values |
-|-------|------|--------|
-| `w`, `h` | width, height | number or `"fill"` |
-| `minW`, `maxW` | minWidth, maxWidth | number |
-| `minH`, `maxH` | minHeight, maxHeight | number |
-| `x`, `y` | position | number |
+| Short          | Full                 | Values             |
+| -------------- | -------------------- | ------------------ |
+| `w`, `h`       | width, height        | number or `"fill"` |
+| `minW`, `maxW` | minWidth, maxWidth   | number             |
+| `minH`, `maxH` | minHeight, maxHeight | number             |
+| `x`, `y`       | position             | number             |
 
 ### Layout
 
-| Short | Full | Values |
-|-------|------|--------|
-| `flex` | flexDirection | `"row"`, `"col"` |
-| `gap` | spacing | number |
-| `wrap` | layoutWrap | `true` |
-| `justify` | justifyContent | `"start"`, `"center"`, `"end"`, `"between"` |
-| `items` | alignItems | `"start"`, `"center"`, `"end"` |
-| `p`, `px`, `py` | padding | number |
-| `pt`, `pr`, `pb`, `pl` | padding sides | number |
-| `position` | layoutPositioning | `"absolute"` |
-| `grow` | layoutGrow | number |
-| `stretch` | layoutAlign | `true` -> STRETCH |
+| Short                  | Full              | Values                                      |
+| ---------------------- | ----------------- | ------------------------------------------- |
+| `flex`                 | flexDirection     | `"row"`, `"col"`                            |
+| `gap`                  | spacing           | number                                      |
+| `wrap`                 | layoutWrap        | `true`                                      |
+| `justify`              | justifyContent    | `"start"`, `"center"`, `"end"`, `"between"` |
+| `items`                | alignItems        | `"start"`, `"center"`, `"end"`              |
+| `p`, `px`, `py`        | padding           | number                                      |
+| `pt`, `pr`, `pb`, `pl` | padding sides     | number                                      |
+| `position`             | layoutPositioning | `"absolute"`                                |
+| `grow`                 | layoutGrow        | number                                      |
+| `stretch`              | layoutAlign       | `true` -> STRETCH                           |
 
 ### Appearance
 
-| Short | Full | Values |
-|-------|------|--------|
-| `bg` | fill | hex or `$Variable` |
-| `stroke` | strokeColor | hex |
-| `strokeWidth` | strokeWeight | number |
-| `strokeAlign` | strokeAlign | `"inside"`, `"outside"` |
-| `opacity` | opacity | 0..1 |
-| `blendMode` | blendMode | `"multiply"`, etc. |
+| Short         | Full         | Values                  |
+| ------------- | ------------ | ----------------------- |
+| `bg`          | fill         | hex or `$Variable`      |
+| `stroke`      | strokeColor  | hex                     |
+| `strokeWidth` | strokeWeight | number                  |
+| `strokeAlign` | strokeAlign  | `"inside"`, `"outside"` |
+| `opacity`     | opacity      | 0..1                    |
+| `blendMode`   | blendMode    | `"multiply"`, etc.      |
 
 ### Corners
 
-| Short | Full | Values |
-|-------|------|--------|
-| `rounded` | cornerRadius | number |
-| `roundedTL/TR/BL/BR` | individual corners | number |
-| `cornerSmoothing` | squircle smoothing | 0..1 (iOS style) |
+| Short                | Full               | Values           |
+| -------------------- | ------------------ | ---------------- |
+| `rounded`            | cornerRadius       | number           |
+| `roundedTL/TR/BL/BR` | individual corners | number           |
+| `cornerSmoothing`    | squircle smoothing | 0..1 (iOS style) |
 
 ### Effects
 
-| Short | Full | Values |
-|-------|------|--------|
-| `shadow` | dropShadow | `"0px 4px 8px rgba(0,0,0,0.25)"` |
-| `blur` | layerBlur | number |
-| `overflow` | clipsContent | `"hidden"` |
-| `rotate` | rotation | degrees |
+| Short      | Full         | Values                           |
+| ---------- | ------------ | -------------------------------- |
+| `shadow`   | dropShadow   | `"0px 4px 8px rgba(0,0,0,0.25)"` |
+| `blur`     | layerBlur    | number                           |
+| `overflow` | clipsContent | `"hidden"`                       |
+| `rotate`   | rotation     | degrees                          |
 
 ### Text
 
-| Short | Full | Values |
-|-------|------|--------|
-| `size` | fontSize | number |
+| Short    | Full       | Values           |
+| -------- | ---------- | ---------------- |
+| `size`   | fontSize   | number           |
 | `weight` | fontWeight | `"bold"`, number |
-| `font` | fontFamily | string |
-| `color` | textColor | hex |
+| `font`   | fontFamily | string           |
+| `color`  | textColor  | hex              |
 
 ### Grid (CSS Grid layout)
 
-| Short | Full | Values |
-|-------|------|--------|
-| `display` | layoutMode | `"grid"` |
-| `cols` | gridTemplateColumns | `"100px 1fr auto"` |
-| `rows` | gridTemplateRows | `"auto auto"` |
-| `colGap` | columnGap | number |
-| `rowGap` | rowGap | number |
+| Short     | Full                | Values             |
+| --------- | ------------------- | ------------------ |
+| `display` | layoutMode          | `"grid"`           |
+| `cols`    | gridTemplateColumns | `"100px 1fr auto"` |
+| `rows`    | gridTemplateRows    | `"auto auto"`      |
+| `colGap`  | columnGap           | number             |
+| `rowGap`  | rowGap              | number             |
 
 ## Components
 
 First call creates master, rest create instances:
 
 ```tsx
-import { defineComponent, Frame, Text } from 'figma-use/render'
+import { defineComponent, Frame, Text } from "figma-use/render";
 
 const Card = defineComponent(
-  'Card',
+  "Card",
   <Frame p={24} bg="#FFF" rounded={12}>
-    <Text size={18} color="#000">Card</Text>
-  </Frame>
-)
+    <Text size={18} color="#000">
+      Card
+    </Text>
+  </Frame>,
+);
 
 export default () => (
   <Frame gap={16} flex="row">
     <Card />
     <Card />
   </Frame>
-)
+);
 ```
 
 Render: `figma-use render ./Card.figma.tsx --x 100 --y 200`
@@ -100,26 +102,26 @@ Render: `figma-use render ./Card.figma.tsx --x 100 --y 200`
 ## Variants (ComponentSet)
 
 ```tsx
-import { defineComponentSet, Frame, Text } from 'figma-use/render'
+import { defineComponentSet, Frame, Text } from "figma-use/render";
 
 const Button = defineComponentSet(
-  'Button',
+  "Button",
   {
-    variant: ['Primary', 'Secondary'] as const,
-    size: ['Small', 'Large'] as const
+    variant: ["Primary", "Secondary"] as const,
+    size: ["Small", "Large"] as const,
   },
   ({ variant, size }) => (
     <Frame
-      p={size === 'Large' ? 16 : 8}
-      bg={variant === 'Primary' ? '#3B82F6' : '#E5E7EB'}
+      p={size === "Large" ? 16 : 8}
+      bg={variant === "Primary" ? "#3B82F6" : "#E5E7EB"}
       rounded={8}
     >
-      <Text color={variant === 'Primary' ? '#FFF' : '#111'}>
+      <Text color={variant === "Primary" ? "#FFF" : "#111"}>
         {variant} {size}
       </Text>
     </Frame>
-  )
-)
+  ),
+);
 ```
 
 ## Variables as Tokens

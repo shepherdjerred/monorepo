@@ -60,6 +60,7 @@ def _my_library_impl(ctx):
 ```
 
 ### When to_list() is Acceptable
+
 - Terminal rules (binaries, test rules) where flattening cost is O(N) total
 - Debugging and inspection
 - Even in terminal rules, be cautious: overlapping deps (test suites, IDE imports) can still cause quadratic costs
@@ -99,6 +100,7 @@ def _my_rule_impl(ctx):
 ```
 
 ### Key Rules
+
 - Pass depsets directly to `args.add_all()` -- never convert to lists first
 - Use `format_each` and `map_each` parameters instead of string concatenation
 - Use `use_param_file` for commands that might exceed shell limits
@@ -109,6 +111,7 @@ def _my_rule_impl(ctx):
 ## Minimal Input Declaration
 
 Declare only the inputs an action actually needs. Extra inputs increase:
+
 - File stat overhead (Bazel checks each input for changes)
 - Sandbox setup cost (each input gets symlinked)
 - Remote cache upload size
@@ -165,6 +168,7 @@ Validation outputs are always requested regardless of `--output_groups` settings
 ## Configuration Transitions
 
 Minimize user-defined configuration transitions. Each transition:
+
 - Creates a new copy of the configured target graph for that subtree
 - Increases memory usage
 - Makes the build graph larger and harder to debug
@@ -176,6 +180,7 @@ If you need a transition, prefer 1:1 transitions over 1:2+ splits.
 ## Toolchain Registration
 
 Split toolchain repos into definition and implementation:
+
 - **Definition repo**: Contains only the toolchain target (always fetched during analysis)
 - **Implementation repo**: Contains the actual tools (deferred until needed)
 

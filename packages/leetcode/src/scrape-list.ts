@@ -1,7 +1,12 @@
-import { LeetCodeClient, formatDuration, timestamp } from "./lib/leetcode-graphql";
+import {
+  LeetCodeClient,
+  formatDuration,
+  timestamp,
+} from "./lib/leetcode-graphql";
 
 const BATCH_SIZE = 100;
-const OUTPUT_PATH = new URL("../data/problems-list.json", import.meta.url).pathname;
+const OUTPUT_PATH = new URL("../data/problems-list.json", import.meta.url)
+  .pathname;
 
 const LIST_QUERY = `
 query problemsetQuestionListV2($categorySlug: String!, $limit: Int, $skip: Int, $filters: QuestionFilterInput!) {
@@ -40,7 +45,8 @@ interface ProblemListResponse {
 
 async function main() {
   const client = new LeetCodeClient(2000, 4000);
-  const allQuestions: ProblemListResponse["problemsetQuestionListV2"]["questions"] = [];
+  const allQuestions: ProblemListResponse["problemsetQuestionListV2"]["questions"] =
+    [];
   const startTime = Date.now();
 
   console.log(`[${timestamp()}] Starting problem list scrape...`);

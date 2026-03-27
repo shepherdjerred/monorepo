@@ -12,10 +12,7 @@
   "dislikes": 1904,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Kth Smallest Element in a BST\", \"titleSlug\": \"kth-smallest-element-in-a-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,2,5,null,null,5,7]",
-    "[2,2,2]"
-  ],
+  "exampleTestcaseList": ["[2,2,5,null,null,5,7]", "[2,2,2]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
   "topicTags": [
     {

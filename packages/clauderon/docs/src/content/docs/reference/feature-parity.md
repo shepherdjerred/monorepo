@@ -35,28 +35,28 @@ description: Comprehensive tracking of feature implementation across platforms a
 
 ### Session Creation
 
-| Feature                     | TUI | Web | Mobile |
-| --------------------------- | :-: | :-: | :----: |
-| Repository path selection   | ✅  | ✅  |   ✅   |
-| Directory browser           | ✅  | ✅  |   ❌   |
-| External editor (Ctrl+E)    | ✅  | ❌  |   ❌   |
-| Backend/Agent selection     | ✅  | ✅  |   ✅   |
-| Model selection             | ✅  | ✅  |   ❌   |
-| Access mode / Plan mode     | ✅  | ✅  |   ✅   |
-| Multi-repository support    | ❌  | ✅  |   ❌   |
+| Feature                             | TUI | Web | Mobile |
+| ----------------------------------- | :-: | :-: | :----: |
+| Repository path selection           | ✅  | ✅  |   ✅   |
+| Directory browser                   | ✅  | ✅  |   ❌   |
+| External editor (Ctrl+E)            | ✅  | ❌  |   ❌   |
+| Backend/Agent selection             | ✅  | ✅  |   ✅   |
+| Model selection                     | ✅  | ✅  |   ❌   |
+| Access mode / Plan mode             | ✅  | ✅  |   ✅   |
+| Multi-repository support            | ❌  | ✅  |   ❌   |
 | Container config (image/CPU/memory) | ❌  | ✅  |   ❌   |
-| Image attachments           | ✅  | ✅  |   ❌   |
+| Image attachments                   | ✅  | ✅  |   ❌   |
 
 ### Terminal/Console
 
-| Feature                              | TUI | Web | Mobile |
-| ------------------------------------ | :-: | :-: | :----: |
-| Full PTY / terminal emulation        | ✅  | ✅  |   ❌   |
-| Scrollback buffer (10k lines)        | ✅  | ✅  |   ❌   |
-| Copy mode / text selection           | ✅  | ✅  |   ❌   |
-| Locked mode                          | ✅  | ❌  |   ❌   |
-| Signal menu (Ctrl+M)                 | ✅  | ❌  |   ❌   |
-| Session switching (Ctrl+P/N)         | ✅  | ❌  |   ❌   |
+| Feature                       | TUI | Web | Mobile |
+| ----------------------------- | :-: | :-: | :----: |
+| Full PTY / terminal emulation | ✅  | ✅  |   ❌   |
+| Scrollback buffer (10k lines) | ✅  | ✅  |   ❌   |
+| Copy mode / text selection    | ✅  | ✅  |   ❌   |
+| Locked mode                   | ✅  | ❌  |   ❌   |
+| Signal menu (Ctrl+M)          | ✅  | ❌  |   ❌   |
+| Session switching (Ctrl+P/N)  | ✅  | ❌  |   ❌   |
 
 ### Chat Interface
 
@@ -69,12 +69,12 @@ description: Comprehensive tracking of feature implementation across platforms a
 
 ### Health & Recovery
 
-| Feature                        | TUI | Web | Mobile |
-| ------------------------------ | :-: | :-: | :----: |
-| Health status per session      | ✅  | ✅  |   ❌   |
+| Feature                                      | TUI | Web | Mobile |
+| -------------------------------------------- | :-: | :-: | :----: |
+| Health status per session                    | ✅  | ✅  |   ❌   |
 | Health actions (Start/Wake/Recreate/Cleanup) | ✅  | ✅  |   ❌   |
-| Data safety indicator          | ✅  | ✅  |   ❌   |
-| Retry reconciliation           | ✅  | ❌  |   ❌   |
+| Data safety indicator                        | ✅  | ✅  |   ❌   |
+| Retry reconciliation                         | ✅  | ❌  |   ❌   |
 
 ### Settings & Authentication
 
@@ -91,21 +91,21 @@ description: Comprehensive tracking of feature implementation across platforms a
 
 ## Backend Capabilities Matrix
 
-| Feature                | Docker          | Zellij         |
+| Feature                |     Docker      |     Zellij     |
 | ---------------------- | :-------------: | :------------: |
 | Environment type       | Local container | Local terminal |
-| Container isolation    | ✅              | ❌             |
-| Multi-repo support     | ✅              | ❌             |
-| CPU/Memory limits      | ✅              | ❌             |
-| Custom container image | ✅              | N/A            |
-| Volume mode option     | ✅              | N/A            |
-| Shared cargo/sccache   | ✅ Named volume | ✅ Host        |
-| Zero-credential proxy  | ✅ Optional     | N/A            |
-| Claude Code            | ✅              | ✅             |
-| Codex                  | ✅              | ❌             |
-| Gemini                 | ✅              | ✅             |
-| Plan mode / Print mode | ✅ / ✅         | ✅ / ❌        |
-| Hooks support          | ✅ HTTP         | ❌             |
+| Container isolation    |       ✅        |       ❌       |
+| Multi-repo support     |       ✅        |       ❌       |
+| CPU/Memory limits      |       ✅        |       ❌       |
+| Custom container image |       ✅        |      N/A       |
+| Volume mode option     |       ✅        |      N/A       |
+| Shared cargo/sccache   | ✅ Named volume |    ✅ Host     |
+| Zero-credential proxy  |   ✅ Optional   |      N/A       |
+| Claude Code            |       ✅        |       ✅       |
+| Codex                  |       ✅        |       ❌       |
+| Gemini                 |       ✅        |       ✅       |
+| Plan mode / Print mode |     ✅ / ✅     |    ✅ / ❌     |
+| Hooks support          |     ✅ HTTP     |       ❌       |
 
 ---
 
@@ -157,12 +157,12 @@ description: Comprehensive tracking of feature implementation across platforms a
 
 ### Medium
 
-| Gap                       | Affected | Impact                          |
-| ------------------------- | -------- | ------------------------------- |
-| TUI: No metadata editing  | TUI      | Cannot update title/description |
-| TUI: No system status     | TUI      | Cannot view credentials/usage   |
-| Mobile: No terminal       | Mobile   | Text-only, no PTY              |
-| Mobile: No container config | Mobile | Cannot set CPU/memory/image     |
+| Gap                         | Affected | Impact                          |
+| --------------------------- | -------- | ------------------------------- |
+| TUI: No metadata editing    | TUI      | Cannot update title/description |
+| TUI: No system status       | TUI      | Cannot view credentials/usage   |
+| Mobile: No terminal         | Mobile   | Text-only, no PTY               |
+| Mobile: No container config | Mobile   | Cannot set CPU/memory/image     |
 
 ---
 

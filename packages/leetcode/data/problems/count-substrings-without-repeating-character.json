@@ -12,11 +12,7 @@
   "dislikes": 2,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Complete Substrings\", \"titleSlug\": \"count-complete-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcd\"",
-    "\"ooo\"",
-    "\"abab\""
-  ],
+  "exampleTestcaseList": ["\"abcd\"", "\"ooo\"", "\"abab\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

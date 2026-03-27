@@ -16,10 +16,7 @@
   "dislikes": 5,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Intersection of Two Arrays\", \"titleSlug\": \"intersection-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Intersection of Two Arrays II\", \"titleSlug\": \"intersection-of-two-arrays-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum XOR Sum of Two Arrays\", \"titleSlug\": \"minimum-xor-sum-of-two-arrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize Product Sum of Two Arrays\", \"titleSlug\": \"minimize-product-sum-of-two-arrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,5]\n[2,6,3]",
-    "[0,1]\n[1,0]"
-  ],
+  "exampleTestcaseList": ["[1,2,5]\n[2,6,3]", "[0,1]\n[1,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,7 +16,8 @@ export async function startContainer(
       "docker",
       "run",
       "-d",
-      "--name", `excalidraw-interview-${String(port)}`,
+      "--name",
+      `excalidraw-interview-${String(port)}`,
       "-p",
       `${String(port)}:80`,
       image,
@@ -30,9 +31,7 @@ export async function startContainer(
   const exitCode = await proc.exited;
   if (exitCode !== 0) {
     const stderr = await new Response(proc.stderr).text();
-    throw new Error(
-      `Failed to start Excalidraw container: ${stderr.trim()}`,
-    );
+    throw new Error(`Failed to start Excalidraw container: ${stderr.trim()}`);
   }
 
   const stdout = await new Response(proc.stdout).text();
@@ -66,9 +65,7 @@ export async function stopContainer(containerId: string): Promise<void> {
 
 export async function healthCheck(port: number): Promise<boolean> {
   try {
-    const response = await fetch(
-      `http://localhost:${String(port)}`,
-    );
+    const response = await fetch(`http://localhost:${String(port)}`);
     return response.ok;
   } catch {
     return false;

@@ -8,7 +8,10 @@ export type RealtimeClientEvent =
   | { type: "input_audio_buffer.append"; audio: string }
   | { type: "input_audio_buffer.commit" }
   | { type: "response.create" }
-  | { type: "conversation.item.create"; item: ConversationItem | FunctionCallOutputItem };
+  | {
+      type: "conversation.item.create";
+      item: ConversationItem | FunctionCallOutputItem;
+    };
 
 export type FunctionCallOutputItem = {
   type: "function_call_output";
@@ -26,10 +29,20 @@ export type RealtimeServerEvent =
   | { type: "session.created"; session: Record<string, unknown> }
   | { type: "session.updated"; session: Record<string, unknown> }
   | { type: "error"; error: { type: string; code: string; message: string } }
-  | { type: "conversation.item.input_audio_transcription.completed"; transcript: string; item_id: string }
+  | {
+      type: "conversation.item.input_audio_transcription.completed";
+      transcript: string;
+      item_id: string;
+    }
   | { type: "response.audio.delta"; delta: string; response_id: string }
   | { type: "response.audio.done"; response_id: string }
-  | { type: "response.function_call_arguments.done"; call_id: string; name: string; arguments: string; item_id: string }
+  | {
+      type: "response.function_call_arguments.done";
+      call_id: string;
+      name: string;
+      arguments: string;
+      item_id: string;
+    }
   | { type: "response.done"; response: ResponseDonePayload }
   | { type: "response.text.delta"; delta: string }
   | { type: "response.text.done"; text: string }
@@ -42,13 +55,21 @@ export type ResponseDonePayload = {
   output: {
     type: string;
     role?: string | undefined;
-    content?: { type: string; text?: string | undefined; transcript?: string | undefined }[] | undefined;
+    content?:
+      | {
+          type: string;
+          text?: string | undefined;
+          transcript?: string | undefined;
+        }[]
+      | undefined;
   }[];
-  usage?: {
-    total_tokens: number;
-    input_tokens: number;
-    output_tokens: number;
-  } | undefined;
+  usage?:
+    | {
+        total_tokens: number;
+        input_tokens: number;
+        output_tokens: number;
+      }
+    | undefined;
 };
 
 export type RealtimeSessionConfig = {
@@ -77,7 +98,12 @@ export type RealtimeCallbacks = {
   onTranscript?: (transcript: string, itemId: string) => void;
   onAudioDelta?: (base64Audio: string, responseId: string) => void;
   onAudioDone?: (responseId: string) => void;
-  onFunctionCall?: (callId: string, name: string, args: string, itemId: string) => void;
+  onFunctionCall?: (
+    callId: string,
+    name: string,
+    args: string,
+    itemId: string,
+  ) => void;
   onResponseDone?: (response: ResponseDonePayload) => void;
   onError?: (error: { type: string; code: string; message: string }) => void;
   onSpeechStarted?: () => void;
@@ -168,11 +194,17 @@ function dispatchSimpleEvent(
       return true;
 
     case "conversation.item.input_audio_transcription.completed":
-      callbacks.onTranscript?.(str(record, "transcript"), str(record, "item_id"));
+      callbacks.onTranscript?.(
+        str(record, "transcript"),
+        str(record, "item_id"),
+      );
       return true;
 
     case "response.audio.delta":
-      callbacks.onAudioDelta?.(str(record, "delta"), str(record, "response_id"));
+      callbacks.onAudioDelta?.(
+        str(record, "delta"),
+        str(record, "response_id"),
+      );
       return true;
 
     case "response.audio.done":
@@ -211,7 +243,9 @@ function dispatchParsedEvent(
     }
 
     case "response.done": {
-      const responseResult = ResponsePayloadSchema.safeParse(record["response"]);
+      const responseResult = ResponsePayloadSchema.safeParse(
+        record["response"],
+      );
       if (responseResult.success) {
         callbacks.onResponseDone?.(responseResult.data);
       }
@@ -233,7 +267,10 @@ export function createRealtimeClient(logger: Logger): RealtimeClient {
 
   function send(event: RealtimeClientEvent): void {
     if (ws?.readyState !== WebSocket.OPEN) {
-      logger.warn("ws_send_failed", { reason: "not connected", eventType: event.type });
+      logger.warn("ws_send_failed", {
+        reason: "not connected",
+        eventType: event.type,
+      });
       return;
     }
     ws.send(JSON.stringify(event));
@@ -331,9 +368,8 @@ export function createRealtimeClient(logger: Logger): RealtimeClient {
       });
 
       socket.addEventListener("message", (event) => {
-        const data = typeof event.data === "string"
-          ? event.data
-          : String(event.data);
+        const data =
+          typeof event.data === "string" ? event.data : String(event.data);
         handleServerEvent(data);
       });
 

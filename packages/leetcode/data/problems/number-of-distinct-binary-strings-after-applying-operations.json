@@ -16,10 +16,7 @@
   "dislikes": 9,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Minimum Number of K Consecutive Bit Flips\", \"titleSlug\": \"minimum-number-of-k-consecutive-bit-flips\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1001\"\n3",
-    "\"10110\"\n5"
-  ],
+  "exampleTestcaseList": ["\"1001\"\n3", "\"10110\"\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

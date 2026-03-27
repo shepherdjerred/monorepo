@@ -12,7 +12,7 @@ I remembered the solution involved a list, but wasn't able to get to the end.
 
 ```java
 class LRUCache {
-    
+
     // basic LRU cache
     // has fixed capacity
     // on GET or PUT we consider the key used
@@ -52,16 +52,16 @@ class LRUCache {
         this.capacity = capacity;
         this.cache = new HashMap<>();
     }
-    
+
     public int get(int key) {
         // mark this as used
         // put it at the END of the tracker
         // if this already exists in the tracker, move it to the back
         // core issue here is traversing the tracker will be an O(n) operation
     }
-    
+
     public void put(int key, int value) {
-        
+
     }
 }
 

@@ -5,21 +5,14 @@
   "titleSlug": "number-of-days-in-a-month",
   "difficulty": "Easy",
   "content": "<p>Given a year <code>year</code> and a month <code>month</code>, return <em>the number of days of that month</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<pre><strong>Input:</strong> year = 1992, month = 7\n<strong>Output:</strong> 31\n</pre><p><strong class=\"example\">Example 2:</strong></p>\n<pre><strong>Input:</strong> year = 2000, month = 2\n<strong>Output:</strong> 29\n</pre><p><strong class=\"example\">Example 3:</strong></p>\n<pre><strong>Input:</strong> year = 1900, month = 2\n<strong>Output:</strong> 28\n</pre>\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1583 &lt;= year &lt;= 2100</code></li>\n\t<li><code>1 &lt;= month &lt;= 12</code></li>\n</ul>\n",
-  "hints": [
-    "Does February have 28 days or 29 days?",
-    "Think of Leap years."
-  ],
+  "hints": ["Does February have 28 days or 29 days?", "Think of Leap years."],
   "metaData": "{\n  \"name\": \"numberOfDays\",\n  \"params\": [\n    {\n      \"name\": \"year\",\n      \"type\": \"integer\"\n    },\n    {\n      \"name\": \"month\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"9.7K\", \"totalSubmission\": \"16.3K\", \"totalAcceptedRaw\": 9692, \"totalSubmissionRaw\": 16326, \"acRate\": \"59.4%\"}",
   "likes": 47,
   "dislikes": 180,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "1992\n7",
-    "2000\n2",
-    "1900\n2"
-  ],
+  "exampleTestcaseList": ["1992\n7", "2000\n2", "1900\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

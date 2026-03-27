@@ -15,11 +15,7 @@
   "dislikes": 18,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Number of Smooth Descent Periods of a Stock\", \"titleSlug\": \"number-of-smooth-descent-periods-of-a-stock\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,2,5,3]",
-    "[3,2,1]",
-    "[2,2,2]"
-  ],
+  "exampleTestcaseList": ["[1,4,2,5,3]", "[3,2,1]", "[2,2,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"hulu\", \"name\": \"Hulu\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

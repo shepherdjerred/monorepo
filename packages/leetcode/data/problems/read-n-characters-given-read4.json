@@ -12,11 +12,7 @@
   "dislikes": 3605,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Read N Characters Given read4 II - Call Multiple Times\", \"titleSlug\": \"read-n-characters-given-read4-ii-call-multiple-times\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n4",
-    "\"abcde\"\n5",
-    "\"abcdABCD1234\"\n12"
-  ],
+  "exampleTestcaseList": ["\"abc\"\n4", "\"abcde\"\n5", "\"abcdABCD1234\"\n12"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

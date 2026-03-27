@@ -106,43 +106,43 @@ Auth: `Authorization: Bearer <token>`
 
 ### Profiles
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/profiles` | List profiles |
-| POST | `/profiles` | Create profile |
-| DELETE | `/profiles/{id}` | Delete profile |
-| POST | `/profiles/{nameOrId}/start` | Start instance from profile |
-| POST | `/profiles/{nameOrId}/stop` | Stop profile's instance |
+| Method | Endpoint                     | Description                 |
+| ------ | ---------------------------- | --------------------------- |
+| GET    | `/profiles`                  | List profiles               |
+| POST   | `/profiles`                  | Create profile              |
+| DELETE | `/profiles/{id}`             | Delete profile              |
+| POST   | `/profiles/{nameOrId}/start` | Start instance from profile |
+| POST   | `/profiles/{nameOrId}/stop`  | Stop profile's instance     |
 
 ### Instances
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/instances` | List running instances |
-| POST | `/instances/start` | Start new instance |
-| POST | `/instances/{id}/stop` | Stop instance |
-| POST | `/instances/{id}/tabs/open` | Open tab in specific instance |
-| GET | `/instances/{id}/tabs` | List tabs in specific instance |
+| Method | Endpoint                    | Description                    |
+| ------ | --------------------------- | ------------------------------ |
+| GET    | `/instances`                | List running instances         |
+| POST   | `/instances/start`          | Start new instance             |
+| POST   | `/instances/{id}/stop`      | Stop instance                  |
+| POST   | `/instances/{id}/tabs/open` | Open tab in specific instance  |
+| GET    | `/instances/{id}/tabs`      | List tabs in specific instance |
 
 ### Tabs (cross-instance, by tab ID)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/tabs/{tabId}/navigate` | Navigate tab |
-| GET | `/tabs/{tabId}/snapshot` | Get accessibility snapshot |
-| GET | `/tabs/{tabId}/text` | Extract page text |
-| GET | `/tabs/{tabId}/cookies` | Get cookies (read-only) |
-| POST | `/tabs/{tabId}/action` | Execute action (click, type, etc.) |
-| GET | `/tabs/{tabId}/screenshot` | Capture screenshot |
-| POST | `/tabs/{tabId}/close` | Close tab |
+| Method | Endpoint                   | Description                        |
+| ------ | -------------------------- | ---------------------------------- |
+| POST   | `/tabs/{tabId}/navigate`   | Navigate tab                       |
+| GET    | `/tabs/{tabId}/snapshot`   | Get accessibility snapshot         |
+| GET    | `/tabs/{tabId}/text`       | Extract page text                  |
+| GET    | `/tabs/{tabId}/cookies`    | Get cookies (read-only)            |
+| POST   | `/tabs/{tabId}/action`     | Execute action (click, type, etc.) |
+| GET    | `/tabs/{tabId}/screenshot` | Capture screenshot                 |
+| POST   | `/tabs/{tabId}/close`      | Close tab                          |
 
 ### Scheduler (if enabled)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/tasks` | Submit task |
-| GET | `/tasks` | List tasks |
-| POST | `/tasks/{id}/cancel` | Cancel task |
+| Method | Endpoint             | Description |
+| ------ | -------------------- | ----------- |
+| POST   | `/tasks`             | Submit task |
+| GET    | `/tasks`             | List tasks  |
+| POST   | `/tasks/{id}/cancel` | Cancel task |
 
 ## Config Reference
 
@@ -154,12 +154,12 @@ Key settings:
 {
   "server": { "token": "..." },
   "instanceDefaults": {
-    "mode": "headed",           // or "headless"
-    "stealthLevel": "full"      // "light", "medium", "full"
+    "mode": "headed", // or "headless"
+    "stealthLevel": "full" // "light", "medium", "full"
   },
   "multiInstance": {
-    "strategy": "explicit",     // "simple", "explicit", "simple-autorestart"
-    "allocationPolicy": "fcfs"  // "fcfs", "round_robin", "random"
+    "strategy": "explicit", // "simple", "explicit", "simple-autorestart"
+    "allocationPolicy": "fcfs" // "fcfs", "round_robin", "random"
   },
   "scheduler": {
     "enabled": true,
@@ -203,11 +203,11 @@ pinchtab fill "css:#password" "mypass"
 // In pinchtab eval - add delays between API calls
 (async () => {
   for (const item of items) {
-    await fetch(url, { method: 'POST', body: JSON.stringify(item) });
-    await new Promise(r => setTimeout(r, 2000)); // 2s delay
+    await fetch(url, { method: "POST", body: JSON.stringify(item) });
+    await new Promise((r) => setTimeout(r, 2000)); // 2s delay
   }
-  window.__result = 'done';
-})()
+  window.__result = "done";
+})();
 ```
 
 ### Read async eval results

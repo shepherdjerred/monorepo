@@ -12,11 +12,7 @@
   "dislikes": 641,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"First Bad Version\", \"titleSlug\": \"first-bad-version\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Plates Between Candles\", \"titleSlug\": \"plates-between-candles\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Target Indices After Sorting Array\", \"titleSlug\": \"find-target-indices-after-sorting-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,7,7,8,8,10]\n8",
-    "[5,7,7,8,8,10]\n6",
-    "[]\n0"
-  ],
+  "exampleTestcaseList": ["[5,7,7,8,8,10]\n8", "[5,7,7,8,8,10]\n6", "[]\n0"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"instacart\", \"name\": \"Instacart\"}], \"six_months\": [{\"timesEncountered\": 7, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"applied-intuition\", \"name\": \"Applied Intuition\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"tinkoff\", \"name\": \"Tinkoff\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"splunk\", \"name\": \"Splunk\"}, {\"timesEncountered\": 3, \"slug\": \"netapp\", \"name\": \"NetApp\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"tekion\", \"name\": \"Tekion\"}]}",
   "topicTags": [
     {

@@ -16,11 +16,7 @@
   "dislikes": 80,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Pivot Index\", \"titleSlug\": \"find-pivot-index\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Partition Array Into Three Parts With Equal Sum\", \"titleSlug\": \"partition-array-into-three-parts-with-equal-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Split Array\", \"titleSlug\": \"number-of-ways-to-split-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Sum Score of Array\", \"titleSlug\": \"maximum-sum-score-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Left and Right Sum Differences\", \"titleSlug\": \"left-and-right-sum-differences\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,-1,8,4]",
-    "[1,-1,4]",
-    "[2,5]"
-  ],
+  "exampleTestcaseList": ["[2,3,-1,8,4]", "[1,-1,4]", "[2,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"code-studio\", \"name\": \"Code Studio\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 65,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"First Unique Character in a String\", \"titleSlug\": \"first-unique-character-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abccbaacz\"",
-    "\"abcdd\""
-  ],
+  "exampleTestcaseList": ["\"abccbaacz\"", "\"abcdd\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": []}",
   "topicTags": [
     {

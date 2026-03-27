@@ -17,10 +17,7 @@
   "dislikes": 53,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[0.4]\n1",
-    "[0.5,0.5,0.5,0.5,0.5]\n0"
-  ],
+  "exampleTestcaseList": ["[0.4]\n1", "[0.5,0.5,0.5,0.5,0.5]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"twitch\", \"name\": \"Twitch\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

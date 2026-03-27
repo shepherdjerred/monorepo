@@ -16,10 +16,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Strength of K Disjoint Subarrays\", \"titleSlug\": \"maximum-strength-of-k-disjoint-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,-1,-5,2,5,-9]",
-    "[-4,-5,-4]"
-  ],
+  "exampleTestcaseList": ["[3,-1,-5,2,5,-9]", "[-4,-5,-4]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

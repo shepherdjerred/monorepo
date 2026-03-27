@@ -15,10 +15,7 @@
   "dislikes": 27,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Minimum Adjacent Swaps for K Consecutive Ones\", \"titleSlug\": \"minimum-adjacent-swaps-for-k-consecutive-ones\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,4,5,5,3,1]",
-    "[9]"
-  ],
+  "exampleTestcaseList": ["[3,4,5,5,3,1]", "[9]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 44, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

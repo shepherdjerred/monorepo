@@ -16,10 +16,7 @@
   "dislikes": 293,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count of Matches in Tournament\", \"titleSlug\": \"count-of-matches-in-tournament\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5",
-    "3"
-  ],
+  "exampleTestcaseList": ["5", "3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

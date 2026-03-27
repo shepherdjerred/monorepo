@@ -14,11 +14,7 @@ export async function handleRecallCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
-  if (
-    subcommand == null ||
-    subcommand === "--help" ||
-    subcommand === "-h"
-  ) {
+  if (subcommand == null || subcommand === "--help" || subcommand === "-h") {
     printRecallUsage();
     process.exit(0);
   }
@@ -78,7 +74,7 @@ async function handleSearch(args: string[]): Promise<void> {
 
   const db = await createRecallDb();
   const embedder = new EmbeddingClient();
-  const useEmbedder = await embedder.isAvailable() ? embedder : null;
+  const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
 
   if (useEmbedder == null && values.verbose) {
     console.error("[search] MLX not available, using keyword-only search");
@@ -128,7 +124,9 @@ async function handleAdd(args: string[]): Promise<void> {
   });
 
   if (positionals.length === 0) {
-    console.error("Usage: toolkit recall add <path> [--tags t1,t2] [--source name]");
+    console.error(
+      "Usage: toolkit recall add <path> [--tags t1,t2] [--source name]",
+    );
     process.exit(1);
   }
 
@@ -203,15 +201,12 @@ async function handleReindex(args: string[]): Promise<void> {
   const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
 
   if (useEmbedder == null) {
-    console.error("Warning: MLX not available. Indexing with mock embeddings (keyword search only).");
+    console.error(
+      "Warning: MLX not available. Indexing with mock embeddings (keyword search only).",
+    );
   }
 
-  const result = await reindexAll(
-    db,
-    useEmbedder,
-    values.full,
-    values.verbose,
-  );
+  const result = await reindexAll(db, useEmbedder, values.full, values.verbose);
 
   console.log(`Reindex complete:`);
   console.log(`  Scanned:  ${String(result.scanned)}`);
@@ -248,12 +243,22 @@ async function handleStatus(args: string[]): Promise<void> {
   const mlxAvailable = await embedder.isAvailable();
 
   if (values.json) {
-    console.log(JSON.stringify({
-      documents: docCount,
-      chunks: chunkCount,
-      sources: sourceStats,
-      embeddings: { available: mlxAvailable, model: mlxAvailable ? "bge-m3" : null, dim: 1024 },
-    }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          documents: docCount,
+          chunks: chunkCount,
+          sources: sourceStats,
+          embeddings: {
+            available: mlxAvailable,
+            model: mlxAvailable ? "bge-m3" : null,
+            dim: 1024,
+          },
+        },
+        null,
+        2,
+      ),
+    );
     db.close();
     return;
   }
@@ -362,49 +367,79 @@ async function handleLogs(args: string[]): Promise<void> {
 
 function printPerfStats(db: RecallDb): void {
   const searchStats = db.sqlite
-    .query<{ duration_ms: number; details: string }, []>(
-      "SELECT duration_ms, details FROM stats WHERE event = 'search' ORDER BY ts DESC LIMIT 100",
-    )
+    .query<
+      { duration_ms: number; details: string },
+      []
+    >("SELECT duration_ms, details FROM stats WHERE event = 'search' ORDER BY ts DESC LIMIT 100")
     .all();
 
   if (searchStats.length > 0) {
-    const durations = searchStats.map((s) => s.duration_ms).toSorted((a, b) => a - b);
-    console.log(`Search Performance (last ${String(searchStats.length)} queries)`);
-    console.log(`  Avg:  ${(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)} ms`);
-    console.log(`  p50:  ${String(durations[Math.floor(durations.length * 0.5)]?.toFixed(1))} ms`);
-    console.log(`  p90:  ${String(durations[Math.floor(durations.length * 0.9)]?.toFixed(1))} ms`);
-    console.log(`  p99:  ${String(durations[Math.floor(durations.length * 0.99)]?.toFixed(1))} ms`);
+    const durations = searchStats
+      .map((s) => s.duration_ms)
+      .toSorted((a, b) => a - b);
+    console.log(
+      `Search Performance (last ${String(searchStats.length)} queries)`,
+    );
+    console.log(
+      `  Avg:  ${(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)} ms`,
+    );
+    console.log(
+      `  p50:  ${String(durations[Math.floor(durations.length * 0.5)]?.toFixed(1))} ms`,
+    );
+    console.log(
+      `  p90:  ${String(durations[Math.floor(durations.length * 0.9)]?.toFixed(1))} ms`,
+    );
+    console.log(
+      `  p99:  ${String(durations[Math.floor(durations.length * 0.99)]?.toFixed(1))} ms`,
+    );
     console.log();
   }
 
   const indexStats = db.sqlite
-    .query<{ duration_ms: number }, []>(
-      "SELECT duration_ms FROM stats WHERE event = 'index' ORDER BY ts DESC LIMIT 100",
-    )
+    .query<
+      { duration_ms: number },
+      []
+    >("SELECT duration_ms FROM stats WHERE event = 'index' ORDER BY ts DESC LIMIT 100")
     .all();
 
   if (indexStats.length > 0) {
-    const durations = indexStats.map((s) => s.duration_ms).toSorted((a, b) => a - b);
-    console.log(`Indexing Performance (last ${String(indexStats.length)} files)`);
-    console.log(`  Avg:  ${(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)} ms/file`);
-    console.log(`  p50:  ${String(durations[Math.floor(durations.length * 0.5)]?.toFixed(1))} ms`);
-    console.log(`  p90:  ${String(durations[Math.floor(durations.length * 0.9)]?.toFixed(1))} ms`);
+    const durations = indexStats
+      .map((s) => s.duration_ms)
+      .toSorted((a, b) => a - b);
+    console.log(
+      `Indexing Performance (last ${String(indexStats.length)} files)`,
+    );
+    console.log(
+      `  Avg:  ${(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(1)} ms/file`,
+    );
+    console.log(
+      `  p50:  ${String(durations[Math.floor(durations.length * 0.5)]?.toFixed(1))} ms`,
+    );
+    console.log(
+      `  p90:  ${String(durations[Math.floor(durations.length * 0.9)]?.toFixed(1))} ms`,
+    );
     console.log();
   }
 
   const reindexStats = db.sqlite
-    .query<{ duration_ms: number; details: string }, []>(
-      "SELECT duration_ms, details FROM stats WHERE event = 'reindex' ORDER BY ts DESC LIMIT 5",
-    )
+    .query<
+      { duration_ms: number; details: string },
+      []
+    >("SELECT duration_ms, details FROM stats WHERE event = 'reindex' ORDER BY ts DESC LIMIT 5")
     .all();
 
   if (reindexStats.length > 0) {
     console.log(`Recent Reindexes`);
     for (const r of reindexStats) {
-      const details = z.record(z.string(), z.unknown()).parse(JSON.parse(r.details));
-      const scanned = typeof details["scanned"] === "number" ? details["scanned"] : 0;
-      const indexed = typeof details["indexed"] === "number" ? details["indexed"] : 0;
-      const skipped = typeof details["skipped"] === "number" ? details["skipped"] : 0;
+      const details = z
+        .record(z.string(), z.unknown())
+        .parse(JSON.parse(r.details));
+      const scanned =
+        typeof details["scanned"] === "number" ? details["scanned"] : 0;
+      const indexed =
+        typeof details["indexed"] === "number" ? details["indexed"] : 0;
+      const skipped =
+        typeof details["skipped"] === "number" ? details["skipped"] : 0;
       console.log(
         `  ${String(Math.round(r.duration_ms))}ms — ${String(scanned)} scanned, ${String(indexed)} indexed, ${String(skipped)} skipped`,
       );

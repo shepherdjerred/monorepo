@@ -16,11 +16,7 @@
   "dislikes": 1578,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Ugly Number\", \"titleSlug\": \"ugly-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Ugly Number II\", \"titleSlug\": \"ugly-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Perfect Squares\", \"titleSlug\": \"perfect-squares\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Common Factors\", \"titleSlug\": \"number-of-common-factors\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Prime Pairs With Target Sum\", \"titleSlug\": \"prime-pairs-with-target-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Count of Numbers Which Are Not Special\", \"titleSlug\": \"find-the-count-of-numbers-which-are-not-special\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "10",
-    "0",
-    "1"
-  ],
+  "exampleTestcaseList": ["10", "0", "1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 3, \"slug\": \"intel\", \"name\": \"Intel\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"sap\", \"name\": \"SAP\"}, {\"timesEncountered\": 2, \"slug\": \"nokia\", \"name\": \"Nokia\"}]}",
   "topicTags": [
     {

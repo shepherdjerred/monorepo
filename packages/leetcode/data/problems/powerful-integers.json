@@ -12,10 +12,7 @@
   "dislikes": 85,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Powerful Integers\", \"titleSlug\": \"count-the-number-of-powerful-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n3\n10",
-    "3\n5\n15"
-  ],
+  "exampleTestcaseList": ["2\n3\n10", "3\n5\n15"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

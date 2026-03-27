@@ -1,5 +1,13 @@
-import { parseElements, type DiagramExtraction } from "#lib/excalidraw/parser.ts";
-import { codeDiff, excalidrawSemanticDiff, type LineDiff, type SemanticDiff } from "./differ.ts";
+import {
+  parseElements,
+  type DiagramExtraction,
+} from "#lib/excalidraw/parser.ts";
+import {
+  codeDiff,
+  excalidrawSemanticDiff,
+  type LineDiff,
+  type SemanticDiff,
+} from "./differ.ts";
 
 export type SnapshotEntry = {
   timestamp: number;
@@ -98,7 +106,10 @@ export function createSnapshotCollector(
     try {
       const newExtraction = parseElements(content);
       if (lastDiagramExtraction !== undefined) {
-        const diff = excalidrawSemanticDiff(lastDiagramExtraction, newExtraction);
+        const diff = excalidrawSemanticDiff(
+          lastDiagramExtraction,
+          newExtraction,
+        );
         const hasChanges =
           diff.addedComponents.length > 0 ||
           diff.removedComponents.length > 0 ||

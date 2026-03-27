@@ -12,10 +12,7 @@
   "dislikes": 1072,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Valid Clock Times\", \"titleSlug\": \"number-of-valid-clock-times\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4]",
-    "[5,5,5,5]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4]", "[5,5,5,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"liveramp\", \"name\": \"LiveRamp\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

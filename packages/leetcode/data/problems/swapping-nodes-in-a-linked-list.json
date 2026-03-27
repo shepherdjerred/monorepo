@@ -16,10 +16,7 @@
   "dislikes": 211,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Nth Node From End of List\", \"titleSlug\": \"remove-nth-node-from-end-of-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Swap Nodes in Pairs\", \"titleSlug\": \"swap-nodes-in-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Reverse Nodes in k-Group\", \"titleSlug\": \"reverse-nodes-in-k-group\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5]\n2",
-    "[7,9,6,6,7,8,3,0,9,5]\n5"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5]\n2", "[7,9,6,6,7,8,3,0,9,5]\n5"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": []}",
   "topicTags": [
     {

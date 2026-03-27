@@ -15,11 +15,7 @@
   "dislikes": 95,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Divide Intervals Into Minimum Number of Groups\", \"titleSlug\": \"divide-intervals-into-minimum-number-of-groups\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"croakcroak\"",
-    "\"crcoakroak\"",
-    "\"croakcrook\""
-  ],
+  "exampleTestcaseList": ["\"croakcroak\"", "\"crcoakroak\"", "\"croakcrook\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zoox\", \"name\": \"Zoox\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

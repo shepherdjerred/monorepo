@@ -15,11 +15,7 @@
   "dislikes": 53,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Ways to Separate Numbers\", \"titleSlug\": \"number-of-ways-to-separate-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Beautiful Partitions\", \"titleSlug\": \"number-of-beautiful-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1000\"\n10000",
-    "\"1000\"\n10",
-    "\"1317\"\n2000"
-  ],
+  "exampleTestcaseList": ["\"1000\"\n10000", "\"1000\"\n10", "\"1317\"\n2000"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

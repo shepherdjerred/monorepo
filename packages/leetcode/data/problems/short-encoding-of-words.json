@@ -12,10 +12,7 @@
   "dislikes": 671,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[\"time\",\"me\",\"bell\"]",
-    "[\"t\"]"
-  ],
+  "exampleTestcaseList": ["[\"time\",\"me\",\"bell\"]", "[\"t\"]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

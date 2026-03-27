@@ -5,20 +5,14 @@
   "titleSlug": "sum-of-unique-elements",
   "difficulty": "Easy",
   "content": "<p>You are given an integer array <code>nums</code>. The unique elements of an array are the elements that appear <strong>exactly once</strong> in the array.</p>\n\n<p>Return <em>the <strong>sum</strong> of all the unique elements of </em><code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,2]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The unique elements are [1,3], and the sum is 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1,1,1,1]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no unique elements, and the sum is 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5]\n<strong>Output:</strong> 15\n<strong>Explanation:</strong> The unique elements are [1,2,3,4,5], and the sum is 15.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 100</code></li>\n</ul>\n",
-  "hints": [
-    "Use a dictionary to count the frequency of each number."
-  ],
+  "hints": ["Use a dictionary to count the frequency of each number."],
   "metaData": "{\n  \"name\": \"sumOfUnique\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"257.9K\", \"totalSubmission\": \"323K\", \"totalAcceptedRaw\": 257879, \"totalSubmissionRaw\": 322963, \"acRate\": \"79.8%\"}",
   "likes": 1695,
   "dislikes": 35,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,2,3,2]",
-    "[1,1,1,1,1]",
-    "[1,2,3,4,5]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,2]", "[1,1,1,1,1]", "[1,2,3,4,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 31,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Palindrome Partitioning\", \"titleSlug\": \"palindrome-partitioning\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning II\", \"titleSlug\": \"palindrome-partitioning-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Palindrome Partitioning III\", \"titleSlug\": \"palindrome-partitioning-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Non-overlapping Palindrome Substrings\", \"titleSlug\": \"maximum-number-of-non-overlapping-palindrome-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcbdd\"",
-    "\"bcbddxy\""
-  ],
+  "exampleTestcaseList": ["\"abcbdd\"", "\"bcbddxy\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

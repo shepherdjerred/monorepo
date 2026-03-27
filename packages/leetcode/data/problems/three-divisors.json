@@ -15,10 +15,7 @@
   "dislikes": 37,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Greatest Common Divisor of Array\", \"titleSlug\": \"find-greatest-common-divisor-of-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Smallest Even Multiple\", \"titleSlug\": \"smallest-even-multiple\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "4"
-  ],
+  "exampleTestcaseList": ["2", "4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

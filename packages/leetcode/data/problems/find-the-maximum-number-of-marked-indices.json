@@ -17,11 +17,7 @@
   "dislikes": 29,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Array Length After Pair Removals\", \"titleSlug\": \"minimum-array-length-after-pair-removals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,5,2,4]",
-    "[9,2,5,4]",
-    "[7,6,8]"
-  ],
+  "exampleTestcaseList": ["[3,5,2,4]", "[9,2,5,4]", "[7,6,8]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

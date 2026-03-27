@@ -15,10 +15,7 @@
   "dislikes": 111,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Design Add and Search Words Data Structure\", \"titleSlug\": \"design-add-and-search-words-data-structure\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum XOR of Two Numbers in an Array\", \"titleSlug\": \"maximum-xor-of-two-numbers-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Map Sum Pairs\", \"titleSlug\": \"map-sum-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[\"abc\",\"ab\",\"bc\",\"b\"]",
-    "[\"abcd\"]"
-  ],
+  "exampleTestcaseList": ["[\"abc\",\"ab\",\"bc\",\"b\"]", "[\"abcd\"]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"boeing\", \"name\": \"Boeing\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

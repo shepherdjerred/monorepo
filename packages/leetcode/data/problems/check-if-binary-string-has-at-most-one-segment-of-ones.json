@@ -15,10 +15,7 @@
   "dislikes": 1158,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longer Contiguous Segments of Ones than Zeros\", \"titleSlug\": \"longer-contiguous-segments-of-ones-than-zeros\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1001\"",
-    "\"110\""
-  ],
+  "exampleTestcaseList": ["\"1001\"", "\"110\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"six_months\": []}",
   "topicTags": [
     {

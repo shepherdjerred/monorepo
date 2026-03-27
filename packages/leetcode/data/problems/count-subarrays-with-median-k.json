@@ -16,10 +16,7 @@
   "dislikes": 17,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Subarrays with Bounded Maximum\", \"titleSlug\": \"number-of-subarrays-with-bounded-maximum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold\", \"titleSlug\": \"number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Imbalance Numbers of All Subarrays\", \"titleSlug\": \"sum-of-imbalance-numbers-of-all-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,1,4,5]\n4",
-    "[2,3,1]\n3"
-  ],
+  "exampleTestcaseList": ["[3,2,1,4,5]\n4", "[2,3,1]\n3"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 8, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"thoughtspot\", \"name\": \"thoughtspot\"}], \"six_months\": []}",
   "topicTags": [
     {

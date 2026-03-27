@@ -67,7 +67,13 @@ Never mounted in containers -- the proxy injects credentials.
 ## Audit Log (audit.jsonl)
 
 ```json
-{"timestamp": "2024-01-15T10:30:00Z", "session_id": "abc123", "method": "GET", "path": "/repos/owner/repo", "response_code": 200}
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "session_id": "abc123",
+  "method": "GET",
+  "path": "/repos/owner/repo",
+  "response_code": 200
+}
 ```
 
 No automatic rotation; rotate manually.

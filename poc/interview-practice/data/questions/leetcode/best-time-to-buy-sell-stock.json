@@ -11,16 +11,45 @@
       "prompt": "Find the maximum profit from buying and selling a stock once. You must buy before you sell.",
       "internalNotes": "Brute force is O(n²) checking all pairs. Optimal: track min price seen so far, compute profit at each step. Common mistakes: selling before buying, not handling decreasing prices.",
       "hints": [
-        { "level": "subtle", "content": "You only need to track one piece of information as you scan left to right." },
-        { "level": "moderate", "content": "What's the best price you could have bought at, for each sell day?" },
-        { "level": "explicit", "content": "Track the minimum price seen so far. At each day, profit = price - minSoFar." }
+        {
+          "level": "subtle",
+          "content": "You only need to track one piece of information as you scan left to right."
+        },
+        {
+          "level": "moderate",
+          "content": "What's the best price you could have bought at, for each sell day?"
+        },
+        {
+          "level": "explicit",
+          "content": "Track the minimum price seen so far. At each day, profit = price - minSoFar."
+        }
       ],
       "testCases": [
-        { "args": [[7, 1, 5, 3, 6, 4]], "expected": 5, "explanation": "Buy at 1, sell at 6" },
-        { "args": [[7, 6, 4, 3, 1]], "expected": 0, "explanation": "Prices only decrease, no profit possible" },
-        { "args": [[1, 2, 3]], "expected": 2, "explanation": "Buy at 1, sell at 3" },
-        { "args": [[5]], "expected": 0, "explanation": "Single day, no transaction" },
-        { "args": [[2, 4, 1, 7]], "expected": 6, "explanation": "Buy at 1, sell at 7" }
+        {
+          "args": [[7, 1, 5, 3, 6, 4]],
+          "expected": 5,
+          "explanation": "Buy at 1, sell at 6"
+        },
+        {
+          "args": [[7, 6, 4, 3, 1]],
+          "expected": 0,
+          "explanation": "Prices only decrease, no profit possible"
+        },
+        {
+          "args": [[1, 2, 3]],
+          "expected": 2,
+          "explanation": "Buy at 1, sell at 3"
+        },
+        {
+          "args": [[5]],
+          "expected": 0,
+          "explanation": "Single day, no transaction"
+        },
+        {
+          "args": [[2, 4, 1, 7]],
+          "expected": 6,
+          "explanation": "Buy at 1, sell at 7"
+        }
       ],
       "followUps": ["What's the time and space complexity?"],
       "expectedApproach": "Single pass tracking min price, compute max profit at each step.",
@@ -36,14 +65,35 @@
       "prompt": "Now you can make unlimited buy/sell transactions (but must sell before buying again). Maximize total profit.",
       "internalNotes": "Greedy: add up all positive differences between consecutive days. Equivalent to buying every valley and selling every peak. Common mistake: trying to find peaks/valleys explicitly instead of using the simpler greedy.",
       "hints": [
-        { "level": "subtle", "content": "Think about what happens between any two consecutive days." },
-        { "level": "moderate", "content": "If tomorrow's price is higher than today's, what should you do?" },
-        { "level": "explicit", "content": "Sum all positive differences: if prices[i+1] > prices[i], add the difference." }
+        {
+          "level": "subtle",
+          "content": "Think about what happens between any two consecutive days."
+        },
+        {
+          "level": "moderate",
+          "content": "If tomorrow's price is higher than today's, what should you do?"
+        },
+        {
+          "level": "explicit",
+          "content": "Sum all positive differences: if prices[i+1] > prices[i], add the difference."
+        }
       ],
       "testCases": [
-        { "args": [[7, 1, 5, 3, 6, 4]], "expected": 7, "explanation": "(5-1)+(6-3) = 4+3 = 7" },
-        { "args": [[1, 2, 3, 4, 5]], "expected": 4, "explanation": "Buy at 1, sell at 5" },
-        { "args": [[7, 6, 4, 3, 1]], "expected": 0, "explanation": "No profit possible" }
+        {
+          "args": [[7, 1, 5, 3, 6, 4]],
+          "expected": 7,
+          "explanation": "(5-1)+(6-3) = 4+3 = 7"
+        },
+        {
+          "args": [[1, 2, 3, 4, 5]],
+          "expected": 4,
+          "explanation": "Buy at 1, sell at 5"
+        },
+        {
+          "args": [[7, 6, 4, 3, 1]],
+          "expected": 0,
+          "explanation": "No profit possible"
+        }
       ],
       "followUps": [
         "What's the time complexity?",
@@ -53,15 +103,10 @@
       "expectedComplexity": { "time": "O(n)", "space": "O(1)" }
     }
   ],
-  "constraints": [
-    "1 <= prices.length <= 10^5",
-    "0 <= prices[i] <= 10^4"
-  ],
+  "constraints": ["1 <= prices.length <= 10^5", "0 <= prices[i] <= 10^4"],
   "functionSignature": {
     "name": "maxProfit",
-    "params": [
-      { "name": "prices", "type": "number[]" }
-    ],
+    "params": [{ "name": "prices", "type": "number[]" }],
     "returnType": "number"
   },
   "source": "LeetCode #121 / #122",

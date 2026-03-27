@@ -16,10 +16,7 @@
   "dislikes": 11,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Nice Pairs in an Array\", \"titleSlug\": \"count-nice-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Bad Pairs\", \"titleSlug\": \"count-number-of-bad-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Balanced Subsequence Sum\", \"titleSlug\": \"maximum-balanced-subsequence-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,5]\n[2,2,1]\n1",
-    "[3,-1]\n[-2,2]\n-1"
-  ],
+  "exampleTestcaseList": ["[3,2,5]\n[2,2,1]\n1", "[3,-1]\n[-2,2]\n-1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": []}",
   "topicTags": [
     {

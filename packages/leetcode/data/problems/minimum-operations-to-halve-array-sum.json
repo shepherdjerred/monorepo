@@ -16,10 +16,7 @@
   "dislikes": 32,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Stones to Minimize the Total\", \"titleSlug\": \"remove-stones-to-minimize-the-total\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Exceed Threshold Value II\", \"titleSlug\": \"minimum-operations-to-exceed-threshold-value-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,19,8,1]",
-    "[3,8,20]"
-  ],
+  "exampleTestcaseList": ["[5,19,8,1]", "[3,8,20]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

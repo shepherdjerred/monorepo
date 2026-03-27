@@ -14,11 +14,7 @@
   "dislikes": 130,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[1,1,1,1,1]\n[1,0,1]",
-    "[0]\n[0]",
-    "[0]\n[1]"
-  ],
+  "exampleTestcaseList": ["[1,1,1,1,1]\n[1,0,1]", "[0]\n[0]", "[0]\n[1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"grab\", \"name\": \"Grab\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

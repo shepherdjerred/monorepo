@@ -12,11 +12,7 @@
   "dislikes": 845,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Sum of k-Mirror Numbers\", \"titleSlug\": \"sum-of-k-mirror-numbers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "6",
-    "8",
-    "13"
-  ],
+  "exampleTestcaseList": ["6", "8", "13"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

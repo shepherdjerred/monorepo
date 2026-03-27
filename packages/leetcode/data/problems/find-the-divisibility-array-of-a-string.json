@@ -15,10 +15,7 @@
   "dislikes": 25,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subarray Sums Divisible by K\", \"titleSlug\": \"subarray-sums-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Sum Divisible by P\", \"titleSlug\": \"make-sum-divisible-by-p\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"998244353\"\n3",
-    "\"1010\"\n10"
-  ],
+  "exampleTestcaseList": ["\"998244353\"\n3", "\"1010\"\n10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

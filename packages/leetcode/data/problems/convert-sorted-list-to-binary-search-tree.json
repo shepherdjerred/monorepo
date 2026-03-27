@@ -12,10 +12,7 @@
   "dislikes": 174,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Convert Sorted Array to Binary Search Tree\", \"titleSlug\": \"convert-sorted-array-to-binary-search-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Create Binary Tree From Descriptions\", \"titleSlug\": \"create-binary-tree-from-descriptions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-10,-3,0,5,9]",
-    "[]"
-  ],
+  "exampleTestcaseList": ["[-10,-3,0,5,9]", "[]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"lyft\", \"name\": \"Lyft\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"zenefits\", \"name\": \"Zenefits\"}]}",
   "topicTags": [
     {

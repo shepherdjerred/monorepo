@@ -16,10 +16,7 @@
   "dislikes": 311,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Number At Least Twice of Others\", \"titleSlug\": \"largest-number-at-least-twice-of-others\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Array By Parity\", \"titleSlug\": \"sort-array-by-parity\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Array By Parity II\", \"titleSlug\": \"sort-array-by-parity-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Smallest String With Swaps\", \"titleSlug\": \"smallest-string-with-swaps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rearrange Array Elements by Sign\", \"titleSlug\": \"rearrange-array-elements-by-sign\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1234",
-    "65875"
-  ],
+  "exampleTestcaseList": ["1234", "65875"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 4, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"zscaler\", \"name\": \"ZScaler\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

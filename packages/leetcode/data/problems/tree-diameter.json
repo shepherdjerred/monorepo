@@ -16,10 +16,7 @@
   "dislikes": 26,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Subtrees With Max Distance Between Cities\", \"titleSlug\": \"count-subtrees-with-max-distance-between-cities\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Diameter After Merging Two Trees\", \"titleSlug\": \"find-minimum-diameter-after-merging-two-trees\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,1],[0,2]]",
-    "[[0,1],[1,2],[2,3],[1,4],[4,5]]"
-  ],
+  "exampleTestcaseList": ["[[0,1],[0,2]]", "[[0,1],[1,2],[2,3],[1,4],[4,5]]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 477,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Flip Game II\", \"titleSlug\": \"flip-game-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"++++\"",
-    "\"+\""
-  ],
+  "exampleTestcaseList": ["\"++++\"", "\"+\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

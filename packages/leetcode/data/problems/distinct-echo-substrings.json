@@ -16,10 +16,7 @@
   "dislikes": 208,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Substring With Given Hash Value\", \"titleSlug\": \"find-substring-with-given-hash-value\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abcabcabc\"",
-    "\"leetcodeleetcode\""
-  ],
+  "exampleTestcaseList": ["\"abcabcabc\"", "\"leetcodeleetcode\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

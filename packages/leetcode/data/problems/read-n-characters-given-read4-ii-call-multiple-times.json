@@ -12,10 +12,7 @@
   "dislikes": 1821,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Read N Characters Given Read4\", \"titleSlug\": \"read-n-characters-given-read4\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"\n[1,2,1]",
-    "\"abc\"\n[4,1]"
-  ],
+  "exampleTestcaseList": ["\"abc\"\n[1,2,1]", "\"abc\"\n[4,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"lyft\", \"name\": \"Lyft\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": []}",
   "topicTags": [
     {

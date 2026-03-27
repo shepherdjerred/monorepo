@@ -12,10 +12,7 @@
   "dislikes": 204,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "9",
-    "10"
-  ],
+  "exampleTestcaseList": ["9", "10"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"houzz\", \"name\": \"Houzz\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

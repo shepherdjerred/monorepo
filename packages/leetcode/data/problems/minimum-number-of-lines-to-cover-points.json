@@ -17,10 +17,7 @@
   "dislikes": 14,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Max Points on a Line\", \"titleSlug\": \"max-points-on-a-line\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Min Cost to Connect All Points\", \"titleSlug\": \"min-cost-to-connect-all-points\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Lines to Represent a Line Chart\", \"titleSlug\": \"minimum-lines-to-represent-a-line-chart\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,1],[2,3],[4,5],[4,3]]",
-    "[[0,2],[-2,-2],[1,4]]"
-  ],
+  "exampleTestcaseList": ["[[0,1],[2,3],[4,5],[4,3]]", "[[0,2],[-2,-2],[1,4]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

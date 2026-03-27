@@ -17,11 +17,7 @@
   "dislikes": 351,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Number of Operations to Move All Balls to Each Box\", \"titleSlug\": \"minimum-number-of-operations-to-move-all-balls-to-each-box\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Split With Minimum Sum\", \"titleSlug\": \"split-with-minimum-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3]",
-    "[2,2,2,3,3]",
-    "[1,1000000000]"
-  ],
+  "exampleTestcaseList": ["[1,2,3]", "[2,2,2,3,3]", "[1,1000000000]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

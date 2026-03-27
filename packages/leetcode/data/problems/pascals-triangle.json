@@ -12,10 +12,7 @@
   "dislikes": 567,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Pascal's Triangle II\", \"titleSlug\": \"pascals-triangle-ii\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check If Digits Are Equal in String After Operations II\", \"titleSlug\": \"check-if-digits-are-equal-in-string-after-operations-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5",
-    "1"
-  ],
+  "exampleTestcaseList": ["5", "1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": [{\"timesEncountered\": 10, \"slug\": \"htc\", \"name\": \"HTC\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 5, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 4, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 3, \"slug\": \"mitsogo\", \"name\": \"Mitsogo\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}, {\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}, {\"timesEncountered\": 2, \"slug\": \"virtusa\", \"name\": \"Virtusa\"}]}",
   "topicTags": [
     {

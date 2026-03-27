@@ -2,7 +2,10 @@ import { describe, test, expect } from "bun:test";
 import path from "node:path";
 import { parseElements } from "#lib/excalidraw/parser.ts";
 
-const FIXTURES_DIR = path.join(import.meta.dirname, "../../fixtures/excalidraw");
+const FIXTURES_DIR = path.join(
+  import.meta.dirname,
+  "../../fixtures/excalidraw",
+);
 
 describe("excalidraw parser", () => {
   test("parses simple diagram with two components and one connection", async () => {

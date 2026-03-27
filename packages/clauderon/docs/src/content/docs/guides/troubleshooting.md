@@ -119,19 +119,19 @@ Delete and recreate session (daemon must be running during creation).
 
 ## 1Password Issues
 
-| Problem | Solution |
-| ------- | -------- |
-| `op` not found | `brew install 1password-cli` |
-| Not signed in | `op signin` or `export OP_SERVICE_ACCOUNT_TOKEN="..."` |
+| Problem        | Solution                                                                        |
+| -------------- | ------------------------------------------------------------------------------- |
+| `op` not found | `brew install 1password-cli`                                                    |
+| Not signed in  | `op signin` or `export OP_SERVICE_ACCOUNT_TOKEN="..."`                          |
 | Item not found | Verify format: `op://Vault/Item/Field`; test: `op read "op://Vault/Item/Field"` |
 
 ## Performance Issues
 
-| Problem | Solution |
-| ------- | -------- |
-| Slow startup | Use Zellij; Docker: `--pull-policy never` with cached images |
-| High memory | Archive old sessions; restart daemon |
-| Slow Web UI | Archive sessions with large chat histories; clear browser cache |
+| Problem      | Solution                                                        |
+| ------------ | --------------------------------------------------------------- |
+| Slow startup | Use Zellij; Docker: `--pull-policy never` with cached images    |
+| High memory  | Archive old sessions; restart daemon                            |
+| Slow Web UI  | Archive sessions with large chat histories; clear browser cache |
 
 ## Getting Help
 

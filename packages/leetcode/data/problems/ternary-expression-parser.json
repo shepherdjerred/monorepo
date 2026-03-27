@@ -12,11 +12,7 @@
   "dislikes": 74,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Mini Parser\", \"titleSlug\": \"mini-parser\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Comments\", \"titleSlug\": \"remove-comments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Parse Lisp Expression\", \"titleSlug\": \"parse-lisp-expression\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"T?2:3\"",
-    "\"F?1:T?4:5\"",
-    "\"T?T?F:5:3\""
-  ],
+  "exampleTestcaseList": ["\"T?2:3\"", "\"F?1:T?4:5\"", "\"T?T?F:5:3\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

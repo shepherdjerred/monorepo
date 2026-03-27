@@ -12,11 +12,7 @@
   "dislikes": 1818,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Search in Rotated Sorted Array II\", \"titleSlug\": \"search-in-rotated-sorted-array-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Minimum in Rotated Sorted Array\", \"titleSlug\": \"find-minimum-in-rotated-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Pour Water Between Buckets to Make Water Levels Equal\", \"titleSlug\": \"pour-water-between-buckets-to-make-water-levels-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,5,6,7,0,1,2]\n0",
-    "[4,5,6,7,0,1,2]\n3",
-    "[1]\n0"
-  ],
+  "exampleTestcaseList": ["[4,5,6,7,0,1,2]\n0", "[4,5,6,7,0,1,2]\n3", "[1]\n0"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"more_than_six_months\": [{\"timesEncountered\": 17, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 15, \"slug\": \"grammarly\", \"name\": \"Grammarly\"}, {\"timesEncountered\": 10, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}, {\"timesEncountered\": 9, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 8, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}, {\"timesEncountered\": 6, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}, {\"timesEncountered\": 5, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}, {\"timesEncountered\": 5, \"slug\": \"newsbreak\", \"name\": \"NewsBreak\"}, {\"timesEncountered\": 4, \"slug\": \"criteo\", \"name\": \"Criteo\"}]}",
   "topicTags": [
     {

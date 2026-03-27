@@ -16,10 +16,7 @@
   "dislikes": 12,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Numbers with Non-Decreasing Digits \", \"titleSlug\": \"count-numbers-with-non-decreasing-digits\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1\"\n\"12\"\n1\n8",
-    "\"1\"\n\"5\"\n1\n5"
-  ],
+  "exampleTestcaseList": ["\"1\"\n\"12\"\n1\n8", "\"1\"\n\"5\"\n1\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

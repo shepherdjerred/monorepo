@@ -16,10 +16,7 @@
   "dislikes": 57,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Anagrams\", \"titleSlug\": \"count-anagrams\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count the Number of Good Subsequences\", \"titleSlug\": \"count-the-number-of-good-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-1,0,1]",
-    "[-1,0,0,1,2]"
-  ],
+  "exampleTestcaseList": ["[-1,0,1]", "[-1,0,0,1,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

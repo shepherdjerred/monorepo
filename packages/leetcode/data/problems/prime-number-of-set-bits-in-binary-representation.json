@@ -14,10 +14,7 @@
   "dislikes": 526,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "6\n10",
-    "10\n15"
-  ],
+  "exampleTestcaseList": ["6\n10", "10\n15"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": []}",
   "topicTags": [
     {

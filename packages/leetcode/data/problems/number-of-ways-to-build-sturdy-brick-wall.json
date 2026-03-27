@@ -16,10 +16,7 @@
   "dislikes": 129,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Brick Wall\", \"titleSlug\": \"brick-wall\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Bricks Falling When Hit\", \"titleSlug\": \"bricks-falling-when-hit\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Kill All Monsters\", \"titleSlug\": \"minimum-time-to-kill-all-monsters\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n3\n[1,2]",
-    "1\n1\n[5]"
-  ],
+  "exampleTestcaseList": ["2\n3\n[1,2]", "1\n1\n[5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microstrategy\", \"name\": \"Microstrategy\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

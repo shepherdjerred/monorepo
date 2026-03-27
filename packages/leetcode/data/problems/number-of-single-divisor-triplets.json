@@ -15,11 +15,7 @@
   "dislikes": 12,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Count Array Pairs Divisible by K\", \"titleSlug\": \"count-array-pairs-divisible-by-k\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,6,7,3,2]",
-    "[1,2,2]",
-    "[1,1,1]"
-  ],
+  "exampleTestcaseList": ["[4,6,7,3,2]", "[1,2,2]", "[1,1,1]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

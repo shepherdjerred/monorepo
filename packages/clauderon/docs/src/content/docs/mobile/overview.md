@@ -11,12 +11,12 @@ Mobile apps are in active development and not yet published to app stores. Build
 
 ## Platforms
 
-| Platform     | Minimum | Status         |
-| ------------ | ------- | -------------- |
-| iOS/iPadOS   | 16+     | In development |
-| Android      | 10+     | In development |
-| macOS        | 11+     | In development |
-| Windows      | 10+     | In development |
+| Platform   | Minimum | Status         |
+| ---------- | ------- | -------------- |
+| iOS/iPadOS | 16+     | In development |
+| Android    | 10+     | In development |
+| macOS      | 11+     | In development |
+| Windows    | 10+     | In development |
 
 **For immediate access**, use the Web UI -- fully functional, mobile-responsive, no install required.
 

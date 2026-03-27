@@ -60,7 +60,14 @@ const MOCK_QUESTION: LeetcodeQuestion = {
     },
   ],
   constraints: ["2 <= nums.length <= 10^4"],
-  functionSignature: { name: "twoSum", params: [{ name: "nums", type: "number[]" }, { name: "target", type: "number" }], returnType: "number[]" },
+  functionSignature: {
+    name: "twoSum",
+    params: [
+      { name: "nums", type: "number[]" },
+      { name: "target", type: "number" },
+    ],
+    returnType: "number[]",
+  },
   source: "leetcode",
   escalationPattern: "constraint-addition",
 };
@@ -176,8 +183,14 @@ describe("buildContext", () => {
       hintsGiven: 0,
       testsRun: 0,
       recentTranscript: [
-        makeTranscriptEntry({ role: "user", content: "I think we can use a hash map" }),
-        makeTranscriptEntry({ role: "interviewer", content: "Tell me more about that approach" }),
+        makeTranscriptEntry({
+          role: "user",
+          content: "I think we can use a hash map",
+        }),
+        makeTranscriptEntry({
+          role: "interviewer",
+          content: "Tell me more about that approach",
+        }),
       ],
       codeSnapshot: "function twoSum(nums, target) {}",
       reflections: [

@@ -15,10 +15,7 @@
   "dislikes": 35,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Partition Equal Subset Sum\", \"titleSlug\": \"partition-equal-subset-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Move Chips to The Same Position\", \"titleSlug\": \"minimum-cost-to-move-chips-to-the-same-position\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Partition Array Into Two Arrays to Minimize Sum Difference\", \"titleSlug\": \"partition-array-into-two-arrays-to-minimize-sum-difference\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Values by Dividing Array\", \"titleSlug\": \"minimum-sum-of-values-by-dividing-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "4325",
-    "687"
-  ],
+  "exampleTestcaseList": ["4325", "687"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

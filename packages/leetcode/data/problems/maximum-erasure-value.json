@@ -15,10 +15,7 @@
   "dislikes": 67,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,4,5,6]",
-    "[5,2,1,2,5,2,1,2,5]"
-  ],
+  "exampleTestcaseList": ["[4,2,4,5,6]", "[5,2,1,2,5,2,1,2,5]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"at-t\", \"name\": \"AT&T\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"cashfree\", \"name\": \"Cashfree\"}], \"six_months\": []}",
   "topicTags": [
     {

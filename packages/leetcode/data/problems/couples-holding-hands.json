@@ -14,10 +14,7 @@
   "dislikes": 131,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"First Missing Positive\", \"titleSlug\": \"first-missing-positive\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Missing Number\", \"titleSlug\": \"missing-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"K-Similar Strings\", \"titleSlug\": \"k-similar-strings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,2,1,3]",
-    "[3,2,0,1]"
-  ],
+  "exampleTestcaseList": ["[0,2,1,3]", "[3,2,0,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"squarepoint-capital\", \"name\": \"Squarepoint Capital\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}]}",
   "topicTags": [
     {

@@ -12,11 +12,7 @@
   "dislikes": 107,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Hills and Valleys in an Array\", \"titleSlug\": \"count-hills-and-valleys-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Count of Monotonic Pairs I\", \"titleSlug\": \"find-the-count-of-monotonic-pairs-i\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,2,3]",
-    "[6,5,4,4]",
-    "[1,3,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,2,3]", "[6,5,4,4]", "[1,3,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 5, \"slug\": \"ozon\", \"name\": \"Ozon\"}]}",
   "topicTags": [
     {

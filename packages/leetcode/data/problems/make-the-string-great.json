@@ -15,11 +15,7 @@
   "dislikes": 187,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"leEeetcode\"",
-    "\"abBAcC\"",
-    "\"s\""
-  ],
+  "exampleTestcaseList": ["\"leEeetcode\"", "\"abBAcC\"", "\"s\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}, {\"timesEncountered\": 2, \"slug\": \"blackstone\", \"name\": \"BlackStone\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

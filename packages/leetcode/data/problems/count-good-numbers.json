@@ -15,11 +15,7 @@
   "dislikes": 595,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Arrays with K Matching Adjacent Elements\", \"titleSlug\": \"count-the-number-of-arrays-with-k-matching-adjacent-elements\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "4",
-    "50"
-  ],
+  "exampleTestcaseList": ["1", "4", "50"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}]}",
   "topicTags": [
     {

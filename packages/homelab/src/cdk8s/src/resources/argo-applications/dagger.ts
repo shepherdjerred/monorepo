@@ -81,9 +81,7 @@ zfs get sync,logbias,atime "$DATASET"`,
                   memory: Quantity.fromString("128Mi"),
                 },
               },
-              volumeMounts: [
-                { name: "host-dev", mountPath: "/dev" },
-              ],
+              volumeMounts: [{ name: "host-dev", mountPath: "/dev" }],
             },
           ],
           volumes: [

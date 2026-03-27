@@ -15,10 +15,7 @@
   "dislikes": 117,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shifting Letters\", \"titleSlug\": \"shifting-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"a1c1e1\"",
-    "\"a1b2c3d4e\""
-  ],
+  "exampleTestcaseList": ["\"a1c1e1\"", "\"a1b2c3d4e\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

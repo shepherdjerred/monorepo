@@ -16,11 +16,7 @@
   "dislikes": 582,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Selling Pieces of Wood\", \"titleSlug\": \"selling-pieces-of-wood\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2\n3",
-    "5\n8",
-    "11\n13"
-  ],
+  "exampleTestcaseList": ["2\n3", "5\n8", "11\n13"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

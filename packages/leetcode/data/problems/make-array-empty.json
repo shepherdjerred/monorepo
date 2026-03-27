@@ -17,11 +17,7 @@
   "dislikes": 35,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,4,-1]",
-    "[1,2,4,3]",
-    "[1,2,3]"
-  ],
+  "exampleTestcaseList": ["[3,4,-1]", "[1,2,4,3]", "[1,2,3]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zepto\", \"name\": \"Zepto\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

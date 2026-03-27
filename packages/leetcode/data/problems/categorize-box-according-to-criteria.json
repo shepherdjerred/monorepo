@@ -14,10 +14,7 @@
   "dislikes": 63,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Fizz Buzz\", \"titleSlug\": \"fizz-buzz\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Winner on a Tic Tac Toe Game\", \"titleSlug\": \"find-winner-on-a-tic-tac-toe-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Best Poker Hand\", \"titleSlug\": \"best-poker-hand\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1000\n35\n700\n300",
-    "200\n50\n800\n50"
-  ],
+  "exampleTestcaseList": ["1000\n35\n700\n300", "200\n50\n800\n50"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"zendesk\", \"name\": \"Zendesk\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

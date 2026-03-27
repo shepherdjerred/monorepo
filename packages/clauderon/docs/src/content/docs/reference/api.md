@@ -12,6 +12,7 @@ Base URL: `http://localhost:3030`
 ```http
 GET /health
 ```
+
 ```json
 { "status": "healthy", "version": "0.1.0" }
 ```
@@ -21,14 +22,22 @@ GET /health
 ```http
 GET /api/sessions?include_archived=false
 ```
+
 ```json
 {
-  "sessions": [{
-    "id": "uuid", "name": "session-name", "backend": "docker",
-    "agent": "claude", "access_mode": "read-write", "status": "running",
-    "repo_path": "/home/user/project", "created_at": "2024-01-15T10:30:00Z",
-    "archived": false
-  }]
+  "sessions": [
+    {
+      "id": "uuid",
+      "name": "session-name",
+      "backend": "docker",
+      "agent": "claude",
+      "access_mode": "read-write",
+      "status": "running",
+      "repo_path": "/home/user/project",
+      "created_at": "2024-01-15T10:30:00Z",
+      "archived": false
+    }
+  ]
 }
 ```
 
@@ -47,6 +56,7 @@ POST /api/sessions
 ```
 
 **Single repo:**
+
 ```json
 {
   "repo_path": "/home/user/project",
@@ -59,6 +69,7 @@ POST /api/sessions
 ```
 
 **Multi-repo:**
+
 ```json
 {
   "name": "multi-repo-session",
@@ -67,23 +78,24 @@ POST /api/sessions
     { "path": "/home/user/project2", "mount_name": "lib" }
   ],
   "prompt": "Refactor shared code",
-  "backend": "docker", "agent": "claude"
+  "backend": "docker",
+  "agent": "claude"
 }
 ```
 
-| Field          | Type    | Required | Description                          |
-| -------------- | ------- | -------- | ------------------------------------ |
-| `repo_path`    | string  | Yes*     | Single repository path               |
-| `repositories` | array   | Yes*     | Multi-repo array (max 5)             |
-| `prompt`       | string  | Yes      | Initial prompt                       |
-| `backend`      | string  | No       | Backend type                         |
-| `agent`        | string  | No       | Agent type (default: "claude")       |
-| `access_mode`  | string  | No       | "read-only" or "read-write"          |
-| `no_plan_mode` | boolean | No       | Disable plan mode                    |
-| `model`        | string  | No       | Model override                       |
-| `name`         | string  | No       | Custom session name                  |
-| `base_branch`  | string  | No       | Git base branch                      |
-| `image_paths`  | array   | No       | Image attachments                    |
+| Field          | Type    | Required | Description                    |
+| -------------- | ------- | -------- | ------------------------------ |
+| `repo_path`    | string  | Yes\*    | Single repository path         |
+| `repositories` | array   | Yes\*    | Multi-repo array (max 5)       |
+| `prompt`       | string  | Yes      | Initial prompt                 |
+| `backend`      | string  | No       | Backend type                   |
+| `agent`        | string  | No       | Agent type (default: "claude") |
+| `access_mode`  | string  | No       | "read-only" or "read-write"    |
+| `no_plan_mode` | boolean | No       | Disable plan mode              |
+| `model`        | string  | No       | Model override                 |
+| `name`         | string  | No       | Custom session name            |
+| `base_branch`  | string  | No       | Git base branch                |
+| `image_paths`  | array   | No       | Image attachments              |
 
 \* Either `repo_path` or `repositories` required
 
@@ -105,6 +117,7 @@ POST /api/sessions/:id/unarchive
 ```http
 PUT /api/sessions/:id/access-mode
 ```
+
 ```json
 { "access_mode": "read-only" }
 ```
@@ -114,6 +127,7 @@ PUT /api/sessions/:id/access-mode
 ```http
 POST /api/sessions/:id/refresh
 ```
+
 Pulls latest image and recreates container (Docker only).
 
 ### Start / Wake / Recreate / Cleanup
@@ -131,12 +145,22 @@ POST /api/sessions/:id/cleanup
 ```http
 GET /api/sessions/:id/health
 ```
+
 ```json
 {
-  "session_id": "uuid", "health": "Error",
-  "details": { "container_status": "exited", "exit_code": 1, "error_message": "OCI runtime error" },
+  "session_id": "uuid",
+  "health": "Error",
+  "details": {
+    "container_status": "exited",
+    "exit_code": 1,
+    "error_message": "OCI runtime error"
+  },
   "available_actions": ["recreate", "recreate_fresh", "cleanup"],
-  "data_preservation": { "recreate": true, "recreate_fresh": false, "cleanup": false },
+  "data_preservation": {
+    "recreate": true,
+    "recreate_fresh": false,
+    "cleanup": false
+  },
   "reconciliation": { "attempts": 2, "last_attempt": "2025-01-28T12:30:00Z" }
 }
 ```
@@ -146,6 +170,7 @@ GET /api/sessions/:id/health
 ```http
 POST /api/sessions/:id/metadata
 ```
+
 ```json
 { "name": "new-name", "description": "...", "tags": ["feature-x"] }
 ```
@@ -153,6 +178,7 @@ POST /api/sessions/:id/metadata
 ```http
 POST /api/sessions/:id/regenerate-metadata
 ```
+
 AI-generated metadata from chat history. Requires `ai_metadata = true`.
 
 ### Upload Files
@@ -160,6 +186,7 @@ AI-generated metadata from chat history. Requires `ai_metadata = true`.
 ```http
 POST /api/sessions/:id/upload
 ```
+
 Multipart form data. Files uploaded to session working directory.
 
 ### Browse Directory
@@ -167,6 +194,7 @@ Multipart form data. Files uploaded to session working directory.
 ```http
 POST /api/browse-directory
 ```
+
 ```json
 { "path": "/home/user/projects", "show_hidden": false }
 ```
@@ -187,6 +215,7 @@ ws://localhost:3030/ws/events
 ```
 
 **Subscribe/Unsubscribe:**
+
 ```json
 { "type": "subscribe", "session_id": "uuid" }
 { "type": "unsubscribe", "session_id": "uuid" }
@@ -195,6 +224,7 @@ ws://localhost:3030/ws/events
 **Events received:** `session_status`, `chat_message`, `tool_call`, `tool_result`
 
 **Send message:**
+
 ```json
 { "type": "send_message", "session_id": "uuid", "content": "..." }
 ```
@@ -215,6 +245,7 @@ Binary protocol for terminal I/O. JSON for resize/error messages:
 ```
 
 **xterm.js example:**
+
 ```javascript
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
@@ -226,10 +257,12 @@ term.open(document.getElementById("terminal"));
 fitAddon.fit();
 
 const ws = new WebSocket(`ws://localhost:3030/ws/console/${sessionId}`);
-ws.onopen = () => ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+ws.onopen = () =>
+  ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
 term.onData((data) => ws.send(data));
 ws.onmessage = (event) => {
-  if (event.data instanceof Blob) event.data.text().then((text) => term.write(text));
+  if (event.data instanceof Blob)
+    event.data.text().then((text) => term.write(text));
   else term.write(event.data);
 };
 ```
@@ -239,7 +272,12 @@ PTY remains attached on disconnect (session continues running).
 ## Error Responses
 
 ```json
-{ "error": { "code": "SESSION_NOT_FOUND", "message": "Session with ID 'xyz' not found" } }
+{
+  "error": {
+    "code": "SESSION_NOT_FOUND",
+    "message": "Session with ID 'xyz' not found"
+  }
+}
 ```
 
 | Code                | HTTP | Description              |

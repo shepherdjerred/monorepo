@@ -18,44 +18,44 @@ All use `UPPER_SNAKE_CASE`. No kebab-case, no snake_case, no aliases.
 
 ## Canonical Names
 
-| Service | Canonical env var |
-|---|---|
-| Grafana | `GRAFANA_URL`, `GRAFANA_API_KEY` |
-| PagerDuty | `PAGERDUTY_TOKEN` |
-| Riot Games | `RIOT_API_KEY` |
-| Discord | `DISCORD_TOKEN` |
-| OpenAI | `OPENAI_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| ArgoCD | `ARGOCD_AUTH_TOKEN` |
-| Buildkite | `BUILDKITE_API_TOKEN` |
-| Bugsink | `BUGSINK_URL`, `BUGSINK_TOKEN` |
-| GitHub | `GH_TOKEN` |
-| Sentry | `SENTRY_AUTH_TOKEN`, `SENTRY_DSN` |
-| Tailscale | `TS_AUTHKEY` |
-| Cloudflare | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
+| Service       | Canonical env var                                                |
+| ------------- | ---------------------------------------------------------------- |
+| Grafana       | `GRAFANA_URL`, `GRAFANA_API_KEY`                                 |
+| PagerDuty     | `PAGERDUTY_TOKEN`                                                |
+| Riot Games    | `RIOT_API_KEY`                                                   |
+| Discord       | `DISCORD_TOKEN`                                                  |
+| OpenAI        | `OPENAI_API_KEY`                                                 |
+| Anthropic     | `ANTHROPIC_API_KEY`                                              |
+| ArgoCD        | `ARGOCD_AUTH_TOKEN`                                              |
+| Buildkite     | `BUILDKITE_API_TOKEN`                                            |
+| Bugsink       | `BUGSINK_URL`, `BUGSINK_TOKEN`                                   |
+| GitHub        | `GH_TOKEN`                                                       |
+| Sentry        | `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`                                |
+| Tailscale     | `TS_AUTHKEY`                                                     |
+| Cloudflare    | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`                  |
 | Cloudflare R2 | `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
-| SeaweedFS | `SEAWEEDFS_ACCESS_KEY_ID`, `SEAWEEDFS_SECRET_ACCESS_KEY` |
+| SeaweedFS     | `SEAWEEDFS_ACCESS_KEY_ID`, `SEAWEEDFS_SECRET_ACCESS_KEY`         |
 
 ## Banned Names
 
 These are enforced by `scripts/check-env-var-names.sh` (lefthook pre-commit).
 
-| Banned pattern | Use instead |
-|---|---|
-| `GRAFANA_SERVER` | `GRAFANA_URL` |
-| `GRAFANA_TOKEN` | `GRAFANA_API_KEY` |
-| `PAGERDUTY_API_KEY` | `PAGERDUTY_TOKEN` |
-| `PAGERDUTY_API_TOKEN` | `PAGERDUTY_TOKEN` |
-| `RIOT_API_TOKEN` | `RIOT_API_KEY` |
-| `GITHUB_TOKEN` | `GH_TOKEN` |
-| `BUGSINK_API_TOKEN` | `BUGSINK_TOKEN` |
-| `ARGOCD_TOKEN` | `ARGOCD_AUTH_TOKEN` |
-| `CF_ACCOUNT_ID` | `CLOUDFLARE_ACCOUNT_ID` |
-| `CF_R2_ACCESS*` | `CLOUDFLARE_R2_ACCESS_KEY_ID` |
-| `CF_R2_SECRET*` | `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
-| `S3_ACCESS_KEY*` | `SEAWEEDFS_ACCESS_KEY_ID` |
-| `S3_SECRET_ACCESS*` | `SEAWEEDFS_SECRET_ACCESS_KEY` |
-| `TS_AUTH_KEY` | `TS_AUTHKEY` |
+| Banned pattern        | Use instead                       |
+| --------------------- | --------------------------------- |
+| `GRAFANA_SERVER`      | `GRAFANA_URL`                     |
+| `GRAFANA_TOKEN`       | `GRAFANA_API_KEY`                 |
+| `PAGERDUTY_API_KEY`   | `PAGERDUTY_TOKEN`                 |
+| `PAGERDUTY_API_TOKEN` | `PAGERDUTY_TOKEN`                 |
+| `RIOT_API_TOKEN`      | `RIOT_API_KEY`                    |
+| `GITHUB_TOKEN`        | `GH_TOKEN`                        |
+| `BUGSINK_API_TOKEN`   | `BUGSINK_TOKEN`                   |
+| `ARGOCD_TOKEN`        | `ARGOCD_AUTH_TOKEN`               |
+| `CF_ACCOUNT_ID`       | `CLOUDFLARE_ACCOUNT_ID`           |
+| `CF_R2_ACCESS*`       | `CLOUDFLARE_R2_ACCESS_KEY_ID`     |
+| `CF_R2_SECRET*`       | `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
+| `S3_ACCESS_KEY*`      | `SEAWEEDFS_ACCESS_KEY_ID`         |
+| `S3_SECRET_ACCESS*`   | `SEAWEEDFS_SECRET_ACCESS_KEY`     |
+| `TS_AUTH_KEY`         | `TS_AUTHKEY`                      |
 
 ## Rationale for each choice
 
@@ -89,6 +89,7 @@ The Tailscale 1Password item stores OAuth credentials as `client_id` / `client_s
 ## Implementation Status (2026-03-27)
 
 ### Completed
+
 - Config.fish (chezmoi template + live): all env vars renamed
 - Toolkit: `PAGERDUTY_API_KEY` → `PAGERDUTY_TOKEN`
 - Scout source code: `RIOT_API_TOKEN` → `RIOT_API_KEY`
@@ -115,6 +116,7 @@ The current convention uses UPPER_SNAKE_CASE for 1Password field labels to match
 - The 1:1 matching creates exceptions for every built-in field
 
 The revised chain would be:
+
 ```
 1Password field (kebab-case) → K8s Secret key (kebab-case) → CDK8s key: (kebab-case) → CDK8s env var: (UPPER_SNAKE_CASE)
 ```

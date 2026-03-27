@@ -5,20 +5,14 @@
   "titleSlug": "fixed-point",
   "difficulty": "Easy",
   "content": "<p>Given an array of distinct integers <code>arr</code>, where <code>arr</code> is sorted in <strong>ascending order</strong>, return the smallest index <code>i</code> that satisfies <code>arr[i] == i</code>. If there is no such index, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [-10,-5,0,3,7]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> For the given array, <code>arr[0] = -10, arr[1] = -5, arr[2] = 0, arr[3] = 3</code>, thus the output is 3.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [0,2,5,8,17]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> <code>arr[0] = 0</code>, thus the output is 0.</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [-10,-5,3,4,7,9]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> There is no such <code>i</code> that <code>arr[i] == i</code>, thus the output is -1.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt; 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>9</sup> &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<strong>Follow up:</strong> The <code>O(n)</code> solution is very straightforward. Can we do better?",
-  "hints": [
-    "Loop over the array and check the first index i such A[i] == i"
-  ],
+  "hints": ["Loop over the array and check the first index i such A[i] == i"],
   "metaData": "{\n  \"name\": \"fixedPoint\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"49.4K\", \"totalSubmission\": \"77.4K\", \"totalAcceptedRaw\": 49357, \"totalSubmissionRaw\": 77356, \"acRate\": \"63.8%\"}",
   "likes": 442,
   "dislikes": 67,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[-10,-5,0,3,7]",
-    "[0,2,5,8,17]",
-    "[-10,-5,3,4,7,9]"
-  ],
+  "exampleTestcaseList": ["[-10,-5,0,3,7]", "[0,2,5,8,17]", "[-10,-5,3,4,7,9]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

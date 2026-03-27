@@ -42,7 +42,9 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const start = performance.now();
   const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, tags } = options;
 
-  const urls = await (useSitemap ? fetchSitemapUrls(baseUrl, useBrowser, verbose) : discoverUrls(baseUrl, maxDepth, useBrowser, verbose));
+  const urls = await (useSitemap
+    ? fetchSitemapUrls(baseUrl, useBrowser, verbose)
+    : discoverUrls(baseUrl, maxDepth, useBrowser, verbose));
 
   if (verbose) {
     console.error(`[crawl] discovered ${String(urls.length)} URLs`);
@@ -60,7 +62,11 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
         ? await fetchWithPinchtab(url, verbose)
         : await fetchWithLightpanda(url, verbose);
 
-      if (!result.success || result.content == null || result.content.trim().length === 0) {
+      if (
+        !result.success ||
+        result.content == null ||
+        result.content.trim().length === 0
+      ) {
         errors++;
         if (verbose) console.error(`[crawl] skip (empty/error): ${url}`);
         continue;
@@ -79,7 +85,8 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
       }
     } catch (error) {
       errors++;
-      if (verbose) console.error(`[crawl] error fetching ${url}: ${String(error)}`);
+      if (verbose)
+        console.error(`[crawl] error fetching ${url}: ${String(error)}`);
     }
   }
 
@@ -173,7 +180,10 @@ async function fetchSitemapUrls(
   await proc.exited;
 
   if (proc.exitCode !== 0 || content.trim().length === 0) {
-    if (verbose) console.error("[crawl] sitemap.xml not found, falling back to link discovery");
+    if (verbose)
+      console.error(
+        "[crawl] sitemap.xml not found, falling back to link discovery",
+      );
     return [baseUrl];
   }
 
@@ -186,13 +196,18 @@ async function fetchSitemapUrls(
     if (url == null) continue;
     const trimmedUrl = decodeXmlEntities(url.trim());
     // Filter to same domain and base path
-    if (trimmedUrl.startsWith(parsed.origin) && trimmedUrl.startsWith(baseUrl.replace(/\/$/, ""))) {
+    if (
+      trimmedUrl.startsWith(parsed.origin) &&
+      trimmedUrl.startsWith(baseUrl.replace(/\/$/, ""))
+    ) {
       urls.push(trimmedUrl);
     }
   }
 
   if (verbose) {
-    console.error(`[crawl] sitemap: ${String(urls.length)} URLs matching ${baseUrl}`);
+    console.error(
+      `[crawl] sitemap: ${String(urls.length)} URLs matching ${baseUrl}`,
+    );
   }
 
   return urls.length > 0 ? urls : [baseUrl];

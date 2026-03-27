@@ -11,18 +11,81 @@
       "prompt": "Given a list of intervals, merge all overlapping intervals and return the merged list.",
       "internalNotes": "Sort by start time, then linear merge. Key insight: after sorting, you only need to compare the current interval with the last merged one. Common mistakes: not sorting first, using O(n²) pairwise comparison, off-by-one on overlap condition (touching intervals [1,2] and [2,3] should merge).",
       "hints": [
-        { "level": "subtle", "content": "What happens if you look at the intervals in a specific order?" },
-        { "level": "moderate", "content": "Sort by start time first. Then think about when two consecutive intervals overlap." },
-        { "level": "explicit", "content": "Sort by start. Iterate: if current start <= last merged end, extend the merged interval. Otherwise start a new merged interval." }
+        {
+          "level": "subtle",
+          "content": "What happens if you look at the intervals in a specific order?"
+        },
+        {
+          "level": "moderate",
+          "content": "Sort by start time first. Then think about when two consecutive intervals overlap."
+        },
+        {
+          "level": "explicit",
+          "content": "Sort by start. Iterate: if current start <= last merged end, extend the merged interval. Otherwise start a new merged interval."
+        }
       ],
       "testCases": [
-        { "args": [[[1, 3], [2, 6], [8, 10], [15, 18]]], "expected": [[1, 6], [8, 10], [15, 18]] },
-        { "args": [[[1, 4], [4, 5]]], "expected": [[1, 5]], "explanation": "Touching intervals merge" },
-        { "args": [[[1, 1]]], "expected": [[1, 1]], "explanation": "Single point interval" },
-        { "args": [[[1, 4], [0, 4], [3, 5]]], "expected": [[0, 5]], "explanation": "All overlap into one" },
-        { "args": [[[1, 2], [3, 4], [5, 6]]], "expected": [[1, 2], [3, 4], [5, 6]], "explanation": "No overlaps" }
+        {
+          "args": [
+            [
+              [1, 3],
+              [2, 6],
+              [8, 10],
+              [15, 18]
+            ]
+          ],
+          "expected": [
+            [1, 6],
+            [8, 10],
+            [15, 18]
+          ]
+        },
+        {
+          "args": [
+            [
+              [1, 4],
+              [4, 5]
+            ]
+          ],
+          "expected": [[1, 5]],
+          "explanation": "Touching intervals merge"
+        },
+        {
+          "args": [[[1, 1]]],
+          "expected": [[1, 1]],
+          "explanation": "Single point interval"
+        },
+        {
+          "args": [
+            [
+              [1, 4],
+              [0, 4],
+              [3, 5]
+            ]
+          ],
+          "expected": [[0, 5]],
+          "explanation": "All overlap into one"
+        },
+        {
+          "args": [
+            [
+              [1, 2],
+              [3, 4],
+              [5, 6]
+            ]
+          ],
+          "expected": [
+            [1, 2],
+            [3, 4],
+            [5, 6]
+          ],
+          "explanation": "No overlaps"
+        }
       ],
-      "followUps": ["What's the time complexity?", "Is the sort stable? Does it matter?"],
+      "followUps": [
+        "What's the time complexity?",
+        "Is the sort stable? Does it matter?"
+      ],
       "expectedApproach": "Sort by start time, then single pass merge comparing with last merged interval.",
       "expectedComplexity": { "time": "O(n log n)", "space": "O(n)" },
       "transitionCriteria": {
@@ -36,17 +99,69 @@
       "prompt": "Given an array of meeting time intervals, find the minimum number of conference rooms required so that no two overlapping meetings share a room.",
       "internalNotes": "Min-heap or sweep line. Sort events (start=+1, end=-1), scan and track max concurrent. Or sort by start, use a min-heap of end times. Common mistakes: not realizing this is different from merge intervals, trying to greedily assign rooms without a heap.",
       "hints": [
-        { "level": "subtle", "content": "Think about what happens at each moment in time — how many meetings are ongoing?" },
-        { "level": "moderate", "content": "Consider a sweep line: what if you tracked meeting starts and ends as separate events?" },
-        { "level": "explicit", "content": "Create events: +1 at each start, -1 at each end. Sort by time (break ties: end before start). Scan and track max concurrent count." }
+        {
+          "level": "subtle",
+          "content": "Think about what happens at each moment in time — how many meetings are ongoing?"
+        },
+        {
+          "level": "moderate",
+          "content": "Consider a sweep line: what if you tracked meeting starts and ends as separate events?"
+        },
+        {
+          "level": "explicit",
+          "content": "Create events: +1 at each start, -1 at each end. Sort by time (break ties: end before start). Scan and track max concurrent count."
+        }
       ],
       "testCases": [
-        { "args": [[[0, 30], [5, 10], [15, 20]]], "expected": 2, "explanation": "Meetings [0,30] and [5,10] overlap" },
-        { "args": [[[7, 10], [2, 4]]], "expected": 1, "explanation": "No overlap" },
-        { "args": [[[0, 5], [1, 6], [2, 7], [3, 8]]], "expected": 4, "explanation": "All overlap" },
-        { "args": [[[1, 5], [5, 10], [10, 15]]], "expected": 1, "explanation": "Sequential, no overlap (end=start counts as no overlap)" }
+        {
+          "args": [
+            [
+              [0, 30],
+              [5, 10],
+              [15, 20]
+            ]
+          ],
+          "expected": 2,
+          "explanation": "Meetings [0,30] and [5,10] overlap"
+        },
+        {
+          "args": [
+            [
+              [7, 10],
+              [2, 4]
+            ]
+          ],
+          "expected": 1,
+          "explanation": "No overlap"
+        },
+        {
+          "args": [
+            [
+              [0, 5],
+              [1, 6],
+              [2, 7],
+              [3, 8]
+            ]
+          ],
+          "expected": 4,
+          "explanation": "All overlap"
+        },
+        {
+          "args": [
+            [
+              [1, 5],
+              [5, 10],
+              [10, 15]
+            ]
+          ],
+          "expected": 1,
+          "explanation": "Sequential, no overlap (end=start counts as no overlap)"
+        }
       ],
-      "followUps": ["What's the time complexity?", "Could you use a min-heap approach instead?"],
+      "followUps": [
+        "What's the time complexity?",
+        "Could you use a min-heap approach instead?"
+      ],
       "expectedApproach": "Sweep line with +1/-1 events, or min-heap of end times.",
       "expectedComplexity": { "time": "O(n log n)", "space": "O(n)" }
     }
@@ -58,9 +173,7 @@
   ],
   "functionSignature": {
     "name": "merge",
-    "params": [
-      { "name": "intervals", "type": "number[][]" }
-    ],
+    "params": [{ "name": "intervals", "type": "number[][]" }],
     "returnType": "number[][]"
   },
   "source": "LeetCode #56 / #253",

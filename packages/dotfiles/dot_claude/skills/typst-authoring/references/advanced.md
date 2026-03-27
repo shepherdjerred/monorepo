@@ -247,6 +247,7 @@ Import from the community package registry:
 The `@preview` namespace indicates community packages, not yet considered stable. Browse at https://typst.app/universe.
 
 Popular packages include:
+
 - `fletcher` — node & arrow diagrams (architecture, flowcharts, state machines)
 - `cetz` — general-purpose vector drawings (similar to TikZ), with `cetz-plot` for charts
 - `lilaq` — publication-quality scientific data visualization (line, scatter, bar, contour)

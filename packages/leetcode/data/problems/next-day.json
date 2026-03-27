@@ -12,10 +12,7 @@
   "dislikes": 1,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"2014-06-20\"",
-    "\"2017-10-31\""
-  ],
+  "exampleTestcaseList": ["\"2014-06-20\"", "\"2017-10-31\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

@@ -17,11 +17,7 @@
   "dislikes": 143,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Graph Connectivity With Threshold\", \"titleSlug\": \"graph-connectivity-with-threshold\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,6]",
-    "[3,9,5]",
-    "[4,3,12,8]"
-  ],
+  "exampleTestcaseList": ["[2,3,6]", "[3,9,5]", "[4,3,12,8]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -14,10 +14,7 @@
   "dislikes": 701,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest K-Length Subsequence With Occurrences of a Letter\", \"titleSlug\": \"smallest-k-length-subsequence-with-occurrences-of-a-letter\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After Deleting Duplicate Characters\", \"titleSlug\": \"lexicographically-smallest-string-after-deleting-duplicate-characters\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"bcabc\"",
-    "\"cbacdcbc\""
-  ],
+  "exampleTestcaseList": ["\"bcabc\"", "\"cbacdcbc\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 5, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"factset\", \"name\": \"FactSet\"}, {\"timesEncountered\": 2, \"slug\": \"increff\", \"name\": \"Increff\"}]}",
   "topicTags": [
     {

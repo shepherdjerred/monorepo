@@ -16,10 +16,7 @@
   "dislikes": 426,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Rearrange Characters to Make Target String\", \"titleSlug\": \"rearrange-characters-to-make-target-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aababcaab\"\n2\n3\n4",
-    "\"aaaa\"\n1\n3\n3"
-  ],
+  "exampleTestcaseList": ["\"aababcaab\"\n2\n3\n4", "\"aaaa\"\n1\n3\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}, {\"timesEncountered\": 6, \"slug\": \"hubspot\", \"name\": \"Hubspot\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"roblox\", \"name\": \"Roblox\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

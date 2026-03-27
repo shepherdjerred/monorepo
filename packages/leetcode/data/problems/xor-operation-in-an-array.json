@@ -14,10 +14,7 @@
   "dislikes": 341,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "5\n0",
-    "4\n3"
-  ],
+  "exampleTestcaseList": ["5\n0", "4\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -42,14 +42,15 @@ export function createOpenAIClient(
             }))
           : undefined;
 
-      const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      const messages: {
+        role: "system" | "user" | "assistant";
+        content: string;
+      }[] = [
         { role: "system", content: options.systemPrompt },
         ...options.messages.map((m) => ({
-          role: (m.role === "system" ? "user" as const : m.role),
+          role: m.role === "system" ? ("user" as const) : m.role,
           content:
-            m.role === "system"
-              ? `[System context] ${m.content}`
-              : m.content,
+            m.role === "system" ? `[System context] ${m.content}` : m.content,
         })),
       ];
 

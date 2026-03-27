@@ -12,11 +12,7 @@
   "dislikes": 202,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Exam Room\", \"titleSlug\": \"exam-room\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Task Scheduler II\", \"titleSlug\": \"task-scheduler-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,0,0,0,1,0,1]",
-    "[1,0,0,0]",
-    "[0,1]"
-  ],
+  "exampleTestcaseList": ["[1,0,0,0,1,0,1]", "[1,0,0,0]", "[0,1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"more_than_six_months\": [{\"timesEncountered\": 18, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 8, \"slug\": \"vk\", \"name\": \"VK\"}, {\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"samsung\", \"name\": \"Samsung\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}]}",
   "topicTags": [
     {

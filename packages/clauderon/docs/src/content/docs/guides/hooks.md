@@ -9,12 +9,12 @@ Hooks are **not yet implemented**. This page documents the planned design.
 
 ## Planned Hook Types
 
-| Hook | Trigger |
-| --- | --- |
-| `on_create` | After session creation |
-| `on_delete` | Before session deletion |
-| `on_start` | When session starts running |
-| `on_stop` | When session stops |
+| Hook        | Trigger                     |
+| ----------- | --------------------------- |
+| `on_create` | After session creation      |
+| `on_delete` | Before session deletion     |
+| `on_start`  | When session starts running |
+| `on_stop`   | When session stops          |
 
 ## Planned Environment Variables
 

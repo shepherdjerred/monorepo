@@ -57,17 +57,16 @@ export type DiagramExtraction = {
   connections: DiagramConnection[];
 };
 
-const SHAPE_TYPES = new Set([
-  "rectangle",
-  "ellipse",
-  "diamond",
-  "image",
-]);
+const SHAPE_TYPES = new Set(["rectangle", "ellipse", "diamond", "image"]);
 
 function buildShapeNames(elements: ExcalidrawElement[]): Map<string, string> {
   const shapeNames = new Map<string, string>();
   for (const el of elements) {
-    if (el.type === "text" && el.containerId !== undefined && el.containerId !== null) {
+    if (
+      el.type === "text" &&
+      el.containerId !== undefined &&
+      el.containerId !== null
+    ) {
       const text = el.text ?? el.originalText ?? "";
       if (text !== "") {
         shapeNames.set(el.containerId, text);
@@ -90,7 +89,10 @@ function extractComponents(
       continue;
     }
     // Standalone text (not inside a container) — treat as a component
-    if (el.type === "text" && (el.containerId === undefined || el.containerId === null)) {
+    if (
+      el.type === "text" &&
+      (el.containerId === undefined || el.containerId === null)
+    ) {
       const text = el.text ?? el.originalText ?? "";
       if (text.trim() !== "") {
         components.push({ name: text.trim(), type: "text", x: el.x, y: el.y });

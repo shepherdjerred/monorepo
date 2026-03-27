@@ -28,19 +28,21 @@ Done. Single-file change to `tools/rules_bun/bun/private/materialize.bzl`.
 
 Done. New rules and templates.
 
-| File | Purpose |
-|------|---------|
-| `bun/private/bun_build.bzl` | Private build action rule (`ctx.actions.run`) |
-| `bun/private/bun_build_test.bzl` | Private test rule for `astro check` |
-| `bun/private/bun_build.sh.tpl` | Build action template (exec-root paths) |
-| `bun/private/bun_build_test.sh.tpl` | Test template (runfiles-based) |
+| File                                | Purpose                                       |
+| ----------------------------------- | --------------------------------------------- |
+| `bun/private/bun_build.bzl`         | Private build action rule (`ctx.actions.run`) |
+| `bun/private/bun_build_test.bzl`    | Private test rule for `astro check`           |
+| `bun/private/bun_build.sh.tpl`      | Build action template (exec-root paths)       |
+| `bun/private/bun_build_test.sh.tpl` | Test template (runfiles-based)                |
 
 Public wrappers in `bun/defs.bzl`:
+
 - `bun_vite_build` — runs `bun ./node_modules/vite/bin/vite.js build`
 - `bun_astro_build` — runs `bun ./node_modules/astro/astro.js build`
 - `bun_astro_check` — runs `bun ./node_modules/astro/astro.js check`
 
 Key design decisions:
+
 - Framework CLIs invoked via direct entrypoint (`./node_modules/astro/astro.js`) instead of `bun run build` or `bun x`. `bun run` spawns a shell that can't find CLIs (sandbox strips PATH). `bun x` downloads from registry instead of using local.
 - `cp -a` overlay from materialized tree to `/tmp` working dir. Required because Vite/Rollup resolve HTML entries via realpath — the deep Bazel execroot TreeArtifact path causes relative path computation to produce invalid `../` chains that Rollup rejects. The `/tmp` overlay gives a short, clean CWD.
 - Hermetic env: `HOME`, `XDG_CACHE_HOME` set to scratch dirs. `CI=true` + `ASTRO_TELEMETRY_DISABLED=1` + `DO_NOT_TRACK=1`.
@@ -52,19 +54,19 @@ Key design decisions:
 
 All 11 packages migrated to new macros. Legacy `tools/bazel:vite_build.bzl`, `astro_build.bzl`, `astro_check.bzl` deleted.
 
-| Package | Framework | Migrated | Builds in Sandbox |
-|---------|-----------|:--------:|:-----------------:|
-| `cooklang-rich-preview` | Astro | yes | **yes** (verified) |
-| `status-page/web` | Astro | yes | not verified |
-| `sjer.red` | Astro | yes | not verified |
-| `scout-for-lol/packages/frontend` | Astro | yes | not verified |
-| `clauderon/docs` | Astro | yes | not verified |
-| `hn-enhancer` | Vite | yes | **no** — see Vite blocker below |
-| `better-skill-capped` | Vite | yes | **no** — see Vite blocker below |
-| `discord-plays-pokemon/packages/frontend` | Vite | yes | not verified |
-| `scout-for-lol/packages/desktop` | Vite | yes | not verified |
-| `sentinel/web` | Vite | yes | not verified |
-| `clauderon/web/frontend` | Vite | yes | not verified |
+| Package                                   | Framework | Migrated |        Builds in Sandbox        |
+| ----------------------------------------- | --------- | :------: | :-----------------------------: |
+| `cooklang-rich-preview`                   | Astro     |   yes    |       **yes** (verified)        |
+| `status-page/web`                         | Astro     |   yes    |          not verified           |
+| `sjer.red`                                | Astro     |   yes    |          not verified           |
+| `scout-for-lol/packages/frontend`         | Astro     |   yes    |          not verified           |
+| `clauderon/docs`                          | Astro     |   yes    |          not verified           |
+| `hn-enhancer`                             | Vite      |   yes    | **no** — see Vite blocker below |
+| `better-skill-capped`                     | Vite      |   yes    | **no** — see Vite blocker below |
+| `discord-plays-pokemon/packages/frontend` | Vite      |   yes    |          not verified           |
+| `scout-for-lol/packages/desktop`          | Vite      |   yes    |          not verified           |
+| `sentinel/web`                            | Vite      |   yes    |          not verified           |
+| `clauderon/web/frontend`                  | Vite      |   yes    |          not verified           |
 
 ### Additional Changes
 
@@ -79,6 +81,7 @@ All 11 packages migrated to new macros. Legacy `tools/bazel:vite_build.bzl`, `as
 **Affects:** All Vite packages (6 total).
 
 **Symptom:** Rollup rejects HTML entry filenames:
+
 ```
 The "fileName" or "name" properties of emitted chunks and assets must be strings
 that are neither absolute nor relative paths, received
@@ -94,6 +97,7 @@ that are neither absolute nor relative paths, received
 **Why Astro works but Vite doesn't:** Astro's build pipeline doesn't emit HTML through Rollup's `generateBundle`. It writes static HTML files directly to `dist/` using its own rendering pipeline.
 
 **Attempted fixes that didn't work:**
+
 - `cp -a` overlay to `/tmp/bun_build_$$/tree/` — Bun still resolves realpath through hardlinks back to the original TreeArtifact
 - Symlinking tree to a short path — same problem, Bun follows realpath
 
@@ -105,12 +109,12 @@ Hermetic builds surface files that the legacy `local=True` macros masked. Each p
 
 ### Astro Package Sandbox Verification (2026-03-19)
 
-| Package | Build Result | Issue |
-|---------|:----------:|-------|
-| `status-page/web` | **PASS** | Builds and runs in sandbox (733s) |
-| `clauderon/docs` | **FAIL** | Starlight CSS virtual module path resolution — Vite can't find compile metadata for `.astro` component styles because Bun resolves node_modules paths through hardlinks back to the deep execroot TreeArtifact path |
-| `sjer.red` | **FAIL** | Vite SSR module runner can't resolve workspace package `astro-opengraph-images` — same realpath-through-hardlinks issue affecting node_modules resolution |
-| `scout-for-lol/frontend` | **FAIL** | Vite `import.meta.glob("assets/Rank=*.png")` in `@scout-for-lol/report` — glob must start with `/` or `./`. This is a source code bug, not a Bazel issue. |
+| Package                  | Build Result | Issue                                                                                                                                                                                                               |
+| ------------------------ | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status-page/web`        |   **PASS**   | Builds and runs in sandbox (733s)                                                                                                                                                                                   |
+| `clauderon/docs`         |   **FAIL**   | Starlight CSS virtual module path resolution — Vite can't find compile metadata for `.astro` component styles because Bun resolves node_modules paths through hardlinks back to the deep execroot TreeArtifact path |
+| `sjer.red`               |   **FAIL**   | Vite SSR module runner can't resolve workspace package `astro-opengraph-images` — same realpath-through-hardlinks issue affecting node_modules resolution                                                           |
+| `scout-for-lol/frontend` |   **FAIL**   | Vite `import.meta.glob("assets/Rank=*.png")` in `@scout-for-lol/report` — glob must start with `/` or `./`. This is a source code bug, not a Bazel issue.                                                           |
 
 The failures are all variants of the same fundamental issue: the `cp -RL` source dereference only covers the package source directory, not `node_modules`. When Vite/Astro process `.astro` files or resolve workspace packages inside `node_modules`, Bun follows hardlinks back to the deep execroot path, breaking path computation. A full `cp -RL` of `node_modules` would fix this but at significant cost (600MB+). A targeted approach (dereference only the specific npm entries that Vite processes) may be needed.
 

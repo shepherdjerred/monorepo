@@ -16,10 +16,7 @@
   "dislikes": 2888,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[197,130,1]",
-    "[235,140,4]"
-  ],
+  "exampleTestcaseList": ["[197,130,1]", "[235,140,4]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"tesla\", \"name\": \"Tesla\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": []}",
   "topicTags": [
     {

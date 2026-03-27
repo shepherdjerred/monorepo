@@ -17,10 +17,7 @@
   "dislikes": 644,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Time Difference\", \"titleSlug\": \"minimum-time-difference\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n2\n1\n600",
-    "0\n1\n2\n76"
-  ],
+  "exampleTestcaseList": ["1\n2\n1\n600", "0\n1\n2\n76"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"ge-digital\", \"name\": \"GE Digital\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

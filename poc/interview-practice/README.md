@@ -50,29 +50,29 @@ interview-practice questions generate \
 
 During an interview session, use these commands:
 
-| Command | Description |
-|---------|-------------|
-| `/run` | Run your solution against hidden tests |
-| `/hint` | Request a hint (affects scoring) |
-| `/score` | Show current assessment |
-| `/time` | Show remaining time |
-| `/quit` | End the session |
-| (anything else) | Talk to the interviewer |
+| Command         | Description                            |
+| --------------- | -------------------------------------- |
+| `/run`          | Run your solution against hidden tests |
+| `/hint`         | Request a hint (affects scoring)       |
+| `/score`        | Show current assessment                |
+| `/time`         | Show remaining time                    |
+| `/quit`         | End the session                        |
+| (anything else) | Talk to the interviewer                |
 
 ## Configuration
 
 All configuration is via environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AI_PROVIDER` | `anthropic` | AI provider: `anthropic`, `openai`, or `google` |
-| `CONVERSATION_MODEL` | per-provider default | Model to use for conversation |
-| `ANTHROPIC_API_KEY` | - | Anthropic API key |
-| `OPENAI_API_KEY` | - | OpenAI API key |
-| `GOOGLE_API_KEY` | - | Google Generative AI key |
-| `DATA_DIR` | `~/.interview-practice` | Data directory for sessions and questions |
-| `LEETCODE_TIME_MINUTES` | `25` | Default session duration |
-| `LOG_LEVEL` | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| Variable                | Default                 | Description                                     |
+| ----------------------- | ----------------------- | ----------------------------------------------- |
+| `AI_PROVIDER`           | `anthropic`             | AI provider: `anthropic`, `openai`, or `google` |
+| `CONVERSATION_MODEL`    | per-provider default    | Model to use for conversation                   |
+| `ANTHROPIC_API_KEY`     | -                       | Anthropic API key                               |
+| `OPENAI_API_KEY`        | -                       | OpenAI API key                                  |
+| `GOOGLE_API_KEY`        | -                       | Google Generative AI key                        |
+| `DATA_DIR`              | `~/.interview-practice` | Data directory for sessions and questions       |
+| `LEETCODE_TIME_MINUTES` | `25`                    | Default session duration                        |
+| `LOG_LEVEL`             | `info`                  | Log level: `debug`, `info`, `warn`, `error`     |
 
 ## Question Format
 
@@ -93,11 +93,12 @@ Questions are stored as JSON files in `~/.interview-practice/questions/leetcode/
       "internalNotes": "Look for O(n) hash map solution",
       "hints": [
         { "level": "subtle", "content": "Think about what complement means" },
-        { "level": "moderate", "content": "A hash map can store values you've seen" }
+        {
+          "level": "moderate",
+          "content": "A hash map can store values you've seen"
+        }
       ],
-      "testCases": [
-        { "input": "2 7 11 15\n9", "expected": "0 1" }
-      ],
+      "testCases": [{ "input": "2 7 11 15\n9", "expected": "0 1" }],
       "followUps": ["What if there are multiple valid pairs?"],
       "expectedApproach": "Hash map storing value -> index",
       "expectedComplexity": { "time": "O(n)", "space": "O(n)" },
@@ -135,6 +136,7 @@ TypeScript, Java, Python, Go, Rust, and C++. Starter code is auto-generated from
 ## Post-Session Report
 
 When a session ends, a summary report is displayed showing:
+
 - Duration, turns, hints given, tests run
 - Token usage and estimated API cost
 - Test pass/fail statistics

@@ -76,8 +76,7 @@ export async function triggerReflection(
       tokensOut: response.tokensOut,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     logger.error("reflection_failed", { error: message });
   }
 }
@@ -153,8 +152,7 @@ export async function pauseAndThink(
 
     return reflections;
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     logger.error("pause_and_think_failed", { error: message });
     return [];
   }

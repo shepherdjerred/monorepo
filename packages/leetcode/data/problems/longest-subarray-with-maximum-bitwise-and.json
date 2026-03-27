@@ -15,10 +15,7 @@
   "dislikes": 110,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Different Integers in a String\", \"titleSlug\": \"number-of-different-integers-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove Colored Pieces if Both Neighbors are the Same Color\", \"titleSlug\": \"remove-colored-pieces-if-both-neighbors-are-the-same-color\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Maximum Bitwise-OR Subsets\", \"titleSlug\": \"count-number-of-maximum-bitwise-or-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Subarrays With Maximum Bitwise OR\", \"titleSlug\": \"smallest-subarrays-with-maximum-bitwise-or\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,3,2,2]",
-    "[1,2,3,4]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,3,2,2]", "[1,2,3,4]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"fourkites\", \"name\": \"fourkites\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 48,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Most Beautiful Item for Each Query\", \"titleSlug\": \"most-beautiful-item-for-each-query\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,7,5,10]",
-    "[1,1,2,4,8,16]"
-  ],
+  "exampleTestcaseList": ["[2,3,7,5,10]", "[1,1,2,4,8,16]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

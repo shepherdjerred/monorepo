@@ -12,10 +12,7 @@
   "dislikes": 1078,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"19:34\"",
-    "\"23:59\""
-  ],
+  "exampleTestcaseList": ["\"19:34\"", "\"23:59\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

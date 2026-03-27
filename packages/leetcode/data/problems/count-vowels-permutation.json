@@ -16,10 +16,7 @@
   "dislikes": 220,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Strings Which Can Be Rearranged to Contain Substring\", \"titleSlug\": \"number-of-strings-which-can-be-rearranged-to-contain-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "2"
-  ],
+  "exampleTestcaseList": ["1", "2"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}], \"three_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

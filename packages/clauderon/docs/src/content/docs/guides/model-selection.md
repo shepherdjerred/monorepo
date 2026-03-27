@@ -7,30 +7,30 @@ description: Choose the right AI model for your Clauderon sessions
 
 ## Claude Models (Anthropic)
 
-| Model          | Flag         | Capability     | Speed    | Context | Notes           |
-| -------------- | ------------ | -------------- | -------- | ------- | --------------- |
-| **Opus 4.6**   | `opus-4-6`   | Most capable   | Moderate | 1M      | Most capable    |
-| **Sonnet 4.6** | `sonnet-4-6` | Balanced       | Fast     | 1M      | **Default**     |
-| **Haiku 4.5**  | `haiku-4-5`  | Moderate       | Fastest  | -       | Fastest Claude  |
-| **Opus 4.5**   | `opus-4-5`   | High           | Moderate | -       |                 |
-| **Sonnet 4.5** | `sonnet-4-5` | High           | Fast     | -       |                 |
-| **Opus 4.1**   | `opus-4-1`   | High (Agentic) | Moderate | -       | Agentic tasks   |
-| **Opus 4**     | `opus-4`     | High           | Moderate | -       |                 |
-| **Sonnet 4**   | `sonnet-4`   | Moderate       | Fast     | -       |                 |
+| Model          | Flag         | Capability     | Speed    | Context | Notes          |
+| -------------- | ------------ | -------------- | -------- | ------- | -------------- |
+| **Opus 4.6**   | `opus-4-6`   | Most capable   | Moderate | 1M      | Most capable   |
+| **Sonnet 4.6** | `sonnet-4-6` | Balanced       | Fast     | 1M      | **Default**    |
+| **Haiku 4.5**  | `haiku-4-5`  | Moderate       | Fastest  | -       | Fastest Claude |
+| **Opus 4.5**   | `opus-4-5`   | High           | Moderate | -       |                |
+| **Sonnet 4.5** | `sonnet-4-5` | High           | Fast     | -       |                |
+| **Opus 4.1**   | `opus-4-1`   | High (Agentic) | Moderate | -       | Agentic tasks  |
+| **Opus 4**     | `opus-4`     | High           | Moderate | -       |                |
+| **Sonnet 4**   | `sonnet-4`   | Moderate       | Fast     | -       |                |
 
 ## Codex/OpenAI Models
 
-| Model             | Flag             | Capability          | Speed    | Notes                |
-| ----------------- | ---------------- | ------------------- | -------- | -------------------- |
-| **GPT-5.3-Codex** | `gpt-5-3-codex`  | High (Code)         | Moderate | **Default** - coding |
-| **GPT-5.4**       | `gpt-5-4`        | Flagship            | Moderate |                      |
-| **GPT-5.4 Mini**  | `gpt-5-4-mini`   | High                | Fast     |                      |
-| **GPT-5.4 Nano**  | `gpt-5-4-nano`   | Moderate            | Fastest  | Cost-effective       |
-| **GPT-5.4 Pro**   | `gpt-5-4-pro`    | Highest             | Slow     | Premium              |
-| **o3**            | `o3`              | High (Reasoning)    | Moderate |                      |
-| **o3-pro**        | `o3-pro`          | Highest (Reasoning) | Slow     | Premium              |
-| **o4-mini**       | `o4-mini`         | High (Reasoning)    | Fast     |                      |
-| **o3-mini**       | `o3-mini`         | Moderate (Reasoning)| Fast     |                      |
+| Model             | Flag            | Capability           | Speed    | Notes                |
+| ----------------- | --------------- | -------------------- | -------- | -------------------- |
+| **GPT-5.3-Codex** | `gpt-5-3-codex` | High (Code)          | Moderate | **Default** - coding |
+| **GPT-5.4**       | `gpt-5-4`       | Flagship             | Moderate |                      |
+| **GPT-5.4 Mini**  | `gpt-5-4-mini`  | High                 | Fast     |                      |
+| **GPT-5.4 Nano**  | `gpt-5-4-nano`  | Moderate             | Fastest  | Cost-effective       |
+| **GPT-5.4 Pro**   | `gpt-5-4-pro`   | Highest              | Slow     | Premium              |
+| **o3**            | `o3`            | High (Reasoning)     | Moderate |                      |
+| **o3-pro**        | `o3-pro`        | Highest (Reasoning)  | Slow     | Premium              |
+| **o4-mini**       | `o4-mini`       | High (Reasoning)     | Fast     |                      |
+| **o3-mini**       | `o3-mini`       | Moderate (Reasoning) | Fast     |                      |
 
 ## Gemini Models (Google)
 
@@ -58,14 +58,14 @@ TUI and Web UI: select model from dropdown during session creation.
 
 ## Choosing a Model
 
-| Use Case            | Recommended Model    |
-| ------------------- | -------------------- |
-| Most tasks          | Sonnet 4.6 (default) |
-| Complex refactoring | Opus 4.6             |
-| Quick iterations    | Haiku 4.5            |
-| Large codebases     | Gemini 3.1 Pro (1M)  |
-| Code generation     | GPT-5.3-Codex        |
-| Deep reasoning      | o3 or Opus 4.1       |
+| Use Case            | Recommended Model                                |
+| ------------------- | ------------------------------------------------ |
+| Most tasks          | Sonnet 4.6 (default)                             |
+| Complex refactoring | Opus 4.6                                         |
+| Quick iterations    | Haiku 4.5                                        |
+| Large codebases     | Gemini 3.1 Pro (1M)                              |
+| Code generation     | GPT-5.3-Codex                                    |
+| Deep reasoning      | o3 or Opus 4.1                                   |
 | Cost optimization   | Haiku 4.5 / GPT-5.4 Nano / Gemini 3.1 Flash-Lite |
 
 ## API Keys

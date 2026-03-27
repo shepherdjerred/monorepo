@@ -12,10 +12,7 @@
   "dislikes": 226,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove All Ones With Row and Column Flips\", \"titleSlug\": \"remove-all-ones-with-row-and-column-flips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[0,0,1,1],[1,0,1,0],[1,1,0,0]]",
-    "[[0]]"
-  ],
+  "exampleTestcaseList": ["[[0,0,1,1],[1,0,1,0],[1,1,0,0]]", "[[0]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"iit-bombay\", \"name\": \"IIT Bombay\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

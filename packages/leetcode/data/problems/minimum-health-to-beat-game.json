@@ -15,11 +15,7 @@
   "dislikes": 240,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Dungeon Game\", \"titleSlug\": \"dungeon-game\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Eliminate Maximum Number of Monsters\", \"titleSlug\": \"eliminate-maximum-number-of-monsters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,7,4,3]\n4",
-    "[2,5,3,4]\n7",
-    "[3,3,3]\n0"
-  ],
+  "exampleTestcaseList": ["[2,7,4,3]\n4", "[2,5,3,4]\n7", "[3,3,3]\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 28, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

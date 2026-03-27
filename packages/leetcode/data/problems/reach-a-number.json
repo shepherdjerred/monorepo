@@ -12,10 +12,7 @@
   "dislikes": 842,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Ways to Reach a Position After Exactly k Steps\", \"titleSlug\": \"number-of-ways-to-reach-a-position-after-exactly-k-steps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "3"
-  ],
+  "exampleTestcaseList": ["2", "3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 8, \"slug\": \"ibm\", \"name\": \"IBM\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"meesho\", \"name\": \"Meesho\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"inmobi\", \"name\": \"InMobi\"}], \"three_months\": []}",
   "topicTags": [
     {

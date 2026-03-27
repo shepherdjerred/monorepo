@@ -1,23 +1,29 @@
 import { z } from "zod";
 import { EMBEDDING_DIM } from "./config.ts";
 
-const ReadyMessage = z.object({ error: z.string().optional(), ready: z.boolean().optional() });
-const EmbedResponse = z.object({ embeddings: z.array(z.array(z.number())).optional(), error: z.string().optional() });
+const ReadyMessage = z.object({
+  error: z.string().optional(),
+  ready: z.boolean().optional(),
+});
+const EmbedResponse = z.object({
+  embeddings: z.array(z.array(z.number())).optional(),
+  error: z.string().optional(),
+});
 
 type StdinWriter = {
   write: (data: string) => void;
   flush: () => void;
   end: () => void;
-}
+};
 
 type ReadResult = {
   value: Uint8Array | undefined;
   done: boolean;
-}
+};
 
 type TypedReader = {
   read: () => Promise<ReadResult>;
-}
+};
 
 function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
   const raw = stdout.getReader();
@@ -114,10 +120,13 @@ export class EmbeddingClient {
     if (this.available != null) return this.available;
 
     try {
-      const check = Bun.spawn(["python3", "-c", "import mlx_embedding_models"], {
-        stdout: "pipe",
-        stderr: "pipe",
-      });
+      const check = Bun.spawn(
+        ["python3", "-c", "import mlx_embedding_models"],
+        {
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
       await check.exited;
 
       if (check.exitCode === 0) {
@@ -126,18 +135,34 @@ export class EmbeddingClient {
       }
 
       // Auto-install
-      console.error("[embeddings] mlx-embedding-models not found, installing...");
-      const install = Bun.spawn(["python3", "-m", "pip", "install", "--user", "mlx-embedding-models", "transformers<5", "einops"], {
-        stdout: "inherit",
-        stderr: "inherit",
-      });
+      console.error(
+        "[embeddings] mlx-embedding-models not found, installing...",
+      );
+      const install = Bun.spawn(
+        [
+          "python3",
+          "-m",
+          "pip",
+          "install",
+          "--user",
+          "mlx-embedding-models",
+          "transformers<5",
+          "einops",
+        ],
+        {
+          stdout: "inherit",
+          stderr: "inherit",
+        },
+      );
       await install.exited;
 
       if (install.exitCode === 0) {
         console.error("[embeddings] installed successfully");
         this.available = true;
       } else {
-        console.error("[embeddings] install failed, falling back to keyword search");
+        console.error(
+          "[embeddings] install failed, falling back to keyword search",
+        );
         this.available = false;
       }
     } catch {
@@ -152,7 +177,11 @@ export class EmbeddingClient {
 
     // Guard against double-spawn: kill any existing process
     if (this.proc != null) {
-      try { this.proc.kill(); } catch { /* ignore */ }
+      try {
+        this.proc.kill();
+      } catch {
+        /* ignore */
+      }
       this.proc = null;
       this.reader = null;
       this.ready = false;
@@ -186,7 +215,9 @@ export class EmbeddingClient {
     try {
       msg = ReadyMessage.parse(JSON.parse(firstLine));
     } catch {
-      throw new Error(`Embedding server sent invalid startup message: ${firstLine.slice(0, 200)}`);
+      throw new Error(
+        `Embedding server sent invalid startup message: ${firstLine.slice(0, 200)}`,
+      );
     }
     if (msg.error != null) {
       throw new Error(msg.error);
@@ -217,11 +248,15 @@ export class EmbeddingClient {
       response = EmbedResponse.parse(JSON.parse(responseLine));
     } catch {
       // If Zod parse fails, try raw JSON for error field
-      const rawResult = z.record(z.string(), z.unknown()).safeParse(JSON.parse(responseLine));
+      const rawResult = z
+        .record(z.string(), z.unknown())
+        .safeParse(JSON.parse(responseLine));
       if (rawResult.success && typeof rawResult.data["error"] === "string") {
         throw new TypeError(`Embedding error: ${rawResult.data["error"]}`);
       }
-      throw new Error(`Invalid embedding response: ${responseLine.slice(0, 200)}`);
+      throw new Error(
+        `Invalid embedding response: ${responseLine.slice(0, 200)}`,
+      );
     }
 
     if (response.error != null) {
@@ -255,7 +290,12 @@ export class EmbeddingClient {
       const result = await Promise.race([
         this.reader.read(),
         new Promise<never>((_, reject) =>
-          setTimeout(() => { reject(new Error("Embedding server read timeout")); }, Math.max(1000, deadline - Date.now())),
+          setTimeout(
+            () => {
+              reject(new Error("Embedding server read timeout"));
+            },
+            Math.max(1000, deadline - Date.now()),
+          ),
         ),
       ]);
 

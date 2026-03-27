@@ -16,10 +16,7 @@
   "dislikes": 10,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,-1,-4,-3]",
-    "[1,-1,1,1,-1,-1,1]"
-  ],
+  "exampleTestcaseList": ["[2,-1,-4,-3]", "[1,-1,1,1,-1,-1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -41,7 +41,21 @@ export function createAudioManager(logger: Logger): AudioManager {
     if (micProc !== null) return;
 
     micProc = Bun.spawn(
-      ["sox", "-d", "-t", "raw", "-r", "24000", "-e", "signed", "-b", "16", "-c", "1", "-"],
+      [
+        "sox",
+        "-d",
+        "-t",
+        "raw",
+        "-r",
+        "24000",
+        "-e",
+        "signed",
+        "-b",
+        "16",
+        "-c",
+        "1",
+        "-",
+      ],
       {
         stdout: "pipe",
         stderr: "ignore",
@@ -83,7 +97,23 @@ export function createAudioManager(logger: Logger): AudioManager {
     await Bun.write(tmpPath, buf);
 
     const proc = Bun.spawn(
-      ["play", "-q", "-t", "raw", "-r", "24000", "-e", "signed-integer", "-b", "16", "-c", "1", "--endian", "little", tmpPath],
+      [
+        "play",
+        "-q",
+        "-t",
+        "raw",
+        "-r",
+        "24000",
+        "-e",
+        "signed-integer",
+        "-b",
+        "16",
+        "-c",
+        "1",
+        "--endian",
+        "little",
+        tmpPath,
+      ],
       {
         stdout: "ignore",
         stderr: "ignore",
@@ -95,7 +125,9 @@ export function createAudioManager(logger: Logger): AudioManager {
     try {
       const fs = await import("node:fs");
       fs.unlinkSync(tmpPath);
-    } catch { /* ignore cleanup errors */ }
+    } catch {
+      /* ignore cleanup errors */
+    }
   }
 
   return {

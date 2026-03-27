@@ -17,10 +17,7 @@
   "dislikes": 33,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Bus Routes\", \"titleSlug\": \"bus-routes\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Distance Between Bus Stops\", \"titleSlug\": \"distance-between-bus-stops\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,6,9,5]\n[5,2,3,10]\n8",
-    "[11,5,13]\n[7,10,6]\n3"
-  ],
+  "exampleTestcaseList": ["[1,6,9,5]\n[5,2,3,10]\n8", "[11,5,13]\n[7,10,6]\n3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"citadel\", \"name\": \"Citadel\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

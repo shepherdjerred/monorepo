@@ -16,10 +16,7 @@
   "dislikes": 9,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Immutability Helper\", \"titleSlug\": \"immutability-helper\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Make Object Immutable\", \"titleSlug\": \"make-object-immutable\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc123\"",
-    "\".-qw73n|^2It\""
-  ],
+  "exampleTestcaseList": ["\"abc123\"", "\".-qw73n|^2It\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

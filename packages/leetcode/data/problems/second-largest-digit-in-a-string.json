@@ -15,10 +15,7 @@
   "dislikes": 133,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Digit From Number to Maximize Result\", \"titleSlug\": \"remove-digit-from-number-to-maximize-result\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"dfa12321afd\"",
-    "\"abc1111\""
-  ],
+  "exampleTestcaseList": ["\"dfa12321afd\"", "\"abc1111\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"softwire\", \"name\": \"Softwire\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

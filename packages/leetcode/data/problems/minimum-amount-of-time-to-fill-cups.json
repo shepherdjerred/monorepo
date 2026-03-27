@@ -15,11 +15,7 @@
   "dislikes": 94,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Construct Target Array With Multiple Sums\", \"titleSlug\": \"construct-target-array-with-multiple-sums\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Score From Removing Stones\", \"titleSlug\": \"maximum-score-from-removing-stones\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Running Time of N Computers\", \"titleSlug\": \"maximum-running-time-of-n-computers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Make Array Equal\", \"titleSlug\": \"minimum-cost-to-make-array-equal\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,2]",
-    "[5,4,4]",
-    "[5,0,0]"
-  ],
+  "exampleTestcaseList": ["[1,4,2]", "[5,4,4]", "[5,0,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 45,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Continuous Subarray Sum\", \"titleSlug\": \"continuous-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,1,3,1,2,3,3]",
-    "[10,5,10,10]"
-  ],
+  "exampleTestcaseList": ["[2,1,3,1,2,3,3]", "[10,5,10,10]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tusimple\", \"name\": \"TuSimple\"}, {\"timesEncountered\": 2, \"slug\": \"wayve\", \"name\": \"Wayve\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

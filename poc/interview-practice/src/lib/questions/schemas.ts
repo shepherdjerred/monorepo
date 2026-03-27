@@ -176,5 +176,7 @@ export const SystemDesignQuestionSchema = z.object({
 export type SystemDesignQuestion = z.infer<typeof SystemDesignQuestionSchema>;
 export type ScoringAnchor = z.infer<typeof ScoringAnchorSchema>;
 export type SystemDesignCategory = z.infer<typeof SystemDesignCategorySchema>;
-export type SystemDesignDifficulty = z.infer<typeof SystemDesignDifficultySchema>;
+export type SystemDesignDifficulty = z.infer<
+  typeof SystemDesignDifficultySchema
+>;
 export type SystemDesignPhase = z.infer<typeof SystemDesignPhaseSchema>;

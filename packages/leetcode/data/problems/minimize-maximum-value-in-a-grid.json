@@ -15,10 +15,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Candy\", \"titleSlug\": \"candy\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[3,1],[2,5]]",
-    "[[10]]"
-  ],
+  "exampleTestcaseList": ["[[3,1],[2,5]]", "[[10]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

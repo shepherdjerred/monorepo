@@ -40,7 +40,12 @@ export type VoiceRouterOptions = {
   onTranscript: (transcript: string) => void;
   onAudioDelta: (base64Audio: string) => void;
   onAudioDone: () => void;
-  onFunctionCall: (callId: string, name: string, args: string, itemId: string) => void;
+  onFunctionCall: (
+    callId: string,
+    name: string,
+    args: string,
+    itemId: string,
+  ) => void;
   onResponseDone: (response: unknown) => void;
   onError: (error: { type: string; code: string; message: string }) => void;
 };

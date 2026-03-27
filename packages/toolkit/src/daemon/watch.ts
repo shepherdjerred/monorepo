@@ -26,7 +26,8 @@ export async function runWatcher(verbose: boolean): Promise<void> {
     await logger.warn("watch", "mlx_unavailable", {
       message: "MLX not installed, using mock embeddings",
     });
-    if (verbose) console.error("[watch] MLX not available, keyword search only");
+    if (verbose)
+      console.error("[watch] MLX not available, keyword search only");
   }
 
   // Initial full reindex
@@ -93,7 +94,8 @@ export async function runWatcher(verbose: boolean): Promise<void> {
     try {
       await stat(dir.directory);
     } catch {
-      if (verbose) console.error(`[watch] skipping (not found): ${dir.directory}`);
+      if (verbose)
+        console.error(`[watch] skipping (not found): ${dir.directory}`);
       continue;
     }
 
@@ -152,18 +154,28 @@ export async function runWatcher(verbose: boolean): Promise<void> {
         process.exit(0);
       }
     })();
-    setTimeout(() => { db.close(); process.exit(0); }, 3000);
+    setTimeout(() => {
+      db.close();
+      process.exit(0);
+    }, 3000);
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 
-  await new Promise(() => { /* never resolves — keeps process alive */ });
+  await new Promise(() => {
+    /* never resolves — keeps process alive */
+  });
 }
 
 async function processItem(
   item: QueueItem,
-  deps: { db: RecallDb; embedder: EmbeddingClient | null; logger: Logger; verbose: boolean },
+  deps: {
+    db: RecallDb;
+    embedder: EmbeddingClient | null;
+    logger: Logger;
+    verbose: boolean;
+  },
 ): Promise<void> {
   const { db, embedder, logger, verbose } = deps;
   try {
@@ -174,7 +186,10 @@ async function processItem(
         await logger.info("watch", "removed", { path: item.filePath });
         if (verbose) console.error(`[watch] removed: ${item.filePath}`);
       }
-    } else if (item.filePath.endsWith(".md") || item.filePath.endsWith(".jsonl")) {
+    } else if (
+      item.filePath.endsWith(".md") ||
+      item.filePath.endsWith(".jsonl")
+    ) {
       const start = performance.now();
       const indexResult = await indexFile({
         db,
@@ -204,7 +219,10 @@ async function processItem(
         path: item.filePath,
         error: String(error),
       });
-    } catch { /* don't let logger failures crash the watcher */ }
-    if (verbose) console.error(`[watch] error: ${item.filePath}: ${String(error)}`);
+    } catch {
+      /* don't let logger failures crash the watcher */
+    }
+    if (verbose)
+      console.error(`[watch] error: ${item.filePath}: ${String(error)}`);
   }
 }

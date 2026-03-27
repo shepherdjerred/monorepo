@@ -16,11 +16,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Increment to Make Array Unique\", \"titleSlug\": \"minimum-increment-to-make-array-unique\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Array Non-decreasing or Non-increasing\", \"titleSlug\": \"make-array-non-decreasing-or-non-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Product After K Increments\", \"titleSlug\": \"maximum-product-after-k-increments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Replacements to Sort the Array\", \"titleSlug\": \"minimum-replacements-to-sort-the-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make Columns Strictly Increasing\", \"titleSlug\": \"minimum-operations-to-make-columns-strictly-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,1]",
-    "[1,5,2,4,1]",
-    "[8]"
-  ],
+  "exampleTestcaseList": ["[1,1,1]", "[1,5,2,4,1]", "[8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

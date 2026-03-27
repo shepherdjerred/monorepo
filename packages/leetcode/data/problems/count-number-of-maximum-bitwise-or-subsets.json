@@ -15,11 +15,7 @@
   "dislikes": 97,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Subsets\", \"titleSlug\": \"subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Combination With Bitwise AND Greater Than Zero\", \"titleSlug\": \"largest-combination-with-bitwise-and-greater-than-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Subarray With Maximum Bitwise AND\", \"titleSlug\": \"longest-subarray-with-maximum-bitwise-and\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,1]",
-    "[2,2,2]",
-    "[3,2,1,5]"
-  ],
+  "exampleTestcaseList": ["[3,1]", "[2,2,2]", "[3,2,1,5]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

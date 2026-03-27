@@ -16,10 +16,7 @@
   "dislikes": 198,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"How Many Numbers Are Smaller Than the Current Number\", \"titleSlug\": \"how-many-numbers-are-smaller-than-the-current-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Successful Pairs of Spells and Potions\", \"titleSlug\": \"successful-pairs-of-spells-and-potions\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,5,2,1]\n[3,10,21]",
-    "[2,3,4,5]\n[1]"
-  ],
+  "exampleTestcaseList": ["[4,5,2,1]\n[3,10,21]", "[2,3,4,5]\n[1]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}]}",
   "topicTags": [
     {

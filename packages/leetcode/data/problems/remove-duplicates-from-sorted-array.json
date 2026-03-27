@@ -16,10 +16,7 @@
   "dislikes": 20516,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove Element\", \"titleSlug\": \"remove-element\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Remove Duplicates from Sorted Array II\", \"titleSlug\": \"remove-duplicates-from-sorted-array-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Apply Operations to an Array\", \"titleSlug\": \"apply-operations-to-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Distances\", \"titleSlug\": \"sum-of-distances\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,2]",
-    "[0,0,1,1,1,2,2,3,3,4]"
-  ],
+  "exampleTestcaseList": ["[1,1,2]", "[0,0,1,1,1,2,2,3,3,4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 17, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"impetus\", \"name\": \"Impetus\"}], \"six_months\": [{\"timesEncountered\": 12, \"slug\": \"udemy\", \"name\": \"Udemy\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 5, \"slug\": \"infosys\", \"name\": \"Infosys\"}, {\"timesEncountered\": 5, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 4, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 3, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 3, \"slug\": \"capgemini\", \"name\": \"Capgemini\"}, {\"timesEncountered\": 2, \"slug\": \"deloitte\", \"name\": \"Deloitte\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}]}",
   "topicTags": [
     {

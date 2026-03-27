@@ -12,10 +12,7 @@
   "dislikes": 295,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Can I Win\", \"titleSlug\": \"can-i-win\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Winning Player in Coin Game\", \"titleSlug\": \"find-the-winning-player-in-coin-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Winning Players\", \"titleSlug\": \"find-the-number-of-winning-players\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count The Number of Winning Sequences\", \"titleSlug\": \"count-the-number-of-winning-sequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,5,2]",
-    "[1,5,233,7]"
-  ],
+  "exampleTestcaseList": ["[1,5,2]", "[1,5,233,7]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": []}",
   "topicTags": [
     {

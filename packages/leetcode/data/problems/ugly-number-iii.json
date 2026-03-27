@@ -15,11 +15,7 @@
   "dislikes": 518,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Ugly Number II\", \"titleSlug\": \"ugly-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2\n3\n5",
-    "4\n2\n3\n4",
-    "5\n2\n11\n13"
-  ],
+  "exampleTestcaseList": ["3\n2\n3\n5", "4\n2\n3\n4", "5\n2\n11\n13"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"american-express\", \"name\": \"American Express\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

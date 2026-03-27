@@ -15,10 +15,7 @@
   "dislikes": 138,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find The Original Array of Prefix Xor\", \"titleSlug\": \"find-the-original-array-of-prefix-xor\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,1,6,7]",
-    "[1,1,1,1,1]"
-  ],
+  "exampleTestcaseList": ["[2,3,1,6,7]", "[1,1,1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

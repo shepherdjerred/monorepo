@@ -12,10 +12,7 @@
   "dislikes": 352,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Binary Tree II\", \"titleSlug\": \"maximum-binary-tree-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,2,1,6,0,5]",
-    "[3,2,1]"
-  ],
+  "exampleTestcaseList": ["[3,2,1,6,0,5]", "[3,2,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

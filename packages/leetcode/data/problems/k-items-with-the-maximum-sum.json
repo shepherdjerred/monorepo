@@ -16,10 +16,7 @@
   "dislikes": 40,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3\n2\n0\n2",
-    "3\n2\n0\n4"
-  ],
+  "exampleTestcaseList": ["3\n2\n0\n2", "3\n2\n0\n4"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

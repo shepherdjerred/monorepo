@@ -12,11 +12,7 @@
   "dislikes": 136,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Strange Printer\", \"titleSlug\": \"strange-printer\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Unique Flavors After Sharing K Candies\", \"titleSlug\": \"number-of-unique-flavors-after-sharing-k-candies\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,3,2,2,2,3,4,3,1]",
-    "[1,1,1]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[1,3,2,2,2,3,4,3,1]", "[1,1,1]", "[1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 7, \"slug\": \"teradata\", \"name\": \"Teradata\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"tencent\", \"name\": \"Tencent\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}, {\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"three_months\": []}",
   "topicTags": [
     {

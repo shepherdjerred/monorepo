@@ -15,11 +15,7 @@
   "dislikes": 153,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[[0,0],[1,1]]",
-    "[[0,0],[0,1]]",
-    "[[0,0],[0,0]]"
-  ],
+  "exampleTestcaseList": ["[[0,0],[1,1]]", "[[0,0],[0,1]]", "[[0,0],[0,0]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"sap\", \"name\": \"SAP\"}], \"six_months\": []}",
   "topicTags": [
     {

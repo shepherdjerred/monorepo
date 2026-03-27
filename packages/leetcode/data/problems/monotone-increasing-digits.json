@@ -14,11 +14,7 @@
   "dislikes": 115,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove K Digits\", \"titleSlug\": \"remove-k-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "10",
-    "1234",
-    "332"
-  ],
+  "exampleTestcaseList": ["10", "1234", "332"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,11 +15,7 @@
   "dislikes": 106,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find First and Last Position of Element in Sorted Array\", \"titleSlug\": \"find-first-and-last-position-of-element-in-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rank Transform of an Array\", \"titleSlug\": \"rank-transform-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Words Containing Character\", \"titleSlug\": \"find-words-containing-character\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,5,2,3]\n2",
-    "[1,2,5,2,3]\n3",
-    "[1,2,5,2,3]\n5"
-  ],
+  "exampleTestcaseList": ["[1,2,5,2,3]\n2", "[1,2,5,2,3]\n3", "[1,2,5,2,3]\n5"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

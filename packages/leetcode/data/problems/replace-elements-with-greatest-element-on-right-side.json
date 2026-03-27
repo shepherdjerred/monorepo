@@ -15,10 +15,7 @@
   "dislikes": 267,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Furthest Houses With Different Colors\", \"titleSlug\": \"two-furthest-houses-with-different-colors\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Next Greater Element IV\", \"titleSlug\": \"next-greater-element-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[17,18,5,4,6,1]",
-    "[400]"
-  ],
+  "exampleTestcaseList": ["[17,18,5,4,6,1]", "[400]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
   "topicTags": [
     {

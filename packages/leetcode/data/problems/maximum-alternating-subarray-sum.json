@@ -17,11 +17,7 @@
   "dislikes": 6,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Maximum Alternating Subsequence Sum\", \"titleSlug\": \"maximum-alternating-subsequence-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,-1,1,2]",
-    "[2,2,2,2,2]",
-    "[1]"
-  ],
+  "exampleTestcaseList": ["[3,-1,1,2]", "[2,2,2,2,2]", "[1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

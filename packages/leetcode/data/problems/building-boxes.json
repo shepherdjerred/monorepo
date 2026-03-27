@@ -15,11 +15,7 @@
   "dislikes": 49,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Block Placement Queries\", \"titleSlug\": \"block-placement-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "3",
-    "4",
-    "10"
-  ],
+  "exampleTestcaseList": ["3", "4", "10"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 13,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Flatten Deeply Nested Array\", \"titleSlug\": \"flatten-deeply-nested-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Generate Fibonacci Sequence\", \"titleSlug\": \"generate-fibonacci-sequence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Design Cancellable Function\", \"titleSlug\": \"design-cancellable-function\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[[6]],[1,3],[]]",
-    "[]"
-  ],
+  "exampleTestcaseList": ["[[[6]],[1,3],[]]", "[]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [],
   "codeSnippets": [

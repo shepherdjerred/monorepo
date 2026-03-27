@@ -15,11 +15,7 @@
   "dislikes": 38,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Distance to Type a Word Using Two Fingers\", \"titleSlug\": \"minimum-distance-to-type-a-word-using-two-fingers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"abc\"",
-    "\"bza\"",
-    "\"zjpc\""
-  ],
+  "exampleTestcaseList": ["\"abc\"", "\"bza\"", "\"zjpc\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 3, \"slug\": \"thomson-reuters\", \"name\": \"Thomson Reuters\"}], \"three_months\": []}",
   "topicTags": [
     {

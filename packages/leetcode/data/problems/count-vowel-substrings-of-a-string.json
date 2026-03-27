@@ -15,11 +15,7 @@
   "dislikes": 437,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Matching Subsequences\", \"titleSlug\": \"number-of-matching-subsequences\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarrays with K Different Integers\", \"titleSlug\": \"subarrays-with-k-different-integers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Substrings With Only 1s\", \"titleSlug\": \"number-of-substrings-with-only-1s\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring Of All Vowels in Order\", \"titleSlug\": \"longest-substring-of-all-vowels-in-order\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Total Appeal of A String\", \"titleSlug\": \"total-appeal-of-a-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count of Substrings Containing Every Vowel and K Consonants II\", \"titleSlug\": \"count-of-substrings-containing-every-vowel-and-k-consonants-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count of Substrings Containing Every Vowel and K Consonants I\", \"titleSlug\": \"count-of-substrings-containing-every-vowel-and-k-consonants-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aeiouu\"",
-    "\"unicornarihan\"",
-    "\"cuaieuouac\""
-  ],
+  "exampleTestcaseList": ["\"aeiouu\"", "\"unicornarihan\"", "\"cuaieuouac\""],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 5, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"paypal\", \"name\": \"PayPal\"}, {\"timesEncountered\": 3, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"commvault\", \"name\": \"Commvault\"}, {\"timesEncountered\": 2, \"slug\": \"wells-fargo\", \"name\": \"Wells Fargo\"}, {\"timesEncountered\": 2, \"slug\": \"noon\", \"name\": \"Noon\"}], \"three_months\": []}",
   "topicTags": [
     {

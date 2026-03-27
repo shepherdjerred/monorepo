@@ -36,14 +36,14 @@ New macro system that addresses legacy macro shortcomings:
 
 Built-in rules extracted to external repositories:
 
-| Rule Set | New Home | Status in Bazel 8 |
-|----------|----------|-------------------|
-| `android_*` | rules_android | Fully extracted |
-| C++ toolchain symbols | rules_cc | Toolchain symbols only; rules in Bazel 9 |
-| `java_*` | rules_java | Fully extracted |
-| `*_proto_library` | protobuf | Fully extracted |
-| `py_*` + PyInfo | rules_python | Fully extracted |
-| `sh_*` | rules_shell | Fully extracted |
+| Rule Set              | New Home      | Status in Bazel 8                        |
+| --------------------- | ------------- | ---------------------------------------- |
+| `android_*`           | rules_android | Fully extracted                          |
+| C++ toolchain symbols | rules_cc      | Toolchain symbols only; rules in Bazel 9 |
+| `java_*`              | rules_java    | Fully extracted                          |
+| `*_proto_library`     | protobuf      | Fully extracted                          |
+| `py_*` + PyInfo       | rules_python  | Fully extracted                          |
+| `sh_*`                | rules_shell   | Fully extracted                          |
 
 `--incompatible_autoload_externally` provides a grace period — automatically loads rules from new locations.
 

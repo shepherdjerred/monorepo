@@ -21,7 +21,7 @@ export type LeetcodeStartOptions = {
   time?: number | undefined;
   voice: boolean;
   question?: string | undefined;
-}
+};
 
 export async function startLeetcodeSession(
   config: Config,
@@ -38,9 +38,10 @@ export async function startLeetcodeSession(
 
   const store = await loadQuestionStore(questionsDir, tempLogger);
 
-  const question = options.question !== undefined && options.question !== ""
-    ? store.getBySlug(options.question)
-    : store.getRandom({ difficulty: options.difficulty });
+  const question =
+    options.question !== undefined && options.question !== ""
+      ? store.getBySlug(options.question)
+      : store.getRandom({ difficulty: options.difficulty });
 
   if (!question) {
     console.error(
@@ -90,14 +91,12 @@ export async function startLeetcodeSession(
 
   const model = config.conversationModel ?? "claude-sonnet-4-6-20260217";
   const apiKeyForProvider =
-    config.aiProvider === "anthropic" ? config.anthropicApiKey :
-    config.aiProvider === "openai" ? config.openaiApiKey :
-    config.googleApiKey;
-  const client = createAIClient(
-    config.aiProvider,
-    model,
-    apiKeyForProvider,
-  );
+    config.aiProvider === "anthropic"
+      ? config.anthropicApiKey
+      : config.aiProvider === "openai"
+        ? config.openaiApiKey
+        : config.googleApiKey;
+  const client = createAIClient(config.aiProvider, model, apiKeyForProvider);
 
   const timer = createTimer(timeMinutes);
 
@@ -144,4 +143,3 @@ export async function startLeetcodeSession(
     duration_s: Math.floor(timer.getElapsedMs() / 1000),
   });
 }
-

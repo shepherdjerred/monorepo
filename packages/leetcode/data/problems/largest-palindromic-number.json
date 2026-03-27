@@ -17,10 +17,7 @@
   "dislikes": 238,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Palindrome\", \"titleSlug\": \"longest-palindrome\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"444947137\"",
-    "\"00009\""
-  ],
+  "exampleTestcaseList": ["\"444947137\"", "\"00009\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -6,4 +6,4 @@ website: https://www.chezmoi.io
 category: Scripts
 ---
 
-- Files prefixed with run_ are executed by chezmoi apply every time it runs.
+- Files prefixed with run\_ are executed by chezmoi apply every time it runs.

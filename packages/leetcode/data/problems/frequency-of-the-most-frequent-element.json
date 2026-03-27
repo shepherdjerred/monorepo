@@ -15,11 +15,7 @@
   "dislikes": 310,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find All Lonely Numbers in the Array\", \"titleSlug\": \"find-all-lonely-numbers-in-the-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Apply Operations to Maximize Frequency Score\", \"titleSlug\": \"apply-operations-to-maximize-frequency-score\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Frequency of an Element After Performing Operations I\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-i\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Frequency of an Element After Performing Operations II\", \"titleSlug\": \"maximum-frequency-of-an-element-after-performing-operations-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Difference Between Even and Odd Frequency II\", \"titleSlug\": \"maximum-difference-between-even-and-odd-frequency-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,4]\n5",
-    "[1,4,8,13]\n5",
-    "[3,9,6]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,4]\n5", "[1,4,8,13]\n5", "[3,9,6]\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"more_than_six_months\": [{\"timesEncountered\": 24, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 20, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"ponyai\", \"name\": \"Pony.ai\"}]}",
   "topicTags": [
     {

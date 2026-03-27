@@ -12,11 +12,7 @@
   "dislikes": 290,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Student Attendance Record I\", \"titleSlug\": \"student-attendance-record-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "1",
-    "10101"
-  ],
+  "exampleTestcaseList": ["2", "1", "10101"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"sprinklr\", \"name\": \"Sprinklr\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

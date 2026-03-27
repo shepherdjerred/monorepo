@@ -16,7 +16,7 @@ export type Logger = {
   warn: (event: string, data?: Record<string, unknown>) => void;
   error: (event: string, data?: Record<string, unknown>) => void;
   child: (component: string) => Logger;
-}
+};
 
 export function createLogger(options: {
   level: LogLevel;
@@ -58,10 +58,18 @@ export function createLogger(options: {
   }
 
   return {
-    debug: (event, data) => { log("debug", event, data); },
-    info: (event, data) => { log("info", event, data); },
-    warn: (event, data) => { log("warn", event, data); },
-    error: (event, data) => { log("error", event, data); },
+    debug: (event, data) => {
+      log("debug", event, data);
+    },
+    info: (event, data) => {
+      log("info", event, data);
+    },
+    warn: (event, data) => {
+      log("warn", event, data);
+    },
+    error: (event, data) => {
+      log("error", event, data);
+    },
     child(component: string): Logger {
       return createLogger({
         ...options,

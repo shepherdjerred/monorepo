@@ -15,10 +15,7 @@
   "dislikes": 208,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count the Number of Good Partitions\", \"titleSlug\": \"count-the-number-of-good-partitions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,4,4,5,6]",
-    "[1,1,1,2]"
-  ],
+  "exampleTestcaseList": ["[4,4,4,5,6]", "[1,1,1,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 71,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find Greatest Common Divisor of Array\", \"titleSlug\": \"find-greatest-common-divisor-of-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Subarrays With LCM Equal to K\", \"titleSlug\": \"number-of-subarrays-with-lcm-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[9,3,1,2,6,3]\n3",
-    "[4]\n7"
-  ],
+  "exampleTestcaseList": ["[9,3,1,2,6,3]\n3", "[4]\n7"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -12,11 +12,7 @@
   "dislikes": 243,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Value of K Coins From Piles\", \"titleSlug\": \"maximum-value-of-k-coins-from-piles\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Earn Points\", \"titleSlug\": \"number-of-ways-to-earn-points\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count of Sub-Multisets With Bounded Sum\", \"titleSlug\": \"count-of-sub-multisets-with-bounded-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Length of the Longest Subsequence That Sums to Target\", \"titleSlug\": \"length-of-the-longest-subsequence-that-sums-to-target\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"The Number of Ways to Make the Sum\", \"titleSlug\": \"the-number-of-ways-to-make-the-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Inverse Coin Change\", \"titleSlug\": \"inverse-coin-change\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n[1,2,5]",
-    "3\n[2]",
-    "10\n[10]"
-  ],
+  "exampleTestcaseList": ["5\n[1,2,5]", "3\n[2]", "10\n[10]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 2, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"pornhub\", \"name\": \"PornHub\"}]}",
   "topicTags": [
     {

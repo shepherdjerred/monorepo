@@ -16,10 +16,7 @@
   "dislikes": 102,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Average Height of Buildings in Each Segment\", \"titleSlug\": \"average-height-of-buildings-in-each-segment\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,2],[2,5],[4,3]]",
-    "[[5,2],[5,4],[10,3],[20,1]]"
-  ],
+  "exampleTestcaseList": ["[[1,2],[2,5],[4,3]]", "[[5,2],[5,4],[10,3],[20,1]]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"instacart\", \"name\": \"Instacart\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"six_months\": []}",
   "topicTags": [
     {

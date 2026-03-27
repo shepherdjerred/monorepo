@@ -14,10 +14,7 @@
   "dislikes": 230,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Average Value of Even Numbers That Are Divisible by Three\", \"titleSlug\": \"average-value-of-even-numbers-that-are-divisible-by-three\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Divisibility Score\", \"titleSlug\": \"find-the-maximum-divisibility-score\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,1,1]",
-    "[1,1,1]"
-  ],
+  "exampleTestcaseList": ["[0,1,1]", "[1,1,1]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
   "topicTags": [
     {

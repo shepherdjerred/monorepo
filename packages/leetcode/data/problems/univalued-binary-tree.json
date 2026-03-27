@@ -12,10 +12,7 @@
   "dislikes": 68,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find All The Lonely Nodes\", \"titleSlug\": \"find-all-the-lonely-nodes\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,1,1,1,1,null,1]",
-    "[2,2,2,5,2]"
-  ],
+  "exampleTestcaseList": ["[1,1,1,1,1,null,1]", "[2,2,2,5,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"twilio\", \"name\": \"Twilio\"}, {\"timesEncountered\": 2, \"slug\": \"box\", \"name\": \"Box\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

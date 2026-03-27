@@ -1,13 +1,20 @@
 import path from "node:path";
-import { LeetcodeQuestionSchema, SystemDesignQuestionSchema } from "./schemas.ts";
-import type { LeetcodeQuestion, SystemDesignQuestion, SystemDesignDifficulty } from "./schemas.ts";
+import {
+  LeetcodeQuestionSchema,
+  SystemDesignQuestionSchema,
+} from "./schemas.ts";
+import type {
+  LeetcodeQuestion,
+  SystemDesignQuestion,
+  SystemDesignDifficulty,
+} from "./schemas.ts";
 import type { Logger } from "#logger";
 
 export type QuestionFilter = {
   difficulty?: "easy" | "medium" | "hard" | undefined;
   tags?: string[] | undefined;
   slug?: string | undefined;
-}
+};
 
 export type QuestionStore = {
   getAll: () => LeetcodeQuestion[];
@@ -15,12 +22,9 @@ export type QuestionStore = {
   getBySlug: (slug: string) => LeetcodeQuestion | undefined;
   filter: (filter: QuestionFilter) => LeetcodeQuestion[];
   getRandom: (filter?: QuestionFilter) => LeetcodeQuestion | undefined;
-}
+};
 
-function matchesFilter(
-  q: LeetcodeQuestion,
-  f: QuestionFilter,
-): boolean {
+function matchesFilter(q: LeetcodeQuestion, f: QuestionFilter): boolean {
   if (f.difficulty && q.difficulty !== f.difficulty) return false;
   if (f.tags && !f.tags.some((t) => q.tags.includes(t))) return false;
   if (f.slug !== undefined && f.slug !== "" && q.slug !== f.slug) return false;
@@ -83,22 +87,29 @@ export type SystemDesignQuestionFilter = {
   difficulty?: SystemDesignDifficulty | undefined;
   category?: string | undefined;
   slug?: string | undefined;
-}
+};
 
 export type SystemDesignQuestionStore = {
   getAll: () => SystemDesignQuestion[];
   getById: (id: string) => SystemDesignQuestion | undefined;
   getBySlug: (slug: string) => SystemDesignQuestion | undefined;
   filter: (filter: SystemDesignQuestionFilter) => SystemDesignQuestion[];
-  getRandom: (filter?: SystemDesignQuestionFilter) => SystemDesignQuestion | undefined;
-}
+  getRandom: (
+    filter?: SystemDesignQuestionFilter,
+  ) => SystemDesignQuestion | undefined;
+};
 
 function matchesSystemDesignFilter(
   q: SystemDesignQuestion,
   f: SystemDesignQuestionFilter,
 ): boolean {
   if (f.difficulty !== undefined && q.difficulty !== f.difficulty) return false;
-  if (f.category !== undefined && f.category !== "" && q.category !== f.category) return false;
+  if (
+    f.category !== undefined &&
+    f.category !== "" &&
+    q.category !== f.category
+  )
+    return false;
   if (f.slug !== undefined && f.slug !== "" && q.slug !== f.slug) return false;
   return true;
 }

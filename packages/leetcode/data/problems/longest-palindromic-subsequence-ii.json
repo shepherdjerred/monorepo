@@ -15,10 +15,7 @@
   "dislikes": 30,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Longest Palindromic Subsequence\", \"titleSlug\": \"longest-palindromic-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"bbabab\"",
-    "\"dcbccacdb\""
-  ],
+  "exampleTestcaseList": ["\"bbabab\"", "\"dcbccacdb\""],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

@@ -101,21 +101,22 @@ toolkit recall watch
 
 These are automatically indexed by the daemon and `toolkit recall reindex`:
 
-| Directory | Source |
-|-----------|--------|
-| `~/.claude/plans/` | claude-plan |
-| `~/.claude-extra/**` | claude-extra |
-| `~/.claude/research/` | claude-research |
-| `~/.claude/projects/*/memory/` | claude-memory |
-| `~/.recall/fetched/**` | fetched |
-| `~/.claude/projects/**` (*.jsonl) | claude-conversation |
-| `~/git/monorepo/packages/docs/` | monorepo-docs |
+| Directory                          | Source              |
+| ---------------------------------- | ------------------- |
+| `~/.claude/plans/`                 | claude-plan         |
+| `~/.claude-extra/**`               | claude-extra        |
+| `~/.claude/research/`              | claude-research     |
+| `~/.claude/projects/*/memory/`     | claude-memory       |
+| `~/.recall/fetched/**`             | fetched             |
+| `~/.claude/projects/**` (\*.jsonl) | claude-conversation |
+| `~/git/monorepo/packages/docs/`    | monorepo-docs       |
 
 ## Troubleshooting
 
 ### "toolkit: command not found"
 
 Install the binary:
+
 ```bash
 cd ~/git/monorepo/packages/toolkit && ./install.sh
 ```
@@ -123,6 +124,7 @@ cd ~/git/monorepo/packages/toolkit && ./install.sh
 ### Search returns no results
 
 Check if the index has been built:
+
 ```bash
 toolkit recall status
 toolkit recall reindex
@@ -131,6 +133,7 @@ toolkit recall reindex
 ### Fetch returns empty content
 
 Try PinchTab for sites that block lightpanda:
+
 ```bash
 toolkit fetch <url> --browser
 ```

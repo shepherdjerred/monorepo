@@ -12,10 +12,7 @@
   "dislikes": 103,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Sort Colors\", \"titleSlug\": \"sort-colors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Wiggle Sort II\", \"titleSlug\": \"wiggle-sort-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Array With Elements Not Equal to Average of Neighbors\", \"titleSlug\": \"array-with-elements-not-equal-to-average-of-neighbors\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,5,2,1,6,4]",
-    "[6,6,5,6,3,8]"
-  ],
+  "exampleTestcaseList": ["[3,5,2,1,6,4]", "[6,6,5,6,3,8]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"myntra\", \"name\": \"Myntra\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -11,23 +11,63 @@
       "prompt": "Design and implement an LRU Cache with O(1) get and put operations.",
       "internalNotes": "The key insight is combining a hash map (for O(1) key lookup) with a doubly linked list (for O(1) insertion/removal to track recency). Common mistakes: using a singly linked list (O(n) removal), forgetting to update recency on get, off-by-one on capacity check.",
       "hints": [
-        { "level": "subtle", "content": "Think about what data structures give you O(1) access and O(1) ordering changes." },
-        { "level": "moderate", "content": "A hash map alone can't track order. A linked list alone can't do O(1) lookup. What if you combine them?" },
-        { "level": "explicit", "content": "Use a hash map mapping keys to doubly-linked-list nodes. The list tracks recency order. On access, move the node to the head. On eviction, remove the tail." }
+        {
+          "level": "subtle",
+          "content": "Think about what data structures give you O(1) access and O(1) ordering changes."
+        },
+        {
+          "level": "moderate",
+          "content": "A hash map alone can't track order. A linked list alone can't do O(1) lookup. What if you combine them?"
+        },
+        {
+          "level": "explicit",
+          "content": "Use a hash map mapping keys to doubly-linked-list nodes. The list tracks recency order. On access, move the node to the head. On eviction, remove the tail."
+        }
       ],
       "testCases": [
         {
-          "args": [2, [["put", 1, 1], ["put", 2, 2], ["get", 1], ["put", 3, 3], ["get", 2], ["put", 4, 4], ["get", 1], ["get", 3], ["get", 4]]],
+          "args": [
+            2,
+            [
+              ["put", 1, 1],
+              ["put", 2, 2],
+              ["get", 1],
+              ["put", 3, 3],
+              ["get", 2],
+              ["put", 4, 4],
+              ["get", 1],
+              ["get", 3],
+              ["get", 4]
+            ]
+          ],
           "expected": [null, null, 1, null, -1, null, 1, 3, 4],
           "explanation": "Capacity 2. After put(3,3), key 2 is evicted (LRU)."
         },
         {
-          "args": [1, [["put", 1, 10], ["get", 1], ["put", 2, 20], ["get", 1], ["get", 2]]],
+          "args": [
+            1,
+            [
+              ["put", 1, 10],
+              ["get", 1],
+              ["put", 2, 20],
+              ["get", 1],
+              ["get", 2]
+            ]
+          ],
           "expected": [null, 10, null, -1, 20],
           "explanation": "Capacity 1: each put evicts the previous entry."
         },
         {
-          "args": [2, [["put", 1, 1], ["put", 2, 2], ["put", 1, 10], ["get", 1], ["get", 2]]],
+          "args": [
+            2,
+            [
+              ["put", 1, 1],
+              ["put", 2, 2],
+              ["put", 1, 10],
+              ["get", 1],
+              ["get", 2]
+            ]
+          ],
           "expected": [null, null, null, 10, 2],
           "explanation": "Updating an existing key should update value and mark as most recent."
         }
@@ -38,7 +78,10 @@
         "Why do you need a doubly linked list instead of singly linked?"
       ],
       "expectedApproach": "Hash map from key to doubly-linked-list node. Doubly linked list with sentinel head/tail nodes. get: lookup in map, move to head, return value. put: if exists update and move to head; else create node at head, add to map, if over capacity remove tail.",
-      "expectedComplexity": { "time": "O(1) per operation", "space": "O(capacity)" },
+      "expectedComplexity": {
+        "time": "O(1) per operation",
+        "space": "O(capacity)"
+      },
       "transitionCriteria": {
         "minApproachQuality": "optimal",
         "mustExplainComplexity": true,
@@ -50,18 +93,47 @@
       "prompt": "Extend your LRU Cache so that each entry has a TTL (time-to-live) in seconds. After the TTL expires, the entry should be treated as if it doesn't exist. The put signature becomes: put(key, value, ttl).",
       "internalNotes": "Store an expiration timestamp with each node. On get, check if expired — if so, remove and return -1. Lazy expiration is acceptable. Eager expiration (background cleanup) is a good discussion point but not required. Watch for: candidates trying to use a separate timer thread (overcomplicating), not updating TTL on put-update.",
       "hints": [
-        { "level": "subtle", "content": "What extra information do you need to store per entry?" },
-        { "level": "moderate", "content": "Store the expiration timestamp in each node. When do you need to check it?" },
-        { "level": "explicit", "content": "On get, check if current_time > node.expiry. If expired, remove the node and return -1. This is called lazy expiration." }
+        {
+          "level": "subtle",
+          "content": "What extra information do you need to store per entry?"
+        },
+        {
+          "level": "moderate",
+          "content": "Store the expiration timestamp in each node. When do you need to check it?"
+        },
+        {
+          "level": "explicit",
+          "content": "On get, check if current_time > node.expiry. If expired, remove the node and return -1. This is called lazy expiration."
+        }
       ],
       "testCases": [
         {
-          "args": [2, [["put", 1, 1, 5], ["put", 2, 2, 10], ["tick", 3], ["get", 1], ["tick", 3], ["get", 1], ["get", 2]]],
+          "args": [
+            2,
+            [
+              ["put", 1, 1, 5],
+              ["put", 2, 2, 10],
+              ["tick", 3],
+              ["get", 1],
+              ["tick", 3],
+              ["get", 1],
+              ["get", 2]
+            ]
+          ],
           "expected": [null, null, null, 1, null, -1, 2],
           "explanation": "Key 1 TTL=5s. At t=3 it's valid. At t=6 it's expired. Key 2 TTL=10s, still valid at t=6."
         },
         {
-          "args": [2, [["put", 1, 1, 5], ["tick", 6], ["put", 2, 2, 5], ["get", 1], ["get", 2]]],
+          "args": [
+            2,
+            [
+              ["put", 1, 1, 5],
+              ["tick", 6],
+              ["put", 2, 2, 5],
+              ["get", 1],
+              ["get", 2]
+            ]
+          ],
           "expected": [null, null, null, -1, 2],
           "explanation": "Key 1 expired before key 2 was added."
         }
@@ -72,7 +144,10 @@
         "In a real system, how would you handle clock skew?"
       ],
       "expectedApproach": "Store expiration timestamp (current_time + ttl) in each node. On get, check expiry before returning. On put, if key exists and expired, treat as new insertion. Lazy expiration is the expected approach.",
-      "expectedComplexity": { "time": "O(1) per operation", "space": "O(capacity)" }
+      "expectedComplexity": {
+        "time": "O(1) per operation",
+        "space": "O(capacity)"
+      }
     }
   ],
   "constraints": [

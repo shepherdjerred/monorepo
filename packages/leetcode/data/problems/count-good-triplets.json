@@ -15,10 +15,7 @@
   "dislikes": 1250,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Special Quadruplets\", \"titleSlug\": \"count-special-quadruplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Unequal Triplets in Array\", \"titleSlug\": \"number-of-unequal-triplets-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,0,1,1,9,7]\n7\n2\n3",
-    "[1,1,2,2,3]\n0\n0\n1"
-  ],
+  "exampleTestcaseList": ["[3,0,1,1,9,7]\n7\n2\n3", "[1,1,2,2,3]\n0\n0\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"turvo\", \"name\": \"Turvo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

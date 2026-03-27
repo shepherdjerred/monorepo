@@ -16,10 +16,7 @@
   "dislikes": 43,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Characters By Frequency\", \"titleSlug\": \"sort-characters-by-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sort Array by Increasing Frequency\", \"titleSlug\": \"sort-array-by-increasing-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,0,0,0,0,7,7,5]",
-    "[2,0,0,2]"
-  ],
+  "exampleTestcaseList": ["[1,0,0,0,0,7,7,5]", "[2,0,0,2]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"juspay\", \"name\": \"Juspay\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

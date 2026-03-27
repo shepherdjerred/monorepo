@@ -18,11 +18,7 @@
   "dislikes": 9,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Minimum Split Into Subarrays With GCD Greater Than One\", \"titleSlug\": \"minimum-split-into-subarrays-with-gcd-greater-than-one\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,6,3,4,3]",
-    "[3,5]",
-    "[1,2,1]"
-  ],
+  "exampleTestcaseList": ["[2,6,3,4,3]", "[3,5]", "[1,2,1]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

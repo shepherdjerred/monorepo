@@ -1,4 +1,7 @@
-import type { SystemDesignQuestion, SystemDesignPhase } from "#lib/questions/schemas.ts";
+import type {
+  SystemDesignQuestion,
+  SystemDesignPhase,
+} from "#lib/questions/schemas.ts";
 import type { TimerPhase } from "#lib/timer/schemas.ts";
 import type { TranscriptEntry } from "#lib/db/transcript.ts";
 
@@ -9,7 +12,7 @@ export type SystemDesignPromptContext = {
   timerPhase: TimerPhase;
   recentTranscript: TranscriptEntry[];
   diagramSnapshot: string | null;
-}
+};
 
 const PHASE_ORDER: SystemDesignPhase[] = [
   "requirements",
@@ -22,8 +25,8 @@ const PHASE_ORDER: SystemDesignPhase[] = [
 ];
 
 const PHASE_LABELS: Record<SystemDesignPhase, string> = {
-  "requirements": "Requirements Gathering",
-  "estimation": "Back-of-Envelope Estimation",
+  requirements: "Requirements Gathering",
+  estimation: "Back-of-Envelope Estimation",
   "api-design": "API Design",
   "data-model": "Data Model Design",
   "high-level": "High-Level Architecture",
@@ -123,7 +126,9 @@ If time is short, ask: "What are the top 2 trade-offs in your design?"`;
   }
 }
 
-export function buildSystemDesignSystemPrompt(ctx: SystemDesignPromptContext): string {
+export function buildSystemDesignSystemPrompt(
+  ctx: SystemDesignPromptContext,
+): string {
   const sections: string[] = [];
 
   // PERSONA
@@ -171,19 +176,19 @@ ${timerInstructions}`);
 
   // Phase progress
   const phaseIdx = getPhaseIndex(ctx.currentPhase);
-  const progress = PHASE_ORDER
-    .map((p, i) => {
-      const label = PHASE_LABELS[p];
-      if (i < phaseIdx) return `  [done] ${label}`;
-      if (i === phaseIdx) return `  [>>  ] ${label}`;
-      return `  [    ] ${label}`;
-    })
-    .join("\n");
+  const progress = PHASE_ORDER.map((p, i) => {
+    const label = PHASE_LABELS[p];
+    if (i < phaseIdx) return `  [done] ${label}`;
+    if (i === phaseIdx) return `  [>>  ] ${label}`;
+    return `  [    ] ${label}`;
+  }).join("\n");
   sections.push(`PHASE PROGRESS:\n${progress}`);
 
   const nextPhase = getNextPhase(ctx.currentPhase);
   if (nextPhase !== null) {
-    sections.push(`Next phase: ${PHASE_LABELS[nextPhase]}. Use transition_phase tool when the candidate is ready.`);
+    sections.push(
+      `Next phase: ${PHASE_LABELS[nextPhase]}. Use transition_phase tool when the candidate is ready.`,
+    );
   }
 
   // QUESTION
@@ -213,13 +218,20 @@ ${ctx.diagramSnapshot}
 
 You are seeing the candidate's diagram. Reference specific components and connections in your feedback.`);
   } else {
-    sections.push(`DIAGRAM STATUS: No components drawn yet. The candidate has an Excalidraw file open. When they mention their diagram, use the review_diagram tool to check for updates.`);
+    sections.push(
+      `DIAGRAM STATUS: No components drawn yet. The candidate has an Excalidraw file open. When they mention their diagram, use the review_diagram tool to check for updates.`,
+    );
   }
 
   return sections.join("\n\n---\n\n");
 }
 
-function formatAnchors(anchors: { 1: string; 2: string; 3: string; 4: string }): string {
+function formatAnchors(anchors: {
+  1: string;
+  2: string;
+  3: string;
+  4: string;
+}): string {
   return `  1: ${anchors[1]}
   2: ${anchors[2]}
   3: ${anchors[3]}

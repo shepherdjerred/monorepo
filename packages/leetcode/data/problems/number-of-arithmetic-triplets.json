@@ -15,10 +15,7 @@
   "dislikes": 98,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"3Sum\", \"titleSlug\": \"3sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Unequal Triplets in Array\", \"titleSlug\": \"number-of-unequal-triplets-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Value of an Ordered Triplet I\", \"titleSlug\": \"maximum-value-of-an-ordered-triplet-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Sum of Mountain Triplets I\", \"titleSlug\": \"minimum-sum-of-mountain-triplets-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,1,4,6,7,10]\n3",
-    "[4,5,6,7,8,9]\n2"
-  ],
+  "exampleTestcaseList": ["[0,1,4,6,7,10]\n3", "[4,5,6,7,8,9]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

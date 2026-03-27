@@ -16,10 +16,7 @@
   "dislikes": 640,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Max Points on a Line\", \"titleSlug\": \"max-points-on-a-line\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Boomerangs\", \"titleSlug\": \"number-of-boomerangs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[[1,1],[-1,1]]",
-    "[[1,1],[-1,-1]]"
-  ],
+  "exampleTestcaseList": ["[[1,1],[-1,1]]", "[[1,1],[-1,-1]]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"nuro\", \"name\": \"Nuro\"}], \"three_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 620,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"cba\"\n1",
-    "\"baaca\"\n3"
-  ],
+  "exampleTestcaseList": ["\"cba\"\n1", "\"baaca\"\n3"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
   "topicTags": [
     {

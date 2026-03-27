@@ -12,10 +12,7 @@
   "dislikes": 3439,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find First and Last Position of Element in Sorted Array\", \"titleSlug\": \"find-first-and-last-position-of-element-in-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Search Insert Position\", \"titleSlug\": \"search-insert-position\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Guess Number Higher or Lower\", \"titleSlug\": \"guess-number-higher-or-lower\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n4",
-    "1\n1"
-  ],
+  "exampleTestcaseList": ["5\n4", "1\n1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"six_months\": []}",
   "topicTags": [
     {

@@ -2,12 +2,7 @@ import { Database } from "bun:sqlite";
 import * as lancedb from "@lancedb/lancedb";
 import { mkdir } from "node:fs/promises";
 import { z } from "zod";
-import {
-  LANCE_DIR,
-  SQLITE_PATH,
-  RECALL_DIR,
-  EMBEDDING_DIM,
-} from "./config.ts";
+import { LANCE_DIR, SQLITE_PATH, RECALL_DIR, EMBEDDING_DIM } from "./config.ts";
 
 const SCHEMA_VERSION = 1;
 const LANCE_TABLE = "chunks";
@@ -92,7 +87,10 @@ export class RecallDb {
 
     // Check/set schema version
     const row = this.sqlite
-      .query<{ value: string }, []>("SELECT value FROM meta WHERE key = 'schema_version'")
+      .query<
+        { value: string },
+        []
+      >("SELECT value FROM meta WHERE key = 'schema_version'")
       .get();
     if (row == null) {
       this.sqlite.run(
@@ -134,9 +132,11 @@ export class RecallDb {
   // Metadata operations
 
   getMetadata(docPath: string): MetadataRow | null {
-    return this.sqlite
-      .query<MetadataRow, [string]>("SELECT * FROM metadata WHERE path = ?")
-      .get(docPath) ?? null;
+    return (
+      this.sqlite
+        .query<MetadataRow, [string]>("SELECT * FROM metadata WHERE path = ?")
+        .get(docPath) ?? null
+    );
   }
 
   upsertMetadata(meta: MetadataRow): void {
@@ -194,15 +194,17 @@ export class RecallDb {
       .query<
         { path: string; title: string; body: string; rank: number },
         [string, number]
-      >(
-        "SELECT path, title, body, rank FROM docs_fts WHERE docs_fts MATCH ? ORDER BY rank LIMIT ?",
-      )
+      >("SELECT path, title, body, rank FROM docs_fts WHERE docs_fts MATCH ? ORDER BY rank LIMIT ?")
       .all(ftsQuery, limit);
   }
 
   // Stats operations
 
-  recordStat(event: string, durationMs: number, details: Record<string, unknown>): void {
+  recordStat(
+    event: string,
+    durationMs: number,
+    details: Record<string, unknown>,
+  ): void {
     this.sqlite.run(
       "INSERT INTO stats (ts, event, duration_ms, details) VALUES (?, ?, ?, ?)",
       [new Date().toISOString(), event, durationMs, JSON.stringify(details)],
@@ -212,10 +214,9 @@ export class RecallDb {
   purgeOldStats(daysToKeep = 30): number {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - daysToKeep);
-    const result = this.sqlite.run(
-      "DELETE FROM stats WHERE ts < ?",
-      [cutoff.toISOString()],
-    );
+    const result = this.sqlite.run("DELETE FROM stats WHERE ts < ?", [
+      cutoff.toISOString(),
+    ]);
     return result.changes;
   }
 
@@ -229,7 +230,9 @@ export class RecallDb {
 
   async deleteChunks(docPath: string): Promise<void> {
     const table = await this.getLanceTable();
-    await table.delete(`doc_path = "${docPath.replaceAll('"', String.raw`\"`)}"`);
+    await table.delete(
+      `doc_path = "${docPath.replaceAll('"', String.raw`\"`)}"`,
+    );
   }
 
   async vectorSearch(
@@ -237,10 +240,7 @@ export class RecallDb {
     limit: number,
   ): Promise<(ChunkRow & { _distance: number })[]> {
     const table = await this.getLanceTable();
-    const raw = await table
-      .vectorSearch(queryVector)
-      .limit(limit)
-      .toArray();
+    const raw = await table.vectorSearch(queryVector).limit(limit).toArray();
     // LanceDB returns untyped records — validate with Zod
     return raw.map((row) => VectorSearchResultSchema.parse(row));
   }
@@ -258,18 +258,20 @@ export class RecallDb {
   getChunkCount(): number {
     return (
       this.sqlite
-        .query<{ total: number }, []>(
-          "SELECT COALESCE(SUM(chunk_count), 0) as total FROM metadata",
-        )
+        .query<
+          { total: number },
+          []
+        >("SELECT COALESCE(SUM(chunk_count), 0) as total FROM metadata")
         .get()?.total ?? 0
     );
   }
 
   getSourceStats(): { source: string; docs: number; chunks: number }[] {
     return this.sqlite
-      .query<{ source: string; docs: number; chunks: number }, []>(
-        "SELECT source, COUNT(*) as docs, COALESCE(SUM(chunk_count), 0) as chunks FROM metadata GROUP BY source ORDER BY docs DESC",
-      )
+      .query<
+        { source: string; docs: number; chunks: number },
+        []
+      >("SELECT source, COUNT(*) as docs, COALESCE(SUM(chunk_count), 0) as chunks FROM metadata GROUP BY source ORDER BY docs DESC")
       .all();
   }
 

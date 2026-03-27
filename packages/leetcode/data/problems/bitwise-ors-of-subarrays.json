@@ -14,11 +14,7 @@
   "dislikes": 244,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Subarrays With Maximum Bitwise OR\", \"titleSlug\": \"smallest-subarrays-with-maximum-bitwise-or\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Bitwise OR of All Subsequence Sums\", \"titleSlug\": \"bitwise-or-of-all-subsequence-sums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Maximum Sequence Value of Array\", \"titleSlug\": \"find-the-maximum-sequence-value-of-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0]",
-    "[1,1,2]",
-    "[1,2,4]"
-  ],
+  "exampleTestcaseList": ["[0]", "[1,1,2]", "[1,2,4]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
   "topicTags": [
     {

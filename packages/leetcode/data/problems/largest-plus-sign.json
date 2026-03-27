@@ -14,10 +14,7 @@
   "dislikes": 241,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximal Square\", \"titleSlug\": \"maximal-square\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "5\n[[4,2]]",
-    "1\n[[0,0]]"
-  ],
+  "exampleTestcaseList": ["5\n[[4,2]]", "1\n[[0,0]]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

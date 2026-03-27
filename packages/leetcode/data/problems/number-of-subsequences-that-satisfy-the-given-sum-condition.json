@@ -16,11 +16,7 @@
   "dislikes": 435,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Operations to Form Subsequence With Target Sum\", \"titleSlug\": \"minimum-operations-to-form-subsequence-with-target-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Sum of Subsequence Powers\", \"titleSlug\": \"find-the-sum-of-subsequence-powers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Sum of the Power of All Subsequences\", \"titleSlug\": \"find-the-sum-of-the-power-of-all-subsequences\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,5,6,7]\n9",
-    "[3,3,6,8]\n10",
-    "[2,3,3,4,6,7]\n12"
-  ],
+  "exampleTestcaseList": ["[3,5,6,7]\n9", "[3,3,6,8]\n10", "[2,3,3,4,6,7]\n12"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 10, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

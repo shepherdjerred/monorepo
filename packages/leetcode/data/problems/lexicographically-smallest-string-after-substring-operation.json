@@ -15,12 +15,7 @@
   "dislikes": 194,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Shifting Letters\", \"titleSlug\": \"shifting-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After Applying Operations\", \"titleSlug\": \"lexicographically-smallest-string-after-applying-operations\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest String After Operations With Constraint\", \"titleSlug\": \"lexicographically-smallest-string-after-operations-with-constraint\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Replace Question Marks in String to Minimize Its Value\", \"titleSlug\": \"replace-question-marks-in-string-to-minimize-its-value\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"cbabc\"",
-    "\"aa\"",
-    "\"acbbc\"",
-    "\"leetcode\""
-  ],
+  "exampleTestcaseList": ["\"cbabc\"", "\"aa\"", "\"acbbc\"", "\"leetcode\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

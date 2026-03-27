@@ -12,11 +12,7 @@
   "dislikes": 257,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Total Appeal of A String\", \"titleSlug\": \"total-appeal-of-a-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"ABC\"",
-    "\"ABA\"",
-    "\"LEETCODE\""
-  ],
+  "exampleTestcaseList": ["\"ABC\"", "\"ABA\"", "\"LEETCODE\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"forusall\", \"name\": \"ForUsAll\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

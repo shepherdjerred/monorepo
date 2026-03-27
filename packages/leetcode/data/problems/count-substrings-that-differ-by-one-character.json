@@ -15,10 +15,7 @@
   "dislikes": 357,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Words Obtained After Adding a Letter\", \"titleSlug\": \"count-words-obtained-after-adding-a-letter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"aba\"\n\"baba\"",
-    "\"ab\"\n\"bb\""
-  ],
+  "exampleTestcaseList": ["\"aba\"\n\"baba\"", "\"ab\"\n\"bb\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

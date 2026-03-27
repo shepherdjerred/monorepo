@@ -16,10 +16,7 @@
   "dislikes": 613,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of 1 Bits\", \"titleSlug\": \"number-of-1-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Values at Indices With K Set Bits\", \"titleSlug\": \"sum-of-values-at-indices-with-k-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the K-or of an Array\", \"titleSlug\": \"find-the-k-or-of-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "5"
-  ],
+  "exampleTestcaseList": ["2", "5"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 11, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"three_months\": []}",
   "topicTags": [
     {

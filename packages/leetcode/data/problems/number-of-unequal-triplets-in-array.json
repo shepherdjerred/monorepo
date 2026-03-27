@@ -15,10 +15,7 @@
   "dislikes": 49,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Count Good Triplets\", \"titleSlug\": \"count-good-triplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Square Sum Triples\", \"titleSlug\": \"count-square-sum-triples\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Arithmetic Triplets\", \"titleSlug\": \"number-of-arithmetic-triplets\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,4,2,4,3]",
-    "[1,1,1,1,1]"
-  ],
+  "exampleTestcaseList": ["[4,4,2,4,3]", "[1,1,1,1,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"paytm\", \"name\": \"Paytm\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

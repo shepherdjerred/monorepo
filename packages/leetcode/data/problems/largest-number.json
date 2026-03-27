@@ -12,10 +12,7 @@
   "dislikes": 805,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Smallest Value of the Rearranged Number\", \"titleSlug\": \"smallest-value-of-the-rearranged-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Key of the Numbers\", \"titleSlug\": \"find-the-key-of-the-numbers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[10,2]",
-    "[3,30,34,5,9]"
-  ],
+  "exampleTestcaseList": ["[10,2]", "[3,30,34,5,9]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": [{\"timesEncountered\": 6, \"slug\": \"clevertap\", \"name\": \"CleverTap\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 11, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 5, \"slug\": \"accenture\", \"name\": \"Accenture\"}, {\"timesEncountered\": 4, \"slug\": \"tcs\", \"name\": \"tcs\"}, {\"timesEncountered\": 4, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 4, \"slug\": \"nykaa\", \"name\": \"Nykaa\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 3, \"slug\": \"myntra\", \"name\": \"Myntra\"}]}",
   "topicTags": [
     {

@@ -16,10 +16,7 @@
   "dislikes": 9068,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Encode and Decode Strings\", \"titleSlug\": \"encode-and-decode-strings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"String Compression\", \"titleSlug\": \"string-compression\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1",
-    "4"
-  ],
+  "exampleTestcaseList": ["1", "4"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"expedia\", \"name\": \"Expedia\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"veeva\", \"name\": \"Veeva Systems\"}, {\"timesEncountered\": 2, \"slug\": \"lg-electronics\", \"name\": \"LG Electronics\"}], \"more_than_six_months\": [{\"timesEncountered\": 26, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 22, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}, {\"timesEncountered\": 6, \"slug\": \"zoho\", \"name\": \"Zoho\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"wix\", \"name\": \"Wix\"}]}",
   "topicTags": [
     {

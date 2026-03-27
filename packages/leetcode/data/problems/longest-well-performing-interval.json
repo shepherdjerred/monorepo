@@ -15,10 +15,7 @@
   "dislikes": 123,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[9,9,6,0,6,6,9]",
-    "[6,6,6]"
-  ],
+  "exampleTestcaseList": ["[9,9,6,0,6,6,9]", "[6,6,6]"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"netapp\", \"name\": \"NetApp\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": []}",
   "topicTags": [
     {

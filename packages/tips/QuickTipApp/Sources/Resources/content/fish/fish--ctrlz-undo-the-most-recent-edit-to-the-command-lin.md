@@ -6,4 +6,4 @@ website: https://fishshell.com
 category: Editing & Key Bindings
 ---
 
-- Ctrl-Z / Ctrl-_ — Undo the most recent edit to the command line.
+- Ctrl-Z / Ctrl-\_ — Undo the most recent edit to the command line.

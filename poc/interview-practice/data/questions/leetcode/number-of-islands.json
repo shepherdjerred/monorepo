@@ -11,18 +11,41 @@
       "prompt": "Count the number of islands in a 2D grid of '1' (land) and '0' (water). Islands are formed by connected land cells (horizontally/vertically adjacent).",
       "internalNotes": "Standard BFS/DFS flood fill. Iterate through grid, when '1' found, increment count and flood-fill to mark all connected land. Common mistakes: forgetting to mark visited, diagonal vs orthogonal adjacency, modifying input vs using separate visited array.",
       "hints": [
-        { "level": "subtle", "content": "Think about how you would explore all connected land from a starting cell." },
-        { "level": "moderate", "content": "Graph traversal — BFS or DFS from each unvisited land cell." },
-        { "level": "explicit", "content": "For each '1' you haven't visited, do a BFS/DFS marking all connected '1's as visited. Count how many times you start a new traversal." }
+        {
+          "level": "subtle",
+          "content": "Think about how you would explore all connected land from a starting cell."
+        },
+        {
+          "level": "moderate",
+          "content": "Graph traversal — BFS or DFS from each unvisited land cell."
+        },
+        {
+          "level": "explicit",
+          "content": "For each '1' you haven't visited, do a BFS/DFS marking all connected '1's as visited. Count how many times you start a new traversal."
+        }
       ],
       "testCases": [
         {
-          "args": [[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]],
+          "args": [
+            [
+              ["1", "1", "1", "1", "0"],
+              ["1", "1", "0", "1", "0"],
+              ["1", "1", "0", "0", "0"],
+              ["0", "0", "0", "0", "0"]
+            ]
+          ],
           "expected": 1,
           "explanation": "All land is connected"
         },
         {
-          "args": [[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]],
+          "args": [
+            [
+              ["1", "1", "0", "0", "0"],
+              ["1", "1", "0", "0", "0"],
+              ["0", "0", "1", "0", "0"],
+              ["0", "0", "0", "1", "1"]
+            ]
+          ],
           "expected": 3,
           "explanation": "Three separate island groups"
         },
@@ -32,7 +55,13 @@
           "explanation": "All water"
         },
         {
-          "args": [[["1","0","1"],["0","1","0"],["1","0","1"]]],
+          "args": [
+            [
+              ["1", "0", "1"],
+              ["0", "1", "0"],
+              ["1", "0", "1"]
+            ]
+          ],
           "expected": 5,
           "explanation": "No orthogonal connections, each '1' is its own island"
         }
@@ -55,13 +84,32 @@
       "prompt": "The grid starts as all water. You receive a stream of positions where land is added one at a time. After each addition, return the current number of islands. Optimize for many additions.",
       "internalNotes": "Union-Find is the optimal approach. Each new land cell starts as its own island (count++). Check 4 neighbors — if any is land, union them (count-- for each successful union). Common mistake: BFS from scratch each time (O(m*n) per query instead of amortized O(α)).",
       "hints": [
-        { "level": "subtle", "content": "Re-running BFS after every addition is too slow. What data structure tracks connected components efficiently?" },
-        { "level": "moderate", "content": "Think about Union-Find (Disjoint Set Union)." },
-        { "level": "explicit", "content": "Use Union-Find. Each new cell is a new component. Union with existing land neighbors. Track component count." }
+        {
+          "level": "subtle",
+          "content": "Re-running BFS after every addition is too slow. What data structure tracks connected components efficiently?"
+        },
+        {
+          "level": "moderate",
+          "content": "Think about Union-Find (Disjoint Set Union)."
+        },
+        {
+          "level": "explicit",
+          "content": "Use Union-Find. Each new cell is a new component. Union with existing land neighbors. Track component count."
+        }
       ],
       "testCases": [
         {
-          "args": [3, 3, [[0, 0], [0, 1], [1, 2], [2, 1], [1, 1]]],
+          "args": [
+            3,
+            3,
+            [
+              [0, 0],
+              [0, 1],
+              [1, 2],
+              [2, 1],
+              [1, 1]
+            ]
+          ],
           "expected": [1, 1, 2, 3, 1],
           "explanation": "After each addition: 1 island, still 1, now 2 disconnected, 3 disconnected, all connected = 1"
         }
@@ -71,7 +119,10 @@
         "What is the path compression and union by rank optimization?"
       ],
       "expectedApproach": "Union-Find with path compression and union by rank.",
-      "expectedComplexity": { "time": "O(α(m*n)) per operation", "space": "O(m*n)" }
+      "expectedComplexity": {
+        "time": "O(α(m*n)) per operation",
+        "space": "O(m*n)"
+      }
     }
   ],
   "constraints": [
@@ -82,9 +133,7 @@
   ],
   "functionSignature": {
     "name": "numIslands",
-    "params": [
-      { "name": "grid", "type": "string[][]" }
-    ],
+    "params": [{ "name": "grid", "type": "string[][]" }],
     "returnType": "number"
   },
   "source": "LeetCode #200 / #305",

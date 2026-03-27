@@ -15,11 +15,7 @@
   "dislikes": 11,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "2\n0\n2",
-    "3\n4\n2",
-    "2\n0\n0"
-  ],
+  "exampleTestcaseList": ["2\n0\n2", "3\n4\n2", "2\n0\n0"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

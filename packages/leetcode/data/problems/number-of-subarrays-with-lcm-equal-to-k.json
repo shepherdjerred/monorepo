@@ -16,10 +16,7 @@
   "dislikes": 41,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Number of Subarrays With GCD Equal to K\", \"titleSlug\": \"number-of-subarrays-with-gcd-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,6,2,7,1]\n6",
-    "[3]\n2"
-  ],
+  "exampleTestcaseList": ["[3,6,2,7,1]\n6", "[3]\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"unity\", \"name\": \"Unity\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

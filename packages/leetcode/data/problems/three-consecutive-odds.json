@@ -5,19 +5,14 @@
   "titleSlug": "three-consecutive-odds",
   "difficulty": "Easy",
   "content": "Given an integer array <code>arr</code>, return <code>true</code>&nbsp;if there are three consecutive odd numbers in the array. Otherwise, return&nbsp;<code>false</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,6,4,1]\n<strong>Output:</strong> false\n<b>Explanation:</b> There are no three consecutive odds.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [1,2,34,3,4,5,7,23,12]\n<strong>Output:</strong> true\n<b>Explanation:</b> [5,7,23] are three consecutive odds.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 1000</code></li>\n</ul>\n",
-  "hints": [
-    "Check every three consecutive numbers in the array for parity."
-  ],
+  "hints": ["Check every three consecutive numbers in the array for parity."],
   "metaData": "{\n  \"name\": \"threeConsecutiveOdds\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
   "stats": "{\"totalAccepted\": \"440.9K\", \"totalSubmission\": \"636.2K\", \"totalAcceptedRaw\": 440911, \"totalSubmissionRaw\": 636190, \"acRate\": \"69.3%\"}",
   "likes": 1407,
   "dislikes": 106,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[2,6,4,1]",
-    "[1,2,34,3,4,5,7,23,12]"
-  ],
+  "exampleTestcaseList": ["[2,6,4,1]", "[1,2,34,3,4,5,7,23,12]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"dji\", \"name\": \"DJI\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

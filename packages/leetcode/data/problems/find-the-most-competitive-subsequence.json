@@ -14,10 +14,7 @@
   "dislikes": 106,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Remove K Digits\", \"titleSlug\": \"remove-k-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Subsequence of Distinct Characters\", \"titleSlug\": \"smallest-subsequence-of-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[3,5,2,6]\n2",
-    "[2,4,3,3,5,4,9,6]\n4"
-  ],
+  "exampleTestcaseList": ["[3,5,2,6]\n2", "[2,4,3,3,5,4,9,6]\n4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

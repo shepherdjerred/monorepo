@@ -48,9 +48,7 @@ export async function fetchPage(options: FetchPageOptions): Promise<void> {
 
   if (verbose) {
     console.error(`[fetch] saving: ${saved.filePath}`);
-    console.error(
-      `[fetch] done (${String(Math.round(result.durationMs))}ms)`,
-    );
+    console.error(`[fetch] done (${String(Math.round(result.durationMs))}ms)`);
   }
 
   // Print the saved path to stdout (for piping/scripting)

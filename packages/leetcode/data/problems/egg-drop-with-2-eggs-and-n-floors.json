@@ -15,10 +15,7 @@
   "dislikes": 164,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Super Egg Drop\", \"titleSlug\": \"super-egg-drop\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "2",
-    "100"
-  ],
+  "exampleTestcaseList": ["2", "100"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"disney\", \"name\": \"Disney\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

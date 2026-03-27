@@ -15,10 +15,7 @@
   "dislikes": 38,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Left and Right Sum Differences\", \"titleSlug\": \"left-and-right-sum-differences\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,3,4,5]",
-    "[3,2,3,4,2]"
-  ],
+  "exampleTestcaseList": ["[1,2,3,4,5]", "[3,2,3,4,2]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

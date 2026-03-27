@@ -16,10 +16,7 @@
   "dislikes": 14,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Binary Subarrays With Sum\", \"titleSlug\": \"binary-subarrays-with-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Number of Nice Subarrays\", \"titleSlug\": \"count-number-of-nice-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[0,1,0,0,1]",
-    "[0,1,0]"
-  ],
+  "exampleTestcaseList": ["[0,1,0,0,1]", "[0,1,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

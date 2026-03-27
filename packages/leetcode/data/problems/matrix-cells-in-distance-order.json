@@ -12,11 +12,7 @@
   "dislikes": 345,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Cells in a Range on an Excel Sheet\", \"titleSlug\": \"cells-in-a-range-on-an-excel-sheet\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "1\n2\n0\n0",
-    "2\n2\n0\n1",
-    "2\n3\n1\n2"
-  ],
+  "exampleTestcaseList": ["1\n2\n0\n0", "2\n2\n0\n1", "2\n3\n1\n2"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 1816,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Make Number of Distinct Characters Equal\", \"titleSlug\": \"make-number-of-distinct-characters-equal\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"1807\"\n\"7810\"",
-    "\"1123\"\n\"0111\""
-  ],
+  "exampleTestcaseList": ["\"1807\"\n\"7810\"", "\"1123\"\n\"0111\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"zopsmart\", \"name\": \"Zopsmart\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"epic-systems\", \"name\": \"Epic Systems\"}, {\"timesEncountered\": 2, \"slug\": \"cars24\", \"name\": \"CARS24\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

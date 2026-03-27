@@ -12,11 +12,7 @@
   "dislikes": 104,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Factorial Trailing Zeroes\", \"titleSlug\": \"factorial-trailing-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "0",
-    "5",
-    "3"
-  ],
+  "exampleTestcaseList": ["0", "5", "3"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

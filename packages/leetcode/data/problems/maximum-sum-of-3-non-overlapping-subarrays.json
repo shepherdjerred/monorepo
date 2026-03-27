@@ -12,10 +12,7 @@
   "dislikes": 159,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock III\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sum of Variable Length Subarrays\", \"titleSlug\": \"sum-of-variable-length-subarrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximize Y\\u2011Sum by Picking a Triplet of Distinct X\\u2011Values\", \"titleSlug\": \"maximize-ysum-by-picking-a-triplet-of-distinct-xvalues\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,2,1,2,6,7,5,1]\n2",
-    "[1,2,1,2,1,2,1,2,1]\n2"
-  ],
+  "exampleTestcaseList": ["[1,2,1,2,6,7,5,1]\n2", "[1,2,1,2,1,2,1,2,1]\n2"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"general-motors\", \"name\": \"General Motors\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 13, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"six_months\": []}",
   "topicTags": [
     {

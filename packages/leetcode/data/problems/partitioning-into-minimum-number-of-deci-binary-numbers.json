@@ -16,11 +16,7 @@
   "dislikes": 1544,
   "isPaidOnly": false,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "\"32\"",
-    "\"82734\"",
-    "\"27346209830709182346\""
-  ],
+  "exampleTestcaseList": ["\"32\"", "\"82734\"", "\"27346209830709182346\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"six_months\": []}",
   "topicTags": [
     {

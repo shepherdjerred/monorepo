@@ -12,10 +12,7 @@
   "dislikes": 762,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Min Max Game\", \"titleSlug\": \"min-max-game\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "9",
-    "1"
-  ],
+  "exampleTestcaseList": ["9", "1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"kickdrum\", \"name\": \"Kickdrum\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"autodesk\", \"name\": \"Autodesk\"}], \"six_months\": []}",
   "topicTags": [
     {

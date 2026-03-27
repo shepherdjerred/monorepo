@@ -15,11 +15,7 @@
   "dislikes": 18,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Champagne Tower\", \"titleSlug\": \"champagne-tower\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "16",
-    "2",
-    "4"
-  ],
+  "exampleTestcaseList": ["16", "2", "4"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

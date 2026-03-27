@@ -150,19 +150,19 @@ Use `bazel mod deps` to unconditionally evaluate all module extensions (useful f
 
 ## WORKSPACE to Bzlmod Migration
 
-| WORKSPACE | Bzlmod Equivalent |
-|-----------|-------------------|
-| `workspace()` | `module()` in MODULE.bazel |
-| `http_archive` deps | `bazel_dep()` directives |
-| `bind()` | `alias()` build rules |
-| `local_repository` | `local_path_override()` |
-| Transitive dep macros | Automatic MVS resolution |
-| Repository rules in WORKSPACE | Module extensions |
+| WORKSPACE                     | Bzlmod Equivalent          |
+| ----------------------------- | -------------------------- |
+| `workspace()`                 | `module()` in MODULE.bazel |
+| `http_archive` deps           | `bazel_dep()` directives   |
+| `bind()`                      | `alias()` build rules      |
+| `local_repository`            | `local_path_override()`    |
+| Transitive dep macros         | Automatic MVS resolution   |
+| Repository rules in WORKSPACE | Module extensions          |
 
 ### Timeline
 
-| Version | Status |
-|---------|--------|
-| Bazel 7 | Bzlmod on by default; WORKSPACE still works |
+| Version | Status                                                     |
+| ------- | ---------------------------------------------------------- |
+| Bazel 7 | Bzlmod on by default; WORKSPACE still works                |
 | Bazel 8 | WORKSPACE disabled by default (`--enable_workspace=false`) |
-| Bazel 9 | WORKSPACE code completely removed |
+| Bazel 9 | WORKSPACE code completely removed                          |

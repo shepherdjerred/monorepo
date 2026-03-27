@@ -14,10 +14,7 @@
   "dislikes": 105,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Delete Node in a BST\", \"titleSlug\": \"delete-node-in-a-bst\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,2,6,1,3,5,7]\n2",
-    "[1]\n1"
-  ],
+  "exampleTestcaseList": ["[4,2,6,1,3,5,7]\n2", "[1]\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"coupang\", \"name\": \"Coupang\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

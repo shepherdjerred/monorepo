@@ -14,10 +14,7 @@
   "dislikes": 188,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Longest Turbulent Subarray\", \"titleSlug\": \"longest-turbulent-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,3,4,3,4]",
-    "[4,5,6]"
-  ],
+  "exampleTestcaseList": ["[2,3,4,3,4]", "[4,5,6]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

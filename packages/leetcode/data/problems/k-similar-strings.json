@@ -12,10 +12,7 @@
   "dislikes": 63,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Couples Holding Hands\", \"titleSlug\": \"couples-holding-hands\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"ab\"\n\"ba\"",
-    "\"abc\"\n\"bca\""
-  ],
+  "exampleTestcaseList": ["\"ab\"\n\"ba\"", "\"abc\"\n\"bca\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"doordash\", \"name\": \"DoorDash\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

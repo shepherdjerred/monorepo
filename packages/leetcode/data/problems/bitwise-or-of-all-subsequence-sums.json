@@ -16,10 +16,7 @@
   "dislikes": 17,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Bitwise ORs of Subarrays\", \"titleSlug\": \"bitwise-ors-of-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[2,1,0,3]",
-    "[0,0,0]"
-  ],
+  "exampleTestcaseList": ["[2,1,0,3]", "[0,0,0]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"zomato\", \"name\": \"Zomato\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

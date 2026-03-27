@@ -2,33 +2,33 @@
 
 ## Full Markup Syntax
 
-| Element | Syntax | Notes |
-|---------|--------|-------|
-| Paragraph break | Blank line | Two consecutive newlines |
-| Bold | `*bold*` | Equivalent to `strong()` |
-| Italic | `_italic_` | Equivalent to `emph()` |
-| Inline code | `` `code` `` | Single backticks |
-| Code block | Triple backticks + lang | Triple backticks with optional language |
-| Link | `https://example.com` | Auto-detected; or `#link("url")[text]` |
-| Label | `<my-label>` | Attaches to preceding element |
-| Reference | `@my-label` | References a labelled element |
-| Heading | `= Heading` | Number of `=` sets level |
-| Unordered list | `- item` | Dash at line start |
-| Ordered list | `+ item` | Plus at line start; auto-numbered |
-| Term list | `/ Term: Description` | Slash, term, colon, description |
-| Line break | `\` | Backslash forces line break |
-| Smart quotes | `'` and `"` | Auto-converted to typographic quotes |
-| Non-breaking space | `~` | Tilde shorthand |
-| Em dash | `---` | Three hyphens |
-| En dash | `--` | Two hyphens |
-| Ellipsis | `...` | Three dots |
-| Escape | `\#`, `\*`, etc. | Backslash escapes special characters |
-| Unicode escape | `\u{1f600}` | Hex codepoint |
-| Line comment | `// comment` | Ignored in output |
-| Block comment | `/* comment */` | Can be nested |
-| Code expression | `#expr` | Switches to code mode |
-| Inline math | `$x^2$` | No spaces around content |
-| Block math | `$ x^2 $` | Spaces around content |
+| Element            | Syntax                  | Notes                                   |
+| ------------------ | ----------------------- | --------------------------------------- |
+| Paragraph break    | Blank line              | Two consecutive newlines                |
+| Bold               | `*bold*`                | Equivalent to `strong()`                |
+| Italic             | `_italic_`              | Equivalent to `emph()`                  |
+| Inline code        | `` `code` ``            | Single backticks                        |
+| Code block         | Triple backticks + lang | Triple backticks with optional language |
+| Link               | `https://example.com`   | Auto-detected; or `#link("url")[text]`  |
+| Label              | `<my-label>`            | Attaches to preceding element           |
+| Reference          | `@my-label`             | References a labelled element           |
+| Heading            | `= Heading`             | Number of `=` sets level                |
+| Unordered list     | `- item`                | Dash at line start                      |
+| Ordered list       | `+ item`                | Plus at line start; auto-numbered       |
+| Term list          | `/ Term: Description`   | Slash, term, colon, description         |
+| Line break         | `\`                     | Backslash forces line break             |
+| Smart quotes       | `'` and `"`             | Auto-converted to typographic quotes    |
+| Non-breaking space | `~`                     | Tilde shorthand                         |
+| Em dash            | `---`                   | Three hyphens                           |
+| En dash            | `--`                    | Two hyphens                             |
+| Ellipsis           | `...`                   | Three dots                              |
+| Escape             | `\#`, `\*`, etc.        | Backslash escapes special characters    |
+| Unicode escape     | `\u{1f600}`             | Hex codepoint                           |
+| Line comment       | `// comment`            | Ignored in output                       |
+| Block comment      | `/* comment */`         | Can be nested                           |
+| Code expression    | `#expr`                 | Switches to code mode                   |
+| Inline math        | `$x^2$`                 | No spaces around content                |
+| Block math         | `$ x^2 $`               | Spaces around content                   |
 
 Source: https://typst.app/docs/reference/syntax/
 

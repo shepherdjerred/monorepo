@@ -16,10 +16,7 @@
   "dislikes": 45,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[5,7,11,13]",
-    "[15,13,12]"
-  ],
+  "exampleTestcaseList": ["[5,7,11,13]", "[15,13,12]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"audible\", \"name\": \"Audible\"}], \"six_months\": []}",
   "topicTags": [
     {

@@ -15,10 +15,7 @@
   "dislikes": 5,
   "isPaidOnly": true,
   "similarQuestions": "[]",
-  "exampleTestcaseList": [
-    "[3,4,1,7,6]\n4\n2",
-    "[1,2,1]\n2\n1"
-  ],
+  "exampleTestcaseList": ["[3,4,1,7,6]\n4\n2", "[1,2,1]\n2\n1"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

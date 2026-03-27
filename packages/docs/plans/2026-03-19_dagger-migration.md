@@ -17,21 +17,27 @@ Bazel is causing OOMs, slow startup, and pain with Astro/Vite builds across the 
 The old Dagger module (deleted in commit `8542233b`) had architectural cache problems beyond the concurrency incident:
 
 ### 1. Overly broad source contexts
+
 The module passed the full monorepo as `source: Directory`, then extracted subdirectories inside the function. BuildKit transferred and checksummed the **entire repo** — any file change anywhere invalidated the source layer and cascaded downstream. GitHub issue [#3705](https://github.com/dagger/dagger/issues/3705) confirms: `Host().Workdir().Directory("subdir")` sends the entire workdir; only `Host().Directory("subdir")` sends just the subdirectory.
 
 ### 2. No exclusion patterns
+
 `.git/`, `node_modules/`, `dist/`, build outputs were included in the context transfer. The homelab cdk8s workspace alone contains 16 MB of generated CRD imports + 18 MB of generated Helm types.
 
 ### 3. Double `bun install`
+
 The 4-phase workspace setup ran `bun install` twice: once after lockfile copy, once after source mount (because mounts replaced the symlinks Phase 2 created). Each install is a full workspace resolution.
 
 ### 4. Version-keyed cache volumes
+
 Cache volumes like `mise-tools-bun{v}-python{v}-node{v}` were keyed by version strings. Any Renovate bump created a completely cold cache.
 
 ### 5. Monolithic single invocation
+
 Everything ran as one `dagger call ci` — no per-package BuildKite steps, no parallelism beyond Dagger's internal DAG. When the engine was under load, everything slowed down together.
 
 ### Mitigations for the new design:
+
 - Pass **narrowest possible directory** per function (just the package, not monorepo root)
 - Use `+ignore` annotations or explicit excludes for `.git`, `node_modules`, `dist`
 - Single `bun install` with lockfile-based caching, no double-install
@@ -74,14 +80,14 @@ pipeline.yml
 
 Based on analysis of all 67 BUILD.bazel files, there are 6 package types:
 
-| Type | Packages | Operations |
-|------|----------|------------|
-| **Standard TS** | eslint-config, webring, tools, monarch, tasknotes-types, bun-decompile, astro-opengraph-images, hn-enhancer, cooklang-*, homelab/src/*, clauderon/web/*, scout-for-lol/packages/data\|report\|ui, discord-plays-pokemon/packages/* | lint, typecheck, test |
-| **Bun service + OCI** | birmel, starlight-karma-bot, sentinel, tasknotes-server, status-page/api, scout-for-lol (root), discord-plays-pokemon (root) | lint, typecheck, test, image build, image push |
-| **Astro site** | sjer.red, clauderon/docs, status-page/web, scout-for-lol/packages/frontend | lint, typecheck, astro check, astro build |
-| **Vite/React** | better-skill-capped, clauderon/web/frontend | lint, typecheck, test, vite build |
-| **Rust** | clauderon | fmt, clippy, test, build, coverage |
-| **Go** | terraform-provider-asuswrt | build, lint, test |
+| Type                  | Packages                                                                                                                                                                                                                           | Operations                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Standard TS**       | eslint-config, webring, tools, monarch, tasknotes-types, bun-decompile, astro-opengraph-images, hn-enhancer, cooklang-_, homelab/src/_, clauderon/web/_, scout-for-lol/packages/data\|report\|ui, discord-plays-pokemon/packages/_ | lint, typecheck, test                          |
+| **Bun service + OCI** | birmel, starlight-karma-bot, sentinel, tasknotes-server, status-page/api, scout-for-lol (root), discord-plays-pokemon (root)                                                                                                       | lint, typecheck, test, image build, image push |
+| **Astro site**        | sjer.red, clauderon/docs, status-page/web, scout-for-lol/packages/frontend                                                                                                                                                         | lint, typecheck, astro check, astro build      |
+| **Vite/React**        | better-skill-capped, clauderon/web/frontend                                                                                                                                                                                        | lint, typecheck, test, vite build              |
+| **Rust**              | clauderon                                                                                                                                                                                                                          | fmt, clippy, test, build, coverage             |
+| **Go**                | terraform-provider-asuswrt                                                                                                                                                                                                         | build, lint, test                              |
 
 Plus cross-cutting: prettier, shellcheck, quality gate (trivy, semgrep, knip), code review.
 
@@ -135,6 +141,7 @@ Each function receives **only its package directory** as source, not the monorep
 For workspace dependencies (e.g., `tasknotes-server` needs `tasknotes-types`), the function receives multiple directory arguments or a structured input.
 
 Container setup pattern (replaces the broken 4-phase approach):
+
 ```
 1. FROM oven/bun:debian
 2. COPY bun.lock package.json → container  (lockfile layer, cached unless lockfile changes)
@@ -153,23 +160,24 @@ Use `withMountedCache("bun-cache", dag.cacheVolume("bun-install-cache"))` for th
 
 ```typescript
 // Pseudocode for the generator
-const base = getBaseRevision()  // merge-base for PRs, last green build for main
-const changedFiles = gitDiff(base, "HEAD")
-const changedPackages = mapFilesToPackages(changedFiles)
+const base = getBaseRevision(); // merge-base for PRs, last green build for main
+const changedFiles = gitDiff(base, "HEAD");
+const changedPackages = mapFilesToPackages(changedFiles);
 
 // Infrastructure files → full build
-if (changedFiles.some(f => INFRA_PATTERNS.test(f))) {
-  changedPackages = ALL_PACKAGES
+if (changedFiles.some((f) => INFRA_PATTERNS.test(f))) {
+  changedPackages = ALL_PACKAGES;
 }
 
 // Workspace dependency cascade
-const graph = buildDependencyGraph()  // from package.json workspaces
-const affectedPackages = transitiveClosureof(changedPackages, graph)
+const graph = buildDependencyGraph(); // from package.json workspaces
+const affectedPackages = transitiveClosureof(changedPackages, graph);
 ```
 
 ### Dependency graph (from research)
 
 The graph is wide and shallow. Key cascade paths:
+
 - `eslint-config` → 28 packages (but eslint-config rarely changes)
 - `tasknotes-types` → `tasknotes-server`, `tasks-for-obsidian`
 - `scout-for-lol/data` → `report`, `backend`, `frontend`, `desktop`, `ui`
@@ -177,6 +185,7 @@ The graph is wide and shallow. Key cascade paths:
 - Everything else is a leaf
 
 Infrastructure files that trigger full builds (keep from current generator):
+
 - `bun.lock`, root `package.json`, root `tsconfig.json`
 - `.buildkite/`, `scripts/ci/`
 - `.dagger/` (the Dagger module itself)
@@ -230,13 +239,14 @@ engine:
       reservedSpace: "100GB"
       minFreeSpace: "20%"
   persistence:
-    storageClassName: "zfs-ssd-buildcache"  # new storage class
+    storageClassName: "zfs-ssd-buildcache" # new storage class
     size: "1Ti"
 ```
 
 ### ZFS storage class (from the never-implemented decision doc)
 
 Create `zfs-ssd-buildcache` storage class:
+
 - `compression=lz4` — ~2-3x write reduction, CPU-free at NVMe speeds
 - `sync=disabled` — eliminates fsync overhead (cache is reproducible, no durability concern)
 - `logbias=throughput` — prevents ZIL double-writes
@@ -247,6 +257,7 @@ Estimated I/O reduction: **202 GB/hr → ~15-30 GB/hr** (from the decision doc a
 ### BuildKite agent connection
 
 Set in agent pod env:
+
 ```
 _EXPERIMENTAL_DAGGER_RUNNER_HOST=tcp://dagger-engine.dagger.svc.cluster.local:8080
 ```
@@ -262,8 +273,8 @@ Already deployed. Controls how many BuildKite job pods run concurrently. This pr
 The SDK research found that `Connection.setGQLClient()` is a **public API**. You can inject a recording proxy that captures every GraphQL query without forking the SDK:
 
 ```typescript
-const recorder = new QueryRecorder(globalConnection.getGQLClient())
-globalConnection.setGQLClient(recorder)
+const recorder = new QueryRecorder(globalConnection.getGQLClient());
+globalConnection.setGQLClient(recorder);
 // Run pipeline code — non-terminal methods are synchronous, no engine needed
 // Terminal methods are captured by the recorder
 // Output: a DAG of operations → BuildKite JSON
@@ -328,14 +339,14 @@ This enables a "single source of truth" pattern: the Dagger module defines both 
 
 ## Key Files
 
-| File | Role |
-|------|------|
-| `packages/docs/decisions/2026-02-23_dagger-disk-write-amplification.md` | Mitigations to apply (ZFS tuning) |
-| `packages/docs/plans/2026-02-22_buildkite.md` | Prior plan for this architecture |
-| `scripts/ci/src/ci/pipeline_generator.py` | Current generator — port change detection logic |
-| `scripts/ci/src/ci/lib/catalog.py` | Registry of images, sites, charts — reuse data |
-| Old `.dagger/src/` (git: `8542233b~1`) | Previous Dagger module — learn from mistakes, reuse patterns |
-| `tools/rules_bun/bun/private/` | Understand what each rule actually runs |
+| File                                                                    | Role                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `packages/docs/decisions/2026-02-23_dagger-disk-write-amplification.md` | Mitigations to apply (ZFS tuning)                            |
+| `packages/docs/plans/2026-02-22_buildkite.md`                           | Prior plan for this architecture                             |
+| `scripts/ci/src/ci/pipeline_generator.py`                               | Current generator — port change detection logic              |
+| `scripts/ci/src/ci/lib/catalog.py`                                      | Registry of images, sites, charts — reuse data               |
+| Old `.dagger/src/` (git: `8542233b~1`)                                  | Previous Dagger module — learn from mistakes, reuse patterns |
+| `tools/rules_bun/bun/private/`                                          | Understand what each rule actually runs                      |
 
 ## Verification
 

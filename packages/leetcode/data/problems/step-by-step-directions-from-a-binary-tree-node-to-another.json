@@ -16,10 +16,7 @@
   "dislikes": 170,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Path Sum II\", \"titleSlug\": \"path-sum-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Lowest Common Ancestor of a Binary Tree\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Binary Tree Paths\", \"titleSlug\": \"binary-tree-paths\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Distance in a Binary Tree\", \"titleSlug\": \"find-distance-in-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,1,2,3,null,6,4]\n3\n6",
-    "[2,1]\n2\n1"
-  ],
+  "exampleTestcaseList": ["[5,1,2,3,null,6,4]\n3\n6", "[2,1]\n2\n1"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"databricks\", \"name\": \"Databricks\"}], \"more_than_six_months\": [{\"timesEncountered\": 13, \"slug\": \"snowflake\", \"name\": \"Snowflake\"}, {\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 304,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Minimum Difference Between Highest and Lowest of K Scores\", \"titleSlug\": \"minimum-difference-between-highest-and-lowest-of-k-scores\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost of Buying Candies With Discount\", \"titleSlug\": \"minimum-cost-of-buying-candies-with-discount\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"All Divisions With the Highest Score of a Binary Array\", \"titleSlug\": \"all-divisions-with-the-highest-score-of-a-binary-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,4,3,2]",
-    "[6,2,6,5,1,2]"
-  ],
+  "exampleTestcaseList": ["[1,4,3,2]", "[6,2,6,5,1,2]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}]}",
   "topicTags": [
     {

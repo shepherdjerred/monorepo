@@ -17,10 +17,7 @@
   "dislikes": 121,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Height by Stacking Cuboids \", \"titleSlug\": \"maximum-height-by-stacking-cuboids\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[10,6,12,7,3,5]",
-    "[8,8]"
-  ],
+  "exampleTestcaseList": ["[10,6,12,7,3,5]", "[8,8]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

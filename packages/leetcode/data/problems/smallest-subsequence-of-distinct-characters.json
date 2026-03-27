@@ -14,10 +14,7 @@
   "dislikes": 200,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Find the Most Competitive Subsequence\", \"titleSlug\": \"find-the-most-competitive-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"bcabc\"",
-    "\"cbacdcbc\""
-  ],
+  "exampleTestcaseList": ["\"bcabc\"", "\"cbacdcbc\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bytedance\", \"name\": \"ByteDance\"}, {\"timesEncountered\": 2, \"slug\": \"factset\", \"name\": \"FactSet\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

@@ -17,10 +17,7 @@
   "dislikes": 7,
   "isPaidOnly": true,
   "similarQuestions": "[{\"title\": \"Split Linked List in Parts\", \"titleSlug\": \"split-linked-list-in-parts\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[1,5,7]",
-    "[2,6,1,5]"
-  ],
+  "exampleTestcaseList": ["[1,5,7]", "[2,6,1,5]"],
   "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
   "topicTags": [
     {

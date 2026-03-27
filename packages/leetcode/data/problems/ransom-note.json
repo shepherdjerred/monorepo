@@ -12,11 +12,7 @@
   "dislikes": 546,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Stickers to Spell Word\", \"titleSlug\": \"stickers-to-spell-word\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Words That Can Be Formed by Characters\", \"titleSlug\": \"find-words-that-can-be-formed-by-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"a\"\n\"b\"",
-    "\"aa\"\n\"ab\"",
-    "\"aa\"\n\"aab\""
-  ],
+  "exampleTestcaseList": ["\"a\"\n\"b\"", "\"aa\"\n\"ab\"", "\"aa\"\n\"aab\""],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 10, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"karat\", \"name\": \"Karat\"}], \"more_than_six_months\": [{\"timesEncountered\": 22, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 11, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 3, \"slug\": \"spotify\", \"name\": \"Spotify\"}, {\"timesEncountered\": 3, \"slug\": \"disney\", \"name\": \"Disney\"}, {\"timesEncountered\": 2, \"slug\": \"criteo\", \"name\": \"Criteo\"}, {\"timesEncountered\": 2, \"slug\": \"tripadvisor\", \"name\": \"Tripadvisor\"}]}",
   "topicTags": [
     {

@@ -12,10 +12,7 @@
   "dislikes": 237,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Maximum Length of Pair Chain\", \"titleSlug\": \"maximum-length-of-pair-chain\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[4,6,7,7]",
-    "[4,4,3,2,1]"
-  ],
+  "exampleTestcaseList": ["[4,6,7,7]", "[4,4,3,2,1]"],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"yahoo\", \"name\": \"Yahoo\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

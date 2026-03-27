@@ -12,10 +12,7 @@
   "dislikes": 278,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Merge Sorted Array\", \"titleSlug\": \"merge-sorted-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sort Transformed Array\", \"titleSlug\": \"sort-transformed-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[-4,-1,0,3,10]",
-    "[-7,-3,2,3,11]"
-  ],
+  "exampleTestcaseList": ["[-4,-1,0,3,10]", "[-7,-3,2,3,11]"],
   "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"tcs\", \"name\": \"tcs\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"whatnot\", \"name\": \"Whatnot\"}], \"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 7, \"slug\": \"instacart\", \"name\": \"Instacart\"}, {\"timesEncountered\": 3, \"slug\": \"crowdstrike\", \"name\": \"CrowdStrike\"}, {\"timesEncountered\": 2, \"slug\": \"agoda\", \"name\": \"Agoda\"}, {\"timesEncountered\": 2, \"slug\": \"ozon\", \"name\": \"Ozon\"}, {\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}]}",
   "topicTags": [
     {

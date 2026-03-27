@@ -16,10 +16,7 @@
   "dislikes": 27,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Flip String to Monotone Increasing\", \"titleSlug\": \"flip-string-to-monotone-increasing\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "\"0011\"",
-    "\"010101\""
-  ],
+  "exampleTestcaseList": ["\"0011\"", "\"010101\""],
   "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"three_months\": [], \"six_months\": []}",
   "topicTags": [
     {

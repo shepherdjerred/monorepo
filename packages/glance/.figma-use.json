@@ -5,10 +5,7 @@
   "storybook": {
     "out": "./stories",
     "matchIcons": false,
-    "preferIcons": [
-      "lucide",
-      "tabler"
-    ],
+    "preferIcons": ["lucide", "tabler"],
     "iconThreshold": 0.85,
     "framework": "react"
   },

@@ -17,10 +17,7 @@
   "dislikes": 54,
   "isPaidOnly": false,
   "similarQuestions": "[{\"title\": \"Largest Number At Least Twice of Others\", \"titleSlug\": \"largest-number-at-least-twice-of-others\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check If N and Its Double Exist\", \"titleSlug\": \"check-if-n-and-its-double-exist\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
-  "exampleTestcaseList": [
-    "[5,3,6,1,12]\n3",
-    "[2,7,9]\n4"
-  ],
+  "exampleTestcaseList": ["[5,3,6,1,12]\n3", "[2,7,9]\n4"],
   "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": []}",
   "topicTags": [
     {
