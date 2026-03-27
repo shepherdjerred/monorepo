@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/lib/openai_client.py
-# hypothesis_version: 6.151.9
-
-[60.0, 120.0, 1000, 4096, 'completion_tokens', 'content', 'gpt-4o', 'image/png', 'image_url', 'openai', 'openai_request', 'prompt_tokens', 'role', 'text', 'type', 'url', 'user']

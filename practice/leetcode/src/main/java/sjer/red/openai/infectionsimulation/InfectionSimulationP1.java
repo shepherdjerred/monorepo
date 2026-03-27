@@ -18,7 +18,6 @@ package sjer.red.openai.infectionsimulation;
  * grid = {{'.', '.', '.'}, {'.', 'X', '.'}, {'.', '.', '.'}}
  * X in center of 3x3 → returns 1 (all 8 neighbors infected in one day)
  * <p>
- * KEY INSIGHT: Multi-source BFS. Seed queue with all initial 'X' cells, process layer by layer.
  * TIME TARGET: ~15-20 minutes
  */
 public class InfectionSimulationP1 {

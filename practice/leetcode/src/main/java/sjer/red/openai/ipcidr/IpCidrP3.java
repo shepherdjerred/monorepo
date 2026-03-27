@@ -9,8 +9,6 @@ import java.util.List;
  * - All Part 1 + Part 2 functionality, plus:
  * - iterateCidr(String cidr) — return all IPs in the CIDR block (e.g. "192.168.1.0/30" returns 4 IPs)
  * <p>
- * KEY INSIGHT: Parse CIDR: base IP and prefix length. Network size = 2^(32 - prefix).
- * <p>
  * TIME TARGET: ~10-15 minutes (cumulative ~35-45)
  */
 public class IpCidrP3 {

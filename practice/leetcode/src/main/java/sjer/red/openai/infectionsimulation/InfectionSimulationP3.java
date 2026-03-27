@@ -14,8 +14,6 @@ package sjer.red.openai.infectionsimulation;
  * Day 1: X spreads to neighbors, original X has been infected 1 day
  * Day 2: original X recovers to I, newly infected spread further
  * <p>
- * KEY INSIGHT: Track infection timestamp per cell. Use Map&lt;Integer, List&lt;int[]&gt;&gt; to schedule
- * recovery events. Each day: (1) process recoveries, (2) spread infection, (3) check equilibrium.
  * TIME TARGET: ~15-20 minutes (cumulative ~40-55)
  */
 public class InfectionSimulationP3 {

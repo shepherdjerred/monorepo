@@ -11,8 +11,6 @@ import java.util.List;
  * - formatIp(long ip) — long back to dotted-decimal
  * - iterateAscending(String startIp, int count) — return count IPs starting from startIp, ascending
  * <p>
- * KEY INSIGHT: IPv4 as long (not int) to avoid signed overflow at 255.255.255.255.
- * <p>
  * TIME TARGET: ~15-20 minutes
  */
 public class IpCidrP1 {

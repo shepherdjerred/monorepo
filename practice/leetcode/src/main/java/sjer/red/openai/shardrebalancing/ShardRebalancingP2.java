@@ -10,9 +10,6 @@ import java.util.List;
  * - rebalance() — adjust shard ranges so maxOverlap() <= limit.
  *   Return new shard list. Minimize data movement by trimming later shards.
  * <p>
- * KEY INSIGHT: Sort shards by start. Sweep left to right. When overlap exceeds
- * limit, trim start of later shard to just past end of earlier shard.
- * <p>
  * Examples:
  * A:(0,100), B:(80,180), limit=1
  * After rebalance: A:(0,100), B:(101,180)

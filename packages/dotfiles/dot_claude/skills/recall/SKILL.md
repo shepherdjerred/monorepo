@@ -26,7 +26,7 @@ Local RAG system for searching across Claude plans, research, memories, fetched 
 # Fetch a page (lightpanda, fast, handles SPAs)
 toolkit fetch <url>
 
-# Fetch with PinchTab (real Chrome, for sites that block lightpanda)
+# Fetch with PinchTab CLI (real Chrome, for sites that block lightpanda)
 toolkit fetch <url> --browser
 
 # Verbose output (shows timing, engine, save path)
@@ -130,7 +130,7 @@ toolkit recall reindex
 
 ### Fetch returns empty content
 
-Try PinchTab for sites that block lightpanda:
+Try PinchTab CLI for sites that block lightpanda:
 ```bash
 toolkit fetch <url> --browser
 ```

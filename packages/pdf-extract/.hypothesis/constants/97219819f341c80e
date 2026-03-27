@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/phases/handwriting.py
-# hypothesis_version: 6.151.9
-
-[200, '\\[[\\d\\s,]*\\]', 'disabled', 'handwriting.complete', 'handwriting.detected', 'handwriting.skip', 'handwriting.start', 'image/png', 'phases.handwriting']

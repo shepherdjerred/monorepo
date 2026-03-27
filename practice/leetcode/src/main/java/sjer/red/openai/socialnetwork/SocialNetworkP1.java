@@ -19,7 +19,6 @@ package sjer.red.openai.socialnetwork;
  * isFollowing(1, 2, 1) → false
  * isFollowing(1, 2, 0) → true
  * <p>
- * KEY INSIGHT: Snapshot versioning via TreeMap per (a,b) pair. Similar to LeetCode 1146 Snapshot Array.
  * TIME TARGET: ~15-20 minutes
  */
 public class SocialNetworkP1 {

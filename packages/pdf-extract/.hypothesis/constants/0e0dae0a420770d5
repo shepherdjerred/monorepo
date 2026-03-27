@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/phases/annotations.py
-# hypothesis_version: 6.151.9
-
-[200, 'Circle', 'Square', '[Highlight]', '[Squiggly underline]', '[Strikeout]', 'annotations.complete', 'annotations.start', 'content', 'phases.annotations', 'png', 'text']

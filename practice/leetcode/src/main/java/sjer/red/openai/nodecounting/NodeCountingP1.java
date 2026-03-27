@@ -20,10 +20,6 @@ import java.util.Map;
  * - Leaves respond with 1
  * - Internal nodes wait for all children, sum up, add 1 for self, respond to parent
  * <p>
- * KEY INSIGHT:
- * - This is NOT a normal tree traversal — you simulate distributed message passing
- * - Think about what messages each node sends/receives and in what order
- * <p>
  * TIME TARGET: ~20-30 minutes
  */
 public class NodeCountingP1 {

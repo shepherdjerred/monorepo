@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/lib/claude.py
-# hypothesis_version: 6.151.9
-
-[1000, 4096, 'base64', 'claude', 'claude_request', 'content', 'data', 'image', 'image/png', 'media_type', 'opus', 'role', 'source', 'text', 'type', 'user']

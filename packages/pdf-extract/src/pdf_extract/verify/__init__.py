@@ -1,1 +1,0 @@
-"""verify sub-package."""

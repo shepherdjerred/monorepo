@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/phases/images.py
-# hypothesis_version: 6.151.9
-
-[0.0, 200, 'CHART', 'DIAGRAM', 'EQUATION', 'OTHER', 'PHOTO', 'TABLE', 'always', 'category', 'confidence', 'hand_drawn_only', 'images.classified', 'images.complete', 'images.diagram.retry', 'images.process_error', 'images.start', 'mermaid', 'phases.images', 'retry_also_failed']

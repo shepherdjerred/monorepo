@@ -1,6 +1,9 @@
 package sjer.red.openai.kvstore;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * PROBLEM: In-Memory KV Store with Recovery
@@ -10,8 +13,6 @@ import java.util.List;
  * - put/get/delete have the same signatures as Part 1
  * - Every put and delete must write to the WAL before applying
  * - WAL format: "PUT key value" for puts, "DELETE key" for deletes
- * <p>
- * KEY INSIGHT: Write to WAL before applying. On construction, replay all entries.
  * <p>
  * Examples:
  * wal = new WriteAheadLog()
@@ -30,24 +31,39 @@ public class KvStoreP2 {
         void clear();
     }
 
+    Map<String, String> m = new HashMap<>();
+    WriteAheadLog wal;
+
     public KvStoreP2(WriteAheadLog wal) {
-        // TODO: initialize data structures and replay WAL
+        this.wal = wal;
+        for (String s : wal.readAll()) {
+            System.out.printf("%s", s);
+            // assumption: key/values cannot have spaces in them
+            var split = s.split(" ");
+            var cmd = split[0];
+            if (cmd.equals("PUT")) {
+                m.put(split[1], split[2]);
+            } else if (cmd.equals("DELETE")) {
+                m.remove(split[1]);
+            } else {
+                throw new IllegalStateException();
+            }
+        }
     }
 
     /**
      * Store a key-value pair. Write to WAL before applying.
      */
     public void put(String key, String value) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        wal.append(String.format("PUT %s %s", key, value));
+        m.put(key, value);
     }
 
     /**
      * Return the value associated with the key, or null if not found.
      */
     public String get(String key) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return m.getOrDefault(key, null);
     }
 
     /**
@@ -56,7 +72,13 @@ public class KvStoreP2 {
      * @return true if the key existed, false otherwise
      */
     public boolean delete(String key) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        var contains = m.containsKey(key);
+        if (contains) {
+            wal.append(String.format("DELETE %s", key));
+            m.remove(key);
+            return true;
+        } else {
+            return false;
+        }
     }
 }

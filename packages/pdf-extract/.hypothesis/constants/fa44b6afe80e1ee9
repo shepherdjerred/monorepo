@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/pipeline.py
-# hypothesis_version: 6.151.9
-
-[1000, '\n---\n', 'annotations', 'claude', 'claude_opus', 'claude_sonnet', 'extraction', 'gemini', 'gemini_flash', 'gemini_pro', 'gpt-5.4', 'handwriting', 'images', 'never', 'openai', 'phase.complete', 'pipeline', 'pipeline.complete', 'preprocessing', 'verification']

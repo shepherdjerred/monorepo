@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/config.py
-# hypothesis_version: 6.151.9
-
-[50.0, 200.0, '0/O', '1/l/I', '5/S', '6/G', '8/B', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'INFO', 'OPENAI_API_KEY', 'anthropic_api_key', 'claude', 'claude-opus-4-6', 'claude-sonnet-4-6', 'config.default.toml', 'docling', 'enabled', 'fsrcnn', 'gemini', 'google_api_key', 'gpt-5.4', 'hand_drawn_only', 'hybrid-auto-engine', 'markdown', 'merval', 'metrics_file', 'mmdc', 'on_failure', 'openai', 'openai_api_key', 'output', 'output_dir', 'preprocess_mode', 'rb', 'rn/m']

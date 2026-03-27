@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/verify/stack.py
-# hypothesis_version: 6.151.9
-
-[0.3, 3.0, 'LOW', 'MEDIUM', 'UNRESOLVED', 'corrected', 'correction.not_found', 'corrections', 'domain.warning', 'gemini_flash', 'original', 'verification', 'verify.stack']

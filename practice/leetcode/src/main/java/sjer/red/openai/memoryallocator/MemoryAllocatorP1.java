@@ -9,8 +9,6 @@ package sjer.red.openai.memoryallocator;
  * - int alloc(int size) — allocate contiguous block, return start address. Return -1 if no space. First-fit strategy.
  * - boolean free(int start) — free block at start. Return true if valid allocation existed.
  * <p>
- * KEY INSIGHT: Maintain a free list. First-fit scans for first block >= size. On free, merge adjacent free blocks.
- * <p>
  * TIME TARGET: ~15-20 minutes
  */
 public class MemoryAllocatorP1 {

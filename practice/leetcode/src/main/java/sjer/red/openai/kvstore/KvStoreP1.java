@@ -1,5 +1,7 @@
 package sjer.red.openai.kvstore;
 
+import java.util.HashMap;
+
 /**
  * PROBLEM: In-Memory KV Store with Recovery
  * SOURCE: From Shuxin
@@ -20,24 +22,20 @@ package sjer.red.openai.kvstore;
  */
 public class KvStoreP1 {
 
-    public KvStoreP1() {
-        // TODO: initialize data structures
-    }
+    HashMap<String, String> m = new HashMap<String, String>();
 
     /**
      * Store a key-value pair. Overwrites any existing value for the key.
      */
     public void put(String key, String value) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        m.put(key, value);
     }
 
     /**
      * Return the value associated with the key, or null if not found.
      */
     public String get(String key) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return m.get(key);
     }
 
     /**
@@ -46,7 +44,12 @@ public class KvStoreP1 {
      * @return true if the key existed, false otherwise
      */
     public boolean delete(String key) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        var contains = m.containsKey(key);
+        if (contains) {
+            m.remove(key);
+            return true;
+        } else {
+            return false;
+        }
     }
 }

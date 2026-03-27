@@ -18,10 +18,6 @@ import java.util.Map;
  * - Handle timeout: if a node doesn't respond within timeoutMs, exclude it
  * - Still return the count of reachable/responsive machines
  * <p>
- * KEY INSIGHT:
- * - This is NOT a normal tree traversal — you simulate distributed message passing
- * - Think about what messages each node sends/receives and in what order
- * <p>
  * TIME TARGET: ~10-15 minutes (cumulative ~30-45 minutes)
  */
 public class NodeCountingP2 {

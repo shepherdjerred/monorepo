@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/metrics.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.3, 1.25, 2.5, 3.0, 5.0, 10.0, 15.0, 25.0, 1000, 1000000]

@@ -130,7 +130,7 @@ This searches:
 
 ```bash
 toolkit fetch <url>              # Fetch via lightpanda, save + index
-toolkit fetch <url> --browser    # Use PinchTab (real Chrome) if lightpanda is blocked
+toolkit fetch <url> --browser    # Use PinchTab CLI (real Chrome) if lightpanda is blocked
 toolkit fetch <url> --crawl      # Crawl a docs site
 ```
 

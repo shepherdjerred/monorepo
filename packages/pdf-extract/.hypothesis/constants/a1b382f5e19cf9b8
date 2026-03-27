@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/verify/tables.py
-# hypothesis_version: 6.151.9
-
-[0.6, 200, 'NFD', '[?]', '[UNREADABLE]', '^-?[\\d,]+\\.?\\d*%?$', '^\\|[-:\\s|]+\\|$', '```', '```json', 'bbox', 'col', 'cols', 'currency', 'date', 'numeric', 'page_idx', 'position', 'row', 'rows', 'table.type_violation', 'table_md', 'tables.complete', 'text', 'verify.tables', '|']

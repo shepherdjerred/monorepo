@@ -9,8 +9,6 @@ import java.util.List;
  * - All Part 1 functionality, plus:
  * - iterateDescending(String startIp, int count) — count IPs starting from startIp, descending
  * <p>
- * KEY INSIGHT: IPv4 as long (not int) to avoid signed overflow at 255.255.255.255.
- * <p>
  * TIME TARGET: ~10 minutes (cumulative ~25-30)
  */
 public class IpCidrP2 {

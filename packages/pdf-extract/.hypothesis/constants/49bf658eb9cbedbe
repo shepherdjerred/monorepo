@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/verify/anchored.py
-# hypothesis_version: 6.151.9
-
-[200, 'LOW', 'MEDIUM', '\\n---+\\n', '```', '```json', 'anchored.complete', 'anchored.page_failed', 'anchored.parse_error', 'confidence', 'corrections', 'gemini', 'missing', 'notes', 'unreadable_regions', 'verify.anchored']

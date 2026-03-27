@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/verify/domain.py
-# hypothesis_version: 6.151.9
-
-[0.3, 0.5, 2.0, 3.0, 100, ',\\d{1,2}(?:\\.\\d+)?$', ',\\d{3}', '.', '..', '/', '@.', '[-/\\.]', '[^\\d.]', '\\D', '\\b\\d+\\.?\\d*\\s?%', '^[A-Z]{2,}-?\\d{3,}$', '^\\+?\\d[\\d\\s\\-()]+$', 'currency', 'date', 'email', 'issue', 'location', 'percentage', 'phone', 'type', 'value', 'verify.domain']

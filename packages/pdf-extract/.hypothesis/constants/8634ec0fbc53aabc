@@ -1,4 +1,0 @@
-# file: /Users/jerred/git/monorepo/packages/pdf-extract/src/pdf_extract/report.py
-# hypothesis_version: 6.151.9
-
-['-->', '<!--', 'API Usage:', 'Confidence:', 'Content Detected:', 'Phase Timings:', 'Verification:']

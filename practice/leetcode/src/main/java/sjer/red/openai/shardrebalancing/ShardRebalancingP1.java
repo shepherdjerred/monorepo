@@ -10,9 +10,6 @@ package sjer.red.openai.shardrebalancing;
  * - maxOverlap() — return the maximum number of shards overlapping at any point
  * - isValid() — return true if maxOverlap() <= the configured limit
  * <p>
- * KEY INSIGHT: Sweep line algorithm. Sort shard starts/ends as events,
- * sweep to find max overlap.
- * <p>
  * Examples:
  * addShard(A:(0,100)), addShard(B:(80,180))
  * maxOverlap() → 2
