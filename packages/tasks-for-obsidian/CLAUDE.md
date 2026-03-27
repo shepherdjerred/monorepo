@@ -2,10 +2,6 @@
 
 React Native 0.83 bare workflow app (no Expo) for iOS/Android. Syncs with the TaskNotes Obsidian plugin via its HTTP API. Uses Metro bundler, Hermes engine, and New Architecture.
 
-## NOT a workspace member
-
-This package has its own `node_modules` and `bun.lock` — same as `clauderon/mobile`. Always `cd packages/tasks-for-obsidian` before running commands.
-
 ## Quick Reference
 
 ```bash

@@ -44,7 +44,7 @@ export function createDaggerApp(chart: Chart) {
     },
     spec: {
       backoffLimit: 3,
-      ttlSecondsAfterFinished: 86400,
+      ttlSecondsAfterFinished: 86_400,
       template: {
         spec: {
           restartPolicy: "OnFailure",

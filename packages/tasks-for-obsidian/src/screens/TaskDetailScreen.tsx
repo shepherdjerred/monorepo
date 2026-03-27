@@ -42,7 +42,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   const [priority, setPriority] = useState<Priority>(
     task?.priority ?? "normal",
   );
-  const [due, setDue] = useState<string | undefined>(task?.due);
+  const [due, setDue] = useState(task?.due);
 
   useEffect(() => {
     if (task) {

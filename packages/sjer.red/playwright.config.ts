@@ -40,51 +40,60 @@ export default defineConfig({
       name: "Mobile Safari",
       use: { ...devices["iPhone 12"] },
     },
-    {
-      name: "Microsoft Edge",
-      use: { ...devices["Desktop Edge"], channel: "msedge" },
-    },
-    {
-      name: "Google Chrome",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
-    },
+    // msedge and chrome channels require separate browser installs (not in CI container)
+    ...(!isCI
+      ? [
+          {
+            name: "Microsoft Edge",
+            use: { ...devices["Desktop Edge"], channel: "msedge" as const },
+          },
+          {
+            name: "Google Chrome",
+            use: { ...devices["Desktop Chrome"], channel: "chrome" as const },
+          },
+        ]
+      : []),
 
     {
       name: "chromium (Dark)",
-      use: { ...devices["Desktop Chrome"], colorScheme: "dark" },
+      use: { ...devices["Desktop Chrome"], colorScheme: "dark" as const },
     },
     {
       name: "firefox (Dark)",
-      use: { ...devices["Desktop Firefox"], colorScheme: "dark" },
+      use: { ...devices["Desktop Firefox"], colorScheme: "dark" as const },
     },
     {
       name: "webkit (Dark)",
-      use: { ...devices["Desktop Safari"], colorScheme: "dark" },
+      use: { ...devices["Desktop Safari"], colorScheme: "dark" as const },
     },
     {
       name: "Mobile Chrome (Dark)",
-      use: { ...devices["Pixel 5"], colorScheme: "dark" },
+      use: { ...devices["Pixel 5"], colorScheme: "dark" as const },
     },
     {
       name: "Mobile Safari (Dark)",
-      use: { ...devices["iPhone 12"], colorScheme: "dark" },
+      use: { ...devices["iPhone 12"], colorScheme: "dark" as const },
     },
-    {
-      name: "Microsoft Edge (Dark)",
-      use: {
-        ...devices["Desktop Edge"],
-        channel: "msedge",
-        colorScheme: "dark",
-      },
-    },
-    {
-      name: "Google Chrome (Dark)",
-      use: {
-        ...devices["Desktop Chrome"],
-        channel: "chrome",
-        colorScheme: "dark",
-      },
-    },
+    ...(!isCI
+      ? [
+          {
+            name: "Microsoft Edge (Dark)",
+            use: {
+              ...devices["Desktop Edge"],
+              channel: "msedge" as const,
+              colorScheme: "dark" as const,
+            },
+          },
+          {
+            name: "Google Chrome (Dark)",
+            use: {
+              ...devices["Desktop Chrome"],
+              channel: "chrome" as const,
+              colorScheme: "dark" as const,
+            },
+          },
+        ]
+      : []),
   ],
   webServer: {
     // Use bun for both local and CI (CI container now has Bun installed)

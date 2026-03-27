@@ -32,7 +32,7 @@ type StatusOverviewProps = {
 };
 
 export function StatusOverview({ siteId, initialStatus }: StatusOverviewProps) {
-  const [status, setStatus] = useState<StatusSummary | null>(
+  const [status, setStatus] = useState(
     initialStatus ?? null,
   );
   const [error, setError] = useState<string | null>(null);

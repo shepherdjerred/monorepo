@@ -27,7 +27,7 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		auth := r.FormValue("login_authorization")
+		auth := r.FormValue("login_authorization") //nolint:gosec // test server, no DoS risk
 		if auth == "" {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
@@ -41,7 +41,7 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
 		}
-		hook := r.FormValue("hook")
+		hook := r.FormValue("hook") //nolint:gosec // test server, no DoS risk
 		result := map[string]string{}
 		m.mu.Lock()
 		for _, h := range strings.Split(hook, ";") {
@@ -61,7 +61,7 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
 		}
-		if err := r.ParseForm(); err != nil {
+		if err := r.ParseForm(); err != nil { //nolint:gosec // test server, no DoS risk
 			t.Errorf("parsing form: %v", err)
 			return
 		}

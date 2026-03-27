@@ -17,39 +17,39 @@ Check the health of a pull request including merge conflicts, CI status, and app
 
 ```bash
 # Check PR for current branch
-tools pr health
+toolkit pr health
 
 # Check specific PR
-tools pr health 123
+toolkit pr health 123
 
 # Output as JSON
-tools pr health --json
+toolkit pr health --json
 
 # Specify repository
-tools pr health --repo owner/repo
+toolkit pr health --repo owner/repo
 ```
 
 ### Get Workflow Logs
 
 ```bash
 # Get all logs for a run
-tools pr logs <run-id>
+toolkit pr logs <run-id>
 
 # Get only failed job logs
-tools pr logs <run-id> --failed-only
+toolkit pr logs <run-id> --failed-only
 
 # Get logs for specific job
-tools pr logs <run-id> --job "build"
+toolkit pr logs <run-id> --job "build"
 ```
 
 ### Detect PR
 
 ```bash
 # Find PR for current branch
-tools pr detect
+toolkit pr detect
 
 # Output as JSON
-tools pr detect --json
+toolkit pr detect --json
 ```
 
 ## Output Format
@@ -78,7 +78,7 @@ git fetch origin main && git merge origin/main
 
 To investigate:
 \`\`\`bash
-tools pr logs 12345678 --failed-only
+toolkit pr logs 12345678 --failed-only
 \`\`\`
 
 ### Approval: APPROVED
@@ -104,7 +104,7 @@ Create a PR first or specify a PR number:
 ```bash
 gh pr create
 # or
-tools pr health 123
+toolkit pr health 123
 ```
 
 ### CI logs are empty

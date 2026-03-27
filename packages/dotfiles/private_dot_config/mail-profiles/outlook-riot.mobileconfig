@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.ews.account</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadUUID</key>
+      <string>0BC7621F-BDC1-4173-B58A-9EA320368307</string>
+      <key>PayloadIdentifier</key>
+      <string>com.jerred.mail.outlook-riot</string>
+      <key>PayloadDisplayName</key>
+      <string>Outlook - riotshielder@outlook.com</string>
+
+      <key>EmailAddress</key>
+      <string>riotshielder@outlook.com</string>
+      <key>UserName</key>
+      <string>riotshielder@outlook.com</string>
+      <key>OAuth</key>
+      <true/>
+    </dict>
+  </array>
+
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadUUID</key>
+  <string>D34AC824-69A3-4C90-83FB-38116CF20306</string>
+  <key>PayloadIdentifier</key>
+  <string>com.jerred.mail.outlook-riot.profile</string>
+  <key>PayloadDisplayName</key>
+  <string>Outlook - riotshielder@outlook.com</string>
+  <key>PayloadDescription</key>
+  <string>Configures Exchange/OAuth for riotshielder@outlook.com</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+</dict>
+</plist>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.mail.managed</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadUUID</key>
+      <string>ED13441B-714F-47CA-85A2-909FCCA358D3</string>
+      <key>PayloadIdentifier</key>
+      <string>com.jerred.mail.fastmail</string>
+      <key>PayloadDisplayName</key>
+      <string>FastMail - root@sjer.red</string>
+
+      <key>EmailAccountDescription</key>
+      <string>FastMail</string>
+      <key>EmailAccountName</key>
+      <string>Jerred Shepherd</string>
+      <key>EmailAccountType</key>
+      <string>EmailTypeIMAP</string>
+      <key>EmailAddress</key>
+      <string>root@sjer.red</string>
+
+      <key>IncomingMailServerHostName</key>
+      <string>imap.fastmail.com</string>
+      <key>IncomingMailServerPortNumber</key>
+      <integer>993</integer>
+      <key>IncomingMailServerUseSSL</key>
+      <true/>
+      <key>IncomingMailServerAuthentication</key>
+      <string>EmailAuthPassword</string>
+      <key>IncomingMailServerUsername</key>
+      <string>root@sjer.red</string>
+      <key>IncomingPassword</key>
+      <string>{{ output "security" "find-internet-password" "-s" "imap.fastmail.com" "-a" "root@sjer.red" "-w" | trim }}</string>
+
+      <key>OutgoingMailServerHostName</key>
+      <string>smtp.fastmail.com</string>
+      <key>OutgoingMailServerPortNumber</key>
+      <integer>587</integer>
+      <key>OutgoingMailServerUseSSL</key>
+      <true/>
+      <key>OutgoingMailServerAuthentication</key>
+      <string>EmailAuthPassword</string>
+      <key>OutgoingMailServerUsername</key>
+      <string>root@sjer.red</string>
+      <key>OutgoingPasswordSameAsIncomingPassword</key>
+      <true/>
+    </dict>
+  </array>
+
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadUUID</key>
+  <string>D36B8ED2-EC28-4E4F-B7CD-A457A816CE9C</string>
+  <key>PayloadIdentifier</key>
+  <string>com.jerred.mail.fastmail.profile</string>
+  <key>PayloadDisplayName</key>
+  <string>FastMail - root@sjer.red</string>
+  <key>PayloadDescription</key>
+  <string>Configures FastMail IMAP/SMTP for root@sjer.red</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+</dict>
+</plist>

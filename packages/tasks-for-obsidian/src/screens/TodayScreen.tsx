@@ -5,8 +5,6 @@ import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import {
-  type FilterConfig,
-  type SortConfig,
   EMPTY_FILTER,
   DEFAULT_SORT,
   applyFilter,
@@ -35,8 +33,8 @@ export function TodayScreen({ navigation }: Props) {
     handleRefresh,
     handleFabPress,
   } = useTaskListScreen(navigation);
-  const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
-  const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
+  const [filter, setFilter] = useState(EMPTY_FILTER);
+  const [sort, setSort] = useState(DEFAULT_SORT);
 
   const displayTasks = useMemo(
     () => applySort(applyFilter(todayTasks, filter), sort),

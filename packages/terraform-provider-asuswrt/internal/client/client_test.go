@@ -21,7 +21,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		auth := r.FormValue("login_authorization")
+		auth := r.FormValue("login_authorization") //nolint:gosec // test server, no DoS risk
 		if auth == "" {
 			writeJSON(t, w, map[string]string{"error_status": "2"})
 
@@ -39,7 +39,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 			return
 		}
 
-		hook := r.FormValue("hook")
+		hook := r.FormValue("hook") //nolint:gosec // test server, no DoS risk
 		result := map[string]string{}
 
 		for _, h := range strings.Split(hook, ";") {
@@ -61,7 +61,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 			return
 		}
 
-		actionMode := r.FormValue("action_mode")
+		actionMode := r.FormValue("action_mode") //nolint:gosec // test server, no DoS risk
 		if actionMode != "apply" {
 			writeJSON(t, w, map[string]string{"modify": "0"})
 
@@ -69,7 +69,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 		}
 
 		resp := map[string]string{"modify": "1"}
-		if svc := r.FormValue("rc_service"); svc != "" {
+		if svc := r.FormValue("rc_service"); svc != "" { //nolint:gosec // test server, no DoS risk
 			resp["run_service"] = svc
 		}
 
@@ -237,7 +237,7 @@ func TestClientTokenReauthOnExpiry(t *testing.T) {
 			return
 		}
 
-		hook := r.FormValue("hook")
+		hook := r.FormValue("hook") //nolint:gosec // test server, no DoS risk
 		result := map[string]string{}
 
 		for _, h := range strings.Split(hook, ";") {

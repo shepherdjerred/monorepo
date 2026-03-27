@@ -14,7 +14,7 @@ import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
-import { escapeAlertmanagerTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 // import { HelmValuesForChart } from "../types/helm/index.js"; // Using 'any' for complex config
 
 export async function createPrometheusApp(chart: Chart) {
@@ -270,15 +270,15 @@ export async function createPrometheusApp(chart: Chart) {
                 routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/pagerduty_token`,
                 // Alertmanager will evaluate this Go template when sending to PagerDuty
                 // kube-prometheus-stack chart passes config values through without template processing
-                description: escapeAlertmanagerTemplate(
+                description: escapeHelmGoTemplate(
                   String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`,
                 ),
                 // Map alert severity label to PagerDuty severity (critical/warning/error/info)
                 // Check if GroupLabels exists first (nil during helm lint)
-                severity: escapeAlertmanagerTemplate(
+                severity: escapeHelmGoTemplate(
                   '{{ if .GroupLabels }}{{ if eq .GroupLabels.severity "critical" }}critical{{ else if eq .GroupLabels.severity "warning" }}warning{{ else if eq .GroupLabels.severity "error" }}error{{ else if eq .GroupLabels.severity "info" }}info{{ else }}error{{ end }}{{ else }}error{{ end }}',
                 ),
-                // details: escapeAlertmanagerTemplate(
+                // details: escapeHelmGoTemplate(
                 //   JSON.stringify(
                 //     {
                 //       firing: "{{ range .Alerts.Firing }}{{ . }}\n{{ end }}",

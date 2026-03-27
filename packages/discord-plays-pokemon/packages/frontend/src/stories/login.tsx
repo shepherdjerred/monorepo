@@ -8,7 +8,7 @@ export function Login({
 }: {
   handleLogin: (token: string) => void;
 }) {
-  const [token, setToken] = useState<string>("");
+  const [token, setToken] = useState("");
   function handleInput(event: SyntheticEvent<HTMLInputElement>) {
     setToken(event.currentTarget.value);
   }

@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+{{ if ne .chezmoi.os "darwin" -}}
+exit 0
+{{ end -}}
+
+# Install .mobileconfig profiles for Apple Mail
+# FastMail: com.apple.mail.managed (IMAP, password from Keychain)
+# Outlook: com.apple.ews.account (EWS + OAuth, triggers browser sign-in)
+# Gmail: must be added manually via Internet Accounts (no macOS profile support)
+
+installed=$(profiles list 2>/dev/null || true)
+
+for profile in ~/.config/mail-profiles/*.mobileconfig; do
+  if [ -f "$profile" ]; then
+    basename=$(basename "$profile" .mobileconfig)
+    identifier="com.jerred.mail.${basename}.profile"
+    if echo "$installed" | grep -q "$identifier"; then
+      echo "  $basename already installed, skipping"
+    else
+      echo "  Installing $basename..."
+      open "$profile"
+      sleep 3
+    fi
+  fi
+done
+
+echo ""
+echo "Approve any pending profiles in System Settings > General > Device Management"
+echo "OAuth accounts will prompt for browser sign-in in Mail."
+echo ""
+echo "Gmail must be added manually: Internet Accounts > Add Account > Google"
+echo "  - shepherdjerred@gmail.com"
+open "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension"

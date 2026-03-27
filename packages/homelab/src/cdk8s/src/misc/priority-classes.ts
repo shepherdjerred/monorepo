@@ -8,7 +8,7 @@ export const BATCH_PRIORITY = "batch-low";
 export function createPriorityClasses(chart: Chart) {
   new KubePriorityClass(chart, "infrastructure-critical", {
     metadata: { name: INFRASTRUCTURE_PRIORITY },
-    value: 1000000,
+    value: 1_000_000,
     globalDefault: false,
     preemptionPolicy: "PreemptLowerPriority",
     description: "Critical infrastructure: monitoring, logging, storage CSI, ArgoCD",
@@ -16,7 +16,7 @@ export function createPriorityClasses(chart: Chart) {
 
   new KubePriorityClass(chart, "service-standard", {
     metadata: { name: SERVICE_PRIORITY },
-    value: 100000,
+    value: 100_000,
     globalDefault: true,
     preemptionPolicy: "Never",
     description: "Standard services: homeassistant, plex, postal, etc.",

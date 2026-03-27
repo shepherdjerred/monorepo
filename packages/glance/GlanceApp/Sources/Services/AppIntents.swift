@@ -166,11 +166,11 @@ struct GlanceFocusFilter: SetFocusFilterIntent {
         "Configure Glance notifications during this Focus."
 
     @Parameter(title: "Show only critical alerts")
-    var criticalOnly: Bool?
+    var criticalOnly: Bool
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
-            title: (self.criticalOnly ?? false)
+            title: self.criticalOnly
                 ? "Critical alerts only"
                 : "All notifications",
         )
@@ -178,7 +178,7 @@ struct GlanceFocusFilter: SetFocusFilterIntent {
 
     func perform() async throws -> some IntentResult {
         UserDefaults.standard.set(
-            self.criticalOnly ?? false,
+            self.criticalOnly,
             forKey: "focusCriticalOnly",
         )
         return .result()

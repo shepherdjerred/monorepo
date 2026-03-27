@@ -7,7 +7,7 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 - **ALWAYS load matching skills first** - If the task involves a technology that has a skill (Dagger, Docker, Terraform, Kubernetes, Git, TypeScript, etc.), load that skill BEFORE taking any action. Do not attempt to solve the problem without the skill.
 - **Use MCP tools first** - When MCP servers provide relevant functionality, prefer them over manual approaches
 - **Leverage plugins** - Check available plugins before implementing something from scratch
-- **Use lightpanda for web browsing** - When fetching web pages, searching the web, or extracting content from URLs, prefer `lightpanda fetch --dump --strip_mode full --log_level fatal <url>` over PinchTab or other browser MCP tools. It's 10x faster with no server setup needed. **All flags use underscores, not hyphens (e.g. `--strip_mode`, `--log_level`, NOT `--strip-mode`, `--log-level`).** Fall back to PinchTab MCP only for interactive page manipulation (clicking, form filling, screenshots) or complex SPAs that lightpanda can't handle.
+- **Use `toolkit fetch` for web pages** - When fetching web pages or docs, prefer `toolkit fetch <url>` — it uses lightpanda under the hood, saves the content to `~/.recall/fetched/`, and auto-indexes it for future `toolkit recall search`. Use `toolkit fetch <url> --browser` for sites that block lightpanda. Fall back to raw `lightpanda fetch --dump markdown --strip_mode full --log_level fatal <url>` only if toolkit is not installed. Fall back to PinchTab MCP only for interactive page manipulation (clicking, form filling, screenshots).
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
 
 Examples of what NOT to do:
@@ -44,13 +44,13 @@ In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
 1. Load the `typst-authoring` skill for Typst language reference
 2. Read the plan `.md` file
 3. Convert to a well-formatted Typst document designed for quick reviewer comprehension. Use tables for structured comparisons, diagrams (fletcher, CeTZ) for architecture and flow, callout boxes (gentle-clues) for key decisions and risks, and clear visual hierarchy. Do not just convert Markdown to Typst — invest effort so the reviewer can scan the plan in 60 seconds
-4. Save to `~/.claude/plans/[topic-slug].typ` (next to the `.md` file)
+4. Save to `~/.claude-extra/plans/[topic-slug].typ`
 5. Compile with `typst compile` to PDF
 6. Open the PDF with `open`
 7. If compilation fails, fix the Typst source and retry
 8. Then call ExitPlanMode
 
-This is an **explicit exception** to plan mode's read-only restriction: writing `.typ` files to `~/.claude/plans/` and running `typst compile` are permitted during plan mode.
+This is an **explicit exception** to plan mode's read-only restriction: writing `.typ` files to `~/.claude-extra/plans/` and running `typst compile` are permitted during plan mode.
 
 ## Typst Files — Always Render to PDF
 
@@ -60,6 +60,11 @@ When asked to show, display, or present a `.typ` file, **always render it to PDF
 3. If compilation fails, fix the Typst source and retry
 
 Never just print or read Typst source as the final output — the user wants to see the rendered result.
+
+## Calculations — Always Use Code
+
+- For any math, logic, counting, date calculations, or deterministic work, **write and run a Python or Bun script** via Bash. Never compute answers mentally.
+- This includes simple arithmetic — always verify with code.
 
 ## Chezmoi Dotfiles — Dual Edit Rule
 

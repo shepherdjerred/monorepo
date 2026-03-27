@@ -28,11 +28,12 @@ const TAG_COLUMN_MAP: Record<string, string> = {
 };
 
 function getColumnKey(task: {
-  extraFields?: Readonly<Record<string, string>> | undefined;
+  extraFields?: Readonly<Record<string, unknown>> | undefined;
   tags: readonly string[];
 }): string {
   // First try extraFields.company_status
-  const status = task.extraFields?.["company_status"]?.toLowerCase();
+  const raw = task.extraFields?.["company_status"];
+  const status = typeof raw === "string" ? raw.toLowerCase() : undefined;
   if (status && COLUMN_DEFS.some((c) => c.key === status)) return status;
 
   // Fall back to tag-based grouping

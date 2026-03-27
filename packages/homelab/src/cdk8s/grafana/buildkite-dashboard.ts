@@ -16,7 +16,7 @@ function createStatPanel(options: {
   legend: string;
   gridPos: { x: number; y: number; w: number; h: number };
   unit?: string;
-  thresholds?: Array<{ value: number; color: string }>;
+  thresholds?: { value: number; color: string }[];
 }) {
   const panel = new stat.PanelBuilder()
     .title(options.title)
@@ -44,7 +44,7 @@ function createStatPanel(options: {
 
 function createTimeseriesPanel(options: {
   title: string;
-  targets: Array<{ query: string; legend: string }>;
+  targets: { query: string; legend: string }[];
   gridPos: { x: number; y: number; w: number; h: number };
   unit?: string;
 }) {
@@ -224,7 +224,7 @@ export function createBuildkiteDashboard() {
         { value: 0.3, color: "yellow" },
         { value: 0.5, color: "green" },
         { value: 1.5, color: "yellow" },
-        { value: 2.0, color: "red" },
+        { value: 2, color: "red" },
       ],
     }),
   );

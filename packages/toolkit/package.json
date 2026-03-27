@@ -1,5 +1,5 @@
 {
-  "name": "@shepherdjerred/tools",
+  "name": "@shepherdjerred/toolkit",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -8,14 +8,17 @@
   },
   "imports": {
     "#lib/*": "./src/lib/*",
-    "#commands/*": "./src/commands/*"
+    "#commands/*": "./src/commands/*",
+    "#daemon/*": "./src/daemon/*"
   },
   "bin": {
-    "tools": "./src/index.ts"
+    "toolkit": "./src/index.ts"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --compile --outfile=dist/tools",
+    "build": "bun build ./src/index.ts --compile --outfile=dist/toolkit",
     "test": "true",
+    "test:unit": "bun test test/recall test/fetch test/daemon --exclude '*integration*'",
+    "test:integration": "bun test test/**/*integration*",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
@@ -26,6 +29,8 @@
     "typescript": "latest"
   },
   "dependencies": {
+    "@lancedb/lancedb": "^0.27.1",
+    "gray-matter": "^4.0.3",
     "zod": "^4.3.6"
   }
 }

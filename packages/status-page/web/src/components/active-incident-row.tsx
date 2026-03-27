@@ -54,9 +54,9 @@ export function ActiveIncidentRow({
   onMessage: (msg: string) => void;
 }) {
   const [updateMessage, setUpdateMessage] = useState("");
-  const [updateStatus, setUpdateStatus] = useState<string>(incident.status);
-  const [newStatus, setNewStatus] = useState<string>(incident.status);
-  const [newImpact, setNewImpact] = useState<string>(incident.impact);
+  const [updateStatus, setUpdateStatus] = useState(incident.status);
+  const [newStatus, setNewStatus] = useState(incident.status);
+  const [newImpact, setNewImpact] = useState(incident.impact);
 
   const handleAddUpdate = async () => {
     if (updateMessage.trim() === "") return;

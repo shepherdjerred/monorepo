@@ -15,7 +15,8 @@ import {
 
 const BUN_IMAGE = "oven/bun:debian"
 const RUST_IMAGE = "rust:1.88-bookworm"
-const GO_IMAGE = "golang:1.24-bookworm"
+const GO_IMAGE = "golang:1.25-bookworm"
+const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble"
 
 // Stable cache volume names — never include version numbers
 const BUN_CACHE = "bun-install-cache"
@@ -39,23 +40,31 @@ export class Monorepo {
     return dag
       .container()
       .from(BUN_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "zstd", "python3", "python3-setuptools"])
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target"] })
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
       .withExec(["bun", "install", "--frozen-lockfile"])
-      // Build workspace deps that publish types via dist/
+      // Build workspace deps that publish types/exports via dist/
       .withWorkdir("/workspace/packages/eslint-config")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/astro-opengraph-images")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/webring")
       .withExec(["bun", "run", "build"])
       .withWorkdir(`/workspace/packages/${pkg}`)
   }
 
   /**
-   * Rust container with cargo caches mounted.
+   * Rust container with cargo caches and system deps (clang, openssl).
    */
   rustBase(source: Directory): Container {
     return dag
       .container()
       .from(RUST_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec(["apt-get", "install", "-y", "-qq", "clang", "libclang-dev", "pkg-config", "libssl-dev", "mold"])
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume(CARGO_REGISTRY))
       .withMountedCache("/workspace/target", dag.cacheVolume(CARGO_TARGET))
       .withWorkdir("/workspace")
@@ -102,6 +111,70 @@ export class Monorepo {
     return this.bunBase(source, pkg)
       .withExec(["bun", "run", "test"])
       .stdout()
+  }
+
+  // ---------------------------------------------------------------------------
+  // Prisma generation (run once, reuse across lint/typecheck/test)
+  // ---------------------------------------------------------------------------
+
+  /** Run bun run generate for a package and return the workspace with generated files */
+  @func()
+  generate(source: Directory, pkg: string): Directory {
+    return this.bunBase(source, pkg)
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"])
+      .directory("/workspace")
+  }
+
+  /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
+  @func()
+  async lintWithGenerated(generated: Directory, pkg: string): Promise<string> {
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory("/workspace", generated)
+      .withMountedCache(`/workspace/packages/${pkg}/.eslintcache`, dag.cacheVolume(ESLINT_CACHE))
+      .withExec(["bun", "run", "lint"])
+      .stdout()
+  }
+
+  /** Run typecheck with pre-generated workspace */
+  @func()
+  async typecheckWithGenerated(generated: Directory, pkg: string): Promise<string> {
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory("/workspace", generated)
+      .withExec(["bun", "run", "typecheck"])
+      .stdout()
+  }
+
+  /** Run test with pre-generated workspace */
+  @func()
+  async testWithGenerated(generated: Directory, pkg: string): Promise<string> {
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory("/workspace", generated)
+      .withExec(["bun", "run", "test"])
+      .stdout()
+  }
+
+  // ---------------------------------------------------------------------------
+  // HA type generation (requires live Home Assistant instance)
+  // ---------------------------------------------------------------------------
+
+  /** Generate Home Assistant entity types by introspecting a live HA instance */
+  @func()
+  haGenerate(source: Directory, hassToken: Secret, hassBaseUrl: string = "https://homeassistant.sjer.red"): Directory {
+    return this.bunBase(source, "homelab/src/ha")
+      .withSecretVariable("HASS_TOKEN", hassToken)
+      .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
+      .withExec(["bun", "run", "generate-types"])
+      .directory("/workspace")
   }
 
   // ---------------------------------------------------------------------------
@@ -161,6 +234,7 @@ export class Monorepo {
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
       .withFile("/workspace/package.json", source.file("package.json"))
+      .withDirectory("/workspace/patches", source.directory("patches"))
       .withFile("/workspace/bun.lock", source.file("bun.lock"))
       .withDirectory(`/workspace/packages/${pkg}`, source.directory(`packages/${pkg}`), { exclude: excludes })
 
@@ -225,7 +299,7 @@ export class Monorepo {
       .stdout()
   }
 
-  /** Run cargo test (or cargo nextest if available) */
+  /** Run cargo test */
   @func()
   async rustTest(source: Directory): Promise<string> {
     return this.rustBase(source)
@@ -233,7 +307,7 @@ export class Monorepo {
       .stdout()
   }
 
-  /** Build the Rust project and return the binary */
+  /** Build the Rust project */
   @func()
   rustBuild(source: Directory, target: string = "x86_64-unknown-linux-gnu"): Container {
     return this.rustBase(source)
@@ -261,11 +335,11 @@ export class Monorepo {
       .stdout()
   }
 
-  /** Run golangci-lint */
+  /** Run golangci-lint (v2) */
   @func()
   async goLint(source: Directory): Promise<string> {
     return this.goBase(source)
-      .withExec(["go", "install", "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"])
+      .withExec(["go", "install", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"])
       .withExec(["golangci-lint", "run", "./..."])
       .stdout()
   }
@@ -280,6 +354,56 @@ export class Monorepo {
     return this.bunBase(source, "homelab/src/cdk8s")
       .withExec(["bun", "run", "build"])
       .directory("/workspace/packages/homelab/src/cdk8s/dist")
+  }
+
+  // ---------------------------------------------------------------------------
+  // Swift operations (lint only — build/test require macOS)
+  // ---------------------------------------------------------------------------
+
+  /** Run swiftlint on a Swift package */
+  @func()
+  async swiftLint(source: Directory, pkg: string): Promise<string> {
+    return dag
+      .container()
+      .from("ghcr.io/realm/swiftlint:latest")
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory(`packages/${pkg}`), { exclude: [".build/**", "**/.build/**"] })
+      .withExec(["swiftlint", "--strict"])
+      .stdout()
+  }
+
+  // ---------------------------------------------------------------------------
+  // Playwright tests
+  // ---------------------------------------------------------------------------
+
+  /** Run Playwright tests headless in a container */
+  @func()
+  async playwrightTest(source: Directory, pkg: string): Promise<string> {
+    return dag
+      .container()
+      .from(PLAYWRIGHT_IMAGE)
+      // Install bun on the Playwright image (needs unzip)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "unzip"])
+      .withExec(["bash", "-c", "curl -fsSL https://bun.sh/install | bash"])
+      .withEnvVariable("PATH", "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+      .withEnvVariable("CI", "true")
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Build workspace deps needed by sjer.red
+      .withWorkdir("/workspace/packages/eslint-config")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/astro-opengraph-images")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir("/workspace/packages/webring")
+      .withExec(["bun", "run", "build"])
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      // Build the site first — playwright tests run against astro preview which needs dist/
+      .withExec(["bunx", "astro", "build"])
+      .withExec(["bun", "run", "test"])
+      .stdout()
   }
 
   // ---------------------------------------------------------------------------
@@ -307,7 +431,7 @@ export class Monorepo {
       .container()
       .from("koalaman/shellcheck-alpine:stable")
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, { include: ["**/*.sh"] })
+      .withDirectory("/workspace", source, { include: ["**/*.sh"], exclude: ["**/archive/**", "**/node_modules/**"] })
       .withExec(["sh", "-c", "find /workspace -name '*.sh' -print0 | xargs -0 shellcheck"])
       .stdout()
   }

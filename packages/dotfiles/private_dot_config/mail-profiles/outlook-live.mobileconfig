@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.ews.account</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadUUID</key>
+      <string>E74E1D1A-7A89-465E-ADE7-A44108DFCF47</string>
+      <key>PayloadIdentifier</key>
+      <string>com.jerred.mail.outlook-live</string>
+      <key>PayloadDisplayName</key>
+      <string>Outlook - jsheph032010@live.com</string>
+
+      <key>EmailAddress</key>
+      <string>jsheph032010@live.com</string>
+      <key>UserName</key>
+      <string>jsheph032010@live.com</string>
+      <key>OAuth</key>
+      <true/>
+    </dict>
+  </array>
+
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadUUID</key>
+  <string>B15E01E8-6EBB-40AA-8360-4467EBA1522C</string>
+  <key>PayloadIdentifier</key>
+  <string>com.jerred.mail.outlook-live.profile</string>
+  <key>PayloadDisplayName</key>
+  <string>Outlook - jsheph032010@live.com</string>
+  <key>PayloadDescription</key>
+  <string>Configures Exchange/OAuth for jsheph032010@live.com</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+</dict>
+</plist>

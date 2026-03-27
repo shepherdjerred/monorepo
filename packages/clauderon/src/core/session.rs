@@ -683,7 +683,6 @@ impl CodexModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gpt5_3Codex => "gpt-5-3-codex",
             Self::Gpt5_4 => "gpt-5-4",
             Self::Gpt5_4Mini => "gpt-5-4-mini",
             Self::Gpt5_4Nano => "gpt-5-4-nano",
@@ -693,7 +692,8 @@ impl CodexModel {
             Self::O4Mini => "o4-mini",
             Self::O3Mini => "o3-mini",
             // Legacy variants map to current default
-            Self::Gpt5_2Codex
+            Self::Gpt5_3Codex
+            | Self::Gpt5_2Codex
             | Self::Gpt5_2
             | Self::Gpt5_2Instant
             | Self::Gpt5_2Thinking
@@ -751,14 +751,11 @@ impl GeminiModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
-            Self::Gemini3_1Pro => "gemini-3-1-pro",
+            Self::Gemini3_1Pro | Self::Gemini3Pro => "gemini-3-1-pro",
             Self::Gemini3Flash => "gemini-3-flash",
             Self::Gemini3_1FlashLite => "gemini-3-1-flash-lite",
             Self::Gemini2_5Pro => "gemini-2-5-pro",
-            Self::Gemini2_5Flash => "gemini-2-5-flash",
-            // Legacy variants map to current equivalents
-            Self::Gemini3Pro => "gemini-3-1-pro",
-            Self::Gemini2_0Flash => "gemini-2-5-flash",
+            Self::Gemini2_5Flash | Self::Gemini2_0Flash => "gemini-2-5-flash",
         }
     }
 
@@ -1487,57 +1484,61 @@ mod tests {
 
     #[test]
     fn test_claude_model_default() {
-        assert_eq!(ClaudeModel::default(), ClaudeModel::Sonnet4_5);
+        assert_eq!(ClaudeModel::default(), ClaudeModel::Sonnet4_6);
     }
 
     #[test]
     fn test_codex_model_to_cli_flag() {
-        assert_eq!(CodexModel::Gpt5_2Codex.to_cli_flag(), "gpt-5-2-codex");
-        assert_eq!(CodexModel::Gpt5_2.to_cli_flag(), "gpt-5-2");
-        assert_eq!(CodexModel::Gpt5_2Instant.to_cli_flag(), "gpt-5-2-instant");
-        assert_eq!(CodexModel::Gpt5_2Thinking.to_cli_flag(), "gpt-5-2-thinking");
-        assert_eq!(CodexModel::Gpt5_2Pro.to_cli_flag(), "gpt-5-2-pro");
-        assert_eq!(CodexModel::Gpt5_1.to_cli_flag(), "gpt-5-1");
-        assert_eq!(CodexModel::Gpt5_1Instant.to_cli_flag(), "gpt-5-1-instant");
-        assert_eq!(CodexModel::Gpt5_1Thinking.to_cli_flag(), "gpt-5-1-thinking");
-        assert_eq!(CodexModel::Gpt4_1.to_cli_flag(), "gpt-4-1");
+        assert_eq!(CodexModel::Gpt5_3Codex.to_cli_flag(), "gpt-5-3-codex");
+        // Legacy variants all map to gpt-5-3-codex
+        assert_eq!(CodexModel::Gpt5_2Codex.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_2.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_2Instant.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_2Thinking.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_2Pro.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_1.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_1Instant.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt5_1Thinking.to_cli_flag(), "gpt-5-3-codex");
+        assert_eq!(CodexModel::Gpt4_1.to_cli_flag(), "gpt-5-3-codex");
         assert_eq!(CodexModel::O3Mini.to_cli_flag(), "o3-mini");
     }
 
     #[test]
     fn test_codex_model_default() {
-        assert_eq!(CodexModel::default(), CodexModel::Gpt5_2Codex);
+        assert_eq!(CodexModel::default(), CodexModel::Gpt5_3Codex);
     }
 
     #[test]
     fn test_gemini_model_to_cli_flag() {
-        assert_eq!(GeminiModel::Gemini3Pro.to_cli_flag(), "gemini-3-pro");
+        assert_eq!(GeminiModel::Gemini3_1Pro.to_cli_flag(), "gemini-3-1-pro");
         assert_eq!(GeminiModel::Gemini3Flash.to_cli_flag(), "gemini-3-flash");
         assert_eq!(GeminiModel::Gemini2_5Pro.to_cli_flag(), "gemini-2-5-pro");
+        // Legacy variants map to current equivalents
+        assert_eq!(GeminiModel::Gemini3Pro.to_cli_flag(), "gemini-3-1-pro");
         assert_eq!(
             GeminiModel::Gemini2_0Flash.to_cli_flag(),
-            "gemini-2-0-flash"
+            "gemini-2-5-flash"
         );
     }
 
     #[test]
     fn test_gemini_model_default() {
-        assert_eq!(GeminiModel::default(), GeminiModel::Gemini3Pro);
+        assert_eq!(GeminiModel::default(), GeminiModel::Gemini3_1Pro);
     }
 
     #[test]
     fn test_session_model_default_for_agent() {
         assert_eq!(
             SessionModel::default_for_agent(AgentType::ClaudeCode),
-            SessionModel::Claude(ClaudeModel::Sonnet4_5)
+            SessionModel::Claude(ClaudeModel::Sonnet4_6)
         );
         assert_eq!(
             SessionModel::default_for_agent(AgentType::Codex),
-            SessionModel::Codex(CodexModel::Gpt5_2Codex)
+            SessionModel::Codex(CodexModel::Gpt5_3Codex)
         );
         assert_eq!(
             SessionModel::default_for_agent(AgentType::Gemini),
-            SessionModel::Gemini(GeminiModel::Gemini3Pro)
+            SessionModel::Gemini(GeminiModel::Gemini3_1Pro)
         );
     }
 
@@ -1552,24 +1553,24 @@ mod tests {
             "o3-mini"
         );
         assert_eq!(
-            SessionModel::Gemini(GeminiModel::Gemini3Pro).to_cli_flag(),
-            "gemini-3-pro"
+            SessionModel::Gemini(GeminiModel::Gemini3_1Pro).to_cli_flag(),
+            "gemini-3-1-pro"
         );
     }
 
     #[test]
     fn test_session_model_is_compatible_with() {
-        let claude_model = SessionModel::Claude(ClaudeModel::Sonnet4_5);
+        let claude_model = SessionModel::Claude(ClaudeModel::Sonnet4_6);
         assert!(claude_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(!claude_model.is_compatible_with(AgentType::Codex));
         assert!(!claude_model.is_compatible_with(AgentType::Gemini));
 
-        let codex_model = SessionModel::Codex(CodexModel::Gpt5_2Codex);
+        let codex_model = SessionModel::Codex(CodexModel::Gpt5_3Codex);
         assert!(!codex_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(codex_model.is_compatible_with(AgentType::Codex));
         assert!(!codex_model.is_compatible_with(AgentType::Gemini));
 
-        let gemini_model = SessionModel::Gemini(GeminiModel::Gemini3Pro);
+        let gemini_model = SessionModel::Gemini(GeminiModel::Gemini3_1Pro);
         assert!(!gemini_model.is_compatible_with(AgentType::ClaudeCode));
         assert!(!gemini_model.is_compatible_with(AgentType::Codex));
         assert!(gemini_model.is_compatible_with(AgentType::Gemini));
@@ -1671,10 +1672,10 @@ mod tests {
             updated_at: Utc::now(),
         };
 
-        // Should fall back to agent default (Sonnet4_5 for ClaudeCode)
+        // Should fall back to agent default (Sonnet4_6 for ClaudeCode)
         assert_eq!(
             session.effective_model(),
-            SessionModel::Claude(ClaudeModel::Sonnet4_5)
+            SessionModel::Claude(ClaudeModel::Sonnet4_6)
         );
     }
 
@@ -2123,9 +2124,9 @@ mod tests {
 
     #[test]
     fn test_model_is_experimental() {
-        assert!(!SessionModel::Claude(ClaudeModel::Sonnet4_5).is_experimental());
-        assert!(SessionModel::Codex(CodexModel::Gpt5_2Codex).is_experimental());
-        assert!(SessionModel::Gemini(GeminiModel::Gemini3Pro).is_experimental());
+        assert!(!SessionModel::Claude(ClaudeModel::Sonnet4_6).is_experimental());
+        assert!(SessionModel::Codex(CodexModel::Gpt5_3Codex).is_experimental());
+        assert!(SessionModel::Gemini(GeminiModel::Gemini3_1Pro).is_experimental());
     }
 
     #[test]
@@ -2159,14 +2160,14 @@ mod tests {
 
     #[test]
     fn test_validate_experimental_blocks_codex_model() {
-        let model = SessionModel::Codex(CodexModel::Gpt5_2Codex);
+        let model = SessionModel::Codex(CodexModel::Gpt5_3Codex);
         let result = validate_experimental_agent(AgentType::Codex, Some(&model), false);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_validate_experimental_allows_claude_model() {
-        let model = SessionModel::Claude(ClaudeModel::Sonnet4_5);
+        let model = SessionModel::Claude(ClaudeModel::Sonnet4_6);
         let result = validate_experimental_agent(AgentType::ClaudeCode, Some(&model), false);
         assert!(result.is_ok());
     }

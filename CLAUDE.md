@@ -24,7 +24,7 @@ packages/
 ├── scout-for-lol/           # League of Legends match analysis
 ├── sjer.red/                # Personal website
 ├── starlight-karma-bot/     # Discord karma bot
-├── tools/                   # CLI developer tools
+├── toolkit/                 # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 ├── webring/                 # Webring component
 scripts/ci/                  # Python CI scripts (uv + Python)
 archive/                     # Legacy projects (do not modify)
@@ -100,6 +100,24 @@ Each package has its own CLAUDE.md with specific instructions:
 - `packages/homelab/CLAUDE.md` - K8s, cdk8s, OpenTofu infrastructure
 - `packages/scout-for-lol/CLAUDE.md` - Match analysis pipeline
 - `packages/resume/CLAUDE.md` - Resume site
-- `packages/tools/CLAUDE.md` - CLI developer tools
+- `packages/toolkit/CLAUDE.md` - CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 - `packages/tasks-for-obsidian/CLAUDE.md` - React Native task app
 - `packages/docs/` - AI-maintained docs (see `monorepo-docs` skill)
+
+## Toolkit — Fetch & Recall
+
+The `toolkit` CLI (`~/.local/bin/toolkit`) provides web fetching and local RAG search.
+
+```bash
+# Fetch a web page (saves to ~/.recall/fetched/ as markdown)
+toolkit fetch <url>
+toolkit fetch <url> --browser    # Use PinchTab (real Chrome) if lightpanda is blocked
+
+# Search across plans, research, memories, conversations, and fetched pages
+toolkit recall search "<query>"
+toolkit recall add <path>        # Index a file or directory
+toolkit recall reindex           # Re-scan all watched directories
+toolkit recall status            # Index stats, daemon health
+```
+
+**Use `toolkit fetch` instead of raw `lightpanda fetch`** — it saves the output and auto-indexes it for future search.

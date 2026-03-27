@@ -1,0 +1,47 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+
+if command -v pinchtab &>/dev/null; then
+  pinchtab daemon install
+
+  # Allow browsing the public internet with content safety enabled
+  pinchtab config set security.idpi.enabled true
+  pinchtab config set security.idpi.allowedDomains '*'
+  pinchtab config set security.idpi.strictMode true
+  pinchtab config set security.idpi.scanContent true
+  pinchtab config set security.idpi.wrapContent true
+
+  # Full stealth for sites with bot detection (e.g. X, Reddit)
+  pinchtab config set instanceDefaults.stealthLevel full
+
+  # Enable JS eval for React-heavy sites
+  pinchtab config set security.allowEvaluate true
+
+  # Install uBlock Origin extension
+  STATE_DIR="$HOME/Library/Application Support/pinchtab"
+  EXT_DIR="$STATE_DIR/extensions/ublock-origin"
+  if [ ! -d "$EXT_DIR/uBlock0.chromium" ]; then
+    mkdir -p "$EXT_DIR"
+    tmp="$(mktemp -d)"
+    gh release download 1.70.0 --repo gorhill/uBlock --pattern "*.chromium.zip" --dir "$tmp"
+    unzip -q "$tmp"/*.chromium.zip -d "$EXT_DIR"
+    rm -rf "$tmp"
+  fi
+
+  # Set extension path directly in config JSON (config set doesn't support this field)
+  python3 -c "
+import json, os
+config_path = os.path.expanduser('~/Library/Application Support/pinchtab/config.json')
+with open(config_path) as f:
+    config = json.load(f)
+ext_path = os.path.expanduser('~/Library/Application Support/pinchtab/extensions/ublock-origin/uBlock0.chromium')
+if ext_path not in config.get('browser', {}).get('extensionPaths', []):
+    config.setdefault('browser', {})['extensionPaths'] = [ext_path]
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+"
+
+  pinchtab daemon restart
+fi
+{{- end -}}

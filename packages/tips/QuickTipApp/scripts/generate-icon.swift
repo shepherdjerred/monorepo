@@ -8,7 +8,7 @@ let size = 1024
 let outputPath = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "icon_1024x1024.png"
 
 /// Create bitmap
-let rep = NSBitmapImageRep(
+guard let rep = NSBitmapImageRep(
     bitmapDataPlanes: nil,
     pixelsWide: size,
     pixelsHigh: size,
@@ -19,9 +19,15 @@ let rep = NSBitmapImageRep(
     colorSpaceName: .deviceRGB,
     bytesPerRow: 0,
     bitsPerPixel: 0
-)!
+) else {
+    print("ERROR: Could not create bitmap image rep")
+    exit(1)
+}
 
-let context = NSGraphicsContext(bitmapImageRep: rep)!
+guard let context = NSGraphicsContext(bitmapImageRep: rep) else {
+    print("ERROR: Could not create graphics context")
+    exit(1)
+}
 NSGraphicsContext.current = context
 let cgContext = context.cgContext
 
@@ -38,7 +44,10 @@ let colors = [
     CGColor(red: 1.0, green: 0.55, blue: 0.0, alpha: 1.0), // #FF8C00 (bottom)
     CGColor(red: 1.0, green: 0.72, blue: 0.0, alpha: 1.0) // #FFB800 (top)
 ] as CFArray
-let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0])!
+guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0]) else {
+    print("ERROR: Could not create gradient")
+    exit(1)
+}
 cgContext.drawLinearGradient(
     gradient,
     start: CGPoint(x: CGFloat(size) / 2, y: 0),
@@ -50,8 +59,7 @@ cgContext.drawLinearGradient(
 let symbolSize: CGFloat = 620
 let config = NSImage.SymbolConfiguration(pointSize: symbolSize, weight: .regular)
 if let symbolImage = NSImage(systemSymbolName: "lightbulb.fill", accessibilityDescription: nil)?
-    .withSymbolConfiguration(config)
-{
+    .withSymbolConfiguration(config) {
     let imageSize = symbolImage.size
 
     // Center the symbol
@@ -81,7 +89,15 @@ if let symbolImage = NSImage(systemSymbolName: "lightbulb.fill", accessibilityDe
 NSGraphicsContext.current = nil
 
 // Save as PNG
-let pngData = rep.representation(using: .png, properties: [:])!
+guard let pngData = rep.representation(using: .png, properties: [:]) else {
+    print("ERROR: Could not create PNG representation")
+    exit(1)
+}
 let url = URL(fileURLWithPath: outputPath)
-try! pngData.write(to: url)
+do {
+    try pngData.write(to: url)
+} catch {
+    print("ERROR: Could not write PNG to \(outputPath): \(error)")
+    exit(1)
+}
 print("Saved icon to \(outputPath)")

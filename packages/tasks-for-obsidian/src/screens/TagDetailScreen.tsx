@@ -4,8 +4,6 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
 import {
-  type FilterConfig,
-  type SortConfig,
   EMPTY_FILTER,
   DEFAULT_SORT,
   applyFilter,
@@ -29,8 +27,8 @@ export function TagDetailScreen({ route, navigation }: Props) {
     contextNames,
     tagNames,
   } = useTasks();
-  const [filter, setFilter] = useState<FilterConfig>(EMPTY_FILTER);
-  const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
+  const [filter, setFilter] = useState(EMPTY_FILTER);
+  const [sort, setSort] = useState(DEFAULT_SORT);
 
   const tagTasks = useMemo(
     () => taskList.filter((t) => t.tags.includes(tagName)),

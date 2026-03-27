@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.ews.account</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadUUID</key>
+      <string>CEA9B8C7-948B-4C81-9F5A-30BB8DAB0A83</string>
+      <key>PayloadIdentifier</key>
+      <string>com.jerred.mail.outlook-gatech</string>
+      <key>PayloadDisplayName</key>
+      <string>Outlook - jshepherd43@gatech.edu</string>
+
+      <key>EmailAddress</key>
+      <string>jshepherd43@gatech.edu</string>
+      <key>UserName</key>
+      <string>jshepherd43@gatech.edu</string>
+      <key>OAuth</key>
+      <true/>
+    </dict>
+  </array>
+
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadUUID</key>
+  <string>32061D4E-B849-4011-A04A-FFC75E8012C0</string>
+  <key>PayloadIdentifier</key>
+  <string>com.jerred.mail.outlook-gatech.profile</string>
+  <key>PayloadDisplayName</key>
+  <string>Outlook - jshepherd43@gatech.edu</string>
+  <key>PayloadDescription</key>
+  <string>Configures Exchange/OAuth for jshepherd43@gatech.edu</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+</dict>
+</plist>

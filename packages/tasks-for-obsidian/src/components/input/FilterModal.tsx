@@ -118,7 +118,7 @@ export function FilterModal({
 }: Props) {
   const { colors } = useSettings();
   const insets = useSafeAreaInsets();
-  const [local, setLocal] = useState<FilterConfig>(filter);
+  const [local, setLocal] = useState(filter);
 
   const handleOpen = useCallback(() => {
     setLocal(filter);

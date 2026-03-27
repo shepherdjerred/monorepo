@@ -24,7 +24,7 @@ export function AdminPanel() {
     () => localStorage.getItem("status-api-key") ?? "",
   );
   const [sites, setSites] = useState<Site[]>([]);
-  const [selectedSiteId, setSelectedSiteId] = useState<string>("");
+  const [selectedSiteId, setSelectedSiteId] = useState("");
   const [components, setComponents] = useState<Component[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [message, setMessage] = useState<string | null>(null);
