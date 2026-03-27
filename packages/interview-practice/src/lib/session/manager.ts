@@ -53,6 +53,8 @@ export async function createSession(options: {
     timer: timerState,
     hintsGiven: 0,
     testsRun: 0,
+    editsGiven: 0,
+    debugHelpsGiven: 0,
   };
 
   await Bun.write(

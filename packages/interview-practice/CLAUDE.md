@@ -20,7 +20,7 @@ interview-practice questions list [--type leetcode] [--difficulty hard]
 - `next_move` structured payloads enable deterministic part advancement without model judgment
 - Conversation model builds context with token budgets, calls tools (run_tests, reveal_next_part, give_hint, pause_and_think)
 - Tests are ALWAYS hidden from user. AI hints verbally but never reveals test cases.
-- Starter code generated from IO schema + per-language templates
+- Starter code generated from function signature + per-language templates
 - SQLite for archival only (transcript, events). Live state is in-memory.
 - Timer tracks elapsedMs (crash-safe), not wall clock.
 
@@ -43,8 +43,8 @@ bunx eslint . --fix
 
 ## Design Rules
 
-- All problems use stdin/stdout IO model (language-agnostic)
-- Question bank uses IO schema + templates, not hand-authored starter code per language
+- All problems use function-call testing (direct import + deep equality), not stdin/stdout
+- Question bank uses function signature schema + templates, not hand-authored starter code per language
 - Scoring rubric has anchored levels (1-4 with concrete descriptions)
 - `reveal_next_part` uses structured `transitionCriteria`, not AI judgment
 - Excalidraw integration reads semantic extraction (components + connections), not raw JSON

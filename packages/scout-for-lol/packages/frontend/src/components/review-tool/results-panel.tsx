@@ -203,9 +203,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
     costTracker,
     onResultGenerated,
   } = props;
-  const [activeGenerations, setActiveGenerations] = useState<
-    Map<string, ActiveGeneration>
-  >(new Map());
+  const [activeGenerations, setActiveGenerations] = useState(new Map<string, ActiveGeneration>());
   const [selectedHistoryId, setSelectedHistoryId] = useState<
     string | undefined
   >();
@@ -261,7 +259,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
           setActiveGenerations((prev) => {
             const updated = new Map(prev);
             const gen = updated.get(hId);
-            if (gen) {
+            if (gen !== undefined) {
               gen.progress = p;
               updated.set(hId, gen);
             }
@@ -361,7 +359,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
           />
         )}
         <MatchAndReviewerInfo match={match} config={config} />
-        {selectedGen?.progress && (
+        {selectedGen?.progress !== undefined && (
           <GenerationProgress
             progress={selectedGen.progress}
             elapsedMs={elapsedMs}

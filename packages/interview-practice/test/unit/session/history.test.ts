@@ -46,6 +46,8 @@ describe("session history", () => {
         timer: { durationMs: 1_500_000, elapsedMs: 900_000, warningsEmitted: [], lastCheckpointMs: 0 },
         hintsGiven: 1,
         testsRun: 2,
+        editsGiven: 0,
+        debugHelpsGiven: 0,
       }),
     );
 
@@ -66,6 +68,8 @@ describe("session history", () => {
         timer: { durationMs: 1_500_000, elapsedMs: 600_000, warningsEmitted: [], lastCheckpointMs: 0 },
         hintsGiven: 0,
         testsRun: 5,
+        editsGiven: 0,
+        debugHelpsGiven: 0,
       }),
     );
 

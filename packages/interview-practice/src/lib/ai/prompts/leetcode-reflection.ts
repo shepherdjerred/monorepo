@@ -25,17 +25,25 @@ You do NOT talk to the candidate. You produce analysis for the conversation mode
 
   sections.push(`OUTPUT FORMAT:
 Respond with a JSON array of reflection objects. Each object has:
-- "type": one of "observation", "suggestion", "next_move", "scoring_update"
+- "type": one of "observation", "suggestion", "next_move", "scoring_update", "score"
 - "content": your analysis text (1-2 sentences)
 - "priority": 1-10 (10 = most urgent)
 - "nextMove": (only for type "next_move") an object with:
   - "action": one of "reveal_next_part", "give_hint", "ask_complexity", "wrap_up", "continue"
   - "targetPart": (optional) part number to advance to
   - "condition": one of "immediate", "after_response", "when_stuck"
+- "scores": (only for type "score") an object with numeric 1-4 values:
+  - "communication": 1=silent/confused, 2=explains when asked, 3=narrates approach, 4=drives conversation
+  - "problemSolving": 1=no progress, 2=brute force with hints, 3=optimal with 1-2 hints, 4=optimal independently
+  - "technical": 1=can't code it, 2=works with bugs, 3=clean+correct, 4=elegant+idiomatic
+  - "testing": 1=no testing awareness, 2=happy path only, 3=considers edge cases, 4=systematic+complexity analysis
+
+IMPORTANT: Always include exactly one "score" type reflection in every analysis. This provides live scoring feedback to the candidate.
 
 Example:
 [
   {"type": "observation", "content": "Candidate is implementing brute force O(n^2). Has not considered hash map.", "priority": 5},
+  {"type": "score", "content": "Good communication but still on brute force approach.", "priority": 3, "scores": {"communication": 3, "problemSolving": 2, "technical": 2, "testing": 1}},
   {"type": "next_move", "content": "All tests passing and candidate explained complexity. Ready for part 2.", "priority": 9, "nextMove": {"action": "reveal_next_part", "targetPart": 2, "condition": "immediate"}}
 ]`);
 

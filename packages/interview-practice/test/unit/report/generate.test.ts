@@ -34,6 +34,8 @@ const baseMetadata: SessionMetadata = {
   },
   hintsGiven: 2,
   testsRun: 3,
+  editsGiven: 0,
+  debugHelpsGiven: 0,
 };
 
 beforeEach(() => {

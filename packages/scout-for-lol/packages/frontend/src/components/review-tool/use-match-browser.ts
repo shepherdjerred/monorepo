@@ -88,11 +88,11 @@ export function useMatchBrowser(
   } | null>(null);
   const [matches, setMatches] = useState<MatchMetadata[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [filterQueueType, setFilterQueueType] = useState<string>("all");
-  const [filterLane, setFilterLane] = useState<string>("all");
-  const [filterPlayer, setFilterPlayer] = useState<string>("");
-  const [filterChampion, setFilterChampion] = useState<string>("");
-  const [filterOutcome, setFilterOutcome] = useState<string>("all");
+  const [filterQueueType, setFilterQueueType] = useState("all");
+  const [filterLane, setFilterLane] = useState("all");
+  const [filterPlayer, setFilterPlayer] = useState("");
+  const [filterChampion, setFilterChampion] = useState("");
+  const [filterOutcome, setFilterOutcome] = useState("all");
   const [selectedMetadata, setSelectedMetadata] =
     useState<MatchMetadata | null>(null);
   const [abortController, setAbortController] =

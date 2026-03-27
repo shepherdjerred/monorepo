@@ -5,6 +5,7 @@ export const ReflectionTypeSchema = z.enum([
   "suggestion",
   "next_move",
   "scoring_update",
+  "score",
 ]);
 
 export const NextMoveActionSchema = z.enum([
@@ -21,17 +22,26 @@ export const NextMovePayloadSchema = z.object({
   condition: z.enum(["immediate", "after_response", "when_stuck"]),
 });
 
+export const ReflectionScoresSchema = z.object({
+  communication: z.number().int().min(1).max(4),
+  problemSolving: z.number().int().min(1).max(4),
+  technical: z.number().int().min(1).max(4),
+  testing: z.number().int().min(1).max(4),
+});
+
 export const ReflectionSchema = z.object({
   type: ReflectionTypeSchema,
   content: z.string(),
   priority: z.number().int().min(1).max(10),
   nextMove: NextMovePayloadSchema.optional(),
+  scores: ReflectionScoresSchema.optional(),
   createdAt: z.number(),
 });
 
 export type ReflectionType = z.infer<typeof ReflectionTypeSchema>;
 export type NextMoveAction = z.infer<typeof NextMoveActionSchema>;
 export type NextMovePayload = z.infer<typeof NextMovePayloadSchema>;
+export type ReflectionScores = z.infer<typeof ReflectionScoresSchema>;
 export type Reflection = z.infer<typeof ReflectionSchema>;
 
 export type ReflectionQueue = {

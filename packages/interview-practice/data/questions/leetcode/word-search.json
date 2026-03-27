@@ -8,7 +8,7 @@
   "parts": [
     {
       "partNumber": 1,
-      "prompt": "Given a 2D grid of characters and a single word, determine if the word can be found in the grid by moving horizontally or vertically to adjacent cells. Each cell can only be used once per word. Return 'true' or 'false'.",
+      "prompt": "Given a 2D grid of characters and a single word, determine if the word can be found in the grid by moving horizontally or vertically to adjacent cells. Each cell can only be used once per word. Return true or false.",
       "internalNotes": "DFS/backtracking from each cell. Mark visited cells (in-place by modifying the char or with a visited set). Backtrack by restoring the cell. Common mistakes: forgetting to unmark on backtrack, using BFS instead of DFS (BFS doesn't naturally support path tracking), not pruning early when remaining path is impossible.",
       "hints": [
         { "level": "subtle", "content": "You need to explore paths through the grid. What traversal strategy lets you try a path and backtrack?" },
@@ -16,11 +16,11 @@
         { "level": "explicit", "content": "For each cell matching word[0], run DFS. At each step, mark the cell visited, try all 4 neighbors for the next character, then unmark (backtrack). Return true if you match the entire word." }
       ],
       "testCases": [
-        { "input": "3 4\nABCE\nSFCS\nADEE\nABCCED", "expected": "true", "explanation": "Path: A(0,0)->B(0,1)->C(0,2)->C(1,2)->E(2,2)->D(2,1) — note not the same as ABCCED" },
-        { "input": "3 4\nABCE\nSFCS\nADEE\nSEE", "expected": "true", "explanation": "Path: S(1,0)->E(2,0)... wait — S(1,3)->E(2,3)->E(2,2)" },
-        { "input": "3 4\nABCE\nSFCS\nADEE\nABCB", "expected": "false", "explanation": "B at (0,1) would need to be reused — not allowed." },
-        { "input": "1 1\nA\nA", "expected": "true", "explanation": "Single cell, single character." },
-        { "input": "2 2\nAB\nCD\nABDC", "expected": "true", "explanation": "Path: A(0,0)->B(0,1)->D(1,1)->C(1,0)" }
+        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "ABCCED"], "expected": true, "explanation": "Path: A(0,0)->B(0,1)->C(0,2)->C(1,2)->E(2,2)->D(2,1)" },
+        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "SEE"], "expected": true, "explanation": "Path: S(1,3)->E(2,3)->E(2,2)" },
+        { "args": [[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "ABCB"], "expected": false, "explanation": "B at (0,1) would need to be reused — not allowed." },
+        { "args": [[["A"]], "A"], "expected": true, "explanation": "Single cell, single character." },
+        { "args": [[["A","B"],["C","D"]], "ABDC"], "expected": true, "explanation": "Path: A(0,0)->B(0,1)->D(1,1)->C(1,0)" }
       ],
       "followUps": [
         "What's the time complexity?",
@@ -45,10 +45,10 @@
         { "level": "explicit", "content": "Build a Trie from the word list. DFS from each cell, following Trie edges. When you reach a Trie node that marks a complete word, add it to results. Prune branches where the Trie has no matching edge." }
       ],
       "testCases": [
-        { "input": "3 4\noaan\netae\nihkr\n4\noath pea eat rain", "expected": "eat oath", "explanation": "'eat' and 'oath' can be found in the grid. 'pea' and 'rain' cannot." },
-        { "input": "2 2\nab\ncd\n4\nabcb abdc abcd dcba", "expected": "abdc", "explanation": "Only 'abdc' forms a valid path: a(0,0)->b(0,1)->d(1,1)->c(1,0)." },
-        { "input": "1 1\na\n2\na b", "expected": "a", "explanation": "Single cell grid. Only 'a' is found." },
-        { "input": "3 3\nabc\ndef\nghi\n3\nabc def ghi", "expected": "abc def ghi", "explanation": "All three words exist as rows in the grid." }
+        { "args": [[["o","a","a","n"],["e","t","a","e"],["i","h","k","r"]], ["oath", "pea", "eat", "rain"]], "expected": ["eat", "oath"], "explanation": "'eat' and 'oath' can be found in the grid. 'pea' and 'rain' cannot." },
+        { "args": [[["a","b"],["c","d"]], ["abcb", "abdc", "abcd", "dcba"]], "expected": ["abdc"], "explanation": "Only 'abdc' forms a valid path." },
+        { "args": [[["a"]], ["a", "b"]], "expected": ["a"], "explanation": "Single cell grid. Only 'a' is found." },
+        { "args": [[["a","b","c"],["d","e","f"],["g","h","i"]], ["abc", "def", "ghi"]], "expected": ["abc", "def", "ghi"], "explanation": "All three words exist as rows in the grid." }
       ],
       "followUps": [
         "What's the time complexity with the Trie approach vs running Part 1 for each word?",
@@ -67,10 +67,13 @@
     "1 <= word.length <= 15 (Part 1)",
     "1 <= words.length <= 3 * 10^4 (Part 2)"
   ],
-  "io": {
-    "inputFormat": "int m, int n, then m rows of the grid, then word (Part 1) or int k followed by k space-separated words (Part 2)",
-    "outputFormat": "Part 1: 'true' or 'false'. Part 2: space-separated list of found words, sorted lexicographically",
-    "parseHint": "First line: m and n space-separated. Next m lines: grid rows. Last line: the word (Part 1) or count + words (Part 2)."
+  "functionSignature": {
+    "name": "exist",
+    "params": [
+      { "name": "board", "type": "string[][]" },
+      { "name": "word", "type": "string" }
+    ],
+    "returnType": "boolean"
   },
   "source": "LeetCode #79 / #212",
   "escalationPattern": "specific-to-general"

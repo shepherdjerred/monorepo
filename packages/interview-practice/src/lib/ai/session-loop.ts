@@ -4,7 +4,7 @@ import type { LeetcodeQuestion, QuestionPart } from "#lib/questions/schemas.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
 import type { Session } from "#lib/session/manager.ts";
 import type { Logger } from "#logger";
-import type { ReflectionQueue, Reflection, NextMovePayload } from "./reflection-queue.ts";
+import type { ReflectionQueue, Reflection, NextMovePayload, ReflectionScores } from "./reflection-queue.ts";
 import type { ReflectionLoopOptions } from "./reflection.ts";
 import { insertTranscript, getTranscriptWindow } from "#lib/db/transcript.ts";
 import { insertEvent } from "#lib/db/events.ts";
@@ -25,6 +25,7 @@ export type TurnResult = {
   toolsCalled: string[];
   partAdvanced: boolean;
   sessionEnded: boolean;
+  scores?: ReflectionScores | undefined;
 };
 
 export type InterviewSessionOptions = {
@@ -283,11 +284,15 @@ export function createInterviewSession(
       reflectionsUsed: reflections.length,
     });
 
+    // Extract latest score from reflections
+    const latestScores = extractLatestScores(reflections);
+
     return {
       aiText: response.text,
       toolsCalled,
       partAdvanced,
       sessionEnded,
+      scores: latestScores,
     };
   }
 
@@ -404,6 +409,17 @@ function findImmediateNextMove(
       r.nextMove?.condition === "immediate"
     ) {
       return r.nextMove;
+    }
+  }
+  return undefined;
+}
+
+function extractLatestScores(
+  reflections: Reflection[],
+): ReflectionScores | undefined {
+  for (const r of reflections) {
+    if (r.type === "score" && r.scores !== undefined) {
+      return r.scores;
     }
   }
   return undefined;

@@ -32,6 +32,8 @@ export const SessionMetadataSchema = z.object({
   timer: TimerStateSchema,
   hintsGiven: z.number().int(),
   testsRun: z.number().int(),
+  editsGiven: z.number().int(),
+  debugHelpsGiven: z.number().int(),
 });
 
 export type SessionType = z.infer<typeof SessionTypeSchema>;

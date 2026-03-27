@@ -25,6 +25,7 @@ import {
   formatTimerDisplay,
   formatSessionStart,
   formatSessionEnd,
+  formatScore,
 } from "#lib/output/formatter.ts";
 import { runVoiceSession } from "./voice.ts";
 
@@ -202,6 +203,9 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
           "[Candidate is requesting a hint. Use the give_hint tool.]",
         );
         console.log(formatInterviewerMessage(result.aiText));
+        if (result.scores !== undefined) {
+          console.log(formatScore({ ...result.scores, feedback: "" }));
+        }
         break;
       }
 
@@ -210,6 +214,9 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
           "[Candidate wants to run their solution. Use the run_tests tool, then comment on the results.]",
         );
         console.log(formatInterviewerMessage(result.aiText));
+        if (result.scores !== undefined) {
+          console.log(formatScore({ ...result.scores, feedback: "" }));
+        }
         break;
       }
 
@@ -227,6 +234,10 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
 
         const result = await interviewSession.handleUserInput(command.content);
         console.log(formatInterviewerMessage(result.aiText));
+
+        if (result.scores !== undefined) {
+          console.log(formatScore({ ...result.scores, feedback: "" }));
+        }
 
         if (result.partAdvanced) {
           console.log(

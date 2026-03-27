@@ -16,11 +16,11 @@
         { "level": "explicit", "content": "Use DP: dp[i] is true if s[0..i) can be segmented. For each position i, check all positions j < i: if dp[j] is true and s[j..i) is in the dictionary, then dp[i] = true." }
       ],
       "testCases": [
-        { "input": "leetcode\n2\nleet code", "expected": "true", "explanation": "'leetcode' = 'leet' + 'code'" },
-        { "input": "applepenapple\n2\napple pen", "expected": "true", "explanation": "'applepenapple' = 'apple' + 'pen' + 'apple'. Reuse of 'apple' is allowed." },
-        { "input": "catsandog\n5\ncats dog sand and cat", "expected": "false", "explanation": "No valid segmentation exists." },
-        { "input": "aaaaaaa\n3\naaaa aaa", "expected": "true", "explanation": "'aaaaaaa' = 'aaaa' + 'aaa'. Greedy longest-first would fail here." },
-        { "input": "a\n1\na", "expected": "true", "explanation": "Single character matches single word." }
+        { "args": ["leetcode", ["leet", "code"]], "expected": true, "explanation": "'leetcode' = 'leet' + 'code'" },
+        { "args": ["applepenapple", ["apple", "pen"]], "expected": true, "explanation": "'applepenapple' = 'apple' + 'pen' + 'apple'. Reuse of 'apple' is allowed." },
+        { "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]], "expected": false, "explanation": "No valid segmentation exists." },
+        { "args": ["aaaaaaa", ["aaaa", "aaa"]], "expected": true, "explanation": "'aaaaaaa' = 'aaaa' + 'aaa'. Greedy longest-first would fail here." },
+        { "args": ["a", ["a"]], "expected": true, "explanation": "Single character matches single word." }
       ],
       "followUps": [
         "What's the time complexity of your DP solution?",
@@ -37,7 +37,7 @@
     },
     {
       "partNumber": 2,
-      "prompt": "Return all possible segmentations of the string into dictionary words. Each segmentation should be a space-separated string. Return them one per line.",
+      "prompt": "Return all possible segmentations of the string into dictionary words. Each segmentation should be a space-separated string. Return them as an array sorted lexicographically.",
       "internalNotes": "Backtracking with memoization. Memoize the list of valid segmentations for each suffix s[i..]. Without memo, worst case is exponential (e.g., 'aaaa' with dict ['a','aa','aaa','aaaa']). Watch for: not memoizing (TLE), building strings instead of collecting and joining at the end.",
       "hints": [
         { "level": "subtle", "content": "Your Part 1 DP tells you which prefixes are valid. Can you reconstruct the paths?" },
@@ -45,10 +45,10 @@
         { "level": "explicit", "content": "Recurse from each index i: for each word in the dictionary that matches starting at i, recurse on i + word.length. Memoize the list of results for each starting index." }
       ],
       "testCases": [
-        { "input": "catsanddog\n5\ncat cats and sand dog", "expected": "cat sand dog\ncats and dog", "explanation": "Two valid segmentations." },
-        { "input": "pineapplepenapple\n5\napple pen applepen pine pineapple", "expected": "pine apple pen apple\npine applepen apple\npineapple pen apple", "explanation": "Three valid segmentations." },
-        { "input": "catsandog\n5\ncats dog sand and cat", "expected": "", "explanation": "No valid segmentation — empty output." },
-        { "input": "aaa\n3\na aa aaa", "expected": "a a a\na aa\naa a\naaa", "explanation": "All possible segmentations of 'aaa' with overlapping words." }
+        { "args": ["catsanddog", ["cat", "cats", "and", "sand", "dog"]], "expected": ["cat sand dog", "cats and dog"], "explanation": "Two valid segmentations." },
+        { "args": ["pineapplepenapple", ["apple", "pen", "applepen", "pine", "pineapple"]], "expected": ["pine apple pen apple", "pine applepen apple", "pineapple pen apple"], "explanation": "Three valid segmentations." },
+        { "args": ["catsandog", ["cats", "dog", "sand", "and", "cat"]], "expected": [], "explanation": "No valid segmentation — empty output." },
+        { "args": ["aaa", ["a", "aa", "aaa"]], "expected": ["a a a", "a aa", "aa a", "aaa"], "explanation": "All possible segmentations of 'aaa' with overlapping words." }
       ],
       "followUps": [
         "What's the worst-case time complexity? Can you construct an input that triggers it?",
@@ -66,10 +66,13 @@
     "s and wordDict[i] consist of only lowercase English letters",
     "All words in wordDict are unique"
   ],
-  "io": {
-    "inputFormat": "string s, int n, then n space-separated words",
-    "outputFormat": "Part 1: 'true' or 'false'. Part 2: one segmentation per line, sorted lexicographically",
-    "parseHint": "First line: the string s. Second line: n (number of words). Third line: n space-separated dictionary words."
+  "functionSignature": {
+    "name": "wordBreak",
+    "params": [
+      { "name": "s", "type": "string" },
+      { "name": "wordDict", "type": "string[]" }
+    ],
+    "returnType": "boolean"
   },
   "source": "LeetCode #139 / #140",
   "escalationPattern": "existence-to-enumeration"

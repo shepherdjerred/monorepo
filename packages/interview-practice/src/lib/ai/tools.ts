@@ -63,6 +63,80 @@ export const PAUSE_AND_THINK_TOOL: ToolDefinition = {
   },
 };
 
+export const VIEW_CODE_TOOL: ToolDefinition = {
+  name: "view_code",
+  description:
+    "Read the candidate's current solution file. Returns the full source code. Use proactively to check for bugs, or when the candidate mentions they've made changes.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {},
+    required: [],
+  },
+};
+
+export const EDIT_CODE_TOOL: ToolDefinition = {
+  name: "edit_code",
+  description:
+    "Edit the candidate's solution file. Use for hints (add comments/skeleton code) or debugging help (fix specific bugs). The candidate will see changes in their editor. Specify either 'fullContent' to replace the entire file, or 'search' and 'replace' for a targeted edit.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      fullContent: {
+        type: "string",
+        description: "Full replacement content for the file",
+      },
+      search: {
+        type: "string",
+        description: "Text to search for (for targeted edit)",
+      },
+      replace: {
+        type: "string",
+        description: "Replacement text",
+      },
+      reason: {
+        type: "string",
+        description: "Why you're editing (hint, debug fix, skeleton)",
+      },
+    },
+    required: ["reason"],
+  },
+};
+
+export const HELP_DEBUG_TOOL: ToolDefinition = {
+  name: "help_debug",
+  description:
+    "Help the candidate debug their solution. Choose a level and method. Subtle: hint at the area ('Look closely at your loop condition'). Moderate: point to specific line/issue ('Your base case doesn't handle empty input'). Explicit: fix the bug directly via code edit.",
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      level: {
+        type: "string",
+        enum: ["subtle", "moderate", "explicit"],
+        description:
+          "Debug help intensity. Start subtle, escalate only if needed.",
+      },
+      method: {
+        type: "string",
+        enum: ["verbal", "code_edit"],
+        description: "Whether to help via speech or by editing the file",
+      },
+      description: {
+        type: "string",
+        description: "What the bug is and how you're helping",
+      },
+      codeEdit: {
+        type: "object",
+        properties: {
+          search: { type: "string" },
+          replace: { type: "string" },
+        },
+        description: "If method is code_edit, the search/replace to apply",
+      },
+    },
+    required: ["level", "method", "description"],
+  },
+};
+
 export const TRANSITION_PHASE_TOOL: ToolDefinition = {
   name: "transition_phase",
   description:
@@ -105,7 +179,7 @@ export const REVIEW_DIAGRAM_TOOL: ToolDefinition = {
 };
 
 export function getLeetcodeTools(): ToolDefinition[] {
-  return [RUN_TESTS_TOOL, REVEAL_NEXT_PART_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL];
+  return [RUN_TESTS_TOOL, REVEAL_NEXT_PART_TOOL, GIVE_HINT_TOOL, PAUSE_AND_THINK_TOOL, VIEW_CODE_TOOL, EDIT_CODE_TOOL, HELP_DEBUG_TOOL];
 }
 
 export function getSystemDesignTools(): ToolDefinition[] {

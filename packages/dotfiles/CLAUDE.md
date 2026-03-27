@@ -69,12 +69,13 @@ Never just print or read Typst source as the final output — the user wants to 
 
 ## PDF Extraction — Use Docling
 
-For PDF to text/markdown conversion, use **Docling** directly. It handles tables, formulas, OCR, reading order, and complex layouts out of the box. Don't build a custom pipeline — benchmarking showed vanilla Docling matches custom multi-model verification stacks within 0.4%.
+For PDF to text/markdown conversion, use **Docling**. It handles tables, formulas, OCR, reading order, and complex layouts out of the box.
 
 ```bash
-pip install docling
+uv pip install docling
 docling input.pdf                              # CLI — outputs markdown
 docling --to md --output ./out/ input.pdf      # Explicit markdown output
+uvx docling input.pdf                          # One-shot without installing
 ```
 
 ```python

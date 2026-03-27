@@ -16,12 +16,12 @@
         { "level": "explicit", "content": "Use a stack. Push numbers. When you see an operator, remember it. When you see ')', pop two numbers, apply the operator, push the result. Or use recursive descent: parse() checks for '(' and recurses." }
       ],
       "testCases": [
-        { "input": "(2+3)", "expected": "5", "explanation": "Simple addition." },
-        { "input": "((2+3)*4)", "expected": "20", "explanation": "(2+3)=5, 5*4=20." },
-        { "input": "((10/(3-1))+1)", "expected": "6", "explanation": "(3-1)=2, 10/2=5, 5+1=6." },
-        { "input": "((2*(3+4))-(8/2))", "expected": "10", "explanation": "(3+4)=7, 2*7=14, 8/2=4, 14-4=10." },
-        { "input": "42", "expected": "42", "explanation": "Single number, no operators." },
-        { "input": "((7-10)/2)", "expected": "-1", "explanation": "7-10=-3, -3/2=-1 (truncate toward zero)." }
+        { "args": ["(2+3)"], "expected": 5, "explanation": "Simple addition." },
+        { "args": ["((2+3)*4)"], "expected": 20, "explanation": "(2+3)=5, 5*4=20." },
+        { "args": ["((10/(3-1))+1)"], "expected": 6, "explanation": "(3-1)=2, 10/2=5, 5+1=6." },
+        { "args": ["((2*(3+4))-(8/2))"], "expected": 10, "explanation": "(3+4)=7, 2*7=14, 8/2=4, 14-4=10." },
+        { "args": ["42"], "expected": 42, "explanation": "Single number, no operators." },
+        { "args": ["((7-10)/2)"], "expected": -1, "explanation": "7-10=-3, -3/2=-1 (truncate toward zero)." }
       ],
       "followUps": [
         "What's the time and space complexity?",
@@ -46,14 +46,14 @@
         { "level": "explicit", "content": "Use recursive descent with a grammar: expr() handles +/-, calls term(). term() handles *// calls factor(). factor() handles numbers and '(' expr ')'. This naturally encodes precedence." }
       ],
       "testCases": [
-        { "input": "2+3*4", "expected": "14", "explanation": "3*4=12, 2+12=14. Multiplication before addition." },
-        { "input": "(2+3)*4", "expected": "20", "explanation": "Parentheses override: (2+3)=5, 5*4=20." },
-        { "input": "3+2*2-1", "expected": "6", "explanation": "2*2=4, 3+4-1=6." },
-        { "input": "10/3", "expected": "3", "explanation": "Integer division truncates toward zero." },
-        { "input": "2*(3+4*(5-2))", "expected": "30", "explanation": "(5-2)=3, 4*3=12, 3+12=15, 2*15=30." },
-        { "input": "100", "expected": "100", "explanation": "Single number." },
-        { "input": "1+2*3-4/2+5", "expected": "10", "explanation": "2*3=6, 4/2=2, then 1+6-2+5=10." },
-        { "input": "((1+2))", "expected": "3", "explanation": "Redundant parentheses." }
+        { "args": ["2+3*4"], "expected": 14, "explanation": "3*4=12, 2+12=14. Multiplication before addition." },
+        { "args": ["(2+3)*4"], "expected": 20, "explanation": "Parentheses override: (2+3)=5, 5*4=20." },
+        { "args": ["3+2*2-1"], "expected": 6, "explanation": "2*2=4, 3+4-1=6." },
+        { "args": ["10/3"], "expected": 3, "explanation": "Integer division truncates toward zero." },
+        { "args": ["2*(3+4*(5-2))"], "expected": 30, "explanation": "(5-2)=3, 4*3=12, 3+12=15, 2*15=30." },
+        { "args": ["100"], "expected": 100, "explanation": "Single number." },
+        { "args": ["1+2*3-4/2+5"], "expected": 10, "explanation": "2*3=6, 4/2=2, then 1+6-2+5=10." },
+        { "args": ["((1+2))"], "expected": 3, "explanation": "Redundant parentheses." }
       ],
       "followUps": [
         "What's the time and space complexity?",
@@ -72,10 +72,12 @@
     "No division by zero",
     "All intermediate and final results fit in a 32-bit integer"
   ],
-  "io": {
-    "inputFormat": "string expression (single line)",
-    "outputFormat": "int result",
-    "parseHint": "Single line containing the expression. Spaces may appear between tokens and should be ignored."
+  "functionSignature": {
+    "name": "calculate",
+    "params": [
+      { "name": "expression", "type": "string" }
+    ],
+    "returnType": "number"
   },
   "source": "LeetCode #224 / #227 / #772",
   "escalationPattern": "constraint-addition"

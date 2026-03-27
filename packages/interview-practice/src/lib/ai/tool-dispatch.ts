@@ -1,3 +1,4 @@
+import { z } from "zod/v4";
 import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
 import type { Session } from "#lib/session/manager.ts";
@@ -22,6 +23,28 @@ export type DispatchToolOptions = {
   codeSnapshot?: string | null | undefined;
 };
 
+const CodeEditSchema = z.object({
+  search: z.string(),
+  replace: z.string(),
+});
+
+const HelpDebugInputSchema = z.object({
+  level: z.enum(["subtle", "moderate", "explicit"]).default("subtle"),
+  method: z.enum(["verbal", "code_edit"]).default("verbal"),
+  description: z.string().default(""),
+  codeEdit: CodeEditSchema.optional(),
+});
+
+type ApplySearchReplaceOptions = {
+  solutionPath: string;
+  search: string;
+  replace: string;
+  session: Session;
+  mode: string;
+  reason: string;
+  level?: string | undefined;
+};
+
 export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
   const { toolName, input, question, session, solutionPath, logger } = opts;
 
@@ -33,7 +56,7 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
     case "run_tests": {
       if (!currentPart) return "No current part found.";
       session.metadata.testsRun++;
-      const result = await runTests(solutionPath, currentPart.testCases);
+      const result = await runTests(solutionPath, currentPart.testCases, question.functionSignature);
 
       insertEvent(session.db, "test_run", {
         passed: result.passed,
@@ -90,6 +113,15 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
       return `Hint (${level}): ${hint.content}\n\nFrame this naturally in conversation — do not read it verbatim.`;
     }
 
+    case "view_code":
+      return handleViewCode(solutionPath);
+
+    case "edit_code":
+      return handleEditCode(input, session, solutionPath);
+
+    case "help_debug":
+      return handleHelpDebug(input, session, solutionPath);
+
     case "pause_and_think": {
       if (opts.reflectionOptions === undefined) {
         return "Reflection model not configured. Proceeding without deep analysis.";
@@ -123,6 +155,101 @@ export async function dispatchTool(opts: DispatchToolOptions): Promise<string> {
 
     default:
       return `Unknown tool: ${toolName}`;
+  }
+}
+
+async function handleViewCode(solutionPath: string): Promise<string> {
+  try {
+    const code = await Bun.file(solutionPath).text();
+    return code.trim() === "" ? "Solution file is empty." : code;
+  } catch {
+    return "Solution file does not exist yet.";
+  }
+}
+
+async function handleEditCode(
+  input: Record<string, unknown>,
+  session: Session,
+  solutionPath: string,
+): Promise<string> {
+  const reason = typeof input["reason"] === "string" ? input["reason"] : "unspecified";
+  const fullContent = typeof input["fullContent"] === "string" ? input["fullContent"] : undefined;
+  const search = typeof input["search"] === "string" ? input["search"] : undefined;
+  const replace = typeof input["replace"] === "string" ? input["replace"] : undefined;
+
+  if (fullContent !== undefined) {
+    await Bun.write(solutionPath, fullContent);
+    session.metadata.editsGiven++;
+    insertEvent(session.db, "code_edit", { mode: "full_replace", reason });
+    return "File replaced with new content.";
+  }
+
+  if (search !== undefined && replace !== undefined) {
+    return applySearchReplace({ solutionPath, search, replace, session, mode: "search_replace", reason });
+  }
+
+  return "edit_code requires either 'fullContent' or both 'search' and 'replace'.";
+}
+
+async function handleHelpDebug(
+  input: Record<string, unknown>,
+  session: Session,
+  solutionPath: string,
+): Promise<string> {
+  const parsed = HelpDebugInputSchema.safeParse(input);
+  const { level, method, description, codeEdit } = parsed.success
+    ? parsed.data
+    : { level: "subtle" as const, method: "verbal" as const, description: "", codeEdit: undefined };
+
+  session.metadata.debugHelpsGiven++;
+  insertEvent(session.db, "debug_help", { level, method, description });
+
+  if (method !== "code_edit") {
+    return `Debug help (${level}): ${description}`;
+  }
+
+  if (codeEdit === undefined) {
+    return `Debug help (${level}): ${description}\n\nNote: code_edit method requires a codeEdit object with search and replace fields.`;
+  }
+
+  const editResult = await applySearchReplace({
+    solutionPath,
+    search: codeEdit.search,
+    replace: codeEdit.replace,
+    session,
+    mode: "debug_fix",
+    reason: description,
+    level,
+  });
+
+  if (editResult === "Edit applied successfully.") {
+    return `Debug help (${level}): ${description}\n\nCode edit applied successfully.`;
+  }
+
+  if (editResult.includes("Search text not found")) {
+    return `Debug help (${level}): ${description}\n\nNote: Could not apply code edit — search text not found.`;
+  }
+
+  return `Debug help (${level}): ${description}\n\nNote: Could not read solution file for editing.`;
+}
+
+async function applySearchReplace(opts: ApplySearchReplaceOptions): Promise<string> {
+  try {
+    const currentCode = await Bun.file(opts.solutionPath).text();
+    if (!currentCode.includes(opts.search)) {
+      return "Search text not found in the solution file. No changes made.";
+    }
+    const updatedCode = currentCode.replace(opts.search, opts.replace);
+    await Bun.write(opts.solutionPath, updatedCode);
+    opts.session.metadata.editsGiven++;
+    const eventData: Record<string, unknown> = { mode: opts.mode, reason: opts.reason };
+    if (opts.level !== undefined) {
+      eventData["level"] = opts.level;
+    }
+    insertEvent(opts.session.db, "code_edit", eventData);
+    return "Edit applied successfully.";
+  } catch {
+    return "Could not read solution file for editing.";
   }
 }
 
