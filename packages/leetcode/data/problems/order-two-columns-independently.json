@@ -1,0 +1,53 @@
+{
+  "questionId": "2302",
+  "questionFrontendId": "2159",
+  "title": "Order Two Columns Independently",
+  "titleSlug": "order-two-columns-independently",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Data</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| first_col   | int  |\n| second_col  | int  |\n+-------------+------+\nThis table may contain duplicate rows.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to independently:</p>\n\n<ul>\n\t<li>order <code>first_col</code> in <strong>ascending order</strong>.</li>\n\t<li>order <code>second_col</code> in <strong>descending order</strong>.</li>\n</ul>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nData table:\n+-----------+------------+\n| first_col | second_col |\n+-----------+------------+\n| 4         | 2          |\n| 2         | 3          |\n| 3         | 1          |\n| 1         | 4          |\n+-----------+------------+\n<strong>Output:</strong> \n+-----------+------------+\n| first_col | second_col |\n+-----------+------------+\n| 1         | 4          |\n| 2         | 3          |\n| 3         | 2          |\n| 4         | 1          |\n+-----------+------------+\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Data (first_col int, second_col int)\"], \"mssql\": [\"Create table Data (first_col int, second_col int)\"], \"oraclesql\": [\"Create table Data (first_col int, second_col int)\"], \"database\": true, \"name\": \"order_two_columns\", \"pythondata\": [\"Data = pd.DataFrame([], columns=['first_col', 'second_col']).astype({'first_col':'Int64', 'second_col':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Data (first_col int, second_col int)\"], \"database_schema\": {\"Data\": {\"first_col\": \"INT\", \"second_col\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"10.8K\", \"totalSubmission\": \"17.5K\", \"totalAcceptedRaw\": 10793, \"totalSubmissionRaw\": 17529, \"acRate\": \"61.6%\"}",
+  "likes": 79,
+  "dislikes": 19,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Data\":[\"first_col\",\"second_col\"]},\"rows\":{\"Data\":[[4,2],[2,3],[3,1],[1,4]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"bookingcom\", \"name\": \"Booking.com\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef order_two_columns(data: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

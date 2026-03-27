@@ -1,0 +1,127 @@
+{
+  "questionId": "2304",
+  "questionFrontendId": "2194",
+  "title": "Cells in a Range on an Excel Sheet",
+  "titleSlug": "cells-in-a-range-on-an-excel-sheet",
+  "difficulty": "Easy",
+  "content": "<p>A cell <code>(r, c)</code> of an excel sheet is represented as a string <code>&quot;&lt;col&gt;&lt;row&gt;&quot;</code> where:</p>\n\n<ul>\n\t<li><code>&lt;col&gt;</code> denotes the column number <code>c</code> of the cell. It is represented by <strong>alphabetical letters</strong>.\n\n\t<ul>\n\t\t<li>For example, the <code>1<sup>st</sup></code> column is denoted by <code>&#39;A&#39;</code>, the <code>2<sup>nd</sup></code> by <code>&#39;B&#39;</code>, the <code>3<sup>rd</sup></code> by <code>&#39;C&#39;</code>, and so on.</li>\n\t</ul>\n\t</li>\n\t<li><code>&lt;row&gt;</code> is the row number <code>r</code> of the cell. The <code>r<sup>th</sup></code> row is represented by the <strong>integer</strong> <code>r</code>.</li>\n</ul>\n\n<p>You are given a string <code>s</code>&nbsp;in&nbsp;the format <code>&quot;&lt;col1&gt;&lt;row1&gt;:&lt;col2&gt;&lt;row2&gt;&quot;</code>, where <code>&lt;col1&gt;</code> represents the column <code>c1</code>, <code>&lt;row1&gt;</code> represents the row <code>r1</code>, <code>&lt;col2&gt;</code> represents the column <code>c2</code>, and <code>&lt;row2&gt;</code> represents the row <code>r2</code>, such that <code>r1 &lt;= r2</code> and <code>c1 &lt;= c2</code>.</p>\n\n<p>Return <em>the <strong>list of cells</strong></em> <code>(x, y)</code> <em>such that</em> <code>r1 &lt;= x &lt;= r2</code> <em>and</em> <code>c1 &lt;= y &lt;= c2</code>. The cells should be represented as&nbsp;<strong>strings</strong> in the format mentioned above and be sorted in <strong>non-decreasing</strong> order first by columns and then by rows.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/08/ex1drawio.png\" style=\"width: 250px; height: 160px;\" />\n<pre>\n<strong>Input:</strong> s = &quot;K1:L2&quot;\n<strong>Output:</strong> [&quot;K1&quot;,&quot;K2&quot;,&quot;L1&quot;,&quot;L2&quot;]\n<strong>Explanation:</strong>\nThe above diagram shows the cells which should be present in the list.\nThe red arrows denote the order in which the cells should be presented.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/09/exam2drawio.png\" style=\"width: 500px; height: 50px;\" />\n<pre>\n<strong>Input:</strong> s = &quot;A1:F1&quot;\n<strong>Output:</strong> [&quot;A1&quot;,&quot;B1&quot;,&quot;C1&quot;,&quot;D1&quot;,&quot;E1&quot;,&quot;F1&quot;]\n<strong>Explanation:</strong>\nThe above diagram shows the cells which should be present in the list.\nThe red arrow denotes the order in which the cells should be presented.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>s.length == 5</code></li>\n\t<li><code>&#39;A&#39; &lt;= s[0] &lt;= s[3] &lt;= &#39;Z&#39;</code></li>\n\t<li><code>&#39;1&#39; &lt;= s[1] &lt;= s[4] &lt;= &#39;9&#39;</code></li>\n\t<li><code>s</code> consists of uppercase English letters, digits and <code>&#39;:&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "From the given string, find the corresponding rows and columns.",
+    "Iterate through the columns in ascending order and for each column, iterate through the rows in ascending order to obtain the required cells in sorted order."
+  ],
+  "metaData": "{\n  \"name\": \"cellsInRange\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.1K\", \"totalSubmission\": \"102.3K\", \"totalAcceptedRaw\": 86123, \"totalSubmissionRaw\": 102321, \"acRate\": \"84.2%\"}",
+  "likes": 652,
+  "dislikes": 100,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Excel Sheet Column Title\", \"titleSlug\": \"excel-sheet-column-title\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Excel Sheet Column Number\", \"titleSlug\": \"excel-sheet-column-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Matrix Cells in Distance Order\", \"titleSlug\": \"matrix-cells-in-distance-order\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"K1:L2\"",
+    "\"A1:F1\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> cellsInRange(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> cellsInRange(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def cellsInRange(self, s: str) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def cellsInRange(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {string[]}\n */\nvar cellsInRange = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function cellsInRange(s: string): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> CellsInRange(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** cellsInRange(char* s, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func cellsInRange(s string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun cellsInRange(s: String): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func cellsInRange(_ s: String) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn cells_in_range(s: String) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {String[]}\ndef cells_in_range(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return String[]\n     */\n    function cellsInRange($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> cellsInRange(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def cellsInRange(s: String): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec cells_in_range(s :: String.t) :: [String.t]\n  def cells_in_range(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec cells_in_range(S :: unicode:unicode_binary()) -> [unicode:unicode_binary()].\ncells_in_range(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (cells-in-range s)\n  (-> string? (listof string?))\n  )"
+    }
+  ],
+  "solution": null
+}

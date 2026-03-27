@@ -1,0 +1,145 @@
+{
+  "questionId": "2360",
+  "questionFrontendId": "2272",
+  "title": "Substring With Largest Variance",
+  "titleSlug": "substring-with-largest-variance",
+  "difficulty": "Hard",
+  "content": "<p>The <strong>variance</strong> of a string is defined as the largest difference between the number of occurrences of <strong>any</strong> <code>2</code> characters present in the string. Note the two characters may or may not be the same.</p>\n\n<p>Given a string <code>s</code> consisting of lowercase English letters only, return <em>the <strong>largest variance</strong> possible among all <strong>substrings</strong> of</em> <code>s</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aababbb&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nAll possible variances along with their respective substrings are listed below:\n- Variance 0 for substrings &quot;a&quot;, &quot;aa&quot;, &quot;ab&quot;, &quot;abab&quot;, &quot;aababb&quot;, &quot;ba&quot;, &quot;b&quot;, &quot;bb&quot;, and &quot;bbb&quot;.\n- Variance 1 for substrings &quot;aab&quot;, &quot;aba&quot;, &quot;abb&quot;, &quot;aabab&quot;, &quot;ababb&quot;, &quot;aababbb&quot;, and &quot;bab&quot;.\n- Variance 2 for substrings &quot;aaba&quot;, &quot;ababbb&quot;, &quot;abbb&quot;, and &quot;babb&quot;.\n- Variance 3 for substring &quot;babbb&quot;.\nSince the largest possible variance is 3, we return it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcde&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nNo letter occurs more than once in s, so the variance of every substring is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Think about how to solve the problem if the string had only two distinct characters.",
+    "If we replace all occurrences of the first character by +1 and those of the second character by -1, can we efficiently calculate the largest possible variance of a string with only two distinct characters?",
+    "Now, try finding the optimal answer by taking all possible pairs of characters into consideration."
+  ],
+  "metaData": "{\n  \"name\": \"largestVariance\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"75.9K\", \"totalSubmission\": \"164.8K\", \"totalAcceptedRaw\": 75854, \"totalSubmissionRaw\": 164799, \"acRate\": \"46.0%\"}",
+  "likes": 1919,
+  "dislikes": 212,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Subarray\", \"titleSlug\": \"maximum-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aababbb\"",
+    "\"abcde\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestVariance(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestVariance(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestVariance(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestVariance(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar largestVariance = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestVariance(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestVariance(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestVariance(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestVariance(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestVariance(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestVariance(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_variance(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef largest_variance(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function largestVariance($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestVariance(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestVariance(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_variance(s :: String.t) :: integer\n  def largest_variance(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_variance(S :: unicode:unicode_binary()) -> integer().\nlargest_variance(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-variance s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1884",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\n> If you are not familiar with Kadane's algorithm, you may refer to [this wikipedia's page](https://en.wikipedia.org/wiki/Maximum_subarray_problem).\n\nKadane's algorithm is a dynamic programming algorithm that finds the maximum subarray sum in an array of integers.  It maintains two values: global_max, which represents the maximum sum encountered so far, and local_max, which represents the maximum sum ending at the current index.  As the algorithm traverses the array from left to right, it updates these values. The algorithm is efficient because it only requires $$O(n)$$ time and $$O(1)$$ space to store two values and does not need any additional data structures.\n\n\nAs shown in the figure below, `local_max` represents the maximum value of the subarray ending at the current index. We update `local_max` at each index and update `global_max` by the maximum `local_max`. This ensures that we always have the maximum sum subarray at each position.\n\n![img](../Figures/2272/1.png)\n\nNote that if the current subarray has a negative sum, we can discard it. In other words, if `local_max` is less than 0, we reset `local_max` to 0.\n\n---\n\n### Approach: Kadane's Algorithm\n\n#### Intuition    \n\nA similar approach can be used to solve this problem. Although `s` may contain many different characters, we can focus on one pair of letters `(major, minor)` at a time and calculate the maximum difference between their occurrences by applying Kadane's algorithm over all substrings of `s` that contain both `major` and `minor`. \n\n\n> In other words, we assign the value of `major` as 1, the value of `minor` as -1, and the value of all other letters as 0, and use the standard Kadane's algorithm to find the maximum subarray sum in the array representing `s`. \n\n![img](../Figures/2272/exp.png)\n\nFor instance, let's consider the pair of letters `(a, b)` as `(major, minor)` and determine their maximum variance in `s`. We update two variables `major_count` and `minor_count`, to keep track of the number of `major` and `minor` in the substring ending at the current index. Thus, `local_max` can be represented as `major_count - minor_count`. The equivalent of resetting `local_max` to 0 is setting both `major_count` and `minor_count` to 0.\n\n\n![img](../Figures/2272/2.png)\n\nPlease refer to the following slides to see how we update `global_max`. **Note that this algorithm is not completely correct and requires some modifications, which we will explain later.**\n\n\n!?!../Documents/2272/s1.json:601,301!?!\n\n\nWe notice that the standard Kadane's algorithm has failed to solve the problem. This is because Kadane's algorithm allows the subarray being considered to have no element with negative value. However, in our problem, a valid substring must contain at least one `major` and one `minor`, so the maximum variance calculated by regular Kadane's algorithm does not necessarily represent a valid substring.\n\n\nTherefore, we need to modify Kadane's algorithm to solve this problem. \n\n> Update `global_max` only when `minor_count > 0`.\n\nThis ensures that we only consider valid substrings that contain at least one `minor`. As shown in the picture below, we cannot update `global_max` if `minor_count = 0`. However, after encountering at least one `minor`, we can update `global_max` as `global_max = max(global_max, local_max) = 2`.\n\n![img](../Figures/2272/3.png)\n\n> Reset `local_max` to 0 only when there is at least one `minor` in the remaining substring.\n\nRecall that we need a step `local_max = max(local_max, 0)` in regular Kadane's algorithm, which always discards the current subarray if it has a negative sum. \n\nIn this problem, however, we cannot simply reset `local_max` to 0 whenever it becomes negative because doing so would reset both `major_count` and `minor_count` to 0. If there are no more `minor` in the remaining string, the `minor_count` will remain 0, and we will never be able to update `global_max` during the remaining traversal. To avoid this situation, we reset `local_max` to 0 only when there is at least one `minor` in the remaining `s`. To achieve this, we can use an additional variable `rest_minor` to keep track of the number of `minor` in the remaining string.\n\nAs shown below, if `local_max < 0` and there is still `minor` in the remaining string, we can reset it to 0 (i.e., reset both `minor_count` and `major_count` to 0).\n\n![img](../Figures/2272/4.png)\n\nHowever, if there is no `minor` left in the remaining string, we cannot reset `minor_count` or `major_count` to 0, as any valid string found in the following iteration must contain at least one `minor`, so we cannot discard the last `minor` by setting `minor_count` to 0.\n\n![img](../Figures/2272/5.png)\n\nTo sum up, we will identify every pair of different letters in the given string, treat one as a `major` letter and the other as a `minor` letter, and then apply the modified Kadane's algorithm to traverse `s`. During the traversal, we need to keep track of the maximum variance between the occurrences of `major` and `minor`, which we call `global_max`. After traversing all the substrings for each pair of `major` and `minor`, we take the maximum value of `global_max` as the final result.\n\n<br>\n\n#### Algorithm\n\n1) Initialize a counter to record the count of each distinct character in `s`. (Since we already know in advance that `s` contains only 26 different letters, we can use an array of length 26 as the counter)\n\n\n2) For each pair of distinct letters `major` and `minor`, we apply Kadane's algorithm with modifications. All different pairs of distinct letters are considered, and **two pairs of the same letters in different orders are considered to be different**. In short, we will consider both `(a, b)` and `(b, a)`.\n\n3) Set `global_max`, `major_count` and `minor_count` to 0, and let `rest_minor` be the number of character `minor` in the string.\n\n4) Traverse the string `s`, and for each letter `ch`:\n    - If `ch` is `major`, increment `major_count` by 1.\n    - If `ch` is `minor`, increment `minor_count` by 1 and decrement `rest_minor` by 1.\n\n5) Update `global_max` only when `minor_count > 0` (The first modification).\n\n6) If `major_count - minor_count < 0`, reset them to 0 only when `rest_minor > 0`  (The second modification).\n\n7) Move on to the next pair of letters `(major, minor)` and repeat from step 3.\n\n\n8) Return `global_max` when the iteration is complete.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/6w4yKw8J/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"6w4yKw8J\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `s` and $$k$$ be the number of distinct characters in `s`.\n\n* Time complexity: $$O(n \\cdot k^2)$$\n\n    - Kadane's algorithm requires $$O(n)$$ time to traverse `s`. For each pair of alphabets `(major, minor)`, we need to traverse `s` once. In the worst-case scenario, `s` contains $$k = 26$$ different letters, so there are $$k\\cdot (k - 1)$$ possible pairs of letters. \n    \n\n* Space complexity: $$O(1)$$\n\n    - In the Kadane's algorithm, we only need to update a few variables, `major_count`, `minor_count`, `rest_minor` and `global_max`, which require $$O(1)$$ space.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

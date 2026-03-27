@@ -1,0 +1,142 @@
+{
+  "questionId": "1433",
+  "questionFrontendId": "2227",
+  "title": "Encrypt and Decrypt Strings",
+  "titleSlug": "encrypt-and-decrypt-strings",
+  "difficulty": "Hard",
+  "content": "<p>You are given a character array <code>keys</code> containing <strong>unique</strong> characters and a string array <code>values</code> containing strings of length 2. You are also given another string array <code>dictionary</code> that contains all permitted original strings after decryption. You should implement a data structure that can encrypt or decrypt a <strong>0-indexed</strong> string.</p>\n\n<p>A string is <strong>encrypted</strong> with the following process:</p>\n\n<ol>\n\t<li>For each character <code>c</code> in the string, we find the index <code>i</code> satisfying <code>keys[i] == c</code> in <code>keys</code>.</li>\n\t<li>Replace <code>c</code> with <code>values[i]</code> in the string.</li>\n</ol>\n\n<p>Note that in case a character of the string is <strong>not present</strong> in <code>keys</code>, the encryption process cannot be carried out, and an empty string <code>&quot;&quot;</code> is returned.</p>\n\n<p>A string is <strong>decrypted</strong> with the following process:</p>\n\n<ol>\n\t<li>For each substring <code>s</code> of length 2 occurring at an even index in the string, we find an <code>i</code> such that <code>values[i] == s</code>. If there are multiple valid <code>i</code>, we choose <strong>any</strong> one of them. This means a string could have multiple possible strings it can decrypt to.</li>\n\t<li>Replace <code>s</code> with <code>keys[i]</code> in the string.</li>\n</ol>\n\n<p>Implement the <code>Encrypter</code> class:</p>\n\n<ul>\n\t<li><code>Encrypter(char[] keys, String[] values, String[] dictionary)</code> Initializes the <code>Encrypter</code> class with <code>keys, values</code>, and <code>dictionary</code>.</li>\n\t<li><code>String encrypt(String word1)</code> Encrypts <code>word1</code> with the encryption process described above and returns the encrypted string.</li>\n\t<li><code>int decrypt(String word2)</code> Returns the number of possible strings <code>word2</code> could decrypt to that also appear in <code>dictionary</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Encrypter&quot;, &quot;encrypt&quot;, &quot;decrypt&quot;]\n[[[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;], [&quot;ei&quot;, &quot;zf&quot;, &quot;ei&quot;, &quot;am&quot;], [&quot;abcd&quot;, &quot;acbd&quot;, &quot;adbc&quot;, &quot;badc&quot;, &quot;dacb&quot;, &quot;cadb&quot;, &quot;cbda&quot;, &quot;abad&quot;]], [&quot;abcd&quot;], [&quot;eizfeiam&quot;]]\n<strong>Output</strong>\n[null, &quot;eizfeiam&quot;, 2]\n\n<strong>Explanation</strong>\nEncrypter encrypter = new Encrypter([[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;], [&quot;ei&quot;, &quot;zf&quot;, &quot;ei&quot;, &quot;am&quot;], [&quot;abcd&quot;, &quot;acbd&quot;, &quot;adbc&quot;, &quot;badc&quot;, &quot;dacb&quot;, &quot;cadb&quot;, &quot;cbda&quot;, &quot;abad&quot;]);\nencrypter.encrypt(&quot;abcd&quot;); // return &quot;eizfeiam&quot;. \n&nbsp;                          // &#39;a&#39; maps to &quot;ei&quot;, &#39;b&#39; maps to &quot;zf&quot;, &#39;c&#39; maps to &quot;ei&quot;, and &#39;d&#39; maps to &quot;am&quot;.\nencrypter.decrypt(&quot;eizfeiam&quot;); // return 2. \n                              // &quot;ei&quot; can map to &#39;a&#39; or &#39;c&#39;, &quot;zf&quot; maps to &#39;b&#39;, and &quot;am&quot; maps to &#39;d&#39;. \n                              // Thus, the possible strings after decryption are &quot;abad&quot;, &quot;cbad&quot;, &quot;abcd&quot;, and &quot;cbcd&quot;. \n                              // 2 of those strings, &quot;abad&quot; and &quot;abcd&quot;, appear in dictionary, so the answer is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= keys.length == values.length &lt;= 26</code></li>\n\t<li><code>values[i].length == 2</code></li>\n\t<li><code>1 &lt;= dictionary.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= dictionary[i].length &lt;= 100</code></li>\n\t<li>All <code>keys[i]</code> and <code>dictionary[i]</code> are <strong>unique</strong>.</li>\n\t<li><code>1 &lt;= word1.length &lt;= 2000</code></li>\n\t<li><code>2 &lt;= word2.length &lt;= 200</code></li>\n\t<li>All <code>word1[i]</code> appear in <code>keys</code>.</li>\n\t<li><code>word2.length</code> is even.</li>\n\t<li><code>keys</code>, <code>values[i]</code>, <code>dictionary[i]</code>, <code>word1</code>, and <code>word2</code> only contain lowercase English letters.</li>\n\t<li>At most <code>200</code> calls will be made to <code>encrypt</code> and <code>decrypt</code> <strong>in total</strong>.</li>\n</ul>\n",
+  "hints": [
+    "For encryption, use hashmap to map each char of word1 to its value.",
+    "For decryption, use trie to prune when necessary."
+  ],
+  "metaData": "{\n  \"classname\": \"Encrypter\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"name\": \"keys\",\n        \"type\": \"character[]\"\n      },\n      {\n        \"type\": \"string[]\",\n        \"name\": \"values\"\n      },\n      {\n        \"name\": \"dictionary\",\n        \"type\": \"string[]\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word1\"\n        }\n      ],\n      \"name\": \"encrypt\",\n      \"return\": {\n        \"type\": \"string\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"word2\"\n        }\n      ],\n      \"name\": \"decrypt\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true,\n  \"manual\": false\n}",
+  "stats": "{\"totalAccepted\": \"17.3K\", \"totalSubmission\": \"45.4K\", \"totalAcceptedRaw\": 17345, \"totalSubmissionRaw\": 45380, \"acRate\": \"38.2%\"}",
+  "likes": 352,
+  "dislikes": 80,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Implement Trie (Prefix Tree)\", \"titleSlug\": \"implement-trie-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Word Search II\", \"titleSlug\": \"word-search-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Implement Trie II (Prefix Tree)\", \"titleSlug\": \"implement-trie-ii-prefix-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Sum of Encrypted Integers\", \"titleSlug\": \"find-the-sum-of-encrypted-integers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Encrypter\",\"encrypt\",\"decrypt\"]\n[[[\"a\",\"b\",\"c\",\"d\"],[\"ei\",\"zf\",\"ei\",\"am\"],[\"abcd\",\"acbd\",\"adbc\",\"badc\",\"dacb\",\"cadb\",\"cbda\",\"abad\"]],[\"abcd\"],[\"eizfeiam\"]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 16, \"slug\": \"duolingo\", \"name\": \"Duolingo\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Trie",
+      "slug": "trie"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Encrypter {\npublic:\n    Encrypter(vector<char>& keys, vector<string>& values, vector<string>& dictionary) {\n        \n    }\n    \n    string encrypt(string word1) {\n        \n    }\n    \n    int decrypt(string word2) {\n        \n    }\n};\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * Encrypter* obj = new Encrypter(keys, values, dictionary);\n * string param_1 = obj->encrypt(word1);\n * int param_2 = obj->decrypt(word2);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Encrypter {\n\n    public Encrypter(char[] keys, String[] values, String[] dictionary) {\n        \n    }\n    \n    public String encrypt(String word1) {\n        \n    }\n    \n    public int decrypt(String word2) {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * Encrypter obj = new Encrypter(keys, values, dictionary);\n * String param_1 = obj.encrypt(word1);\n * int param_2 = obj.decrypt(word2);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Encrypter:\n\n    def __init__(self, keys: List[str], values: List[str], dictionary: List[str]):\n        \n\n    def encrypt(self, word1: str) -> str:\n        \n\n    def decrypt(self, word2: str) -> int:\n        \n\n\n# Your Encrypter object will be instantiated and called as such:\n# obj = Encrypter(keys, values, dictionary)\n# param_1 = obj.encrypt(word1)\n# param_2 = obj.decrypt(word2)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Encrypter(object):\n\n    def __init__(self, keys, values, dictionary):\n        \"\"\"\n        :type keys: List[str]\n        :type values: List[str]\n        :type dictionary: List[str]\n        \"\"\"\n        \n\n    def encrypt(self, word1):\n        \"\"\"\n        :type word1: str\n        :rtype: str\n        \"\"\"\n        \n\n    def decrypt(self, word2):\n        \"\"\"\n        :type word2: str\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your Encrypter object will be instantiated and called as such:\n# obj = Encrypter(keys, values, dictionary)\n# param_1 = obj.encrypt(word1)\n# param_2 = obj.decrypt(word2)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {character[]} keys\n * @param {string[]} values\n * @param {string[]} dictionary\n */\nvar Encrypter = function(keys, values, dictionary) {\n    \n};\n\n/** \n * @param {string} word1\n * @return {string}\n */\nEncrypter.prototype.encrypt = function(word1) {\n    \n};\n\n/** \n * @param {string} word2\n * @return {number}\n */\nEncrypter.prototype.decrypt = function(word2) {\n    \n};\n\n/** \n * Your Encrypter object will be instantiated and called as such:\n * var obj = new Encrypter(keys, values, dictionary)\n * var param_1 = obj.encrypt(word1)\n * var param_2 = obj.decrypt(word2)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Encrypter {\n    constructor(keys: string[], values: string[], dictionary: string[]) {\n        \n    }\n\n    encrypt(word1: string): string {\n        \n    }\n\n    decrypt(word2: string): number {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * var obj = new Encrypter(keys, values, dictionary)\n * var param_1 = obj.encrypt(word1)\n * var param_2 = obj.decrypt(word2)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Encrypter {\n\n    public Encrypter(char[] keys, string[] values, string[] dictionary) {\n        \n    }\n    \n    public string Encrypt(string word1) {\n        \n    }\n    \n    public int Decrypt(string word2) {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * Encrypter obj = new Encrypter(keys, values, dictionary);\n * string param_1 = obj.Encrypt(word1);\n * int param_2 = obj.Decrypt(word2);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Encrypter;\n\n\nEncrypter* encrypterCreate(char* keys, int keysSize, char** values, int valuesSize, char** dictionary, int dictionarySize) {\n    \n}\n\nchar* encrypterEncrypt(Encrypter* obj, char* word1) {\n    \n}\n\nint encrypterDecrypt(Encrypter* obj, char* word2) {\n    \n}\n\nvoid encrypterFree(Encrypter* obj) {\n    \n}\n\n/**\n * Your Encrypter struct will be instantiated and called as such:\n * Encrypter* obj = encrypterCreate(keys, keysSize, values, valuesSize, dictionary, dictionarySize);\n * char* param_1 = encrypterEncrypt(obj, word1);\n \n * int param_2 = encrypterDecrypt(obj, word2);\n \n * encrypterFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Encrypter struct {\n    \n}\n\n\nfunc Constructor(keys []byte, values []string, dictionary []string) Encrypter {\n    \n}\n\n\nfunc (this *Encrypter) Encrypt(word1 string) string {\n    \n}\n\n\nfunc (this *Encrypter) Decrypt(word2 string) int {\n    \n}\n\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * obj := Constructor(keys, values, dictionary);\n * param_1 := obj.Encrypt(word1);\n * param_2 := obj.Decrypt(word2);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Encrypter(keys: CharArray, values: Array<String>, dictionary: Array<String>) {\n\n    fun encrypt(word1: String): String {\n        \n    }\n\n    fun decrypt(word2: String): Int {\n        \n    }\n\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * var obj = Encrypter(keys, values, dictionary)\n * var param_1 = obj.encrypt(word1)\n * var param_2 = obj.decrypt(word2)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Encrypter {\n\n    init(_ keys: [Character], _ values: [String], _ dictionary: [String]) {\n        \n    }\n    \n    func encrypt(_ word1: String) -> String {\n        \n    }\n    \n    func decrypt(_ word2: String) -> Int {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * let obj = Encrypter(keys, values, dictionary)\n * let ret_1: String = obj.encrypt(word1)\n * let ret_2: Int = obj.decrypt(word2)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Encrypter {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Encrypter {\n\n    fn new(keys: Vec<char>, values: Vec<String>, dictionary: Vec<String>) -> Self {\n        \n    }\n    \n    fn encrypt(&self, word1: String) -> String {\n        \n    }\n    \n    fn decrypt(&self, word2: String) -> i32 {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * let obj = Encrypter::new(keys, values, dictionary);\n * let ret_1: String = obj.encrypt(word1);\n * let ret_2: i32 = obj.decrypt(word2);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Encrypter\n\n=begin\n    :type keys: Character[]\n    :type values: String[]\n    :type dictionary: String[]\n=end\n    def initialize(keys, values, dictionary)\n        \n    end\n\n\n=begin\n    :type word1: String\n    :rtype: String\n=end\n    def encrypt(word1)\n        \n    end\n\n\n=begin\n    :type word2: String\n    :rtype: Integer\n=end\n    def decrypt(word2)\n        \n    end\n\n\nend\n\n# Your Encrypter object will be instantiated and called as such:\n# obj = Encrypter.new(keys, values, dictionary)\n# param_1 = obj.encrypt(word1)\n# param_2 = obj.decrypt(word2)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Encrypter {\n    /**\n     * @param String[] $keys\n     * @param String[] $values\n     * @param String[] $dictionary\n     */\n    function __construct($keys, $values, $dictionary) {\n        \n    }\n  \n    /**\n     * @param String $word1\n     * @return String\n     */\n    function encrypt($word1) {\n        \n    }\n  \n    /**\n     * @param String $word2\n     * @return Integer\n     */\n    function decrypt($word2) {\n        \n    }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * $obj = Encrypter($keys, $values, $dictionary);\n * $ret_1 = $obj->encrypt($word1);\n * $ret_2 = $obj->decrypt($word2);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Encrypter {\n\n  Encrypter(List<String> keys, List<String> values, List<String> dictionary) {\n    \n  }\n  \n  String encrypt(String word1) {\n    \n  }\n  \n  int decrypt(String word2) {\n    \n  }\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * Encrypter obj = Encrypter(keys, values, dictionary);\n * String param1 = obj.encrypt(word1);\n * int param2 = obj.decrypt(word2);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Encrypter(_keys: Array[Char], _values: Array[String], _dictionary: Array[String]) {\n\n    def encrypt(word1: String): String = {\n        \n    }\n\n    def decrypt(word2: String): Int = {\n        \n    }\n\n}\n\n/**\n * Your Encrypter object will be instantiated and called as such:\n * val obj = new Encrypter(keys, values, dictionary)\n * val param_1 = obj.encrypt(word1)\n * val param_2 = obj.decrypt(word2)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Encrypter do\n  @spec init_(keys :: [char], values :: [String.t], dictionary :: [String.t]) :: any\n  def init_(keys, values, dictionary) do\n    \n  end\n\n  @spec encrypt(word1 :: String.t) :: String.t\n  def encrypt(word1) do\n    \n  end\n\n  @spec decrypt(word2 :: String.t) :: integer\n  def decrypt(word2) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Encrypter.init_(keys, values, dictionary)\n# param_1 = Encrypter.encrypt(word1)\n# param_2 = Encrypter.decrypt(word2)\n\n# Encrypter.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec encrypter_init_(Keys :: [char()], Values :: [unicode:unicode_binary()], Dictionary :: [unicode:unicode_binary()]) -> any().\nencrypter_init_(Keys, Values, Dictionary) ->\n  .\n\n-spec encrypter_encrypt(Word1 :: unicode:unicode_binary()) -> unicode:unicode_binary().\nencrypter_encrypt(Word1) ->\n  .\n\n-spec encrypter_decrypt(Word2 :: unicode:unicode_binary()) -> integer().\nencrypter_decrypt(Word2) ->\n  .\n\n\n%% Your functions will be called as such:\n%% encrypter_init_(Keys, Values, Dictionary),\n%% Param_1 = encrypter_encrypt(Word1),\n%% Param_2 = encrypter_decrypt(Word2),\n\n%% encrypter_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define encrypter%\n  (class object%\n    (super-new)\n    \n    ; keys : (listof char?)\n    ; values : (listof string?)\n    ; dictionary : (listof string?)\n    (init-field\n      keys\n      values\n      dictionary)\n    \n    ; encrypt : string? -> string?\n    (define/public (encrypt word1)\n      )\n    ; decrypt : string? -> exact-integer?\n    (define/public (decrypt word2)\n      )))\n\n;; Your encrypter% object will be instantiated and called as such:\n;; (define obj (new encrypter% [keys keys] [values values] [dictionary dictionary]))\n;; (define param_1 (send obj encrypt word1))\n;; (define param_2 (send obj decrypt word2))"
+    }
+  ],
+  "solution": null
+}

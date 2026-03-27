@@ -1,0 +1,136 @@
+{
+  "questionId": "2294",
+  "questionFrontendId": "2187",
+  "title": "Minimum Time to Complete Trips",
+  "titleSlug": "minimum-time-to-complete-trips",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>time</code> where <code>time[i]</code> denotes the time taken by the <code>i<sup>th</sup></code> bus to complete <strong>one trip</strong>.</p>\n\n<p>Each bus can make multiple trips <strong>successively</strong>; that is, the next trip can start <strong>immediately after</strong> completing the current trip. Also, each bus operates <strong>independently</strong>; that is, the trips of one bus do not influence the trips of any other bus.</p>\n\n<p>You are also given an integer <code>totalTrips</code>, which denotes the number of trips all buses should make <strong>in total</strong>. Return <em>the <strong>minimum time</strong> required for all buses to complete <strong>at least</strong> </em><code>totalTrips</code><em> trips</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> time = [1,2,3], totalTrips = 5\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\n- At time t = 1, the number of trips completed by each bus are [1,0,0]. \n  The total number of trips completed is 1 + 0 + 0 = 1.\n- At time t = 2, the number of trips completed by each bus are [2,1,0]. \n  The total number of trips completed is 2 + 1 + 0 = 3.\n- At time t = 3, the number of trips completed by each bus are [3,1,1]. \n  The total number of trips completed is 3 + 1 + 1 = 5.\nSo the minimum time needed for all buses to complete at least 5 trips is 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> time = [2], totalTrips = 1\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nThere is only one bus, and it will complete its first trip at t = 2.\nSo the minimum time needed to complete 1 trip is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= time.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= time[i], totalTrips &lt;= 10<sup>7</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For a given amount of time, how can we count the total number of trips completed by all buses within that time?",
+    "Consider using binary search."
+  ],
+  "metaData": "{\n  \"name\": \"minimumTime\",\n  \"params\": [\n    {\n      \"name\": \"time\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"totalTrips\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"152.8K\", \"totalSubmission\": \"385.7K\", \"totalAcceptedRaw\": 152791, \"totalSubmissionRaw\": 385743, \"acRate\": \"39.6%\"}",
+  "likes": 3088,
+  "dislikes": 196,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Speed to Arrive on Time\", \"titleSlug\": \"minimum-speed-to-arrive-on-time\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimized Maximum of Products Distributed to Any Store\", \"titleSlug\": \"minimized-maximum-of-products-distributed-to-any-store\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Running Time of N Computers\", \"titleSlug\": \"maximum-running-time-of-n-computers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimize Maximum of Array\", \"titleSlug\": \"minimize-maximum-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Amount of Damage Dealt to Bob\", \"titleSlug\": \"minimum-amount-of-damage-dealt-to-bob\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]\n5",
+    "[2]\n1"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"meesho\", \"name\": \"Meesho\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minimumTime(vector<int>& time, int totalTrips) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minimumTime(int[] time, int totalTrips) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumTime(self, time: List[int], totalTrips: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumTime(self, time, totalTrips):\n        \"\"\"\n        :type time: List[int]\n        :type totalTrips: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} time\n * @param {number} totalTrips\n * @return {number}\n */\nvar minimumTime = function(time, totalTrips) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumTime(time: number[], totalTrips: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinimumTime(int[] time, int totalTrips) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minimumTime(int* time, int timeSize, int totalTrips) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumTime(time []int, totalTrips int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumTime(time: IntArray, totalTrips: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumTime(_ time: [Int], _ totalTrips: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_time(time: Vec<i32>, total_trips: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} time\n# @param {Integer} total_trips\n# @return {Integer}\ndef minimum_time(time, total_trips)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $time\n     * @param Integer $totalTrips\n     * @return Integer\n     */\n    function minimumTime($time, $totalTrips) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumTime(List<int> time, int totalTrips) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumTime(time: Array[Int], totalTrips: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_time(time :: [integer], total_trips :: integer) :: integer\n  def minimum_time(time, total_trips) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_time(Time :: [integer()], TotalTrips :: integer()) -> integer().\nminimum_time(Time, TotalTrips) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-time time totalTrips)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1705",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given an array `time` representing some buses, the bus `i` needs `time[i]` to complete a trip. Each bus works independently and doesn't need breaks between trips. \n\n\n<br>\n\nTake the following picture as an example, we are given four buses `time = [1, 2, 3, 1]` and `totalTrips = 10`.\n\n![img](../Figures/2187/1.png)\n\nAssume the time needed is `given_time`, for bus `i`, the number of trips it can finish within `given_time` is `given_time / time[i]`. Thus the total number of trips is the sum of `given_time / time[i]` for all buses. In the following picture, we can tell that if the given time is `6`, these buses can finish (at least) `totalTrips` in time. \n\n\n![img](../Figures/2187/2.png)\n\nThe task is, given `totalTrips`, what is the minimum time for all buses to finish `totalTrips`?\n\n\n---\n\n### Approach: Binary Search\n\n\n#### Intuition   \n\nStart with the brute force solution: since we are asked to find the minimum valid time to finish `totalTrips`, it's safe to check each time starting from the smallest. If the current time `curr_time` is not enough, we will move on to `curr_time + 1`. We keep trying each time until we find the first (and the minimum) time that is long enough for all buses to finish `totalTrips`.\n\n\nHowever, according to the constraints given to us in the question, we can't afford to try every time from the smallest as this approach is likely to exceed the time limit, so we shall look for a better way to locate the minimum time.\n\n\n\nAfter some observation, we can observe the following pattern:\n\n\n![img](../Figures/2187/3.png)\n\nCombining the two patterns we have found before, whether each time is long enough to finish `totalTrips` or not is shown in the figure below. We need to find the boundary, which is the minimum valid time.\n\n\n![img](../Figures/2187/4.png)\n\n\n\nRather than brute force, we can take advantage of this feature and use binary search to cut the search space by half each time to locate the minimum valid time. Start with initializing the search space, we set the left boundary as `left = 1` since it is the minimum possible valid time, we also set the right boundary as `right = totalTrips * maximum_time` where `maximum_time` equals the maximum time taken by one trip, so `right` is guaranteed to be long enough. Therefore, the minimum time is included in this search space.\n\n\nThen we keep checking if the middle time `mid` is long enough. \n\nIf not, it means `mid` is too short and we shall cut the half containing smaller times, otherwise, we shall cut the half containing larger times. Then we move on to the remaining half and repeat the process until there is only one time left, which is the minimum valid time.\n\nWe can check if a given time `mid` is sufficient by iterating over the input and using the formula we introduced above (each bus can complete `mid / time[i]` trips).\n\n\n\n<br>\n\n\n#### Algorithm\n\n1) Initialize the search space by setting boundaries. The minimum possible valid time is `1` since we can't set a shorter time than this, thus we set the left boundary as `left = 1`. For the right boundary, we can set it as the `totalTrips` multiplied by the maximum time required by one bus, thus this time is long enough for buses to finish `totalTrips`, so we set the right boundary as `right = max(times) * totalTrips`.\n\n\n2) While `left < right`, get the middle value as `mid = (left + right) / 2`.\n3) Check if all buses can finish `totalTrips` in `mid` time, by iterating over `time` and adding up the result of the integer division of `time[i]` by `mid`.\n\n\n    - If the sum is larger than or equals to `totalTrips`, it means `mid` is long enough, we cut the larger half of the searching space by setting `right = mid` and repeat step 2.\n    - Otherwise, it means `mid` is too short, we shall cut the smaller half of the searching space by setting `left = mid + 1` and repeat step 2.\n4) Return `left` once the binary search ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bD5Guo9d/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bD5Guo9d\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of `time`, $$m$$ be the upper limit of `totalTrips` and $$k$$ be the maximum time taken by one trip.\n\n* Time complexity: $$O(n \\cdot \\log (m\\cdot k))$$\n\n    - We set the right boundary of the searching space as $$m \\cdot k$$. The searching space is cut by half each time, thus it takes $$O(\\log (m\\cdot k))$$ steps to finish the binary search.\n    - In each step, we iterate the entire array `time` to calculate the number of trips made in the given time, it takes $$O(n)$$ time.\n    - To sum up, the time complexity is $$O(n \\cdot \\log (m\\cdot k))$$.\n    \n\n* Space complexity: $$O(1)$$\n\n    - During the binary search, we only need to record the two boundaries `left` and `right`, and the number of trips made in each given time `mid`. Therefore the space complexity is $$O(1)$$.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

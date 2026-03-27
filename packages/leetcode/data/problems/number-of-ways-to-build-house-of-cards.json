@@ -1,0 +1,132 @@
+{
+  "questionId": "1385",
+  "questionFrontendId": "2189",
+  "title": "Number of Ways to Build House of Cards",
+  "titleSlug": "number-of-ways-to-build-house-of-cards",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> representing the number of playing cards you have. A <strong>house of cards</strong> meets the following conditions:</p>\n\n<ul>\n\t<li>A <strong>house of cards</strong> consists of one or more rows of <strong>triangles</strong> and horizontal cards.</li>\n\t<li><strong>Triangles</strong> are created by leaning two cards against each other.</li>\n\t<li>One card must be placed horizontally between <strong>all adjacent</strong> triangles in a row.</li>\n\t<li>Any triangle on a row higher than the first must be placed on a horizontal card from the previous row.</li>\n\t<li>Each triangle is placed in the <strong>leftmost</strong> available spot in the row.</li>\n</ul>\n\n<p>Return <em>the number of <strong>distinct</strong> <strong>house of cards</strong> you can build using <strong>all</strong></em> <code>n</code><em> cards.</em> Two houses of cards are considered distinct if there exists a row where the two houses contain a different number of cards.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/02/27/image-20220227213243-1.png\" style=\"width: 726px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> n = 16\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The two valid houses of cards are shown.\nThe third house of cards in the diagram is not valid because the rightmost triangle on the top row is not placed on top of a horizontal card.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/02/27/image-20220227213306-2.png\" style=\"width: 96px; height: 80px;\" />\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The one valid house of cards is shown.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/02/27/image-20220227213331-3.png\" style=\"width: 330px; height: 85px;\" />\n<pre>\n<strong>Input:</strong> n = 4\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The three houses of cards in the diagram are not valid.\nThe first house of cards needs a horizontal card placed between the two triangles.\nThe second house of cards uses 5 cards.\nThe third house of cards uses 2 cards.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 500</code></li>\n</ul>\n",
+  "hints": [
+    "If a row has k triangles, how many cards does it take to build that row? It takes 3 * k - 1 cards.",
+    "If you still have i cards left, and on the previous row there were k triangles, what are the possible ways to build the current row? You can start at 1 triangle and continue adding more until you run out of cards or reach k - 1 triangles."
+  ],
+  "metaData": "{\n  \"name\": \"houseOfCards\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3.8K\", \"totalSubmission\": \"6K\", \"totalAcceptedRaw\": 3778, \"totalSubmissionRaw\": 6014, \"acRate\": \"62.8%\"}",
+  "likes": 69,
+  "dislikes": 18,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Champagne Tower\", \"titleSlug\": \"champagne-tower\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "16",
+    "2",
+    "4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int houseOfCards(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int houseOfCards(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def houseOfCards(self, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def houseOfCards(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {number}\n */\nvar houseOfCards = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function houseOfCards(n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int HouseOfCards(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int houseOfCards(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func houseOfCards(n int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun houseOfCards(n: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func houseOfCards(_ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn house_of_cards(n: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Integer}\ndef house_of_cards(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Integer\n     */\n    function houseOfCards($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int houseOfCards(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def houseOfCards(n: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec house_of_cards(n :: integer) :: integer\n  def house_of_cards(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec house_of_cards(N :: integer()) -> integer().\nhouse_of_cards(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (house-of-cards n)\n  (-> exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

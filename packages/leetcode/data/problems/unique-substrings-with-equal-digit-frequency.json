@@ -1,0 +1,151 @@
+{
+  "questionId": "2303",
+  "questionFrontendId": "2168",
+  "title": "Unique Substrings With Equal Digit Frequency",
+  "titleSlug": "unique-substrings-with-equal-digit-frequency",
+  "difficulty": "Medium",
+  "content": "Given a digit string <code>s</code>, return <em>the number of <strong>unique substrings </strong>of </em><code>s</code><em> where every digit appears the same number of times.</em>\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;1212&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The substrings that meet the requirements are &quot;1&quot;, &quot;2&quot;, &quot;12&quot;, &quot;21&quot;, &quot;1212&quot;.\nNote that although the substring &quot;12&quot; appears twice, it is only counted once.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;12321&quot;\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> The substrings that meet the requirements are &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;12&quot;, &quot;23&quot;, &quot;32&quot;, &quot;21&quot;, &quot;123&quot;, &quot;321&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 1000</code></li>\n\t<li><code>s</code> consists of digits.</li>\n</ul>\n",
+  "hints": [
+    "With the constraints, could we try every substring?",
+    "Yes, checking every substring has runtime O(n^2), which will pass.",
+    "How can we make sure we only count unique substrings?",
+    "Use a set to store previously counted substrings. Hashing a string s of length m takes O(m) time. Is there a fast way to compute the hash of s if we know the hash of s[0..m - 2]?",
+    "Use a rolling hash."
+  ],
+  "metaData": "{\n  \"name\": \"equalDigitFrequency\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.9K\", \"totalSubmission\": \"15.3K\", \"totalAcceptedRaw\": 9856, \"totalSubmissionRaw\": 15255, \"acRate\": \"64.6%\"}",
+  "likes": 104,
+  "dislikes": 14,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Number of Equal Count Substrings\", \"titleSlug\": \"number-of-equal-count-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Substrings That Begin and End With the Same Letter\", \"titleSlug\": \"substrings-that-begin-and-end-with-the-same-letter\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1212\"",
+    "\"12321\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"expedia\", \"name\": \"Expedia\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int equalDigitFrequency(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int equalDigitFrequency(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def equalDigitFrequency(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def equalDigitFrequency(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar equalDigitFrequency = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function equalDigitFrequency(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EqualDigitFrequency(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int equalDigitFrequency(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func equalDigitFrequency(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun equalDigitFrequency(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func equalDigitFrequency(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn equal_digit_frequency(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef equal_digit_frequency(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function equalDigitFrequency($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int equalDigitFrequency(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def equalDigitFrequency(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec equal_digit_frequency(s :: String.t) :: integer\n  def equal_digit_frequency(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec equal_digit_frequency(S :: unicode:unicode_binary()) -> integer().\nequal_digit_frequency(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (equal-digit-frequency s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2634",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s` consisting of digits (`'0'` to `'9'`). Our task is to calculate the number of unique substrings of `s` where each digit present in the substring occurs an equal number of times.\n\nFor example, in the string `s = \"1212\"`, the substrings `\"1212\"` and `\"12\"` satisfy the condition because the digits in each of these substrings occur with equal frequency. Notice that the substring `\"12\"` appears twice in the string, but it should be counted once to the result. On the other hand, `\"121\"` does not satisfy the condition because `'1'` occurs twice while `'2'` occurs once. \n\n---\n\n### Approach 1: Optimized Brute Force\n\n#### Intuition\n\nIn the brute-force approach, we would iterate over all substrings of `s`, calculate the frequency of all characters for each substring, and increment a counter if the substring has the desired property. To avoid counting duplicates, we would use a set to track unique substrings.\n\nHowever, this process is inefficient. For example, if we already know the frequency of all characters in the substring `s[0:4]`, there is no need to recalculate these frequencies when considering the substring `s[0:5]`. Instead, we can maintain an array to store the character frequencies for substrings starting at the same position and simply update this array as we extend the substring by moving its endpoint to the right. \n\n#### Algorithm\n\n-   Initialize `n` to the size of the string `s`.\n-   Initialize an empty set, `validSubstrings`.\n-   Iterate over `s` with `start` from `0` to `n - 1`:\n    -   Initialize a frequency table `digitFrequency` of size `10` to store the frequency of each digit in the substring `s[start:end]`.\n    -   Loop with `end` from `start` to `n - 1`:\n        -   Add `s[end]` to the substring by incrementing `digitFrequency[s[end] - '0']` by `1`.\n        -   Check whether all frequencies in substring `s[start: end]` are the same:\n            -   Initialize `commonFrequency` to `0` and a boolean variable `isValid` to `true`.\n            -   Iterate over `digitFrequency` with `i` from `0` to `9`:\n                -   If the current digit does not appear in the substring (i.e. `digitFrequency[i] == 0`), skip it.\n                -   If this is the first digit that appears in the substring (i.e. `commonFrequency == 0`), set `commonFrequency` to `digitFrequency[i]`.\n                -   If the current element has a different frequency than `commonFrequency`, set `isValid` to `false`. \n        -   If the substring is valid, insert it into the `validSubstrings` set.\n-   Return the size of `validSubstrings`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LEDtpVgw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LEDtpVgw\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n-   Time complexity: $O(n^3)$\n\n    The algorithm uses two nested loops to iterate over all possible substrings of `s`. For each substring, we perform two operations:\n\n    1. Extracting the substring, which takes $O(k)$ time, where $k$ is the length of the substring.\n    2. Inserting the substring into a set, which also takes $O(k)$ time because it involves hashing the substring.\n\n    In the worst case, $k$ can be as large as $n$. Therefore, the total time complexity is $O(n^3)$.\n\n-   Space complexity: $O(n^3)$\n\n    The algorithm creates a set to store all valid substrings of the input string `s`. There are roughly $O(n^2)$ substrings. Each substring could have a maximum length of up to $n$, so the set requires space proportional to $O(n^3)$. You could attempt to prove that the space complexity is actually more than just $O(n^2)$ as an extra challenge!\n\n    Other parts of the algorithm use data structures like variables and a fixed-size frequency array (`digitFrequency`), which don’t grow with the size of the input. Therefore, these don’t contribute to increasing the space complexity.\n    \n---\n\n### Approach 2: Rolling Hash\n\n#### Intuition\n\nIn our previous approach, we manually extracted substrings from the string `s` and hashed each one to check for uniqueness. These two operations significantly increase the time complexity, adding an extra factor of $n$. To improve this, we need a better way to represent substrings and compare them for equality without explicitly extracting each one.\n\nOne efficient solution is to use a **rolling hash** technique. A rolling hash allows us to compute the hash of a substring in constant time, as we extend or shrink the substring by just one character. Instead of recalculating the entire hash from scratch, we reuse the previously computed hash and update it based on the added or removed character. \n\nFirst, an intuitive way to create unique hashes for substrings is by using their numeric representation. For example, if we know the hash of `\"1212\"` is `1212`, finding the hash of `\"1212x\"` is straightforward: it’s `10 * 1212 + x`. This approach works well because every unique string maps to a unique number.\n\nHowever, as strings get longer, their numeric representation can exceed the limits of an integer variable, causing overflow issues. To solve this, we use the modulo operation to shrink the hash into a manageable range. For example, we can choose a large modulus like `10^9`.\n\nUsing a modulus introduces a new challenge: collisions. For instance, the strings `\"1212\"` and `\"100001212\"` (since $10^9 + 1212$) would hash to the same value: `1212`. To reduce collisions, we use a large prime number as the base of the hash instead of 10. A prime base ensures a more even distribution of hash values, lowering the chances of two different substrings producing the same hash.\n\n#### Algorithm\n\n-   Initialize `n` to the size of the string `s`.\n-   Initialize an empty set `validSubstringHashes` to store unique hashes of valid substrings.\n-   Initialize `prime` to a prime number greater than `10`, (e.g., `31`) and `mod` to a large value (e.g., `10e9`). \n-   Iterate over `s` with `start` from `0` to `n - 1`:\n    -   Initialize a frequency table `digitFrequency` of size `10` to store the frequency of each digit in the substring `s[start: end]`.\n    -   Initialize `substringHash`, `maxDigitFrequency`, and `uniqueDigitsCount` to `0`.\n    -   Loop with `end` from `start` to `n - 1`:\n        -   Set `currentDigit` to `s[end] - '0'`.\n        -   If this is the first time `currentDigit` occurs in the substring (i.e., `digitFrequency[currentDigit] == 0`), increment `uniqueDigitsCount` by `1`.\n        -   Increment `digitFrequency[currentDigit]` by `1`.\n        -   Set `maxDigitFrequency` to the maximum of its current value and the frequency of `currentDigit`, `digitFrequency[currentDigit]`.\n        -   Update `substringHash` to `(prime * substringHash + (currentDigit + 1)) % mod` (Adding `1` to `currentDigit` ensures unique hashes when `currentDigit` is `0`).\n        -   If all characters in the substring have the same frequency (`maxDigitFrequency`): `maxDigitFrequency * uniqueDigitsCount == end - start + 1`.\n            -   Insert `substringHash` to `validSubstringHashes` set.\n-   Return the size of `validSubstringHashes`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nTCywmEq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nTCywmEq\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n-   Time complexity: $O(n^2)$\n\n    Like in the previous approach, we use two nested loops to iterate over all possible substrings of `s`. However, in this approach on each iteration, the algorithm only performs constant-time operations to update the hash of the substring and store it in the set if it is valid. Therefore, the time complexity of the solution is $O(n^2)$.\n\n-   Space complexity: $O(n^2)$\n\n    The algorithm uses a set of integers to store the hashes of the valid substrings. Since the string `s` has $O(n^2)$ substrings, the set can grow up to $O(n^2)$ in size.\n    \n---\n\n### Approach 3: Prefix Tree (Trie)\n\n#### Intuition\n\nThe previous approach uses the modulo operation and relies on the randomness of rolling hashes to check the uniqueness of substrings. It assumes that the hashes are distributed evenly enough to avoid collisions.\n\nHowever, to remove this randomness, we can take a different approach by using a Trie (Prefix Tree). A Trie is a data structure designed to efficiently store and retrieve substrings.\n\n> If you are new to Tries, you might want to check out the [Trie Explore Card 🔗](https://leetcode.com/explore/learn/card/trie/). This resource provides an in-depth look at the trie data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\nIn a Trie, each node (`TrieNode`) represents a substring. Each `TrieNode` has:\n\n-   A boolean flag, `isVisited`, to indicate if the substring has already been seen.\n-   A map to store its child nodes, representing the next characters of the substring.\n\nJust like before, we will go through all the substrings of `s` and store them in the Trie. If a substring meets the required condition, we will mark it as visited in the Trie and increase our result counter.\n\n!?!../Documents/2168/2168_trie.json:960,540!?!\n\nThe downside of using a Trie is that each time a new `TrieNode` is created, an array of size 10 is needed to store its possible children. This adds extra time and space complexity, increasing it by a factor of 10 compared to the rolling hash approach. On the other hand, this solution avoids issues like incorrect results caused by hash collisions.\n\n#### Algorithm\n\n-   Define a `TrieNode` class, where each node has:\n    -   A flag to check if the substring ending at this node has been seen before (`isVisited`),\n    -   An array of size 10 (for digits 0-9), pointing to child nodes (`children`).\n-   In the `equalDigitFrequency` function:\n    -   Initialize `n` to the size of the string `s` and `validSubstringsCount` to `0`.\n    -   Initialize the `root` of the prefix tree to a `TrieNode` with no children.\n    -   Iterate over `s` with `start` from `0` to `n - 1`:\n        -   Initialize a frequency table `digitFrequency` of size `10` to track the frequency of each digit in the substring `s[start: end]`.\n        -   Initialize `maxDigitFrequency` and `uniqueDigitsCount` to `0`.\n        -   Initialize `currentNode` to `root`: the node that the search for the substrings starts at.\n        -   Loop with `end` from `start` to `n - 1`:\n            -   Set `currentDigit` to `s[end] - '0'`.\n            -   If this is the first time `currentDigit` occurs in the substring (i.e., `digitFrequency[currentDigit] == 0`), increment `uniqueDigitsCount` by `1`.\n            -   Increment `digitFrequency[currentDigit]` by `1`.\n            -   Set `maxDigitFrequency` to the maximum of its current value and the frequency of `currentDigit`, `digitFrequency[currentDigit]`.\n            -   Check if the current digit already exists as a child of the `currentNode` in the Trie.\n                -   If not, create a new `TrieNode` for this digit.\n            -   Move `currentNode` to the child corresponding to this digit.\n            -   Check if the substring is valid: `maxFrequency * uniqueDigitCount == end - start + 1`.\n                -   If this holds, increment `validSubstringsCount` by `1`.\n                -   Mark `currentNode` as visited.\n    -   Return `validSubstringsCount`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/L4KbJKPn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"L4KbJKPn\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n-   Time complexity: $O(n^2)$\n\n    We iterate over all substrings and on each iteration we perform constant-time operations like updating the frequency of the digits and tracking the number of unique digits. The search of the substring in the Trie costs $O(1)$ as well, as it will either be a direct child of the `currentNode` or not exist at all. Therefore, the time complexity of the algorithm is $O(n^2)$.\n\n-   Space complexity: $O(n^2)$\n\n    In the worst case (when all substrings of `s` are distinct), a new `TrieNode` is created for each substring. Therefore, the algorithm requires $O(n^2)$ extra space.\n    \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

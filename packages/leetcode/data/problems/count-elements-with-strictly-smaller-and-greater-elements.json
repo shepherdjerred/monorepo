@@ -1,0 +1,136 @@
+{
+  "questionId": "2269",
+  "questionFrontendId": "2148",
+  "title": "Count Elements With Strictly Smaller and Greater Elements ",
+  "titleSlug": "count-elements-with-strictly-smaller-and-greater-elements",
+  "difficulty": "Easy",
+  "content": "<p>Given an integer array <code>nums</code>, return <em>the number of elements that have <strong>both</strong> a strictly smaller and a strictly greater element appear in </em><code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [11,7,2,15]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The element 7 has the element 2 strictly smaller than it and the element 11 strictly greater than it.\nElement 11 has element 7 strictly smaller than it and element 15 strictly greater than it.\nIn total there are 2 elements having both a strictly smaller and a strictly greater element appear in <code>nums</code>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-3,3,3,90]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The element 3 has the element -3 strictly smaller than it and the element 90 strictly greater than it.\nSince there are two elements with the value 3, in total there are 2 elements having both a strictly smaller and a strictly greater element appear in <code>nums</code>.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "All the elements in the array should be counted except for the minimum and maximum elements.",
+    "If the array has n elements, the answer will be n - count(min(nums)) - count(max(nums))",
+    "This formula will not work in case the array has all the elements equal, why?"
+  ],
+  "metaData": "{\n  \"name\": \"countElements\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"81.8K\", \"totalSubmission\": \"136.7K\", \"totalAcceptedRaw\": 81817, \"totalSubmissionRaw\": 136661, \"acRate\": \"59.9%\"}",
+  "likes": 717,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Smallest Letter Greater Than Target\", \"titleSlug\": \"find-smallest-letter-greater-than-target\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[11,7,2,15]",
+    "[-3,3,3,90]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countElements(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countElements(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countElements(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar countElements = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countElements(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountElements(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countElements(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countElements(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countElements(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countElements(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_elements(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef count_elements(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function countElements($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countElements(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countElements(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_elements(nums :: [integer]) :: integer\n  def count_elements(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_elements(Nums :: [integer()]) -> integer().\ncount_elements(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-elements nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

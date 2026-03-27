@@ -1,0 +1,148 @@
+{
+  "questionId": "2300",
+  "questionFrontendId": "2182",
+  "title": "Construct String With Repeat Limit",
+  "titleSlug": "construct-string-with-repeat-limit",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> and an integer <code>repeatLimit</code>. Construct a new string <code>repeatLimitedString</code> using the characters of <code>s</code> such that no letter appears <strong>more than</strong> <code>repeatLimit</code> times <strong>in a row</strong>. You do <strong>not</strong> have to use all characters from <code>s</code>.</p>\n\n<p>Return <em>the <strong>lexicographically largest</strong> </em><code>repeatLimitedString</code> <em>possible</em>.</p>\n\n<p>A string <code>a</code> is <strong>lexicographically larger</strong> than a string <code>b</code> if in the first position where <code>a</code> and <code>b</code> differ, string <code>a</code> has a letter that appears later in the alphabet than the corresponding letter in <code>b</code>. If the first <code>min(a.length, b.length)</code> characters do not differ, then the longer string is the lexicographically larger one.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;cczazcc&quot;, repeatLimit = 3\n<strong>Output:</strong> &quot;zzcccac&quot;\n<strong>Explanation:</strong> We use all of the characters from s to construct the repeatLimitedString &quot;zzcccac&quot;.\nThe letter &#39;a&#39; appears at most 1 time in a row.\nThe letter &#39;c&#39; appears at most 3 times in a row.\nThe letter &#39;z&#39; appears at most 2 times in a row.\nHence, no letter appears more than repeatLimit times in a row and the string is a valid repeatLimitedString.\nThe string is the lexicographically largest repeatLimitedString possible so we return &quot;zzcccac&quot;.\nNote that the string &quot;zzcccca&quot; is lexicographically larger but the letter &#39;c&#39; appears more than 3 times in a row, so it is not a valid repeatLimitedString.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aababab&quot;, repeatLimit = 2\n<strong>Output:</strong> &quot;bbabaa&quot;\n<strong>Explanation:</strong> We use only some of the characters from s to construct the repeatLimitedString &quot;bbabaa&quot;. \nThe letter &#39;a&#39; appears at most 2 times in a row.\nThe letter &#39;b&#39; appears at most 2 times in a row.\nHence, no letter appears more than repeatLimit times in a row and the string is a valid repeatLimitedString.\nThe string is the lexicographically largest repeatLimitedString possible so we return &quot;bbabaa&quot;.\nNote that the string &quot;bbabaaa&quot; is lexicographically larger but the letter &#39;a&#39; appears more than 2 times in a row, so it is not a valid repeatLimitedString.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= repeatLimit &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Start constructing the string in descending order of characters.",
+    "When repeatLimit is reached, pick the next largest character."
+  ],
+  "metaData": "{\n  \"name\": \"repeatLimitedString\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"repeatLimit\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"129.5K\", \"totalSubmission\": \"182.8K\", \"totalAcceptedRaw\": 129520, \"totalSubmissionRaw\": 182823, \"acRate\": \"70.8%\"}",
+  "likes": 1272,
+  "dislikes": 102,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Rearrange String k Distance Apart\", \"titleSlug\": \"rearrange-string-k-distance-apart\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"cczazcc\"\n3",
+    "\"aababab\"\n2"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 5, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"arista-networks\", \"name\": \"Arista Networks\"}, {\"timesEncountered\": 3, \"slug\": \"fortinet\", \"name\": \"Fortinet\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string repeatLimitedString(string s, int repeatLimit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String repeatLimitedString(String s, int repeatLimit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def repeatLimitedString(self, s: str, repeatLimit: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def repeatLimitedString(self, s, repeatLimit):\n        \"\"\"\n        :type s: str\n        :type repeatLimit: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} repeatLimit\n * @return {string}\n */\nvar repeatLimitedString = function(s, repeatLimit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function repeatLimitedString(s: string, repeatLimit: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string RepeatLimitedString(string s, int repeatLimit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* repeatLimitedString(char* s, int repeatLimit) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func repeatLimitedString(s string, repeatLimit int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun repeatLimitedString(s: String, repeatLimit: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func repeatLimitedString(_ s: String, _ repeatLimit: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn repeat_limited_string(s: String, repeat_limit: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} repeat_limit\n# @return {String}\ndef repeat_limited_string(s, repeat_limit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $repeatLimit\n     * @return String\n     */\n    function repeatLimitedString($s, $repeatLimit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String repeatLimitedString(String s, int repeatLimit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def repeatLimitedString(s: String, repeatLimit: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec repeat_limited_string(s :: String.t, repeat_limit :: integer) :: String.t\n  def repeat_limited_string(s, repeat_limit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec repeat_limited_string(S :: unicode:unicode_binary(), RepeatLimit :: integer()) -> unicode:unicode_binary().\nrepeat_limited_string(S, RepeatLimit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (repeat-limited-string s repeatLimit)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2614",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to construct the longest possible string under specific constraints, where no character can appear consecutively more than a given limit. A real-life application of this problem could be in designing passwords, where specific characters (letters, numbers, or symbols) need to be distributed without excessive repetition while adhering to complexity rules. \n\n---\n\n### Approach 1: Greedy Character Frequency Distribution\n\n#### Intuition\n\nThe key to solving this problem is to focus on the largest letters first, as they help create a string that’s lexicographically larger. However, we need to be careful not to use the same letter too many times in a row due to the limit on consecutive usage. To handle this, we should alternate between letters to avoid hitting the limit. This involves keeping track of how many times each letter has been used and strategically choosing the largest permissible letter at each step.\n\nThe process works like this: we start with the largest letter available and add as many of it as we can, stopping just before we reach the limit. Once we hit the limit, we switch to a smaller letter to \"break the streak\". After adding the smaller letter, we can go back to the larger letter if it’s still available.\n\nTo switch to a smaller letter, we need to have one available as a \"breaker\". If we run out of smaller letters to alternate with, we have to stop, because adding more characters would break the rule.\n\n!?!../Documents/2182/2182.json:3000,1687!?!\n\n#### Algorithm\n\n- Create a frequency array (`freq`) of size 26 to count the occurrences of each character in the string.\n- Iterate over the string, mapping each character to its corresponding index, and increment the respective value in `freq`.\n- Initialize an empty list (`result`) to build the final result string.\n- Set a pointer (`current_char_index`) to 25, representing the largest character (`z`).\n\n- While `current_char_index` is greater than or equal to 0:\n  - If the frequency of the current character is zero, decrement `current_char_index` to move to the next smaller character and continue.\n  - Determine how many times the current character can be added to the result consecutively (`use`), which is the minimum of its frequency and `repeatLimit`.\n  - Append `use` instances of the character to the `result` list.\n  - Subtract `use` from the frequency of the current character in `freq`.\n  - If the current character still has remaining occurrences:\n    - Find a smaller character to act as a breaker (`smaller_char_index`), starting from `current_char_index - 1`.\n    - Decrement `smaller_char_index` until a character with a non-zero frequency is found.\n    - If no such smaller character exists (all smaller frequencies are zero), break the loop as further construction of the result is not possible.\n    - Append one instance of the smaller character to the `result`.\n    - Decrement the frequency of the smaller character in `freq` by 1.\n\n- Join the characters in `result` to form the final string and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YqTEVUde/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YqTEVUde\"></iframe>\n\nLet $N$ be the length of `s` and $K$ be the number of unique characters in `s`.\n\n* Time Complexity: $O(N \\cdot K)$\n\n    The time complexity of the approach is $O(N \\cdot K)$. The initial loop that counts character frequencies runs in $O(N)$ time.\n\n    The outer while loop executes at most $K$ times, which is at most 26 times for this problem since there are at most 26 unique characters in the input string. The inner while loop, which finds the next available character with a non-zero frequency, runs at most 25 times in the worst case.\n\n    For instance, consider the string `s = \"zzzzzzzaaaaaaa\"` with `repeatLimit = 1`. After exhausting the repeat limit for `z`, the inner loop iterates to locate `a`, which involves up to 25 steps. This results in an $O(N \\cdot K)$ time complexity because for each character in the string of length $N$, we may need to perform up to K operations to find the next available character.\n\n* Space Complexity: $O(K)$\n\n    The space used by the `freq` array is $O(K)$, where $K$ is 26 characters at most.\n\n    The `result` will store the final string, which in the worst case will be of size `N`, but this is not considered in the space complexity analysis as it is part of the output.\n\n    Therefore, the overall space complexity is $O(K)$.\n\n---\n\n### Approach 2: Heap-Optimized Greedy Character Frequency Distribution\n\n#### Intuition\n\nThe previous approach has a time complexity of $O(N \\cdot K)$, where $K$ represents the number of unique characters in `s`. Given that $K$ is small for this problem (a maximum of 26 unique characters), this time complexity is manageable. However, this method will become less efficient if we need to handle a larger set of unique characters. So, let's explore ways to optimize it further.\n\nSince the main goal is to consistently pick the largest available character, it’s better to use a data structure that lets us quickly access and update the count of the character with the highest priority. A priority queue (or max heap) is perfect for this because it dynamically keeps the characters organized by priority. This way, instead of scanning all characters repeatedly, we can focus only on the most relevant ones.  \n\nAs we build the string, we always pick the largest character first and add as many of it as the repeat limit allows. Once we hit the limit, we face the challenge of finding a \"breaker\" — a different character to interrupt the sequence.  \n\nTo find this breaker, we look for the next largest character in the priority queue. If one is available, we add it to the string and decrease its count. After using it, we check if it still has more occurrences left; if it does, we put it back into the priority queue for future use.  \n\nIf no breaker is available, the construction of the string stops. This happens because no other characters can be inserted without violating the constraints, making it impossible to continue building the string while maintaining both the repeat limit and lexicographical order.\n\n> For a more comprehensive understanding of heaps and priority queues, check out the [Heap Explore Card 🔗](https://leetcode.com/explore/learn/card/heap/). This resource provides an in-depth look at heap-based algorithms, explaining their key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Create a frequency map (`freq`) to count the occurrences of each character in the string.\n- Initialize a max-heap (`maxHeap`) to store the characters, ordered by their natural descending order.\n- Add all characters from the frequency map to the max-heap.\n- Initialize a string (`result`) to build the final result.\n\n- While the max-heap is not empty:\n  - Poll the character with the highest lexicographical value (`ch`) from the heap.\n  - Retrieve its count from the frequency map (`freq`).\n  - Determine the number of times the character can be used (`use`) as the minimum of `count` and `repeatLimit`.\n  - Append `ch` to `result` exactly `use` times.\n  - Update the frequency map for `ch` by subtracting `use`.\n  - If `ch` still has remaining occurrences and the max-heap is not empty:\n    - Poll the next character with the highest lexicographical value (`nextCh`) from the heap.\n    - Append `nextCh` to `result`.\n    - Decrease its frequency in the map by 1.\n    - If `nextCh` still has occurrences remaining, reinsert it into the max-heap.\n    - Reinsert `ch` into the max-heap to process its remaining occurrences.\n\n- Return the string representation of `result`.\n\n#### Implementation \n\n> **Note:** In the Python solution, we store the negative of the character's ordinal value (`-ord(c)`) in the heap to simulate a max-heap. This is necessary because Python's `heapq` library implements a min-heap by default. By negating the ordinal value, we ensure that characters with higher ASCII values (e.g., 'z') are prioritized when elements are popped from the heap, effectively mimicking the behavior of a max-heap.\n\n<iframe src=\"https://leetcode.com/playground/af9rN872/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"af9rN872\"></iframe>\n\nLet $N$ be the length of `s` and $K$ be the number of unique characters in `s`.\n\n* Time Complexity: $O(N \\cdot \\log K)$\n\n    The time complexity of this approach is dominated by the operations on the heap, which is used to efficiently access and modify the most frequent characters. The size of the heap is bounded by the number of unique characters, denoted as $K$, so the heap operations (push and pop) take $O(\\log K)$ time.\n    \n    In the worst case, we perform two heap operations for every character in the string, resulting in $O(N)$ heap operations. Each heap operation involves pushing or popping an element, which takes $O(\\log K)$ time.\n    \n    Therefore, the overall time complexity of the solution is $O(N \\cdot \\log K)$.\n\n* Space Complexity: $O(K)$\n\n    The space complexity of this approach is $O(K)$. This is because the heap and the frequency counter stores up to $K$ values.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

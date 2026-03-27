@@ -1,0 +1,152 @@
+{
+  "questionId": "2364",
+  "questionFrontendId": "2246",
+  "title": "Longest Path With Different Adjacent Characters",
+  "titleSlug": "longest-path-with-different-adjacent-characters",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>tree</strong> (i.e. a connected, undirected graph that has no cycles) <strong>rooted</strong> at node <code>0</code> consisting of <code>n</code> nodes numbered from <code>0</code> to <code>n - 1</code>. The tree is represented by a <strong>0-indexed</strong> array <code>parent</code> of size <code>n</code>, where <code>parent[i]</code> is the parent of node <code>i</code>. Since node <code>0</code> is the root, <code>parent[0] == -1</code>.</p>\n\n<p>You are also given a string <code>s</code> of length <code>n</code>, where <code>s[i]</code> is the character assigned to node <code>i</code>.</p>\n\n<p>Return <em>the length of the <strong>longest path</strong> in the tree such that no pair of <strong>adjacent</strong> nodes on the path have the same character assigned to them.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/25/testingdrawio.png\" style=\"width: 201px; height: 241px;\" />\n<pre>\n<strong>Input:</strong> parent = [-1,0,0,1,1,2], s = &quot;abacbe&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The longest path where each two adjacent nodes have different characters in the tree is the path: 0 -&gt; 1 -&gt; 3. The length of this path is 3, so 3 is returned.\nIt can be proven that there is no longer path that satisfies the conditions. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/25/graph2drawio.png\" style=\"width: 201px; height: 221px;\" />\n<pre>\n<strong>Input:</strong> parent = [-1,0,0,0], s = &quot;aabc&quot;\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The longest path where each two adjacent nodes have different characters is the path: 2 -&gt; 0 -&gt; 3. The length of this path is 3, so 3 is returned.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == parent.length == s.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= parent[i] &lt;= n - 1</code> for all <code>i &gt;= 1</code></li>\n\t<li><code>parent[0] == -1</code></li>\n\t<li><code>parent</code> represents a valid tree.</li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Do a DFS from the root. At each node, calculate the longest path we can make from two branches of that subtree.",
+    "To do that, we need to find the length of the longest path from each of the node’s children."
+  ],
+  "metaData": "{\n  \"name\": \"longestPath\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"parent\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"92.3K\", \"totalSubmission\": \"171K\", \"totalAcceptedRaw\": 92310, \"totalSubmissionRaw\": 171010, \"acRate\": \"54.0%\"}",
+  "likes": 2544,
+  "dislikes": 61,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Diameter of Binary Tree\", \"titleSlug\": \"diameter-of-binary-tree\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Longest Univalue Path\", \"titleSlug\": \"longest-univalue-path\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Choose Edges to Maximize Score in a Tree\", \"titleSlug\": \"choose-edges-to-maximize-score-in-a-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[-1,0,0,1,1,2]\n\"abacbe\"",
+    "[-1,0,0,0]\n\"aabc\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 7, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"target\", \"name\": \"Target\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestPath(vector<int>& parent, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestPath(int[] parent, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestPath(self, parent: List[int], s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestPath(self, parent, s):\n        \"\"\"\n        :type parent: List[int]\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} parent\n * @param {string} s\n * @return {number}\n */\nvar longestPath = function(parent, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestPath(parent: number[], s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestPath(int[] parent, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestPath(int* parent, int parentSize, char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestPath(parent []int, s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestPath(parent: IntArray, s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestPath(_ parent: [Int], _ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_path(parent: Vec<i32>, s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} parent\n# @param {String} s\n# @return {Integer}\ndef longest_path(parent, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $parent\n     * @param String $s\n     * @return Integer\n     */\n    function longestPath($parent, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestPath(List<int> parent, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestPath(parent: Array[Int], s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_path(parent :: [integer], s :: String.t) :: integer\n  def longest_path(parent, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_path(Parent :: [integer()], S :: unicode:unicode_binary()) -> integer().\nlongest_path(Parent, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-path parent s)\n  (-> (listof exact-integer?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1636",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nThe problem presents an undirected tree with `n` nodes. Each node of the tree has a character associated with it. Our task is to find the length of the longest path in the tree such that no pair of adjacent nodes on the path have the same character assigned to them.\n\n---\n\n### Approach 1: Depth First Search\n\n#### Intuition\n\nIntuitively, we can think that for any parent node, the longest path will be formed by choosing at most the two longest chains of its child nodes. Here's a visual explanation of the two scenarios that could occur where node `p` is the parent node:\n\n![img](../Figures/2246/2246-1.png)\n\nSo, for a node `p` if we find the two longest chains of its child nodes, say `L1` and `L2` we can compute the longest path centered at node `p`. For each node, we can find the maximum of value `1 + L1 + L2` to find the answer. The addition of one comes for the node `p` itself.\n\nLet's take an example to understand this better. Consider the following subtree, where each node has a character and the length of the longest chain starting from the node (including it). Assume, we have visited all the children of node `a` and are yet to compute the answer for the longest path centered at node `a`.\n\n![img](../Figures/2246/2246-2.png)\n\nWe pick up the two longest chains, which have characters different from those of node `a`. In this case, these are the nodes with the characters `b` and `d`. It should be noted, that depending on the children of a node and the characters associated with the children and the node, we might not be unable to pick up any chains or might only be able to pick up one chain. We will not be able to pick up any chains centered at the node when it does not have any children or all its children have the same character as the node. In such cases, we will consider the length of the longest and second longest chains amongst its children as `0`.\n\n![img](../Figures/2246/2246-3.png)\n\nThe longest path centered at node `a` will be `1 + 2 + 3 = 6`.\n\nGoing forward, we also need the length of the longest chain starting from `a` to be used by its parent. It would be `1 + L1`, where `L1` is the length of the longest chain of a child, which leads to `1 + 3 = 4`.\n\n![img](../Figures/2246/2246-4.png)\n\nThis way we can figure out the length of the longest path by selecting each node as the center and using the two longest chains of its children.\n\nA good algorithm to pass the information from the children to their parents is a depth-first search (DFS). In DFS, we explore nodes as far as possible along each branch. Upon reaching the end of the current branch, we backtrack to the next possible branch and continue exploring.\n\nFollowing the above approach, the idea is to visit all the children of every node recursively, get the length of the longest chain starting from the child, and use the longest and second longest chains to get the longest path centered at that node.\n\nWe initialize the answer variable `longestPath = 1`, since a single node can always be taken as its own path. We implement a DFS traversal algorithm for a `node` that returns the length of longest chain starting from the `node` and begin with the root `0`. We initialize two variables, say `longestChain = 0` and `secondLongestChain = 0` to store the longest and second longest chains amongst its children.\n\nWe recursively iterate over each `child` of the `node`. We store the longest chain starting from `child` in another variable, say `longestChainStartingFromChild`. Using `longestChainStartingFromChild`, we update `longestChain` and `secondLongestChain` to store the longest and second longest chains amongst the children of the `currentNode`.\n\nThe answer variable is updated to `longestPath = max(longest, longestChain + secondLongestChain + 1)`. In the end, we return the longest chain starting from the `node` (including it) which is `1 + longestChain`. The answer is updated with both chains because we are treating the current `node` as the center. But when we return, we can only include one chain, otherwise there would be three branches at the current `node` which is not a valid path.\n\n#### Algorithm\n\n1. Initialize an array `children`, where `children[X]` contains all the children of node `X`.\n2. Initialize the answer variable `longestPath = 1` (a single node can always be selected).\n3. Start a DFS traversal.\n    - We use a `dfs` function to perform the traversal. For each call, pass `currentNode`, `children`, `s`, and `longestPath` as the parameters. It returns the length of the longest chain starting from that `currentNode`. \n    - Initialize two integers `longestChain = 0` and `secondLongestChain = 0`, to store the longest and the second longest chains across all the children of the `currentNode`.\n    - Iterate over all the children and for every `child`, recursively call the dfs function with `child, children, s, longestPath` as the parameters. This call returns the length of longest path `longestChainStartingFromChild` starting from `child`.\n    - Use `longestChainStartingFromChild` to update `longestChain` and `secondLongestChain`.\n    - After iterating over all the children, use `longestChain` and `secondLongestChain` to update the `longestPath` to `max(longestPath, longestChain + secondLongestChain + 1)`. The `+1` comes from the `currentNode` which connects the two chains.\n    - Return the length of the longest chain including the `currentNode` which is `longestChain + 1`.\n4. Return `longestPath`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/mh9argsJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"mh9argsJ\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes.\n\n* Time complexity: $O(n)$\n\n    - Each node is visited by the `dfs` function once, which takes $O(n)$ time in total. We also iterate over the edges of every node once (since we don't visit a node more than once, we don't iterate its edges more than once), which adds $O(n)$ time since we have $n - 1$ edges.\n    - We also need $O(n)$ time to initialize the `children` array.\n\n* Space complexity: $O(n)$\n\n    - The recursion call stack used by `dfs` can have no more than $n$ elements in the worst-case scenario. So, we would take up $O(n)$ space in the worst case.\n    - We also need $O(n)$ space for the the `children` array.\n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nWe can also use a breadth-first search (BFS) algorithm using the child nodes to get the answer for the parent node.\n\nWe need to visit all the children first, get the length of the longest chain using each child, and use it to compute the answer for the parent node. So, we need to move from the leaf nodes to the root.\n\nAs we know, in a tree, each step from top to bottom is part of a level/depth. The level count starts with `0` (for the root node) and increments by `1` at each level or step. Here, we need a BFS traversal that covers all of the nodes at the current level, say at level `l` before moving to the nodes present one level above at level `l - 1`. To perform such a traversal, we push all the leaf nodes into the BFS queue first and then move up until we reach the root.\n\nSimilar to the above approach, we initialize the answer variable `longestPath = 1`, since a single node is always an answer. We declare an array, say `childrenCount` to count the number of children of each node. We also initialize a 2D array, `longestChains` where `longestChains[node][0]` and `longestChains[node][1]` store the longest and second longest chains among its children. If a node, say `A` has no children or all children are covered, we update `longestChains[A][0]` to store the length of the longest chain starting from `A` (including it) to be used by its parent. \n\nWe push the leaf nodes into the queue (nodes with `childrenCount == 0`). For each leaf node, say `A` we also set the longest chain starting from `A` to `longestChains[A][0] = 1`.\n\nNext, we perform the BFS traversal until the queue is empty. We pop out the first element, say `currentNode` from the queue. We get the `currentNode`'s parent from `parent[currentNode]`, let's call it `par`.\n\nWe get the longest chain starting from the `currentNode` in `longestChainStartingFromCurrNode` using `longestChainStartingFromCurrNode = longestChains[currentNode][0]`. If the characters of the `currentNode` and its parent do not match, we update the `longestChains[par]` using `longestChainStartingFromNode` if possible.\n\nThe answer variable is updated to `longestPath = max(longest, longestChains[par][0] + longestChains[par][1] + 1)`. We also reduce the child count of the `par` by one to mark that we have covered a child of the `par` node.\n\nIf the child count of a node reaches `0`, i.e., `childrenCount[par] == 0` it means we have covered all its children, and it would behave as a leaf node. We push the `par` into the queue and also increment `longestChains[par][0]` by `1` to store the largest chain starting from the `par` to be used for its parent.\n\nThis algorithm of moving from leaf nodes to the root by decrementing the count of children is similar to the topological sort algorithm (Kahn's algorithm). If you are not familiar with this algorithm, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\n#### Algorithm\n\n1. Initialize an array `childrenCount`, that stores the number of children of a node `i` in `childrenCount[i]`.\n    - To populate it, we iterate over all the nodes, and for each node, increment `childrenCount[parent[node]]` by 1. Since the root node `0` does not have a parent, we start iterating from node `1` to node `n - 1`.\n2. Initialize another 2D-array `longestChains[n][2]`. For a node `i`, it stores the length of the longest and second longest chains among its children in `longestChains[i][0]` and `longestChains[i][1]` respectively. We initialize it with `0`.\n3. Initialize a queue and the answer variable `longestPath = 1`.\n4. Iterate over all the nodes and for each `node`, check if it is a leaf node and not a root node (does not have a parent).\n    - If it is a leaf node, i.e., `childCount[node] == 0 & node != 0`, we push it into the queue. We also set `longestChain[node][0] = 1` as this node does not have any children and this is the longest chain we can form including it. It will help find the answer of its parent.\n5. Then, while the queue is not empty:\n    - Dequeue the first element `currentNode` from the queue.\n    - Fetch the parent `par` of the `currentNode` from `parents[currentNode]`.\n    - Get the longest chain starting from the `currentNode` from `longestChainStartingFromCurrNode = longestChains[currentNode][0]` to update the longest (`longestChains[par][0]`) and second (`longestChains[par][1]`) longest chains of the `par` if possible.\n    - Update the `longestPath` with `max(longestPath, longestChains[par][0] + longestChains[par][1] + 1)`. `par` is an intermediate node that connects the longest and second longest chains of it.\n    - Because we covered the `currentNode` which is a child of `par`, we deduct `childrenCount[par]` by `1`.\n    - If there are no more children of the `par` to visit, i.e., `childrenCount[par] == 0 `, we push the `par` to the queue. It behaves as a leaf node. We increase `longestChain[par][0]` by `1` to include `par` in the longest chain. We do not push root node `0` into the queue since it does not have a parent.\n6. Return `longestPath`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CPkCV8Wy/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CPkCV8Wy\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes.\n\n* Time complexity: $O(n)$\n\n    - Each node is only queued once, which takes $O(1)$ time for each node. We also iterate over the edges of every node once. Since we only visit each node once, we won't iterate over a node's edges multiple times. There are $n - 1$ edges, so we need $O(n)$ time.\n    - We also need $O(n)$ time to initialize the `childrenCount` and the `longestChains` arrays.\n\n* Space complexity: $O(n)$\n\n    - In the worst case, the queue can grow to a size linear with `n`.\n    - We also require $O(n)$ space each for the `childrenCount` and the `longestChains` arrays.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

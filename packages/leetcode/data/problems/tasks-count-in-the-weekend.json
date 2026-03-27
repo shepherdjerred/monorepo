@@ -1,0 +1,53 @@
+{
+  "questionId": "2440",
+  "questionFrontendId": "2298",
+  "title": "Tasks Count in the Weekend",
+  "titleSlug": "tasks-count-in-the-weekend",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Tasks</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| task_id     | int  |\n| assignee_id | int  |\n| submit_date | date |\n+-------------+------+\ntask_id is the primary key (column with unique values) for this table.\nEach row in this table contains the ID of a task, the id of the assignee, and the submission date.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to report:</p>\n\n<ul>\n\t<li>the number of tasks that were submitted during the weekend (Saturday, Sunday) as <code>weekend_cnt</code>, and</li>\n\t<li>the number of tasks that were submitted during the working days as <code>working_cnt</code>.</li>\n</ul>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTasks table:\n+---------+-------------+-------------+\n| task_id | assignee_id | submit_date |\n+---------+-------------+-------------+\n| 1       | 1           | 2022-06-13  |\n| 2       | 6           | 2022-06-14  |\n| 3       | 6           | 2022-06-15  |\n| 4       | 3           | 2022-06-18  |\n| 5       | 5           | 2022-06-19  |\n| 6       | 7           | 2022-06-19  |\n+---------+-------------+-------------+\n<strong>Output:</strong> \n+-------------+-------------+\n| weekend_cnt | working_cnt |\n+-------------+-------------+\n| 3           | 3           |\n+-------------+-------------+\n<strong>Explanation:</strong> \nTask 1 was submitted on Monday.\nTask 2 was submitted on Tuesday.\nTask 3 was submitted on Wednesday.\nTask 4 was submitted on Saturday.\nTask 5 was submitted on Sunday.\nTask 6 was submitted on Sunday.\n3 tasks were submitted during the weekend.\n3 tasks were submitted during the working days.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Tasks (task_id int, assignee_id int, submit_date date)\"], \"mssql\": [\"Create table Tasks (task_id int, assignee_id int, submit_date date)\"], \"oraclesql\": [\"Create table Tasks (task_id int, assignee_id int, submit_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"count_tasks\", \"pythondata\": [\"Tasks = pd.DataFrame([], columns=['task_id', 'assignee_id', 'submit_date']).astype({'task_id':'Int64', 'assignee_id':'Int64', 'submit_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Tasks (task_id int, assignee_id int, submit_date date)\"], \"database_schema\": {\"Tasks\": {\"task_id\": \"INT\", \"assignee_id\": \"INT\", \"submit_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"9.2K\", \"totalSubmission\": \"11.2K\", \"totalAcceptedRaw\": 9200, \"totalSubmissionRaw\": 11246, \"acRate\": \"81.8%\"}",
+  "likes": 53,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Tasks\": [\"task_id\", \"assignee_id\", \"submit_date\"]}, \"rows\": {\"Tasks\": [[1, 1, \"2022-06-13\"], [2, 6, \"2022-06-14\"], [3, 6, \"2022-06-15\"], [4, 3, \"2022-06-18\"], [5, 5, \"2022-06-19\"], [6, 7, \"2022-06-19\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_tasks(tasks: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

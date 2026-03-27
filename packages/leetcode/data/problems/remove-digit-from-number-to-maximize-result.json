@@ -1,0 +1,137 @@
+{
+  "questionId": "2337",
+  "questionFrontendId": "2259",
+  "title": "Remove Digit From Number to Maximize Result",
+  "titleSlug": "remove-digit-from-number-to-maximize-result",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>number</code> representing a <strong>positive integer</strong> and a character <code>digit</code>.</p>\n\n<p>Return <em>the resulting string after removing <strong>exactly one occurrence</strong> of </em><code>digit</code><em> from </em><code>number</code><em> such that the value of the resulting string in <strong>decimal</strong> form is <strong>maximized</strong></em>. The test cases are generated such that <code>digit</code> occurs at least once in <code>number</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> number = &quot;123&quot;, digit = &quot;3&quot;\n<strong>Output:</strong> &quot;12&quot;\n<strong>Explanation:</strong> There is only one &#39;3&#39; in &quot;123&quot;. After removing &#39;3&#39;, the result is &quot;12&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> number = &quot;1231&quot;, digit = &quot;1&quot;\n<strong>Output:</strong> &quot;231&quot;\n<strong>Explanation:</strong> We can remove the first &#39;1&#39; to get &quot;231&quot; or remove the second &#39;1&#39; to get &quot;123&quot;.\nSince 231 &gt; 123, we return &quot;231&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> number = &quot;551&quot;, digit = &quot;5&quot;\n<strong>Output:</strong> &quot;51&quot;\n<strong>Explanation:</strong> We can remove either the first or second &#39;5&#39; from &quot;551&quot;.\nBoth result in the string &quot;51&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= number.length &lt;= 100</code></li>\n\t<li><code>number</code> consists of digits from <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code>.</li>\n\t<li><code>digit</code> is a digit from <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code>.</li>\n\t<li><code>digit</code> occurs at least once in <code>number</code>.</li>\n</ul>\n",
+  "hints": [
+    "The maximum length of number is really small.",
+    "Iterate through the digits of number and every time we see digit, try removing it.",
+    "To remove a character at index i, concatenate the substring from index 0 to i - 1 and the substring from index i + 1 to number.length - 1."
+  ],
+  "metaData": "{\n  \"name\": \"removeDigit\",\n  \"params\": [\n    {\n      \"name\": \"number\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"character\",\n      \"name\": \"digit\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"128.7K\", \"totalSubmission\": \"266K\", \"totalAcceptedRaw\": 128660, \"totalSubmissionRaw\": 266017, \"acRate\": \"48.4%\"}",
+  "likes": 952,
+  "dislikes": 66,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove K Digits\", \"titleSlug\": \"remove-k-digits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Remove Vowels from a String\", \"titleSlug\": \"remove-vowels-from-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Second Largest Digit in a String\", \"titleSlug\": \"second-largest-digit-in-a-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make a Special Number\", \"titleSlug\": \"minimum-operations-to-make-a-special-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"123\"\n\"3\"",
+    "\"1231\"\n\"1\"",
+    "\"551\"\n\"5\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string removeDigit(string number, char digit) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String removeDigit(String number, char digit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def removeDigit(self, number: str, digit: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def removeDigit(self, number, digit):\n        \"\"\"\n        :type number: str\n        :type digit: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} number\n * @param {character} digit\n * @return {string}\n */\nvar removeDigit = function(number, digit) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function removeDigit(number: string, digit: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string RemoveDigit(string number, char digit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* removeDigit(char* number, char digit) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func removeDigit(number string, digit byte) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun removeDigit(number: String, digit: Char): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func removeDigit(_ number: String, _ digit: Character) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn remove_digit(number: String, digit: char) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} number\n# @param {Character} digit\n# @return {String}\ndef remove_digit(number, digit)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $number\n     * @param String $digit\n     * @return String\n     */\n    function removeDigit($number, $digit) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String removeDigit(String number, String digit) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def removeDigit(number: String, digit: Char): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec remove_digit(number :: String.t, digit :: char) :: String.t\n  def remove_digit(number, digit) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec remove_digit(Number :: unicode:unicode_binary(), Digit :: char()) -> unicode:unicode_binary().\nremove_digit(Number, Digit) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (remove-digit number digit)\n  (-> string? char? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

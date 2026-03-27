@@ -1,0 +1,157 @@
+{
+  "questionId": "2287",
+  "questionFrontendId": "2152",
+  "title": "Minimum Number of Lines to Cover Points",
+  "titleSlug": "minimum-number-of-lines-to-cover-points",
+  "difficulty": "Medium",
+  "content": "<p>You are given an array <code>points</code> where <code>points[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> represents a point on an <strong>X-Y </strong>plane.</p>\n\n<p><strong>Straight lines</strong> are going to be added to the <strong>X-Y</strong> plane, such that every point is covered by at <strong>least </strong>one line.</p>\n\n<p>Return <em>the <strong>minimum </strong>number of <strong>straight lines</strong> needed to cover all the points</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/01/23/image-20220123200023-1.png\" style=\"width: 350px; height: 402px;\" />\n<pre>\n<strong>Input:</strong> points = [[0,1],[2,3],[4,5],[4,3]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The minimum number of straight lines needed is two. One possible solution is to add:\n- One line connecting the point at (0, 1) to the point at (4, 5).\n- Another line connecting the point at (2, 3) to the point at (4, 3).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/01/23/image-20220123200057-3.png\" style=\"width: 350px; height: 480px;\" />\n<pre>\n<strong>Input:</strong> points = [[0,2],[-2,-2],[1,4]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The minimum number of straight lines needed is one. The only solution is to add:\n- One line connecting the point at (-2, -2) to the point at (1, 4).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= points.length &lt;= 10</code></li>\n\t<li><code>points[i].length == 2</code></li>\n\t<li><code>-100 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 100</code></li>\n\t<li>All the <code>points</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "What is the highest possible answer for a set of n points?",
+    "The highest possible answer is n / 2 (rounded up). This is because you can cover at least two points with a line, and if n is odd, you need to add one extra line to cover the last point.",
+    "Suppose you have a line covering two points, how can you quickly check if a third point is also covered by that line?",
+    "Calculate the slope from the first point to the second point. If the slope from the first point to the third point is the same, then it is also covered by that line."
+  ],
+  "metaData": "{\n  \"name\": \"minimumLines\",\n  \"params\": [\n    {\n      \"name\": \"points\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.8K\", \"totalSubmission\": \"6.4K\", \"totalAcceptedRaw\": 2833, \"totalSubmissionRaw\": 6448, \"acRate\": \"43.9%\"}",
+  "likes": 77,
+  "dislikes": 14,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Max Points on a Line\", \"titleSlug\": \"max-points-on-a-line\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Min Cost to Connect All Points\", \"titleSlug\": \"min-cost-to-connect-all-points\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Lines to Represent a Line Chart\", \"titleSlug\": \"minimum-lines-to-represent-a-line-chart\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,1],[2,3],[4,5],[4,3]]",
+    "[[0,2],[-2,-2],[1,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"morgan-stanley\", \"name\": \"Morgan Stanley\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    },
+    {
+      "name": "Bitmask",
+      "slug": "bitmask"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumLines(vector<vector<int>>& points) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumLines(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumLines(self, points: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumLines(self, points):\n        \"\"\"\n        :type points: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} points\n * @return {number}\n */\nvar minimumLines = function(points) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumLines(points: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumLines(int[][] points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumLines(int** points, int pointsSize, int* pointsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumLines(points [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumLines(points: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumLines(_ points: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_lines(points: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} points\n# @return {Integer}\ndef minimum_lines(points)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $points\n     * @return Integer\n     */\n    function minimumLines($points) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumLines(List<List<int>> points) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumLines(points: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_lines(points :: [[integer]]) :: integer\n  def minimum_lines(points) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_lines(Points :: [[integer()]]) -> integer().\nminimum_lines(Points) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-lines points)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

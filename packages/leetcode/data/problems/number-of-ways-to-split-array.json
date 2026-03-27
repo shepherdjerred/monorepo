@@ -1,0 +1,136 @@
+{
+  "questionId": "2358",
+  "questionFrontendId": "2270",
+  "title": "Number of Ways to Split Array",
+  "titleSlug": "number-of-ways-to-split-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of length <code>n</code>.</p>\n\n<p><code>nums</code> contains a <strong>valid split</strong> at index <code>i</code> if the following are true:</p>\n\n<ul>\n\t<li>The sum of the first <code>i + 1</code> elements is <strong>greater than or equal to</strong> the sum of the last <code>n - i - 1</code> elements.</li>\n\t<li>There is <strong>at least one</strong> element to the right of <code>i</code>. That is, <code>0 &lt;= i &lt; n - 1</code>.</li>\n</ul>\n\n<p>Return <em>the number of <strong>valid splits</strong> in</em> <code>nums</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [10,4,-8,7]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nThere are three ways of splitting nums into two non-empty parts:\n- Split nums at index 0. Then, the first part is [10], and its sum is 10. The second part is [4,-8,7], and its sum is 3. Since 10 &gt;= 3, i = 0 is a valid split.\n- Split nums at index 1. Then, the first part is [10,4], and its sum is 14. The second part is [-8,7], and its sum is -1. Since 14 &gt;= -1, i = 1 is a valid split.\n- Split nums at index 2. Then, the first part is [10,4,-8], and its sum is 6. The second part is [7], and its sum is 7. Since 6 &lt; 7, i = 2 is not a valid split.\nThus, the number of valid splits in nums is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,3,1,0]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nThere are two valid splits in nums:\n- Split nums at index 1. Then, the first part is [2,3], and its sum is 5. The second part is [1,0], and its sum is 1. Since 5 &gt;= 1, i = 1 is a valid split. \n- Split nums at index 2. Then, the first part is [2,3,1], and its sum is 6. The second part is [0], and its sum is 0. Since 6 &gt;= 0, i = 2 is a valid split.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For any index i, how can we find the sum of the first (i+1) elements from the sum of the first i elements?",
+    "If the total sum of the array is known, how can we check if the sum of the first (i+1) elements greater than or equal to the remaining elements?"
+  ],
+  "metaData": "{\n  \"name\": \"waysToSplitArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"235.8K\", \"totalSubmission\": \"421.8K\", \"totalAcceptedRaw\": 235763, \"totalSubmissionRaw\": 421829, \"acRate\": \"55.9%\"}",
+  "likes": 1199,
+  "dislikes": 100,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Split Array Largest Sum\", \"titleSlug\": \"split-array-largest-sum\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find Pivot Index\", \"titleSlug\": \"find-pivot-index\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Ways to Split Array Into Three Subarrays\", \"titleSlug\": \"ways-to-split-array-into-three-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Middle Index in Array\", \"titleSlug\": \"find-the-middle-index-in-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Partition Array Into Two Arrays to Minimize Sum Difference\", \"titleSlug\": \"partition-array-into-two-arrays-to-minimize-sum-difference\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Average Difference\", \"titleSlug\": \"minimum-average-difference\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[10,4,-8,7]",
+    "[2,3,1,0]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"nvidia\", \"name\": \"Nvidia\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int waysToSplitArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int waysToSplitArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def waysToSplitArray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def waysToSplitArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar waysToSplitArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function waysToSplitArray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int WaysToSplitArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int waysToSplitArray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func waysToSplitArray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun waysToSplitArray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func waysToSplitArray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn ways_to_split_array(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef ways_to_split_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function waysToSplitArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int waysToSplitArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def waysToSplitArray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec ways_to_split_array(nums :: [integer]) :: integer\n  def ways_to_split_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec ways_to_split_array(Nums :: [integer()]) -> integer().\nways_to_split_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (ways-to-split-array nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2635",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Prefix Sum Array\n\n#### Intuition\n\nOur task is to count all splits in the array `nums` where the sum of values before the split is greater than or equal to the sum of values after the split.\n\nThe main challenge in this problem lies in efficiently calculating the sums at each split. The brute force approach would involve looping over each value in each section of the split and adding them up to compare. This means determining whether a split is valid would take linear time, making the overall process take quadratic time. Such an approach would be too slow for our requirements. \n\nOne way to determine the sum of any section of the array in constant time is by using a prefix sum array.\n\nEach index in the prefix sum array stores the sum of all elements in the array from the start up to that index. For example:\n\nIf `nums = [2, 3, 5]`, the prefix sum array would be `[2, 5, 10]`.\n- `prefix[0]` = 2 (sum of the first element).\n- `prefix[1]` = 2 + 3 = 5 (sum of the first two elements).\n- `prefix[2]` = 2 + 3 + 5 = 10 (sum of all three elements).\n\nUsing the prefix sum array, we can calculate the sum of any section of the array in constant time. For example, the sum of elements between index `start` (exclusive) and `end` (inclusive) is simply `prefix[end] - prefix[start]`. This avoids recalculating sums repeatedly for different splits.\n\nNow that we understand prefix sums, let's create a prefix sum array `prefSum`. The first element will be `nums[0]` since no prefix exists for the `0`th element. For each subsequent index, we'll add the current value in `nums` to the prefix sum of the previous element.\n\nWith our prefix sum array ready, we can count the valid splits. We'll iterate through each possible split position. At each position, if the sum to the left of the split is greater than or equal to the sum to the right, we'll increment a counter. The final value of this counter will be our answer.\n\nA common question that arises is how to recognize when to use the prefix sum technique. Suppose you're walking along a path, and someone asks how far you are from a point you passed earlier. Instead of counting the steps back, you just subtract the distance from where you are now to the point in question. This is what the prefix sum does. By using it, we can answer multiple queries in constant time, which reduces the computation time from a multiplication factor of $q$ to just addition for each query.\n\nTo generalize, when a problem requires answering multiple queries, and each query involves some form of range aggregation where each aggregate builds on the previous one, the prefix sum is often a good fit, such as the sum of a subarray, the product of a range, counting from a range or finding averages.\n\n#### Algorithm\n\n- Initialize:\n  - a variable `n` to store the length of the input array `nums`.\n  - an array `prefSum` of size `n` to store prefix sums, using `long` data type to handle large numbers.\n- Set the first element of `prefSum` to the first element of `nums`, as the prefix sum of one element is the element itself.\n- Iterate from index `1` to `n - 1` to build the prefix sum array:\n  - Add the current element to the previous prefix sum to get the current prefix sum.\n  - Store this value in `prefSum[i]`.\n- Initialize a variable `count` to `0` to track the number of valid splits.\n- Iterate `i` from `0` to `n - 2` to check each possible split position:\n  - Calculate `leftSum` as the prefix sum up to index `i`.\n  - Calculate `rightSum` by subtracting the prefix sum up to index `i` from the total sum (which is stored in `prefSum[n-1]`).\n  - If `leftSum` is greater than or equal to `rightSum`, increment `count`.\n- Return the final value of `count` as the result.\n\n> Note: Given the problem constraints where the array elements can be up to `10^5` and the array length up to `10^5`, the sum could reach `10^10` which exceeds integer limits. Therefore, we use `long` to safely handle these large sums.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/X9DvHPTJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"X9DvHPTJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n\n    The algorithm has two main loops. The first loop builds the prefix sum array in $O(n)$ time. The second loop iterates through all possible split positions, also taking $O(n)$ time. Since these operations are sequential, the total time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses an additional array `prefSum` of size $n$ to store the prefix sums. No other data structures that scale with input size are used. Therefore, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Optimized Prefix and Suffix Sums\n\n#### Intuition\n\nIn the previous approach, we calculated the prefix sum array and then iterated through the array again to check each split. This involves some repetitive work since the sums can be updated dynamically as we process each element. Instead of calculating the prefix sum separately, we can directly track the sums on the left and right sides of the split as we iterate through the array.\n\nTo do this, we maintain two variables:\n\n- `leftSum`: This keeps track of the sum of elements to the left of the current split position. At the beginning, since no elements are to the left, this is initialized to `0`.\n\n- `rightSum`: This keeps track of the sum of elements to the right of the current split position. At the start, this is the total sum of the array, as all elements are initially on the right.\n\nNow, each time we consider a new split position, the current element moves from the right side to the left side. So we update `leftSum` and add the current element to it. And to update `rightSum`, we subtract the current element from it.\n\nAfter updating these variables, we compare `leftSum` and `rightSum`. If `leftSum` is greater than or equal to `rightSum`, the split is valid, and we increment a counter. And we repeat this until we exhaust the entire array.\n\nThe slideshow below demonstrates this algorithm in action:\n\n!?!../Documents/2270/slideshow.json:774,582!?!\n\n#### Algorithm\n\n- Initialize two variables `leftSum` and `rightSum` to `0` to track the sum of elements on the left and right sides of each split.\n- Calculate the initial `rightSum` by iterating through the input array and adding all elements to it, as initially, all elements are on the right side.\n- Initialize a variable `count` to `0` to track the number of valid splits.\n- Iterate from index `0` to the length of `nums` minus 2:\n  - Add the current element to `leftSum` as it moves to the left side.\n  - Subtract the current element from `rightSum` as it leaves the right side.\n  - If `leftSum` is greater than or equal to `rightSum`, increment `count`.\n- Return the final value of `count` as the result.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DQnGTDT9/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DQnGTDT9\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(n)$\n\n    The algorithm has two main loops. The first loop calculates the initial `rightSum` by iterating through all elements once in $O(n)$ time. The second loop checks each possible split position, also taking $O(n)$ time. Since these operations are sequential, the total time complexity is $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm only uses two variables (`leftSum` and `rightSum`) regardless of the input size. No additional data structures that scale with input are used. Therefore, the space complexity is constant, $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

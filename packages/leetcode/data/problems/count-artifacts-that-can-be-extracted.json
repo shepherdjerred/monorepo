@@ -1,0 +1,135 @@
+{
+  "questionId": "1312",
+  "questionFrontendId": "2201",
+  "title": "Count Artifacts That Can Be Extracted",
+  "titleSlug": "count-artifacts-that-can-be-extracted",
+  "difficulty": "Medium",
+  "content": "<p>There is an <code>n x n</code> <strong>0-indexed</strong> grid with some artifacts buried in it. You are given the integer <code>n</code> and a <strong>0-indexed </strong>2D integer array <code>artifacts</code> describing the positions of the rectangular artifacts where <code>artifacts[i] = [r1<sub>i</sub>, c1<sub>i</sub>, r2<sub>i</sub>, c2<sub>i</sub>]</code> denotes that the <code>i<sup>th</sup></code> artifact is buried in the subgrid where:</p>\n\n<ul>\n\t<li><code>(r1<sub>i</sub>, c1<sub>i</sub>)</code> is the coordinate of the <strong>top-left</strong> cell of the <code>i<sup>th</sup></code> artifact and</li>\n\t<li><code>(r2<sub>i</sub>, c2<sub>i</sub>)</code> is the coordinate of the <strong>bottom-right</strong> cell of the <code>i<sup>th</sup></code> artifact.</li>\n</ul>\n\n<p>You will excavate some cells of the grid and remove all the mud from them. If the cell has a part of an artifact buried underneath, it will be uncovered. If all the parts of an artifact are uncovered, you can extract it.</p>\n\n<p>Given a <strong>0-indexed</strong> 2D integer array <code>dig</code> where <code>dig[i] = [r<sub>i</sub>, c<sub>i</sub>]</code> indicates that you will excavate the cell <code>(r<sub>i</sub>, c<sub>i</sub>)</code>, return <em>the number of artifacts that you can extract</em>.</p>\n\n<p>The test cases are generated such that:</p>\n\n<ul>\n\t<li>No two artifacts overlap.</li>\n\t<li>Each artifact only covers at most <code>4</code> cells.</li>\n\t<li>The entries of <code>dig</code> are unique.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/16/untitled-diagram.jpg\" style=\"width: 216px; height: 216px;\" />\n<pre>\n<strong>Input:</strong> n = 2, artifacts = [[0,0,0,0],[0,1,1,1]], dig = [[0,0],[0,1]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> \nThe different colors represent different artifacts. Excavated cells are labeled with a &#39;D&#39; in the grid.\nThere is 1 artifact that can be extracted, namely the red artifact.\nThe blue artifact has one part in cell (1,1) which remains uncovered, so we cannot extract it.\nThus, we return 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/09/16/untitled-diagram-1.jpg\" style=\"width: 216px; height: 216px;\" />\n<pre>\n<strong>Input:</strong> n = 2, artifacts = [[0,0,0,0],[0,1,1,1]], dig = [[0,0],[0,1],[1,1]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Both the red and blue artifacts have all parts uncovered (labeled with a &#39;D&#39;) and can be extracted, so we return 2. \n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= artifacts.length, dig.length &lt;= min(n<sup>2</sup>, 10<sup>5</sup>)</code></li>\n\t<li><code>artifacts[i].length == 4</code></li>\n\t<li><code>dig[i].length == 2</code></li>\n\t<li><code>0 &lt;= r1<sub>i</sub>, c1<sub>i</sub>, r2<sub>i</sub>, c2<sub>i</sub>, r<sub>i</sub>, c<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>r1<sub>i</sub> &lt;= r2<sub>i</sub></code></li>\n\t<li><code>c1<sub>i</sub> &lt;= c2<sub>i</sub></code></li>\n\t<li>No two artifacts will overlap.</li>\n\t<li>The number of cells covered by an artifact is <strong>at most</strong> <code>4</code>.</li>\n\t<li>The entries of <code>dig</code> are unique.</li>\n</ul>\n",
+  "hints": [
+    "Check if each coordinate of each artifact has been excavated. How can we do this quickly without iterating over the dig array every time?",
+    "Consider marking all excavated cells in a 2D boolean array."
+  ],
+  "metaData": "{\n  \"name\": \"digArtifacts\",\n  \"params\": [\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"artifacts\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"dig\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"23.2K\", \"totalSubmission\": \"40.7K\", \"totalAcceptedRaw\": 23239, \"totalSubmissionRaw\": 40674, \"acRate\": \"57.1%\"}",
+  "likes": 225,
+  "dislikes": 204,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximal Square\", \"titleSlug\": \"maximal-square\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[[0,0,0,0],[0,1,1,1]]\n[[0,0],[0,1]]",
+    "2\n[[0,0,0,0],[0,1,1,1]]\n[[0,0],[0,1],[1,1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int digArtifacts(int n, vector<vector<int>>& artifacts, vector<vector<int>>& dig) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int digArtifacts(int n, int[][] artifacts, int[][] dig) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def digArtifacts(self, n: int, artifacts: List[List[int]], dig: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def digArtifacts(self, n, artifacts, dig):\n        \"\"\"\n        :type n: int\n        :type artifacts: List[List[int]]\n        :type dig: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} artifacts\n * @param {number[][]} dig\n * @return {number}\n */\nvar digArtifacts = function(n, artifacts, dig) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function digArtifacts(n: number, artifacts: number[][], dig: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DigArtifacts(int n, int[][] artifacts, int[][] dig) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int digArtifacts(int n, int** artifacts, int artifactsSize, int* artifactsColSize, int** dig, int digSize, int* digColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func digArtifacts(n int, artifacts [][]int, dig [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun digArtifacts(n: Int, artifacts: Array<IntArray>, dig: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func digArtifacts(_ n: Int, _ artifacts: [[Int]], _ dig: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn dig_artifacts(n: i32, artifacts: Vec<Vec<i32>>, dig: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} artifacts\n# @param {Integer[][]} dig\n# @return {Integer}\ndef dig_artifacts(n, artifacts, dig)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $artifacts\n     * @param Integer[][] $dig\n     * @return Integer\n     */\n    function digArtifacts($n, $artifacts, $dig) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int digArtifacts(int n, List<List<int>> artifacts, List<List<int>> dig) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def digArtifacts(n: Int, artifacts: Array[Array[Int]], dig: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec dig_artifacts(n :: integer, artifacts :: [[integer]], dig :: [[integer]]) :: integer\n  def dig_artifacts(n, artifacts, dig) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec dig_artifacts(N :: integer(), Artifacts :: [[integer()]], Dig :: [[integer()]]) -> integer().\ndig_artifacts(N, Artifacts, Dig) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (dig-artifacts n artifacts dig)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

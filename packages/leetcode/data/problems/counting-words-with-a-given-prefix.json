@@ -1,0 +1,139 @@
+{
+  "questionId": "2292",
+  "questionFrontendId": "2185",
+  "title": "Counting Words With a Given Prefix",
+  "titleSlug": "counting-words-with-a-given-prefix",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array of strings <code>words</code> and a string <code>pref</code>.</p>\n\n<p>Return <em>the number of strings in </em><code>words</code><em> that contain </em><code>pref</code><em> as a <strong>prefix</strong></em>.</p>\n\n<p>A <strong>prefix</strong> of a string <code>s</code> is any leading contiguous substring of <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;pay&quot;,&quot;<strong><u>at</u></strong>tention&quot;,&quot;practice&quot;,&quot;<u><strong>at</strong></u>tend&quot;], <code>pref </code>= &quot;at&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The 2 strings that contain &quot;at&quot; as a prefix are: &quot;<u><strong>at</strong></u>tention&quot; and &quot;<u><strong>at</strong></u>tend&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words = [&quot;leetcode&quot;,&quot;win&quot;,&quot;loops&quot;,&quot;success&quot;], <code>pref </code>= &quot;code&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no strings that contain &quot;code&quot; as a prefix.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= words[i].length, pref.length &lt;= 100</code></li>\n\t<li><code>words[i]</code> and <code>pref</code> consist of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Go through each word in words and increment the answer if pref is a prefix of the word."
+  ],
+  "metaData": "{\n  \"name\": \"prefixCount\",\n  \"params\": [\n    {\n      \"name\": \"words\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"pref\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"303.5K\", \"totalSubmission\": \"359.3K\", \"totalAcceptedRaw\": 303467, \"totalSubmissionRaw\": 359331, \"acRate\": \"84.5%\"}",
+  "likes": 1127,
+  "dislikes": 38,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Check If a Word Occurs As a Prefix of Any Word in a Sentence\", \"titleSlug\": \"check-if-a-word-occurs-as-a-prefix-of-any-word-in-a-sentence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Count Prefixes of a Given String\", \"titleSlug\": \"count-prefixes-of-a-given-string\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"pay\",\"attention\",\"practice\",\"attend\"]\n\"at\"",
+    "[\"leetcode\",\"win\",\"loops\",\"success\"]\n\"code\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "String Matching",
+      "slug": "string-matching"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int prefixCount(vector<string>& words, string pref) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int prefixCount(String[] words, String pref) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def prefixCount(self, words: List[str], pref: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def prefixCount(self, words, pref):\n        \"\"\"\n        :type words: List[str]\n        :type pref: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words\n * @param {string} pref\n * @return {number}\n */\nvar prefixCount = function(words, pref) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function prefixCount(words: string[], pref: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int PrefixCount(string[] words, string pref) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int prefixCount(char** words, int wordsSize, char* pref) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func prefixCount(words []string, pref string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun prefixCount(words: Array<String>, pref: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func prefixCount(_ words: [String], _ pref: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn prefix_count(words: Vec<String>, pref: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words\n# @param {String} pref\n# @return {Integer}\ndef prefix_count(words, pref)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words\n     * @param String $pref\n     * @return Integer\n     */\n    function prefixCount($words, $pref) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int prefixCount(List<String> words, String pref) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def prefixCount(words: Array[String], pref: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec prefix_count(words :: [String.t], pref :: String.t) :: integer\n  def prefix_count(words, pref) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec prefix_count(Words :: [unicode:unicode_binary()], Pref :: unicode:unicode_binary()) -> integer().\nprefix_count(Words, Pref) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (prefix-count words pref)\n  (-> (listof string?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2637",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nGiven the small constraints of the problem where `words.length` $\\leq$ 100 (the array contains at most 100 words) and `words[i].length`, `pref.length` $\\leq$ 100 (each word and the prefix can be up to 100 characters long), a brute-force approach is viable. This approach involves checking each word in the `words` list to see if it starts with `pref`. We can do this using two pointers, one for the current word and one for `pref`, both starting at index 0.\n\nTo implement this logic, we iterate through the list of words and for each word, compare its characters with the corresponding characters in `pref` up to the length of `pref`. If at any point the characters don't match or if the word's length is smaller than the length of `pref`, we stop checking that word and move to the next one.\n\nThe counter is incremented only when the prefix matches entirely. Finally, after examining all the words in the list, the counter holds the number of words that have `pref` as their prefix, which is returned as the result.\n\n#### Algorithm\n\nFor the main method `prefixCount`:\n- Initialize a variable `count` to `0` to track the number of strings with the given prefix.\n- Iterate through each string in the input array `words`. For each string:\n  - Add the result of `hasPrefix` to `count`.\n- Return the final count.\n\nFor the helper method `hasPrefix`:\n- Initialize a variable `itr` to track the current character position being compared.\n- Start a loop that continues while `itr` is less than both the length of `str` and `pref`:\n  - Compare characters at position `itr` in both strings.\n  - If characters don't match, return `0` immediately as the prefix is not found.\n- After the loop ends, check if `itr` equals the length of `pref`.\n  - If not equal, return `0` as the string was too short to contain the prefix.\n- Return `1` indicating the prefix was found.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fnFNU5E6/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fnFNU5E6\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `words` and $m$ be the length of the prefix string `pref`.\n\n- Time complexity: $O(n \\cdot m)$\n\n    The outer loop in `prefixCount` iterates through each string in the array `words`, which takes $O(n)$ operations. \n    \n    For each string, we call `hasPrefix` which compares characters until it reaches the end of the prefix or finds a mismatch. In the worst case, this character comparison takes $O(m)$ operations. \n    \n    Therefore, the total time complexity is $O(n \\cdot m)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm only uses a constant amount of extra space regardless of the input size. We only store the counter variables `count` and `itr`. No additional data structures are created that grow with the input size. Thus, the space complexity is constant, $O(1)$.\n\n---\n\n### Approach 2: Built-In Methods\n\n#### Intuition\n\nMatching prefixes is an extremely common task in programming. Because of this, most popular programming languages provide built-in methods to handle prefix matching. These built-in methods have been thoroughly tested and optimized over time, making them more reliable and efficient than custom-written code.\n\nFor this reason, it's generally better to use these built-in methods rather than writing our own implementation. Let's look at some popular built-in methods that we can use for this problem:\n\n##### Java\n1. `String.startsWith(String prefix)` \n   Checks if the string begins with the specified prefix.\n\n2. `Stream.filter(Predicate<T> predicate)`  \n   Filters elements in a stream based on a given condition (e.g., checking if a string starts with a prefix).\n\n3. `String.substring(int beginIndex, int endIndex)`\n   Extracts a substring from a string, which can be compared manually to check for a prefix.\n\n##### C++\n1. `std::string::find` (or `std::string::rfind`)  \n   Finds the position of the first or last occurrence of a substring and is commonly used to check if it occurs at the start.\n\n2. `std::string::substr(size_t pos, size_t len)`  \n   Extracts a substring starting at a position, which can be used to compare the prefix manually.\n\n3. `std::mismatch` (from `<algorithm>`)  \n   Compares elements of two ranges (e.g., a prefix and the beginning of a string) and determines if they match.\n\n##### Python3\n1. `str.startswith(prefix)`  \n   Directly checks if the string starts with the specified prefix.\n\n2. `filter(function, iterable)`  \n   Applies a function (e.g., a lambda checking `startswith`) to an iterable and filters elements that match.\n\n3. `any()` and `all()` (combined with slicing)  \n   Can be used to validate whether a prefix condition holds across a collection.\n\n#### Algorithm\n\n- Initialize a variable `count` to `0` to track the number of strings with the given prefix.\n- Iterate through each string `word` in the input array `words`:\n  - Check if `word` starts with the given prefix using the built-in string method `startsWith`.\n    - If so, increment the `count` by 1.\n- After examining all strings, return the final count.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4ShBo4Ab/shared\" frameBorder=\"0\" width=\"100%\" height=\"259\" name=\"4ShBo4Ab\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `words` and $m$ be the length of the prefix string `pref`.\n\n- Time complexity: $O(n \\cdot m)$\n\n    The outer loop iterates through each string in the array `words`, which takes $O(n)$ operations. For each string, the `startsWith` method needs to compare characters until it reaches the end of the prefix or finds a mismatch. In the worst case, this comparison takes $O(m)$ operations. \n    \n    Thus, the total time complexity is $O(n \\cdot m)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm only uses a constant amount of extra space regardless of the input size. We only store the counter variable `count`. No additional data structures are created that grow with the input size. \n    \n    Therefore, the space complexity is constant, $O(1)$.\n\n---\n\n### Approach 3: Trie\n\n#### Intuition\n\nThe process of matching characters sequentially from the beginning aligns perfectly with the concept of a Trie. A Trie is a specialized tree-like data structure designed to handle strings efficiently, especially for operations like prefix searches, word insertions, and word lookups.\n\nEach node in a Trie represents a single character, and the path from the root node to any other node forms a prefix or a word. \n\nUsually a Trie is used in two below ways:\n\n1. Insertion: When inserting a word into the Trie, we start at the root and traverse down the tree, creating new nodes for each character of the word if they don't already exist. At the end of the word, we mark the final node to signify the completion of the word.\n\n2. Search for a Prefix: To check if a word starts with a given prefix, we simply traverse the Trie following the nodes corresponding to each character of the prefix. If we can traverse all characters successfully, the prefix exists in the Trie.\n\nFor example, if we built a Trie using the `words` array in Example 1 of the problem description, this is how it would look like:\n\n![](../Figures/2185/trie.png)\n\nWhat makes Tries particularly powerful is their ability to efficiently handle prefix-based operations. Think about how you use autocomplete on your phone - as you type each character, it quickly suggests words that start with those letters. Tries are thus a natural choice for problems involving prefixes or auto-completion. By structuring the characters hierarchically, they allow for fast and intuitive access to any subset of stored strings.\n\nOur version of the Trie has a unique feature - instead of just marking where words end, we keep count of how many words share each prefix. For example, if three words begin with `\"cat\"`, then after we reach `'t'` in the Trie, that node would show a count of 3.\n\nTo build this solution, we start by designing our Trie structure. Each node needs two essential pieces: links to its children (representing the next possible characters) and the count variable. Since we're working with lowercase English letters, we can use an array of size 26 for the links, where each index represents a character (a = 0, b = 1, etc.). This array approach gives us constant-time access to child nodes.\n\nWhen adding words to our Trie, we follow a path determined by each character in the word. If we're adding `\"cat\"`, we start at the root and follow (or create) links for `'c'`, then `'a'`, then `'t'`. The crucial part is incrementing the count at each node we visit. This means that after adding `\"cat\"`, `\"car\"`, and `\"carpet\"`, the node for `'r'` would have a count of 2 (for `\"car\"` and `\"carpet\"`), while the node for `'t'` would have a count of 1.\n\nThe counting process becomes straightforward once our Trie is built. To find how many words start with a prefix, we simply navigate the Trie following the characters of our prefix. If we can follow the entire prefix, the count at the final node gives us our answer. However, if we can't follow the complete prefix (a link is missing), we know no words start with that prefix, so we return 0.\n\n> For a more comprehensive understanding of tries, check out the [Trie Explore Card 🔗](https://leetcode.com/explore/learn/card/trie/). This resource provides an in-depth look at the trie data structure, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\nMain method `prefixCount`:\n- Initialize a variable `count` to 0 to track the count of matching strings.\n- Create a new instance of the Trie data structure.\n- Iterate through each string in the input array `words` and add it to the Trie.\n- Return the result of counting strings with the given prefix using `countPrefix`.\n\nFor the Trie Node structure:\n- Initialize \n  - an array `links` of size `26` to store pointers to child nodes (one for each lowercase letter).\n  - a variable `count` to track the number of strings that share the prefix up to this node.\n\nFor the `addWord` method:\n- Start at the root node of the Trie.\n- For each character in the input word:\n  - Convert the character to an array index (0-25).\n  - If no node exists for this character, create a new node.\n  - Move to the child node.\n  - Increment the `count` at the current node to track prefix frequency.\n   \nFor the `countPrefix` method:\n- Start at the root node of the Trie.\n- For each character in the prefix string:\n  - Convert the character to an array index.\n  - If no node exists for this character, return `0` as the prefix doesn't exist.\n  - Move to the child node.\n- Return the `count` stored at the final node, which represents the number of strings containing this prefix.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LsCe8agi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LsCe8agi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the total number of strings in the input array `words`, $l$ be the maximum length of any string in `words`, and $m$ be the length of the prefix string `pref`.\n\n- Time complexity: $O(n \\cdot l + m)$\n\n    The algorithm has two main phases. In the first phase, we build the Trie by inserting all words. For each word of maximum length $l$, we perform $l$ operations to add each character. Since we have $n$ words, building the Trie takes $O(n \\cdot l)$ time. \n    \n    In the second phase, searching for the prefix takes $O(m)$ operations. \n    \n    Thus, the total time complexity is $O(n \\cdot l + m)$.\n\n- Space complexity: $O(n \\cdot l)$\n\n    The space complexity is determined by the size of the Trie structure. In the worst case, when there are no common prefixes among the words, each character of each word will require a new node. Each node contains a fixed-size array of $26$ pointers and a `count` variable. With $n$ words of maximum length $l$, the Trie can contain up to $O(n \\cdot l)$ nodes. Therefore, the space complexity is $O(n \\cdot l)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "2301",
+  "questionFrontendId": "2183",
+  "title": "Count Array Pairs Divisible by K",
+  "titleSlug": "count-array-pairs-divisible-by-k",
+  "difficulty": "Hard",
+  "content": "<p>Given a <strong>0-indexed</strong> integer array <code>nums</code> of length <code>n</code> and an integer <code>k</code>, return <em>the <strong>number of pairs</strong></em> <code>(i, j)</code> <em>such that:</em></p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt; j &lt;= n - 1</code> <em>and</em></li>\n\t<li><code>nums[i] * nums[j]</code> <em>is divisible by</em> <code>k</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4,5], k = 2\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> \nThe 7 pairs of indices whose corresponding products are divisible by 2 are\n(0, 1), (0, 3), (1, 2), (1, 3), (1, 4), (2, 3), and (3, 4).\nTheir products are 2, 4, 6, 8, 10, 12, and 20 respectively.\nOther pairs such as (0, 2) and (2, 4) have products 3 and 15 respectively, which are not divisible by 2.    \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,4], k = 5\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There does not exist any pair of indices whose corresponding product is divisible by 5.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i], k &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For any element in the array, what is the smallest number it should be multiplied with such that the product is divisible by k?",
+    "The smallest number which should be multiplied with nums[i] so that the product is divisible by k is k / gcd(k, nums[i]). Now think about how you can store and update the count of such numbers present in the array efficiently."
+  ],
+  "metaData": "{\n  \"name\": \"countPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"23.2K\", \"totalSubmission\": \"75.6K\", \"totalAcceptedRaw\": 23179, \"totalSubmissionRaw\": 75626, \"acRate\": \"30.6%\"}",
+  "likes": 924,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Single Divisor Triplets\", \"titleSlug\": \"number-of-single-divisor-triplets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Check If Array Pairs Are Divisible by k\", \"titleSlug\": \"check-if-array-pairs-are-divisible-by-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Good Pairs II\", \"titleSlug\": \"find-the-number-of-good-pairs-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Number of Good Pairs I\", \"titleSlug\": \"find-the-number-of-good-pairs-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5]\n2",
+    "[1,2,3,4]\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"qualcomm\", \"name\": \"Qualcomm\"}, {\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Number Theory",
+      "slug": "number-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long countPairs(vector<int>& nums, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long countPairs(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countPairs(self, nums: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countPairs(self, nums, k):\n        \"\"\"\n        :type nums: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} k\n * @return {number}\n */\nvar countPairs = function(nums, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countPairs(nums: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long CountPairs(int[] nums, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long countPairs(int* nums, int numsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countPairs(nums []int, k int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countPairs(nums: IntArray, k: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countPairs(_ nums: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_pairs(nums: Vec<i32>, k: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} k\n# @return {Integer}\ndef count_pairs(nums, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $k\n     * @return Integer\n     */\n    function countPairs($nums, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countPairs(List<int> nums, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countPairs(nums: Array[Int], k: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_pairs(nums :: [integer], k :: integer) :: integer\n  def count_pairs(nums, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_pairs(Nums :: [integer()], K :: integer()) -> integer().\ncount_pairs(Nums, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-pairs nums k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,130 @@
+{
+  "questionId": "2361",
+  "questionFrontendId": "2243",
+  "title": "Calculate Digit Sum of a String",
+  "titleSlug": "calculate-digit-sum-of-a-string",
+  "difficulty": "Easy",
+  "content": "<p>You are given a string <code>s</code> consisting of digits and an integer <code>k</code>.</p>\n\n<p>A <strong>round</strong> can be completed if the length of <code>s</code> is greater than <code>k</code>. In one round, do the following:</p>\n\n<ol>\n\t<li><strong>Divide</strong> <code>s</code> into <strong>consecutive groups</strong> of size <code>k</code> such that the first <code>k</code> characters are in the first group, the next <code>k</code> characters are in the second group, and so on. <strong>Note</strong> that the size of the last group can be smaller than <code>k</code>.</li>\n\t<li><strong>Replace</strong> each group of <code>s</code> with a string representing the sum of all its digits. For example, <code>&quot;346&quot;</code> is replaced with <code>&quot;13&quot;</code> because <code>3 + 4 + 6 = 13</code>.</li>\n\t<li><strong>Merge</strong> consecutive groups together to form a new string. If the length of the string is greater than <code>k</code>, repeat from step <code>1</code>.</li>\n</ol>\n\n<p>Return <code>s</code> <em>after all rounds have been completed</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;11111222223&quot;, k = 3\n<strong>Output:</strong> &quot;135&quot;\n<strong>Explanation:</strong> \n- For the first round, we divide s into groups of size 3: &quot;111&quot;, &quot;112&quot;, &quot;222&quot;, and &quot;23&quot;.\n  ​​​​​Then we calculate the digit sum of each group: 1 + 1 + 1 = 3, 1 + 1 + 2 = 4, 2 + 2 + 2 = 6, and 2 + 3 = 5. \n&nbsp; So, s becomes &quot;3&quot; + &quot;4&quot; + &quot;6&quot; + &quot;5&quot; = &quot;3465&quot; after the first round.\n- For the second round, we divide s into &quot;346&quot; and &quot;5&quot;.\n&nbsp; Then we calculate the digit sum of each group: 3 + 4 + 6 = 13, 5 = 5. \n&nbsp; So, s becomes &quot;13&quot; + &quot;5&quot; = &quot;135&quot; after second round. \nNow, s.length &lt;= k, so we return &quot;135&quot; as the answer.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;00000000&quot;, k = 3\n<strong>Output:</strong> &quot;000&quot;\n<strong>Explanation:</strong> \nWe divide s into &quot;000&quot;, &quot;000&quot;, and &quot;00&quot;.\nThen we calculate the digit sum of each group: 0 + 0 + 0 = 0, 0 + 0 + 0 = 0, and 0 + 0 = 0. \ns becomes &quot;0&quot; + &quot;0&quot; + &quot;0&quot; = &quot;000&quot;, whose length is equal to k, so we return &quot;000&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>2 &lt;= k &lt;= 100</code></li>\n\t<li><code>s</code> consists of digits only.</li>\n</ul>\n",
+  "hints": [
+    "Try simulating the entire process to find the final answer."
+  ],
+  "metaData": "{\n  \"name\": \"digitSum\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"54.2K\", \"totalSubmission\": \"80.1K\", \"totalAcceptedRaw\": 54223, \"totalSubmissionRaw\": 80064, \"acRate\": \"67.7%\"}",
+  "likes": 599,
+  "dislikes": 52,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Add Digits\", \"titleSlug\": \"add-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Triangular Sum of an Array\", \"titleSlug\": \"find-triangular-sum-of-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"11111222223\"\n3",
+    "\"00000000\"\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string digitSum(string s, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String digitSum(String s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def digitSum(self, s: str, k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def digitSum(self, s, k):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @return {string}\n */\nvar digitSum = function(s, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function digitSum(s: string, k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string DigitSum(string s, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* digitSum(char* s, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func digitSum(s string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun digitSum(s: String, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func digitSum(_ s: String, _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn digit_sum(s: String, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @return {String}\ndef digit_sum(s, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @return String\n     */\n    function digitSum($s, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String digitSum(String s, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def digitSum(s: String, k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec digit_sum(s :: String.t, k :: integer) :: String.t\n  def digit_sum(s, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec digit_sum(S :: unicode:unicode_binary(), K :: integer()) -> unicode:unicode_binary().\ndigit_sum(S, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (digit-sum s k)\n  (-> string? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

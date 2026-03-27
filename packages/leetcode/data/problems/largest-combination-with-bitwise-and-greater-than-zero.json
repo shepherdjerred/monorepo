@@ -1,0 +1,144 @@
+{
+  "questionId": "2356",
+  "questionFrontendId": "2275",
+  "title": "Largest Combination With Bitwise AND Greater Than Zero",
+  "titleSlug": "largest-combination-with-bitwise-and-greater-than-zero",
+  "difficulty": "Medium",
+  "content": "<p>The <strong>bitwise AND</strong> of an array <code>nums</code> is the bitwise AND of all integers in <code>nums</code>.</p>\n\n<ul>\n\t<li>For example, for <code>nums = [1, 5, 3]</code>, the bitwise AND is equal to <code>1 &amp; 5 &amp; 3 = 1</code>.</li>\n\t<li>Also, for <code>nums = [7]</code>, the bitwise AND is <code>7</code>.</li>\n</ul>\n\n<p>You are given an array of positive integers <code>candidates</code>. Compute the <strong>bitwise AND</strong> for all possible <strong>combinations</strong> of elements in the <code>candidates</code> array.</p>\n\n<p>Return <em>the size of the <strong>largest</strong> combination of </em><code>candidates</code><em> with a bitwise AND <strong>greater</strong> than </em><code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> candidates = [16,17,71,62,12,24,14]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The combination [16,17,62,24] has a bitwise AND of 16 &amp; 17 &amp; 62 &amp; 24 = 16 &gt; 0.\nThe size of the combination is 4.\nIt can be shown that no combination with a size greater than 4 has a bitwise AND greater than 0.\nNote that more than one combination may have the largest size.\nFor example, the combination [62,12,24,14] has a bitwise AND of 62 &amp; 12 &amp; 24 &amp; 14 = 8 &gt; 0.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> candidates = [8,8]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The largest combination [8,8] has a bitwise AND of 8 &amp; 8 = 8 &gt; 0.\nThe size of the combination is 2, so we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= candidates.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= candidates[i] &lt;= 10<sup>7</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For the bitwise AND to be greater than zero, at least one bit should be 1 for every number in the combination.",
+    "The candidates are 24 bits long, so for every bit position, we can calculate the size of the largest combination such that the bitwise AND will have a 1 at that bit position."
+  ],
+  "metaData": "{\n  \"name\": \"largestCombination\",\n  \"params\": [\n    {\n      \"name\": \"candidates\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"156.2K\", \"totalSubmission\": \"193.4K\", \"totalAcceptedRaw\": 156248, \"totalSubmissionRaw\": 193412, \"acRate\": \"80.8%\"}",
+  "likes": 1133,
+  "dislikes": 60,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Number of Maximum Bitwise-OR Subsets\", \"titleSlug\": \"count-number-of-maximum-bitwise-or-subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[16,17,71,62,12,24,14]",
+    "[8,8]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"adobe\", \"name\": \"Adobe\"}, {\"timesEncountered\": 2, \"slug\": \"jump-trading\", \"name\": \"Jump Trading\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int largestCombination(vector<int>& candidates) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int largestCombination(int[] candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestCombination(self, candidates: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestCombination(self, candidates):\n        \"\"\"\n        :type candidates: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} candidates\n * @return {number}\n */\nvar largestCombination = function(candidates) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestCombination(candidates: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LargestCombination(int[] candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int largestCombination(int* candidates, int candidatesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestCombination(candidates []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestCombination(candidates: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestCombination(_ candidates: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_combination(candidates: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} candidates\n# @return {Integer}\ndef largest_combination(candidates)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $candidates\n     * @return Integer\n     */\n    function largestCombination($candidates) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int largestCombination(List<int> candidates) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestCombination(candidates: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_combination(candidates :: [integer]) :: integer\n  def largest_combination(candidates) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_combination(Candidates :: [integer()]) -> integer().\nlargest_combination(Candidates) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-combination candidates)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2554",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview \n\nWhen we want to find groups of numbers where their bitwise AND is greater than zero, we first need to understand what conditions allow for a positive result. The crucial factor is that all numbers in the group must share at least one '1' bit in the same position. For instance, if we take the numbers 6 (binary `110`) and 4 (binary `100`), their AND operation yields 4 (binary `100`) because they both have a '1' in the third position.\n\nThis insight leads us to a critical conclusion: the size of the largest group we can form will correspond to the count of numbers that share a '1' bit in any particular position. \n\nTo illustrate this further, consider the numbers `[6, 4, 5, 3]`, which in binary are `[110, 100, 101 , 011]`. For these numbers to yield a bitwise AND greater than zero, they must have at least one '1' bit in the same position. Analyzing the binary representations, we see that three numbers (6, 4, and 5) have a common '1' in the third position. This means we can form groups of size 3 that will result in a non-zero AND. The other groups will be smaller than the size of 3.\n\nIn practical terms, for numbers constrained to be less than or equal to $10^7$ (requiring a maximum of 24 bits), we only need to check bit positions 0 to 23 when working with 32-bit integers. For larger numbers, like those up to $10^9$, we would check up to 30 bits, since $2^{30} = 1,073,741,824$.\n\n---\n\n### Approach 1: Using a Bit Count Array\n\n#### Intuition\n\nSince we’re interested in grouping numbers that share 1 bit at the same positions, we can scan through each bit position across all numbers and simply count how many times each position has a 1. For example, if the third bit position has three numbers with a 1, then we know we can form a group of three with a non-zero AND result. By doing this for all bit positions, the largest count we find will represent the maximum group size that meets our criteria.\n\nTo implement this, we create an array called `bitCount`, with each index representing a bit position (from 0 to 23). We initialize all values to zero. As we iterate through each number in `candidates`, we check if each bit is set using a bitwise AND operation. If it is set, we increment the corresponding index in `bitCount`. By the end of this process, `bitCount[i]` will tell us how many numbers have the i-th bit set.\n\nFinally, we look for the maximum value in the `bitCount` array. This value represents the largest group of candidates that can contribute to a bitwise AND greater than zero. The logic here is straightforward: if more numbers have a specific bit set, we can form a larger combination that retains that bit in the final AND result. \n \nFor instance, given the input `candidates = [6, 3, 4, 5]`, we check each bit position. For the most significant bit (bit 0), the numbers 6 (binary 110), 3 (011), 4 (100), and 5 (101) contribute to a count of 3, since 3 candidates have their most significant bit set. The final maximum count across all bit positions is 3, indicating that the largest combination with a bitwise AND greater than zero consists of 3 numbers.\n\n#### Algorithm\n\n- Initialize an array `bitCount` of size 24 with zeros to store the count of set bits at each bit position from 0 to 23.\n\n- For each bit position `i` from 0 to 23:\n  - For each number `num` in `candidates`:\n    - Check if the i-th bit of `num` is set using the expression `(num & (1 << i)) != 0`.\n    - If the bit is set, increment `bitCount[i]` to track how many numbers have the i-th bit set.\n\n- After counting set bits for all positions, find the maximum value in `bitCount` using `max_element`.\n  \n- Return the maximum count, which represents the largest size of candidates that have a common bit set at the same position.\n\n\n<details>\n  <summary>Working of <code>(num & (1 << i)) != 0</code> (Click here to check)</summary>\n  \n  <p>\n    The expression <code>(num & (1 << i)) != 0</code> is a way to check if the bit at the <em>i-th</em> position of <code>num</code> is <code>1</code>.\n  </p>\n  <p>\n    The expression <code>(1 << i)</code> moves the bit <code>1</code> to the left by <code>i</code> places. For example:\n    <ul>\n      <li><code>(1 << 0)</code> is <code>0001</code> (1 in decimal).</li>\n      <li><code>(1 << 1)</code> is <code>0010</code> (2 in decimal).</li>\n      <li><code>(1 << 2)</code> is <code>0100</code> (4 in decimal).</li>\n    </ul>\n    This creates a number where only the i-th bit is <code>1</code>, and all other bits are <code>0</code>.\n  </p>\n  <p>\n    Then the <code>&</code> (bitwise AND) operation compares each bit of <code>num</code> with <code>(1 << i)</code>.\n    <ul>\n      <li>If the i-th bit of <code>num</code> is <code>1</code>, then <code>(num & (1 << i))</code> will give a non-zero result, because there’s a <code>1</code> in the same position for both <code>num</code> and <code>(1 << i)</code>.</li>\n      <li>If the i-th bit of <code>num</code> is <code>0</code>, the result of <code>(num & (1 << i))</code> will be <code>0</code>, because there’s no <code>1</code> in that position in <code>num</code>.</li>\n    </ul>\n  </p>\n  <p>\n    Say <code>num</code> is <code>5</code> (binary <code>0101</code>), and we want to check if the 2nd bit (counting from 0) is <code>1</code>:\n    <ul>\n      <li><code>(1 << 2)</code> gives <code>0100</code>.</li>\n      <li><code>num & (1 << 2)</code> does <code>0101 & 0100</code>, which gives <code>0100</code> (not zero), so the 2nd bit in <code>num</code> is indeed <code>1</code>.</li>\n    </ul>\n  </p>\n</details>\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LNGeKnEk/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"LNGeKnEk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `candidates` array.\n\n- Time complexity: $O(n \\cdot b + b) = O(n)$\n\n    The outer loop iterates over 24 bit positions (from 0 to 23), checking each integer in `candidates` to see if a specific bit is set. Inside the nested loop, the bitwise operation `(num & (1 << i))` is performed, which executes in constant time for each candidate and bit position.\n\n    Given that there are $n$ integers in `candidates` and we check up to 24 bit positions for each, the total time complexity for this part is $O(n \\cdot 24)$.\n\n    Additionally, we find the maximum value in the `bitCount` array, which has a fixed size of 24. This allows the operation to complete in $O(b)$ time, where $b$ represents the fixed size of the array.\n\n    Thus, the overall time complexity can be expressed as $O(n \\cdot b + b) = O(n)$, where $b = 24$ represents the fixed bit width.\n\n- Space complexity: $O(b) = O(1)$\n\n    We utilize an auxiliary array `bitCount` of size 24 to store the count of set bits at each bit position. Since 24 is a constant that \"doesn't scale with $n$\", the space complexity is $O(b) = O(1)$, where $b = 24$ represents the fixed bit width.\n\n    Aside from `bitCount`, we only use a few fixed-size variables, resulting in no additional space complexity beyond $O(b)$.\n\n---\n\n### Approach 2: Direct Maximum Bit Count\n\n#### Intuition\n\nWe can simplify the method by focusing on finding the maximum count of candidates with set bits without using an extra array. Here, we keep track of the highest count directly with a single variable, `maxCount`.\n\nAs we loop through each bit position from 0 to 23, we initialize a `count` variable to zero for each position. For every candidate, we check if the current bit is set. If it is, we increment `count`. At the end of checking all candidates for a bit position, we compare `count` to `maxCount`. If `count` is larger, we update `maxCount`. By the end of our iterations, `maxCount` will reflect the size of the largest combination with a bitwise AND greater than zero.\n\n![Direct Maximum Bit Count](../Figures/2275/2275_approach_2.png)\n\n#### Algorithm\n\n- Initialize `maxCount` to `0` to track the maximum number of candidates with the same bit position set.\n\n- Loop over each bit position from `0` to `23` (assuming 24 bits are sufficient for the input constraints):\n  - Set `count` to `0` for the current bit position to count how many candidates have this bit set.\n\n  - For each number in `candidates`:\n    - Use bitwise AND to check if the current bit position (i-th bit) is set in the number.\n    - If the bit is set, increment `count`.\n\n  - After counting for the current bit position, update `maxCount` with the maximum value between `maxCount` and `count`.\n\n- Return the `maxCount`, which represents the largest size of candidates that have a common bit set at the same position.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/S3MrFPY2/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"S3MrFPY2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `candidates` array.\n\n- Time complexity: $O(n \\cdot b) = O(n)$\n\n    The outer loop runs 24 times, corresponding to checking each of the 24 bits (from the least significant to the 24th bit). Inside this loop, an inner loop iterates over all $n$ elements in the `candidates` array. For each element, we perform a constant-time operation (bitwise AND) to determine if a specific bit is set.\n\n    Thus, the overall time complexity is $O(n \\cdot b)$, where $b = 24$ represents the fixed bit width being processed. The built-in functions used include `max` (constant time), `&`, and bit shifting `<<`, all of which operate in $O(1)$.  \n\n- Space complexity: $O(1)$\n\n    The space complexity is constant because the algorithm only uses a fixed amount of extra space: `maxCount` and `count` (both integers) and does not require any additional data structures.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

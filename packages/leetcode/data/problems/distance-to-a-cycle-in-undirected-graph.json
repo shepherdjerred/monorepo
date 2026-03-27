@@ -1,0 +1,145 @@
+{
+  "questionId": "1347",
+  "questionFrontendId": "2204",
+  "title": "Distance to a Cycle in Undirected Graph",
+  "titleSlug": "distance-to-a-cycle-in-undirected-graph",
+  "difficulty": "Hard",
+  "content": "<p>You are given a positive integer <code>n</code> representing the number of nodes in a <strong>connected undirected graph</strong> containing <strong>exactly one</strong> cycle. The nodes are numbered from <code>0</code> to <code>n - 1</code> (<strong>inclusive</strong>).</p>\n\n<p>You are also given a 2D integer array <code>edges</code>, where <code>edges[i] = [node1<sub>i</sub>, node2<sub>i</sub>]</code> denotes that there is a <strong>bidirectional</strong> edge connecting <code>node1<sub>i</sub></code> and <code>node2<sub>i</sub></code> in the graph.</p>\n\n<p>The distance between two nodes <code>a</code> and <code>b</code> is defined to be the <strong>minimum</strong> number of edges that are needed to go from <code>a</code> to <code>b</code>.</p>\n\n<p>Return <em>an integer array <code>answer</code></em><em> of size </em><code>n</code><em>, where </em><code>answer[i]</code><em> is the <strong>minimum</strong> distance between the </em><code>i<sup>th</sup></code><em> node and <strong>any</strong> node in the cycle.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/03/15/image-20220315154238-1.png\" style=\"width: 350px; height: 237px;\" />\n<pre>\n<strong>Input:</strong> n = 7, edges = [[1,2],[2,4],[4,3],[3,1],[0,1],[5,2],[6,5]]\n<strong>Output:</strong> [1,0,0,0,0,1,2]\n<strong>Explanation:</strong>\nThe nodes 1, 2, 3, and 4 form the cycle.\nThe distance from 0 to 1 is 1.\nThe distance from 1 to 1 is 0.\nThe distance from 2 to 2 is 0.\nThe distance from 3 to 3 is 0.\nThe distance from 4 to 4 is 0.\nThe distance from 5 to 2 is 1.\nThe distance from 6 to 2 is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2022/03/15/image-20220315154634-1.png\" style=\"width: 400px; height: 297px;\" />\n<pre>\n<strong>Input:</strong> n = 9, edges = [[0,1],[1,2],[0,2],[2,6],[6,7],[6,8],[0,3],[3,4],[3,5]]\n<strong>Output:</strong> [0,0,0,1,2,2,1,2,2]\n<strong>Explanation:</strong>\nThe nodes 0, 1, and 2 form the cycle.\nThe distance from 0 to 0 is 0.\nThe distance from 1 to 1 is 0.\nThe distance from 2 to 2 is 0.\nThe distance from 3 to 1 is 1.\nThe distance from 4 to 1 is 2.\nThe distance from 5 to 1 is 2.\nThe distance from 6 to 2 is 1.\nThe distance from 7 to 2 is 2.\nThe distance from 8 to 2 is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= node1<sub>i</sub>, node2<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>node1<sub>i</sub> != node2<sub>i</sub></code></li>\n\t<li>The graph is connected.</li>\n\t<li>The graph has exactly one cycle.</li>\n\t<li>There is at most one edge between any pair of vertices.</li>\n</ul>\n",
+  "hints": [
+    "This problem can be broken down into two parts: finding the cycle, and finding the distance between each node and the cycle.",
+    "How can we find the cycle? We can use DFS and keep track of the nodes we’ve seen, and the order that we see them in. Once we see a node we’ve already visited, we know that the cycle contains the node that was seen twice and all the nodes that we visited in between.",
+    "Now that we know which nodes are part of the cycle, how can we find the distances? We can run a multi-source BFS starting from the nodes in the cycle and expanding outward."
+  ],
+  "metaData": "{\n  \"name\": \"distanceToCycle\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"7.2K\", \"totalSubmission\": \"9.7K\", \"totalAcceptedRaw\": 7183, \"totalSubmissionRaw\": 9696, \"acRate\": \"74.1%\"}",
+  "likes": 153,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Paths in Maze That Lead to Same Room\", \"titleSlug\": \"paths-in-maze-that-lead-to-same-room\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "7\n[[1,2],[2,4],[4,3],[3,1],[0,1],[5,2],[6,5]]",
+    "9\n[[0,1],[1,2],[0,2],[2,6],[6,7],[6,8],[0,3],[3,4],[3,5]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> distanceToCycle(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] distanceToCycle(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def distanceToCycle(self, n: int, edges: List[List[int]]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def distanceToCycle(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number[]}\n */\nvar distanceToCycle = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function distanceToCycle(n: number, edges: number[][]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] DistanceToCycle(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* distanceToCycle(int n, int** edges, int edgesSize, int* edgesColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func distanceToCycle(n int, edges [][]int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun distanceToCycle(n: Int, edges: Array<IntArray>): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func distanceToCycle(_ n: Int, _ edges: [[Int]]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn distance_to_cycle(n: i32, edges: Vec<Vec<i32>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer[]}\ndef distance_to_cycle(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer[]\n     */\n    function distanceToCycle($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> distanceToCycle(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def distanceToCycle(n: Int, edges: Array[Array[Int]]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec distance_to_cycle(n :: integer, edges :: [[integer]]) :: [integer]\n  def distance_to_cycle(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec distance_to_cycle(N :: integer(), Edges :: [[integer()]]) -> [integer()].\ndistance_to_cycle(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (distance-to-cycle n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2584",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a connected, undirected graph that contains exactly one cycle. Our task is to calculate the shortest distance between each node in the graph and any node in the cycle.\n\nTo solve this problem, we can break it down into two main independent steps:\n\n1. Identify the cycle nodes\n2. Compute distances to the cycle\n\nFor each task, we’ll introduce two distinct algorithms. These algorithms can be used interchangeably, providing multiple paths to solving the problem.\n\nTo get started, consider taking a look at this related problem: [2608. Shortest Cycle in a Graph](https://leetcode.com/problems/shortest-cycle-in-a-graph/description/).\n\n---\n\n### Approach 1: Depth-First Search (DFS)\n\n#### Intuition\n\nWe’ll use Depth-First Search (DFS), to identify all nodes that form the cycle. The key idea is that a cycle is detected when DFS revisits a node that has already been visited (and is not the direct parent of the current node).\n\nWhile performing DFS, we’ll keep track of each node’s parent. Once we detect a cycle, we can use backtracking to trace and collect all nodes that form the cycle.\n\nNext, we can conceptually treat all cycle nodes as a single \"super-node\" (as illustrated below). With this transformation, the graph becomes a tree: there are no remaining cycles, and there’s exactly one path between any two nodes. Now, we can treat this \"cycle\" node as the root of the tree and perform another DFS to calculate the shortest distance from the cycle to each other node in the graph.\n\n![Cycle nodes forming a \"super-node\"](../Figures/2204/2204_Approach1/2204_Approach1.png)\n\n#### Algorithm\n\n-   Define a function `detectCycleNodes` that takes as parameters the `currentNode`, the graph's `adjacencyList`, and the arrays `isInCycle`, `visited`, and `parent` and returns a boolean value, indicating whether a cycle has been detected.\n\n    -   Mark `currentNode` as visited.\n    -   For each `neighbor` of `currentNode`:\n        -   If `neighbor` is not visited:\n            -   Mark `currentNode` as the parent of `neighbor`.\n            -   Call `detectCycleNodes` for the `neighbor` node and return `true` if it also returns `true`.\n        -   Else, if `neighbor` is not the direct parent of `curretNode`, a cycle is detected:\n            -   Set `isInCycle[neighbor] = true`.\n            -   Initialize `tempNode` to `currentNode` and while `tempNode` is not equal to `neighbor`:\n                -   Set `isInCycle[tempNode]` to `true`.\n                -   Update `tempNode` to `parent[tempNode]`.\n            -   Return `true`.\n    -   If all neighbors are processed and no cycle is found, return `false`.\n\n-   Define a function `calculateDistances` that takes as parameters the `currentNode`, the graph's `adjacencyList`, the `currentDistance`, and the arrays `distances`, `visited`, and `isInCycle`.\n\n    -   Set `distances[currentNode]` to `currentDistance`.\n    -   Mark `currentNode` as visited.\n    -   For each `neighbor` of `currentNode`:\n        -   If `neighbor` is visited, continue.\n        -   Otherwise:\n            -   If `neighbor` is a cycle node, it is part of the root \"super-node\"; Set `newDistance` to `0`. Else, set `newDistance` to `currentDistance + 1`.\n            -   Call `calculateDistances` for `neighbor` with `newDistance`.\n\n-   In the main `distanceToCycle` function:\n    -   Initialize the boolean arrays `isInCycle` and `visited` and set each element to `false`.\n    -   Initialize the integer arrays `parent` and `distances`.\n    -   Create the graph's `adjacencyList`:\n        -   For each `edge` in the `edges` array:\n            -   Push `edge[0]` to `adjacencyList[edge[1]]` and vice versa.\n    -   Call `detectCycleNodes` for a random node (e.g. `0`).\n    -   Reset the `visited` array.\n    -   Call `calculateDistances` for a cycle node.\n    -   Return `distances`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Zw4qWQHH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Zw4qWQHH\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes and $e$ the number of edges in the graph.\n\n-   Time Complexity: $O(n + e)$.\n\n    The `detectCycleNodes` function processes each node and each edge once, giving a time complexity of $O(n + e)$, with an additional $O(n)$ for backtracking. Similarly, the `calculateDistances` function also processes each node and edge once, contributing $O(n + e)$ to the time complexity. Thus, the overall time complexity is $O(n + e)$.\n\n-   Space Complexity: $O(n + e)$.\n\n    The arrays `isInCycle`, `visited`, `parent`, and `distances` all have a size of $O(n)$. The graph's `adjacencyList` has $2e = O(e)$ elements and the recursion depth is $O(n)$. Therefore, the total space complexity is $O(n + e)$.\n\n---\n\n### Approach 2: Layer By Layer + Multisource BFS\n\n#### Intuition\n\nIn this approach, we're using two variations of Breadth-First Search (BFS) to solve the problem by gradually \"peeling away\" the outer layers of the graph. We start by focusing on nodes with a degree of 1, which are essentially the outermost nodes connected to the graph. As we remove each of these nodes, we also decrease the degree of their neighboring nodes. If any neighbor’s degree drops to 1 as a result, we add it to the queue to process next.\n\nThe key insight here is that nodes that are part of a cycle will never end up in our queue. That’s because, to be part of a cycle, a node must always have a degree of at least 2, ensuring it stays connected within the cycle. To formally prove the correctness of this approach, we need to prove two statements:\n\n1. If $u$ is a cycle node, it will not be added to the queue.\n2. If $u$ is not a cycle node, it will be added to the queue.\n\n###### Proof:\n\n1. Assume for contradiction that $u$ is the first cycle node to be added to the queue. Before being added, $u$ had a degree of 2, meaning it was connected to exactly two other nodes. Since $u$ is the first cycle node in the queue, both of its neighbors must also be cycle nodes. However, this leads to a contradiction: if $u$ is added to the queue, at least one of its neighbors must be processed before $u$, but this would mean that $u$ would not be the first cycle node to enter the queue. Therefore, cycle nodes cannot be added to the queue.\n\n2. Now, we can think of all the cycle nodes as forming a \"super-node,\" which acts as the root of a tree. We then start processing from the leaves of this tree, removing them layer by layer. By continuing this process, we will eventually reach the root (the cycle nodes) after processing all the non-cycle nodes.\n\n!?!../Documents/2204/2204_Approach2.json:960,540!?!\n\nAfter detecting the cycle nodes, we perform BFS starting from the cycle nodes as the source nodes. Expanding layer by layer guarantees that we find the shortest path to all nodes.\n\n#### Algorithm\n\n-   Initialize the boolean arrays `isInCycle`, setting each element to `true` and `visited` with all elements set to `false`.\n-   Initialize the integer arrays `degree` and `distances`, setting each element of `degree` to `0`.\n-   Create the graph's `adjacencyList` and count the degree of each node:\n    -   For each `edge` in the `edges` array:\n        -   Push `edge[0]` to `adjacencyList[edge[1]]` and vice versa.\n        -   Increase `degree[edge[0]]` and `degree[edge[1]]` by 1.\n-   Initialize a queue, named `nodeQueue` and push all nodes with a degree equal to 1 into it.\n-   While `nodeQueue` is not empty:\n    -   Pop the `currentNode` from the queue.\n    -   Set `isInCycle[currentNode]` to `false`.\n    -   For each `neighbor` of `currentNode`:\n        -   Decrease `degree[neighbor]` by 1.\n        -   If `degree[neighbor]` equals 1, push `neighbor` to the queue.\n-   After the loop ends, `nodeQueue` is empty. Iterate over all nodes with `currentNode` from `0` to `n - 1`:\n    -   If `currentNode` is in the cycle:\n        -   Mark `currentNode` as visited.\n        -   Push `currentNode` into the queue.\n-   Initialize `currentDistance` to `0`.\n    -   While `nodeQueue` is not empty:\n        -   Get the current size of the queue, denoted as `queueSize`.\n        -   Perform the following `queueSize` times:\n            -   Pop `currentNode` from the queue.\n            -   Set `distances[currentNode]` to `currentDistance`.\n            -   For each `neighbor` of `currentNode`:\n                -   If `neighbor` is visited, continue.\n                -   Otherwise,\n                    -   Push `neighbor` into the queue.\n                    -   Mark `neighbor` as visited.\n        -   Increase `currentDistance` by `1`.\n    -   Return `distances`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fV342GgN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fV342GgN\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes and $e$ the number of edges in the graph.\n\n-   Time Complexity: $O(n + e)$.\n\n    During the first BFS traversal, each non-cycle node is added to and removed from the queue exactly once. Additionally, each edge of the graph is processed exactly once (by the inner for loop), so the time taken to detect all cycle nodes in $O(n + e)$.\n\n    In order to calculate the minimum distance of each node to the cycle, we perform a second BFS traversal which contributes another $O(n + e)$ to the total time complexity.\n\n-   Space Complexity: $O(n + e)$.\n\n    The arrays `isInCycle`, `visited`, `parent`, and `distances` all have a size of $O(n)$. The graph's `adjacencyList` has $2e = O(e)$ elements and the queue can contain at most $O(n)$. Therefore, the total space complexity is $O(n + e)$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "questionId": "2359",
+  "questionFrontendId": "2271",
+  "title": "Maximum White Tiles Covered by a Carpet",
+  "titleSlug": "maximum-white-tiles-covered-by-a-carpet",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>tiles</code> where <code>tiles[i] = [l<sub>i</sub>, r<sub>i</sub>]</code> represents that every tile <code>j</code> in the range <code>l<sub>i</sub> &lt;= j &lt;= r<sub>i</sub></code> is colored white.</p>\n\n<p>You are also given an integer <code>carpetLen</code>, the length of a single carpet that can be placed <strong>anywhere</strong>.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of white tiles that can be covered by the carpet</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/25/example1drawio3.png\" style=\"width: 644px; height: 158px;\" />\n<pre>\n<strong>Input:</strong> tiles = [[1,5],[10,11],[12,18],[20,25],[30,32]], carpetLen = 10\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> Place the carpet starting on tile 10. \nIt covers 9 white tiles, so we return 9.\nNote that there may be other places where the carpet covers 9 white tiles.\nIt can be shown that the carpet cannot cover more than 9 white tiles.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/24/example2drawio.png\" style=\"width: 231px; height: 168px;\" />\n<pre>\n<strong>Input:</strong> tiles = [[10,11],[1,1]], carpetLen = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Place the carpet starting on tile 10. \nIt covers 2 white tiles, so we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= tiles.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>tiles[i].length == 2</code></li>\n\t<li><code>1 &lt;= l<sub>i</sub> &lt;= r<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= carpetLen &lt;= 10<sup>9</sup></code></li>\n\t<li>The <code>tiles</code> are <strong>non-overlapping</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Think about the potential placements of the carpet in an optimal solution.",
+    "Can we use Prefix Sum and Binary Search to determine how many tiles are covered for a given placement?"
+  ],
+  "metaData": "{\n  \"name\": \"maximumWhiteTiles\",\n  \"params\": [\n    {\n      \"name\": \"tiles\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"carpetLen\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"21.8K\", \"totalSubmission\": \"61K\", \"totalAcceptedRaw\": 21778, \"totalSubmissionRaw\": 60981, \"acRate\": \"35.7%\"}",
+  "likes": 840,
+  "dislikes": 58,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Number of Vowels in a Substring of Given Length\", \"titleSlug\": \"maximum-number-of-vowels-in-a-substring-of-given-length\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,5],[10,11],[12,18],[20,25],[30,32]]\n10",
+    "[[10,11],[1,1]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"lti\", \"name\": \"LTI\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumWhiteTiles(vector<vector<int>>& tiles, int carpetLen) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumWhiteTiles(int[][] tiles, int carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumWhiteTiles(self, tiles: List[List[int]], carpetLen: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumWhiteTiles(self, tiles, carpetLen):\n        \"\"\"\n        :type tiles: List[List[int]]\n        :type carpetLen: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} tiles\n * @param {number} carpetLen\n * @return {number}\n */\nvar maximumWhiteTiles = function(tiles, carpetLen) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumWhiteTiles(tiles: number[][], carpetLen: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumWhiteTiles(int[][] tiles, int carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumWhiteTiles(int** tiles, int tilesSize, int* tilesColSize, int carpetLen) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumWhiteTiles(tiles [][]int, carpetLen int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumWhiteTiles(tiles: Array<IntArray>, carpetLen: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumWhiteTiles(_ tiles: [[Int]], _ carpetLen: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_white_tiles(tiles: Vec<Vec<i32>>, carpet_len: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} tiles\n# @param {Integer} carpet_len\n# @return {Integer}\ndef maximum_white_tiles(tiles, carpet_len)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $tiles\n     * @param Integer $carpetLen\n     * @return Integer\n     */\n    function maximumWhiteTiles($tiles, $carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumWhiteTiles(List<List<int>> tiles, int carpetLen) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumWhiteTiles(tiles: Array[Array[Int]], carpetLen: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_white_tiles(tiles :: [[integer]], carpet_len :: integer) :: integer\n  def maximum_white_tiles(tiles, carpet_len) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_white_tiles(Tiles :: [[integer()]], CarpetLen :: integer()) -> integer().\nmaximum_white_tiles(Tiles, CarpetLen) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-white-tiles tiles carpetLen)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

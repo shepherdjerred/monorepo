@@ -1,0 +1,144 @@
+{
+  "questionId": "2379",
+  "questionFrontendId": "2285",
+  "title": "Maximum Total Importance of Roads",
+  "titleSlug": "maximum-total-importance-of-roads",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> denoting the number of cities in a country. The cities are numbered from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>You are also given a 2D integer array <code>roads</code> where <code>roads[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> denotes that there exists a <strong>bidirectional</strong> road connecting cities <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code>.</p>\n\n<p>You need to assign each city with an integer value from <code>1</code> to <code>n</code>, where each value can only be used <strong>once</strong>. The <strong>importance</strong> of a road is then defined as the <strong>sum</strong> of the values of the two cities it connects.</p>\n\n<p>Return <em>the <strong>maximum total importance</strong> of all roads possible after assigning the values optimally.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/04/07/ex1drawio.png\" style=\"width: 290px; height: 215px;\" />\n<pre>\n<strong>Input:</strong> n = 5, roads = [[0,1],[1,2],[2,3],[0,2],[1,3],[2,4]]\n<strong>Output:</strong> 43\n<strong>Explanation:</strong> The figure above shows the country and the assigned values of [2,4,5,3,1].\n- The road (0,1) has an importance of 2 + 4 = 6.\n- The road (1,2) has an importance of 4 + 5 = 9.\n- The road (2,3) has an importance of 5 + 3 = 8.\n- The road (0,2) has an importance of 2 + 5 = 7.\n- The road (1,3) has an importance of 4 + 3 = 7.\n- The road (2,4) has an importance of 5 + 1 = 6.\nThe total importance of all roads is 6 + 9 + 8 + 7 + 7 + 6 = 43.\nIt can be shown that we cannot obtain a greater total importance than 43.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/04/07/ex2drawio.png\" style=\"width: 281px; height: 151px;\" />\n<pre>\n<strong>Input:</strong> n = 5, roads = [[0,3],[2,4],[1,3]]\n<strong>Output:</strong> 20\n<strong>Explanation:</strong> The figure above shows the country and the assigned values of [4,3,2,5,1].\n- The road (0,3) has an importance of 4 + 5 = 9.\n- The road (2,4) has an importance of 2 + 1 = 3.\n- The road (1,3) has an importance of 3 + 5 = 8.\nThe total importance of all roads is 9 + 3 + 8 = 20.\nIt can be shown that we cannot obtain a greater total importance than 20.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= roads.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>roads[i].length == 2</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>a<sub>i</sub> != b<sub>i</sub></code></li>\n\t<li>There are no duplicate roads.</li>\n</ul>\n",
+  "hints": [
+    "Consider what each city contributes to the total importance of all roads.",
+    "Based on that, how can you sort the cities such that assigning them values in that order will yield the maximum total importance?"
+  ],
+  "metaData": "{\n  \"name\": \"maximumImportance\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"roads\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"161.6K\", \"totalSubmission\": \"233.7K\", \"totalAcceptedRaw\": 161558, \"totalSubmissionRaw\": 233702, \"acRate\": \"69.1%\"}",
+  "likes": 1359,
+  "dislikes": 84,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "5\n[[0,1],[1,2],[2,3],[0,2],[1,3],[2,4]]",
+    "5\n[[0,3],[2,4],[1,3]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"hrt\", \"name\": \"Hudson River Trading\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maximumImportance(int n, vector<vector<int>>& roads) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maximumImportance(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumImportance(self, n: int, roads: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumImportance(self, n, roads):\n        \"\"\"\n        :type n: int\n        :type roads: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} roads\n * @return {number}\n */\nvar maximumImportance = function(n, roads) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumImportance(n: number, roads: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaximumImportance(int n, int[][] roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maximumImportance(int n, int** roads, int roadsSize, int* roadsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumImportance(n int, roads [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumImportance(n: Int, roads: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumImportance(_ n: Int, _ roads: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_importance(n: i32, roads: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} roads\n# @return {Integer}\ndef maximum_importance(n, roads)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $roads\n     * @return Integer\n     */\n    function maximumImportance($n, $roads) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumImportance(int n, List<List<int>> roads) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumImportance(n: Int, roads: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_importance(n :: integer, roads :: [[integer]]) :: integer\n  def maximum_importance(n, roads) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_importance(N :: integer(), Roads :: [[integer()]]) -> integer().\nmaximum_importance(N, Roads) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-importance n roads)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2354",
+    "content": "## Solution\n\n---\n\n### Approach: Sorting\n\n#### Intuition\n\nWe have `N` cities (nodes) numbered `0` to `N-1`, connected by bidirectional roads (edges). Our task is to assign unique values from `1` to `N` to each node, maximizing the total importance of all edges.\n\nEdge importance is defined as the sum of the values of the nodes it connects.\n\nKey observation: A node's value contributes to importance once for each connected edge. This means that nodes with more connections (higher degree) should be assigned higher values.\n\nWe can solve the problem in three steps:\n1. Calculate the degree of each node (number of connected edges).\n2. Sort nodes by degree in ascending order.\n3. Assign values `1` to `N` to nodes, starting with the lowest degree.\n\nNote that there might be a case where two or more nodes have the same degree; in such cases, the values assigned to the nodes can be swapped. This is because the importance sum of all the edges will remain the same, as shown in the figure below:\n\n![fig](../Figures/2285/2285A.png)\n\nIf we notice now the entire approach we just translated the graph structure into a numerical assignment problem, leveraging the relationship between node connectivity and edge importance.\n\n![fig](../Figures/2285/2285A.png)\n\n#### Algorithm\n\n1. Initialize an array `degree` of size `N` to store the degree of each node. Initially, all values are `0`.\n2. Iterate over the list of edges `roads` and increment the degree for each of the nodes the road connects, i.e. `edge[0]` and `edge[1]`.\n3. Sort the array `degree` in the ascending order.\n4. Initialize the variable `value` to `1`, this will be the value we assign to the nodes.\n5. Initialize the variable `totalImportance` to `0` to store the maximum importance of all edges.\n6. Iterate over the array `degree` and keep adding the importance as `node degree * assigned value` to the variable `totalImportance`. Also, increment the value `value` to assign it to the next node.\n7. Return `totalImportance`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/8ETbhAuN/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"8ETbhAuN\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of nodes in the graph.\n\n* Time complexity: $O(N^2)$.\n\n  We iterate over the edges list `roads` to find the degree of each node. In the worst case, the number of edges in the graph could reach $N^2$, assuming an edge exists between every pair of nodes. Assigning degrees thus requires $O(N^2)$ operations.\n  Next, sorting the degrees in ascending order takes $O(N \\log N)$. Iterating through the degree array to calculate the total importance is an $O(N)$ operation. Therefore, the overall time complexity remains $O(N^2)$.\n\n* Space complexity: $O(N)$\n\n  We need an array of size $N$, `degree`, to keep the edge count of each node. \n  \n   Some additional space is required for sorting. The space complexity of the sorting algorithm depends on the programming language.\n   - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space. Additionally, Tim Sort is designed to be a stable algorithm.\n   - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n)$ for sorting an array.\n   - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n)$.\n\n   Thus, the inbuilt `sort()` function might add up to $O(\\log⁡⁡ N)$ or $O(N)$ to the space complexity.\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

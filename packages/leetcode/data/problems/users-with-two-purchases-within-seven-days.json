@@ -1,0 +1,53 @@
+{
+  "questionId": "2370",
+  "questionFrontendId": "2228",
+  "title": "Users With Two Purchases Within Seven Days",
+  "titleSlug": "users-with-two-purchases-within-seven-days",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Purchases</code></p>\n\n<pre>\n+---------------+------+\n| Column Name   | Type |\n+---------------+------+\n| purchase_id   | int  |\n| user_id       | int  |\n| purchase_date | date |\n+---------------+------+\npurchase_id contains unique values.\nThis table contains logs of the dates that users purchased from a certain retailer.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the IDs of the users that made any two purchases <strong>at most</strong> <code>7</code> days apart.</p>\n\n<p>Return the result table ordered by <code>user_id</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nPurchases table:\n+-------------+---------+---------------+\n| purchase_id | user_id | purchase_date |\n+-------------+---------+---------------+\n| 4           | 2       | 2022-03-13    |\n| 1           | 5       | 2022-02-11    |\n| 3           | 7       | 2022-06-19    |\n| 6           | 2       | 2022-03-20    |\n| 5           | 7       | 2022-06-19    |\n| 2           | 2       | 2022-06-08    |\n+-------------+---------+---------------+\n<strong>Output:</strong> \n+---------+\n| user_id |\n+---------+\n| 2       |\n| 7       |\n+---------+\n<strong>Explanation:</strong> \nUser 2 had two purchases on 2022-03-13 and 2022-03-20. Since the second purchase is within 7 days of the first purchase, we add their ID.\nUser 5 had only 1 purchase.\nUser 7 had two purchases on the same day so we add their ID.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Purchases (purchase_id int, user_id int, purchase_date date)\"], \"mssql\": [\"Create table Purchases (purchase_id int, user_id int, purchase_date date)\"], \"oraclesql\": [\"Create table Purchases (purchase_id int, user_id int, purchase_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_valid_users\", \"pythondata\": [\"Purchases = pd.DataFrame([], columns=['purchase_id', 'user_id', 'purchase_date']).astype({'purchase_id':'Int64', 'user_id':'Int64', 'purchase_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Purchases (purchase_id int, user_id int, purchase_date date)\"], \"database_schema\": {\"Purchases\": {\"purchase_id\": \"INT\", \"user_id\": \"INT\", \"purchase_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"12K\", \"totalSubmission\": \"25.7K\", \"totalAcceptedRaw\": 12038, \"totalSubmissionRaw\": 25733, \"acRate\": \"46.8%\"}",
+  "likes": 67,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Biggest Window Between Visits\", \"titleSlug\": \"biggest-window-between-visits\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Purchases\":[\"purchase_id\",\"user_id\",\"purchase_date\"]},\"rows\":{\"Purchases\":[[4,2,\"2022-03-13\"],[1,5,\"2022-02-11\"],[3,7,\"2022-06-19\"],[6,2,\"2022-03-20\"],[5,7,\"2022-06-19\"],[2,2,\"2022-06-08\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_users(purchases: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

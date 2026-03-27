@@ -1,0 +1,132 @@
+{
+  "questionId": "2323",
+  "questionFrontendId": "2220",
+  "title": "Minimum Bit Flips to Convert Number",
+  "titleSlug": "minimum-bit-flips-to-convert-number",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>bit flip</strong> of a number <code>x</code> is choosing a bit in the binary representation of <code>x</code> and <strong>flipping</strong> it from either <code>0</code> to <code>1</code> or <code>1</code> to <code>0</code>.</p>\n\n<ul>\n\t<li>For example, for <code>x = 7</code>, the binary representation is <code>111</code> and we may choose any bit (including any leading zeros not shown) and flip it. We can flip the first bit from the right to get <code>110</code>, flip the second bit from the right to get <code>101</code>, flip the fifth bit from the right (a leading zero) to get <code>10111</code>, etc.</li>\n</ul>\n\n<p>Given two integers <code>start</code> and <code>goal</code>, return<em> the <strong>minimum</strong> number of <strong>bit flips</strong> to convert </em><code>start</code><em> to </em><code>goal</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> start = 10, goal = 7\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The binary representation of 10 and 7 are 1010 and 0111 respectively. We can convert 10 to 7 in 3 steps:\n- Flip the first bit from the right: 101<u>0</u> -&gt; 101<u>1</u>.\n- Flip the third bit from the right: 1<u>0</u>11 -&gt; 1<u>1</u>11.\n- Flip the fourth bit from the right: <u>1</u>111 -&gt; <u>0</u>111.\nIt can be shown we cannot convert 10 to 7 in less than 3 steps. Hence, we return 3.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> start = 3, goal = 4\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The binary representation of 3 and 4 are 011 and 100 respectively. We can convert 3 to 4 in 3 steps:\n- Flip the first bit from the right: 01<u>1</u> -&gt; 01<u>0</u>.\n- Flip the second bit from the right: 0<u>1</u>0 -&gt; 0<u>0</u>0.\n- Flip the third bit from the right: <u>0</u>00 -&gt; <u>1</u>00.\nIt can be shown we cannot convert 3 to 4 in less than 3 steps. Hence, we return 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>0 &lt;= start, goal &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/hamming-distance/description/\" target=\"_blank\">461: Hamming Distance.</a></p>\n",
+  "hints": [
+    "If the value of a bit in start and goal differ, then we need to flip that bit.",
+    "Consider using the XOR operation to determine which bits need a bit flip."
+  ],
+  "metaData": "{\n  \"name\": \"minBitFlips\",\n  \"params\": [\n    {\n      \"name\": \"start\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"goal\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"369.2K\", \"totalSubmission\": \"420.4K\", \"totalAcceptedRaw\": 369220, \"totalSubmissionRaw\": 420353, \"acRate\": \"87.8%\"}",
+  "likes": 1611,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Flips to Make a OR b Equal to c\", \"titleSlug\": \"minimum-flips-to-make-a-or-b-equal-to-c\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Make Array XOR Equal to K\", \"titleSlug\": \"minimum-number-of-operations-to-make-array-xor-equal-to-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Smallest Number With All Set Bits\", \"titleSlug\": \"smallest-number-with-all-set-bits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "10\n7",
+    "3\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"persistent-systems\", \"name\": \"persistent systems\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minBitFlips(int start, int goal) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minBitFlips(int start, int goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minBitFlips(self, start: int, goal: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minBitFlips(self, start, goal):\n        \"\"\"\n        :type start: int\n        :type goal: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} start\n * @param {number} goal\n * @return {number}\n */\nvar minBitFlips = function(start, goal) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minBitFlips(start: number, goal: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinBitFlips(int start, int goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minBitFlips(int start, int goal) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minBitFlips(start int, goal int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minBitFlips(start: Int, goal: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minBitFlips(_ start: Int, _ goal: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_bit_flips(start: i32, goal: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} start\n# @param {Integer} goal\n# @return {Integer}\ndef min_bit_flips(start, goal)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $start\n     * @param Integer $goal\n     * @return Integer\n     */\n    function minBitFlips($start, $goal) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minBitFlips(int start, int goal) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minBitFlips(start: Int, goal: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_bit_flips(start :: integer, goal :: integer) :: integer\n  def min_bit_flips(start, goal) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_bit_flips(Start :: integer(), Goal :: integer()) -> integer().\nmin_bit_flips(Start, Goal) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-bit-flips start goal)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2433",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nTo find the minimum number of bit flips needed to convert `start` to `goal`, we first need to understand a few key concepts. Grasping these concepts is essential for following the approaches, as it will help clarify how the solution works.\n\n##### XOR Operator (`^`):\n\nThe `XOR` (exclusive `OR`) operator is a bitwise operator that compares each bit of two operands. The result is `1` if the bits are different, and `0` if they are the same. Here’s a truth table for the `XOR` operator:\n\n| A | B | A ^ B |\n|---|---|-------|\n| 0 | 0 |   0   |\n| 0 | 1 |   1   |\n| 1 | 0 |   1   |\n| 1 | 1 |   0   |\n\nProperties:\n- `A ^ A = 0` (any number XORed with itself is `0`)\n- `A ^ 0 = A` (XORing with `0` leaves the number unchanged)\n- `A ^ B = B ^ A` (order doesn’t matter)\n- `(A ^ B) ^ C = A ^ (B ^ C)` (grouping doesn’t matter)\n- `(A ^ B) ^ B = A` (XORing twice cancels out)\n\n##### Right Shift Operator (`>>`):\n\nThe right shift operator (`>>`) shifts the bits of a number to the right by a specified number of positions. The `>>=` operator is a compound assignment operator that performs the right shift and assigns the result to the variable.\n\nFor example, with the number `14` (binary `1110`), performing a right shift by 1 position (`>> 1`) shifts the binary number `1110` to the right. The result is `0111`, where the last bit is dropped, and a `0` is added to the left.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe simplest method is to check each bit of both numbers, one by one. For each bit position, we check if the bits differ. If they do, we need to flip that bit in the `start` number to match the `goal`. We count how many bits need to be flipped as we move from the least significant bit to the most significant bit. Although simple, we need to check each bit individually, which can be slow for large numbers.\n\n#### Algorithm\n\n- Initialize a counter `count` to keep track of the number of bit flips needed.\n\n- Loop while either `start` or `goal` has bits left to check:\n  - Compare the least significant bits (rightmost bits) of `start` and `goal`:\n    - Use the bitwise AND operation (`& 1`) to isolate the least significant bit of each number.\n    - If the bits differ (`(start & 1) != (goal & 1)`), increment the `count` by 1.\n  - Right shift both `start` and `goal` by one position (`>>= 1`) to move to the next bit.\n\n- Return the total `count` after all bits have been checked.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3nKBjaXV/shared\" frameBorder=\"0\" width=\"100%\" height=\"327\" name=\"3nKBjaXV\"></iframe>\n\n#### Complexity Analysis\n\n- Time Complexity: $O(\\text{max bits})$\n  \n  We need to compare each bit of `start` and `goal`. Given that $0 \\leq \\text{start}, \\text{goal} \\leq 10^9$, the maximum number of bits needed to represent these numbers is 30 (since $2^{30} \\approx 10^9$). Thus, the time complexity is proportional to the number of bits, which is $O(30)$, effectively $O(1)$.\n\n- Space Complexity: $O(1)$\n\n  We use a fixed amount of extra space to store variables for the comparison. It does not require additional space that grows with the input size, so the space complexity is constant.\n\n---\n\n### Approach 2: Recursive Approach\n\n#### Intuition\n\nIn the iterative approach, we compare each bit of `start` and `goal` to count the differences. This approach solves the problem by breaking it into smaller tasks. We start with the least significant bits, which are the rightmost bits in the binary numbers. If these bits differ, we need to flip the bit in `start` to match `goal`. Each flip is counted as one operation.\n\nAfter addressing the least significant bits, we shift both `start` and `goal` to the right by one position, effectively discarding the bits we've already compared. This way, we reduce the size by one bit, allowing us to focus on the next pair of bits. We then apply the same logic: repeatedly strip away the smallest unit of the problem (the last bit), solve it, and then move on to the next, gradually building up the solution.\n\nThe process continues recursively, with each step reducing the problem by one bit until all bits have been processed and we reach the base case. At this point, both the `start` and `goal` become `0000`, and the recursion ends.\n\n#### Algorithm\n\n- Base Case: Check if both `start` and `goal` are 0:\n    - If true, return 0, since both numbers have been fully processed, meaning there are no more bits left to compare.\n\n- Compare the least significant bit (LSB) of `start` and `goal` using the bitwise `AND` operation (`start & 1` and `goal & 1`).\n    - If the LSBs differ, set `flip` to 1 (indicating a flip is required).\n    - If the LSBs are the same, set `flip` to 0 (indicating no flip is needed).\n\n- Recursively call `minBitFlips` with both `start` and `goal` right-shifted by 1 bit to process the next bit.\n    - Add the result of the recursive call to the `flip` value calculated for the current bit.\n\n- Return the sum of flips required for all the bits to match `goal` from `start`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ETDzjU7x/shared\" frameBorder=\"0\" width=\"100%\" height=\"276\" name=\"ETDzjU7x\"></iframe>\n\n#### Complexity Analysis  \n\n- Time complexity: $O(\\text{max bits})$\n\n  Each recursive call handles one bit and shifts the numbers right by one position. The depth of the recursion is determined by the number of bits in the integers. Given the maximum of 30 bits, the recursion will execute up to 30 times, resulting in a time complexity of $O(30)$, effectively $O(1)$.\n\n- Space complexity: $O(\\text{max bits})$\n\n  The recursive approach uses stack space proportional to the recursion depth. Since the maximum depth is the number of bits (up to 30), the space complexity is $O(30)$, which is effectively $O(1)$.\n\n---\n\n### Approach 3: XOR Rules\n\n#### Intuition\n\nThe general rule of the `XOR` operation is that `XOR` between two bits returns 1 if the bits differ and 0 if they are the same. This is perfect for this problem.\n\nBy applying `XOR` to the start and goal, we get a new number where each 1 represents a bit that differs between the start and goal. The problem now reduces to counting how many 1s are in the binary representation of this new number. This simplifies the entire process because we shift from comparing each bit individually to a single operation that captures all differences.\n\n#### Algorithm\n\n- XOR `start` and `goal` to find differing bits. Store the result in `xorResult`.\n- Initialize a counter `count` to zero for counting differing bits.\n- Iterate the entire `xorResult`:\n  - While `xorResult` is not zero:\n    - Increment `count` if the last bit of `xorResult` is 1.\n    - Shift `xorResult` right by one bit to process the next bit.\n- Return `count` as the number of bit flips needed to convert `start` to `goal`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/87rrP23K/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"87rrP23K\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(\\text{number of bits})$\n\n  This approach calculates the XOR of `start` and `goal`, then counts the number of set bits in the result. The XOR operation and bit counting are both linear with respect to the number of bits. Given a maximum of 30 bits, the time complexity is $O(30)$, effectively $O(1)$.\n\n- Space complexity: $O(1)$\n\n  The space used is constant, as we only need variables to store the XOR result and count the set bits. There are no additional data structures, so the space complexity is constant.\n\n---\n\n### Approach 4: Brian Kernighan’s Algorithm\n\n#### Intuition\n\nBrian Kernighan’s algorithm provides an efficient way to count the number of set bits (`1`s) in an integer by repeatedly eliminating the lowest set bit at each step. The algorithm leverages a clever trick: subtracting `1` from a number flips all the bits after the rightmost `1`, including the rightmost `1` itself. When we perform a bitwise `AND` between the original number and the result of subtracting `1`, this operation removes the lowest set bit. This is a nifty observation based on different examples.\n\nIf you start with:\n\n- `n = 1101100 & n-1 = 1101011 => 1101000`\n- `n = 1101000 & n-1 = 1100111 => 1100000`\n- `n = 1100000 & n-1 = 1011111 => 1000000`\n- `n = 1000000 & n-1 = 0111111 => 0000000`\n\nSo this iterates 4 times. Each iteration removes the least significant bit that is set to `1`.\n\nDecrementing by one flips the lowest bit and every bit up to the first `1`. For example, if you have `1000000`, then `1000000 - 1 = 0111111`. This flips the lowest bit and all bits up to the first `1`, leaving any other bits unchanged. When you perform `n & (n - 1)`, only the lowest bit set becomes `0`.\n\nTo apply this to our problem, we first calculate the XOR of the `start` and `goal` values. The `XOR` operation gives us a binary number where each `1` represents a position where the bits of `start` and `goal` differ. Our task now is to count how many such positions exist, which corresponds to counting the `1`s in the `XOR` result.\n\nHere's where Brian Kernighan’s algorithm shines. Instead of iterating through all the bits of the `XOR` result, which would involve checking each bit individually, we directly target the `1`s. We repeatedly remove the lowest set bit by performing the operation `x = x & (x - 1)` on the XOR result. Each time we remove a set bit, we know there was a difference at that bit position between `start` and `goal`. We count how many times we can perform this operation until the number becomes `0`.\n\nThis is efficient because it skips over the `0` bits entirely, focusing only on the positions that matter—the ones where the bits differ.\n\n![Brian_Kernighan](../Figures/2220/Brian_Kernighan.png)\n\n#### Algorithm\n\n- XOR `start` and `goal` to find differing bits. Store the result in `xorResult`.\n- Initialize a counter `count` to zero for counting differing bits.\n- Count the number of 1s in `xorResult` (differing bits) using Brian Kernighan's algorithm:\n  - While `xorResult` is not zero:\n    - Clear the lowest set bit of `xorResult` by performing `xorResult &= (xorResult - 1)`.\n    - Increment `count`.\n- Return `count` as the number of bit flips needed to convert `start` to `goal`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fSQESEqd/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"fSQESEqd\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(\\text{number of set bits})$\n\n  The algorithm iterates over the set bits in the XOR result. The number of iterations is equal to the number of set bits. For the worst case, where all bits are set, this is proportional to the number of bits, which is $O(30)$, effectively $O(1)$.\n\n- Space complexity: $O(1)$\n\n  Brian Kernighan’s Algorithm uses a constant amount of extra space regardless of the input size. It only requires space for variables and does not use additional data structures, so the space complexity is constant.\n\n</br>\n\n---\n\n</br>\n\nThe problem can also be solved using built-in functions in different programming languages. These functions count the number of `1` bits in an integer, which directly gives us the number of bit flips needed.\n\n1. C++: Use `__builtin_popcount(start ^ goal)`. This function counts the `1` bits in the result of `start ^ goal`. \n    - The code looks like this: `return __builtin_popcount(start ^ goal);`.\n\n2. Java: Use `Integer.bitCount(start ^ goal)`. This method counts the `1` bits in the integer result of `start ^ goal`. \n    - The code looks like this: `return Integer.bitCount(start ^ goal);`.\n\n3. Python: Use `(start ^ goal).bit_count()`. This method counts the 1 bits in the result of `start ^ goal`.\n    - The code looks like this: `return (start ^ goal).bit_count()`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

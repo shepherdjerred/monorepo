@@ -1,0 +1,136 @@
+{
+  "questionId": "2311",
+  "questionFrontendId": "2209",
+  "title": "Minimum White Tiles After Covering With Carpets",
+  "titleSlug": "minimum-white-tiles-after-covering-with-carpets",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed binary</strong> string <code>floor</code>, which represents the colors of tiles on a floor:</p>\n\n<ul>\n\t<li><code>floor[i] = &#39;0&#39;</code> denotes that the <code>i<sup>th</sup></code> tile of the floor is colored <strong>black</strong>.</li>\n\t<li>On the other hand, <code>floor[i] = &#39;1&#39;</code> denotes that the <code>i<sup>th</sup></code> tile of the floor is colored <strong>white</strong>.</li>\n</ul>\n\n<p>You are also given <code>numCarpets</code> and <code>carpetLen</code>. You have <code>numCarpets</code> <strong>black</strong> carpets, each of length <code>carpetLen</code> tiles. Cover the tiles with the given carpets such that the number of <strong>white</strong> tiles still visible is <strong>minimum</strong>. Carpets may overlap one another.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of white tiles still visible.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/10/ex1-1.png\" style=\"width: 400px; height: 73px;\" />\n<pre>\n<strong>Input:</strong> floor = &quot;10110101&quot;, numCarpets = 2, carpetLen = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nThe figure above shows one way of covering the tiles with the carpets such that only 2 white tiles are visible.\nNo other way of covering the tiles with the carpets can leave less than 2 white tiles visible.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/10/ex2.png\" style=\"width: 353px; height: 123px;\" />\n<pre>\n<strong>Input:</strong> floor = &quot;11111&quot;, numCarpets = 2, carpetLen = 3\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> \nThe figure above shows one way of covering the tiles with the carpets such that no white tiles are visible.\nNote that the carpets are able to overlap one another.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= carpetLen &lt;= floor.length &lt;= 1000</code></li>\n\t<li><code>floor[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li><code>1 &lt;= numCarpets &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Can you think of a DP solution?",
+    "Let DP[i][j] denote the minimum number of white tiles still visible from indices i to floor.length-1 after covering with at most j carpets.",
+    "The transition will be whether to put down the carpet at position i (if possible), or not."
+  ],
+  "metaData": "{\n  \"name\": \"minimumWhiteTiles\",\n  \"params\": [\n    {\n      \"name\": \"floor\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"numCarpets\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"carpetLen\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.2K\", \"totalSubmission\": \"41.9K\", \"totalAcceptedRaw\": 16201, \"totalSubmissionRaw\": 41854, \"acRate\": \"38.7%\"}",
+  "likes": 523,
+  "dislikes": 17,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Edit Distance\", \"titleSlug\": \"edit-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"10110101\"\n2\n2",
+    "\"11111\"\n2\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumWhiteTiles(string floor, int numCarpets, int carpetLen) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumWhiteTiles(String floor, int numCarpets, int carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumWhiteTiles(self, floor: str, numCarpets: int, carpetLen: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumWhiteTiles(self, floor, numCarpets, carpetLen):\n        \"\"\"\n        :type floor: str\n        :type numCarpets: int\n        :type carpetLen: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} floor\n * @param {number} numCarpets\n * @param {number} carpetLen\n * @return {number}\n */\nvar minimumWhiteTiles = function(floor, numCarpets, carpetLen) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumWhiteTiles(floor: string, numCarpets: number, carpetLen: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumWhiteTiles(string floor, int numCarpets, int carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumWhiteTiles(char* floor, int numCarpets, int carpetLen) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumWhiteTiles(floor string, numCarpets int, carpetLen int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumWhiteTiles(floor: String, numCarpets: Int, carpetLen: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumWhiteTiles(_ floor: String, _ numCarpets: Int, _ carpetLen: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_white_tiles(floor: String, num_carpets: i32, carpet_len: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} floor\n# @param {Integer} num_carpets\n# @param {Integer} carpet_len\n# @return {Integer}\ndef minimum_white_tiles(floor, num_carpets, carpet_len)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $floor\n     * @param Integer $numCarpets\n     * @param Integer $carpetLen\n     * @return Integer\n     */\n    function minimumWhiteTiles($floor, $numCarpets, $carpetLen) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumWhiteTiles(String floor, int numCarpets, int carpetLen) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumWhiteTiles(floor: String, numCarpets: Int, carpetLen: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_white_tiles(floor :: String.t, num_carpets :: integer, carpet_len :: integer) :: integer\n  def minimum_white_tiles(floor, num_carpets, carpet_len) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_white_tiles(Floor :: unicode:unicode_binary(), NumCarpets :: integer(), CarpetLen :: integer()) -> integer().\nminimum_white_tiles(Floor, NumCarpets, CarpetLen) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-white-tiles floor numCarpets carpetLen)\n  (-> string? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

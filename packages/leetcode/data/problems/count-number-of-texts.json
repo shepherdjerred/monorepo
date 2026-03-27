@@ -1,0 +1,139 @@
+{
+  "questionId": "2348",
+  "questionFrontendId": "2266",
+  "title": "Count Number of Texts",
+  "titleSlug": "count-number-of-texts",
+  "difficulty": "Medium",
+  "content": "<p>Alice is texting Bob using her phone. The <strong>mapping</strong> of digits to letters is shown in the figure below.</p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/15/1200px-telephone-keypad2svg.png\" style=\"width: 200px; height: 162px;\" />\n<p>In order to <strong>add</strong> a letter, Alice has to <strong>press</strong> the key of the corresponding digit <code>i</code> times, where <code>i</code> is the position of the letter in the key.</p>\n\n<ul>\n\t<li>For example, to add the letter <code>&#39;s&#39;</code>, Alice has to press <code>&#39;7&#39;</code> four times. Similarly, to add the letter <code>&#39;k&#39;</code>, Alice has to press <code>&#39;5&#39;</code> twice.</li>\n\t<li>Note that the digits <code>&#39;0&#39;</code> and <code>&#39;1&#39;</code> do not map to any letters, so Alice <strong>does not</strong> use them.</li>\n</ul>\n\n<p>However, due to an error in transmission, Bob did not receive Alice&#39;s text message but received a <strong>string of pressed keys</strong> instead.</p>\n\n<ul>\n\t<li>For example, when Alice sent the message <code>&quot;bob&quot;</code>, Bob received the string <code>&quot;2266622&quot;</code>.</li>\n</ul>\n\n<p>Given a string <code>pressedKeys</code> representing the string received by Bob, return <em>the <strong>total number of possible text messages</strong> Alice could have sent</em>.</p>\n\n<p>Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> pressedKeys = &quot;22233&quot;\n<strong>Output:</strong> 8\n<strong>Explanation:</strong>\nThe possible text messages Alice could have sent are:\n&quot;aaadd&quot;, &quot;abdd&quot;, &quot;badd&quot;, &quot;cdd&quot;, &quot;aaae&quot;, &quot;abe&quot;, &quot;bae&quot;, and &quot;ce&quot;.\nSince there are 8 possible messages, we return 8.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pressedKeys = &quot;222222222222222222222222222222222222&quot;\n<strong>Output:</strong> 82876089\n<strong>Explanation:</strong>\nThere are 2082876103 possible text messages Alice could have sent.\nSince we need to return the answer modulo 10<sup>9</sup> + 7, we return 2082876103 % (10<sup>9</sup> + 7) = 82876089.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= pressedKeys.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>pressedKeys</code> only consists of digits from <code>&#39;2&#39;</code> - <code>&#39;9&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "For a substring consisting of the same digit, how can we count the number of texts it could have originally represented?",
+    "How can dynamic programming help us calculate the required answer?"
+  ],
+  "metaData": "{\n  \"name\": \"countTexts\",\n  \"params\": [\n    {\n      \"name\": \"pressedKeys\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"29.4K\", \"totalSubmission\": \"58.8K\", \"totalAcceptedRaw\": 29421, \"totalSubmissionRaw\": 58773, \"acRate\": \"50.1%\"}",
+  "likes": 944,
+  "dislikes": 36,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Letter Combinations of a Phone Number\", \"titleSlug\": \"letter-combinations-of-a-phone-number\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Decode Ways\", \"titleSlug\": \"decode-ways\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"22233\"",
+    "\"222222222222222222222222222222222222\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countTexts(string pressedKeys) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countTexts(String pressedKeys) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countTexts(self, pressedKeys: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countTexts(self, pressedKeys):\n        \"\"\"\n        :type pressedKeys: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} pressedKeys\n * @return {number}\n */\nvar countTexts = function(pressedKeys) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countTexts(pressedKeys: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountTexts(string pressedKeys) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countTexts(char* pressedKeys) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countTexts(pressedKeys string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countTexts(pressedKeys: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countTexts(_ pressedKeys: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_texts(pressed_keys: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} pressed_keys\n# @return {Integer}\ndef count_texts(pressed_keys)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $pressedKeys\n     * @return Integer\n     */\n    function countTexts($pressedKeys) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countTexts(String pressedKeys) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countTexts(pressedKeys: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_texts(pressed_keys :: String.t) :: integer\n  def count_texts(pressed_keys) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_texts(PressedKeys :: unicode:unicode_binary()) -> integer().\ncount_texts(PressedKeys) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-texts pressedKeys)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

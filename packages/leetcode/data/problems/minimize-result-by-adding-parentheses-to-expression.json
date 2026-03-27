@@ -1,0 +1,132 @@
+{
+  "questionId": "2328",
+  "questionFrontendId": "2232",
+  "title": "Minimize Result by Adding Parentheses to Expression",
+  "titleSlug": "minimize-result-by-adding-parentheses-to-expression",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>expression</code> of the form <code>&quot;&lt;num1&gt;+&lt;num2&gt;&quot;</code> where <code>&lt;num1&gt;</code> and <code>&lt;num2&gt;</code> represent positive integers.</p>\n\n<p>Add a pair of parentheses to <code>expression</code> such that after the addition of parentheses, <code>expression</code> is a <strong>valid</strong> mathematical expression and evaluates to the <strong>smallest</strong> possible value. The left parenthesis <strong>must</strong> be added to the left of <code>&#39;+&#39;</code> and the right parenthesis <strong>must</strong> be added to the right of <code>&#39;+&#39;</code>.</p>\n\n<p>Return <code>expression</code><em> after adding a pair of parentheses such that </em><code>expression</code><em> evaluates to the <strong>smallest</strong> possible value.</em> If there are multiple answers that yield the same result, return any of them.</p>\n\n<p>The input has been generated such that the original value of <code>expression</code>, and the value of <code>expression</code> after adding any pair of parentheses that meets the requirements fits within a signed 32-bit integer.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;247+38&quot;\n<strong>Output:</strong> &quot;2(47+38)&quot;\n<strong>Explanation:</strong> The <code>expression</code> evaluates to 2 * (47 + 38) = 2 * 85 = 170.\nNote that &quot;2(4)7+38&quot; is invalid because the right parenthesis must be to the right of the <code>&#39;+&#39;</code>.\nIt can be shown that 170 is the smallest possible value.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;12+34&quot;\n<strong>Output:</strong> &quot;1(2+3)4&quot;\n<strong>Explanation:</strong> The expression evaluates to 1 * (2 + 3) * 4 = 1 * 5 * 4 = 20.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> expression = &quot;999+999&quot;\n<strong>Output:</strong> &quot;(999+999)&quot;\n<strong>Explanation:</strong> The <code>expression</code> evaluates to 999 + 999 = 1998.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= expression.length &lt;= 10</code></li>\n\t<li><code>expression</code> consists of digits from <code>&#39;1&#39;</code> to <code>&#39;9&#39;</code> and <code>&#39;+&#39;</code>.</li>\n\t<li><code>expression</code> starts and ends with digits.</li>\n\t<li><code>expression</code> contains exactly one <code>&#39;+&#39;</code>.</li>\n\t<li>The original value of <code>expression</code>, and the value of <code>expression</code> after adding any pair of parentheses that meets the requirements fits within a signed 32-bit integer.</li>\n</ul>\n",
+  "hints": [
+    "The maximum length of expression is very low. We can try every possible spot to place the parentheses.",
+    "Every possibility of expression is of the form a * (b + c) * d where a, b, c, d represent integers. Note the edge cases where a and/or d do not exist, in which case use 1 instead of them."
+  ],
+  "metaData": "{\n  \"name\": \"minimizeResult\",\n  \"params\": [\n    {\n      \"name\": \"expression\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"26.8K\", \"totalSubmission\": \"39.4K\", \"totalAcceptedRaw\": 26848, \"totalSubmissionRaw\": 39368, \"acRate\": \"68.2%\"}",
+  "likes": 226,
+  "dislikes": 345,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Basic Calculator\", \"titleSlug\": \"basic-calculator\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Different Ways to Add Parentheses\", \"titleSlug\": \"different-ways-to-add-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Solve the Equation\", \"titleSlug\": \"solve-the-equation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"247+38\"",
+    "\"12+34\"",
+    "\"999+999\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"pinterest\", \"name\": \"Pinterest\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string minimizeResult(string expression) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String minimizeResult(String expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimizeResult(self, expression: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimizeResult(self, expression):\n        \"\"\"\n        :type expression: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} expression\n * @return {string}\n */\nvar minimizeResult = function(expression) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimizeResult(expression: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MinimizeResult(string expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* minimizeResult(char* expression) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimizeResult(expression string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimizeResult(expression: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimizeResult(_ expression: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimize_result(expression: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} expression\n# @return {String}\ndef minimize_result(expression)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $expression\n     * @return String\n     */\n    function minimizeResult($expression) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String minimizeResult(String expression) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimizeResult(expression: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimize_result(expression :: String.t) :: String.t\n  def minimize_result(expression) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimize_result(Expression :: unicode:unicode_binary()) -> unicode:unicode_binary().\nminimize_result(Expression) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimize-result expression)\n  (-> string? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,139 @@
+{
+  "questionId": "2378",
+  "questionFrontendId": "2284",
+  "title": "Sender With Largest Word Count",
+  "titleSlug": "sender-with-largest-word-count",
+  "difficulty": "Medium",
+  "content": "<p>You have a chat log of <code>n</code> messages. You are given two string arrays <code>messages</code> and <code>senders</code> where <code>messages[i]</code> is a <strong>message</strong> sent by <code>senders[i]</code>.</p>\n\n<p>A <strong>message</strong> is list of <strong>words</strong> that are separated by a single space with no leading or trailing spaces. The <strong>word count</strong> of a sender is the total number of <strong>words</strong> sent by the sender. Note that a sender may send more than one message.</p>\n\n<p>Return <em>the sender with the <strong>largest</strong> word count</em>. If there is more than one sender with the largest word count, return <em>the one with the <strong>lexicographically largest</strong> name</em>.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>Uppercase letters come before lowercase letters in lexicographical order.</li>\n\t<li><code>&quot;Alice&quot;</code> and <code>&quot;alice&quot;</code> are distinct.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> messages = [&quot;Hello userTwooo&quot;,&quot;Hi userThree&quot;,&quot;Wonderful day Alice&quot;,&quot;Nice day userThree&quot;], senders = [&quot;Alice&quot;,&quot;userTwo&quot;,&quot;userThree&quot;,&quot;Alice&quot;]\n<strong>Output:</strong> &quot;Alice&quot;\n<strong>Explanation:</strong> Alice sends a total of 2 + 3 = 5 words.\nuserTwo sends a total of 2 words.\nuserThree sends a total of 3 words.\nSince Alice has the largest word count, we return &quot;Alice&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> messages = [&quot;How is leetcode for everyone&quot;,&quot;Leetcode is useful for practice&quot;], senders = [&quot;Bob&quot;,&quot;Charlie&quot;]\n<strong>Output:</strong> &quot;Charlie&quot;\n<strong>Explanation:</strong> Bob sends a total of 5 words.\nCharlie sends a total of 5 words.\nSince there is a tie for the largest word count, we return the sender with the lexicographically larger name, Charlie.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == messages.length == senders.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= messages[i].length &lt;= 100</code></li>\n\t<li><code>1 &lt;= senders[i].length &lt;= 10</code></li>\n\t<li><code>messages[i]</code> consists of uppercase and lowercase English letters and <code>&#39; &#39;</code>.</li>\n\t<li>All the words in <code>messages[i]</code> are separated by <strong>a single space</strong>.</li>\n\t<li><code>messages[i]</code> does not have leading or trailing spaces.</li>\n\t<li><code>senders[i]</code> consists of uppercase and lowercase English letters only.</li>\n</ul>\n",
+  "hints": [
+    "The number of words in a message is equal to the number of spaces + 1.",
+    "Use a hash map to count the total number of words from each sender."
+  ],
+  "metaData": "{\n  \"name\": \"largestWordCount\",\n  \"params\": [\n    {\n      \"name\": \"messages\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"senders\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"44.8K\", \"totalSubmission\": \"75.2K\", \"totalAcceptedRaw\": 44831, \"totalSubmissionRaw\": 75216, \"acRate\": \"59.6%\"}",
+  "likes": 468,
+  "dislikes": 41,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Top K Frequent Elements\", \"titleSlug\": \"top-k-frequent-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Top K Frequent Words\", \"titleSlug\": \"top-k-frequent-words\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Hello userTwooo\",\"Hi userThree\",\"Wonderful day Alice\",\"Nice day userThree\"]\n[\"Alice\",\"userTwo\",\"userThree\",\"Alice\"]",
+    "[\"How is leetcode for everyone\",\"Leetcode is useful for practice\"]\n[\"Bob\",\"Charlie\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 12, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string largestWordCount(vector<string>& messages, vector<string>& senders) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String largestWordCount(String[] messages, String[] senders) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def largestWordCount(self, messages: List[str], senders: List[str]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def largestWordCount(self, messages, senders):\n        \"\"\"\n        :type messages: List[str]\n        :type senders: List[str]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} messages\n * @param {string[]} senders\n * @return {string}\n */\nvar largestWordCount = function(messages, senders) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function largestWordCount(messages: string[], senders: string[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string LargestWordCount(string[] messages, string[] senders) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* largestWordCount(char** messages, int messagesSize, char** senders, int sendersSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func largestWordCount(messages []string, senders []string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun largestWordCount(messages: Array<String>, senders: Array<String>): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func largestWordCount(_ messages: [String], _ senders: [String]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn largest_word_count(messages: Vec<String>, senders: Vec<String>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} messages\n# @param {String[]} senders\n# @return {String}\ndef largest_word_count(messages, senders)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $messages\n     * @param String[] $senders\n     * @return String\n     */\n    function largestWordCount($messages, $senders) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String largestWordCount(List<String> messages, List<String> senders) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def largestWordCount(messages: Array[String], senders: Array[String]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec largest_word_count(messages :: [String.t], senders :: [String.t]) :: String.t\n  def largest_word_count(messages, senders) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec largest_word_count(Messages :: [unicode:unicode_binary()], Senders :: [unicode:unicode_binary()]) -> unicode:unicode_binary().\nlargest_word_count(Messages, Senders) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (largest-word-count messages senders)\n  (-> (listof string?) (listof string?) string?)\n  )"
+    }
+  ],
+  "solution": null
+}

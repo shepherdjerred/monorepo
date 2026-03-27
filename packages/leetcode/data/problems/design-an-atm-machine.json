@@ -1,0 +1,134 @@
+{
+  "questionId": "2352",
+  "questionFrontendId": "2241",
+  "title": "Design an ATM Machine",
+  "titleSlug": "design-an-atm-machine",
+  "difficulty": "Medium",
+  "content": "<p>There is an ATM machine that stores banknotes of <code>5</code> denominations: <code>20</code>, <code>50</code>, <code>100</code>, <code>200</code>, and <code>500</code> dollars. Initially the ATM is empty. The user can use the machine to deposit or withdraw any amount of money.</p>\n\n<p>When withdrawing, the machine prioritizes using banknotes of <strong>larger</strong> values.</p>\n\n<ul>\n\t<li>For example, if you want to withdraw <code>$300</code> and there are <code>2</code> <code>$50</code> banknotes, <code>1</code> <code>$100</code> banknote, and <code>1</code> <code>$200</code> banknote, then the machine will use the <code>$100</code> and <code>$200</code> banknotes.</li>\n\t<li>However, if you try to withdraw <code>$600</code> and there are <code>3</code> <code>$200</code> banknotes and <code>1</code> <code>$500</code> banknote, then the withdraw request will be rejected because the machine will first try to use the <code>$500</code> banknote and then be unable to use banknotes to complete the remaining <code>$100</code>. Note that the machine is <strong>not</strong> allowed to use the <code>$200</code> banknotes instead of the <code>$500</code> banknote.</li>\n</ul>\n\n<p>Implement the ATM class:</p>\n\n<ul>\n\t<li><code>ATM()</code> Initializes the ATM object.</li>\n\t<li><code>void deposit(int[] banknotesCount)</code> Deposits new banknotes in the order <code>$20</code>, <code>$50</code>, <code>$100</code>, <code>$200</code>, and <code>$500</code>.</li>\n\t<li><code>int[] withdraw(int amount)</code> Returns an array of length <code>5</code> of the number of banknotes that will be handed to the user in the order <code>$20</code>, <code>$50</code>, <code>$100</code>, <code>$200</code>, and <code>$500</code>, and update the number of banknotes in the ATM after withdrawing. Returns <code>[-1]</code> if it is not possible (do <strong>not</strong> withdraw any banknotes in this case).</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;ATM&quot;, &quot;deposit&quot;, &quot;withdraw&quot;, &quot;deposit&quot;, &quot;withdraw&quot;, &quot;withdraw&quot;]\n[[], [[0,0,1,2,1]], [600], [[0,1,0,1,1]], [600], [550]]\n<strong>Output</strong>\n[null, null, [0,0,1,0,1], null, [-1], [0,1,0,0,1]]\n\n<strong>Explanation</strong>\nATM atm = new ATM();\natm.deposit([0,0,1,2,1]); // Deposits 1 $100 banknote, 2 $200 banknotes,\n                          // and 1 $500 banknote.\natm.withdraw(600);        // Returns [0,0,1,0,1]. The machine uses 1 $100 banknote\n                          // and 1 $500 banknote. The banknotes left over in the\n                          // machine are [0,0,0,2,0].\natm.deposit([0,1,0,1,1]); // Deposits 1 $50, $200, and $500 banknote.\n                          // The banknotes in the machine are now [0,1,0,3,1].\natm.withdraw(600);        // Returns [-1]. The machine will try to use a $500 banknote\n                          // and then be unable to complete the remaining $100,\n                          // so the withdraw request will be rejected.\n                          // Since the request is rejected, the number of banknotes\n                          // in the machine is not modified.\natm.withdraw(550);        // Returns [0,1,0,0,1]. The machine uses 1 $50 banknote\n                          // and 1 $500 banknote.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>banknotesCount.length == 5</code></li>\n\t<li><code>0 &lt;= banknotesCount[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= amount &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>5000</code> calls <strong>in total</strong> will be made to <code>withdraw</code> and <code>deposit</code>.</li>\n\t<li>At least <strong>one</strong> call will be made to each function <code>withdraw</code> and <code>deposit</code>.</li>\n\t<li>Sum of <code>banknotesCount[i]</code> in all deposits doesn&#39;t exceed <code>10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Store the number of banknotes of each denomination.",
+    "Can you use math to quickly evaluate a withdrawal request?"
+  ],
+  "metaData": "{\n  \"classname\": \"ATM\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer[]\",\n          \"name\": \"banknotesCount\"\n        }\n      ],\n      \"name\": \"deposit\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"amount\"\n        }\n      ],\n      \"name\": \"withdraw\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"35K\", \"totalSubmission\": \"78.1K\", \"totalAcceptedRaw\": 35007, \"totalSubmissionRaw\": 78093, \"acRate\": \"44.8%\"}",
+  "likes": 313,
+  "dislikes": 387,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Simple Bank System\", \"titleSlug\": \"simple-bank-system\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Operations to Convert Time\", \"titleSlug\": \"minimum-number-of-operations-to-convert-time\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"ATM\",\"deposit\",\"withdraw\",\"deposit\",\"withdraw\",\"withdraw\"]\n[[],[[0,0,1,2,1]],[600],[[0,1,0,1,1]],[600],[550]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"yandex\", \"name\": \"Yandex\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class ATM {\npublic:\n    ATM() {\n        \n    }\n    \n    void deposit(vector<int> banknotesCount) {\n        \n    }\n    \n    vector<int> withdraw(int amount) {\n        \n    }\n};\n\n/**\n * Your ATM object will be instantiated and called as such:\n * ATM* obj = new ATM();\n * obj->deposit(banknotesCount);\n * vector<int> param_2 = obj->withdraw(amount);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class ATM {\n\n    public ATM() {\n        \n    }\n    \n    public void deposit(int[] banknotesCount) {\n        \n    }\n    \n    public int[] withdraw(int amount) {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * ATM obj = new ATM();\n * obj.deposit(banknotesCount);\n * int[] param_2 = obj.withdraw(amount);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class ATM:\n\n    def __init__(self):\n        \n\n    def deposit(self, banknotesCount: List[int]) -> None:\n        \n\n    def withdraw(self, amount: int) -> List[int]:\n        \n\n\n# Your ATM object will be instantiated and called as such:\n# obj = ATM()\n# obj.deposit(banknotesCount)\n# param_2 = obj.withdraw(amount)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class ATM(object):\n\n    def __init__(self):\n        \n\n    def deposit(self, banknotesCount):\n        \"\"\"\n        :type banknotesCount: List[int]\n        :rtype: None\n        \"\"\"\n        \n\n    def withdraw(self, amount):\n        \"\"\"\n        :type amount: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your ATM object will be instantiated and called as such:\n# obj = ATM()\n# obj.deposit(banknotesCount)\n# param_2 = obj.withdraw(amount)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar ATM = function() {\n    \n};\n\n/** \n * @param {number[]} banknotesCount\n * @return {void}\n */\nATM.prototype.deposit = function(banknotesCount) {\n    \n};\n\n/** \n * @param {number} amount\n * @return {number[]}\n */\nATM.prototype.withdraw = function(amount) {\n    \n};\n\n/** \n * Your ATM object will be instantiated and called as such:\n * var obj = new ATM()\n * obj.deposit(banknotesCount)\n * var param_2 = obj.withdraw(amount)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class ATM {\n    constructor() {\n        \n    }\n\n    deposit(banknotesCount: number[]): void {\n        \n    }\n\n    withdraw(amount: number): number[] {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * var obj = new ATM()\n * obj.deposit(banknotesCount)\n * var param_2 = obj.withdraw(amount)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class ATM {\n\n    public ATM() {\n        \n    }\n    \n    public void Deposit(int[] banknotesCount) {\n        \n    }\n    \n    public int[] Withdraw(int amount) {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * ATM obj = new ATM();\n * obj.Deposit(banknotesCount);\n * int[] param_2 = obj.Withdraw(amount);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} ATM;\n\n\nATM* aTMCreate() {\n    \n}\n\nvoid aTMDeposit(ATM* obj, int* banknotesCount, int banknotesCountSize) {\n    \n}\n\nint* aTMWithdraw(ATM* obj, int amount, int* retSize) {\n    \n}\n\nvoid aTMFree(ATM* obj) {\n    \n}\n\n/**\n * Your ATM struct will be instantiated and called as such:\n * ATM* obj = aTMCreate();\n * aTMDeposit(obj, banknotesCount, banknotesCountSize);\n \n * int* param_2 = aTMWithdraw(obj, amount, retSize);\n \n * aTMFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type ATM struct {\n    \n}\n\n\nfunc Constructor() ATM {\n    \n}\n\n\nfunc (this *ATM) Deposit(banknotesCount []int)  {\n    \n}\n\n\nfunc (this *ATM) Withdraw(amount int) []int {\n    \n}\n\n\n/**\n * Your ATM object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Deposit(banknotesCount);\n * param_2 := obj.Withdraw(amount);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class ATM() {\n\n    fun deposit(banknotesCount: IntArray) {\n        \n    }\n\n    fun withdraw(amount: Int): IntArray {\n        \n    }\n\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * var obj = ATM()\n * obj.deposit(banknotesCount)\n * var param_2 = obj.withdraw(amount)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass ATM {\n\n    init() {\n        \n    }\n    \n    func deposit(_ banknotesCount: [Int]) {\n        \n    }\n    \n    func withdraw(_ amount: Int) -> [Int] {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * let obj = ATM()\n * obj.deposit(banknotesCount)\n * let ret_2: [Int] = obj.withdraw(amount)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct ATM {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl ATM {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn deposit(&self, banknotes_count: Vec<i32>) {\n        \n    }\n    \n    fn withdraw(&self, amount: i32) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * let obj = ATM::new();\n * obj.deposit(banknotesCount);\n * let ret_2: Vec<i32> = obj.withdraw(amount);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class ATM\n    def initialize()\n        \n    end\n\n\n=begin\n    :type banknotes_count: Integer[]\n    :rtype: Void\n=end\n    def deposit(banknotes_count)\n        \n    end\n\n\n=begin\n    :type amount: Integer\n    :rtype: Integer[]\n=end\n    def withdraw(amount)\n        \n    end\n\n\nend\n\n# Your ATM object will be instantiated and called as such:\n# obj = ATM.new()\n# obj.deposit(banknotes_count)\n# param_2 = obj.withdraw(amount)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class ATM {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer[] $banknotesCount\n     * @return NULL\n     */\n    function deposit($banknotesCount) {\n        \n    }\n  \n    /**\n     * @param Integer $amount\n     * @return Integer[]\n     */\n    function withdraw($amount) {\n        \n    }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * $obj = ATM();\n * $obj->deposit($banknotesCount);\n * $ret_2 = $obj->withdraw($amount);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class ATM {\n\n  ATM() {\n    \n  }\n  \n  void deposit(List<int> banknotesCount) {\n    \n  }\n  \n  List<int> withdraw(int amount) {\n    \n  }\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * ATM obj = ATM();\n * obj.deposit(banknotesCount);\n * List<int> param2 = obj.withdraw(amount);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class ATM() {\n\n    def deposit(banknotesCount: Array[Int]): Unit = {\n        \n    }\n\n    def withdraw(amount: Int): Array[Int] = {\n        \n    }\n\n}\n\n/**\n * Your ATM object will be instantiated and called as such:\n * val obj = new ATM()\n * obj.deposit(banknotesCount)\n * val param_2 = obj.withdraw(amount)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule ATM do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec deposit(banknotes_count :: [integer]) :: any\n  def deposit(banknotes_count) do\n    \n  end\n\n  @spec withdraw(amount :: integer) :: [integer]\n  def withdraw(amount) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# ATM.init_()\n# ATM.deposit(banknotes_count)\n# param_2 = ATM.withdraw(amount)\n\n# ATM.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec atm_init_() -> any().\natm_init_() ->\n  .\n\n-spec atm_deposit(BanknotesCount :: [integer()]) -> any().\natm_deposit(BanknotesCount) ->\n  .\n\n-spec atm_withdraw(Amount :: integer()) -> [integer()].\natm_withdraw(Amount) ->\n  .\n\n\n%% Your functions will be called as such:\n%% atm_init_(),\n%% atm_deposit(BanknotesCount),\n%% Param_2 = atm_withdraw(Amount),\n\n%% atm_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define atm%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; deposit : (listof exact-integer?) -> void?\n    (define/public (deposit banknotes-count)\n      )\n    ; withdraw : exact-integer? -> (listof exact-integer?)\n    (define/public (withdraw amount)\n      )))\n\n;; Your atm% object will be instantiated and called as such:\n;; (define obj (new atm%))\n;; (send obj deposit banknotes-count)\n;; (define param_2 (send obj withdraw amount))"
+    }
+  ],
+  "solution": null
+}

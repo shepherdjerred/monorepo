@@ -1,0 +1,137 @@
+{
+  "questionId": "2363",
+  "questionFrontendId": "2245",
+  "title": "Maximum Trailing Zeros in a Cornered Path",
+  "titleSlug": "maximum-trailing-zeros-in-a-cornered-path",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>grid</code> of size <code>m x n</code>, where each cell contains a positive integer.</p>\n\n<p>A <strong>cornered path</strong> is defined as a set of adjacent cells with <strong>at most</strong> one turn. More specifically, the path should exclusively move either <strong>horizontally</strong> or <strong>vertically</strong> up to the turn (if there is one), without returning to a previously visited cell. After the turn, the path will then move exclusively in the <strong>alternate</strong> direction: move vertically if it moved horizontally, and vice versa, also without returning to a previously visited cell.</p>\n\n<p>The <strong>product</strong> of a path is defined as the product of all the values in the path.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of <strong>trailing zeros</strong> in the product of a cornered path found in </em><code>grid</code>.</p>\n\n<p>Note:</p>\n\n<ul>\n\t<li><strong>Horizontal</strong> movement means moving in either the left or right direction.</li>\n\t<li><strong>Vertical</strong> movement means moving in either the up or down direction.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/23/ex1new2.jpg\" style=\"width: 577px; height: 190px;\" />\n<pre>\n<strong>Input:</strong> grid = [[23,17,15,3,20],[8,1,20,27,11],[9,4,6,2,21],[40,9,1,10,6],[22,7,4,5,3]]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> The grid on the left shows a valid cornered path.\nIt has a product of 15 * 20 * 6 * 1 * 10 = 18000 which has 3 trailing zeros.\nIt can be shown that this is the maximum trailing zeros in the product of a cornered path.\n\nThe grid in the middle is not a cornered path as it has more than one turn.\nThe grid on the right is not a cornered path as it requires a return to a previously visited cell.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/25/ex2.jpg\" style=\"width: 150px; height: 157px;\" />\n<pre>\n<strong>Input:</strong> grid = [[4,3,2],[7,6,1],[8,8,8]]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The grid is shown in the figure above.\nThere are no cornered paths in the grid that result in a product with a trailing zero.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= grid[i][j] &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "What actually tells us the trailing zeros of the product of a path?",
+    "It is the sum of the exponents of 2 and sum of the exponents of 5 of the prime factorizations of the numbers on that path. The smaller of the two is the answer for that path.",
+    "We can then treat each cell as the elbow point and calculate the largest minimum (sum of 2 exponents, sum of 5 exponents) from the combination of top-left, top-right, bottom-left and bottom-right.",
+    "To do this efficiently, we should use the prefix sum technique."
+  ],
+  "metaData": "{\n  \"name\": \"maxTrailingZeros\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"9.7K\", \"totalSubmission\": \"25.7K\", \"totalAcceptedRaw\": 9654, \"totalSubmissionRaw\": 25730, \"acRate\": \"37.5%\"}",
+  "likes": 203,
+  "dislikes": 407,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Factorial Trailing Zeroes\", \"titleSlug\": \"factorial-trailing-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Bomb Enemy\", \"titleSlug\": \"bomb-enemy\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Abbreviating the Product of a Range\", \"titleSlug\": \"abbreviating-the-product-of-a-range\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[23,17,15,3,20],[8,1,20,27,11],[9,4,6,2,21],[40,9,1,10,6],[22,7,4,5,3]]",
+    "[[4,3,2],[7,6,1],[8,8,8]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTrailingZeros(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTrailingZeros(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTrailingZeros(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTrailingZeros(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar maxTrailingZeros = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTrailingZeros(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTrailingZeros(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTrailingZeros(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTrailingZeros(grid [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTrailingZeros(grid: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTrailingZeros(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_trailing_zeros(grid: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef max_trailing_zeros(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function maxTrailingZeros($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTrailingZeros(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTrailingZeros(grid: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_trailing_zeros(grid :: [[integer]]) :: integer\n  def max_trailing_zeros(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_trailing_zeros(Grid :: [[integer()]]) -> integer().\nmax_trailing_zeros(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-trailing-zeros grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

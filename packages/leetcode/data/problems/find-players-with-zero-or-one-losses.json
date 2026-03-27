@@ -1,0 +1,143 @@
+{
+  "questionId": "1354",
+  "questionFrontendId": "2225",
+  "title": "Find Players With Zero or One Losses",
+  "titleSlug": "find-players-with-zero-or-one-losses",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>matches</code> where <code>matches[i] = [winner<sub>i</sub>, loser<sub>i</sub>]</code> indicates that the player <code>winner<sub>i</sub></code> defeated player <code>loser<sub>i</sub></code> in a match.</p>\n\n<p>Return <em>a list </em><code>answer</code><em> of size </em><code>2</code><em> where:</em></p>\n\n<ul>\n\t<li><code>answer[0]</code> is a list of all players that have <strong>not</strong> lost any matches.</li>\n\t<li><code>answer[1]</code> is a list of all players that have lost exactly <strong>one</strong> match.</li>\n</ul>\n\n<p>The values in the two lists should be returned in <strong>increasing</strong> order.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>You should only consider the players that have played <strong>at least one</strong> match.</li>\n\t<li>The testcases will be generated such that <strong>no</strong> two matches will have the <strong>same</strong> outcome.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> matches = [[1,3],[2,3],[3,6],[5,6],[5,7],[4,5],[4,8],[4,9],[10,4],[10,9]]\n<strong>Output:</strong> [[1,2,10],[4,5,7,8]]\n<strong>Explanation:</strong>\nPlayers 1, 2, and 10 have not lost any matches.\nPlayers 4, 5, 7, and 8 each have lost one match.\nPlayers 3, 6, and 9 each have lost two matches.\nThus, answer[0] = [1,2,10] and answer[1] = [4,5,7,8].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> matches = [[2,3],[1,3],[5,4],[6,4]]\n<strong>Output:</strong> [[1,2,5,6],[]]\n<strong>Explanation:</strong>\nPlayers 1, 2, 5, and 6 have not lost any matches.\nPlayers 3 and 4 each have lost two matches.\nThus, answer[0] = [1,2,5,6] and answer[1] = [].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= matches.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>matches[i].length == 2</code></li>\n\t<li><code>1 &lt;= winner<sub>i</sub>, loser<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>winner<sub>i</sub> != loser<sub>i</sub></code></li>\n\t<li>All <code>matches[i]</code> are <strong>unique</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Count the number of times a player loses while iterating through the matches."
+  ],
+  "metaData": "{\n  \"name\": \"findWinners\",\n  \"params\": [\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"matches\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"313.3K\", \"totalSubmission\": \"432.5K\", \"totalAcceptedRaw\": 313338, \"totalSubmissionRaw\": 432453, \"acRate\": \"72.5%\"}",
+  "likes": 2273,
+  "dislikes": 160,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Lowest Common Ancestor of a Binary Tree\", \"titleSlug\": \"lowest-common-ancestor-of-a-binary-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3],[2,3],[3,6],[5,6],[5,7],[4,5],[4,8],[4,9],[10,4],[10,9]]",
+    "[[2,3],[1,3],[5,4],[6,4]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"palantir-technologies\", \"name\": \"Palantir Technologies\"}, {\"timesEncountered\": 2, \"slug\": \"indeed\", \"name\": \"Indeed\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> findWinners(vector<vector<int>>& matches) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> findWinners(int[][] matches) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findWinners(self, matches: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findWinners(self, matches):\n        \"\"\"\n        :type matches: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} matches\n * @return {number[][]}\n */\nvar findWinners = function(matches) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findWinners(matches: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> FindWinners(int[][] matches) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** findWinners(int** matches, int matchesSize, int* matchesColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findWinners(matches [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findWinners(matches: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findWinners(_ matches: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_winners(matches: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} matches\n# @return {Integer[][]}\ndef find_winners(matches)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $matches\n     * @return Integer[][]\n     */\n    function findWinners($matches) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> findWinners(List<List<int>> matches) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findWinners(matches: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_winners(matches :: [[integer]]) :: [[integer]]\n  def find_winners(matches) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_winners(Matches :: [[integer()]]) -> [[integer()]].\nfind_winners(Matches) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-winners matches)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1578",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nIn this problem, we are given an array `matches` consisting of matches `[winner, loser]` where `winner` defeats `loser`.\n\nWe need to collect these 2 kinds of players into two lists separately:\n- players that have not lost any matches.\n- players that have lost exactly one match.\n\nthen return the two lists in increasing order.\n\nHere we introduce several approaches that use different data structures.\n\n\n---\n\n### Approach 1: Hash Set\n\n#### Intuition   \n\nWe use three hash sets to store the players with different numbers of losses:\n- `zero_loss` to store players with zero loss.\n- `one_loss` to store players with one loss.\n- `more_loss` to store players with more than one loss.\n\nFor each match `match[i] = [winner, loser]`, two players `winner` and `loser` may need to move to other sets and we update the sets they should move to. For example, if `player_A` is in `zero_loss` previously, assume we encounter a match `[player_X, player_A]`, it means `player_A` has one loss now, so we need to remove `player_A` from `zero_loss` and add it to `one_loss`. \n\n![img](../Figures/2225/2225-1ex.png)\n\n<br>\n\n#### Algorithm\n\n1) Initialize three empty hash sets, `zero_loss`, `one_loss` and `more_losses`.\n2) Iterate over `matches`, for each match `[winner, loser]`, update the sets they are in according to the following rule:\n    - For `winner`:\n        - If `winner` is not in `more_losses` or `one_loss`, it means he should be in `zero_loss`, add it to `zero_loss`.\n        - Otherwise, the number of losses for `winner` doesn't change, keep this player in the original set.\n    - For `loser`: \n        - If `loser` is in `zero_loss`, remove it from `zero_loss` and add it to `one_loss` since this player has one more loss now.\n        - If `loser` is in `one_loss`, remove it from `one_loss` and add it to `more_losses` since this player has one more loss now.\n        - If `loser` is in `more_losses`, keep this player in `more_losses`.\n        - Otherwise, it means that this match is `loser`'s first match, we add this player to `one_loss`.\n3) After the iteration ends, get the players from `zero_loss` and `one_loss` and sort them, as required by the problem.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g8pSvDQN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"g8pSvDQN\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `matches`.\n\n* Time complexity: $$O(n\\cdot \\log n)$$\n\n    - For each match from `matches`, we have up to 3 operations on these sets. Operations on hash set require $$O(1)$$ time. Thus the iteration over `matches` takes $$O(n)$$ time.\n    - We need to store two kinds of players in two arrays and sort them. In the worst-case scenario, there may be $$O(n)$$ players in these arrays, thus it requires $$O(n \\cdot\\log n)$$ time.\n    - To sum up, the time complexity is $$O(n\\cdot \\log n)$$.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We use three hash sets to store all the players, there are at most $$O(n)$$ players.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Hash Set + Hash Map\n\n#### Intuition   \n\nThe previous approach works but has very limited usability. It seems very concise because of the fact that the question asks us to find only `k = 2` kinds of players. What if `k` be a very large number, or even worse, `k` is of the same order of magnitude as `n`? We need to create $$O(n)$$ hash sets and more complex decision conditions!\n\nTherefore, instead of using the set itself to represent the number of losses of players (i.e `set 1` for players of 1 loss, `set 2` for players of 2 losses, and so forth), we would better consider the number losses as a value bound to the player. We can use a hash map `losses_count` to store players and the number of losses each has.\n\nHence, we use a hash set `seen` to store all the players, and a hash map `losses_count` to store the number of losses each `loser` has.\n\n![img](../Figures/2225/2225-2ex.png)\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty hash set `seen` and an empty hash map `losses_count`.\n2) Iterate over `matches` and for each match `[winner, loser]`, add both `winner` and `loser` to `seen`. Increment `losses_count[loser]` by 1.\n3) After the iteration stops, we iterate through all the players in `seen` and collect players with 0 loss or 1 loss to two arrays respectively. \n4) Sort these two arrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZWJCDxEs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZWJCDxEs\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `matches`.\n\n* Time complexity: $$O(n\\cdot \\log n)$$\n\n    - For each match in `matches`, we need to update `seen` and `losses_count` once. The operation on hash set or hash map takes $$O(1)$$ time. Thus the iteration over `matches` takes $$O(n)$$ time.\n    - We need to store and sort two kinds of players in two arrays respectively. In the worst-case scenario, there may be $$O(n)$$ players in these two arrays, so it requires $$O(n \\cdot\\log n)$$ time.\n    - To sum up, the time complexity is $$O(n\\cdot \\log n)$$.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We use a hash set and a hash map to store all the players, there are at most $$O(n)$$ players.\n\n<br/>\n\n\n\n---\n\n### Approach 3: Hash Map\n\n#### Intuition   \n\nIf the previous approach, we use a hash map to store the players with at least 1 loss. We can also store the players with 0 loss in the same hash map, so we no longer need the hash set `seen` to store all the players!\n\nFor a given match `[winner, loser]`:\n- We increment `loser`'s number of losses by 1.\n- If `winner` has 1 or more losses already, we don't need to make any change, otherwise, we set his value to 0, which means that `winner` has played at least 1 game and hasn't received a loss yet.\n\nTherefore, we can update the number of losses of each player using only 1 hash map, as shown in the picture below.\n\n![img](../Figures/2225/2225-3_1.png)\n\n<br>\n\n#### Algorithm\n\n- Initialize a map called `lossesCount` to track the number of losses for each player.\n- Iterate over each match:\n  - Extract the `winner` and `loser` from the match.\n  - Update `lossesCount`:\n    - Set the number of losses for `winner` to 0 if not already present.\n    - Increment the number of losses for `loser` by 1.\n- Initialize a list of list of integer called `answer` with two empty lists:\n  - The first list will store players with 0 losses.\n  - The second list will store players with exactly 1 loss.\n- Iterate over the `lossesCount` map:\n  - If a player's loss count is 0, add the player to the first list in `answer`.\n  - If a player's loss count is 1, add the player to the second list in `answer`.\n- Sort both lists in `answer` to ensure the output is in ascending order.\n- Return the `answer` list containing the two sorted lists of players.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hyg8qiJS/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"hyg8qiJS\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `matches`.\n\n* Time complexity: $$O(n\\cdot \\log n)$$\n\n    - For each match in `matches`, we need to update the value of both players in `losses_count`. Operations on hash map require $$O(1)$$ time. Thus the iteration over `matches` takes $$O(n)$$ time.\n    - We need to store two kinds of players in two arrays and sort them. In the worst-case scenario, there may be $$O(n)$$ players in these arrays, so it requires $$O(n \\cdot\\log n)$$ time.\n    - To sum up, the time complexity is $$O(n\\cdot \\log n)$$.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We use a hash map to store all players and their number of losses, which requires $$O(n)$$ space in the worst-case scenario.\n\n<br/>\n\n\n\n---\n\n### Approach 4: Counting with Array\n\n#### Intuition   \n\nIn the previous approaches, we store players without so we need to sort them after adding them to arrays. Can we store the players in order so that we don't need an additional sorting process after we collect them?\n\nNotice that the valid range of players is of the same order of magnitude as the size of `match`. This reminds us of counting sort, a sorting algorithm with linear time complexity. \n\n> What is Counting Sort?\n\nFor a detailed introduction, you can refer to this article on [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort).\n\nIn short, Counting Sort is not a comparison sort; thus, the $$O(n \\cdot \\log(n))$$ time complexity for comparison sorting does not apply. Note that the approach we use to solve this problem is not exactly a counting sort, but has the same idea behind it: mapping each of the players to an (unique) index within a specific range. \n\nWe create an auxiliary array (`losses_count`) and fill it with a specific value (let's say `-1`) indicating that none of the players have played the match yet. For each match `[winner, loser]`, we modify `losses_count[winner]` and `losses_count[loser]` to other numbers than `-1` to reflect that both players have played at least one match.\n\n\n> How do we use different values to represent different kinds of players?\n\n- `losses_count[i] = -1`, player `i` has not played.\n- `losses_count[i] = 0`, player `i` has played at least one game and has 0 loss.\n- `losses_count[i] = 1`, player `i` has exact 1 loss.\n- `losses_count[i] > 1`, player `i` has more than 1 loss.\n\nTherefore, we initialize all the values in `losses_count` as `-1`, iterate through `matches` and update values at index `winner` and `loser` for each match. Each value `losses_count[i] != -1` stands for a player `i` who has played at least one match. We just need to iterate over `losses_count` from low to high and add the two kinds of players to corresponding arrays, so we don't need to sort them anymore.\n\nPlease refer to the slides below.\n\n!?!../Documents/2225/s1.json:601,301!?!\n\n<br>\n\n#### Algorithm\n\n1) Use an array `losses_count` to store the number of losses for each player. Initially, `losses_count[i] = -1` for every index `i`.\n2) For each match `[winner, loser]`: \n    - If `losses_count[loser] = -1`, set it to 1, otherwise increment it by 1.\n    - If `losses_count[winner] = -1`, set it to 0.\n3) Iterate over `losses_count` and use two arrays to store these 2 kinds of players, for each index `i`:\n    - If `losses_count[i] = 0`, add this player to the first array.\n    - If `losses_count[i] = 1`, add this player to the second array.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HuoQ45At/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HuoQ45At\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `matches`, and $$k$$ be the range of values in `winner` or `loser`. \n\n* Time complexity: $$O(n + k)$$\n\n    - For each match, we need to update two values in the array `losses_count` which takes constant time. Thus the iteration requires $$O(n)$$ time.\n    - We need to iterate over `losses_count` to collect two kinds of players, which takes $$O(k)$$ time.\n    - Since we iterate over players from low to high, we don't need to sort them anymore.\n    - To sum up, the overall time complexity is $$O(n + k)$$.\n    \n\n* Space complexity: $$O(k)$$\n\n    - We need to create an array of size $$O(k)$$ to cover all players. Thus the overall space complexity is $$O(k)$$.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

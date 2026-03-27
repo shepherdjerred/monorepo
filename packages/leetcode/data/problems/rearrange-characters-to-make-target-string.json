@@ -1,0 +1,137 @@
+{
+  "questionId": "2372",
+  "questionFrontendId": "2287",
+  "title": "Rearrange Characters to Make Target String",
+  "titleSlug": "rearrange-characters-to-make-target-string",
+  "difficulty": "Easy",
+  "content": "<p>You are given two <strong>0-indexed</strong> strings <code>s</code> and <code>target</code>. You can take some letters from <code>s</code> and rearrange them to form new strings.</p>\n\n<p>Return<em> the <strong>maximum</strong> number of copies of </em><code>target</code><em> that can be formed by taking letters from </em><code>s</code><em> and rearranging them.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;ilovecodingonleetcode&quot;, target = &quot;code&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nFor the first copy of &quot;code&quot;, take the letters at indices 4, 5, 6, and 7.\nFor the second copy of &quot;code&quot;, take the letters at indices 17, 18, 19, and 20.\nThe strings that are formed are &quot;ecod&quot; and &quot;code&quot; which can both be rearranged into &quot;code&quot;.\nWe can make at most two copies of &quot;code&quot;, so we return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcba&quot;, target = &quot;abc&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nWe can make one copy of &quot;abc&quot; by taking the letters at indices 0, 1, and 2.\nWe can make at most one copy of &quot;abc&quot;, so we return 1.\nNote that while there is an extra &#39;a&#39; and &#39;b&#39; at indices 3 and 4, we cannot reuse the letter &#39;c&#39; at index 2, so we cannot make a second copy of &quot;abc&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abbaccaddaeea&quot;, target = &quot;aaaaa&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nWe can make one copy of &quot;aaaaa&quot; by taking the letters at indices 0, 3, 6, 9, and 12.\nWe can make at most one copy of &quot;aaaaa&quot;, so we return 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= target.length &lt;= 10</code></li>\n\t<li><code>s</code> and <code>target</code> consist of lowercase English letters.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/maximum-number-of-balloons/description/\" target=\"_blank\"> 1189: Maximum Number of Balloons.</a></p>\n",
+  "hints": [
+    "Count the frequency of each character in s and target.",
+    "Consider each letter one at a time. If there are x occurrences of a letter in s and y occurrences of the same letter in target, how many copies of this letter can we make?",
+    "We can make floor(x / y) copies of the letter."
+  ],
+  "metaData": "{\n  \"name\": \"rearrangeCharacters\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"55.9K\", \"totalSubmission\": \"91.5K\", \"totalAcceptedRaw\": 55926, \"totalSubmissionRaw\": 91464, \"acRate\": \"61.1%\"}",
+  "likes": 528,
+  "dislikes": 38,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Words That Can Be Formed by Characters\", \"titleSlug\": \"find-words-that-can-be-formed-by-characters\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Occurrences of a Substring\", \"titleSlug\": \"maximum-number-of-occurrences-of-a-substring\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"ilovecodingonleetcode\"\n\"code\"",
+    "\"abcba\"\n\"abc\"",
+    "\"abbaccaddaeea\"\n\"aaaaa\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int rearrangeCharacters(string s, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int rearrangeCharacters(String s, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def rearrangeCharacters(self, s: str, target: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def rearrangeCharacters(self, s, target):\n        \"\"\"\n        :type s: str\n        :type target: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} target\n * @return {number}\n */\nvar rearrangeCharacters = function(s, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function rearrangeCharacters(s: string, target: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int RearrangeCharacters(string s, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int rearrangeCharacters(char* s, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func rearrangeCharacters(s string, target string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun rearrangeCharacters(s: String, target: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func rearrangeCharacters(_ s: String, _ target: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn rearrange_characters(s: String, target: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} target\n# @return {Integer}\ndef rearrange_characters(s, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $target\n     * @return Integer\n     */\n    function rearrangeCharacters($s, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int rearrangeCharacters(String s, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def rearrangeCharacters(s: String, target: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec rearrange_characters(s :: String.t, target :: String.t) :: integer\n  def rearrange_characters(s, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec rearrange_characters(S :: unicode:unicode_binary(), Target :: unicode:unicode_binary()) -> integer().\nrearrange_characters(S, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (rearrange-characters s target)\n  (-> string? string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

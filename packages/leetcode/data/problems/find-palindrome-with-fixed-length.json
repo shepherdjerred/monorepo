@@ -1,0 +1,131 @@
+{
+  "questionId": "1375",
+  "questionFrontendId": "2217",
+  "title": "Find Palindrome With Fixed Length",
+  "titleSlug": "find-palindrome-with-fixed-length",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>queries</code> and a <strong>positive</strong> integer <code>intLength</code>, return <em>an array</em> <code>answer</code> <em>where</em> <code>answer[i]</code> <em>is either the </em><code>queries[i]<sup>th</sup></code> <em>smallest <strong>positive palindrome</strong> of length</em> <code>intLength</code> <em>or</em> <code>-1</code><em> if no such palindrome exists</em>.</p>\n\n<p>A <strong>palindrome</strong> is a number that reads the same backwards and forwards. Palindromes cannot have leading zeros.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> queries = [1,2,3,4,5,90], intLength = 3\n<strong>Output:</strong> [101,111,121,131,141,999]\n<strong>Explanation:</strong>\nThe first few palindromes of length 3 are:\n101, 111, 121, 131, 141, 151, 161, 171, 181, 191, 202, ...\nThe 90<sup>th</sup> palindrome of length 3 is 999.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> queries = [2,4,6], intLength = 4\n<strong>Output:</strong> [1111,1331,1551]\n<strong>Explanation:</strong>\nThe first six palindromes of length 4 are:\n1001, 1111, 1221, 1331, 1441, and 1551.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= queries.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= queries[i] &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= intLength&nbsp;&lt;= 15</code></li>\n</ul>\n",
+  "hints": [
+    "For any value of queries[i] and intLength, how can you check if there exists at least queries[i] palindromes of length intLength?",
+    "Since a palindrome reads the same forwards and backwards, consider how you can efficiently find the first half (ceil(intLength/2) digits) of the palindrome."
+  ],
+  "metaData": "{\n  \"name\": \"kthPalindrome\",\n  \"params\": [\n    {\n      \"name\": \"queries\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"intLength\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"27.6K\", \"totalSubmission\": \"72.7K\", \"totalAcceptedRaw\": 27621, \"totalSubmissionRaw\": 72732, \"acRate\": \"38.0%\"}",
+  "likes": 664,
+  "dislikes": 296,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Palindrome Number\", \"titleSlug\": \"palindrome-number\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find the Closest Palindrome\", \"titleSlug\": \"find-the-closest-palindrome\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Lexicographically Smallest Beautiful String\", \"titleSlug\": \"lexicographically-smallest-beautiful-string\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3,4,5,90]\n3",
+    "[2,4,6]\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> kthPalindrome(vector<int>& queries, int intLength) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] kthPalindrome(int[] queries, int intLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthPalindrome(self, queries: List[int], intLength: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthPalindrome(self, queries, intLength):\n        \"\"\"\n        :type queries: List[int]\n        :type intLength: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} queries\n * @param {number} intLength\n * @return {number[]}\n */\nvar kthPalindrome = function(queries, intLength) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthPalindrome(queries: number[], intLength: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] KthPalindrome(int[] queries, int intLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* kthPalindrome(int* queries, int queriesSize, int intLength, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthPalindrome(queries []int, intLength int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthPalindrome(queries: IntArray, intLength: Int): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthPalindrome(_ queries: [Int], _ intLength: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_palindrome(queries: Vec<i32>, int_length: i32) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} queries\n# @param {Integer} int_length\n# @return {Integer[]}\ndef kth_palindrome(queries, int_length)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $queries\n     * @param Integer $intLength\n     * @return Integer[]\n     */\n    function kthPalindrome($queries, $intLength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> kthPalindrome(List<int> queries, int intLength) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthPalindrome(queries: Array[Int], intLength: Int): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_palindrome(queries :: [integer], int_length :: integer) :: [integer]\n  def kth_palindrome(queries, int_length) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_palindrome(Queries :: [integer()], IntLength :: integer()) -> [integer()].\nkth_palindrome(Queries, IntLength) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-palindrome queries intLength)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

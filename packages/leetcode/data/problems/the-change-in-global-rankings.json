@@ -1,0 +1,53 @@
+{
+  "questionId": "2315",
+  "questionFrontendId": "2175",
+  "title": "The Change in Global Rankings",
+  "titleSlug": "the-change-in-global-rankings",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>TeamPoints</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| team_id     | int     |\n| name        | varchar |\n| points      | int     |\n+-------------+---------+\nteam_id contains unique values.\nEach row of this table contains the ID of a national team, the name of the country it represents, and the points it has in the global rankings. No two teams will represent the same country.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>PointsChange</code></p>\n\n<pre>\n+---------------+------+\n| Column Name   | Type |\n+---------------+------+\n| team_id       | int  |\n| points_change | int  |\n+---------------+------+\nteam_id contains unique values.\nEach row of this table contains the ID of a national team and the change in its points in the global rankings.\npoints_change can be:\n- 0: indicates no change in points.\n- positive: indicates an increase in points.\n- negative: indicates a decrease in points.\nEach team_id that appears in TeamPoints will also appear in this table.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>The <strong>global ranking</strong> of a national team is its rank after sorting all the teams by their points <strong>in descending order</strong>. If two teams have the same points, we break the tie by sorting them by their name <strong>in lexicographical order</strong>.</p>\n\n<p>The points of each national team should be updated based on its corresponding <code>points_change</code> value.</p>\n\n<p>Write a solution to calculate the change in the global rankings after updating each team&#39;s points.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTeamPoints table:\n+---------+-------------+--------+\n| team_id | name        | points |\n+---------+-------------+--------+\n| 3       | Algeria     | 1431   |\n| 1       | Senegal     | 2132   |\n| 2       | New Zealand | 1402   |\n| 4       | Croatia     | 1817   |\n+---------+-------------+--------+\nPointsChange table:\n+---------+---------------+\n| team_id | points_change |\n+---------+---------------+\n| 3       | 399           |\n| 2       | 0             |\n| 4       | 13            |\n| 1       | -22           |\n+---------+---------------+\n<strong>Output:</strong> \n+---------+-------------+-----------+\n| team_id | name        | rank_diff |\n+---------+-------------+-----------+\n| 1       | Senegal     | 0         |\n| 4       | Croatia     | -1        |\n| 3       | Algeria     | 1         |\n| 2       | New Zealand | 0         |\n+---------+-------------+-----------+\n<strong>Explanation:</strong> \nThe global rankings were as follows:\n+---------+-------------+--------+------+\n| team_id | name        | points | rank |\n+---------+-------------+--------+------+\n| 1       | Senegal     | 2132   | 1    |\n| 4       | Croatia     | 1817   | 2    |\n| 3       | Algeria     | 1431   | 3    |\n| 2       | New Zealand | 1402   | 4    |\n+---------+-------------+--------+------+\nAfter updating the points of each team, the rankings became the following:\n+---------+-------------+--------+------+\n| team_id | name        | points | rank |\n+---------+-------------+--------+------+\n| 1       | Senegal     | 2110   | 1    |\n| 3       | Algeria     | 1830   | 2    |\n| 4       | Croatia     | 1830   | 3    |\n| 2       | New Zealand | 1402   | 4    |\n+---------+-------------+--------+------+\nSince after updating the points Algeria and Croatia have the same points, they are ranked according to their lexicographic order.\nSenegal lost 22 points but their rank did not change.\nCroatia gained 13 points but their rank decreased by one.\nAlgeria gained 399 points and their rank increased by one.\nNew Zealand did not gain or lose points and their rank did not change.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists TeamPoints (team_id int, name varchar(100), points int)\", \"Create table If Not Exists PointsChange (team_id int, points_change int)\"], \"mssql\": [\"Create table TeamPoints (team_id int, name varchar(100), points int)\", \"Create table PointsChange (team_id int, points_change int)\"], \"oraclesql\": [\"Create table TeamPoints (team_id int, name varchar(100), points int)\", \"Create table PointsChange (team_id int, points_change int)\"], \"database\": true, \"name\": \"global_ratings_change\", \"pythondata\": [\"TeamPoints = pd.DataFrame([], columns=['team_id', 'name', 'points']).astype({'team_id':'Int64', 'name':'object', 'points':'Int64'})\", \"PointsChange = pd.DataFrame([], columns=['team_id', 'points_change']).astype({'team_id':'Int64', 'points_change':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists TeamPoints (team_id int, name varchar(100), points int)\", \"Create table If Not Exists PointsChange (team_id int, points_change int)\"], \"database_schema\": {\"TeamPoints\": {\"team_id\": \"INT\", \"name\": \"VARCHAR(100)\", \"points\": \"INT\"}, \"PointsChange\": {\"team_id\": \"INT\", \"points_change\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"9K\", \"totalSubmission\": \"14.7K\", \"totalAcceptedRaw\": 8954, \"totalSubmissionRaw\": 14680, \"acRate\": \"61.0%\"}",
+  "likes": 48,
+  "dislikes": 19,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"TeamPoints\": [\"team_id\", \"name\", \"points\"], \"PointsChange\": [\"team_id\", \"points_change\"]}, \"rows\": {\"TeamPoints\": [[3, \"Algeria\", 1431], [1, \"Senegal\", 2132], [2, \"New Zealand\", 1402], [4, \"Croatia\", 1817]], \"PointsChange\": [[3, 399], [2, 0], [4, 13], [1, -22]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef global_ratings_change(team_points: pd.DataFrame, points_change: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

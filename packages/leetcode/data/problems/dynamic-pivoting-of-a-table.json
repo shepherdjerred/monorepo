@@ -1,0 +1,53 @@
+{
+  "questionId": "2381",
+  "questionFrontendId": "2252",
+  "title": "Dynamic Pivoting of a Table",
+  "titleSlug": "dynamic-pivoting-of-a-table",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| store       | varchar |\n| price       | int     |\n+-------------+---------+\n(product_id, store) is the primary key (combination of columns with unique values) for this table.\nEach row of this table indicates the price of product_id in store.\nThere will be at most 30 different stores in the table.\nprice is the price of the product at this store.\n</pre>\n\n<p>&nbsp;</p>\n\n<p><strong>Important note:</strong> This problem targets those who have a good experience with SQL. If you are a beginner, we recommend that you skip it for now.</p>\n\n<p>Implement the procedure <code>PivotProducts</code> to reorganize the <code>Products</code> table so that each row has the id of one product and its price in each store. The price should be <code>null</code> if the product is not sold in a store. The columns of the table should contain each store and they should be sorted in <strong>lexicographical order</strong>.</p>\n\n<p>The procedure should return the table after reorganizing it.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProducts table:\n+------------+----------+-------+\n| product_id | store    | price |\n+------------+----------+-------+\n| 1          | Shop     | 110   |\n| 1          | LC_Store | 100   |\n| 2          | Nozama   | 200   |\n| 2          | Souq     | 190   |\n| 3          | Shop     | 1000  |\n| 3          | Souq     | 1900  |\n+------------+----------+-------+\n<strong>Output:</strong> \n+------------+----------+--------+------+------+\n| product_id | LC_Store | Nozama | Shop | Souq |\n+------------+----------+--------+------+------+\n| 1          | 100      | null   | 110  | null |\n| 2          | null     | 200    | null | 190  |\n| 3          | null     | null   | 1000 | 1900 |\n+------------+----------+--------+------+------+\n<strong>Explanation:</strong> \nWe have 4 stores: Shop, LC_Store, Nozama, and Souq. We first order them lexicographically to be: LC_Store, Nozama, Shop, and Souq.\nNow, for product 1, the price in LC_Store is 100 and in Shop is 110. For the other two stores, the product is not sold so we set the price as null.\nSimilarly, product 2 has a price of 200 in Nozama and 190 in Souq. It is not sold in the other two stores.\nFor product 3, the price is 1000 in Shop and 1900 in Souq. It is not sold in the other two stores.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Products (product_id int, store varchar(7), price int)\"], \"mssql\": [\"Create table Products (product_id int, store varchar(7), price int)\"], \"oraclesql\": [\"Create table Products (product_id int, store varchar(7), price int)\"], \"database\": true, \"manual\": true, \"name\": \"dynamic_pivoting_table\", \"pythondata\": [\"Products = pd.DataFrame([], columns=['product_id', 'store', 'price']).astype({'product_id':'Int64', 'store':'object', 'price':'Int64'})\"], \"database_schema\": {\"Products\": {\"product_id\": \"INT\", \"store\": \"VARCHAR(7)\", \"price\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"2.2K\", \"totalSubmission\": \"3.8K\", \"totalAcceptedRaw\": 2192, \"totalSubmissionRaw\": 3834, \"acRate\": \"57.2%\"}",
+  "likes": 34,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Product's Price for Each Store\", \"titleSlug\": \"products-price-for-each-store\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Products\":[\"product_id\",\"store\",\"price\"]},\"rows\":{\"Products\":[[1,\"Shop\",110],[1,\"LC_Store\",100],[2,\"Nozama\",200],[2,\"Souq\",190],[3,\"Shop\",1000],[3,\"Souq\",1900]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "CREATE PROCEDURE PivotProducts()\nBEGIN\n\t# Write your MySQL query statement below.\n\nEND"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "CREATE PROCEDURE PivotProducts AS\nBEGIN\n    /* Write your T-SQL query statement below. */\n\nEND"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below.\nCREATE OR REPLACE FUNCTION PivotProducts()\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "CREATE FUNCTION PivotProducts\nRETURN SYS_REFCURSOR IS result SYS_REFCURSOR;\nBEGIN\n    /* Write your PL/SQL query statement below */\n\n    RETURN result;\nEND;"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef dynamic_pivoting_table(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

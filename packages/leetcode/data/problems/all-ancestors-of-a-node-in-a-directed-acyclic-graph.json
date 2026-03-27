@@ -1,0 +1,144 @@
+{
+  "questionId": "1431",
+  "questionFrontendId": "2192",
+  "title": "All Ancestors of a Node in a Directed Acyclic Graph",
+  "titleSlug": "all-ancestors-of-a-node-in-a-directed-acyclic-graph",
+  "difficulty": "Medium",
+  "content": "<p>You are given a positive integer <code>n</code> representing the number of nodes of a <strong>Directed Acyclic Graph</strong> (DAG). The nodes are numbered from <code>0</code> to <code>n - 1</code> (<strong>inclusive</strong>).</p>\n\n<p>You are also given a 2D integer array <code>edges</code>, where <code>edges[i] = [from<sub>i</sub>, to<sub>i</sub>]</code> denotes that there is a <strong>unidirectional</strong> edge from <code>from<sub>i</sub></code> to <code>to<sub>i</sub></code> in the graph.</p>\n\n<p>Return <em>a list</em> <code>answer</code><em>, where </em><code>answer[i]</code><em> is the <strong>list of ancestors</strong> of the</em> <code>i<sup>th</sup></code> <em>node, sorted in <strong>ascending order</strong></em>.</p>\n\n<p>A node <code>u</code> is an <strong>ancestor</strong> of another node <code>v</code> if <code>u</code> can reach <code>v</code> via a set of edges.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/12/e1.png\" style=\"width: 322px; height: 265px;\" />\n<pre>\n<strong>Input:</strong> n = 8, edgeList = [[0,3],[0,4],[1,3],[2,4],[2,7],[3,5],[3,6],[3,7],[4,6]]\n<strong>Output:</strong> [[],[],[],[0,1],[0,2],[0,1,3],[0,1,2,3,4],[0,1,2,3]]\n<strong>Explanation:</strong>\nThe above diagram represents the input graph.\n- Nodes 0, 1, and 2 do not have any ancestors.\n- Node 3 has two ancestors 0 and 1.\n- Node 4 has two ancestors 0 and 2.\n- Node 5 has three ancestors 0, 1, and 3.\n- Node 6 has five ancestors 0, 1, 2, 3, and 4.\n- Node 7 has four ancestors 0, 1, 2, and 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2019/12/12/e2.png\" style=\"width: 343px; height: 299px;\" />\n<pre>\n<strong>Input:</strong> n = 5, edgeList = [[0,1],[0,2],[0,3],[0,4],[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]\n<strong>Output:</strong> [[],[0],[0,1],[0,1,2],[0,1,2,3]]\n<strong>Explanation:</strong>\nThe above diagram represents the input graph.\n- Node 0 does not have any ancestor.\n- Node 1 has one ancestor 0.\n- Node 2 has two ancestors 0 and 1.\n- Node 3 has three ancestors 0, 1, and 2.\n- Node 4 has four ancestors 0, 1, 2, and 3.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= edges.length &lt;= min(2000, n * (n - 1) / 2)</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>0 &lt;= from<sub>i</sub>, to<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>from<sub>i</sub> != to<sub>i</sub></code></li>\n\t<li>There are no duplicate edges.</li>\n\t<li>The graph is <strong>directed</strong> and <strong>acyclic</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Consider how reversing each edge of the graph can help us.",
+    "How can performing BFS/DFS on the reversed graph help us find the ancestors of every node?"
+  ],
+  "metaData": "{\n  \"name\": \"getAncestors\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<list<integer>>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"160.2K\", \"totalSubmission\": \"258.1K\", \"totalAcceptedRaw\": 160225, \"totalSubmissionRaw\": 258118, \"acRate\": \"62.1%\"}",
+  "likes": 1753,
+  "dislikes": 44,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Restricted Paths From First to Last Node\", \"titleSlug\": \"number-of-restricted-paths-from-first-to-last-node\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "8\n[[0,3],[0,4],[1,3],[2,4],[2,7],[3,5],[3,6],[3,7],[4,6]]",
+    "5\n[[0,1],[0,2],[0,3],[0,4],[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> getAncestors(int n, vector<vector<int>>& edges) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<List<Integer>> getAncestors(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getAncestors(self, n: int, edges: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getAncestors(self, n, edges):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @return {number[][]}\n */\nvar getAncestors = function(n, edges) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getAncestors(n: number, edges: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<IList<int>> GetAncestors(int n, int[][] edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** getAncestors(int n, int** edges, int edgesSize, int* edgesColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getAncestors(n int, edges [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getAncestors(n: Int, edges: Array<IntArray>): List<List<Int>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getAncestors(_ n: Int, _ edges: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_ancestors(n: i32, edges: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @return {Integer[][]}\ndef get_ancestors(n, edges)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @return Integer[][]\n     */\n    function getAncestors($n, $edges) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> getAncestors(int n, List<List<int>> edges) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getAncestors(n: Int, edges: Array[Array[Int]]): List[List[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_ancestors(n :: integer, edges :: [[integer]]) :: [[integer]]\n  def get_ancestors(n, edges) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_ancestors(N :: integer(), Edges :: [[integer()]]) -> [[integer()]].\nget_ancestors(N, Edges) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-ancestors n edges)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2355",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a directed acyclic graph of `n` nodes, and our task is to return a list where each sub-list contains the ancestors of the node at that index, sorted in ascending order.\n\nA [Directed Acyclic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) is a graph where each edge has a defined direction from one vertex to another and following these edges will never create a closed loop.\n\nA prerequisite for solving this problem is knowledge of graph traversals, namely depth-first search and breadth-first search. If you are not familiar with popular graph traversal techniques, we strongly encourage you to check out this LeetCode [Explore Card](https://leetcode.com/explore/learn/card/graph/).\n    \n---\n\n### Approach 1: Depth First Search (Reversed Graph)\n\n#### Intuition\n\nA node `u` is an ancestor of node `v` if we can reach `v` by following a series of directed edges from `u`. Thus, all nodes from which we can reach `v` are its ancestors. But how can we efficiently find all ancestors for each node?\n\nThe brute force strategy to determine if node `u` is an ancestor of node `v` involves performing a graph traversal from `u` to check if `v` can be reached. However, this approach has a time complexity of $O(n^3)$, which is too slow for our constraints. We need a more optimized technique.\n\nThe key insight lies in reversing the traversal direction. By starting from each node and tracing back to all its ancestors directly, we can simplify our task. This is achieved by reversing the edges of the graph, flipping parent-child connections to child-parent. Consequently, nodes reachable from a given node in the reversed graph were its ancestors in the original graph. Have a look at the slides below:\n\n!?!../Documents/2192/reversed_slideshow.json:1162,1142!?!\n\nTo find the descendants of a node `v`, we start a depth-first traversal from `v` in the reversed graph, using a `visited` set to track nodes. After the traversal, we collect all nodes in `visited` (except `v`) in a list, representing the ancestors of `v` in the original graph. Performing this traversal for each node provides the required ancestors for all nodes.\n\n#### Algorithm\n\n1. Main method `getAncestors`:\n   - Initialize `adjacencyList` to store the graph representation.\n   - Add the edges to the `adjacencyList` but reverse their direction.\n   - Initialize a list of lists `ancestorsList` to store the ancestors of each node.\n   - Iterate through each node:\n     - Initialize:\n       - An empty list `ancestors` to store ancestors of the current node.\n       - A set `visited` to store the nodes already visited in the traversal.\n     - Call the `findChildren` method to perform DFS and find all descendants of the current node.\n     - Add all nodes present in the `visited` set to `ancestors`.\n     - Add `ancestors` to `ancestorsList`.\n   - Return `ancestorsList` containing the ancestors for each node.\n  \n2. Helper method `findChildren`:\n   - Define the `findChildren` method with parameters: `currentNode`, `adjacencyList` and the `visited` set for the current traversal.\n   - Add `currentNode` to the `visited` set.\n   - Iterate through the neighbors of `currentNode`. If `neighbor` has not been visited yet:\n     - Recursively call `findChildren` on `neighbor`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TMApG9fd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TMApG9fd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices in the graph and $m$ be the length of the `edges` array. \n\n- Time complexity: $O(n^2 + n \\cdot m)$\n\n    Initializing and populating the adjacency list requires $O(n + m)$ time.\n\n    The algorithm calls the the DFS method a total of $n$ times. The depth-first search has a worst-case time complexity of $O(n + m)$. Thus, finding the ancestors take a total of $O(n^2 + n \\cdot m)$. \n\n    Forming the list of ancestors requires $O(n)$ time, which also occurs $n$ times. This equates to a $O(n^2)$ complexity.\n\n    Thus, the total time complexity is $O(n + m)$ + $O(n^2 + n \\cdot m)$ + $O(n^2)$, which simplifies to $O(n^2 + n \\cdot m)$.\n\n- Space complexity: $O(n + m)$\n\n    The adjacency list takes $O(n + m)$ space, while the `ancestors` list and the `visited` set each require $O(n)$ space. The recursion call stack can go as deep as $O(n)$ in the worst case. Thus, the total space complexity of the algorithm is $O(n + m) + 3 \\cdot O(n)$, which simplifies to $O(n + m)$.\n\n    > Note: We are not considering the space required by `ancestorsList` in our analysis, since it is part of the output space. If we do consider it, `ancestorsList` would have a worst-case space complexity of $O(n^2)$, making the space complexity of the algorithm $O(n^2 + m)$.\n\n---\n\n### Approach 2: Depth First Search (Optimized)\n\n#### Intuition\n\nWe can solve this problem without reversing the edges. Observe that a vertex `v` will be an ancestor for all nodes reachable from it. Therefore, we can initiate a depth-first traversal from each vertex and designate that vertex as an ancestor to all nodes it can reach.\n\nOur depth-first search would be very similar to Approach 1; but with a key difference: we add the given node as an `ancestor` to all children of the node we're currently exploring. We then recursively call our depth-first search function on each child until all descendants of `ancestor` are marked with its presence. \n\nHave a look at this slideshow to better understand this process:\n\n!?!../Documents/2192/ancestors_slideshow.json:1742,1310!?!\n\nAnother optimization we can implement is eliminating the `visited` set. In each traversal, we add `ancestor` to the list of ancestors for each node. To determine if a node has been visited, we check if its last ancestor matches the current ancestor. If it does, the node has been visited and can be safely skipped from further exploration.\n\n#### Algorithm\n\n1. Main method **getAncestors**:\n   - Initialize: \n     - A list of lists `adjacencyList` to store the adjacency list of the graph.\n     - A list of lists `ancestors` to store the ancestors of each node.\n   - Populate `adjacencyList` with edges from the input.\n   - For each node, use depth-first search (DFS) to find all its ancestors.\n   - Return `ancestors` containing the ancestors of each node.\n  \n2. Helper method **findAncestorsDFS**:\n   - Define a method `findAncestorsDFS` that takes four parameters: the `ancestor` node, `adjacencyList`, the current node being visited, and `ancestors`.\n   - Loop through each child node `childNode` of the current node in the adjacency list:\n     - Check if `ancestor` is already added to the child node's ancestor list. If not:\n       - Add `ancestor` to the child node's ancestor list.\n       - Recursively call `findAncestorsDFS` for `childNode`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ejRveq7U/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ejRveq7U\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices in the graph and $m$ be the length of the `edges` array. \n\n- Time complexity: $O(n^2 + n \\cdot m)$\n\n    Initializing and populating the adjacency list requires $O(n + m)$ time.\n    \n    The depth-first search (DFS) has a time complexity of $O(n + m)$ and is executed $n$ times. Therefore, the total time complexity of this section is $O(n^2 + n \\cdot m)$.\n    \n    The overall time complexity of the algorithm combines $O(n + m)$ for initialization and $O(n^2 + n \\cdot m)$ for the DFS, resulting in $O(n^2 + n \\cdot m)$ complexity.\n\n- Space complexity: $O(n + m)$\n\n    The adjacency list representation of the graph takes $O(n + m)$ space. The call stack for the DFS could go as deep as the height of the graph, which in the worst case is $O(n)$. Thus, the total space complexity of the algorithm is $O(n + m) + O(n)$, simplifying to $O(n + m)$.\n\n    > Note: We have not considered the space required by `ancestors` in our analysis, since it is part of the output space.\n\n---\n\n### Approach 3: Topological Sort (BFS)\n\n#### Intuition\n\nThe problem revolves around the nature of the graph as a Directed Acyclic Graph (DAG). In a DAG, cycles are absent, and each path progresses clearly from a starting point to an endpoint. This characteristic implies that by processing nodes in a specific order, we can systematically determine each node's ancestors.\n\nThe key to identifying this optimal processing order lies in topological sorting. In a DAG, topological sorting arranges nodes such that for every directed edge from node `u` to node `v`, `u` precedes `v` in the ordering. This arrangement is crucial because it ensures that when we process a node `v`, we have already considered all its potential ancestors. To achieve this ordering, we will use Kahn's algorithm.\n\nKahn's algorithm is a method for topologically sorting a directed acyclic graph. It starts by identifying all nodes without incoming edges and placing them in a queue. At each step, it removes a node from this queue, adds it to the sorted list, and eliminates its outgoing edges from the graph. This process may create new nodes without incoming edges, which are then added to the queue. The algorithm continues until the queue is empty. The resulting list provides a valid topological ordering of the graph. For a more detailed explanation of Kahn's algorithm and its implementation, refer to this [Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/).\n\nAfter establishing the topological order, we process each node sequentially. For each `node`, we iterate through its `neighbors`, designating both the node itself and its ancestors as ancestors of the `neighbor`. To efficiently track each node's ancestors, we use a list of sets. Sets, unlike lists, maintain unique elements, ensuring each ancestor appears only once in a node's ancestor set.\n\nIn the final step, we'll convert these sets of ancestors into lists, as required by the problem statement.\n\n#### Algorithm\n \n- Initialize a list of lists `adjacencyList` to store the edges of the graph.\n- Initialize an array `indegree` to store the in-degree of each node.\n- Fill `adjacencyList` and the `indegree` array based on the given edges.\n- Initialize a queue `nodesWithZeroIndegree` and add all such nodes to the queue.\n- Initialize a list `topologicalOrder` to store the topological order of nodes and process nodes in the queue. For each node:\n  - Reduce the in-degree of its neighbors. \n  - Add neighbors with zero in-degree to the queue.\n- Initialize a list `ancestorsList` to store the result and a list of sets `ancestorsSetList` to store the ancestors of each node.\n- For each `node` in the topological order:\n  - Loop over all neighbors `neighbor` of `node`. For each `neighbor`:\n    - Add `node` as the immediate parent of `neighbor` to the set `ancestorsSetList[neighbor]`.\n    - Add all other ancestors of `node` to the set `ancestorsSetList[neighbor]`.\n- Add the contents of each set to it's corresponding list in `ancestorsList` in ascending order.\n- Return `ancestorsList`, which contains the ancestors of each node in the graph.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BGfz4pY8/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BGfz4pY8\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of vertices in the graph and $m$ be the length of the `edges` array.\n\n* Time complexity: $O(n^2 + m)$\n\n    Creating and filling the adjacency list and in-degree array requires $O(n + m)$ time.\n    \n    Topological sort on the graph also needs $O(n + m)$ time.\n    \n    In the worst-case scenario, if the graph forms a chain, the time complexity could be $O(n^2)$. This is because each node in the chain would have a growing number of ancestors. So, the sizes of the ancestor lists would be $0$, $1$, $2$, ..., $n-2$, $n-1$. Forming these lists would take another $O(n^2)$ time.\n    \n    Thus, the overall time complexity of the algorithm is $O(n^2 + m)$.\n\n* Space complexity: $O(n^2 + m)$\n\n    We use an adjacency list which takes $O(n + m)$ space.\n\n    We store an array of size $n$ to keep track of the indegree of each node, taking $O(n)$ space.\n\n    All nodes are added to the queue once, requiring $O(n)$ space.\n\n    The topological order list requires $O(n)$ space.\n\n    Maintaining a list of sets to store the ancestors requires $O(n^2)$ space in the worst case.\n\n    Considering all individual components, the total space complexity comes out to be $O(n^2 + m)$.\n\n    > Note: As stated in the previous approaches, the space taken by `ancestorsList` is not taken into consideration since it is part of the output space. \n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

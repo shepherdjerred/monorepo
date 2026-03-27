@@ -1,0 +1,140 @@
+{
+  "questionId": "2380",
+  "questionFrontendId": "2286",
+  "title": "Booking Concert Tickets in Groups",
+  "titleSlug": "booking-concert-tickets-in-groups",
+  "difficulty": "Hard",
+  "content": "<p>A concert hall has <code>n</code> rows numbered from <code>0</code> to <code>n - 1</code>, each with <code>m</code> seats, numbered from <code>0</code> to <code>m - 1</code>. You need to design a ticketing system that can allocate seats in the following cases:</p>\n\n<ul>\n\t<li>If a group of <code>k</code> spectators can sit <strong>together</strong> in a row.</li>\n\t<li>If <strong>every</strong> member of a group of <code>k</code> spectators can get a seat. They may or <strong>may not</strong> sit together.</li>\n</ul>\n\n<p>Note that the spectators are very picky. Hence:</p>\n\n<ul>\n\t<li>They will book seats only if each member of their group can get a seat with row number <strong>less than or equal</strong> to <code>maxRow</code>. <code>maxRow</code> can <strong>vary</strong> from group to group.</li>\n\t<li>In case there are multiple rows to choose from, the row with the <strong>smallest</strong> number is chosen. If there are multiple seats to choose in the same row, the seat with the <strong>smallest</strong> number is chosen.</li>\n</ul>\n\n<p>Implement the <code>BookMyShow</code> class:</p>\n\n<ul>\n\t<li><code>BookMyShow(int n, int m)</code> Initializes the object with <code>n</code> as number of rows and <code>m</code> as number of seats per row.</li>\n\t<li><code>int[] gather(int k, int maxRow)</code> Returns an array of length <code>2</code> denoting the row and seat number (respectively) of the <strong>first seat</strong> being allocated to the <code>k</code> members of the group, who must sit <strong>together</strong>. In other words, it returns the smallest possible <code>r</code> and <code>c</code> such that all <code>[c, c + k - 1]</code> seats are valid and empty in row <code>r</code>, and <code>r &lt;= maxRow</code>. Returns <code>[]</code> in case it is <strong>not possible</strong> to allocate seats to the group.</li>\n\t<li><code>boolean scatter(int k, int maxRow)</code> Returns <code>true</code> if all <code>k</code> members of the group can be allocated seats in rows <code>0</code> to <code>maxRow</code>, who may or <strong>may not</strong> sit together. If the seats can be allocated, it allocates <code>k</code> seats to the group with the <strong>smallest</strong> row numbers, and the smallest possible seat numbers in each row. Otherwise, returns <code>false</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;BookMyShow&quot;, &quot;gather&quot;, &quot;gather&quot;, &quot;scatter&quot;, &quot;scatter&quot;]\n[[2, 5], [4, 0], [2, 0], [5, 1], [5, 1]]\n<strong>Output</strong>\n[null, [0, 0], [], true, false]\n\n<strong>Explanation</strong>\nBookMyShow bms = new BookMyShow(2, 5); // There are 2 rows with 5 seats each \nbms.gather(4, 0); // return [0, 0]\n                  // The group books seats [0, 3] of row 0. \nbms.gather(2, 0); // return []\n                  // There is only 1 seat left in row 0,\n                  // so it is not possible to book 2 consecutive seats. \nbms.scatter(5, 1); // return True\n                   // The group books seat 4 of row 0 and seats [0, 3] of row 1. \nbms.scatter(5, 1); // return False\n                   // There is only one seat left in the hall.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= m, k &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= maxRow &lt;= n - 1</code></li>\n\t<li>At most <code>5 * 10<sup>4</sup></code> calls <strong>in total</strong> will be made to <code>gather</code> and <code>scatter</code>.</li>\n</ul>\n",
+  "hints": [
+    "Since seats are allocated by smallest row and then by smallest seat numbers, how can we keep a record of the smallest seat number vacant in each row?",
+    "How can range max query help us to check if contiguous seats can be allocated in a range?",
+    "Similarly, can range sum query help us to check if enough seats are available in a range?",
+    "Which data structure can be used to implement the above?"
+  ],
+  "metaData": "{\n  \"classname\": \"BookMyShow\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"n\"\n      },\n      {\n        \"type\": \"integer\",\n        \"name\": \"m\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"k\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"maxRow\"\n        }\n      ],\n      \"name\": \"gather\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"k\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"maxRow\"\n        }\n      ],\n      \"name\": \"scatter\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"9.7K\", \"totalSubmission\": \"50K\", \"totalAcceptedRaw\": 9749, \"totalSubmissionRaw\": 50049, \"acRate\": \"19.5%\"}",
+  "likes": 353,
+  "dislikes": 61,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Cinema Seat Allocation\", \"titleSlug\": \"cinema-seat-allocation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Increasing Subsequence II\", \"titleSlug\": \"longest-increasing-subsequence-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"BookMyShow\",\"gather\",\"gather\",\"scatter\",\"scatter\"]\n[[2,5],[4,0],[2,0],[5,1],[5,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class BookMyShow {\npublic:\n    BookMyShow(int n, int m) {\n        \n    }\n    \n    vector<int> gather(int k, int maxRow) {\n        \n    }\n    \n    bool scatter(int k, int maxRow) {\n        \n    }\n};\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * BookMyShow* obj = new BookMyShow(n, m);\n * vector<int> param_1 = obj->gather(k,maxRow);\n * bool param_2 = obj->scatter(k,maxRow);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class BookMyShow {\n\n    public BookMyShow(int n, int m) {\n        \n    }\n    \n    public int[] gather(int k, int maxRow) {\n        \n    }\n    \n    public boolean scatter(int k, int maxRow) {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * BookMyShow obj = new BookMyShow(n, m);\n * int[] param_1 = obj.gather(k,maxRow);\n * boolean param_2 = obj.scatter(k,maxRow);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class BookMyShow:\n\n    def __init__(self, n: int, m: int):\n        \n\n    def gather(self, k: int, maxRow: int) -> List[int]:\n        \n\n    def scatter(self, k: int, maxRow: int) -> bool:\n        \n\n\n# Your BookMyShow object will be instantiated and called as such:\n# obj = BookMyShow(n, m)\n# param_1 = obj.gather(k,maxRow)\n# param_2 = obj.scatter(k,maxRow)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class BookMyShow(object):\n\n    def __init__(self, n, m):\n        \"\"\"\n        :type n: int\n        :type m: int\n        \"\"\"\n        \n\n    def gather(self, k, maxRow):\n        \"\"\"\n        :type k: int\n        :type maxRow: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def scatter(self, k, maxRow):\n        \"\"\"\n        :type k: int\n        :type maxRow: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your BookMyShow object will be instantiated and called as such:\n# obj = BookMyShow(n, m)\n# param_1 = obj.gather(k,maxRow)\n# param_2 = obj.scatter(k,maxRow)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number} m\n */\nvar BookMyShow = function(n, m) {\n    \n};\n\n/** \n * @param {number} k \n * @param {number} maxRow\n * @return {number[]}\n */\nBookMyShow.prototype.gather = function(k, maxRow) {\n    \n};\n\n/** \n * @param {number} k \n * @param {number} maxRow\n * @return {boolean}\n */\nBookMyShow.prototype.scatter = function(k, maxRow) {\n    \n};\n\n/** \n * Your BookMyShow object will be instantiated and called as such:\n * var obj = new BookMyShow(n, m)\n * var param_1 = obj.gather(k,maxRow)\n * var param_2 = obj.scatter(k,maxRow)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class BookMyShow {\n    constructor(n: number, m: number) {\n        \n    }\n\n    gather(k: number, maxRow: number): number[] {\n        \n    }\n\n    scatter(k: number, maxRow: number): boolean {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * var obj = new BookMyShow(n, m)\n * var param_1 = obj.gather(k,maxRow)\n * var param_2 = obj.scatter(k,maxRow)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class BookMyShow {\n\n    public BookMyShow(int n, int m) {\n        \n    }\n    \n    public int[] Gather(int k, int maxRow) {\n        \n    }\n    \n    public bool Scatter(int k, int maxRow) {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * BookMyShow obj = new BookMyShow(n, m);\n * int[] param_1 = obj.Gather(k,maxRow);\n * bool param_2 = obj.Scatter(k,maxRow);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} BookMyShow;\n\n\nBookMyShow* bookMyShowCreate(int n, int m) {\n    \n}\n\nint* bookMyShowGather(BookMyShow* obj, int k, int maxRow, int* retSize) {\n    \n}\n\nbool bookMyShowScatter(BookMyShow* obj, int k, int maxRow) {\n    \n}\n\nvoid bookMyShowFree(BookMyShow* obj) {\n    \n}\n\n/**\n * Your BookMyShow struct will be instantiated and called as such:\n * BookMyShow* obj = bookMyShowCreate(n, m);\n * int* param_1 = bookMyShowGather(obj, k, maxRow, retSize);\n \n * bool param_2 = bookMyShowScatter(obj, k, maxRow);\n \n * bookMyShowFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type BookMyShow struct {\n    \n}\n\n\nfunc Constructor(n int, m int) BookMyShow {\n    \n}\n\n\nfunc (this *BookMyShow) Gather(k int, maxRow int) []int {\n    \n}\n\n\nfunc (this *BookMyShow) Scatter(k int, maxRow int) bool {\n    \n}\n\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * obj := Constructor(n, m);\n * param_1 := obj.Gather(k,maxRow);\n * param_2 := obj.Scatter(k,maxRow);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class BookMyShow(n: Int, m: Int) {\n\n    fun gather(k: Int, maxRow: Int): IntArray {\n        \n    }\n\n    fun scatter(k: Int, maxRow: Int): Boolean {\n        \n    }\n\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * var obj = BookMyShow(n, m)\n * var param_1 = obj.gather(k,maxRow)\n * var param_2 = obj.scatter(k,maxRow)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass BookMyShow {\n\n    init(_ n: Int, _ m: Int) {\n        \n    }\n    \n    func gather(_ k: Int, _ maxRow: Int) -> [Int] {\n        \n    }\n    \n    func scatter(_ k: Int, _ maxRow: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * let obj = BookMyShow(n, m)\n * let ret_1: [Int] = obj.gather(k, maxRow)\n * let ret_2: Bool = obj.scatter(k, maxRow)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct BookMyShow {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl BookMyShow {\n\n    fn new(n: i32, m: i32) -> Self {\n        \n    }\n    \n    fn gather(&self, k: i32, max_row: i32) -> Vec<i32> {\n        \n    }\n    \n    fn scatter(&self, k: i32, max_row: i32) -> bool {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * let obj = BookMyShow::new(n, m);\n * let ret_1: Vec<i32> = obj.gather(k, maxRow);\n * let ret_2: bool = obj.scatter(k, maxRow);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class BookMyShow\n\n=begin\n    :type n: Integer\n    :type m: Integer\n=end\n    def initialize(n, m)\n        \n    end\n\n\n=begin\n    :type k: Integer\n    :type max_row: Integer\n    :rtype: Integer[]\n=end\n    def gather(k, max_row)\n        \n    end\n\n\n=begin\n    :type k: Integer\n    :type max_row: Integer\n    :rtype: Boolean\n=end\n    def scatter(k, max_row)\n        \n    end\n\n\nend\n\n# Your BookMyShow object will be instantiated and called as such:\n# obj = BookMyShow.new(n, m)\n# param_1 = obj.gather(k, max_row)\n# param_2 = obj.scatter(k, max_row)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class BookMyShow {\n    /**\n     * @param Integer $n\n     * @param Integer $m\n     */\n    function __construct($n, $m) {\n        \n    }\n  \n    /**\n     * @param Integer $k\n     * @param Integer $maxRow\n     * @return Integer[]\n     */\n    function gather($k, $maxRow) {\n        \n    }\n  \n    /**\n     * @param Integer $k\n     * @param Integer $maxRow\n     * @return Boolean\n     */\n    function scatter($k, $maxRow) {\n        \n    }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * $obj = BookMyShow($n, $m);\n * $ret_1 = $obj->gather($k, $maxRow);\n * $ret_2 = $obj->scatter($k, $maxRow);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class BookMyShow {\n\n  BookMyShow(int n, int m) {\n    \n  }\n  \n  List<int> gather(int k, int maxRow) {\n    \n  }\n  \n  bool scatter(int k, int maxRow) {\n    \n  }\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * BookMyShow obj = BookMyShow(n, m);\n * List<int> param1 = obj.gather(k,maxRow);\n * bool param2 = obj.scatter(k,maxRow);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class BookMyShow(_n: Int, _m: Int) {\n\n    def gather(k: Int, maxRow: Int): Array[Int] = {\n        \n    }\n\n    def scatter(k: Int, maxRow: Int): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your BookMyShow object will be instantiated and called as such:\n * val obj = new BookMyShow(n, m)\n * val param_1 = obj.gather(k,maxRow)\n * val param_2 = obj.scatter(k,maxRow)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule BookMyShow do\n  @spec init_(n :: integer, m :: integer) :: any\n  def init_(n, m) do\n    \n  end\n\n  @spec gather(k :: integer, max_row :: integer) :: [integer]\n  def gather(k, max_row) do\n    \n  end\n\n  @spec scatter(k :: integer, max_row :: integer) :: boolean\n  def scatter(k, max_row) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# BookMyShow.init_(n, m)\n# param_1 = BookMyShow.gather(k, max_row)\n# param_2 = BookMyShow.scatter(k, max_row)\n\n# BookMyShow.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec book_my_show_init_(N :: integer(), M :: integer()) -> any().\nbook_my_show_init_(N, M) ->\n  .\n\n-spec book_my_show_gather(K :: integer(), MaxRow :: integer()) -> [integer()].\nbook_my_show_gather(K, MaxRow) ->\n  .\n\n-spec book_my_show_scatter(K :: integer(), MaxRow :: integer()) -> boolean().\nbook_my_show_scatter(K, MaxRow) ->\n  .\n\n\n%% Your functions will be called as such:\n%% book_my_show_init_(N, M),\n%% Param_1 = book_my_show_gather(K, MaxRow),\n%% Param_2 = book_my_show_scatter(K, MaxRow),\n\n%% book_my_show_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define book-my-show%\n  (class object%\n    (super-new)\n    \n    ; n : exact-integer?\n    ; m : exact-integer?\n    (init-field\n      n\n      m)\n    \n    ; gather : exact-integer? exact-integer? -> (listof exact-integer?)\n    (define/public (gather k max-row)\n      )\n    ; scatter : exact-integer? exact-integer? -> boolean?\n    (define/public (scatter k max-row)\n      )))\n\n;; Your book-my-show% object will be instantiated and called as such:\n;; (define obj (new book-my-show% [n n] [m m]))\n;; (define param_1 (send obj gather k max-row))\n;; (define param_2 (send obj scatter k max-row))"
+    }
+  ],
+  "solution": null
+}

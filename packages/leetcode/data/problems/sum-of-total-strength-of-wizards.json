@@ -1,0 +1,145 @@
+{
+  "questionId": "2368",
+  "questionFrontendId": "2281",
+  "title": "Sum of Total Strength of Wizards",
+  "titleSlug": "sum-of-total-strength-of-wizards",
+  "difficulty": "Hard",
+  "content": "<p>As the ruler of a kingdom, you have an army of wizards at your command.</p>\n\n<p>You are given a <strong>0-indexed</strong> integer array <code>strength</code>, where <code>strength[i]</code> denotes the strength of the <code>i<sup>th</sup></code> wizard. For a <strong>contiguous</strong> group of wizards (i.e. the wizards&#39; strengths form a <strong>subarray</strong> of <code>strength</code>), the <strong>total strength</strong> is defined as the <strong>product</strong> of the following two values:</p>\n\n<ul>\n\t<li>The strength of the <strong>weakest</strong> wizard in the group.</li>\n\t<li>The <strong>total</strong> of all the individual strengths of the wizards in the group.</li>\n</ul>\n\n<p>Return <em>the <strong>sum</strong> of the total strengths of <strong>all</strong> contiguous groups of wizards</em>. Since the answer may be very large, return it <strong>modulo</strong> <code>10<sup>9</sup> + 7</code>.</p>\n\n<p>A <strong>subarray</strong> is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> strength = [1,3,1,2]\n<strong>Output:</strong> 44\n<strong>Explanation:</strong> The following are all the contiguous groups of wizards:\n- [1] from [<u><strong>1</strong></u>,3,1,2] has a total strength of min([1]) * sum([1]) = 1 * 1 = 1\n- [3] from [1,<u><strong>3</strong></u>,1,2] has a total strength of min([3]) * sum([3]) = 3 * 3 = 9\n- [1] from [1,3,<u><strong>1</strong></u>,2] has a total strength of min([1]) * sum([1]) = 1 * 1 = 1\n- [2] from [1,3,1,<u><strong>2</strong></u>] has a total strength of min([2]) * sum([2]) = 2 * 2 = 4\n- [1,3] from [<u><strong>1,3</strong></u>,1,2] has a total strength of min([1,3]) * sum([1,3]) = 1 * 4 = 4\n- [3,1] from [1,<u><strong>3,1</strong></u>,2] has a total strength of min([3,1]) * sum([3,1]) = 1 * 4 = 4\n- [1,2] from [1,3,<u><strong>1,2</strong></u>] has a total strength of min([1,2]) * sum([1,2]) = 1 * 3 = 3\n- [1,3,1] from [<u><strong>1,3,1</strong></u>,2] has a total strength of min([1,3,1]) * sum([1,3,1]) = 1 * 5 = 5\n- [3,1,2] from [1,<u><strong>3,1,2</strong></u>] has a total strength of min([3,1,2]) * sum([3,1,2]) = 1 * 6 = 6\n- [1,3,1,2] from [<u><strong>1,3,1,2</strong></u>] has a total strength of min([1,3,1,2]) * sum([1,3,1,2]) = 1 * 7 = 7\nThe sum of all the total strengths is 1 + 9 + 1 + 4 + 4 + 4 + 3 + 5 + 6 + 7 = 44.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> strength = [5,4,6]\n<strong>Output:</strong> 213\n<strong>Explanation:</strong> The following are all the contiguous groups of wizards: \n- [5] from [<u><strong>5</strong></u>,4,6] has a total strength of min([5]) * sum([5]) = 5 * 5 = 25\n- [4] from [5,<u><strong>4</strong></u>,6] has a total strength of min([4]) * sum([4]) = 4 * 4 = 16\n- [6] from [5,4,<u><strong>6</strong></u>] has a total strength of min([6]) * sum([6]) = 6 * 6 = 36\n- [5,4] from [<u><strong>5,4</strong></u>,6] has a total strength of min([5,4]) * sum([5,4]) = 4 * 9 = 36\n- [4,6] from [5,<u><strong>4,6</strong></u>] has a total strength of min([4,6]) * sum([4,6]) = 4 * 10 = 40\n- [5,4,6] from [<u><strong>5,4,6</strong></u>] has a total strength of min([5,4,6]) * sum([5,4,6]) = 4 * 15 = 60\nThe sum of all the total strengths is 25 + 16 + 36 + 36 + 40 + 60 = 213.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= strength.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= strength[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Consider the contribution of each wizard to the answer.",
+    "Can you efficiently calculate the total contribution to the answer for all subarrays that end at each index?",
+    "Denote the total contribution of all subarrays ending at index i as solve[i]. Can you express solve[i] in terms of solve[m] for some m < i?"
+  ],
+  "metaData": "{\n  \"name\": \"totalStrength\",\n  \"params\": [\n    {\n      \"name\": \"strength\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"25.5K\", \"totalSubmission\": \"87.2K\", \"totalAcceptedRaw\": 25492, \"totalSubmissionRaw\": 87248, \"acRate\": \"29.2%\"}",
+  "likes": 1270,
+  "dislikes": 111,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Minimums\", \"titleSlug\": \"sum-of-subarray-minimums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Visible People in a Queue\", \"titleSlug\": \"number-of-visible-people-in-a-queue\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Ranges\", \"titleSlug\": \"sum-of-subarray-ranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,1,2]",
+    "[5,4,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 15, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int totalStrength(vector<int>& strength) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int totalStrength(int[] strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def totalStrength(self, strength: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def totalStrength(self, strength):\n        \"\"\"\n        :type strength: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} strength\n * @return {number}\n */\nvar totalStrength = function(strength) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function totalStrength(strength: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TotalStrength(int[] strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int totalStrength(int* strength, int strengthSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func totalStrength(strength []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun totalStrength(strength: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func totalStrength(_ strength: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn total_strength(strength: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} strength\n# @return {Integer}\ndef total_strength(strength)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $strength\n     * @return Integer\n     */\n    function totalStrength($strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int totalStrength(List<int> strength) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def totalStrength(strength: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec total_strength(strength :: [integer]) :: integer\n  def total_strength(strength) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec total_strength(Strength :: [integer()]) -> integer().\ntotal_strength(Strength) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (total-strength strength)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1799",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nIn this problem, a **group of wizards** is a subarray. We define the **strength of a group of wizards** as the product of the following two values of the subarray:\r\n\r\n\r\n\r\n- The minimum value of this subarray.\r\n- The sum of this subarray.\r\n\r\nFor example, in the picture below, the subarray colored in blue has `2` as its minimum and `14` as its sum, so its strength equals `2 * 14 = 28`.\r\n\r\n![img](../Figures/2281/1.png)\r\n\r\nHere our task is to find the total strength of all subarrays from a given array.\r\n\r\n---\r\n\r\n### Approach: Prefix Sum + Monotonic Stack\r\n\r\n\r\n#### Intuition   \r\n\r\nAs always, we start with the naive solution, brute force. It might not pass the time limit, but we can refine our approach based on the observations of our first try.\r\n\r\nWe fix the left end of a subarray and iterate over each right end. It takes $$O(n ^ 2)$$ time to iterate all subarrays and calculate each strength. However, given the size of the input array as `10 ** 5`, this brute force algorithm is likely to exceed the time limit which implies that we shall look for a better approach.\r\n\r\n\r\n<br>\r\n\r\nInstead of focusing on each subarray, we can focus on each element and count the number of subarrays that have it as their minimum. As shown in the picture below, if we focus on the element `2` (colored in green), we can find 6 subarrays that have this `2` as their minimum.\r\n\r\n![img](../Figures/2281/2.png)\r\n\r\n\r\n\r\nThis problem consists of several key parts, let's break it down into subproblems for an easier view.\r\n  \r\n1. The first task is to calculate the sum of a subarray.\r\n\r\n\r\nRecall that the strength of a subarray is the product of its sum and its minimum, but we can't afford to get its sum by adding each element. We can build a prefix sum array instead so the sum of any subarray can be calculated in constant time.\r\n\r\n\r\n![img](../Figures/2281/3.png)\r\n\r\n\r\n2. The next task is to get the number of subarrays that have `A[i]` as the minimum.\r\n\r\nWe can record the index of the first element on `A[i]`'s left which is smaller than `A[i]` and the index of the first element on `A[i]`'s right which is smaller than `A[i]`.\r\n\r\nTherefore, every subarray that has left end in *the range of the left end* and right end in *the range of the right end* is a subarray with `A[i]` as the minimum.\r\n\r\n\r\n![img](../Figures/2281/11.png)\r\n\r\nWe can use a monostack to record the indices mentioned above. If you are not familiar with monostack, you may refer to [LeetCode's Monotonic Stack](https://leetcode.com/tag/monotonic-stack/) for more practice.\r\n\r\n\r\n\r\n3. How to avoid double-counting?\r\n\r\nNote that there might be subarrays that have more than one element as its minimum, when we iterate over these elements, the strength of the same subarray might be counted more than once:\r\n\r\n![img](../Figures/2281/12.png)\r\n\r\nTherefore, we need to apply different judgment conditions to the left side and the right side of `A[i]` to avoid double counting. More specifically:\r\n\r\n- The first element on `A[i]`'s left which is **smaller than** `A[i]`.\r\n- The first element on `A[i]`'s right which is **smaller than or equals to** `A[i]`.\r\n\r\n![img](../Figures/2281/10.png)\r\n\r\nTherefore, we do not double-count any subarrays.\r\n\r\n4. Combining subproblems 1 and 2, how do we get the total strength of all such subarrays that have `A[i]` as the minimum?\r\n\r\nFor each index `i`, even though we have fixed the minimum value of the subarrays that have `A[i]` as their minimum, each subarray may still have a different sum. We can't afford to calculate their sums one by one. Let's write down the equation of the total strength of subarrays that have `A[i]` as the minimum, and see if we can apply some rearrangements to make it easier to calculate. Since all of these subarrays have `A[i]` as their minimum, the total strength equals:\r\n\r\n\r\n$$\\text{TotalStrength}_i = A[i] * \\text{totalSum}_i$$\r\n\r\n\r\nIn the picture below, we focus on $$\\text{totalSum}_i$$, the sum of all subarrays that have `A[i]` as the minimum.\r\n\r\n\r\n![img](../Figures/2281/5.png)\r\n\r\nRecall that we can rewrite the sum of each subarray as two terms in the prefix sum array. Now it requires some transformation of mathematical formulas. Note that `presumA[i+1]` appears `L` times, `presumA[i+2]` also appears `L` times, ..., we can rewrite all the positive sign terms as `(presumA[i+1] + presumA[i+2] + ... + presumA[i+R]) * L`. Similarly, each negative sign term appears `R` times, so we can also rewrite them as `-(presumA[i-L+1] + presumA[i-L+2] + ... + presumA[i]) * R`. For convenience, let's call them $$\\text{POS}_{\\text{term}}$$ and $$\\text{NEG}_{\\text{term}}$$.\r\n\r\n\r\n![img](../Figures/2281/6.png)\r\n\r\n\r\nNote that we need to calculate the sum of consecutive prefix sums. In order to save time, we can also create an array `prepreA`, the **prefix sum array of the prefix sum array of `A`**. \r\n\r\n![img](../Figures/2281/8.png)\r\n\r\n\r\nThen we can get the sum of consecutive prefix sums of `A` in a constant time.\r\n\r\n![img](../Figures/2281/7.png)\r\n\r\n\r\nThe job is done! For each index `i`, we rewrite $\\text{totalSum}_i$, the total sum of all subarrays having `A[i]` as the minimum value into some terms in `prepreA`. Since all these subarrays have `A[i]` as the minimum, we can get the total strength of these subarrays by multiplying $\\text{totalSum}_i$ by `A[i]`.\r\n\r\nWe use our monostack to determine which terms of `prepreA` to use for each `A[i]`.\r\n\r\n\r\n![img](../Figures/2281/13.png)\r\n\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Get the length of the input array `strength` as `n`, initialize `answer` as `0` and `mod` as $10^9 + 7$ as indicated by the problem statement.\r\n\r\n2) Initialize two arrays `leftIndex` and `rightIndex` of length `n` to record the boundary indexes of each index, create an array `presumOfPresum` of length `n + 1` as the prefix sum of the prefix sum of `strength`.\r\n\r\n![img](../Figures/2281/9.png)\r\n\r\n3) For each index `i` from `0` to `n - 1` using a monotonic stack,\r\n\r\n    - Get the index of the first smaller element than `strength[i]` to `i`'s left and record it in `leftIndex[i]`.\r\n    - Get the index of the first element that is smaller than or equals to `strength[i]` to `i`'s right and record it in `rightIndex[i]`.\r\n4) Iterate over indexes from `0` to `n - 1`, for each index `i`,\r\n    - Get `leftIndex[i]` and `rightIndex[i]`, according to the previous equation, we can get `leftCount = i - leftIndex[i]` and `rightCount = rightIndex[i] - i`.\r\n    - Get the sum of all the positive terms as `posPresum = presumOfPresum[i + rightCount + 1] - presumOfPresum[i + 1]`, and the sum of all the negative terms as `negPresum = presumOfPresum[i + 1] - presumOfPresum[i - leftCount + 1]`.\r\n    - Increment `answer` by `posPresum * leftCount - negPresum * rightCount`, the sum of strengths of all subarrays having `strength[i]` as the minimum.\r\n\r\n5) Return `answer`.\r\n\r\n\r\n> Since the numbers can get huge, make sure to use modular arithmetic not only when calculating the answer, but also values like `negPresum`, `posPresum`, and `presumOfPresum`.\r\n\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/ZHxwUDyZ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZHxwUDyZ\"></iframe>\r\n\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the length of the input array `strength`.\r\n\r\n* Time complexity: $$O(n)$$\r\n\r\n    - We use mono stack to build arrays `leftIndex` and `rightIndex`, each element is added to the stack or removed from the stack by at most once, thus it takes at most $$O(n)$$ time to build them.\r\n    - It takes $$O(n)$$ time to build the prefix array of `strength`.\r\n    - It takes $$O(n)$$ time to build the prefix sum of the prefix sum array of `strength`.\r\n    - We iterate over `strength`, according to the previous equations, it takes $$O(1)$$ time to calculate the sum of strengths having each element as the minimum, so the total time complexity of this step is $$O(n)$$.\r\n    - To sum up, the overall time complexity is $$O(n)$$.\r\n\r\n* Space complexity: $$O(n)$$\r\n\r\n    - We build some auxiliary arrays `leftIndex`, `rightIndex`, and `presumOfPresum`, each of them has $$O(n)$$ elements, thus the total space complexity is $$O(n)$$.\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

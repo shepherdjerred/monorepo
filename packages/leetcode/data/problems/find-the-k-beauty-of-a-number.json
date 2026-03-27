@@ -1,0 +1,135 @@
+{
+  "questionId": "1430",
+  "questionFrontendId": "2269",
+  "title": "Find the K-Beauty of a Number",
+  "titleSlug": "find-the-k-beauty-of-a-number",
+  "difficulty": "Easy",
+  "content": "<p>The <strong>k-beauty</strong> of an integer <code>num</code> is defined as the number of <strong>substrings</strong> of <code>num</code> when it is read as a string that meet the following conditions:</p>\n\n<ul>\n\t<li>It has a length of <code>k</code>.</li>\n\t<li>It is a divisor of <code>num</code>.</li>\n</ul>\n\n<p>Given integers <code>num</code> and <code>k</code>, return <em>the k-beauty of </em><code>num</code>.</p>\n\n<p>Note:</p>\n\n<ul>\n\t<li><strong>Leading zeros</strong> are allowed.</li>\n\t<li><code>0</code> is not a divisor of any value.</li>\n</ul>\n\n<p>A <strong>substring</strong> is a contiguous sequence of characters in a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 240, k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The following are the substrings of num of length k:\n- &quot;24&quot; from &quot;<strong><u>24</u></strong>0&quot;: 24 is a divisor of 240.\n- &quot;40&quot; from &quot;2<u><strong>40</strong></u>&quot;: 40 is a divisor of 240.\nTherefore, the k-beauty is 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = 430043, k = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The following are the substrings of num of length k:\n- &quot;43&quot; from &quot;<u><strong>43</strong></u>0043&quot;: 43 is a divisor of 430043.\n- &quot;30&quot; from &quot;4<u><strong>30</strong></u>043&quot;: 30 is not a divisor of 430043.\n- &quot;00&quot; from &quot;43<u><strong>00</strong></u>43&quot;: 0 is not a divisor of 430043.\n- &quot;04&quot; from &quot;430<u><strong>04</strong></u>3&quot;: 4 is not a divisor of 430043.\n- &quot;43&quot; from &quot;4300<u><strong>43</strong></u>&quot;: 43 is a divisor of 430043.\nTherefore, the k-beauty is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= num &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= num.length</code> (taking <code>num</code> as a string)</li>\n</ul>\n",
+  "hints": [
+    "We should check all the substrings of num with a length of k and see if it is a divisor of num.",
+    "We can more easily obtain the substrings by converting num into a string and converting back to an integer to check for divisibility."
+  ],
+  "metaData": "{\n  \"name\": \"divisorSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"90.3K\", \"totalSubmission\": \"142.9K\", \"totalAcceptedRaw\": 90280, \"totalSubmissionRaw\": 142859, \"acRate\": \"63.2%\"}",
+  "likes": 734,
+  "dislikes": 47,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "240\n2",
+    "430043\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}, {\"timesEncountered\": 2, \"slug\": \"postmates\", \"name\": \"Postmates\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int divisorSubstrings(int num, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int divisorSubstrings(int num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def divisorSubstrings(self, num: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def divisorSubstrings(self, num, k):\n        \"\"\"\n        :type num: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} num\n * @param {number} k\n * @return {number}\n */\nvar divisorSubstrings = function(num, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function divisorSubstrings(num: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int DivisorSubstrings(int num, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int divisorSubstrings(int num, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func divisorSubstrings(num int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun divisorSubstrings(num: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func divisorSubstrings(_ num: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn divisor_substrings(num: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} num\n# @param {Integer} k\n# @return {Integer}\ndef divisor_substrings(num, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $num\n     * @param Integer $k\n     * @return Integer\n     */\n    function divisorSubstrings($num, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int divisorSubstrings(int num, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def divisorSubstrings(num: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec divisor_substrings(num :: integer, k :: integer) :: integer\n  def divisor_substrings(num, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec divisor_substrings(Num :: integer(), K :: integer()) -> integer().\ndivisor_substrings(Num, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (divisor-substrings num k)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

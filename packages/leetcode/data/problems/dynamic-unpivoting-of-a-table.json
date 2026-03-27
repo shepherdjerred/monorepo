@@ -1,0 +1,48 @@
+{
+  "questionId": "2382",
+  "questionFrontendId": "2253",
+  "title": "Dynamic Unpivoting of a Table",
+  "titleSlug": "dynamic-unpivoting-of-a-table",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Products</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| product_id  | int     |\n| store_name<sub>1</sub> | int     |\n| store_name<sub>2</sub> | int     |\n|      :      | int     |\n|      :      | int     |\n|      :      | int     |\n| store_name<sub>n</sub> | int     |\n+-------------+---------+\nproduct_id is the primary key for this table.\nEach row in this table indicates the product&#39;s price in n different stores.\nIf the product is not available in a store, the price will be null in that store&#39;s column.\nThe names of the stores may change from one testcase to another. There will be at least 1 store and at most 30 stores.\n</pre>\n\n<p>&nbsp;</p>\n\n<p><strong>Important note:</strong> This problem targets those who have a good experience with SQL. If you are a beginner, we recommend that you skip it for now.</p>\n\n<p>Implement the procedure <code>UnpivotProducts</code> to reorganize the <code>Products</code> table so that each row has the id of one product, the name of a store where it is sold, and its price in that store. If a product is not available in a store, do <strong>not</strong> include a row with that <code>product_id</code> and <code>store</code> combination in the result table. There should be three columns: <code>product_id</code>, <code>store</code>, and <code>price</code>.</p>\n\n<p>The procedure should return the table after reorganizing it.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProducts table:\n+------------+----------+--------+------+------+\n| product_id | LC_Store | Nozama | Shop | Souq |\n+------------+----------+--------+------+------+\n| 1          | 100      | null   | 110  | null |\n| 2          | null     | 200    | null | 190  |\n| 3          | null     | null   | 1000 | 1900 |\n+------------+----------+--------+------+------+\n<strong>Output:</strong> \n+------------+----------+-------+\n| product_id | store    | price |\n+------------+----------+-------+\n| 1          | LC_Store | 100   |\n| 1          | Shop     | 110   |\n| 2          | Nozama   | 200   |\n| 2          | Souq     | 190   |\n| 3          | Shop     | 1000  |\n| 3          | Souq     | 1900  |\n+------------+----------+-------+\n<strong>Explanation:</strong> \nProduct 1 is sold in LC_Store and Shop with prices of 100 and 110 respectively.\nProduct 2 is sold in Nozama and Souq with prices of 200 and 190.\nProduct 3 is sold in Shop and Souq with prices of 1000 and 1900.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [], \"mssql\": [], \"oraclesql\": [], \"database\": true, \"manual\": true, \"name\": \"dynamic_unpivoting_of_a_table\"}",
+  "stats": "{\"totalAccepted\": \"1.4K\", \"totalSubmission\": \"2.1K\", \"totalAcceptedRaw\": 1450, \"totalSubmissionRaw\": 2095, \"acRate\": \"69.2%\"}",
+  "likes": 20,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Rearrange Products Table\", \"titleSlug\": \"rearrange-products-table\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Products\": [\"product_id\", \"LC_Store\", \"Nozama\", \"Shop\", \"Souq\"]}, \"rows\": {\"Products\": [[1, 100, null, 110, null], [2, null, 200, null, 190], [3, null, null, 1000, 1900]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "CREATE PROCEDURE UnpivotProducts()\nBEGIN\n\t# Write your MySQL query statement below.\n\t\nEND"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "CREATE PROCEDURE UnpivotProducts AS\nBEGIN\n    /* Write your T-SQL query statement below. */\n    \nEND"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Important: For this problem, column names are case sensitive.\n              You should use double quotes while using the columns.\n */\nCREATE FUNCTION UnpivotProducts\nRETURN SYS_REFCURSOR IS result SYS_REFCURSOR;\nBEGIN\n    /* Write your PL/SQL query statement below */\n    \n    RETURN result;\nEND;"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_users(products: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

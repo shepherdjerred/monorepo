@@ -1,0 +1,157 @@
+{
+  "questionId": "2280",
+  "questionFrontendId": "2179",
+  "title": "Count Good Triplets in an Array",
+  "titleSlug": "count-good-triplets-in-an-array",
+  "difficulty": "Hard",
+  "content": "<p>You are given two <strong>0-indexed</strong> arrays <code>nums1</code> and <code>nums2</code> of length <code>n</code>, both of which are <strong>permutations</strong> of <code>[0, 1, ..., n - 1]</code>.</p>\n\n<p>A <strong>good triplet</strong> is a set of <code>3</code> <strong>distinct</strong> values which are present in <strong>increasing order</strong> by position both in <code>nums1</code> and <code>nums2</code>. In other words, if we consider <code>pos1<sub>v</sub></code> as the index of the value <code>v</code> in <code>nums1</code> and <code>pos2<sub>v</sub></code> as the index of the value <code>v</code> in <code>nums2</code>, then a good triplet will be a set <code>(x, y, z)</code> where <code>0 &lt;= x, y, z &lt;= n - 1</code>, such that <code>pos1<sub>x</sub> &lt; pos1<sub>y</sub> &lt; pos1<sub>z</sub></code> and <code>pos2<sub>x</sub> &lt; pos2<sub>y</sub> &lt; pos2<sub>z</sub></code>.</p>\n\n<p>Return <em>the <strong>total number</strong> of good triplets</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [2,0,1,3], nums2 = [0,1,2,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> \nThere are 4 triplets (x,y,z) such that pos1<sub>x</sub> &lt; pos1<sub>y</sub> &lt; pos1<sub>z</sub>. They are (2,0,1), (2,0,3), (2,1,3), and (0,1,3). \nOut of those triplets, only the triplet (0,1,3) satisfies pos2<sub>x</sub> &lt; pos2<sub>y</sub> &lt; pos2<sub>z</sub>. Hence, there is only 1 good triplet.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [4,0,1,3,2], nums2 = [4,1,0,2,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The 4 good triplets are (4,0,3), (4,0,2), (4,1,3), and (4,1,2).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums1.length == nums2.length</code></li>\n\t<li><code>3 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums1[i], nums2[i] &lt;= n - 1</code></li>\n\t<li><code>nums1</code> and <code>nums2</code> are permutations of <code>[0, 1, ..., n - 1]</code>.</li>\n</ul>\n",
+  "hints": [
+    "For every value y, how can you find the number of values x  (0 ≤ x, y ≤ n - 1) such that x appears before y in both of the arrays?",
+    "Similarly, for every value y, try finding the number of values z (0 ≤ y, z ≤ n - 1) such that z appears after y in both of the arrays.",
+    "Now, for every value y, count the number of good triplets that can be formed if y is considered as the middle element."
+  ],
+  "metaData": "{\n  \"name\": \"goodTriplets\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"76.9K\", \"totalSubmission\": \"117K\", \"totalAcceptedRaw\": 76927, \"totalSubmissionRaw\": 117041, \"acRate\": \"65.7%\"}",
+  "likes": 1017,
+  "dislikes": 114,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count of Smaller Numbers After Self\", \"titleSlug\": \"count-of-smaller-numbers-after-self\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Increasing Triplet Subsequence\", \"titleSlug\": \"increasing-triplet-subsequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Create Sorted Array through Instructions\", \"titleSlug\": \"create-sorted-array-through-instructions\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Good Paths\", \"titleSlug\": \"number-of-good-paths\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Increasing Quadruplets\", \"titleSlug\": \"count-increasing-quadruplets\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,0,1,3]\n[0,1,2,3]",
+    "[4,0,1,3,2]\n[4,1,0,2,3]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Divide and Conquer",
+      "slug": "divide-and-conquer"
+    },
+    {
+      "name": "Binary Indexed Tree",
+      "slug": "binary-indexed-tree"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Merge Sort",
+      "slug": "merge-sort"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long goodTriplets(vector<int>& nums1, vector<int>& nums2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long goodTriplets(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def goodTriplets(self, nums1: List[int], nums2: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def goodTriplets(self, nums1, nums2):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @return {number}\n */\nvar goodTriplets = function(nums1, nums2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function goodTriplets(nums1: number[], nums2: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long GoodTriplets(int[] nums1, int[] nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long goodTriplets(int* nums1, int nums1Size, int* nums2, int nums2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func goodTriplets(nums1 []int, nums2 []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun goodTriplets(nums1: IntArray, nums2: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func goodTriplets(_ nums1: [Int], _ nums2: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn good_triplets(nums1: Vec<i32>, nums2: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @return {Integer}\ndef good_triplets(nums1, nums2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @return Integer\n     */\n    function goodTriplets($nums1, $nums2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int goodTriplets(List<int> nums1, List<int> nums2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def goodTriplets(nums1: Array[Int], nums2: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec good_triplets(nums1 :: [integer], nums2 :: [integer]) :: integer\n  def good_triplets(nums1, nums2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec good_triplets(Nums1 :: [integer()], Nums2 :: [integer()]) -> integer().\ngood_triplets(Nums1, Nums2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (good-triplets nums1 nums2)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2733",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Binary Indexed Tree\n\n#### Intuition\n\nIf $i, j, k$ satisfy $0 \\leq i < j < k < n$ and $0 \\leq \\textit{pos2}_{\\textit{nums1}[i]} < \\textit{pos2}_{\\textit{nums1}[j]} < \\textit{pos2}_{\\textit{nums1}[k]} < n$, then $\\textit{nums1}[i]$, $\\textit{nums1}[j]$, $\\textit{nums1}[k]$ form a good triplet. Because both $\\textit{nums1}$ and $\\textit{nums2}$ are permutations of $0$ to $n-1$, we can count the number of good triplets by calculating the number of triplets $i, j, k$ that meet the conditions.\n\nAn array $\\textit{indexMapping}$ is used to express the above relationship, where $\\textit{indexMapping}[i] = \\textit{pos2}_{\\textit{nums1}[i]}$, and $\\textit{indexMapping}$ is also a permutation of $0$ to $n-1$. When calculating the number of triplets $i, j, k$ that meet the conditions, we can first fix $j$, then count how many numbers are less than $\\textit{indexMapping}[j]$ in the $\\textit{indexMapping}$ array to the left of index $j$, and denote it as $\\textit{left}$. Next, count how many numbers are greater than $\\textit{indexMapping}[j]$ to the right of index $j$, and denote it as $\\textit{right}$. Thus, $\\textit{left}\\times\\textit{right}$ represents the number of triplets with the middle element as $j$. By traversing all $j$, the answer can be calculated.\n\nThe above calculation process can be referred to [315. Count of Smaller Numbers After Self](https://leetcode.com/problems/count-of-smaller-numbers-after-self/description/), using a binary indexed tree to solve. The binary indexed tree can complete increment and prefix sum operations for a certain index in $O(\\log{n})$ time. When applying the binary indexed tree, we need to traverse the values in $\\textit{indexMapping}$ from small to large, and calculate the prefix sum for the current index $\\textit{pos}$, which represents how many numbers are less than $\\textit{indexMapping}[pos]$ to the left of index $pos$. We can also calculate how many numbers are greater than $\\textit{indexMapping}[pos]$ to the right of index $pos$, and then add $1$ to the value of the current index. Since we are traversing according to the value size, we need another array $\\textit{reversedIndexMapping}$ to save the indices of each value in $\\textit{indexMapping}$. In the code, the variable $\\textit{indexMapping}$ can be omitted. The result can be returned after the traversal is completed.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CL98TQtb/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CL98TQtb\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n\\times\\log{n})$.\n\nThe binary indexed tree requires $O(\\log{n})$ for each query and update operation, and we need to perform query and update operations on each index of the array during traversal.\n\n- Space complexity: $O(n)$.\n\nThe binary indexed tree requires $O(n)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

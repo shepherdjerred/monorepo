@@ -1,0 +1,136 @@
+{
+  "questionId": "2342",
+  "questionFrontendId": "2256",
+  "title": "Minimum Average Difference",
+  "titleSlug": "minimum-average-difference",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> of length <code>n</code>.</p>\n\n<p>The <strong>average difference</strong> of the index <code>i</code> is the <strong>absolute</strong> <strong>difference</strong> between the average of the <strong>first</strong> <code>i + 1</code> elements of <code>nums</code> and the average of the <strong>last</strong> <code>n - i - 1</code> elements. Both averages should be <strong>rounded down</strong> to the nearest integer.</p>\n\n<p>Return<em> the index with the <strong>minimum average difference</strong></em>. If there are multiple such indices, return the <strong>smallest</strong> one.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>The <strong>absolute difference</strong> of two numbers is the absolute value of their difference.</li>\n\t<li>The <strong>average</strong> of <code>n</code> elements is the <strong>sum</strong> of the <code>n</code> elements divided (<strong>integer division</strong>) by <code>n</code>.</li>\n\t<li>The average of <code>0</code> elements is considered to be <code>0</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,5,3,9,5,3]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\n- The average difference of index 0 is: |2 / 1 - (5 + 3 + 9 + 5 + 3) / 5| = |2 / 1 - 25 / 5| = |2 - 5| = 3.\n- The average difference of index 1 is: |(2 + 5) / 2 - (3 + 9 + 5 + 3) / 4| = |7 / 2 - 20 / 4| = |3 - 5| = 2.\n- The average difference of index 2 is: |(2 + 5 + 3) / 3 - (9 + 5 + 3) / 3| = |10 / 3 - 17 / 3| = |3 - 5| = 2.\n- The average difference of index 3 is: |(2 + 5 + 3 + 9) / 4 - (5 + 3) / 2| = |19 / 4 - 8 / 2| = |4 - 4| = 0.\n- The average difference of index 4 is: |(2 + 5 + 3 + 9 + 5) / 5 - 3 / 1| = |24 / 5 - 3 / 1| = |4 - 3| = 1.\n- The average difference of index 5 is: |(2 + 5 + 3 + 9 + 5 + 3) / 6 - 0| = |27 / 6 - 0| = |4 - 0| = 4.\nThe average difference of index 3 is the minimum average difference so return 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThe only index is 0 so return 0.\nThe average difference of index 0 is: |0 / 1 - 0| = |0 - 0| = 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can we use precalculation to efficiently calculate the average difference at an index?",
+    "Create a prefix and/or suffix sum array."
+  ],
+  "metaData": "{\n  \"name\": \"minimumAverageDifference\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"97.5K\", \"totalSubmission\": \"222.5K\", \"totalAcceptedRaw\": 97530, \"totalSubmissionRaw\": 222528, \"acRate\": \"43.8%\"}",
+  "likes": 1569,
+  "dislikes": 182,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Split Array With Same Average\", \"titleSlug\": \"split-array-with-same-average\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Split Array\", \"titleSlug\": \"number-of-ways-to-split-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,5,3,9,5,3]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumAverageDifference(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumAverageDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumAverageDifference(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumAverageDifference(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minimumAverageDifference = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumAverageDifference(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumAverageDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumAverageDifference(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumAverageDifference(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumAverageDifference(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumAverageDifference(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_average_difference(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef minimum_average_difference(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minimumAverageDifference($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumAverageDifference(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumAverageDifference(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_average_difference(nums :: [integer]) :: integer\n  def minimum_average_difference(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_average_difference(Nums :: [integer()]) -> integer().\nminimum_average_difference(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-average-difference nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1585",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nGiven an array `nums`, we need to find the index that divides the array into two parts and where the difference between the average of the left part of the array and the right part is minimum.        \n\nAn index `i` will divide the array into two parts: \n  - the first part will have elements from index `0` to index `i`, and\n  - the second part will have elements from index `i + 1` to the last index.       \n\nAnd the average of both parts of the array will be **rounded down** to the nearest integer.\n\n![example](../Figures/2256/Slide1.png)\n\nLet's look at the brute method first and try to optimize it further.\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nThe most naive method we can think of is iterating on every index `i` of the array and then finding the averages of the left and right parts of the array broken at index `i` and finding the difference between them.\n\n> **Note:** Firstly, we would need to iterate on every index of the array to consider that index as breaking point and then iterate on all indices again to iterate on both parts of the array to calculate their respective averages. As you can see this method is not optimal, thus this will result in a **Time Limit Exceed**, but it will be a stepping stone to the further approaches.\n\n!?!../Documents/2256/slideshow1.json:960,540!?!\n\n<br />\n\n#### Algorithm\n\n1. Initialize variables:\n    - `n`, integer to store the number of elements in the array.\n    - `minAvgDiff`, initialized with a large integer value, stores the minimum average difference.\n    - `ans`, integer to store the index where we found the minimum average difference.\n\n2. Iterate over each index of the `nums` array:\n    - At each index `i`, add all elements of the `nums` array from index `0` to index `i`, and divide the sum by `i + 1` to get the average of the left part of the array.\n    - Similarly, add elements from index `i + 1` to `n - 1`, and divide by `n - i - 1` to get the average of the right part of the array. \n    - If the difference between the average of the left and right part of the array is smaller than `minAvgDiff`, then store this difference in `minAvgDiff` and the current index `i` in `ans`. \n\n3. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7aMAK8Zo/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7aMAK8Zo\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n^{2})$.\n  - We iterate over each index of the `nums` array.\n  - And at each index, we again iterate on all elements to calculate averages of two parts, which takes $O(n)$ time.\n  - Thus, for finding the difference of averages at $n$ indices, it will take $O(n^2)$ time.\n\n* Space complexity: $O(1)$.    \n  - We have only used some integer variables. Thus, the space used is constant.\n\n\n<br />\n\n---\n\n\n### Approach 2: Prefix Sum\n\n#### Intuition\n\nFirst of all, if you don't know, prefix sum is the technique where we generate a `prefix` array, and it's each element at `(i + 1)th` index stores the cumulative sum of all array elements from index `0` to index `i`. \n\nIf you carefully notice, when in the previous approach at each index `i`, we needed sum of all elements of `nums` array from index `0` to index `i`, thus we can conclude that we can use a  prefix array instead of iterating again on all elements.\n\nJust like, prefix sums, we can store suffix sum for the `nums` array to get the sum of all elements from index `i + 1` till last index in optimal way. Let's understand this with the following example:     \n\n![prefix_suffix_example](../Figures/2256/Slide18.png)\n\n#### Algorithm\n\n1. Initialize variables:\n    - `n`, integer to store the number of elements in the array.\n    - `minAvgDiff`, initialized with a large integer value, stores the minimum average difference.\n    - `ans`, integer to store the index where we found the minimum average difference.\n    - `prefixSum`, `suffixSum`, integer arrays to store prefix and suffix sums for the `nums` array.\n\n2. Precompute prefix and suffix sums for the `nums` array.\n    - For prefix sum, iterate from start to end and add the current element to the previous prefix sum.\n    - For suffix sum, iterate from end to start and add the current element to the previous suffix sum.\n\n3. Iterate over each index of the `nums` array:\n    - At each index `i`, get the sum of all elements of the `nums` array from index `0` to index `i` stored in `prefixSum[i + 1]`, and divide the sum by `i + 1` to get the average of the left part of the array.\n    - Similarly, get the sum of elements from index `i +1` to `n - 1` stored in `suffix[i + 1]`, and divide by `n - i - 1` to get the average of the right part of the array. \n    - If the difference between the average of the left and right part of the array is smaller than `minAvgDiff`, then store this difference in `minAvgDiff` and the current index `i` in `ans`. \n\n4. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3haRpj7b/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3haRpj7b\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n)$.\n  - We iterate over `nums` array to precompute `prefixSum` and `suffixSum` arrays.\n  - Then, we iterate over each index of the `nums` array and at each index, we calculate averages of two parts in constant time using `prefixSum` and `suffixSum` arrays.\n  - Thus, for finding the difference of averages at $n$ indices, it will take $O(n)$ time.\n\n* Space complexity: $O(n)$.    \n  - We have used two arrays of size $n$ to store prefix and suffix sums of `nums` array.\n  - Thus, overall it will take $O(n)$ space.\n\n<br />\n\n---\n\n\n### Approach 3: Prefix Sum Optimized\n\n#### Intuition\n\nOur runtime for the previous approach is fairly efficient, but we are using some auxiliary space.        \nLet's try optimizing it now.    \n\nWe are using two arrays, `prefixSum` to store the sum of all the elements of the array from index `0` to index `i` to get the left part's sum, and `suffixSum` to store the sum of elements from index `i + 1` to the last index to get the right part's sum.            \n\nBut if we already had the sum of all elements of the array, then we can subtract the left part's sum from it to get the right part's sum, thus we can discard the `suffixSum` array and use only `prefixSum` array with a `totalSum` variable.\n\nBut further we can notice, that while iterating on every index for breaking the `nums` array in two parts at that index, every time we only use the value at the current index `i` from the `prefixSum` array. Thus, instead of storing all prefix sums in an array, we can store the prefix sum till index `i` in a variable. So, we can also discard the `prefixSum` array and only use a `currPrefixSum` variable instead of it.             \nThus, instead of two arrays, we can use only two variables `totalSum` and `currPrefixSum`.       \n\nLet's visualize it better with the following slideshow:\n\n!?!../Documents/2256/slideshow2.json:960,540!?!\n\n#### Algorithm\n\n1. Initialize variables:\n    - `n`, integer to store the number of elements in the array.\n    - `minAvgDiff`, initialized with a large integer value, stores the minimum average difference.\n    - `totalSum`, a variable to store the sum of all elements of the `nums` array.\n    - `currPrefixSum`, a variable to store the sum of all elements till the current index of the `nums` array.\n    - `ans`, integer to store the index where we found the minimum average difference.\n\n2. Iterate on the `nums` array and calculate `totalSum`.\n\n3. Iterate over each index of the `nums` array:\n    - At each index `i`, we add the current element in `currPrefixSum`, to get the sum of all elements of the `nums` array from index `0` to index `i`, and divide the sum by `i + 1` to get the average of the left part of the array.\n    - Similarly, we can get the sum of elements from index `i + 1` to `n - 1` after subtracting the left part's sum from the total sum of the array, and then divide it by `n - i - 1` to get the average of the right part of the array. \n    - If the difference between the average of the left and right part of the array is smaller than `minAvgDiff`, then store this difference in `minAvgDiff` and the current index `i` in `ans`. \n\n4. Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4vRrdfhq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4vRrdfhq\"></iframe>\n\n#### Complexity Analysis\n\nHere, $N$ is the number of elements in the `nums` array.\n\n* Time complexity: $O(n)$.\n  - We iterate over each index of the `nums` array and at each index, we calculate averages of two parts in constant time using `currSum` and `totalSum` variables.\n  - Thus, for finding the difference of averages at $n$ indices, it will take $O(n)$ time.\n\n* Space complexity: $O(1)$.    \n  - We have only used some integer variables. Thus, the space used is constant.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

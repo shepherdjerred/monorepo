@@ -1,0 +1,143 @@
+{
+  "questionId": "2332",
+  "questionFrontendId": "2249",
+  "title": "Count Lattice Points Inside a Circle",
+  "titleSlug": "count-lattice-points-inside-a-circle",
+  "difficulty": "Medium",
+  "content": "<p>Given a 2D integer array <code>circles</code> where <code>circles[i] = [x<sub>i</sub>, y<sub>i</sub>, r<sub>i</sub>]</code> represents the center <code>(x<sub>i</sub>, y<sub>i</sub>)</code> and radius <code>r<sub>i</sub></code> of the <code>i<sup>th</sup></code> circle drawn on a grid, return <em>the <strong>number of lattice points</strong> </em><em>that are present inside <strong>at least one</strong> circle</em>.</p>\n\n<p><strong>Note:</strong></p>\n\n<ul>\n\t<li>A <strong>lattice point</strong> is a point with integer coordinates.</li>\n\t<li>Points that lie <strong>on the circumference of a circle</strong> are also considered to be inside it.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/02/exa-11.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> circles = [[2,2,1]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\nThe figure above shows the given circle.\nThe lattice points present inside the circle are (1, 2), (2, 1), (2, 2), (2, 3), and (3, 2) and are shown in green.\nOther points such as (1, 1) and (1, 3), which are shown in red, are not considered inside the circle.\nHence, the number of lattice points present inside at least one circle is 5.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/03/02/exa-22.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> circles = [[2,2,2],[3,4,1]]\n<strong>Output:</strong> 16\n<strong>Explanation:</strong>\nThe figure above shows the given circles.\nThere are exactly 16 lattice points which are present inside at least one circle. \nSome of them are (0, 2), (2, 0), (2, 4), (3, 2), and (4, 4).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= circles.length &lt;= 200</code></li>\n\t<li><code>circles[i].length == 3</code></li>\n\t<li><code>1 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= 100</code></li>\n\t<li><code>1 &lt;= r<sub>i</sub> &lt;= min(x<sub>i</sub>, y<sub>i</sub>)</code></li>\n</ul>\n",
+  "hints": [
+    "For each circle, how can you check whether or not a lattice point lies inside it?",
+    "Since you need to reduce the search space, consider the minimum and maximum possible values of the coordinates of a lattice point contained in any circle."
+  ],
+  "metaData": "{\n  \"name\": \"countLatticePoints\",\n  \"params\": [\n    {\n      \"name\": \"circles\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"32.5K\", \"totalSubmission\": \"57.6K\", \"totalAcceptedRaw\": 32533, \"totalSubmissionRaw\": 57555, \"acRate\": \"56.5%\"}",
+  "likes": 254,
+  "dislikes": 223,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Queries on Number of Points Inside a Circle\", \"titleSlug\": \"queries-on-number-of-points-inside-a-circle\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,2,1]]",
+    "[[2,2,2],[3,4,1]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"rubrik\", \"name\": \"Rubrik\"}], \"three_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countLatticePoints(vector<vector<int>>& circles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countLatticePoints(int[][] circles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countLatticePoints(self, circles: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countLatticePoints(self, circles):\n        \"\"\"\n        :type circles: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} circles\n * @return {number}\n */\nvar countLatticePoints = function(circles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countLatticePoints(circles: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountLatticePoints(int[][] circles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countLatticePoints(int** circles, int circlesSize, int* circlesColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countLatticePoints(circles [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countLatticePoints(circles: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countLatticePoints(_ circles: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_lattice_points(circles: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} circles\n# @return {Integer}\ndef count_lattice_points(circles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $circles\n     * @return Integer\n     */\n    function countLatticePoints($circles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countLatticePoints(List<List<int>> circles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countLatticePoints(circles: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_lattice_points(circles :: [[integer]]) :: integer\n  def count_lattice_points(circles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_lattice_points(Circles :: [[integer()]]) -> integer().\ncount_lattice_points(Circles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-lattice-points circles)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

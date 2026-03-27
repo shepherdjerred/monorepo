@@ -1,0 +1,129 @@
+{
+  "questionId": "2261",
+  "questionFrontendId": "2155",
+  "title": "All Divisions With the Highest Score of a Binary Array",
+  "titleSlug": "all-divisions-with-the-highest-score-of-a-binary-array",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> binary array <code>nums</code> of length <code>n</code>. <code>nums</code> can be divided at index <code>i</code> (where <code>0 &lt;= i &lt;= n)</code> into two arrays (possibly empty) <code>nums<sub>left</sub></code> and <code>nums<sub>right</sub></code>:</p>\n\n<ul>\n\t<li><code>nums<sub>left</sub></code> has all the elements of <code>nums</code> between index <code>0</code> and <code>i - 1</code> <strong>(inclusive)</strong>, while <code>nums<sub>right</sub></code> has all the elements of nums between index <code>i</code> and <code>n - 1</code> <strong>(inclusive)</strong>.</li>\n\t<li>If <code>i == 0</code>, <code>nums<sub>left</sub></code> is <strong>empty</strong>, while <code>nums<sub>right</sub></code> has all the elements of <code>nums</code>.</li>\n\t<li>If <code>i == n</code>, <code>nums<sub>left</sub></code> has all the elements of nums, while <code>nums<sub>right</sub></code> is <strong>empty</strong>.</li>\n</ul>\n\n<p>The <strong>division score</strong> of an index <code>i</code> is the <strong>sum</strong> of the number of <code>0</code>&#39;s in <code>nums<sub>left</sub></code> and the number of <code>1</code>&#39;s in <code>nums<sub>right</sub></code>.</p>\n\n<p>Return <em><strong>all distinct indices</strong> that have the <strong>highest</strong> possible <strong>division score</strong></em>. You may return the answer in <strong>any order</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,1,0]\n<strong>Output:</strong> [2,4]\n<strong>Explanation:</strong> Division at index\n- 0: nums<sub>left</sub> is []. nums<sub>right</sub> is [0,0,<u><strong>1</strong></u>,0]. The score is 0 + 1 = 1.\n- 1: nums<sub>left</sub> is [<u><strong>0</strong></u>]. nums<sub>right</sub> is [0,<u><strong>1</strong></u>,0]. The score is 1 + 1 = 2.\n- 2: nums<sub>left</sub> is [<u><strong>0</strong></u>,<u><strong>0</strong></u>]. nums<sub>right</sub> is [<u><strong>1</strong></u>,0]. The score is 2 + 1 = 3.\n- 3: nums<sub>left</sub> is [<u><strong>0</strong></u>,<u><strong>0</strong></u>,1]. nums<sub>right</sub> is [0]. The score is 2 + 0 = 2.\n- 4: nums<sub>left</sub> is [<u><strong>0</strong></u>,<u><strong>0</strong></u>,1,<u><strong>0</strong></u>]. nums<sub>right</sub> is []. The score is 3 + 0 = 3.\nIndices 2 and 4 both have the highest possible division score 3.\nNote the answer [4,2] would also be accepted.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0,0,0]\n<strong>Output:</strong> [3]\n<strong>Explanation:</strong> Division at index\n- 0: nums<sub>left</sub> is []. nums<sub>right</sub> is [0,0,0]. The score is 0 + 0 = 0.\n- 1: nums<sub>left</sub> is [<u><strong>0</strong></u>]. nums<sub>right</sub> is [0,0]. The score is 1 + 0 = 1.\n- 2: nums<sub>left</sub> is [<u><strong>0</strong></u>,<u><strong>0</strong></u>]. nums<sub>right</sub> is [0]. The score is 2 + 0 = 2.\n- 3: nums<sub>left</sub> is [<u><strong>0</strong></u>,<u><strong>0</strong></u>,<u><strong>0</strong></u>]. nums<sub>right</sub> is []. The score is 3 + 0 = 3.\nOnly index 3 has the highest possible division score 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,1]\n<strong>Output:</strong> [0]\n<strong>Explanation:</strong> Division at index\n- 0: nums<sub>left</sub> is []. nums<sub>right</sub> is [<u><strong>1</strong></u>,<u><strong>1</strong></u>]. The score is 0 + 2 = 2.\n- 1: nums<sub>left</sub> is [1]. nums<sub>right</sub> is [<u><strong>1</strong></u>]. The score is 0 + 1 = 1.\n- 2: nums<sub>left</sub> is [1,1]. nums<sub>right</sub> is []. The score is 0 + 0 = 0.\nOnly index 0 has the highest possible division score 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == nums.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>nums[i]</code> is either <code>0</code> or <code>1</code>.</li>\n</ul>\n",
+  "hints": [
+    "When you iterate the array, maintain the number of zeros and ones on the left side. Can you quickly calculate the number of ones on the right side?",
+    "The number of ones on the right side equals the number of ones in the whole array minus the number of ones on the left side.",
+    "Alternatively, you can quickly calculate it by using a prefix sum array."
+  ],
+  "metaData": "{\n  \"name\": \"maxScoreIndices\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"36.8K\", \"totalSubmission\": \"56.1K\", \"totalAcceptedRaw\": 36759, \"totalSubmissionRaw\": 56107, \"acRate\": \"65.5%\"}",
+  "likes": 538,
+  "dislikes": 18,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Ones and Zeroes\", \"titleSlug\": \"ones-and-zeroes\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones II\", \"titleSlug\": \"max-consecutive-ones-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Subarrays With More Ones Than Zeros\", \"titleSlug\": \"count-subarrays-with-more-ones-than-zeros\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Array Partition\", \"titleSlug\": \"array-partition\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Divide Array in Sets of K Consecutive Numbers\", \"titleSlug\": \"divide-array-in-sets-of-k-consecutive-numbers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[0,0,1,0]",
+    "[0,0,0]",
+    "[1,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> maxScoreIndices(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> maxScoreIndices(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxScoreIndices(self, nums: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxScoreIndices(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number[]}\n */\nvar maxScoreIndices = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxScoreIndices(nums: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> MaxScoreIndices(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* maxScoreIndices(int* nums, int numsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxScoreIndices(nums []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxScoreIndices(nums: IntArray): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxScoreIndices(_ nums: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_score_indices(nums: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer[]}\ndef max_score_indices(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer[]\n     */\n    function maxScoreIndices($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> maxScoreIndices(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxScoreIndices(nums: Array[Int]): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_score_indices(nums :: [integer]) :: [integer]\n  def max_score_indices(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_score_indices(Nums :: [integer()]) -> [integer()].\nmax_score_indices(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-score-indices nums)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

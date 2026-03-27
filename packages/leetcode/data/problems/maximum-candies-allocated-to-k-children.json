@@ -1,0 +1,136 @@
+{
+  "questionId": "1335",
+  "questionFrontendId": "2226",
+  "title": "Maximum Candies Allocated to K Children",
+  "titleSlug": "maximum-candies-allocated-to-k-children",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>candies</code>. Each element in the array denotes a pile of candies of size <code>candies[i]</code>. You can divide each pile into any number of <strong>sub piles</strong>, but you <strong>cannot</strong> merge two piles together.</p>\n\n<p>You are also given an integer <code>k</code>. You should allocate piles of candies to <code>k</code> children such that each child gets the <strong>same</strong> number of candies. Each child can be allocated candies from <strong>only one</strong> pile of candies and some piles of candies may go unused.</p>\n\n<p>Return <em>the <strong>maximum number of candies</strong> each child can get.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> candies = [5,8,6], k = 3\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> We can divide candies[1] into 2 piles of size 5 and 3, and candies[2] into 2 piles of size 5 and 1. We now have five piles of candies of sizes 5, 5, 3, 5, and 1. We can allocate the 3 piles of size 5 to 3 children. It can be proven that each child cannot receive more than 5 candies.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> candies = [2,5], k = 11\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are 11 children but only 7 candies in total, so it is impossible to ensure each child receives at least one candy. Thus, each child gets no candy and the answer is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= candies.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= candies[i] &lt;= 10<sup>7</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= 10<sup>12</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For a fixed number of candies c, how can you check if each child can get c candies?",
+    "Use binary search to find the maximum c as the answer."
+  ],
+  "metaData": "{\n  \"name\": \"maximumCandies\",\n  \"params\": [\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"candies\"\n    },\n    {\n      \"type\": \"long\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"204.5K\", \"totalSubmission\": \"410K\", \"totalAcceptedRaw\": 204542, \"totalSubmissionRaw\": 410040, \"acRate\": \"49.9%\"}",
+  "likes": 1830,
+  "dislikes": 84,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Koko Eating Bananas\", \"titleSlug\": \"koko-eating-bananas\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Limit of Balls in a Bag\", \"titleSlug\": \"minimum-limit-of-balls-in-a-bag\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Speed to Arrive on Time\", \"titleSlug\": \"minimum-speed-to-arrive-on-time\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Removable Characters\", \"titleSlug\": \"maximum-number-of-removable-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimized Maximum of Products Distributed to Any Store\", \"titleSlug\": \"minimized-maximum-of-products-distributed-to-any-store\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Complete Trips\", \"titleSlug\": \"minimum-time-to-complete-trips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimize Maximum of Array\", \"titleSlug\": \"minimize-maximum-of-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize Happiness of Selected Children\", \"titleSlug\": \"maximize-happiness-of-selected-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,8,6]\n3",
+    "[2,5]\n11"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 14, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumCandies(vector<int>& candies, long long k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumCandies(int[] candies, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumCandies(self, candies: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumCandies(self, candies, k):\n        \"\"\"\n        :type candies: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} candies\n * @param {number} k\n * @return {number}\n */\nvar maximumCandies = function(candies, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumCandies(candies: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumCandies(int[] candies, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumCandies(int* candies, int candiesSize, long long k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumCandies(candies []int, k int64) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumCandies(candies: IntArray, k: Long): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumCandies(_ candies: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_candies(candies: Vec<i32>, k: i64) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} candies\n# @param {Integer} k\n# @return {Integer}\ndef maximum_candies(candies, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $candies\n     * @param Integer $k\n     * @return Integer\n     */\n    function maximumCandies($candies, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumCandies(List<int> candies, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumCandies(candies: Array[Int], k: Long): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_candies(candies :: [integer], k :: integer) :: integer\n  def maximum_candies(candies, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_candies(Candies :: [integer()], K :: integer()) -> integer().\nmaximum_candies(Candies, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-candies candies k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2702",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array called `candies`, where each element `candies[i]` represents the number of candies in the `i-th` pile. We also have an integer `k`, which denotes the number of children we must give candies to. Our goal is to find the greatest number of candies each child can get, following these rules:\n\n-   Each child must get the same number of candies.\n-   Each child's candies must come from just one pile. We can divide candies from a pile among multiple children, but we cannot combine candies from different piles for one child.\n\nNote that we do not have to use all the candies from any given pile—some candies from a pile or even entire piles may remain unused.\n\nTo better understand the task, let's go through an example. Suppose we have `candies = [5, 2, 6, 2]` and `k = 3`. \n\nFirst, since each child's candies must come from a single pile, the greatest number of candies each child can get is at most equal to the largest element in the array — in this case, `6`. If we tried to give, for example, `7` candies to each child, we would need to combine candies from multiple piles, which is not allowed.\n\nAfter determining the upper bound, we can start from `6` and go down to `0` until we find the first number for which an allocation is valid. Let's denote the number of candies each child receives with `x`.\n-   For `x = 6`, no valid distribution exists, as the total number of candies is less than `3 * 6 = 18`.\n-   For `x = 5`, the first child can get candies from the first pile and the second child can get candies from the third pile. However, it is impossible to give `5` candies to the last child without combining the remaining piles.\n-   Similarly, for `x = 4`, giving candies to the last child would require merging piles, which is not allowed.\n-   For `x = 3`, we can give `3` candies from the first pile to the first child, `3` candies from the third pile to the second child, and the remaining `3` candies from the third pile to the third child. \n\nSince `3` is the largest number of candies that satisfies all conditions, it is our final result.\n\n![Visual Illustration of the Example](../Figures/2226/2226_overview.png)\n\n\n### Approach: Binary Search on The Answer\n\n#### Intuition\n\nLet's first try to answer a slightly different question: given a target number of candies `x` per child, can we distribute the candies so that each child gets exactly `x`? \n\nTo check this, we calculate how many children each pile can serve. For example, with `candies = [5, 2, 6, 2]` and `x = 4`, the first and third piles can serve one child each, with some leftover, while the second and fourth piles can't be used because they contain fewer than `x` candies. In total, the piles can serve at most `2` children. \n\nGenerally, each pile can serve up to $\\lfloor \\frac{\\text{candies[i]}}{x} \\rfloor$ children, possibly with some leftover candies. By summing the number of children each pile can serve, we can easily determine if an allocation is possible by comparing the total to the number of children (`k`) we must distribute candies to.\n\nAdditionally, note that if a valid distribution exists for a given number `x`, then a distribution is also possible for any number smaller than or equal to `x`. Conversely, if we cannot allocate the candies such that each child receives `x` candies, then it's impossible to distribute them in a way that gives each child more than `x` candies. This monotonic property allows us to use a binary search approach, where we check if a distribution is possible for the middle value of our search range. Based on that, we either move to the upper half of the range if a distribution is possible, or to the lower half if it's not.\n\n![Execution of the Binary Search Algorithm](../Figures/2226/2226_approach1.png)\n\n> For a more comprehensive understanding of binary search, check out the [Binary Search Explore Card 🔗](https://leetcode.com/explore/learn/card/binary-search/). This resource offers an in-depth look at binary search, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern. Additionally, for extra practice, consider taking a look at the classic binary search problem [Koko Eating Bananas](https://leetcode.com/problems/koko-eating-bananas/description/).\n\n#### Algorithm\n\n-   Define a function `canAllocateCandies(candies, k, numOfCandies)`:\n    -   Initialize `maxNumOfChildren` to `0`, denoting the maximum number of children that can be served.\n    -   Iterate over `candies`, with `pileIndex` from `0` to `candies.size - 1`, to find the greatest number of children each pile can serve:\n        -   Add `candies[pileIndex] / numOfCandies` to `maxNumOfChildren`.\n    -   If the number of children that can be served is at least `k`, return `true`. Otherwise, return `false`.\n    \n-   In the main `maximumCandies` function:\n    -   Iterate over `candies` to find the maximum element and store it as `maxCandiesInPile`. \n    -   Initialize the boundaries of the binary search: `left = 0` and `right = maxCandiesInPile`.\n    -   While `left < right`:\n        -   Find `middle` as `(left + right + 1) / 2`.\n        -   Check if an allocation where each child receives `middle` candies is possible, using the `canAllocateCandies` function. If so, move to the upper half of the range to search for greater values, by setting `left = middle`.\n        -   Otherwise, move to the lower half, by setting `right = middle - 1`.\n    -   When exiting the loop, `left = right`, so return `left`, which corresponds to the maximum number of candies each child can get.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Wqg9c2Qi/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Wqg9c2Qi\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `candies` array and $m$ be the greatest value in it.\n\n-   Time complexity: $O(n \\log m)$\n\n    The `canAllocateCandies` function iterates through the $n$ candy piles, executing constant-time (arithmetic) operations, during each iteration. As a result, its time complexity is $O(n)$.\n\n    The main function, `maximumCandies`, performs a binary search over the range $[0, m]$, calling in each iteration the `canAllocateCandies` function. Since the binary search runs in $O(\\log m)$ time, the overall time complexity of the `maximumCandies` function is $O(n \\log m)$.\n\n-   Space complexity: $O(1)$\n\n    We only use a fixed number of integer variables (`left`, `right`, `maxNumberOfChildren`), which do not increase with input size.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

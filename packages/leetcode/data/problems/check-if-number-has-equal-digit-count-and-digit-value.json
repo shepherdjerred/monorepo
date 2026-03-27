@@ -1,0 +1,134 @@
+{
+  "questionId": "2377",
+  "questionFrontendId": "2283",
+  "title": "Check if Number Has Equal Digit Count and Digit Value",
+  "titleSlug": "check-if-number-has-equal-digit-count-and-digit-value",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>num</code> of length <code>n</code> consisting of digits.</p>\n\n<p>Return <code>true</code> <em>if for <strong>every</strong> index </em><code>i</code><em> in the range </em><code>0 &lt;= i &lt; n</code><em>, the digit </em><code>i</code><em> occurs </em><code>num[i]</code><em> times in </em><code>num</code><em>, otherwise return </em><code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;1210&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nnum[0] = &#39;1&#39;. The digit 0 occurs once in num.\nnum[1] = &#39;2&#39;. The digit 1 occurs twice in num.\nnum[2] = &#39;1&#39;. The digit 2 occurs once in num.\nnum[3] = &#39;0&#39;. The digit 3 occurs zero times in num.\nThe condition holds true for every index in &quot;1210&quot;, so return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> num = &quot;030&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong>\nnum[0] = &#39;0&#39;. The digit 0 should occur zero times, but actually occurs twice in num.\nnum[1] = &#39;3&#39;. The digit 1 should occur three times, but actually occurs zero times in num.\nnum[2] = &#39;0&#39;. The digit 2 occurs zero times in num.\nThe indices 0 and 1 both violate the condition, so return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == num.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10</code></li>\n\t<li><code>num</code> consists of digits.</li>\n</ul>\n",
+  "hints": [
+    "Count the frequency of each digit in num."
+  ],
+  "metaData": "{\n  \"name\": \"digitCount\",\n  \"params\": [\n    {\n      \"name\": \"num\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"84.5K\", \"totalSubmission\": \"115.6K\", \"totalAcceptedRaw\": 84539, \"totalSubmissionRaw\": 115583, \"acRate\": \"73.1%\"}",
+  "likes": 677,
+  "dislikes": 101,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Self Dividing Numbers\", \"titleSlug\": \"self-dividing-numbers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"1210\"",
+    "\"030\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool digitCount(string num) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean digitCount(String num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def digitCount(self, num: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def digitCount(self, num):\n        \"\"\"\n        :type num: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} num\n * @return {boolean}\n */\nvar digitCount = function(num) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function digitCount(num: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool DigitCount(string num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool digitCount(char* num) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func digitCount(num string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun digitCount(num: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func digitCount(_ num: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn digit_count(num: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} num\n# @return {Boolean}\ndef digit_count(num)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $num\n     * @return Boolean\n     */\n    function digitCount($num) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool digitCount(String num) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def digitCount(num: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec digit_count(num :: String.t) :: boolean\n  def digit_count(num) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec digit_count(Num :: unicode:unicode_binary()) -> boolean().\ndigit_count(Num) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (digit-count num)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

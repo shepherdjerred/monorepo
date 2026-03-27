@@ -1,0 +1,139 @@
+{
+  "questionId": "2275",
+  "questionFrontendId": "2156",
+  "title": "Find Substring With Given Hash Value",
+  "titleSlug": "find-substring-with-given-hash-value",
+  "difficulty": "Hard",
+  "content": "<p>The hash of a <strong>0-indexed</strong> string <code>s</code> of length <code>k</code>, given integers <code>p</code> and <code>m</code>, is computed using the following function:</p>\n\n<ul>\n\t<li><code>hash(s, p, m) = (val(s[0]) * p<sup>0</sup> + val(s[1]) * p<sup>1</sup> + ... + val(s[k-1]) * p<sup>k-1</sup>) mod m</code>.</li>\n</ul>\n\n<p>Where <code>val(s[i])</code> represents the index of <code>s[i]</code> in the alphabet from <code>val(&#39;a&#39;) = 1</code> to <code>val(&#39;z&#39;) = 26</code>.</p>\n\n<p>You are given a string <code>s</code> and the integers <code>power</code>, <code>modulo</code>, <code>k</code>, and <code>hashValue.</code> Return <code>sub</code>,<em> the <strong>first</strong> <strong>substring</strong> of </em><code>s</code><em> of length </em><code>k</code><em> such that </em><code>hash(sub, power, modulo) == hashValue</code>.</p>\n\n<p>The test cases will be generated such that an answer always <strong>exists</strong>.</p>\n\n<p>A <b>substring</b> is a contiguous non-empty sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leetcode&quot;, power = 7, modulo = 20, k = 2, hashValue = 0\n<strong>Output:</strong> &quot;ee&quot;\n<strong>Explanation:</strong> The hash of &quot;ee&quot; can be computed to be hash(&quot;ee&quot;, 7, 20) = (5 * 1 + 5 * 7) mod 20 = 40 mod 20 = 0. \n&quot;ee&quot; is the first substring of length 2 with hashValue 0. Hence, we return &quot;ee&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;fbxzaad&quot;, power = 31, modulo = 100, k = 3, hashValue = 32\n<strong>Output:</strong> &quot;fbx&quot;\n<strong>Explanation:</strong> The hash of &quot;fbx&quot; can be computed to be hash(&quot;fbx&quot;, 31, 100) = (6 * 1 + 2 * 31 + 24 * 31<sup>2</sup>) mod 100 = 23132 mod 100 = 32. \nThe hash of &quot;bxz&quot; can be computed to be hash(&quot;bxz&quot;, 31, 100) = (2 * 1 + 24 * 31 + 26 * 31<sup>2</sup>) mod 100 = 25732 mod 100 = 32. \n&quot;fbx&quot; is the first substring of length 3 with hashValue 32. Hence, we return &quot;fbx&quot;.\nNote that &quot;bxz&quot; also has a hash of 32 but it appears later than &quot;fbx&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= s.length &lt;= 2 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= power, modulo &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= hashValue &lt; modulo</code></li>\n\t<li><code>s</code> consists of lowercase English letters only.</li>\n\t<li>The test cases are generated such that an answer always <strong>exists</strong>.</li>\n</ul>\n",
+  "hints": [
+    "How can we update the hash value efficiently while iterating instead of recalculating it each time?",
+    "Use the rolling hash method."
+  ],
+  "metaData": "{\n  \"name\": \"subStrHash\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"power\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"modulo\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"hashValue\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.7K\", \"totalSubmission\": \"64K\", \"totalAcceptedRaw\": 16686, \"totalSubmissionRaw\": 63985, \"acRate\": \"26.1%\"}",
+  "likes": 447,
+  "dislikes": 385,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Distinct Echo Substrings\", \"titleSlug\": \"distinct-echo-substrings\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"leetcode\"\n7\n20\n2\n0",
+    "\"fbxzaad\"\n31\n100\n3\n32"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Rolling Hash",
+      "slug": "rolling-hash"
+    },
+    {
+      "name": "Hash Function",
+      "slug": "hash-function"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string subStrHash(string s, int power, int modulo, int k, int hashValue) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String subStrHash(String s, int power, int modulo, int k, int hashValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subStrHash(self, s: str, power: int, modulo: int, k: int, hashValue: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subStrHash(self, s, power, modulo, k, hashValue):\n        \"\"\"\n        :type s: str\n        :type power: int\n        :type modulo: int\n        :type k: int\n        :type hashValue: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} power\n * @param {number} modulo\n * @param {number} k\n * @param {number} hashValue\n * @return {string}\n */\nvar subStrHash = function(s, power, modulo, k, hashValue) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subStrHash(s: string, power: number, modulo: number, k: number, hashValue: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SubStrHash(string s, int power, int modulo, int k, int hashValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* subStrHash(char* s, int power, int modulo, int k, int hashValue) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subStrHash(s string, power int, modulo int, k int, hashValue int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subStrHash(s: String, power: Int, modulo: Int, k: Int, hashValue: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subStrHash(_ s: String, _ power: Int, _ modulo: Int, _ k: Int, _ hashValue: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sub_str_hash(s: String, power: i32, modulo: i32, k: i32, hash_value: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} power\n# @param {Integer} modulo\n# @param {Integer} k\n# @param {Integer} hash_value\n# @return {String}\ndef sub_str_hash(s, power, modulo, k, hash_value)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $power\n     * @param Integer $modulo\n     * @param Integer $k\n     * @param Integer $hashValue\n     * @return String\n     */\n    function subStrHash($s, $power, $modulo, $k, $hashValue) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String subStrHash(String s, int power, int modulo, int k, int hashValue) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subStrHash(s: String, power: Int, modulo: Int, k: Int, hashValue: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sub_str_hash(s :: String.t, power :: integer, modulo :: integer, k :: integer, hash_value :: integer) :: String.t\n  def sub_str_hash(s, power, modulo, k, hash_value) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sub_str_hash(S :: unicode:unicode_binary(), Power :: integer(), Modulo :: integer(), K :: integer(), HashValue :: integer()) -> unicode:unicode_binary().\nsub_str_hash(S, Power, Modulo, K, HashValue) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sub-str-hash s power modulo k hashValue)\n  (-> string? exact-integer? exact-integer? exact-integer? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,142 @@
+{
+  "questionId": "2267",
+  "questionFrontendId": "2163",
+  "title": "Minimum Difference in Sums After Removal of Elements",
+  "titleSlug": "minimum-difference-in-sums-after-removal-of-elements",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> consisting of <code>3 * n</code> elements.</p>\n\n<p>You are allowed to remove any <strong>subsequence</strong> of elements of size <strong>exactly</strong> <code>n</code> from <code>nums</code>. The remaining <code>2 * n</code> elements will be divided into two <strong>equal</strong> parts:</p>\n\n<ul>\n\t<li>The first <code>n</code> elements belonging to the first part and their sum is <code>sum<sub>first</sub></code>.</li>\n\t<li>The next <code>n</code> elements belonging to the second part and their sum is <code>sum<sub>second</sub></code>.</li>\n</ul>\n\n<p>The <strong>difference in sums</strong> of the two parts is denoted as <code>sum<sub>first</sub> - sum<sub>second</sub></code>.</p>\n\n<ul>\n\t<li>For example, if <code>sum<sub>first</sub> = 3</code> and <code>sum<sub>second</sub> = 2</code>, their difference is <code>1</code>.</li>\n\t<li>Similarly, if <code>sum<sub>first</sub> = 2</code> and <code>sum<sub>second</sub> = 3</code>, their difference is <code>-1</code>.</li>\n</ul>\n\n<p>Return <em>the <strong>minimum difference</strong> possible between the sums of the two parts after the removal of </em><code>n</code><em> elements</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1,2]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> Here, nums has 3 elements, so n = 1. \nThus we have to remove 1 element from nums and divide the array into two equal parts.\n- If we remove nums[0] = 3, the array will be [1,2]. The difference in sums of the two parts will be 1 - 2 = -1.\n- If we remove nums[1] = 1, the array will be [3,2]. The difference in sums of the two parts will be 3 - 2 = 1.\n- If we remove nums[2] = 2, the array will be [3,1]. The difference in sums of the two parts will be 3 - 1 = 2.\nThe minimum difference between sums of the two parts is min(-1,1,2) = -1. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [7,9,5,8,1,3]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> Here n = 2. So we must remove 2 elements and divide the remaining array into two parts containing two elements each.\nIf we remove nums[2] = 5 and nums[3] = 8, the resultant array will be [7,9,1,3]. The difference in sums will be (7+9) - (1+3) = 12.\nTo obtain the minimum difference, we should remove nums[1] = 9 and nums[4] = 1. The resultant array becomes [7,5,8,3]. The difference in sums of the two parts is (7+5) - (8+3) = 1.\nIt can be shown that it is not possible to obtain a difference smaller than 1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>nums.length == 3 * n</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The lowest possible difference can be obtained when the sum of the first n elements in the resultant array is minimum, and the sum of the next n elements is maximum.",
+    "For every index i, think about how you can find the minimum possible sum of n elements with indices lesser or equal to i, if possible.",
+    "Similarly, for every index i, try to find the maximum possible sum of n elements with indices greater or equal to i, if possible.",
+    "Now for all indices, check if we can consider it as the partitioning index and hence find the answer."
+  ],
+  "metaData": "{\n  \"name\": \"minimumDifference\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"82.9K\", \"totalSubmission\": \"118.7K\", \"totalAcceptedRaw\": 82851, \"totalSubmissionRaw\": 118732, \"acRate\": \"69.8%\"}",
+  "likes": 1137,
+  "dislikes": 43,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Product of Array Except Self\", \"titleSlug\": \"product-of-array-except-self\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Subsequence of Length K With the Largest Sum\", \"titleSlug\": \"find-subsequence-of-length-k-with-the-largest-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Find Minimum Cost to Remove Array Elements\", \"titleSlug\": \"find-minimum-cost-to-remove-array-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,1,2]",
+    "[7,9,5,8,1,3]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}], \"more_than_six_months\": [{\"timesEncountered\": 23, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"infosys\", \"name\": \"Infosys\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long minimumDifference(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long minimumDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumDifference(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumDifference(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minimumDifference = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumDifference(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MinimumDifference(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long minimumDifference(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumDifference(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumDifference(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumDifference(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_difference(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef minimum_difference(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minimumDifference($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumDifference(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumDifference(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_difference(nums :: [integer]) :: integer\n  def minimum_difference(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_difference(Nums :: [integer()]) -> integer().\nminimum_difference(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-difference nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2799",
+    "content": "### Approach: Priority Queue\n\n#### Intuition\n\nThe requirement in the question is equivalent to:\n\n- Choose a positive integer $k$ in the interval $[n, 2n]$.\n\n- The first $k$ numbers of the array $\\textit{nums}$ belong to the first part, but only $n$ of them can be retained.\n\n- The last $3n - k$ numbers of the array $\\textit{nums}$ belong to the second part, but again, only $n$ of them can be retained.\n\n- The goal is to minimize the difference between the sum of the first part and the sum of the second part.\n\nThe reason $k \\in [n, 2n]$ is required is that we must ensure each part has at least $n$ elements.\n\nSince we need to minimize the difference between the sum of the first part and the sum of the second part, we want the first part to be as small as possible and the second part to be as large as possible. In other words:\n\n> We need to select the $n$ smallest elements from the first part and the $n$ largest elements from the second part.\n\nTo do this, we can use a priority queue for selection. For the first part, we start by placing $\\textit{nums}[0 .. n-1]$ into a max heap. Then, for each index $i$ in $[n, 2n)$, we insert $\\textit{nums}[i]$ into the max heap and remove the largest element (i.e., the heap top). The remaining elements in the heap will be the $n$ smallest elements in $\\textit{nums}[0 .. i]$.\n\nFor the second part, we perform a similar process in reverse. We begin by placing $\\textit{nums}[2n .. 3n-1]$ into a min heap, and then iterate through indices $i$ in reverse from $2n-1$ down to $n$. At each step, we insert $\\textit{nums}[i]$ into the heap and remove the smallest element. The heap will then contain the $n$ largest elements in $\\textit{nums}[i .. 3n-1]$.\n\nWhile modifying the heaps, we maintain the sum of the elements currently in each heap. When an element is inserted, we add its value; when the top element is removed, we subtract its value. This lets us compute $\\textit{part}_1[n-1], \\dots, \\textit{part}_1[2n-1]$ and $\\textit{part}_2[n], \\dots, \\textit{part}_2[2n]$, where:\n\n- $\\textit{part}_1[i]$ is the sum of the $n$ smallest elements in $\\textit{nums}[0 .. i]$,\n\n- $\\textit{part}_2[i]$ is the sum of the $n$ largest elements in $\\textit{nums}[i .. 3n-1]$.\n\nThe final answer is the minimum value of all expressions $\\textit{part}_1[i] - \\textit{part}_2[i+1]$ where $i \\in [n-1, 2n)$.\n\nWe can simplify the indexing by subtracting $n-1$ from all subscripts in $\\textit{part}_1$ and $n$ from all subscripts in $\\textit{part}_2$, so that both have index ranges in $[0, n)$. This means we only need two arrays of length $n+1$ to store these values.\n\nFurther, while computing $\\textit{part}_2$, we don’t actually need an array; we can just use a single variable. At index $i$, the relevant value from $\\textit{part}_1$ is $\\textit{part}_1[i - n]$, so we can compute the answer as $\\textit{part}_1[i - n] - \\textit{part}_2$ during the iteration.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BX46sAM7/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BX46sAM7\"></iframe>\n\n#### Complexity analysis\n\n- Time complexity: $O(n \\log n)$.\n  \n  The priority queue contains $n$ elements, with a time complexity of $O(\\log n)$ per operation, and a total of $O(n)$ operations.\n\n- Space complexity: $O(n)$.\n  \n  This is the space required for the priority queue and the array $\\textit{part}_1$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

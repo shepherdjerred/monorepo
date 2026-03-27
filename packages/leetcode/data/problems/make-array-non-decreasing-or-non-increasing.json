@@ -1,0 +1,141 @@
+{
+  "questionId": "1419",
+  "questionFrontendId": "2263",
+  "title": "Make Array Non-decreasing or Non-increasing",
+  "titleSlug": "make-array-non-decreasing-or-non-increasing",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>. In one operation, you can:</p>\n\n<ul>\n\t<li>Choose an index <code>i</code> in the range <code>0 &lt;= i &lt; nums.length</code></li>\n\t<li>Set <code>nums[i]</code> to <code>nums[i] + 1</code> <strong>or</strong> <code>nums[i] - 1</code></li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> number of operations to make </em><code>nums</code><em> <strong>non-decreasing</strong> or <strong>non-increasing</strong>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,2,4,5,0]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\nOne possible way to turn nums into non-increasing order is to:\n- Add 1 to nums[1] once so that it becomes 3.\n- Subtract 1 from nums[2] once so it becomes 3.\n- Subtract 1 from nums[3] twice so it becomes 3.\nAfter doing the 4 operations, nums becomes [3,3,3,3,0] which is in non-increasing order.\nNote that it is also possible to turn nums into [4,4,4,4,0] in 4 operations.\nIt can be proven that 4 is the minimum number of operations needed.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,3,4]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> nums is already in non-decreasing order, so no operations are needed and we return 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [0]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> nums is already in non-decreasing order, so no operations are needed and we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>0 &lt;= nums[i] &lt;= 1000</code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> Can you solve it in <code>O(n*log(n))</code> time complexity?</p>\n",
+  "hints": [
+    "To find the minimum cost to make nums non-decreasing, use a max heap that contains all of the elements that you have seen so far.",
+    "If the largest number in the heap is greater than the current number, calculate the cost to make the two numbers equal. Then, in the heap, replace the largest number with the current number.",
+    "Now that we have found the minimum cost to make nums non-decreasing, we can set every nums[i] to -nums[i] and do the same process to find the minimum cost to make nums non-increasing."
+  ],
+  "metaData": "{\n  \"name\": \"convertArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4.8K\", \"totalSubmission\": \"7.3K\", \"totalAcceptedRaw\": 4785, \"totalSubmissionRaw\": 7296, \"acRate\": \"65.6%\"}",
+  "likes": 94,
+  "dislikes": 13,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Non-decreasing Array\", \"titleSlug\": \"non-decreasing-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Make Array Strictly Increasing\", \"titleSlug\": \"make-array-strictly-increasing\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Operations to Make the Array Increasing\", \"titleSlug\": \"minimum-operations-to-make-the-array-increasing\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,4,5,0]",
+    "[2,2,3,4]",
+    "[0]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"vmware\", \"name\": \"VMware\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int convertArray(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int convertArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def convertArray(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def convertArray(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar convertArray = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function convertArray(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int ConvertArray(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int convertArray(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func convertArray(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun convertArray(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func convertArray(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn convert_array(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef convert_array(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function convertArray($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int convertArray(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def convertArray(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec convert_array(nums :: [integer]) :: integer\n  def convert_array(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec convert_array(Nums :: [integer()]) -> integer().\nconvert_array(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (convert-array nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

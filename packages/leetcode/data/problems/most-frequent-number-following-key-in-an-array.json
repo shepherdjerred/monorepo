@@ -1,0 +1,135 @@
+{
+  "questionId": "2312",
+  "questionFrontendId": "2190",
+  "title": "Most Frequent Number Following Key In an Array",
+  "titleSlug": "most-frequent-number-following-key-in-an-array",
+  "difficulty": "Easy",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code>.<strong> </strong>You are also given an integer <code>key</code>, which is present in <code>nums</code>.</p>\n\n<p>For every unique integer <code>target</code> in <code>nums</code>, <strong>count</strong> the number of times <code>target</code> immediately follows an occurrence of <code>key</code> in <code>nums</code>. In other words, count the number of indices <code>i</code> such that:</p>\n\n<ul>\n\t<li><code>0 &lt;= i &lt;= nums.length - 2</code>,</li>\n\t<li><code>nums[i] == key</code> and,</li>\n\t<li><code>nums[i + 1] == target</code>.</li>\n</ul>\n\n<p>Return <em>the </em><code>target</code><em> with the <strong>maximum</strong> count</em>. The test cases will be generated such that the <code>target</code> with maximum count is unique.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,100,200,1,100], key = 1\n<strong>Output:</strong> 100\n<strong>Explanation:</strong> For target = 100, there are 2 occurrences at indices 1 and 4 which follow an occurrence of key.\nNo other integers follow an occurrence of key, so we return 100.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,2,2,3], key = 2\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> For target = 2, there are 3 occurrences at indices 1, 2, and 3 which follow an occurrence of key.\nFor target = 3, there is only one occurrence at index 4 which follows an occurrence of key.\ntarget = 2 has the maximum number of occurrences following an occurrence of key, so we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 1000</code></li>\n\t<li>The test cases will be generated such that the answer is unique.</li>\n</ul>\n",
+  "hints": [
+    "Count the number of times each target value follows the key in the array.",
+    "Choose the target with the maximum count and return it."
+  ],
+  "metaData": "{\n  \"name\": \"mostFrequent\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"key\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"50.6K\", \"totalSubmission\": \"85.1K\", \"totalAcceptedRaw\": 50559, \"totalSubmissionRaw\": 85091, \"acRate\": \"59.4%\"}",
+  "likes": 409,
+  "dislikes": 253,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Sort Array by Increasing Frequency\", \"titleSlug\": \"sort-array-by-increasing-frequency\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,100,200,1,100]\n1",
+    "[2,2,2,2,3]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int mostFrequent(vector<int>& nums, int key) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int mostFrequent(int[] nums, int key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mostFrequent(self, nums: List[int], key: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mostFrequent(self, nums, key):\n        \"\"\"\n        :type nums: List[int]\n        :type key: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} key\n * @return {number}\n */\nvar mostFrequent = function(nums, key) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mostFrequent(nums: number[], key: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MostFrequent(int[] nums, int key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int mostFrequent(int* nums, int numsSize, int key) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mostFrequent(nums []int, key int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mostFrequent(nums: IntArray, key: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mostFrequent(_ nums: [Int], _ key: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn most_frequent(nums: Vec<i32>, key: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} key\n# @return {Integer}\ndef most_frequent(nums, key)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $key\n     * @return Integer\n     */\n    function mostFrequent($nums, $key) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int mostFrequent(List<int> nums, int key) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mostFrequent(nums: Array[Int], key: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec most_frequent(nums :: [integer], key :: integer) :: integer\n  def most_frequent(nums, key) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec most_frequent(Nums :: [integer()], Key :: integer()) -> integer().\nmost_frequent(Nums, Key) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (most-frequent nums key)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

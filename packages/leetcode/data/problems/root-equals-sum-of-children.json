@@ -1,0 +1,128 @@
+{
+  "questionId": "2384",
+  "questionFrontendId": "2236",
+  "title": "Root Equals Sum of Children",
+  "titleSlug": "root-equals-sum-of-children",
+  "difficulty": "Easy",
+  "content": "<p>You are given the <code>root</code> of a <strong>binary tree</strong> that consists of exactly <code>3</code> nodes: the root, its left child, and its right child.</p>\n\n<p>Return <code>true</code> <em>if the value of the root is equal to the <strong>sum</strong> of the values of its two children, or </em><code>false</code><em> otherwise</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/04/08/graph3drawio.png\" style=\"width: 281px; height: 199px;\" />\n<pre>\n<strong>Input:</strong> root = [10,4,6]\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The values of the root, its left child, and its right child are 10, 4, and 6, respectively.\n10 is equal to 4 + 6, so we return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/04/08/graph3drawio-1.png\" style=\"width: 281px; height: 199px;\" />\n<pre>\n<strong>Input:</strong> root = [5,3,1]\n<strong>Output:</strong> false\n<strong>Explanation:</strong> The values of the root, its left child, and its right child are 5, 3, and 1, respectively.\n5 is not equal to 3 + 1, so we return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The tree consists only of the root, its left child, and its right child.</li>\n\t<li><code>-100 &lt;= Node.val &lt;= 100</code></li>\n</ul>\n",
+  "hints": [],
+  "metaData": "{\n  \"name\": \"checkTree\",\n  \"params\": [\n    {\n      \"name\": \"root\",\n      \"type\": \"TreeNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"348.3K\", \"totalSubmission\": \"410.3K\", \"totalAcceptedRaw\": 348271, \"totalSubmissionRaw\": 410276, \"acRate\": \"84.9%\"}",
+  "likes": 1579,
+  "dislikes": 1648,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[10,4,6]",
+    "[5,3,1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    bool checkTree(TreeNode* root) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public boolean checkTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def checkTree(self, root: Optional[TreeNode]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def checkTree(self, root):\n        \"\"\"\n        :type root: Optional[TreeNode]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @return {boolean}\n */\nvar checkTree = function(root) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction checkTree(root: TreeNode | null): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public bool CheckTree(TreeNode root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nbool checkTree(struct TreeNode* root) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc checkTree(root *TreeNode) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun checkTree(root: TreeNode?): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func checkTree(_ root: TreeNode?) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn check_tree(root: Option<Rc<RefCell<TreeNode>>>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {TreeNode} root\n# @return {Boolean}\ndef check_tree(root)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param TreeNode $root\n     * @return Boolean\n     */\n    function checkTree($root) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  bool checkTree(TreeNode? root) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def checkTree(root: TreeNode): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec check_tree(root :: TreeNode.t | nil) :: boolean\n  def check_tree(root) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec check_tree(Root :: #tree_node{} | null) -> boolean().\ncheck_tree(Root) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (check-tree root)\n  (-> (or/c tree-node? #f) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

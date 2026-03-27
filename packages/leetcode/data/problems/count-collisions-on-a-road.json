@@ -1,0 +1,141 @@
+{
+  "questionId": "2317",
+  "questionFrontendId": "2211",
+  "title": "Count Collisions on a Road",
+  "titleSlug": "count-collisions-on-a-road",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> cars on an infinitely long road. The cars are numbered from <code>0</code> to <code>n - 1</code> from left to right and each car is present at a <strong>unique</strong> point.</p>\n\n<p>You are given a <strong>0-indexed</strong> string <code>directions</code> of length <code>n</code>. <code>directions[i]</code> can be either <code>&#39;L&#39;</code>, <code>&#39;R&#39;</code>, or <code>&#39;S&#39;</code> denoting whether the <code>i<sup>th</sup></code> car is moving towards the <strong>left</strong>, towards the <strong>right</strong>, or <strong>staying</strong> at its current point respectively. Each moving car has the <strong>same speed</strong>.</p>\n\n<p>The number of collisions can be calculated as follows:</p>\n\n<ul>\n\t<li>When two cars moving in <strong>opposite</strong> directions collide with each other, the number of collisions increases by <code>2</code>.</li>\n\t<li>When a moving car collides with a stationary car, the number of collisions increases by <code>1</code>.</li>\n</ul>\n\n<p>After a collision, the cars involved can no longer move and will stay at the point where they collided. Other than that, cars cannot change their state or direction of motion.</p>\n\n<p>Return <em>the <strong>total number of collisions</strong> that will happen on the road</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> directions = &quot;RLRSLL&quot;\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\nThe collisions that will happen on the road are:\n- Cars 0 and 1 will collide with each other. Since they are moving in opposite directions, the number of collisions becomes 0 + 2 = 2.\n- Cars 2 and 3 will collide with each other. Since car 3 is stationary, the number of collisions becomes 2 + 1 = 3.\n- Cars 3 and 4 will collide with each other. Since car 3 is stationary, the number of collisions becomes 3 + 1 = 4.\n- Cars 4 and 5 will collide with each other. After car 4 collides with car 3, it will stay at the point of collision and get hit by car 5. The number of collisions becomes 4 + 1 = 5.\nThus, the total number of collisions that will happen on the road is 5. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> directions = &quot;LLRR&quot;\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nNo cars will collide with each other. Thus, the total number of collisions that will happen on the road is 0.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= directions.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>directions[i]</code> is either <code>&#39;L&#39;</code>, <code>&#39;R&#39;</code>, or <code>&#39;S&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "In what circumstances does a moving car not collide with another car?",
+    "If we disregard the moving cars that do not collide with another car, what does each moving car contribute to the answer?",
+    "Will stationary cars contribute towards the answer?"
+  ],
+  "metaData": "{\n  \"name\": \"countCollisions\",\n  \"params\": [\n    {\n      \"name\": \"directions\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"126.7K\", \"totalSubmission\": \"218.2K\", \"totalAcceptedRaw\": 126703, \"totalSubmissionRaw\": 218230, \"acRate\": \"58.1%\"}",
+  "likes": 1105,
+  "dislikes": 277,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Asteroid Collision\", \"titleSlug\": \"asteroid-collision\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Car Fleet\", \"titleSlug\": \"car-fleet\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Last Moment Before All Ants Fall Out of a Plank\", \"titleSlug\": \"last-moment-before-all-ants-fall-out-of-a-plank\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Car Fleet II\", \"titleSlug\": \"car-fleet-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"RLRSLL\"",
+    "\"LLRR\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countCollisions(string directions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countCollisions(String directions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countCollisions(self, directions: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countCollisions(self, directions):\n        \"\"\"\n        :type directions: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} directions\n * @return {number}\n */\nvar countCollisions = function(directions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countCollisions(directions: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountCollisions(string directions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countCollisions(char* directions) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countCollisions(directions string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countCollisions(directions: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countCollisions(_ directions: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_collisions(directions: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} directions\n# @return {Integer}\ndef count_collisions(directions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $directions\n     * @return Integer\n     */\n    function countCollisions($directions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countCollisions(String directions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countCollisions(directions: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_collisions(directions :: String.t) :: integer\n  def count_collisions(directions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_collisions(Directions :: unicode:unicode_binary()) -> integer().\ncount_collisions(Directions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-collisions directions)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2886",
+    "content": "### Approach 1: Simulation\n\n#### Intuition\n\nFrom the problem statement, we know that stationary vehicles do not count toward collision times; only moving vehicles that collide are counted. We traverse all vehicles from left to right and use a variable $\\textit{flag}$ to record the status of the vehicles on the left.\n\n- If there are no vehicles on the left side or all vehicles on the left side are moving left, then $\\textit{flag}$ is set to $-1$.\n- If a collision occurs on the left and the vehicles eventually stop, then $\\textit{flag}$ is set to $0$.\n- If there are consecutive vehicles on the left moving to the right, then $\\textit{flag}$ stores the number of such vehicles.\n\nIn this case, we can divide the behavior of the current vehicle into the following three scenarios:\n\n1. The current vehicle moves left. If $\\textit{flag} \\ge 0$, the collision count increases by $\\textit{flag} + 1$, and $\\textit{flag}$ is set to $0$.\n2. The current vehicle is stationary. If $\\textit{flag} > 0$, the collision count increases by $\\textit{flag}$, and $\\textit{flag}$ is set to $0$.\n3. The current vehicle moves right. If $\\textit{flag} < 0$, set $\\textit{flag}$ to $1$; otherwise, increment $\\textit{flag}$ by $1$.\n\nFinally, return the total number of collisions.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DCXAS4ic/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"DCXAS4ic\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{directions}$.\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(1)$.\n  \n  Only a constant number of variables were used in the process.\n\n### Approach 2: Counting\n\n#### Intuition\n\nWe define a vehicle that continuously moves outward (either left or right) without being blocked by a reversing or stationary vehicle in between as an \"outward-moving vehicle.\"\n\nLeft-moving outward vehicles and right-moving outward vehicles will not collide with each other. All other vehicles will collide exactly once.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7HptCrKJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"7HptCrKJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{directions}$.\n\n- Time complexity: $O(n)$.\n\n- Space complexity: $O(1)$.\n  \n  Only a constant number of variables were used in the process.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

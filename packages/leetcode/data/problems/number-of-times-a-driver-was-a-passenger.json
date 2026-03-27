@@ -1,0 +1,53 @@
+{
+  "questionId": "2376",
+  "questionFrontendId": "2238",
+  "title": "Number of Times a Driver Was a Passenger",
+  "titleSlug": "number-of-times-a-driver-was-a-passenger",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Rides</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| ride_id      | int  |\n| driver_id    | int  |\n| passenger_id | int  |\n+--------------+------+\nride_id is the column with unique values for this table.\nEach row of this table contains the ID of the driver and the ID of the passenger that rode in ride_id.\nNote that driver_id != passenger_id.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution&nbsp;to report the ID of each driver and the number of times they were a passenger.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nRides table:\n+---------+-----------+--------------+\n| ride_id | driver_id | passenger_id |\n+---------+-----------+--------------+\n| 1       | 7         | 1            |\n| 2       | 7         | 2            |\n| 3       | 11        | 1            |\n| 4       | 11        | 7            |\n| 5       | 11        | 7            |\n| 6       | 11        | 3            |\n+---------+-----------+--------------+\n<strong>Output:</strong> \n+-----------+-----+\n| driver_id | cnt |\n+-----------+-----+\n| 7         | 2   |\n| 11        | 0   |\n+-----------+-----+\n<strong>Explanation:</strong> \nThere are two drivers in all the given rides: 7 and 11.\nThe driver with ID = 7 was a passenger two times.\nThe driver with ID = 11 was never a passenger.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Rides (ride_id int, driver_id int, passenger_id int)\"], \"mssql\": [\"Create table Rides (ride_id int, driver_id int, passenger_id int)\"], \"oraclesql\": [\"Create table Rides (ride_id int, driver_id int, passenger_id int)\"], \"database\": true, \"name\": \"driver_passenger\", \"pythondata\": [\"Rides = pd.DataFrame([], columns=['ride_id', 'driver_id', 'passenger_id']).astype({'ride_id':'Int64', 'driver_id':'Int64', 'passenger_id':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Rides (ride_id int, driver_id int, passenger_id int)\"], \"database_schema\": {\"Rides\": {\"ride_id\": \"INT\", \"driver_id\": \"INT\", \"passenger_id\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"11.3K\", \"totalSubmission\": \"15.7K\", \"totalAcceptedRaw\": 11265, \"totalSubmissionRaw\": 15703, \"acRate\": \"71.7%\"}",
+  "likes": 73,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Hopper Company Queries I\", \"titleSlug\": \"hopper-company-queries-i\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Hopper Company Queries II\", \"titleSlug\": \"hopper-company-queries-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Hopper Company Queries III\", \"titleSlug\": \"hopper-company-queries-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Rides\":[\"ride_id\",\"driver_id\",\"passenger_id\"]},\"rows\":{\"Rides\":[[1,7,1],[2,7,2],[3,11,1],[4,11,7],[5,11,7],[6,11,3]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef driver_passenger(rides: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

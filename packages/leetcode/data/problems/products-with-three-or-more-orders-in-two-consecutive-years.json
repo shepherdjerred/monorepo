@@ -1,0 +1,53 @@
+{
+  "questionId": "2431",
+  "questionFrontendId": "2292",
+  "title": "Products With Three or More Orders in Two Consecutive Years",
+  "titleSlug": "products-with-three-or-more-orders-in-two-consecutive-years",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Orders</code></p>\n\n<pre>\n+---------------+------+\n| Column Name   | Type |\n+---------------+------+\n| order_id      | int  |\n| product_id    | int  |\n| quantity      | int  |\n| purchase_date | date |\n+---------------+------+\norder_id contains unique values.\nEach row in this table contains the ID of an order, the id of the product purchased, the quantity, and the purchase date.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the IDs of all the products that were ordered three or more times in two consecutive years.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is shown in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nOrders table:\n+----------+------------+----------+---------------+\n| order_id | product_id | quantity | purchase_date |\n+----------+------------+----------+---------------+\n| 1        | 1          | 7        | 2020-03-16    |\n| 2        | 1          | 4        | 2020-12-02    |\n| 3        | 1          | 7        | 2020-05-10    |\n| 4        | 1          | 6        | 2021-12-23    |\n| 5        | 1          | 5        | 2021-05-21    |\n| 6        | 1          | 6        | 2021-10-11    |\n| 7        | 2          | 6        | 2022-10-11    |\n+----------+------------+----------+---------------+\n<strong>Output:</strong> \n+------------+\n| product_id |\n+------------+\n| 1          |\n+------------+\n<strong>Explanation:</strong> \nProduct 1 was ordered in 2020 three times and in 2021 three times. Since it was ordered three times in two consecutive years, we include it in the answer.\nProduct 2 was ordered one time in 2022. We do not include it in the answer.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Orders (order_id int, product_id int, quantity int, purchase_date date)\"], \"mssql\": [\"Create table Orders (order_id int, product_id int, quantity int, purchase_date date)\"], \"oraclesql\": [\"Create table Orders (order_id int, product_id int, quantity int, purchase_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_valid_products\", \"pythondata\": [\"Orders = pd.DataFrame([], columns=['order_id', 'product_id', 'quantity', 'purchase_date']).astype({'order_id':'Int64', 'product_id':'Int64', 'quantity':'Int64', 'purchase_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Orders (order_id int, product_id int, quantity int, purchase_date date)\"], \"database_schema\": {\"Orders\": {\"order_id\": \"INT\", \"product_id\": \"INT\", \"quantity\": \"INT\", \"purchase_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"10.6K\", \"totalSubmission\": \"26.1K\", \"totalAcceptedRaw\": 10594, \"totalSubmissionRaw\": 26064, \"acRate\": \"40.6%\"}",
+  "likes": 65,
+  "dislikes": 29,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\": {\"Orders\": [\"order_id\", \"product_id\", \"quantity\", \"purchase_date\"]}, \"rows\": {\"Orders\": [[1, 1, 7, \"2020-03-16\"], [2, 1, 4, \"2020-12-02\"], [3, 1, 7, \"2020-05-10\"], [4, 1, 6, \"2021-12-23\"], [5, 1, 5, \"2021-05-21\"], [6, 1, 6, \"2021-10-11\"], [7, 2, 6, \"2022-10-11\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_valid_products(orders: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,140 @@
+{
+  "questionId": "2265",
+  "questionFrontendId": "2161",
+  "title": "Partition Array According to Given Pivot",
+  "titleSlug": "partition-array-according-to-given-pivot",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> integer array <code>nums</code> and an integer <code>pivot</code>. Rearrange <code>nums</code> such that the following conditions are satisfied:</p>\n\n<ul>\n\t<li>Every element less than <code>pivot</code> appears <strong>before</strong> every element greater than <code>pivot</code>.</li>\n\t<li>Every element equal to <code>pivot</code> appears <strong>in between</strong> the elements less than and greater than <code>pivot</code>.</li>\n\t<li>The <strong>relative order</strong> of the elements less than <code>pivot</code> and the elements greater than <code>pivot</code> is maintained.\n\t<ul>\n\t\t<li>More formally, consider every <code>p<sub>i</sub></code>, <code>p<sub>j</sub></code> where <code>p<sub>i</sub></code> is the new position of the <code>i<sup>th</sup></code> element and <code>p<sub>j</sub></code> is the new position of the <code>j<sup>th</sup></code> element. If <code>i &lt; j</code> and <strong>both</strong> elements are smaller (<em>or larger</em>) than <code>pivot</code>, then <code>p<sub>i</sub> &lt; p<sub>j</sub></code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <code>nums</code><em> after the rearrangement.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [9,12,5,10,14,3,10], pivot = 10\n<strong>Output:</strong> [9,5,3,10,10,12,14]\n<strong>Explanation:</strong> \nThe elements 9, 5, and 3 are less than the pivot so they are on the left side of the array.\nThe elements 12 and 14 are greater than the pivot so they are on the right side of the array.\nThe relative ordering of the elements less than and greater than pivot is also maintained. [9, 5, 3] and [12, 14] are the respective orderings.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [-3,4,3,2], pivot = 2\n<strong>Output:</strong> [-3,2,4,3]\n<strong>Explanation:</strong> \nThe element -3 is less than the pivot so it is on the left side of the array.\nThe elements 4 and 3 are greater than the pivot so they are on the right side of the array.\nThe relative ordering of the elements less than and greater than pivot is also maintained. [-3] and [4, 3] are the respective orderings.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>6</sup> &lt;= nums[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>pivot</code> equals to an element of <code>nums</code>.</li>\n</ul>\n",
+  "hints": [
+    "Could you put the elements smaller than the pivot and greater than the pivot in a separate list as in the sequence that they occur?",
+    "With the separate lists generated, could you then generate the result?"
+  ],
+  "metaData": "{\n  \"name\": \"pivotArray\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"pivot\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"309.5K\", \"totalSubmission\": \"344.7K\", \"totalAcceptedRaw\": 309534, \"totalSubmissionRaw\": 344704, \"acRate\": \"89.8%\"}",
+  "likes": 1772,
+  "dislikes": 125,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Partition List\", \"titleSlug\": \"partition-list\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rearrange Array Elements by Sign\", \"titleSlug\": \"rearrange-array-elements-by-sign\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[9,12,5,10,14,3,10]\n10",
+    "[-3,4,3,2]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> pivotArray(vector<int>& nums, int pivot) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] pivotArray(int[] nums, int pivot) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def pivotArray(self, nums: List[int], pivot: int) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def pivotArray(self, nums, pivot):\n        \"\"\"\n        :type nums: List[int]\n        :type pivot: int\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @param {number} pivot\n * @return {number[]}\n */\nvar pivotArray = function(nums, pivot) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function pivotArray(nums: number[], pivot: number): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] PivotArray(int[] nums, int pivot) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* pivotArray(int* nums, int numsSize, int pivot, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func pivotArray(nums []int, pivot int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun pivotArray(nums: IntArray, pivot: Int): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func pivotArray(_ nums: [Int], _ pivot: Int) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn pivot_array(nums: Vec<i32>, pivot: i32) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @param {Integer} pivot\n# @return {Integer[]}\ndef pivot_array(nums, pivot)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @param Integer $pivot\n     * @return Integer[]\n     */\n    function pivotArray($nums, $pivot) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> pivotArray(List<int> nums, int pivot) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def pivotArray(nums: Array[Int], pivot: Int): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec pivot_array(nums :: [integer], pivot :: integer) :: [integer]\n  def pivot_array(nums, pivot) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec pivot_array(Nums :: [integer()], Pivot :: integer()) -> [integer()].\npivot_array(Nums, Pivot) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (pivot-array nums pivot)\n  (-> (listof exact-integer?) exact-integer? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2698",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview \n\nWe are given an array `nums` and a value `pivot`. Our goal is to rearrange `nums` such that all elements **less than** `pivot` appear first, followed by all elements **equal to** `pivot`, and finally, all elements **greater than** `pivot`. Additionally, the **relative order** of elements within each group must be preserved.  \n\n> Note: The relative order of elements means that if one element appears before another in the original array, it must still appear before that element in the rearranged array as long as they belong to the same group (less than, equal to, or greater than `pivot`).  \n\nFor example, consider `nums = [9,12,5,10,14,3,10]` with `pivot = 10`. The correct rearrangement is `[9,5,3,10,10,12,14]`:\n- The numbers `9, 5, 3` (which are less than `pivot`) appear first, maintaining their original order.  \n- The numbers `10, 10` (which are equal to `pivot`) appear next.  \n- The numbers `12, 14` (which are greater than `pivot`) appear last, also maintaining their original order.  \n\nA common mistake in solving this problem is not preserving the relative order of elements. It’s tempting to use quicksort style partitioning, but that approach disrupts the relative order. Instead, for the initial phase, we should try to build the output array step by step, placing elements into separate lists based on their comparison with `pivot`, and then combining these lists at the end.\n\n### Approach 1: Dynamic Lists\n\n#### Intuition\n\nWhen we rearrange `nums`, we know that it is composed of three sections, from left to right:\n\n1. The elements less than `pivot`.\n2. The elements equal to `pivot`.\n3. The elements greater than `pivot`.\n\nThus, one approach is to use dynamic lists to build each of the three sections. To do this, we can iterate through `nums`, left to right, and append each element into its corresponding dynamic list based on its comparison with `pivot`. This way, as we process each element, their relative position is maintained within their list. After iterating, we can stitch together the three lists to obtain the final rearranged result. \n\n#### Algorithm\n\n- Declare three dynamic lists `less`, `equal`, and `greater` for all elements less than, equal to, and greater than `pivot`, respectively.\n- Iterate through each element `num` in `nums`:\n    - If `num < pivot`: append `num` to `less`.\n    - If `num > pivot`: append `num` to `greater`.\n    - Else: append `num` to `equal`.\n- Stitch together the dynamic lists:\n    - Append all elements of `equal` to `less`. \n    - Append all elements of `greater`.\n- Return the resulting list.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CDSppTfJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CDSppTfJ\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time Complexity: $O(N)$\n\n    Appending to a dynamic list is an $O(1)$ operation for each element, so building the three lists (`less`, `equal`, and `greater`) takes a total of $O(N)$ time, where $N$ is the number of elements in `nums`. The `extend()` operations also take $O(N)$ time since you're adding all elements from `equal` and `greater` into `less`. Thus, the total time complexity is $O(N)$.\n\n* Space Complexity: $O(N)$\n\n    Although the answer container (`less`) is returned and doesn't contribute to space complexity (as it is considered part of the output), the two temporary lists (`equal` and `greater`) can require additional $O(N)$ space to hold elements temporarily. Thus, the auxiliary space complexity is $O(N)$. If only one list were used for temporary storage and returned as the result, it would be considered $O(1)$ space since no additional space would be required for other containers.  \n\n---\n\n### Approach 2: Two Passes With Fixed Array\n\n#### Intuition\n\nIn Approach 1, we used dynamic lists to build the three sections of the array because we did not know initially how many elements belong in each section. The flexibility of dynamic lists allowed us to append elements and grow our list as needed, but there is extra space/time overhead with dynamically sized lists.\n\nFor this approach, we will rearrange `nums` using only a single fixed-size array instead. The challenge is knowing how to place each element of `nums` in the correct index of our array without overwriting/overlapping elements from other sections. To solve this, we first need to determine the specific indices our second and third sections start at (we know that our first section will always start at index `0`). \n\nTo do this, we can perform an initial pass through `nums` to keep count of the number of elements that are in the first and second sections. We can call these counts `numLess` (number of elements less than `pivot`) and `numEqual` (number of elements equal to `pivot`). Using these 2 counters, we can initialize 3 pointers for each section to help us properly find the correct indices to insert our elements:\n\n- The first section will always start at index `0`, so its pointer will be initialized to `0`. \n- The second section follows right after, so its index starts at `numLess`. \n- The third section comes next, so its index would be initialized to the total number of elements from the earlier 2 sections -  `numLess + numEqual`. \n\nWith these pointers set, we can do a second pass through `nums` and correctly place its elements in our fixed-sized array `ans` using these pointers. For each element we process, we determine which section it belongs in and use its corresponding pointer to place it in the correct index in `ans`. After placing it, we can increment the corresponding pointer. \n\n#### Algorithm\n\n- Initialize `numLess` and `numEqual` to 0.\n- Iterate through `nums`. For each `num` in `nums`:\n    - If `num < pivot`, increment `numLess`.\n    - If `num == pivot`, increment `numEqual`.\n- Initialize a fixed-sized array `ans` to contain our rearranged array.\n- Calculate our 3 pointers:\n    - `lessI = 0` since the first section starts at index `0`\n    - `equalI = numLess` since the second section starts at index `numLess`.\n    - `greaterI = numLess + numEqual` since the third section starts at index `numLess + numEqual`\n- For each `num` in `nums`:\n    - If `num < pivot`: `ans[lessI] = num` and increment `lessI`.\n    - If `num == pivot`: `ans[equalI] = num` and increment `equalI`.\n    - If `num > pivot`: `ans[greaterI] = num` and increment `greaterI`.\n- Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/S9kEhGzX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"S9kEhGzX\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time Complexity: $O(N)$\n\n    We perform two passes of `nums`, each with constant time operations. so the total time complexity is $O(N)$. \n\n* Space Complexity: $O(N)$\n \n    The algorithm uses an additional array `ans` of the same size as `nums`, which requires $O(N)$ extra space. Other auxiliary variables, such as `lessI` and `greaterI`, require only $O(1)$ space. Therefore, the overall space complexity is $O(N)$ due to the extra array used to store the result. However, if we consider only the auxiliary space complexity, it would be $O(1)$.\n\n---\n\n### Approach 3: Two Pointer\n\n#### Intuition\n\nThe idea of this approach is to maintain two pointers, `lessI` and `greaterI`, which track the positions where the next smaller and larger elements should be placed, respectively. As we iterate through the array from both ends (using `i` for the left-to-right pass and `j` for the right-to-left pass), we compare each element to the pivot. If an element is smaller than the pivot, it is placed at the `lessI` position, and `lessI` is incremented. Similarly, if an element is greater than the pivot, it is placed at the `greaterI` position, and `greaterI` is decremented. This ensures that smaller elements are placed at the beginning of the array and larger elements at the end.\n\nAfter the initial pass, all elements smaller than the pivot are at the beginning of the array, and all elements larger than the pivot are at the end. The remaining positions between `lessI` and `greaterI` are filled with the pivot value, ensuring that elements equal to the pivot are placed in the middle.\n\n#### Algorithm\n\n- Initialize a fixed-sized array `ans` to contain our rearranged array.\n- Initialize pointer for first section `lessI = 0` going left to right.\n- Initialize pointer for third section `greaterI = nums.length - 1` going right to left.\n- Start a forward and backward iteration of `nums`. For forward, we initialize `i = 0`. For backward, we initialize `j = nums.length - 1`. For each iteration: \n    - If `nums[i] < pivot`, then write in first section: `ans[lessI] = nums[i]` and increment `lessI`.\n    - If `nums[j] > pivot`, then write in third section: `ans[greaterI] = nums[j]` and decrement `greaterI`.\n    - Increment `i` and decrement `j`.\n- Fill in the remaining spots of `ans` with pivot:\n    - While `lessI <= greaterI`:\n        - `ans[lessI] = pivot`\n        - `lessI++`\n- Return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/FPYQhHNF/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"FPYQhHNF\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the size of `nums`.\n\n* Time Complexity: $O(N)$\n\n    We perform a simultaneous forward and backwards iteration of `nums`, taking a total of $O(N)$ time.\n\n* Space Complexity: $O(N)$\n \n    The algorithm uses an additional array `ans` of the same size as `nums`, which requires $O(N)$ extra space. Other auxiliary variables, such as `lessI` and `greaterI`, require only $O(1)$ space. Therefore, the overall space complexity is $O(N)$ due to the extra array used to store the result. However, if we consider only the auxiliary space complexity, it would be $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

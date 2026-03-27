@@ -1,0 +1,135 @@
+{
+  "questionId": "2357",
+  "questionFrontendId": "2276",
+  "title": "Count Integers in Intervals",
+  "titleSlug": "count-integers-in-intervals",
+  "difficulty": "Hard",
+  "content": "<p>Given an <strong>empty</strong> set of intervals, implement a data structure that can:</p>\n\n<ul>\n\t<li><strong>Add</strong> an interval to the set of intervals.</li>\n\t<li><strong>Count</strong> the number of integers that are present in <strong>at least one</strong> interval.</li>\n</ul>\n\n<p>Implement the <code>CountIntervals</code> class:</p>\n\n<ul>\n\t<li><code>CountIntervals()</code> Initializes the object with an empty set of intervals.</li>\n\t<li><code>void add(int left, int right)</code> Adds the interval <code>[left, right]</code> to the set of intervals.</li>\n\t<li><code>int count()</code> Returns the number of integers that are present in <strong>at least one</strong> interval.</li>\n</ul>\n\n<p><strong>Note</strong> that an interval <code>[left, right]</code> denotes all the integers <code>x</code> where <code>left &lt;= x &lt;= right</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;CountIntervals&quot;, &quot;add&quot;, &quot;add&quot;, &quot;count&quot;, &quot;add&quot;, &quot;count&quot;]\n[[], [2, 3], [7, 10], [], [5, 8], []]\n<strong>Output</strong>\n[null, null, null, 6, null, 8]\n\n<strong>Explanation</strong>\nCountIntervals countIntervals = new CountIntervals(); // initialize the object with an empty set of intervals. \ncountIntervals.add(2, 3);  // add [2, 3] to the set of intervals.\ncountIntervals.add(7, 10); // add [7, 10] to the set of intervals.\ncountIntervals.count();    // return 6\n                           // the integers 2 and 3 are present in the interval [2, 3].\n                           // the integers 7, 8, 9, and 10 are present in the interval [7, 10].\ncountIntervals.add(5, 8);  // add [5, 8] to the set of intervals.\ncountIntervals.count();    // return 8\n                           // the integers 2 and 3 are present in the interval [2, 3].\n                           // the integers 5 and 6 are present in the interval [5, 8].\n                           // the integers 7 and 8 are present in the intervals [5, 8] and [7, 10].\n                           // the integers 9 and 10 are present in the interval [7, 10].\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= left &lt;= right &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls <strong>in total</strong> will be made to <code>add</code> and <code>count</code>.</li>\n\t<li>At least <strong>one</strong> call will be made to <code>count</code>.</li>\n</ul>\n",
+  "hints": [
+    "How can you efficiently add intervals to the set of intervals? Can a data structure like a Binary Search Tree help?",
+    "How can you ensure that the intervals present in the set are non-overlapping? Try merging the overlapping intervals whenever a new interval is added.",
+    "How can you update the count of integers present in at least one interval when a new interval is added to the set?"
+  ],
+  "metaData": "{\n  \"classname\": \"CountIntervals\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"left\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"right\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"count\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"29K\", \"totalSubmission\": \"80.9K\", \"totalAcceptedRaw\": 28968, \"totalSubmissionRaw\": 80873, \"acRate\": \"35.8%\"}",
+  "likes": 625,
+  "dislikes": 64,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Merge Intervals\", \"titleSlug\": \"merge-intervals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Insert Interval\", \"titleSlug\": \"insert-interval\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Data Stream as Disjoint Intervals\", \"titleSlug\": \"data-stream-as-disjoint-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"My Calendar III\", \"titleSlug\": \"my-calendar-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"CountIntervals\",\"add\",\"add\",\"count\",\"add\",\"count\"]\n[[],[2,3],[7,10],[],[5,8],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class CountIntervals {\npublic:\n    CountIntervals() {\n        \n    }\n    \n    void add(int left, int right) {\n        \n    }\n    \n    int count() {\n        \n    }\n};\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * CountIntervals* obj = new CountIntervals();\n * obj->add(left,right);\n * int param_2 = obj->count();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class CountIntervals {\n\n    public CountIntervals() {\n        \n    }\n    \n    public void add(int left, int right) {\n        \n    }\n    \n    public int count() {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * CountIntervals obj = new CountIntervals();\n * obj.add(left,right);\n * int param_2 = obj.count();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class CountIntervals:\n\n    def __init__(self):\n        \n\n    def add(self, left: int, right: int) -> None:\n        \n\n    def count(self) -> int:\n        \n\n\n# Your CountIntervals object will be instantiated and called as such:\n# obj = CountIntervals()\n# obj.add(left,right)\n# param_2 = obj.count()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class CountIntervals(object):\n\n    def __init__(self):\n        \n\n    def add(self, left, right):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :rtype: None\n        \"\"\"\n        \n\n    def count(self):\n        \"\"\"\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your CountIntervals object will be instantiated and called as such:\n# obj = CountIntervals()\n# obj.add(left,right)\n# param_2 = obj.count()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar CountIntervals = function() {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right\n * @return {void}\n */\nCountIntervals.prototype.add = function(left, right) {\n    \n};\n\n/**\n * @return {number}\n */\nCountIntervals.prototype.count = function() {\n    \n};\n\n/** \n * Your CountIntervals object will be instantiated and called as such:\n * var obj = new CountIntervals()\n * obj.add(left,right)\n * var param_2 = obj.count()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class CountIntervals {\n    constructor() {\n        \n    }\n\n    add(left: number, right: number): void {\n        \n    }\n\n    count(): number {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * var obj = new CountIntervals()\n * obj.add(left,right)\n * var param_2 = obj.count()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class CountIntervals {\n\n    public CountIntervals() {\n        \n    }\n    \n    public void Add(int left, int right) {\n        \n    }\n    \n    public int Count() {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * CountIntervals obj = new CountIntervals();\n * obj.Add(left,right);\n * int param_2 = obj.Count();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} CountIntervals;\n\n\nCountIntervals* countIntervalsCreate() {\n    \n}\n\nvoid countIntervalsAdd(CountIntervals* obj, int left, int right) {\n    \n}\n\nint countIntervalsCount(CountIntervals* obj) {\n    \n}\n\nvoid countIntervalsFree(CountIntervals* obj) {\n    \n}\n\n/**\n * Your CountIntervals struct will be instantiated and called as such:\n * CountIntervals* obj = countIntervalsCreate();\n * countIntervalsAdd(obj, left, right);\n \n * int param_2 = countIntervalsCount(obj);\n \n * countIntervalsFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type CountIntervals struct {\n    \n}\n\n\nfunc Constructor() CountIntervals {\n    \n}\n\n\nfunc (this *CountIntervals) Add(left int, right int)  {\n    \n}\n\n\nfunc (this *CountIntervals) Count() int {\n    \n}\n\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Add(left,right);\n * param_2 := obj.Count();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class CountIntervals() {\n\n    fun add(left: Int, right: Int) {\n        \n    }\n\n    fun count(): Int {\n        \n    }\n\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * var obj = CountIntervals()\n * obj.add(left,right)\n * var param_2 = obj.count()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass CountIntervals {\n\n    init() {\n        \n    }\n    \n    func add(_ left: Int, _ right: Int) {\n        \n    }\n    \n    func count() -> Int {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * let obj = CountIntervals()\n * obj.add(left, right)\n * let ret_2: Int = obj.count()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct CountIntervals {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl CountIntervals {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add(&self, left: i32, right: i32) {\n        \n    }\n    \n    fn count(&self) -> i32 {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * let obj = CountIntervals::new();\n * obj.add(left, right);\n * let ret_2: i32 = obj.count();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class CountIntervals\n    def initialize()\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :rtype: Void\n=end\n    def add(left, right)\n        \n    end\n\n\n=begin\n    :rtype: Integer\n=end\n    def count()\n        \n    end\n\n\nend\n\n# Your CountIntervals object will be instantiated and called as such:\n# obj = CountIntervals.new()\n# obj.add(left, right)\n# param_2 = obj.count()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class CountIntervals {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @return NULL\n     */\n    function add($left, $right) {\n        \n    }\n  \n    /**\n     * @return Integer\n     */\n    function count() {\n        \n    }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * $obj = CountIntervals();\n * $obj->add($left, $right);\n * $ret_2 = $obj->count();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class CountIntervals {\n\n  CountIntervals() {\n    \n  }\n  \n  void add(int left, int right) {\n    \n  }\n  \n  int count() {\n    \n  }\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * CountIntervals obj = CountIntervals();\n * obj.add(left,right);\n * int param2 = obj.count();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class CountIntervals() {\n\n    def add(left: Int, right: Int): Unit = {\n        \n    }\n\n    def count(): Int = {\n        \n    }\n\n}\n\n/**\n * Your CountIntervals object will be instantiated and called as such:\n * val obj = new CountIntervals()\n * obj.add(left,right)\n * val param_2 = obj.count()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule CountIntervals do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add(left :: integer, right :: integer) :: any\n  def add(left, right) do\n    \n  end\n\n  @spec count() :: integer\n  def count() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# CountIntervals.init_()\n# CountIntervals.add(left, right)\n# param_2 = CountIntervals.count()\n\n# CountIntervals.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_intervals_init_() -> any().\ncount_intervals_init_() ->\n  .\n\n-spec count_intervals_add(Left :: integer(), Right :: integer()) -> any().\ncount_intervals_add(Left, Right) ->\n  .\n\n-spec count_intervals_count() -> integer().\ncount_intervals_count() ->\n  .\n\n\n%% Your functions will be called as such:\n%% count_intervals_init_(),\n%% count_intervals_add(Left, Right),\n%% Param_2 = count_intervals_count(),\n\n%% count_intervals_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define count-intervals%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add : exact-integer? exact-integer? -> void?\n    (define/public (add left right)\n      )\n    ; count : -> exact-integer?\n    (define/public (count)\n      )))\n\n;; Your count-intervals% object will be instantiated and called as such:\n;; (define obj (new count-intervals%))\n;; (send obj add left right)\n;; (define param_2 (send obj count))"
+    }
+  ],
+  "solution": null
+}

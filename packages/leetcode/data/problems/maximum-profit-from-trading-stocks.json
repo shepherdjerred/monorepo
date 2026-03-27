@@ -1,0 +1,132 @@
+{
+  "questionId": "2426",
+  "questionFrontendId": "2291",
+  "title": "Maximum Profit From Trading Stocks",
+  "titleSlug": "maximum-profit-from-trading-stocks",
+  "difficulty": "Medium",
+  "content": "<p>You are given two <strong>0-indexed</strong> integer arrays of the same length <code>present</code> and <code>future</code> where <code>present[i]</code> is the current price of the <code>i<sup>th</sup></code> stock and <code>future[i]</code> is the price of the <code>i<sup>th</sup></code> stock a year in the future. You may buy each stock at most <strong>once</strong>. You are also given an integer <code>budget</code> representing the amount of money you currently have.</p>\n\n<p>Return <em>the maximum amount of profit you can make.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> present = [5,4,6,2,3], future = [8,5,4,3,5], budget = 10\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> One possible way to maximize your profit is to:\nBuy the 0<sup>th</sup>, 3<sup>rd</sup>, and 4<sup>th</sup> stocks for a total of 5 + 2 + 3 = 10.\nNext year, sell all three stocks for a total of 8 + 3 + 5 = 16.\nThe profit you made is 16 - 10 = 6.\nIt can be shown that the maximum profit you can make is 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> present = [2,2,5], future = [3,4,10], budget = 6\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> The only possible way to maximize your profit is to:\nBuy the 2<sup>nd</sup> stock, and make a profit of 10 - 5 = 5.\nIt can be shown that the maximum profit you can make is 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> present = [3,3,12], future = [0,3,15], budget = 10\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> One possible way to maximize your profit is to:\nBuy the 1<sup>st</sup> stock, and make a profit of 3 - 3 = 0.\nIt can be shown that the maximum profit you can make is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == present.length == future.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= present[i], future[i] &lt;= 100</code></li>\n\t<li><code>0 &lt;= budget &lt;= 1000</code></li>\n</ul>\n",
+  "hints": [
+    "Think of the 0-1 Knapsack Problem.",
+    "For the ith stock, the weight is present[i], and the value is future[i] - present[i]."
+  ],
+  "metaData": "{\n  \"name\": \"maximumProfit\",\n  \"params\": [\n    {\n      \"name\": \"present\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"future\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"budget\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"17.5K\", \"totalSubmission\": \"36.4K\", \"totalAcceptedRaw\": 17521, \"totalSubmissionRaw\": 36413, \"acRate\": \"48.1%\"}",
+  "likes": 191,
+  "dislikes": 9,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Best Time to Buy and Sell Stock\", \"titleSlug\": \"best-time-to-buy-and-sell-stock\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock II\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock III\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Best Time to Buy and Sell Stock IV\", \"titleSlug\": \"best-time-to-buy-and-sell-stock-iv\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,6,2,3]\n[8,5,4,3,5]\n10",
+    "[2,2,5]\n[3,4,10]\n6",
+    "[3,3,12]\n[0,3,15]\n10"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 3, \"slug\": \"blackrock\", \"name\": \"BlackRock\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumProfit(vector<int>& present, vector<int>& future, int budget) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumProfit(int[] present, int[] future, int budget) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumProfit(self, present: List[int], future: List[int], budget: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumProfit(self, present, future, budget):\n        \"\"\"\n        :type present: List[int]\n        :type future: List[int]\n        :type budget: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} present\n * @param {number[]} future\n * @param {number} budget\n * @return {number}\n */\nvar maximumProfit = function(present, future, budget) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumProfit(present: number[], future: number[], budget: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumProfit(int[] present, int[] future, int budget) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumProfit(int* present, int presentSize, int* future, int futureSize, int budget) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumProfit(present []int, future []int, budget int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumProfit(present: IntArray, future: IntArray, budget: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumProfit(_ present: [Int], _ future: [Int], _ budget: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_profit(present: Vec<i32>, future: Vec<i32>, budget: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} present\n# @param {Integer[]} future\n# @param {Integer} budget\n# @return {Integer}\ndef maximum_profit(present, future, budget)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $present\n     * @param Integer[] $future\n     * @param Integer $budget\n     * @return Integer\n     */\n    function maximumProfit($present, $future, $budget) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumProfit(List<int> present, List<int> future, int budget) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumProfit(present: Array[Int], future: Array[Int], budget: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_profit(present :: [integer], future :: [integer], budget :: integer) :: integer\n  def maximum_profit(present, future, budget) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_profit(Present :: [integer()], Future :: [integer()], Budget :: integer()) -> integer().\nmaximum_profit(Present, Future, Budget) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-profit present future budget)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

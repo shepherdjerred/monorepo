@@ -1,0 +1,145 @@
+{
+  "questionId": "2306",
+  "questionFrontendId": "2196",
+  "title": "Create Binary Tree From Descriptions",
+  "titleSlug": "create-binary-tree-from-descriptions",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>descriptions</code> where <code>descriptions[i] = [parent<sub>i</sub>, child<sub>i</sub>, isLeft<sub>i</sub>]</code> indicates that <code>parent<sub>i</sub></code> is the <strong>parent</strong> of <code>child<sub>i</sub></code> in a <strong>binary</strong> tree of <strong>unique</strong> values. Furthermore,</p>\n\n<ul>\n\t<li>If <code>isLeft<sub>i</sub> == 1</code>, then <code>child<sub>i</sub></code> is the left child of <code>parent<sub>i</sub></code>.</li>\n\t<li>If <code>isLeft<sub>i</sub> == 0</code>, then <code>child<sub>i</sub></code> is the right child of <code>parent<sub>i</sub></code>.</li>\n</ul>\n\n<p>Construct the binary tree described by <code>descriptions</code> and return <em>its <strong>root</strong></em>.</p>\n\n<p>The test cases will be generated such that the binary tree is <strong>valid</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/09/example1drawio.png\" style=\"width: 300px; height: 236px;\" />\n<pre>\n<strong>Input:</strong> descriptions = [[20,15,1],[20,17,0],[50,20,1],[50,80,0],[80,19,1]]\n<strong>Output:</strong> [50,20,80,15,17,19]\n<strong>Explanation:</strong> The root node is the node with value 50 since it has no parent.\nThe resulting binary tree is shown in the diagram.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/02/09/example2drawio.png\" style=\"width: 131px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> descriptions = [[1,2,1],[2,3,0],[3,4,1]]\n<strong>Output:</strong> [1,2,null,null,3,4]\n<strong>Explanation:</strong> The root node is the node with value 1 since it has no parent.\nThe resulting binary tree is shown in the diagram.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= descriptions.length &lt;= 10<sup>4</sup></code></li>\n\t<li><code>descriptions[i].length == 3</code></li>\n\t<li><code>1 &lt;= parent<sub>i</sub>, child<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= isLeft<sub>i</sub> &lt;= 1</code></li>\n\t<li>The binary tree described by <code>descriptions</code> is valid.</li>\n</ul>\n",
+  "hints": [
+    "Could you represent and store the descriptions more efficiently?",
+    "Could you find the root node?",
+    "The node that is not a child in any of the descriptions is the root node."
+  ],
+  "metaData": "{\n  \"name\": \"createBinaryTree\",\n  \"params\": [\n    {\n      \"name\": \"descriptions\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"TreeNode\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"170.5K\", \"totalSubmission\": \"208.6K\", \"totalAcceptedRaw\": 170487, \"totalSubmissionRaw\": 208619, \"acRate\": \"81.7%\"}",
+  "likes": 1659,
+  "dislikes": 39,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Convert Sorted List to Binary Search Tree\", \"titleSlug\": \"convert-sorted-list-to-binary-search-tree\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number Of Ways To Reconstruct A Tree\", \"titleSlug\": \"number-of-ways-to-reconstruct-a-tree\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[20,15,1],[20,17,0],[50,20,1],[50,80,0],[80,19,1]]",
+    "[[1,2,1],[2,3,0],[3,4,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"clari\", \"name\": \"Clari\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     TreeNode *left;\n *     TreeNode *right;\n *     TreeNode() : val(0), left(nullptr), right(nullptr) {}\n *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n * };\n */\nclass Solution {\npublic:\n    TreeNode* createBinaryTree(vector<vector<int>>& descriptions) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     int val;\n *     TreeNode left;\n *     TreeNode right;\n *     TreeNode() {}\n *     TreeNode(int val) { this.val = val; }\n *     TreeNode(int val, TreeNode left, TreeNode right) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\nclass Solution {\n    public TreeNode createBinaryTree(int[][] descriptions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution:\n    def createBinaryTree(self, descriptions: List[List[int]]) -> Optional[TreeNode]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for a binary tree node.\n# class TreeNode(object):\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nclass Solution(object):\n    def createBinaryTree(self, descriptions):\n        \"\"\"\n        :type descriptions: List[List[int]]\n        :rtype: Optional[TreeNode]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number[][]} descriptions\n * @return {TreeNode}\n */\nvar createBinaryTree = function(descriptions) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     val: number\n *     left: TreeNode | null\n *     right: TreeNode | null\n *     constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.left = (left===undefined ? null : left)\n *         this.right = (right===undefined ? null : right)\n *     }\n * }\n */\n\nfunction createBinaryTree(descriptions: number[][]): TreeNode | null {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public int val;\n *     public TreeNode left;\n *     public TreeNode right;\n *     public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n *         this.val = val;\n *         this.left = left;\n *         this.right = right;\n *     }\n * }\n */\npublic class Solution {\n    public TreeNode CreateBinaryTree(int[][] descriptions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for a binary tree node.\n * struct TreeNode {\n *     int val;\n *     struct TreeNode *left;\n *     struct TreeNode *right;\n * };\n */\nstruct TreeNode* createBinaryTree(int** descriptions, int descriptionsSize, int* descriptionsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for a binary tree node.\n * type TreeNode struct {\n *     Val int\n *     Left *TreeNode\n *     Right *TreeNode\n * }\n */\nfunc createBinaryTree(descriptions [][]int) *TreeNode {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var ti = TreeNode(5)\n * var v = ti.`val`\n * Definition for a binary tree node.\n * class TreeNode(var `val`: Int) {\n *     var left: TreeNode? = null\n *     var right: TreeNode? = null\n * }\n */\nclass Solution {\n    fun createBinaryTree(descriptions: Array<IntArray>): TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for a binary tree node.\n * public class TreeNode {\n *     public var val: Int\n *     public var left: TreeNode?\n *     public var right: TreeNode?\n *     public init() { self.val = 0; self.left = nil; self.right = nil; }\n *     public init(_ val: Int) { self.val = val; self.left = nil; self.right = nil; }\n *     public init(_ val: Int, _ left: TreeNode?, _ right: TreeNode?) {\n *         self.val = val\n *         self.left = left\n *         self.right = right\n *     }\n * }\n */\nclass Solution {\n    func createBinaryTree(_ descriptions: [[Int]]) -> TreeNode? {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for a binary tree node.\n// #[derive(Debug, PartialEq, Eq)]\n// pub struct TreeNode {\n//   pub val: i32,\n//   pub left: Option<Rc<RefCell<TreeNode>>>,\n//   pub right: Option<Rc<RefCell<TreeNode>>>,\n// }\n// \n// impl TreeNode {\n//   #[inline]\n//   pub fn new(val: i32) -> Self {\n//     TreeNode {\n//       val,\n//       left: None,\n//       right: None\n//     }\n//   }\n// }\nuse std::rc::Rc;\nuse std::cell::RefCell;\nimpl Solution {\n    pub fn create_binary_tree(descriptions: Vec<Vec<i32>>) -> Option<Rc<RefCell<TreeNode>>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for a binary tree node.\n# class TreeNode\n#     attr_accessor :val, :left, :right\n#     def initialize(val = 0, left = nil, right = nil)\n#         @val = val\n#         @left = left\n#         @right = right\n#     end\n# end\n# @param {Integer[][]} descriptions\n# @return {TreeNode}\ndef create_binary_tree(descriptions)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *     public $val = null;\n *     public $left = null;\n *     public $right = null;\n *     function __construct($val = 0, $left = null, $right = null) {\n *         $this->val = $val;\n *         $this->left = $left;\n *         $this->right = $right;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param Integer[][] $descriptions\n     * @return TreeNode\n     */\n    function createBinaryTree($descriptions) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode {\n *   int val;\n *   TreeNode? left;\n *   TreeNode? right;\n *   TreeNode([this.val = 0, this.left, this.right]);\n * }\n */\nclass Solution {\n  TreeNode? createBinaryTree(List<List<int>> descriptions) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for a binary tree node.\n * class TreeNode(_value: Int = 0, _left: TreeNode = null, _right: TreeNode = null) {\n *   var value: Int = _value\n *   var left: TreeNode = _left\n *   var right: TreeNode = _right\n * }\n */\nobject Solution {\n    def createBinaryTree(descriptions: Array[Array[Int]]): TreeNode = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for a binary tree node.\n#\n# defmodule TreeNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           left: TreeNode.t() | nil,\n#           right: TreeNode.t() | nil\n#         }\n#   defstruct val: 0, left: nil, right: nil\n# end\n\ndefmodule Solution do\n  @spec create_binary_tree(descriptions :: [[integer]]) :: TreeNode.t | nil\n  def create_binary_tree(descriptions) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for a binary tree node.\n%%\n%% -record(tree_node, {val = 0 :: integer(),\n%%                     left = null  :: 'null' | #tree_node{},\n%%                     right = null :: 'null' | #tree_node{}}).\n\n-spec create_binary_tree(Descriptions :: [[integer()]]) -> #tree_node{} | null.\ncreate_binary_tree(Descriptions) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for a binary tree node.\n#|\n\n; val : integer?\n; left : (or/c tree-node? #f)\n; right : (or/c tree-node? #f)\n(struct tree-node\n  (val left right) #:mutable #:transparent)\n\n; constructor\n(define (make-tree-node [val 0])\n  (tree-node val #f #f))\n\n|#\n\n(define/contract (create-binary-tree descriptions)\n  (-> (listof (listof exact-integer?)) (or/c tree-node? #f))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2371",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a 2D integer array `descriptions`, where each element is a triplet `[parent_i, child_i, isLeft_i]`. \nEach triplet `[parent_i, child_i, isLeft_i]` provides specific information:\n- `parent_i` is the value of a parent node in the binary tree.\n- `child_i` is the value of the child node associated with `parent_i`.\n- `isLeft_i` indicates the position of `child_i` relative to `parent_i`. A value of `1` means `child_i` is the left child, and a value of `0` means `child_i` is the right child.\n\nOur task is to construct the binary tree based on the given descriptions and return the root node of this tree. It is important to note that the input `descriptions` are guaranteed to describe a valid binary tree, where each node's value is unique. This uniqueness ensures that we can confidently build the tree without conflicts in node values.\n\nIn a binary tree, each node can have at most two children: a left child and a right child. For any given node, we need to determine and assign its left and right children based on the provided descriptions. The `descriptions` array provides explicit instructions on how to connect parent nodes to their respective children. Knowing whether a child is a left or right child (indicated by `isLeft_i`) is crucial for placing the child in the correct position.\n\nTo build the tree, we can iterate through each triplet `[parent_i, child_i, isLeft_i]` from the `descriptions` array. For each triplet, we establish the parent-child relationship by creating or identifying the nodes and linking the child to the parent in the specified position (left or right). \n\n---\n\n### Approach 1: Convert to Graph with Breadth First Search\n\n#### Intuition\n\nWe need a way to organize the information we're given. The `descriptions` provide parent-child relationships, but they are unordered. To address this, we begin by constructing a graph representation. Using a map to link each parent to its children, we establish a structure that facilitates quick lookup of all children associated with any node.\n\nBut a graph isn't enough; we must identify our starting point. In a binary tree, this starting point is the root node—the only node that is a parent but never a child. To find the root node, we track all parents and children separately. By removing all children from the set of parents, we isolate the root. This approach saves time by avoiding multiple scans through the entire list of descriptions to find the root.\n\nSo to construct the binary tree, we initially set up data structures to manage parent-child relationships efficiently. We utilize two sets: `children`, which stores all child nodes, and `parents`, which stores all parent nodes. Additionally, we use a map named `parentToChildren` to map each parent node to a list of its children along with their positional information (`isLeft_i`).\n\nAs we iterate through each description `[parent_i, child_i, isLeft_i]` in the `descriptions` array, we add each `parent_i` to the `parents` set and each `child_i` to the `children` set. We also update the `parentToChildren` map to associate each `parent_i` with its child and positional information. This mapping allows us to systematically establish the binary tree structure later.\n\nNext, to determine the root of the binary tree, we identify the node in the `parents` set that does not appear in the `children` set. The node remaining in `parents` after removing all elements present in `children` represents the root of our binary tree.\n\nWith the root identified, we construct the binary tree using a breadth-first search (BFS). We initialize a queue with the root node. For each parent node dequeued, we create `TreeNode` objects for its children from the `parentToChildren` map, enqueue them, and link them as left or right children based on `isLeft_i`.\n\nUpon completing the BFS traversal, the binary tree is fully constructed and linked according to the relationships defined in the `descriptions` array. Finally, we return the root node of the constructed binary tree.\n\n#### Algorithm\n \n- Initialize `children` and `parents` as sets to track unique child and parent nodes, respectively.\n- Initialize `parentToChildren` as a map to store parent to children relationships using array of pairs.\n\n- Build the graph:\n  - Iterate through each `d` in `descriptions`:\n    - Extract `parent`, `child`, and `isLeft` from `d`.\n    - Add `parent` and `child` to `parents` to track all nodes.\n    - Add `child` to `children`.\n    - Push back the pair `(child, isLeft)` into `parentToChildren[parent]` to store child nodes and their left/right flags.\n\n- Iterate through `parents` to find the node that is in `parents` but not in `children`, and assign it to `root`.\n\n- Create the root node `TreeNode*` using the first element of `parents`.\n\n- Construct the binary tree using BFS:\n  - Initialize a queue and push `root` into it.\n  - While `queue` is not empty:\n    - Dequeue the front `parent` node from `queue`.\n    - Iterate over each `childInfo` in `parentToChildren[parent.val]`:\n      - Extract `childValue` and `isLeft`.\n      - Create a new `TreeNode* child` with `childValue`.\n      - Push `child` into `queue`.\n      - Attach `child` to `parent.left` or `parent.right` based on the `isLeft` flag.\n\n- Return the constructed `root` node of the binary tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/cAUP2TPX/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"cAUP2TPX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of entries in `descriptions`.\n\n* Time complexity: $O(n)$\n\n    Building the `parentToChildren` map and the `children` and `parents` sets takes $O(n)$ time.\n\n    Finding the root node involves iterating through the `parents` set, which is $O(n)$ in the worst case.\n    \n    Constructing the binary tree using BFS also takes $O(n)$ time since each node is processed once. Therefore, the overall time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The `parentToChildren` map can store up to $n$ entries. The `children` and `parents` sets can each store up to $n$ elements. The BFS queue can store up to $n$ nodes in the worst case. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 2: Convert to Graph with Depth First Search\n\n#### Intuition\n\nThe main logic frame remains the same as the BFS approach; the difference lies in how we construct it using the DFS algorithm.\n\nTo construct the binary tree, we initially set up data structures to manage parent-child relationships efficiently. We utilize two sets: `children`, which stores all child nodes, and `allNodes`, which stores all nodes (both parents and children). Additionally, we use a dictionary named `parentToChildren` to map each parent node to a list of its children along with their positional information (`isLeft`).\n\nAs we iterate through each `[parent, child, isLeft]` in `descriptions`, we populate `allNodes` with all nodes and `children` with child nodes. Using `parentToChildren`, each parent maps to a list including its child and positional info (`isLeft`), facilitating binary tree creation.\n\nTo determine the root of the binary tree, we identify the node in the `allNodes` set that does not appear in the `children` set. This node remains in the `allNodes` set after removing all elements also present in `children` and represents the root of our binary tree.\n\nWith the root identified, we construct the binary tree using a depth-first search (DFS). The `dfs` function recursively creates `TreeNode` instances for each node value. If a node has children in `parentToChildren`, `dfs` iterates through them, attaching each subtree based on `isLeft`. Finally, `dfs` returns the fully constructed subtree rooted at the current node.\n\nWe start the whole process by calling a depth-first search on the root value we identified. This initiates the recursive construction of the entire tree.\n\nThe DFS approach naturally follows the structure of the tree, building each branch completely before moving to the next. This method is particularly efficient for deep trees, as it doesn't need to store information about all nodes at one level before proceeding to the next (unlike BFS).\n\nUpon completing the DFS traversal, the binary tree is fully constructed and linked according to the relationships defined in the `descriptions` array. Finally, we return the root node of the constructed binary tree.\n\n#### Algorithm\n \n- Initialize `parentToChildren` as a map to store parent-child relationships using lists of integer arrays.\n- Initialize `allNodes` as a set to track all node values and `children` as another `HashSet` to track child nodes.\n\n- Iterate through each `desc` in `descriptions`:\n  - Extract `parent`, `child`, and `isLeft` from `desc`.\n  - If `parent` is not already in `parentToChildren`, initialize it with an empty list.\n  - Add the pair `(child, isLeft)` to `parentToChildren[parent]`.\n  - Add both `parent` and `child` to the `allNodes` set.\n  - Add `child` to the `children` set.\n\n- Find the root node value (`rootVal`):\n  - Iterate through `allNodes`:\n    - If a node is not in the `children` set, assign it to `rootVal` and break out of the loop.\n\n- Call `dfs(parentToChildren, rootVal)` to recursively construct the binary tree.\n\nHelper method `dfs` with parameters: `parentToChildren`, `val`:\n- Create a new `TreeNode` for `val`.\n- If `val` has children:\n  - Iterate through each `childInfo` in `parentToChildren.get(val)`:\n    - Extract `child` and `isLeft`.\n    - If `isLeft` is `1`, recursively call `dfs` to attach `child` as the left child of `node`.\n    - Otherwise, attach `child` as the right child of `node`.\n\n- Return the root node of the constructed binary tree.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7c2h3pfA/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"7c2h3pfA\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of entries in `descriptions`.\n\n* Time complexity: $O(n)$\n\n    Building the `parentToChildren` map and the `allNodes` and `children` sets takes $O(n)$ time. Finding the root node involves iterating through the `allNodes` set, which is $O(n)$ in the worst case.\n\n    Constructing the binary tree using DFS also takes $O(n)$ time since each node is processed once. Therefore, the overall time complexity is $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The `parentToChildren` map can store up to $n$ entries. The `allNodes` and `children` sets can each store up to $n$ elements. The recursive DFS stack can store up to $n$ nodes in the worst case. Therefore, the overall space complexity is $O(n)$.\n\n---\n\n### Approach 3: Constructing Tree From Directly Map and TreeNode Object\n\n#### Intuition\n\nWhile the DFS solution effectively built the tree through recursive traversal, it required multiple data structures and a separate step to identify the root. To build the binary tree efficiently, we need a way to quickly access any node by its value. Trees are not inherently sequential structures, making navigation and referencing more complex. Using a map to associate each node value with its corresponding `TreeNode` object solves this problem, providing instant access to any node.\n\nThis map serves a dual purpose: it not only provides $O(1)$ access to any node but also eliminates the need for separate parent and child tracking sets used in our previous approach, thus significantly reducing the algorithm's time and space complexity.\n\nThe first step involves creating this map to link each node's value to its `TreeNode` object. As we iterate through each description `[parent_i, child_i, isLeft_i]`, we need to check if the parent and child nodes already exist in the map. If they do not, we create them and store them in the map.\n\nNext, based on the `isLeft_i` value, we link the parent node to the child node by setting either the left or right pointer of the parent's `TreeNode` object to the child's `TreeNode` object. This way we can establish the left and right child relationships as described by the input.\n\nWhile setting up these relationships, we also maintain a set (say `children`) to keep track of all nodes that have been assigned as a child to some parent node. This set is crucial for identifying the root node later because the root will not be a child of any node.\n\nFinally, once all descriptions are processed, we iterate through the nodes in the map. For each node, we check if it is not present in the `children` set. The node not present in the `children` set is the one which has never been assigned as a child, indicating that it is the root of the tree. We return this root node.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2196/approach3.json:975,550!?!\n\n#### Algorithm\n\n- Initialize `nodeMap` to map node values to `TreeNode` pointers.\n- Initialize `children` set to track child nodes from descriptions.\n\n- Iterate through each `description` in `descriptions`:\n  - Extract `parentValue`, `childValue`, and `isLeft` (boolean indicating if it's a left child).\n  - Create `TreeNode` objects for `parentValue` and `childValue` if not already in `nodeMap`.\n  - Attach `childValue` as left or right child to `parentValue` based on `isLeft`.\n  - Add `childValue` to `children` set.\n\n- Iterate through `nodeMap` to find the root node:\n  - Check each node:\n    - If node's value is not in `children`, return it as the root node.\n\n- Return the identified root node of the binary tree.\n\n- If no root node is found (should not occur per problem statement), return `nullptr`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bhW8Q2j4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bhW8Q2j4\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of nodes created in the binary tree.\n\n- Time complexity: $O(n)$\n\n    The algorithm iterates through each description exactly once, and for each description, it performs constant-time operations:\n    - Checking and adding nodes to `nodeMap`.\n    - Updating node connections (`left` or `right` child assignments).\n    - Adding child values to the `children` set.\n\n    The final loop iterates through the `nodeMap`, which contains all created nodes, to find the root node. The loop's runtime is linear in relation to the number of nodes created, resulting in a time complexity of $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm uses `nodeMap` to store references to all created nodes. In the worst case, this map contains all nodes, so it takes up $O(n)$ space. The `children` set also takes $O(n)$ space to store child values.\n    \n    Additional space is used for the `TreeNode` objects themselves, but that's accounted for within the $O(n)$ space complexity due to the nodes being stored in `nodeMap`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}
