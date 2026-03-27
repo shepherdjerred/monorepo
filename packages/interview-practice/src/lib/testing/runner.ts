@@ -1,6 +1,6 @@
 import path from "node:path";
 import { getLanguageConfig } from "./languages.ts";
-import type { TestCase } from "#lib/questions/schemas.ts";
+import type { TestCase, FunctionSignature } from "#lib/questions/schemas.ts";
 
 export type TestResult = {
   passed: boolean;
@@ -19,75 +19,52 @@ export type TestRunResult = {
   compileError: string | null;
 }
 
-function interpolateCmd(
-  template: string,
-  filePath: string,
+function generateTestHarness(
+  solutionPath: string,
+  testCases: TestCase[],
+  signature: FunctionSignature,
 ): string {
-  const dir = path.dirname(filePath);
-  const file = filePath;
-  return template.replaceAll('{file}', file).replaceAll('{dir}', dir);
-}
+  const solutionBase = path.basename(solutionPath, path.extname(solutionPath));
+  const importPath = `./${solutionBase}.ts`;
 
-async function compileFile(
-  compileCmd: string,
-  filePath: string,
-  timeout: number,
-): Promise<string | null> {
-  const cmd = interpolateCmd(compileCmd, filePath);
-  const parts = cmd.split(" ");
-  const proc = Bun.spawn(parts, {
-    cwd: path.dirname(filePath),
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const testCasesJson = JSON.stringify(
+    testCases.map((tc) => ({ args: tc.args, expected: tc.expected })),
+  );
 
-  const timeoutId = setTimeout(() => { proc.kill(); }, timeout);
-  const exitCode = await proc.exited;
-  clearTimeout(timeoutId);
+  return `import { ${signature.name} } from "${importPath}";
 
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text();
-    return stderr || `Compilation failed with exit code ${String(exitCode)}`;
-  }
-  return null;
-}
+const testCases = ${testCasesJson};
 
-async function runWithInput(
-  runCmd: string,
-  filePath: string,
-  input: string,
-  timeout: number,
-): Promise<{ stdout: string; stderr: string; timedOut: boolean; durationMs: number }> {
-  const cmd = interpolateCmd(runCmd, filePath);
-  const parts = cmd.split(" ");
+const results = [];
+for (const tc of testCases) {
   const start = Date.now();
-
-  const proc = Bun.spawn(parts, {
-    cwd: path.dirname(filePath),
-    stdin: new Response(input).body,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  let timedOut = false;
-  const timeoutId = setTimeout(() => {
-    timedOut = true;
-    proc.kill();
-  }, timeout);
-
-  await proc.exited;
-  clearTimeout(timeoutId);
-
-  const stdout = await new Response(proc.stdout).text();
-  const stderr = await new Response(proc.stderr).text();
-  const durationMs = Date.now() - start;
-
-  return { stdout, stderr, timedOut, durationMs };
+  try {
+    const actual = ${signature.name}(...tc.args);
+    const passed = JSON.stringify(actual) === JSON.stringify(tc.expected);
+    results.push({ passed, actual, expected: tc.expected, error: null, durationMs: Date.now() - start });
+  } catch (e) {
+    results.push({ passed: false, actual: null, expected: tc.expected, error: e instanceof Error ? e.message : String(e), durationMs: Date.now() - start });
+  }
 }
+
+console.log(JSON.stringify(results));
+`;
+}
+
+import { z } from "zod/v4";
+
+const harnessResultParser = z.array(z.object({
+  passed: z.boolean(),
+  actual: z.unknown(),
+  expected: z.unknown(),
+  error: z.string().nullable(),
+  durationMs: z.number(),
+}));
 
 export async function runTests(
   solutionPath: string,
   testCases: TestCase[],
+  signature?: FunctionSignature,
 ): Promise<TestRunResult> {
   const ext = "." + (path.basename(solutionPath).split(".").pop() ?? "");
   const langConfig = getLanguageConfig(ext);
@@ -100,7 +77,7 @@ export async function runTests(
       results: testCases.map((tc) => ({
         passed: false,
         actual: "",
-        expected: tc.expected,
+        expected: formatExpected(tc.expected),
         stderr: `Unsupported language: ${ext}`,
         durationMs: 0,
         timedOut: false,
@@ -109,13 +86,61 @@ export async function runTests(
     };
   }
 
-  if (langConfig.compile !== null) {
-    const compileError = await compileFile(
-      langConfig.compile,
-      solutionPath,
-      langConfig.compileTimeout,
-    );
-    if (compileError !== null) {
+  // For TypeScript with a function signature, use the test harness approach
+  if (ext === ".ts" && signature !== undefined) {
+    return runWithHarness(solutionPath, testCases, signature, langConfig.runTimeout);
+  }
+
+  // Fallback for languages without harness support
+  return {
+    passed: 0,
+    failed: testCases.length,
+    total: testCases.length,
+    results: testCases.map((tc) => ({
+      passed: false,
+      actual: "",
+      expected: formatExpected(tc.expected),
+      stderr: `Function-call testing not yet supported for ${ext}`,
+      durationMs: 0,
+      timedOut: false,
+    })),
+    compileError: null,
+  };
+}
+
+async function runWithHarness(
+  solutionPath: string,
+  testCases: TestCase[],
+  signature: FunctionSignature,
+  timeout: number,
+): Promise<TestRunResult> {
+  const dir = path.dirname(solutionPath);
+  const harnessPath = path.join(dir, "__test_harness.ts");
+  const harnessCode = generateTestHarness(solutionPath, testCases, signature);
+
+  await Bun.write(harnessPath, harnessCode);
+
+  try {
+    const proc = Bun.spawn(["bun", "run", harnessPath], {
+      cwd: dir,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    const state = { timedOut: false };
+    const timeoutId = setTimeout(() => {
+      state.timedOut = true;
+      proc.kill();
+    }, timeout);
+
+    const exitCode = await proc.exited;
+    clearTimeout(timeoutId);
+
+    const stdout = await new Response(proc.stdout).text();
+    const stderr = await new Response(proc.stderr).text();
+
+    // exitCode is non-zero when process was killed by timeout
+    if (state.timedOut || (exitCode !== 0 && stdout.trim() === "")) {
       return {
         passed: 0,
         failed: testCases.length,
@@ -123,47 +148,67 @@ export async function runTests(
         results: testCases.map((tc) => ({
           passed: false,
           actual: "",
-          expected: tc.expected,
-          stderr: compileError,
+          expected: formatExpected(tc.expected),
+          stderr: "Timed out",
+          durationMs: timeout,
+          timedOut: true,
+        })),
+        compileError: null,
+      };
+    }
+
+    if (stdout.trim() === "") {
+      return {
+        passed: 0,
+        failed: testCases.length,
+        total: testCases.length,
+        results: testCases.map((tc) => ({
+          passed: false,
+          actual: "",
+          expected: formatExpected(tc.expected),
+          stderr: stderr || "No output from test harness",
           durationMs: 0,
           timedOut: false,
         })),
-        compileError,
+        compileError: stderr || "Test harness produced no output",
       };
     }
-  }
 
-  const results: TestResult[] = [];
-  let passed = 0;
-  let failed = 0;
+    const harnessResults = harnessResultParser.parse(JSON.parse(stdout.trim()));
 
-  for (const tc of testCases) {
-    const { stdout, stderr, timedOut, durationMs } = await runWithInput(
-      langConfig.run,
-      solutionPath,
-      tc.input,
-      langConfig.runTimeout,
-    );
+    let passed = 0;
+    let failed = 0;
+    const results: TestResult[] = [];
 
-    const actualTrimmed = stdout.trim();
-    const expectedTrimmed = tc.expected.trim();
-    const isPassed = !timedOut && actualTrimmed === expectedTrimmed;
-
-    if (isPassed) {
-      passed++;
-    } else {
-      failed++;
+    for (const r of harnessResults) {
+      if (r.passed) {
+        passed++;
+      } else {
+        failed++;
+      }
+      results.push({
+        passed: r.passed,
+        actual: formatExpected(r.actual),
+        expected: formatExpected(r.expected),
+        stderr: r.error ?? "",
+        durationMs: r.durationMs,
+        timedOut: false,
+      });
     }
 
-    results.push({
-      passed: isPassed,
-      actual: actualTrimmed,
-      expected: expectedTrimmed,
-      stderr,
-      durationMs,
-      timedOut,
-    });
+    return { passed, failed, total: testCases.length, results, compileError: null };
+  } finally {
+    // Clean up harness file
+    try {
+      const { unlinkSync } = await import("node:fs");
+      unlinkSync(harnessPath);
+    } catch {
+      // Ignore cleanup errors
+    }
   }
+}
 
-  return { passed, failed, total: testCases.length, results, compileError: null };
+function formatExpected(value: unknown): string {
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
 }

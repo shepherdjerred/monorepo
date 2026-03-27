@@ -1,14 +1,19 @@
 import { z } from "zod/v4";
 
-export const IOSchema = z.object({
-  inputFormat: z.string(),
-  outputFormat: z.string(),
-  parseHint: z.string().optional(),
+export const FunctionParamSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+});
+
+export const FunctionSignatureSchema = z.object({
+  name: z.string(),
+  params: z.array(FunctionParamSchema),
+  returnType: z.string(),
 });
 
 export const TestCaseSchema = z.object({
-  input: z.string(),
-  expected: z.string(),
+  args: z.array(z.unknown()),
+  expected: z.unknown(),
   explanation: z.string().optional(),
 });
 
@@ -56,7 +61,7 @@ export const LeetcodeQuestionSchema = z.object({
   description: z.string(),
   parts: z.array(QuestionPartSchema).min(1).max(4),
   constraints: z.array(z.string()),
-  io: IOSchema,
+  functionSignature: FunctionSignatureSchema,
   source: z.string(),
   escalationPattern: EscalationPatternSchema,
 });
@@ -65,7 +70,8 @@ export type LeetcodeQuestion = z.infer<typeof LeetcodeQuestionSchema>;
 export type QuestionPart = z.infer<typeof QuestionPartSchema>;
 export type TestCase = z.infer<typeof TestCaseSchema>;
 export type Hint = z.infer<typeof HintSchema>;
-export type IOSpec = z.infer<typeof IOSchema>;
+export type FunctionSignature = z.infer<typeof FunctionSignatureSchema>;
+export type FunctionParam = z.infer<typeof FunctionParamSchema>;
 export type TransitionCriteria = z.infer<typeof TransitionCriteriaSchema>;
 
 // System Design schemas

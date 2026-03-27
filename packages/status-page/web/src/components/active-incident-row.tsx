@@ -5,6 +5,9 @@ import {
   type Incident,
   type Component,
 } from "#src/lib/api.ts";
+
+const STATUSES = ["investigating", "identified", "monitoring", "resolved"] as const;
+const IMPACTS = ["none", "minor", "major", "critical"] as const;
 import { Button } from "#src/components/ui/button.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
 import {
@@ -57,6 +60,19 @@ export function ActiveIncidentRow({
   const [updateStatus, setUpdateStatus] = useState(incident.status);
   const [newStatus, setNewStatus] = useState(incident.status);
   const [newImpact, setNewImpact] = useState(incident.impact);
+
+  const handleNewStatus = (value: string) => {
+    const found = STATUSES.find(s => s === value);
+    if (found !== undefined) setNewStatus(found);
+  };
+  const handleNewImpact = (value: string) => {
+    const found = IMPACTS.find(s => s === value);
+    if (found !== undefined) setNewImpact(found);
+  };
+  const handleUpdateStatus = (value: string) => {
+    const found = STATUSES.find(s => s === value);
+    if (found !== undefined) setUpdateStatus(found);
+  };
 
   const handleAddUpdate = async () => {
     if (updateMessage.trim() === "") return;
@@ -115,7 +131,7 @@ export function ActiveIncidentRow({
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value as typeof newStatus)}>
+              <Select value={newStatus} onValueChange={handleNewStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -126,7 +142,7 @@ export function ActiveIncidentRow({
                   <SelectItem value="resolved">Resolved</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={newImpact} onValueChange={(value: string) => setNewImpact(value as typeof newImpact)}>
+              <Select value={newImpact} onValueChange={handleNewImpact}>
                 <SelectTrigger>
                   <SelectValue placeholder="Impact" />
                 </SelectTrigger>
@@ -151,7 +167,7 @@ export function ActiveIncidentRow({
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Add Update</p>
-              <Select value={updateStatus} onValueChange={(value: string) => setUpdateStatus(value as typeof updateStatus)}>
+              <Select value={updateStatus} onValueChange={handleUpdateStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>

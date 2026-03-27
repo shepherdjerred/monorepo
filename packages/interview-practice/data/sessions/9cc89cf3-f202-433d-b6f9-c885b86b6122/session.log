@@ -1,4 +1,0 @@
-{"ts":"2026-03-27T04:20:22.080Z","level":"info","component":"voice","sessionId":"9cc89cf3-f202-433d-b6f9-c885b86b6122","event":"ws_connected","model":"gpt-realtime-mini"}
-{"ts":"2026-03-27T04:20:22.082Z","level":"info","component":"voice","sessionId":"9cc89cf3-f202-433d-b6f9-c885b86b6122","event":"mic_started"}
-{"ts":"2026-03-27T04:20:22.083Z","level":"info","component":"voice","sessionId":"9cc89cf3-f202-433d-b6f9-c885b86b6122","event":"speaker_started"}
-{"ts":"2026-03-27T04:20:24.175Z","level":"info","component":"voice","sessionId":"9cc89cf3-f202-433d-b6f9-c885b86b6122","event":"user_transcript","transcript":"Wow."}

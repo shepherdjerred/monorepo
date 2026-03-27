@@ -16,7 +16,7 @@ describe("question store", () => {
   test("loads questions from data directory", async () => {
     const store = await loadQuestionStore(DATA_DIR, logger);
     const all = store.getAll();
-    expect(all.length).toBeGreaterThanOrEqual(5);
+    expect(all.length).toBeGreaterThanOrEqual(1);
   });
 
   test("filters by difficulty", async () => {

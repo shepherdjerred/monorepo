@@ -13,6 +13,7 @@ export type VoiceSessionContext = {
   testsRun: number;
   tools: ToolDefinition[];
   reflections?: string | undefined;
+  codeSnapshot?: string | undefined;
 };
 
 export function buildRealtimeSessionConfig(
@@ -86,6 +87,10 @@ Expected complexity: Time ${ctx.currentPart.expectedComplexity.time}, Space ${ct
 
 Internal notes (never share): ${ctx.currentPart.internalNotes}`,
   );
+
+  if (ctx.codeSnapshot !== undefined) {
+    sections.push(`CANDIDATE'S CURRENT CODE:\n\`\`\`\n${ctx.codeSnapshot}\n\`\`\``);
+  }
 
   if (ctx.reflections !== undefined) {
     sections.push(`REFLECTIONS:\n${ctx.reflections}`);

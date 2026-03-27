@@ -2,18 +2,17 @@ import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import type { Config } from "#config";
 import { createLogger } from "#logger";
-import type { Logger } from "#logger";
 import { createAIClient } from "#lib/ai/client.ts";
-import type { AIClient } from "#lib/ai/client.ts";
-import { loadSession, saveSession } from "#lib/session/manager.ts";
+import { loadSession } from "#lib/session/manager.ts";
 import type { Session } from "#lib/session/manager.ts";
 import { loadQuestionStore } from "#lib/questions/store.ts";
 import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
 import { createTimer } from "#lib/timer/countdown.ts";
 import type { Timer } from "#lib/timer/countdown.ts";
-import { runInterviewerTurn } from "#lib/ai/interviewer.ts";
+import { createInterviewSession } from "#lib/ai/session-loop.ts";
+import type { InterviewSession } from "#lib/ai/session-loop.ts";
 import { insertEvent } from "#lib/db/events.ts";
-import { generateReport, formatReport } from "#lib/report/generate.ts";
+import { formatReport } from "#lib/report/generate.ts";
 import { getFileExtension, getSolutionFilename } from "#lib/questions/starter-code.ts";
 import {
   createReadline,
@@ -99,29 +98,26 @@ export async function resumeLeetcodeSession(
 
   displayResumeHeader(session, question, timer);
 
-  const resumeResult = await runInterviewerTurn(
-    "[Session resumed. Welcome the candidate back and briefly recap where they were. Do not re-present the problem unless asked.]",
-    {
-      client,
-      session,
-      question,
-      timer,
-      solutionPath,
-      logger: logger.child("interviewer"),
-      onOutput: (text) => process.stdout.write(text),
-      onTimerWarning: (w) => { console.log(formatTimerWarning(w)); },
-    },
-  );
-
-  console.log(formatInterviewerMessage(resumeResult.aiText));
-
-  await runInterviewLoop({
+  const interviewSession = createInterviewSession({
     client,
     session,
     question,
     timer,
     solutionPath,
-    logger,
+    logger: logger.child("interviewer"),
+  });
+
+  const resumeResult = await interviewSession.handleUserInput(
+    "[Session resumed. Welcome the candidate back and briefly recap where they were. Do not re-present the problem unless asked.]",
+  );
+
+  console.log(formatInterviewerMessage(resumeResult.aiText));
+
+  await runInterviewLoop({
+    interviewSession,
+    session,
+    question,
+    timer,
     exportReport: options.exportReport,
   });
 
@@ -183,17 +179,15 @@ function displayResumeHeader(
 }
 
 type InterviewLoopOptions = {
-  client: AIClient;
+  interviewSession: InterviewSession;
   session: Session;
   question: LeetcodeQuestion;
   timer: Timer;
-  solutionPath: string;
-  logger: Logger;
   exportReport: string | undefined;
 };
 
 async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
-  const { client, session, question, timer, solutionPath, logger } = opts;
+  const { interviewSession, session, question, timer } = opts;
   const rl = createReadline();
   let running = true;
 
@@ -201,10 +195,31 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
     const rawInput = await promptUser(rl);
     const command = parseCommand(rawInput);
 
+    // Check timer warnings
+    const warnings = timer.checkWarnings();
+    for (const w of warnings) {
+      console.log(formatTimerWarning(w));
+    }
+
     switch (command.type) {
       case "quit": {
         running = false;
-        await handleQuit(opts);
+
+        const closingResult = await interviewSession.handleUserInput(
+          "[Candidate is ending the session. Give a brief final assessment with scores.]",
+        );
+        console.log(formatInterviewerMessage(closingResult.aiText));
+
+        const report = await interviewSession.close();
+        console.log(formatReport(report));
+
+        if (opts.exportReport !== undefined) {
+          const json = JSON.stringify(report, null, 2);
+          await Bun.write(opts.exportReport, json);
+          console.log(`Report exported to: ${opts.exportReport}`);
+        }
+
+        console.log(formatSessionEnd());
         break;
       }
 
@@ -213,28 +228,16 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
         break;
 
       case "hint": {
-        const result = await runInterviewerTurn(
+        const result = await interviewSession.handleUserInput(
           "[Candidate is requesting a hint. Use the give_hint tool.]",
-          {
-            client, session, question, timer, solutionPath,
-            logger: logger.child("interviewer"),
-            onOutput: (text) => process.stdout.write(text),
-            onTimerWarning: (w) => { console.log(formatTimerWarning(w)); },
-          },
         );
         console.log(formatInterviewerMessage(result.aiText));
         break;
       }
 
       case "run": {
-        const result = await runInterviewerTurn(
+        const result = await interviewSession.handleUserInput(
           "[Candidate wants to run their solution. Use the run_tests tool, then comment on the results.]",
-          {
-            client, session, question, timer, solutionPath,
-            logger: logger.child("interviewer"),
-            onOutput: (text) => process.stdout.write(text),
-            onTimerWarning: (w) => { console.log(formatTimerWarning(w)); },
-          },
         );
         console.log(formatInterviewerMessage(result.aiText));
         break;
@@ -252,12 +255,7 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
           break;
         }
 
-        const result = await runInterviewerTurn(command.content, {
-          client, session, question, timer, solutionPath,
-          logger: logger.child("interviewer"),
-          onOutput: (text) => process.stdout.write(text),
-          onTimerWarning: (w) => { console.log(formatTimerWarning(w)); },
-        });
+        const result = await interviewSession.handleUserInput(command.content);
 
         console.log(formatInterviewerMessage(result.aiText));
 
@@ -269,9 +267,8 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
 
         if (result.sessionEnded) {
           running = false;
-          session.metadata.status = "completed";
-          session.metadata.endedAt = new Date().toISOString();
-          await saveSession(session);
+          const report = await interviewSession.close();
+          console.log(formatReport(report));
           console.log(formatSessionEnd());
         }
         break;
@@ -280,40 +277,4 @@ async function runInterviewLoop(opts: InterviewLoopOptions): Promise<void> {
   }
 
   rl.close();
-}
-
-async function handleQuit(opts: InterviewLoopOptions): Promise<void> {
-  const { client, session, question, timer, solutionPath, logger } = opts;
-
-  session.metadata.status = "completed";
-  session.metadata.endedAt = new Date().toISOString();
-  session.metadata.timer = timer.getState();
-  await saveSession(session);
-  insertEvent(session.db, "session_end", {
-    duration_s: Math.floor(timer.getElapsedMs() / 1000),
-    hintsGiven: session.metadata.hintsGiven,
-    testsRun: session.metadata.testsRun,
-  });
-
-  const closingResult = await runInterviewerTurn(
-    "[Candidate is ending the session. Give a brief final assessment with scores.]",
-    {
-      client, session, question, timer, solutionPath,
-      logger: logger.child("interviewer"),
-      onOutput: (text) => process.stdout.write(text),
-      onTimerWarning: (_w: string) => { /* closing — no timer warnings */ },
-    },
-  );
-  console.log(formatInterviewerMessage(closingResult.aiText));
-
-  const report = generateReport(session.db, session.metadata);
-  console.log(formatReport(report));
-
-  if (opts.exportReport !== undefined) {
-    const json = JSON.stringify(report, null, 2);
-    await Bun.write(opts.exportReport, json);
-    console.log(`Report exported to: ${opts.exportReport}`);
-  }
-
-  console.log(formatSessionEnd());
 }

@@ -1,13 +1,5 @@
 # {{TITLE}}
-# Input: {{INPUT_FORMAT}}
-# Output: {{OUTPUT_FORMAT}}
-# {{PARSE_HINT}}
 
-import sys
-
-def solve():
-    lines = sys.stdin.read().strip().split("\n")
-    # TODO: Parse input and solve
-    print("TODO")
-
-solve()
+def {{FUNCTION_NAME}}({{PARAMS}}):
+    # TODO: implement
+    return {{DEFAULT_RETURN}}

@@ -1,11 +1,11 @@
 import path from "node:path";
-import type { IOSpec } from "./schemas.ts";
+import type { FunctionSignature } from "./schemas.ts";
 
 const TEMPLATES_DIR = path.join(path.dirname(import.meta.dir), "..", "templates");
 
 export async function generateStarterCode(
   language: string,
-  io: IOSpec,
+  signature: FunctionSignature,
   problemTitle: string,
 ): Promise<string> {
   const ext = language.startsWith(".") ? language : `.${language}`;
@@ -15,15 +15,88 @@ export async function generateStarterCode(
   try {
     let template = await Bun.file(templatePath).text();
     template = template.replaceAll('{{TITLE}}', problemTitle);
-    template = template.replaceAll('{{INPUT_FORMAT}}', io.inputFormat);
-    template = template.replaceAll('{{OUTPUT_FORMAT}}', io.outputFormat);
-    template = template.replaceAll(
-      '{{PARSE_HINT}}',
-      io.parseHint ?? "See problem description",
-    );
+    template = template.replaceAll('{{FUNCTION_NAME}}', signature.name);
+    template = template.replaceAll('{{PARAMS}}', buildParams(ext, signature));
+    template = template.replaceAll('{{RETURN_TYPE}}', signature.returnType);
+    template = template.replaceAll('{{DEFAULT_RETURN}}', getDefaultReturn(ext, signature.returnType));
     return template;
   } catch {
-    return getDefaultTemplate(ext, io, problemTitle);
+    return getDefaultTemplate(ext, signature, problemTitle);
+  }
+}
+
+function buildParams(ext: string, signature: FunctionSignature): string {
+  switch (ext) {
+    case ".ts":
+      return signature.params.map((p) => `${p.name}: ${p.type}`).join(", ");
+    case ".java":
+      return signature.params.map((p) => `${toJavaType(p.type)} ${p.name}`).join(", ");
+    case ".py":
+      return signature.params.map((p) => p.name).join(", ");
+    case ".go":
+      return signature.params.map((p) => `${p.name} ${toGoType(p.type)}`).join(", ");
+    default:
+      return signature.params.map((p) => `${p.name}: ${p.type}`).join(", ");
+  }
+}
+
+function toJavaType(tsType: string): string {
+  const map: Record<string, string> = {
+    "number": "int",
+    "number[]": "int[]",
+    "number[][]": "int[][]",
+    "string": "String",
+    "string[]": "String[]",
+    "boolean": "boolean",
+    "boolean[]": "boolean[]",
+  };
+  return map[tsType] ?? tsType;
+}
+
+function toGoType(tsType: string): string {
+  const map: Record<string, string> = {
+    "number": "int",
+    "number[]": "[]int",
+    "number[][]": "[][]int",
+    "string": "string",
+    "string[]": "[]string",
+    "boolean": "bool",
+    "boolean[]": "[]bool",
+  };
+  return map[tsType] ?? tsType;
+}
+
+function getDefaultReturn(ext: string, returnType: string): string {
+  const isArray = returnType.includes("[]");
+  const isBool = returnType === "boolean";
+  const isString = returnType === "string";
+  const isNumber = returnType === "number";
+
+  switch (ext) {
+    case ".ts":
+      if (isArray) return "[]";
+      if (isBool) return "false";
+      if (isString) return '""';
+      if (isNumber) return "0";
+      return "undefined";
+    case ".java":
+      if (isArray) return `new ${toJavaType(returnType)}{}`;
+      if (isBool) return "false";
+      if (isString) return '""';
+      return "0";
+    case ".py":
+      if (isArray) return "[]";
+      if (isBool) return "False";
+      if (isString) return '""';
+      if (isNumber) return "0";
+      return "None";
+    case ".go":
+      if (isArray) return "nil";
+      if (isBool) return "false";
+      if (isString) return '""';
+      return "0";
+    default:
+      return "undefined";
   }
 }
 
@@ -41,56 +114,43 @@ function getTemplateName(ext: string): string {
 
 function getDefaultTemplate(
   ext: string,
-  io: IOSpec,
+  signature: FunctionSignature,
   title: string,
 ): string {
+  const params = buildParams(ext, signature);
   switch (ext) {
     case ".ts":
-      return String.raw`// ${title}
-// Input: ${io.inputFormat}
-// Output: ${io.outputFormat}
-// ${io.parseHint ?? ""}
+      return `// ${title}
 
-const input = await Bun.stdin.text();
-const lines = input.trim().split("\n");
-
-// TODO: Parse input and solve
-// ${io.parseHint ?? "Parse according to input format"}
-
-console.log("TODO");
+export function ${signature.name}(${params}): ${signature.returnType} {
+  // TODO: implement
+  return ${getDefaultReturn(ext, signature.returnType)};
+}
 `;
     case ".java":
       return `// ${title}
-// Input: ${io.inputFormat}
-// Output: ${io.outputFormat}
-
-import java.util.*;
 
 public class Solution {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        // TODO: Parse input and solve
-        System.out.println("TODO");
+    public ${toJavaType(signature.returnType)} ${signature.name}(${params}) {
+        // TODO: implement
+        return ${getDefaultReturn(ext, signature.returnType)};
     }
 }
 `;
     case ".py":
-      return String.raw`# ${title}
-# Input: ${io.inputFormat}
-# Output: ${io.outputFormat}
+      return `# ${title}
 
-import sys
-
-def solve():
-    lines = sys.stdin.read().strip().split("\n")
-    # TODO: Parse input and solve
-    print("TODO")
-
-solve()
+def ${toSnakeCase(signature.name)}(${params}):
+    # TODO: implement
+    return ${getDefaultReturn(ext, signature.returnType)}
 `;
     default:
-      return `// ${title}\n// Input: ${io.inputFormat}\n// Output: ${io.outputFormat}\n// TODO: implement\n`;
+      return `// ${title}\n// TODO: implement\n`;
   }
+}
+
+function toSnakeCase(name: string): string {
+  return name.replaceAll(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 }
 
 export function getFileExtension(language: string): string {

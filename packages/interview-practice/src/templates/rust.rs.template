@@ -1,13 +1,6 @@
 // {{TITLE}}
-// Input: {{INPUT_FORMAT}}
-// Output: {{OUTPUT_FORMAT}}
-// {{PARSE_HINT}}
 
-use std::io::{self, BufRead};
-
+// TODO: implement
 fn main() {
-    let stdin = io::stdin();
-    let _lines: Vec<String> = stdin.lock().lines().map(|l| l.unwrap()).collect();
-    // TODO: Parse input and solve
     println!("TODO");
 }

@@ -32,7 +32,7 @@ The output must be valid JSON matching this schema:
         { "level": "subtle" | "moderate" | "explicit", "content": "<hint text>" }
       ],
       "testCases": [
-        { "input": "<stdin>", "expected": "<stdout>", "explanation": "<optional>" }
+        { "args": ["<arg1>", "<arg2>"], "expected": "<return value>", "explanation": "<optional>" }
       ],
       "followUps": ["<follow-up questions>"],
       "expectedApproach": "<description of expected approach>",
@@ -45,10 +45,10 @@ The output must be valid JSON matching this schema:
     }
   ],
   "constraints": ["<constraint>"],
-  "io": {
-    "inputFormat": "<e.g. int[] nums, int target>",
-    "outputFormat": "<e.g. int[]>",
-    "parseHint": "<how to parse stdin>"
+  "functionSignature": {
+    "name": "<e.g. twoSum>",
+    "params": [{ "name": "<e.g. nums>", "type": "<e.g. number[]>" }],
+    "returnType": "<e.g. number[]>"
   },
   "source": "generated",
   "escalationPattern": "constraint-addition" | "static-to-dynamic" | "existence-to-enumeration" | "single-to-distributed" | "concrete-to-symbolic" | "specific-to-general"
@@ -58,7 +58,7 @@ Requirements:
 - Generate 2-3 parts with increasing difficulty
 - Each part needs at least 3 test cases covering edge cases
 - Include subtle, moderate, and explicit hints for each part
-- Test case inputs/outputs must be valid stdin/stdout strings
+- Test case args must be arrays matching the function parameters, expected must match the return type
 - The escalation pattern should match how parts progress
 
 Return ONLY the JSON object, no markdown fences or explanation.`;

@@ -1,0 +1,4 @@
+{"ts":"2026-03-27T04:33:05.537Z","level":"info","component":"interviewer","sessionId":"ccdfab24-3b7e-471a-92b8-3895d55b37d8","event":"turn_complete","latencyMs":1552,"tokensIn":2110,"tokensOut":68,"toolsCalled":[],"reflectionsUsed":0}
+:"interviewer","sessionId":"ccdfab24-3b7e-471a-92b8-3895d55b37d8","event":"turn_complete","latencyMs":2865,"tokensIn":1976,"tokensOut":211,"toolsCalled":["run_tests"],"reflectionsUsed":0}
+ent":"tool_call","tool":"run_tests","input":{}}
+{"ts":"2026-03-27T04:32:48.629Z","level":"info","component":"interviewer","sessionId":"ccdfab24-3b7e-471a-92b8-3895d55b37d8","event":"turn_complete","latencyMs":3835,"tokensIn":1849,"tokensOut":123,"toolsCalled":["pause_and_think","run_tests"],"reflectionsUsed":0}

@@ -44,7 +44,7 @@ export class Monorepo {
       .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "zstd", "python3", "python3-setuptools"])
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git"] })
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Build workspace deps that publish types/exports via dist/
       .withWorkdir("/workspace/packages/eslint-config")
@@ -390,7 +390,7 @@ export class Monorepo {
       .withEnvVariable("CI", "true")
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git"] })
       .withExec(["bun", "install", "--frozen-lockfile"])
       // Build workspace deps needed by sjer.red
       .withWorkdir("/workspace/packages/eslint-config")
@@ -419,7 +419,7 @@ export class Monorepo {
       .withEnvVariable("CI", "true")
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git/hooks"] })
+      .withDirectory("/workspace", source, { exclude: ["**/node_modules", "**/.eslintcache", "**/dist", "**/target", ".git"] })
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir("/workspace/packages/eslint-config")
       .withExec(["bun", "run", "build"])
@@ -469,7 +469,7 @@ export class Monorepo {
 
   /** Run lint/typecheck/test for all TS packages in parallel. Returns results summary. */
   @func()
-  async ciAll(source: Directory): Promise<string> {
+  async ciAll(source: Directory, hassToken: Secret | null = null): Promise<string> {
     const tsPackages = [
       "webring", "bun-decompile", "eslint-config", "resume",
       "astro-opengraph-images", "cooklang-for-obsidian", "cooklang-rich-preview",
@@ -531,6 +531,48 @@ export class Monorepo {
     ])
     for (const r of goResults) {
       results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+    }
+
+    // scout-for-lol: generate then lint/typecheck/test
+    const scoutGenerated = this.bunBase(source, "scout-for-lol")
+      .withExec(["bun", "run", "generate"])
+      .directory("/workspace")
+    const scoutContainer = dag.container().from(BUN_IMAGE)
+      .withDirectory("/workspace", scoutGenerated)
+      .withWorkdir("/workspace/packages/scout-for-lol")
+    const scoutResults = await Promise.allSettled([
+      scoutContainer.withExec(["bun", "run", "lint"]).sync()
+        .then(() => "scout-for-lol: lint=PASS").catch((e: Error) => `scout-for-lol: lint=FAIL (${e.message.slice(0, 80)})`),
+      scoutContainer.withExec(["bun", "run", "typecheck"]).sync()
+        .then(() => "scout-for-lol: typecheck=PASS").catch((e: Error) => `scout-for-lol: typecheck=FAIL (${e.message.slice(0, 80)})`),
+      scoutContainer.withExec(["bun", "run", "test"]).sync()
+        .then(() => "scout-for-lol: test=PASS").catch((e: Error) => `scout-for-lol: test=FAIL (${e.message.slice(0, 80)})`),
+    ])
+    for (const r of scoutResults) {
+      results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+    }
+
+    // homelab/ha: generate types then lint/typecheck (requires HASS_TOKEN)
+    if (hassToken != null) {
+      const haGenerated = this.bunBase(source, "homelab/src/ha")
+        .withSecretVariable("HASS_TOKEN", hassToken)
+        .withEnvVariable("HASS_BASE_URL", "https://homeassistant.sjer.red")
+        .withExec(["bun", "run", "generate-types"])
+        .directory("/workspace")
+      const haContainer = dag.container().from(BUN_IMAGE)
+        .withDirectory("/workspace", haGenerated)
+        .withWorkdir("/workspace/packages/homelab/src/ha")
+      const haResults = await Promise.allSettled([
+        haContainer.withExec(["bun", "run", "lint"]).sync()
+          .then(() => "homelab/ha: lint=PASS").catch((e: Error) => `homelab/ha: lint=FAIL (${e.message.slice(0, 80)})`),
+        haContainer.withExec(["bun", "run", "typecheck"]).sync()
+          .then(() => "homelab/ha: typecheck=PASS").catch((e: Error) => `homelab/ha: typecheck=FAIL (${e.message.slice(0, 80)})`),
+      ])
+      for (const r of haResults) {
+        results.push(r.status === "fulfilled" ? r.value : `UNKNOWN: ${r.reason}`)
+      }
+    } else {
+      results.push("homelab/ha: SKIPPED (no hassToken)")
     }
 
     return results.join("\n")

@@ -1,0 +1,112 @@
+[
+  {
+    "index": 0,
+    "classification": "Scientific paper",
+    "language": "English",
+    "gt_chars": 6923,
+    "extracted_chars": 6941,
+    "edit_similarity": 0.9942371416222446,
+    "rouge_l": 0.9937769267592149,
+    "duration_s": 49.33688683299988,
+    "error": false
+  },
+  {
+    "index": 1,
+    "classification": "Book page",
+    "language": "English",
+    "gt_chars": 3846,
+    "extracted_chars": 3906,
+    "edit_similarity": 0.9298515104966718,
+    "rouge_l": 0.9772151898734177,
+    "duration_s": 29.019821832996968,
+    "error": false
+  },
+  {
+    "index": 2,
+    "classification": "Other",
+    "language": "French",
+    "gt_chars": 3824,
+    "extracted_chars": 4005,
+    "edit_similarity": 0.954307116104869,
+    "rouge_l": 0.9774436090225564,
+    "duration_s": 61.36892458300281,
+    "error": false
+  },
+  {
+    "index": 3,
+    "classification": "Form",
+    "language": "Dutch",
+    "gt_chars": 214,
+    "extracted_chars": 523,
+    "edit_similarity": 0.4053537284894837,
+    "rouge_l": 0.5306122448979592,
+    "duration_s": 42.1215457090002,
+    "error": false
+  },
+  {
+    "index": 4,
+    "classification": "Scientific paper",
+    "language": "English",
+    "gt_chars": 5047,
+    "extracted_chars": 5124,
+    "edit_similarity": 0.9797033567525371,
+    "rouge_l": 0.9855979962429555,
+    "duration_s": 48.314742041999125,
+    "error": false
+  },
+  {
+    "index": 5,
+    "classification": "Presentation",
+    "language": "Portuguese",
+    "gt_chars": 2792,
+    "extracted_chars": 2412,
+    "edit_similarity": 0.8212750716332378,
+    "rouge_l": 0.9130434782608696,
+    "duration_s": 48.501401624998834,
+    "error": false
+  },
+  {
+    "index": 6,
+    "classification": "Presentation",
+    "language": "English",
+    "gt_chars": 2910,
+    "extracted_chars": 2913,
+    "edit_similarity": 0.9989701338825953,
+    "rouge_l": 1.0,
+    "duration_s": 40.22325395799999,
+    "error": false
+  },
+  {
+    "index": 7,
+    "classification": "Financial document",
+    "language": "English",
+    "gt_chars": 1686,
+    "extracted_chars": 3008,
+    "edit_similarity": 0.5605053191489362,
+    "rouge_l": 0.7836990595611286,
+    "duration_s": 37.84008320800058,
+    "error": false
+  },
+  {
+    "index": 8,
+    "classification": "Financial document",
+    "language": "English",
+    "gt_chars": 1408,
+    "extracted_chars": 1827,
+    "edit_similarity": 0.7695675971538041,
+    "rouge_l": 0.8726003490401396,
+    "duration_s": 31.1571449999974,
+    "error": false
+  },
+  {
+    "index": 9,
+    "classification": "Form",
+    "language": "Polish",
+    "gt_chars": 1012,
+    "extracted_chars": 1875,
+    "edit_similarity": 0.4597333333333333,
+    "rouge_l": 0.794701986754967,
+    "duration_s": 64.99511974999768,
+    "error": false
+  }
+]

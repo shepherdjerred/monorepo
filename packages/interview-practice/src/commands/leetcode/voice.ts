@@ -1,4 +1,3 @@
-import { z } from "zod/v4";
 import type { Config } from "#config";
 import type { Session } from "#lib/session/manager.ts";
 import type { LeetcodeQuestion } from "#lib/questions/schemas.ts";
@@ -7,7 +6,7 @@ import type { Logger } from "#logger";
 import { saveSession } from "#lib/session/manager.ts";
 import { insertEvent } from "#lib/db/events.ts";
 import { insertTranscript } from "#lib/db/transcript.ts";
-import { generateReport, formatReport } from "#lib/report/generate.ts";
+import { formatReport } from "#lib/report/generate.ts";
 import {
   createReadline,
   promptUser,
@@ -23,8 +22,7 @@ import { createRealtimeClient } from "#lib/voice/realtime.ts";
 import { buildRealtimeSessionConfig } from "#lib/voice/session-config.ts";
 import { createAudioManager, checkAudioDependencies } from "#lib/voice/audio.ts";
 import { getLeetcodeTools } from "#lib/ai/tools.ts";
-import { runTests } from "#lib/testing/runner.ts";
-import { updateProblemForNewPart } from "#lib/session/workspace.ts";
+import { createInterviewSession } from "#lib/ai/session-loop.ts";
 
 export type VoiceSessionOptions = {
   config: Config;
@@ -74,6 +72,16 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
   const realtimeClient = createRealtimeClient(voiceLogger);
   const audioManager = createAudioManager(voiceLogger);
 
+  // Create session controller (shares tool dispatch and code watching with text mode)
+  const interviewSession = createInterviewSession({
+    session,
+    question,
+    timer,
+    solutionPath,
+    logger: voiceLogger,
+    // Voice mode uses Realtime API directly for conversation, no text AI client needed
+  });
+
   // Track consecutive WebSocket failures for fallback
   let consecutiveWsFailures = 0;
   const MAX_WS_FAILURES = 3;
@@ -103,8 +111,6 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
     tools,
   });
 
-  const audioChunks: Buffer[] = [];
-
   // Wire up callbacks
   realtimeClient.on({
     onTranscript(transcript, _itemId) {
@@ -114,33 +120,21 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
     },
 
     onAudioDelta(base64Audio, _responseId) {
-      const buf = Buffer.from(base64Audio, "base64");
-      audioChunks.push(buf);
       audioManager.gateMicWhileSpeaking(true);
       audioManager.writeSpeakerAudio(base64Audio);
     },
 
     onAudioDone(_responseId) {
-      const full = Buffer.concat(audioChunks);
-      void Bun.write("/tmp/realtime_full_response.raw", full);
-      console.log(`[debug] saved full response: ${String(full.length)} bytes to /tmp/realtime_full_response.raw`);
-      audioChunks.length = 0;
+      audioManager.flushSpeaker();
       audioManager.gateMicWhileSpeaking(false);
       consecutiveWsFailures = 0;
     },
 
     onFunctionCall(callId, name, args, _itemId) {
       voiceLogger.info("voice_tool_call", { name, args });
-      insertTranscript(session.db, "tool_call", name, { tool: name, args });
 
       void (async () => {
-        const result = await dispatchVoiceTool(name, args, {
-          session,
-          question,
-          solutionPath,
-          logger: voiceLogger,
-        });
-        insertTranscript(session.db, "tool_result", result, { tool: name });
+        const result = await interviewSession.handleToolCall(name, args);
         realtimeClient.sendFunctionResult(callId, result);
       })();
     },
@@ -209,27 +203,41 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
     realtimeClient.sendAudio(pcmBase64);
   });
 
+  // Watch solution file for changes and push code context to Realtime via session.update
+  const codeWatchInterval = setInterval(() => {
+    void (async () => {
+      try {
+        const updatedConfig = buildRealtimeSessionConfig({
+          model: config.realtimeModel,
+          voice: config.realtimeVoice,
+          question,
+          currentPart: question.parts.find(
+            (p) => p.partNumber === session.metadata.currentPart,
+          ) ?? currentPart,
+          totalParts: question.parts.length,
+          timerDisplay: timer.getDisplayTime(),
+          hintsGiven: session.metadata.hintsGiven,
+          testsRun: session.metadata.testsRun,
+          tools,
+          codeSnapshot: await readSolutionSafe(solutionPath),
+        });
+        realtimeClient.sendSessionUpdate(updatedConfig);
+      } catch {
+        // File may not exist yet
+      }
+    })();
+  }, 5000);
+
   // Slash command loop (runs alongside voice)
-  // Wait for /quit or fallback trigger
   await handleVoiceCommands(rl, {
     fallbackTriggered: () => fallbackTriggered,
     onQuit: async () => {
+      clearInterval(codeWatchInterval);
       audioManager.stopAll();
       realtimeClient.disconnect();
 
-      session.metadata.status = "completed";
-      session.metadata.endedAt = new Date().toISOString();
-      session.metadata.timer = timer.getState();
-      await saveSession(session);
-      insertEvent(session.db, "session_end", {
-        duration_s: Math.floor(timer.getElapsedMs() / 1000),
-        hintsGiven: session.metadata.hintsGiven,
-        testsRun: session.metadata.testsRun,
-      });
-
-      const report = generateReport(session.db, session.metadata);
+      const report = await interviewSession.close();
       console.log(formatReport(report));
-
       console.log(formatSessionEnd());
     },
     timer,
@@ -240,6 +248,15 @@ export async function runVoiceSession(opts: VoiceSessionOptions): Promise<void> 
   voiceLogger.info("voice_session_complete", {
     duration_s: Math.floor(timer.getElapsedMs() / 1000),
   });
+}
+
+async function readSolutionSafe(solutionPath: string): Promise<string | undefined> {
+  try {
+    const code = await Bun.file(solutionPath).text();
+    return code.trim() === "" ? undefined : code;
+  } catch {
+    return undefined;
+  }
 }
 
 async function handleVoiceCommands(
@@ -283,107 +300,5 @@ async function handleVoiceCommands(
         break;
       }
     }
-  }
-}
-
-async function dispatchVoiceTool(
-  toolName: string,
-  argsJson: string,
-  opts: {
-    session: Session;
-    question: LeetcodeQuestion;
-    solutionPath: string;
-    logger: Logger;
-  },
-): Promise<string> {
-  const { session, question, solutionPath, logger: toolLogger } = opts;
-  let input: Record<string, unknown> = {};
-  try {
-    const parsed = z.record(z.string(), z.unknown()).safeParse(JSON.parse(argsJson));
-    if (parsed.success) {
-      input = parsed.data;
-    }
-  } catch {
-    // empty args
-  }
-
-  const currentPart = question.parts.find(
-    (p) => p.partNumber === session.metadata.currentPart,
-  );
-
-  switch (toolName) {
-    case "run_tests": {
-      if (!currentPart) return "No current part found.";
-      session.metadata.testsRun++;
-      const result = await runTests(solutionPath, currentPart.testCases);
-
-      insertEvent(session.db, "test_run", {
-        passed: result.passed,
-        failed: result.failed,
-        total: result.total,
-        compileError: result.compileError,
-      });
-
-      if (result.compileError !== null) {
-        return `Compilation failed:\n${result.compileError}`;
-      }
-
-      const details = result.results
-        .map((r, i) => {
-          if (r.timedOut) return `Test ${String(i + 1)}: TIMEOUT`;
-          if (r.passed) return `Test ${String(i + 1)}: PASSED`;
-          return `Test ${String(i + 1)}: FAILED (expected "${r.expected}", got "${r.actual}")`;
-        })
-        .join("\n");
-
-      return `Test results: ${String(result.passed)}/${String(result.total)} passed\n\n${details}`;
-    }
-
-    case "reveal_next_part": {
-      const nextPartNum = session.metadata.currentPart + 1;
-      const nextPart = question.parts.find((p) => p.partNumber === nextPartNum);
-
-      if (!nextPart) {
-        return "No more parts -- this is the final part of the problem.";
-      }
-
-      session.metadata.currentPart = nextPartNum;
-      await updateProblemForNewPart(session.workspacePath, question, nextPartNum);
-
-      insertEvent(session.db, "part_revealed", {
-        partNumber: nextPartNum,
-        totalParts: question.parts.length,
-        reason: input["reason"],
-      });
-
-      toolLogger.info("part_revealed", { partNumber: nextPartNum });
-
-      return `Advanced to part ${String(nextPartNum)}/${String(question.parts.length)}. Present the new part: "${nextPart.prompt}"`;
-    }
-
-    case "give_hint": {
-      if (!currentPart) return "No current part found.";
-      const level = typeof input["level"] === "string" ? input["level"] : "subtle";
-      const availableHints = currentPart.hints.filter((h) => h.level === level);
-      const hintIndex = Math.min(session.metadata.hintsGiven, availableHints.length - 1);
-      const hint = availableHints[Math.max(hintIndex, 0)];
-
-      session.metadata.hintsGiven++;
-
-      insertEvent(session.db, "hint_given", {
-        level,
-        hintIndex: session.metadata.hintsGiven,
-        partNumber: session.metadata.currentPart,
-      });
-
-      if (!hint) {
-        return `No ${level} hint available. Use your judgment to guide the candidate.`;
-      }
-
-      return `Hint (${level}): ${hint.content}\n\nFrame this naturally in conversation.`;
-    }
-
-    default:
-      return `Unknown tool: ${toolName}`;
   }
 }

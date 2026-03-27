@@ -13,7 +13,7 @@ export async function scaffoldLeetcodeWorkspace(
   const solutionPath = path.join(workspacePath, solutionFilename);
   const problemPath = path.join(workspacePath, "problem.md");
 
-  const starterCode = await generateStarterCode(ext, question.io, question.title);
+  const starterCode = await generateStarterCode(ext, question.functionSignature, question.title);
   await Bun.write(solutionPath, starterCode);
 
   const problemContent = buildProblemMarkdown(question, currentPart);
@@ -49,12 +49,10 @@ function buildProblemMarkdown(
     parts.push("");
   }
 
-  parts.push(`## Input/Output\n`);
-  parts.push(`- **Input:** ${question.io.inputFormat}`);
-  parts.push(`- **Output:** ${question.io.outputFormat}`);
-  if (question.io.parseHint !== undefined) {
-    parts.push(`- **Format:** ${question.io.parseHint}`);
-  }
+  parts.push(`## Function Signature\n`);
+  const sig = question.functionSignature;
+  const paramStr = sig.params.map((p) => `${p.name}: ${p.type}`).join(", ");
+  parts.push(`\`${sig.name}(${paramStr}) → ${sig.returnType}\``);
   parts.push("");
 
   const visibleParts = question.parts.filter((p) => p.partNumber <= upToPart);

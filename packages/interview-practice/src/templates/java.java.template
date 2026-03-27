@@ -1,14 +1,8 @@
 // {{TITLE}}
-// Input: {{INPUT_FORMAT}}
-// Output: {{OUTPUT_FORMAT}}
-// {{PARSE_HINT}}
-
-import java.util.*;
 
 public class Solution {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        // TODO: Parse input and solve
-        System.out.println("TODO");
+    public {{RETURN_TYPE}} {{FUNCTION_NAME}}({{PARAMS}}) {
+        // TODO: implement
+        return {{DEFAULT_RETURN}};
     }
 }

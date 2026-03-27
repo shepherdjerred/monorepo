@@ -16,11 +16,11 @@
         { "level": "explicit", "content": "For each number, check if (target - number) exists in a hash map." }
       ],
       "testCases": [
-        { "input": "4\n2 7 11 15\n9", "expected": "0 1", "explanation": "nums[0] + nums[1] = 2 + 7 = 9" },
-        { "input": "3\n3 2 4\n6", "expected": "1 2", "explanation": "nums[1] + nums[2] = 2 + 4 = 6" },
-        { "input": "2\n3 3\n6", "expected": "0 1", "explanation": "Duplicate values edge case" },
-        { "input": "4\n1 5 3 7\n8", "expected": "1 2", "explanation": "5 + 3 = 8, not adjacent" },
-        { "input": "5\n-1 -2 -3 -4 -5\n-8", "expected": "2 4", "explanation": "Negative numbers" }
+        { "args": [[2, 7, 11, 15], 9], "expected": [0, 1], "explanation": "nums[0] + nums[1] = 2 + 7 = 9" },
+        { "args": [[3, 2, 4], 6], "expected": [1, 2], "explanation": "nums[1] + nums[2] = 2 + 4 = 6" },
+        { "args": [[3, 3], 6], "expected": [0, 1], "explanation": "Duplicate values edge case" },
+        { "args": [[1, 5, 3, 7], 8], "expected": [1, 2], "explanation": "5 + 3 = 8, not adjacent" },
+        { "args": [[-1, -2, -3, -4, -5], -8], "expected": [2, 4], "explanation": "Negative numbers" }
       ],
       "followUps": [
         "What's the time complexity of your solution?",
@@ -45,10 +45,10 @@
         { "level": "explicit", "content": "Use two pointers, one at the start and one at the end. Move them inward based on whether the sum is too small or too large." }
       ],
       "testCases": [
-        { "input": "4\n2 7 11 15\n9", "expected": "0 1" },
-        { "input": "3\n2 3 4\n6", "expected": "0 2" },
-        { "input": "2\n-1 0\n-1", "expected": "0 1" },
-        { "input": "5\n1 2 3 4 5\n9", "expected": "3 4" }
+        { "args": [[2, 7, 11, 15], 9], "expected": [0, 1] },
+        { "args": [[2, 3, 4], 6], "expected": [0, 2] },
+        { "args": [[-1, 0], -1], "expected": [0, 1] },
+        { "args": [[1, 2, 3, 4, 5], 9], "expected": [3, 4] }
       ],
       "followUps": [
         "What's the time and space complexity now?",
@@ -64,10 +64,13 @@
     "-10^9 <= target <= 10^9",
     "Exactly one valid answer exists"
   ],
-  "io": {
-    "inputFormat": "int n, int[] nums, int target",
-    "outputFormat": "int i, int j (space-separated indices)",
-    "parseHint": "First line: n (array length). Second line: n space-separated integers. Third line: target."
+  "functionSignature": {
+    "name": "twoSum",
+    "params": [
+      { "name": "nums", "type": "number[]" },
+      { "name": "target", "type": "number" }
+    ],
+    "returnType": "number[]"
   },
   "source": "LeetCode #1 / #167",
   "escalationPattern": "constraint-addition"

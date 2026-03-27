@@ -16,10 +16,21 @@
         { "level": "explicit", "content": "Use two arrays of size 300: timestamps[i] stores the last timestamp that mapped to bucket i (via t % 300), and counts[i] stores the hit count. On hit(t): if timestamps[t%300] == t, increment; else reset to 1. On getHits(t): sum all counts[i] where t - timestamps[i] < 300." }
       ],
       "testCases": [
-        { "input": "hit 1\nhit 2\nhit 3\ngetHits 4\nhit 300\ngetHits 300\ngetHits 301", "expected": "3\n4\n3", "explanation": "At t=4: hits at 1,2,3 all within window. At t=300: all 4 hits in window. At t=301: hit at 1 expired, 3 remain." },
-        { "input": "hit 1\nhit 1\nhit 1\ngetHits 1\ngetHits 300\ngetHits 301", "expected": "3\n3\n0", "explanation": "Multiple hits at same timestamp. All expire at t=301." },
-        { "input": "hit 1\nhit 2\nhit 3\nhit 4\nhit 5\ngetHits 300\ngetHits 301\ngetHits 302\ngetHits 305", "expected": "5\n4\n3\n0", "explanation": "Hits expire one by one as the window moves." },
-        { "input": "getHits 1\nhit 100\ngetHits 100\ngetHits 400", "expected": "0\n1\n0", "explanation": "getHits before any hit returns 0. Hit at 100 expires at t=400." }
+        {
+          "args": [[["hit", 1], ["hit", 2], ["hit", 3], ["getHits", 4], ["hit", 300], ["getHits", 300], ["getHits", 301]]],
+          "expected": [null, null, null, 3, null, 4, 3],
+          "explanation": "At t=4: hits at 1,2,3 all within window. At t=300: all 4 hits in window. At t=301: hit at 1 expired, 3 remain."
+        },
+        {
+          "args": [[["hit", 1], ["hit", 1], ["hit", 1], ["getHits", 1], ["getHits", 300], ["getHits", 301]]],
+          "expected": [null, null, null, 3, 3, 0],
+          "explanation": "Multiple hits at same timestamp. All expire at t=301."
+        },
+        {
+          "args": [[["getHits", 1], ["hit", 100], ["getHits", 100], ["getHits", 400]]],
+          "expected": [0, null, 1, 0],
+          "explanation": "getHits before any hit returns 0. Hit at 100 expires at t=400."
+        }
       ],
       "followUps": [
         "What's the time complexity of hit and getHits?",
@@ -44,9 +55,16 @@
         { "level": "explicit", "content": "Use per-bucket locks or atomic operations. For hit(t): only lock/CAS bucket t%300. For getHits: acquire read locks or iterate with atomic reads. This allows concurrent hits to different buckets." }
       ],
       "testCases": [
-        { "input": "concurrent_hit 1 1000\ngetHits 1", "expected": "1000", "explanation": "1000 concurrent hits at timestamp 1 should all be counted." },
-        { "input": "concurrent_hit 1 500\nconcurrent_hit 2 500\ngetHits 2", "expected": "1000", "explanation": "Concurrent hits to different timestamps — both should be fully counted." },
-        { "input": "concurrent_hit 1 100\nconcurrent_hit 301 100\ngetHits 301", "expected": "100", "explanation": "Hits at t=1 expire by t=301. Only the 100 hits at t=301 remain." }
+        {
+          "args": [[["concurrent_hit", 1, 1000], ["getHits", 1]]],
+          "expected": [null, 1000],
+          "explanation": "1000 concurrent hits at timestamp 1 should all be counted."
+        },
+        {
+          "args": [[["concurrent_hit", 1, 500], ["concurrent_hit", 2, 500], ["getHits", 2]]],
+          "expected": [null, null, 1000],
+          "explanation": "Concurrent hits to different timestamps — both should be fully counted."
+        }
       ],
       "followUps": [
         "What are the trade-offs between per-bucket locks and a global lock?",
@@ -64,10 +82,12 @@
     "At most 300 unique timestamps in any 300-second window",
     "Calls to hit and getHits are at most 5 * 10^4 total"
   ],
-  "io": {
-    "inputFormat": "One operation per line: hit timestamp | getHits timestamp | concurrent_hit timestamp count (Part 2)",
-    "outputFormat": "One line per getHits operation with the returned count",
-    "parseHint": "Each line is an operation. 'hit' and 'concurrent_hit' produce no output. 'getHits' produces one line of output."
+  "functionSignature": {
+    "name": "HitCounter",
+    "params": [
+      { "name": "operations", "type": "string[][]" }
+    ],
+    "returnType": "unknown[]"
   },
   "source": "LeetCode #362",
   "escalationPattern": "constraint-addition"

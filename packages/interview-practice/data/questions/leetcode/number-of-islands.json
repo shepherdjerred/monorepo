@@ -17,23 +17,23 @@
       ],
       "testCases": [
         {
-          "input": "4 5\n11110\n11010\n11000\n00000",
-          "expected": "1",
+          "args": [[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]],
+          "expected": 1,
           "explanation": "All land is connected"
         },
         {
-          "input": "4 5\n11000\n11000\n00100\n00011",
-          "expected": "3",
+          "args": [[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]],
+          "expected": 3,
           "explanation": "Three separate island groups"
         },
         {
-          "input": "1 1\n0",
-          "expected": "0",
+          "args": [[["0"]]],
+          "expected": 0,
           "explanation": "All water"
         },
         {
-          "input": "3 3\n101\n010\n101",
-          "expected": "5",
+          "args": [[["1","0","1"],["0","1","0"],["1","0","1"]]],
+          "expected": 5,
           "explanation": "No orthogonal connections, each '1' is its own island"
         }
       ],
@@ -61,8 +61,8 @@
       ],
       "testCases": [
         {
-          "input": "3 3\n5\n0 0\n0 1\n1 2\n2 1\n1 1",
-          "expected": "1\n1\n2\n3\n1",
+          "args": [3, 3, [[0, 0], [0, 1], [1, 2], [2, 1], [1, 1]]],
+          "expected": [1, 1, 2, 3, 1],
           "explanation": "After each addition: 1 island, still 1, now 2 disconnected, 3 disconnected, all connected = 1"
         }
       ],
@@ -80,10 +80,12 @@
     "1 <= m, n <= 300",
     "grid[i][j] is '0' or '1'"
   ],
-  "io": {
-    "inputFormat": "int m, int n, string[] grid",
-    "outputFormat": "int (number of islands)",
-    "parseHint": "First line: m n. Next m lines: grid rows as strings of '0' and '1'."
+  "functionSignature": {
+    "name": "numIslands",
+    "params": [
+      { "name": "grid", "type": "string[][]" }
+    ],
+    "returnType": "number"
   },
   "source": "LeetCode #200 / #305",
   "escalationPattern": "static-to-dynamic"

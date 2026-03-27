@@ -1,11 +1,6 @@
 // {{TITLE}}
-// Input: {{INPUT_FORMAT}}
-// Output: {{OUTPUT_FORMAT}}
-// {{PARSE_HINT}}
 
-const input = await Bun.stdin.text();
-const lines = input.trim().split("\n");
-
-// TODO: Parse input and solve
-
-console.log("TODO");
+export function {{FUNCTION_NAME}}({{PARAMS}}): {{RETURN_TYPE}} {
+  // TODO: implement
+  return {{DEFAULT_RETURN}};
+}

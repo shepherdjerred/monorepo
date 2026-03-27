@@ -60,7 +60,7 @@ const MOCK_QUESTION: LeetcodeQuestion = {
     },
   ],
   constraints: ["2 <= nums.length <= 10^4"],
-  io: { inputFormat: "int[] nums, int target", outputFormat: "int[]" },
+  functionSignature: { name: "twoSum", params: [{ name: "nums", type: "number[]" }, { name: "target", type: "number" }], returnType: "number[]" },
   source: "leetcode",
   escalationPattern: "constraint-addition",
 };

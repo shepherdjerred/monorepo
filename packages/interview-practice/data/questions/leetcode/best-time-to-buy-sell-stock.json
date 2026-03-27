@@ -16,11 +16,11 @@
         { "level": "explicit", "content": "Track the minimum price seen so far. At each day, profit = price - minSoFar." }
       ],
       "testCases": [
-        { "input": "6\n7 1 5 3 6 4", "expected": "5", "explanation": "Buy at 1, sell at 6" },
-        { "input": "5\n7 6 4 3 1", "expected": "0", "explanation": "Prices only decrease, no profit possible" },
-        { "input": "3\n1 2 3", "expected": "2", "explanation": "Buy at 1, sell at 3" },
-        { "input": "1\n5", "expected": "0", "explanation": "Single day, no transaction" },
-        { "input": "4\n2 4 1 7", "expected": "6", "explanation": "Buy at 1, sell at 7" }
+        { "args": [[7, 1, 5, 3, 6, 4]], "expected": 5, "explanation": "Buy at 1, sell at 6" },
+        { "args": [[7, 6, 4, 3, 1]], "expected": 0, "explanation": "Prices only decrease, no profit possible" },
+        { "args": [[1, 2, 3]], "expected": 2, "explanation": "Buy at 1, sell at 3" },
+        { "args": [[5]], "expected": 0, "explanation": "Single day, no transaction" },
+        { "args": [[2, 4, 1, 7]], "expected": 6, "explanation": "Buy at 1, sell at 7" }
       ],
       "followUps": ["What's the time and space complexity?"],
       "expectedApproach": "Single pass tracking min price, compute max profit at each step.",
@@ -41,9 +41,9 @@
         { "level": "explicit", "content": "Sum all positive differences: if prices[i+1] > prices[i], add the difference." }
       ],
       "testCases": [
-        { "input": "6\n7 1 5 3 6 4", "expected": "7", "explanation": "(5-1)+(6-3) = 4+3 = 7" },
-        { "input": "5\n1 2 3 4 5", "expected": "4", "explanation": "Buy at 1, sell at 5" },
-        { "input": "5\n7 6 4 3 1", "expected": "0", "explanation": "No profit possible" }
+        { "args": [[7, 1, 5, 3, 6, 4]], "expected": 7, "explanation": "(5-1)+(6-3) = 4+3 = 7" },
+        { "args": [[1, 2, 3, 4, 5]], "expected": 4, "explanation": "Buy at 1, sell at 5" },
+        { "args": [[7, 6, 4, 3, 1]], "expected": 0, "explanation": "No profit possible" }
       ],
       "followUps": [
         "What's the time complexity?",
@@ -57,10 +57,12 @@
     "1 <= prices.length <= 10^5",
     "0 <= prices[i] <= 10^4"
   ],
-  "io": {
-    "inputFormat": "int n, int[] prices",
-    "outputFormat": "int (maximum profit)",
-    "parseHint": "First line: n. Second line: n space-separated prices."
+  "functionSignature": {
+    "name": "maxProfit",
+    "params": [
+      { "name": "prices", "type": "number[]" }
+    ],
+    "returnType": "number"
   },
   "source": "LeetCode #121 / #122",
   "escalationPattern": "constraint-addition"
