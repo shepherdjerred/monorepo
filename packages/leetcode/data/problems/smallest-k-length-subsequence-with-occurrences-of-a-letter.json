@@ -1,0 +1,140 @@
+{
+  "questionId": "2157",
+  "questionFrontendId": "2030",
+  "title": "Smallest K-Length Subsequence With Occurrences of a Letter",
+  "titleSlug": "smallest-k-length-subsequence-with-occurrences-of-a-letter",
+  "difficulty": "Hard",
+  "content": "<p>You are given a string <code>s</code>, an integer <code>k</code>, a letter <code>letter</code>, and an integer <code>repetition</code>.</p>\n\n<p>Return <em>the <strong>lexicographically smallest</strong> subsequence of</em> <code>s</code><em> of length</em> <code>k</code> <em>that has the letter</em> <code>letter</code> <em>appear <strong>at least</strong></em> <code>repetition</code> <em>times</em>. The test cases are generated so that the <code>letter</code> appears in <code>s</code> <strong>at least</strong> <code>repetition</code> times.</p>\n\n<p>A <strong>subsequence</strong> is a string that can be derived from another string by deleting some or no characters without changing the order of the remaining characters.</p>\n\n<p>A string <code>a</code> is <strong>lexicographically smaller</strong> than a string <code>b</code> if in the first position where <code>a</code> and <code>b</code> differ, string <code>a</code> has a letter that appears earlier in the alphabet than the corresponding letter in <code>b</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;leet&quot;, k = 3, letter = &quot;e&quot;, repetition = 1\n<strong>Output:</strong> &quot;eet&quot;\n<strong>Explanation:</strong> There are four subsequences of length 3 that have the letter &#39;e&#39; appear at least 1 time:\n- &quot;lee&quot; (from &quot;<strong><u>lee</u></strong>t&quot;)\n- &quot;let&quot; (from &quot;<strong><u>le</u></strong>e<u><strong>t</strong></u>&quot;)\n- &quot;let&quot; (from &quot;<u><strong>l</strong></u>e<u><strong>et</strong></u>&quot;)\n- &quot;eet&quot; (from &quot;l<u><strong>eet</strong></u>&quot;)\nThe lexicographically smallest subsequence among them is &quot;eet&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"example-2\" src=\"https://assets.leetcode.com/uploads/2021/09/13/smallest-k-length-subsequence.png\" style=\"width: 339px; height: 67px;\" />\n<pre>\n<strong>Input:</strong> s = &quot;leetcode&quot;, k = 4, letter = &quot;e&quot;, repetition = 2\n<strong>Output:</strong> &quot;ecde&quot;\n<strong>Explanation:</strong> &quot;ecde&quot; is the lexicographically smallest subsequence of length 4 that has the letter &quot;e&quot; appear at least 2 times.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;bb&quot;, k = 2, letter = &quot;b&quot;, repetition = 2\n<strong>Output:</strong> &quot;bb&quot;\n<strong>Explanation:</strong> &quot;bb&quot; is the only subsequence of length 2 that has the letter &quot;b&quot; appear at least 2 times.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= repetition &lt;= k &lt;= s.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists of lowercase English letters.</li>\n\t<li><code>letter</code> is a lowercase English letter, and appears in <code>s</code> at least <code>repetition</code> times.</li>\n</ul>\n",
+  "hints": [
+    "Use stack. For every character to be appended, decide how many character(s) from the stack needs to get popped based on the stack length and the count of the required character.",
+    "Pop the extra characters out from the stack and return the characters in the stack (reversed)."
+  ],
+  "metaData": "{\n  \"name\": \"smallestSubsequence\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    },\n    {\n      \"type\": \"character\",\n      \"name\": \"letter\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"repetition\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11.4K\", \"totalSubmission\": \"28.6K\", \"totalAcceptedRaw\": 11373, \"totalSubmissionRaw\": 28629, \"acRate\": \"39.7%\"}",
+  "likes": 513,
+  "dislikes": 15,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Remove Duplicate Letters\", \"titleSlug\": \"remove-duplicate-letters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Subarray With Elements Greater Than Varying Threshold\", \"titleSlug\": \"subarray-with-elements-greater-than-varying-threshold\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Lexicographically Smallest Valid Sequence\", \"titleSlug\": \"find-the-lexicographically-smallest-valid-sequence\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"leet\"\n3\n\"e\"\n1",
+    "\"leetcode\"\n4\n\"e\"\n2",
+    "\"bb\"\n2\n\"b\"\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string smallestSubsequence(string s, int k, char letter, int repetition) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String smallestSubsequence(String s, int k, char letter, int repetition) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def smallestSubsequence(self, s: str, k: int, letter: str, repetition: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def smallestSubsequence(self, s, k, letter, repetition):\n        \"\"\"\n        :type s: str\n        :type k: int\n        :type letter: str\n        :type repetition: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} k\n * @param {character} letter\n * @param {number} repetition\n * @return {string}\n */\nvar smallestSubsequence = function(s, k, letter, repetition) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function smallestSubsequence(s: string, k: number, letter: string, repetition: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string SmallestSubsequence(string s, int k, char letter, int repetition) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* smallestSubsequence(char* s, int k, char letter, int repetition) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func smallestSubsequence(s string, k int, letter byte, repetition int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun smallestSubsequence(s: String, k: Int, letter: Char, repetition: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func smallestSubsequence(_ s: String, _ k: Int, _ letter: Character, _ repetition: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn smallest_subsequence(s: String, k: i32, letter: char, repetition: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} k\n# @param {Character} letter\n# @param {Integer} repetition\n# @return {String}\ndef smallest_subsequence(s, k, letter, repetition)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $k\n     * @param String $letter\n     * @param Integer $repetition\n     * @return String\n     */\n    function smallestSubsequence($s, $k, $letter, $repetition) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String smallestSubsequence(String s, int k, String letter, int repetition) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def smallestSubsequence(s: String, k: Int, letter: Char, repetition: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec smallest_subsequence(s :: String.t, k :: integer, letter :: char, repetition :: integer) :: String.t\n  def smallest_subsequence(s, k, letter, repetition) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec smallest_subsequence(S :: unicode:unicode_binary(), K :: integer(), Letter :: char(), Repetition :: integer()) -> unicode:unicode_binary().\nsmallest_subsequence(S, K, Letter, Repetition) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (smallest-subsequence s k letter repetition)\n  (-> string? exact-integer? char? exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

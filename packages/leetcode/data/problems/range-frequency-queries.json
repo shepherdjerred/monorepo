@@ -1,0 +1,144 @@
+{
+  "questionId": "1294",
+  "questionFrontendId": "2080",
+  "title": "Range Frequency Queries",
+  "titleSlug": "range-frequency-queries",
+  "difficulty": "Medium",
+  "content": "<p>Design a data structure to find the <strong>frequency</strong> of a given value in a given subarray.</p>\n\n<p>The <strong>frequency</strong> of a value in a subarray is the number of occurrences of that value in the subarray.</p>\n\n<p>Implement the <code>RangeFreqQuery</code> class:</p>\n\n<ul>\n\t<li><code>RangeFreqQuery(int[] arr)</code> Constructs an instance of the class with the given <strong>0-indexed</strong> integer array <code>arr</code>.</li>\n\t<li><code>int query(int left, int right, int value)</code> Returns the <strong>frequency</strong> of <code>value</code> in the subarray <code>arr[left...right]</code>.</li>\n</ul>\n\n<p>A <strong>subarray</strong> is a contiguous sequence of elements within an array. <code>arr[left...right]</code> denotes the subarray that contains the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> (<strong>inclusive</strong>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;RangeFreqQuery&quot;, &quot;query&quot;, &quot;query&quot;]\n[[[12, 33, 4, 56, 22, 2, 34, 33, 22, 12, 34, 56]], [1, 2, 4], [0, 11, 33]]\n<strong>Output</strong>\n[null, 1, 2]\n\n<strong>Explanation</strong>\nRangeFreqQuery rangeFreqQuery = new RangeFreqQuery([12, 33, 4, 56, 22, 2, 34, 33, 22, 12, 34, 56]);\nrangeFreqQuery.query(1, 2, 4); // return 1. The value 4 occurs 1 time in the subarray [33, 4]\nrangeFreqQuery.query(0, 11, 33); // return 2. The value 33 occurs 2 times in the whole array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arr[i], value &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= left &lt;= right &lt; arr.length</code></li>\n\t<li>At most <code>10<sup>5</sup></code> calls will be made to <code>query</code></li>\n</ul>\n",
+  "hints": [
+    "The queries must be answered efficiently to avoid time limit exceeded verdict.",
+    "Store the elements of the array in a data structure that helps answering the queries efficiently.",
+    "Use a hash table that stored for each value, the indices where that value appeared.",
+    "Use binary search over the indices of a value to find its range frequency."
+  ],
+  "metaData": "{\n  \"classname\": \"RangeFreqQuery\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer[]\",\n        \"name\": \"arr\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"left\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"right\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"value\"\n        }\n      ],\n      \"name\": \"query\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"33.6K\", \"totalSubmission\": \"79.1K\", \"totalAcceptedRaw\": 33632, \"totalSubmissionRaw\": 79149, \"acRate\": \"42.5%\"}",
+  "likes": 745,
+  "dislikes": 29,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"RangeFreqQuery\",\"query\",\"query\"]\n[[[12,33,4,56,22,2,34,33,22,12,34,56]],[1,2,4],[0,11,33]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"quora\", \"name\": \"Quora\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Segment Tree",
+      "slug": "segment-tree"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class RangeFreqQuery {\npublic:\n    RangeFreqQuery(vector<int>& arr) {\n        \n    }\n    \n    int query(int left, int right, int value) {\n        \n    }\n};\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * RangeFreqQuery* obj = new RangeFreqQuery(arr);\n * int param_1 = obj->query(left,right,value);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class RangeFreqQuery {\n\n    public RangeFreqQuery(int[] arr) {\n        \n    }\n    \n    public int query(int left, int right, int value) {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * RangeFreqQuery obj = new RangeFreqQuery(arr);\n * int param_1 = obj.query(left,right,value);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class RangeFreqQuery:\n\n    def __init__(self, arr: List[int]):\n        \n\n    def query(self, left: int, right: int, value: int) -> int:\n        \n\n\n# Your RangeFreqQuery object will be instantiated and called as such:\n# obj = RangeFreqQuery(arr)\n# param_1 = obj.query(left,right,value)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class RangeFreqQuery(object):\n\n    def __init__(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        \"\"\"\n        \n\n    def query(self, left, right, value):\n        \"\"\"\n        :type left: int\n        :type right: int\n        :type value: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your RangeFreqQuery object will be instantiated and called as such:\n# obj = RangeFreqQuery(arr)\n# param_1 = obj.query(left,right,value)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n */\nvar RangeFreqQuery = function(arr) {\n    \n};\n\n/** \n * @param {number} left \n * @param {number} right \n * @param {number} value\n * @return {number}\n */\nRangeFreqQuery.prototype.query = function(left, right, value) {\n    \n};\n\n/** \n * Your RangeFreqQuery object will be instantiated and called as such:\n * var obj = new RangeFreqQuery(arr)\n * var param_1 = obj.query(left,right,value)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class RangeFreqQuery {\n    constructor(arr: number[]) {\n        \n    }\n\n    query(left: number, right: number, value: number): number {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * var obj = new RangeFreqQuery(arr)\n * var param_1 = obj.query(left,right,value)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class RangeFreqQuery {\n\n    public RangeFreqQuery(int[] arr) {\n        \n    }\n    \n    public int Query(int left, int right, int value) {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * RangeFreqQuery obj = new RangeFreqQuery(arr);\n * int param_1 = obj.Query(left,right,value);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} RangeFreqQuery;\n\n\nRangeFreqQuery* rangeFreqQueryCreate(int* arr, int arrSize) {\n    \n}\n\nint rangeFreqQueryQuery(RangeFreqQuery* obj, int left, int right, int value) {\n    \n}\n\nvoid rangeFreqQueryFree(RangeFreqQuery* obj) {\n    \n}\n\n/**\n * Your RangeFreqQuery struct will be instantiated and called as such:\n * RangeFreqQuery* obj = rangeFreqQueryCreate(arr, arrSize);\n * int param_1 = rangeFreqQueryQuery(obj, left, right, value);\n \n * rangeFreqQueryFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type RangeFreqQuery struct {\n    \n}\n\n\nfunc Constructor(arr []int) RangeFreqQuery {\n    \n}\n\n\nfunc (this *RangeFreqQuery) Query(left int, right int, value int) int {\n    \n}\n\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * obj := Constructor(arr);\n * param_1 := obj.Query(left,right,value);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class RangeFreqQuery(arr: IntArray) {\n\n    fun query(left: Int, right: Int, value: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * var obj = RangeFreqQuery(arr)\n * var param_1 = obj.query(left,right,value)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass RangeFreqQuery {\n\n    init(_ arr: [Int]) {\n        \n    }\n    \n    func query(_ left: Int, _ right: Int, _ value: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * let obj = RangeFreqQuery(arr)\n * let ret_1: Int = obj.query(left, right, value)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct RangeFreqQuery {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl RangeFreqQuery {\n\n    fn new(arr: Vec<i32>) -> Self {\n        \n    }\n    \n    fn query(&self, left: i32, right: i32, value: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * let obj = RangeFreqQuery::new(arr);\n * let ret_1: i32 = obj.query(left, right, value);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class RangeFreqQuery\n\n=begin\n    :type arr: Integer[]\n=end\n    def initialize(arr)\n        \n    end\n\n\n=begin\n    :type left: Integer\n    :type right: Integer\n    :type value: Integer\n    :rtype: Integer\n=end\n    def query(left, right, value)\n        \n    end\n\n\nend\n\n# Your RangeFreqQuery object will be instantiated and called as such:\n# obj = RangeFreqQuery.new(arr)\n# param_1 = obj.query(left, right, value)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class RangeFreqQuery {\n    /**\n     * @param Integer[] $arr\n     */\n    function __construct($arr) {\n        \n    }\n  \n    /**\n     * @param Integer $left\n     * @param Integer $right\n     * @param Integer $value\n     * @return Integer\n     */\n    function query($left, $right, $value) {\n        \n    }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * $obj = RangeFreqQuery($arr);\n * $ret_1 = $obj->query($left, $right, $value);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class RangeFreqQuery {\n\n  RangeFreqQuery(List<int> arr) {\n    \n  }\n  \n  int query(int left, int right, int value) {\n    \n  }\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * RangeFreqQuery obj = RangeFreqQuery(arr);\n * int param1 = obj.query(left,right,value);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class RangeFreqQuery(_arr: Array[Int]) {\n\n    def query(left: Int, right: Int, value: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your RangeFreqQuery object will be instantiated and called as such:\n * val obj = new RangeFreqQuery(arr)\n * val param_1 = obj.query(left,right,value)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule RangeFreqQuery do\n  @spec init_(arr :: [integer]) :: any\n  def init_(arr) do\n    \n  end\n\n  @spec query(left :: integer, right :: integer, value :: integer) :: integer\n  def query(left, right, value) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# RangeFreqQuery.init_(arr)\n# param_1 = RangeFreqQuery.query(left, right, value)\n\n# RangeFreqQuery.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec range_freq_query_init_(Arr :: [integer()]) -> any().\nrange_freq_query_init_(Arr) ->\n  .\n\n-spec range_freq_query_query(Left :: integer(), Right :: integer(), Value :: integer()) -> integer().\nrange_freq_query_query(Left, Right, Value) ->\n  .\n\n\n%% Your functions will be called as such:\n%% range_freq_query_init_(Arr),\n%% Param_1 = range_freq_query_query(Left, Right, Value),\n\n%% range_freq_query_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define range-freq-query%\n  (class object%\n    (super-new)\n    \n    ; arr : (listof exact-integer?)\n    (init-field\n      arr)\n    \n    ; query : exact-integer? exact-integer? exact-integer? -> exact-integer?\n    (define/public (query left right value)\n      )))\n\n;; Your range-freq-query% object will be instantiated and called as such:\n;; (define obj (new range-freq-query% [arr arr]))\n;; (define param_1 (send obj query left right value))"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "2223",
+  "questionFrontendId": "2082",
+  "title": "The Number of Rich Customers",
+  "titleSlug": "the-number-of-rich-customers",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Store</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| bill_id     | int  |\n| customer_id | int  |\n| amount      | int  |\n+-------------+------+\nbill_id is the primary key (column with unique values) for this table.\nEach row contains information about the amount of one bill and the customer associated with it.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the number of customers who had <strong>at least one</strong> bill with an amount <strong>strictly greater</strong> than <code>500</code>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nStore table:\n+---------+-------------+--------+\n| bill_id | customer_id | amount |\n+---------+-------------+--------+\n| 6       | 1           | 549    |\n| 8       | 1           | 834    |\n| 4       | 2           | 394    |\n| 11      | 3           | 657    |\n| 13      | 3           | 257    |\n+---------+-------------+--------+\n<strong>Output:</strong> \n+------------+\n| rich_count |\n+------------+\n| 2          |\n+------------+\n<strong>Explanation:</strong> \nCustomer 1 has two bills with amounts strictly greater than 500.\nCustomer 2 does not have any bills with an amount strictly greater than 500.\nCustomer 3 has one bill with an amount strictly greater than 500.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Store (bill_id int, customer_id int, amount int)\"], \"mssql\": [\"Create table Store (bill_id int, customer_id int, amount int)\"], \"oraclesql\": [\"Create table Store (bill_id int, customer_id int, amount int)\"], \"database\": true, \"name\": \"count_rich_customers\", \"pythondata\": [\"Store = pd.DataFrame([], columns=['bill_id', 'customer_id', 'amount']).astype({'bill_id':'int64', 'customer_id':'int64', 'amount':'int64'})\"], \"database_schema\": {\"Store\": {\"bill_id\": \"INT\", \"customer_id\": \"INT\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"30.7K\", \"totalSubmission\": \"39.6K\", \"totalAcceptedRaw\": 30671, \"totalSubmissionRaw\": 39635, \"acRate\": \"77.4%\"}",
+  "likes": 101,
+  "dislikes": 25,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"The Winner University\", \"titleSlug\": \"the-winner-university\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Store\":[\"bill_id\",\"customer_id\",\"amount\"]},\"rows\":{\"Store\":[[6,1,549],[8,1,834],[4,2,394],[11,3,657],[13,3,257]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"athenahealth\", \"name\": \"athenahealth\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_rich_customers(store: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2022",
+    "content": "<!-- Don't delete this -->\n[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: Counting Unique Values\n\n#### Algorithm\nTo initiate the process, bills with amounts greater than 500 are filtered out. Subsequently, the resulting set of bills is processed to extract the unique customer IDs. This is achieved through the application of Boolean Indexing, enabling the filtering of rows that meet the condition `amount > 500`.\n\n```python\nrich_customers = store[store['amount'] > 500]\n```\n\nThis creates a new DataFrame `rich_customers` by filtering the `store` DataFrame and selecting only those rows where the `amount` column is strictly greater than 500. \n\n\n|   bill_id |   customer_id |   amount |\n|----------:|--------------:|---------:|\n|         6 |             1 |      549 |\n|         8 |             1 |      834 |\n|        11 |             3 |      657 |\n\n\n<br>\n\nIn the DataFrame `rich_customers`, there might be some duplicate customer IDs. To calculate the count of unique customer IDs in this column `customer_id`, we can use various approaches. For example, a more \"Pythonic\" method involves calculating the number of elements in the set of values in the `customer_id` column:\n\n```python\ncount = len(set(rich_customers['customer_id']))\n\n# count = 2\n```\n\nAlternatively, we can calculate the number of distinct customer IDs by applying the `nunique()` method to the Series `store['customer_id']` via:\n\n```python\ncount = rich_customers['customer_id'].nunique()\n\n# count = 2\n```\n\n<br>\n\nLastly, we create a new DataFrame `answer` as the final output. It contains a single column named `rich_count`, and the value in this column is the count of rich customers.\n\n```python\nanswer = pd.DataFrame({'rich_count': [count]})\n```\n| rich_count |\n|------------|\n| 2          |\n\n\n<br>\n\n\n#### Implementation\n\nBelow is the complete code:\n\n<iframe src=\"https://leetcode.com/playground/fHZEvtCq/shared\" frameBorder=\"0\" width=\"100%\" height=\"225\" name=\"fHZEvtCq\"></iframe>\n\n<br>\n\n---\n\n## Database\n\n### Approach: Counting Unique Values\n\n#### Algorithm\n\nThe rows in the `Store` table are filtered based on the condition `amount > 500`. Only the rows where the `amount` column holds values greater than 500 will be taken into account for the calculation.\n\nIn SQL, the aggregation function `COUNT(DISTINCT ...)` is used to count the number of distinct values for a specified column in a table. It provides a way to aggregate data and retrieve the count of unique occurrences for a particular attribute in the dataset. Therefore, we can apply the aggregation function `COUNT(DISTINCT customer_id)` to count the number of distinct values in the `customer_id` column. \n\n#### Implementation\n\n```sql\nSELECT \n    COUNT(DISTINCT customer_id) AS rich_count \nFROM \n    Store \nWHERE \n    amount > 500\n```",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

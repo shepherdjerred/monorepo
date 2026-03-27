@@ -1,0 +1,142 @@
+{
+  "questionId": "2139",
+  "questionFrontendId": "2013",
+  "title": "Detect Squares",
+  "titleSlug": "detect-squares",
+  "difficulty": "Medium",
+  "content": "<p>You are given a stream of points on the X-Y plane. Design an algorithm that:</p>\n\n<ul>\n\t<li><strong>Adds</strong> new points from the stream into a data structure. <strong>Duplicate</strong> points are allowed and should be treated as different points.</li>\n\t<li>Given a query point, <strong>counts</strong> the number of ways to choose three points from the data structure such that the three points and the query point form an <strong>axis-aligned square</strong> with <strong>positive area</strong>.</li>\n</ul>\n\n<p>An <strong>axis-aligned square</strong> is a square whose edges are all the same length and are either parallel or perpendicular to the x-axis and y-axis.</p>\n\n<p>Implement the <code>DetectSquares</code> class:</p>\n\n<ul>\n\t<li><code>DetectSquares()</code> Initializes the object with an empty data structure.</li>\n\t<li><code>void add(int[] point)</code> Adds a new point <code>point = [x, y]</code> to the data structure.</li>\n\t<li><code>int count(int[] point)</code> Counts the number of ways to form <strong>axis-aligned squares</strong> with point <code>point = [x, y]</code> as described above.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/01/image.png\" style=\"width: 869px; height: 504px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;DetectSquares&quot;, &quot;add&quot;, &quot;add&quot;, &quot;add&quot;, &quot;count&quot;, &quot;count&quot;, &quot;add&quot;, &quot;count&quot;]\n[[], [[3, 10]], [[11, 2]], [[3, 2]], [[11, 10]], [[14, 8]], [[11, 2]], [[11, 10]]]\n<strong>Output</strong>\n[null, null, null, null, 1, 0, null, 2]\n\n<strong>Explanation</strong>\nDetectSquares detectSquares = new DetectSquares();\ndetectSquares.add([3, 10]);\ndetectSquares.add([11, 2]);\ndetectSquares.add([3, 2]);\ndetectSquares.count([11, 10]); // return 1. You can choose:\n                               //   - The first, second, and third points\ndetectSquares.count([14, 8]);  // return 0. The query point cannot form a square with any points in the data structure.\ndetectSquares.add([11, 2]);    // Adding duplicate points is allowed.\ndetectSquares.count([11, 10]); // return 2. You can choose:\n                               //   - The first, second, and third points\n                               //   - The first, third, and fourth points\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>point.length == 2</code></li>\n\t<li><code>0 &lt;= x, y &lt;= 1000</code></li>\n\t<li>At most <code>3000</code> calls <strong>in total</strong> will be made to <code>add</code> and <code>count</code>.</li>\n</ul>\n",
+  "hints": [
+    "Maintain the frequency of all the points in a hash map.",
+    "Traverse the hash map and if any point has the same y-coordinate as the query point, consider this point and the query point to form one of the horizontal lines of the square."
+  ],
+  "metaData": "{\n  \"classname\": \"DetectSquares\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer[]\",\n          \"name\": \"point\"\n        }\n      ],\n      \"name\": \"add\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer[]\",\n          \"name\": \"point\"\n        }\n      ],\n      \"name\": \"count\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"107.1K\", \"totalSubmission\": \"204.3K\", \"totalAcceptedRaw\": 107128, \"totalSubmissionRaw\": 204304, \"acRate\": \"52.4%\"}",
+  "likes": 1012,
+  "dislikes": 259,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"DetectSquares\",\"add\",\"add\",\"add\",\"count\",\"count\",\"add\",\"count\"]\n[[],[[3,10]],[[11,2]],[[3,2]],[[11,10]],[[14,8]],[[11,2]],[[11,10]]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Data Stream",
+      "slug": "data-stream"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class DetectSquares {\npublic:\n    DetectSquares() {\n        \n    }\n    \n    void add(vector<int> point) {\n        \n    }\n    \n    int count(vector<int> point) {\n        \n    }\n};\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * DetectSquares* obj = new DetectSquares();\n * obj->add(point);\n * int param_2 = obj->count(point);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class DetectSquares {\n\n    public DetectSquares() {\n        \n    }\n    \n    public void add(int[] point) {\n        \n    }\n    \n    public int count(int[] point) {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * DetectSquares obj = new DetectSquares();\n * obj.add(point);\n * int param_2 = obj.count(point);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class DetectSquares:\n\n    def __init__(self):\n        \n\n    def add(self, point: List[int]) -> None:\n        \n\n    def count(self, point: List[int]) -> int:\n        \n\n\n# Your DetectSquares object will be instantiated and called as such:\n# obj = DetectSquares()\n# obj.add(point)\n# param_2 = obj.count(point)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class DetectSquares(object):\n\n    def __init__(self):\n        \n\n    def add(self, point):\n        \"\"\"\n        :type point: List[int]\n        :rtype: None\n        \"\"\"\n        \n\n    def count(self, point):\n        \"\"\"\n        :type point: List[int]\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your DetectSquares object will be instantiated and called as such:\n# obj = DetectSquares()\n# obj.add(point)\n# param_2 = obj.count(point)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar DetectSquares = function() {\n    \n};\n\n/** \n * @param {number[]} point\n * @return {void}\n */\nDetectSquares.prototype.add = function(point) {\n    \n};\n\n/** \n * @param {number[]} point\n * @return {number}\n */\nDetectSquares.prototype.count = function(point) {\n    \n};\n\n/** \n * Your DetectSquares object will be instantiated and called as such:\n * var obj = new DetectSquares()\n * obj.add(point)\n * var param_2 = obj.count(point)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class DetectSquares {\n    constructor() {\n        \n    }\n\n    add(point: number[]): void {\n        \n    }\n\n    count(point: number[]): number {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * var obj = new DetectSquares()\n * obj.add(point)\n * var param_2 = obj.count(point)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class DetectSquares {\n\n    public DetectSquares() {\n        \n    }\n    \n    public void Add(int[] point) {\n        \n    }\n    \n    public int Count(int[] point) {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * DetectSquares obj = new DetectSquares();\n * obj.Add(point);\n * int param_2 = obj.Count(point);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} DetectSquares;\n\n\nDetectSquares* detectSquaresCreate() {\n    \n}\n\nvoid detectSquaresAdd(DetectSquares* obj, int* point, int pointSize) {\n    \n}\n\nint detectSquaresCount(DetectSquares* obj, int* point, int pointSize) {\n    \n}\n\nvoid detectSquaresFree(DetectSquares* obj) {\n    \n}\n\n/**\n * Your DetectSquares struct will be instantiated and called as such:\n * DetectSquares* obj = detectSquaresCreate();\n * detectSquaresAdd(obj, point, pointSize);\n \n * int param_2 = detectSquaresCount(obj, point, pointSize);\n \n * detectSquaresFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type DetectSquares struct {\n    \n}\n\n\nfunc Constructor() DetectSquares {\n    \n}\n\n\nfunc (this *DetectSquares) Add(point []int)  {\n    \n}\n\n\nfunc (this *DetectSquares) Count(point []int) int {\n    \n}\n\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * obj := Constructor();\n * obj.Add(point);\n * param_2 := obj.Count(point);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class DetectSquares() {\n\n    fun add(point: IntArray) {\n        \n    }\n\n    fun count(point: IntArray): Int {\n        \n    }\n\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * var obj = DetectSquares()\n * obj.add(point)\n * var param_2 = obj.count(point)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass DetectSquares {\n\n    init() {\n        \n    }\n    \n    func add(_ point: [Int]) {\n        \n    }\n    \n    func count(_ point: [Int]) -> Int {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * let obj = DetectSquares()\n * obj.add(point)\n * let ret_2: Int = obj.count(point)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct DetectSquares {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl DetectSquares {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add(&self, point: Vec<i32>) {\n        \n    }\n    \n    fn count(&self, point: Vec<i32>) -> i32 {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * let obj = DetectSquares::new();\n * obj.add(point);\n * let ret_2: i32 = obj.count(point);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class DetectSquares\n    def initialize()\n        \n    end\n\n\n=begin\n    :type point: Integer[]\n    :rtype: Void\n=end\n    def add(point)\n        \n    end\n\n\n=begin\n    :type point: Integer[]\n    :rtype: Integer\n=end\n    def count(point)\n        \n    end\n\n\nend\n\n# Your DetectSquares object will be instantiated and called as such:\n# obj = DetectSquares.new()\n# obj.add(point)\n# param_2 = obj.count(point)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class DetectSquares {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer[] $point\n     * @return NULL\n     */\n    function add($point) {\n        \n    }\n  \n    /**\n     * @param Integer[] $point\n     * @return Integer\n     */\n    function count($point) {\n        \n    }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * $obj = DetectSquares();\n * $obj->add($point);\n * $ret_2 = $obj->count($point);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class DetectSquares {\n\n  DetectSquares() {\n    \n  }\n  \n  void add(List<int> point) {\n    \n  }\n  \n  int count(List<int> point) {\n    \n  }\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * DetectSquares obj = DetectSquares();\n * obj.add(point);\n * int param2 = obj.count(point);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class DetectSquares() {\n\n    def add(point: Array[Int]): Unit = {\n        \n    }\n\n    def count(point: Array[Int]): Int = {\n        \n    }\n\n}\n\n/**\n * Your DetectSquares object will be instantiated and called as such:\n * val obj = new DetectSquares()\n * obj.add(point)\n * val param_2 = obj.count(point)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule DetectSquares do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add(point :: [integer]) :: any\n  def add(point) do\n    \n  end\n\n  @spec count(point :: [integer]) :: integer\n  def count(point) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# DetectSquares.init_()\n# DetectSquares.add(point)\n# param_2 = DetectSquares.count(point)\n\n# DetectSquares.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec detect_squares_init_() -> any().\ndetect_squares_init_() ->\n  .\n\n-spec detect_squares_add(Point :: [integer()]) -> any().\ndetect_squares_add(Point) ->\n  .\n\n-spec detect_squares_count(Point :: [integer()]) -> integer().\ndetect_squares_count(Point) ->\n  .\n\n\n%% Your functions will be called as such:\n%% detect_squares_init_(),\n%% detect_squares_add(Point),\n%% Param_2 = detect_squares_count(Point),\n\n%% detect_squares_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define detect-squares%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add : (listof exact-integer?) -> void?\n    (define/public (add point)\n      )\n    ; count : (listof exact-integer?) -> exact-integer?\n    (define/public (count point)\n      )))\n\n;; Your detect-squares% object will be instantiated and called as such:\n;; (define obj (new detect-squares%))\n;; (send obj add point)\n;; (define param_2 (send obj count point))"
+    }
+  ],
+  "solution": null
+}

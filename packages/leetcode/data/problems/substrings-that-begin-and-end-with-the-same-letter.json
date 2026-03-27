@@ -1,0 +1,152 @@
+{
+  "questionId": "2225",
+  "questionFrontendId": "2083",
+  "title": "Substrings That Begin and End With the Same Letter",
+  "titleSlug": "substrings-that-begin-and-end-with-the-same-letter",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> consisting of only lowercase English letters. Return <em>the number of <strong>substrings</strong> in </em><code>s</code> <em>that begin and end with the <strong>same</strong> character.</em></p>\n\n<p>A <strong>substring</strong> is a contiguous non-empty sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcba&quot;\n<strong>Output:</strong> 7\n<strong>Explanation:</strong>\nThe substrings of length 1 that start and end with the same letter are: &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;b&quot;, and &quot;a&quot;.\nThe substring of length 3 that starts and ends with the same letter is: &quot;bcb&quot;.\nThe substring of length 5 that starts and ends with the same letter is: &quot;abcba&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abacad&quot;\n<strong>Output:</strong> 9\n<strong>Explanation:</strong>\nThe substrings of length 1 that start and end with the same letter are: &quot;a&quot;, &quot;b&quot;, &quot;a&quot;, &quot;c&quot;, &quot;a&quot;, and &quot;d&quot;.\nThe substrings of length 3 that start and end with the same letter are: &quot;aba&quot; and &quot;aca&quot;.\nThe substring of length 5 that starts and ends with the same letter is: &quot;abaca&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a&quot;\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe substring of length 1 that starts and ends with the same letter is: &quot;a&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "In the string \"abacad\", the letter \"a\" appears 3 times. How many substrings begin with the first \"a\" and end with any \"a\"?",
+    "There are 3 substrings (\"a\", \"aba\", and \"abaca\"). How many substrings begin with the second \"a\" and end with any \"a\"? How about the third?",
+    "2 substrings begin with the second \"a\" (\"a\", and \"aca\") and 1 substring begins with the third \"a\" (\"a\").",
+    "There is a total of 3 + 2 + 1 = 6 substrings that begin and end with \"a\".",
+    "If a character appears i times in the string, there are i * (i + 1) / 2 substrings that begin and end with that character."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14K\", \"totalSubmission\": \"18.8K\", \"totalAcceptedRaw\": 13992, \"totalSubmissionRaw\": 18804, \"acRate\": \"74.4%\"}",
+  "likes": 137,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Number of Good Pairs\", \"titleSlug\": \"number-of-good-pairs\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Beauty of All Substrings\", \"titleSlug\": \"sum-of-beauty-of-all-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Pairs in Two Arrays\", \"titleSlug\": \"count-pairs-in-two-arrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Substrings With Equal Digit Frequency\", \"titleSlug\": \"unique-substrings-with-equal-digit-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"abcba\"",
+    "\"abacad\"",
+    "\"a\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long numberOfSubstrings(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long numberOfSubstrings(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfSubstrings(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfSubstrings(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar numberOfSubstrings = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfSubstrings(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long NumberOfSubstrings(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long numberOfSubstrings(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfSubstrings(s string) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfSubstrings(s: String): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfSubstrings(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_substrings(s: String) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef number_of_substrings(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function numberOfSubstrings($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfSubstrings(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfSubstrings(s: String): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_substrings(s :: String.t) :: integer\n  def number_of_substrings(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_substrings(S :: unicode:unicode_binary()) -> integer().\nnumber_of_substrings(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-substrings s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2335",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nSince we need to find the number of substrings that begin and end with the same letter, we can focus on the first and last character of the substring and safely ignore the characters in the middle. \n\nAdditionally, substrings with only one letter have to be considered and counted along with all their duplicates. Say the input string has 5 `a` characters, all 5 of these single character substrings have to be included in our answer. \n\nA common mistake when solving this problem is to overlook whether or not we need to track duplicate characters or whether substrings of length 1 are also counted. Asking clarifying questions about edge cases in an interview can be very helpful to both showcase your attention to detail and keep you on the right track. \n\n--- \n\n### Approach 1: Prefix Count\n\n#### Intuition\n\nSince all we need to do to identify a valid substring is ensure that the last character matches the first, we know that any given character in `s` forms a substring with every occurrence of the same character that has already appeared in the given string. \n\n!?!../Documents/2083/slideshow.json:960,540!?!\n\nTo pair up a letter in `s` with all the same letters that come before it, we need to keep track of how many times we've encountered it so far. This widely used concept in data structure and algorithm questions is called prefix count. In prefix count, as the name suggests, we store the number of occurrences of each element at a given index as we encounter them. \n\nAs we iterate through the letters in `s`, the current element can be paired up with all the occurrences of that letter we have seen so far, along with the current element itself. \n\nThe input string `s` only consists of lowercase English letters, so we can use an array with a fixed size of 26 for each letter of the alphabet instead of a hash set to store the prefix count. \n\n> Note: For an input string of size `10,000` where all the characters are the same letter, there are `5,000,050,000` substrings that begin and end with the same letter. Trying to store this value in a 32-bit integer data type will cause an overflow. The data type `long` in Java can hold values up to `9,223,372,036,854,775,807`, and the data type `long long` in C++ can hold values up to `9,223,372,036,854,775,807`. Therefore, we will be using these data types for this problem.\n\n\n#### Algorithm\n\n1. Initialization:\n    - Get the size of the string `s` and store it in `n`.\n    - Initialize `answer` to `0` to store the number of valid substrings.\n    - Create a list `prefixCount` of size `26`, initialized to `0` to store the number of letters observed so far. \n2. Iterate through the string `s` from left to right:\n    - For each character in the string `s`:\n        - Increment the corresponding position in `prefixCount`. \n        - Update `answer` by adding the entry for the current character in `prefixCount`.\n3. Return `answer` which stores the total number of valid substrings.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PKX9wp4p/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"PKX9wp4p\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time Complexity: $O(n)$\n\n    Initializing the `prefixCount` array takes $O(1)$ time, because it has a fixed size of `26`.\n\n     Iterating through the string `s` involves a single loop that runs $n$ times. \n\n     Inside the loop, incrementing the count in the `prefixCount` array and updating the `answer` variable both take $O(1)$ time for each character.\n\n     Therefore, the total time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    The `prefixCount` array uses constant space $O(26) = O(1)$. \n\n    Variables `n`, `answer`, and `i` use constant space.\n\n    Therefore, the space complexity is $O(1)$.\n\n---\n\n### Approach 2: Counting\n\n#### Intuition\n\nWe established that matching the first and last characters is sufficient to detect a valid substring. Thus, the count of valid substrings starting and ending with a specific letter precisely corresponds to the number of ways we can select two occurrences of that letter from the entire string. Consequently, if we have the frequency count of each letter in `s`, we can directly compute the total number of valid substrings starting and ending with that specific letter.\n\nSo, the problem is now reduced to counting how many ways we can pick two from the occurrences of a specific letter in the string `s`. In mathematics, we can express this as $\\dbinom{n}{2}$, read as `n choose 2`, where `n` is the number of times the specific letter appears in the string. Notice that this formula doesn't include substrings of length one, which is equivalent to picking the same character twice. Thus, the correct formula is $\\dbinom{n}{2} + n$ to include substrings of length one as well. \n\nWe can simplify the formula further to get $\\dbinom{n}{2} + n$ = $\\dfrac{n \\cdot (n - 1)}{2} + n = \\dfrac{(n + 1) \\cdot n}{2}$. \n\n> Note: As a reminder, $\\dbinom{n}{k} = \\dfrac{n!}{k! \\cdot (n - k)!}$ . \n\n#### Algorithm\n\n1. Initialization:\n    - Initialize `answer` to `0` to store the number of valid substrings.\n    - Create a list `frequencyCount` of size `26`, initialized to `0` to store the frequency of each letter in `s`.\n2. Count the frequency of each character in the string `s`:\n    - Iterate through each character in the string `s`:\n        - Increment the corresponding position in `frequencyCount`.\n3. Calculate the total number of valid substrings:\n    - Iterate through each count in `frequencyCount`:\n        - Use the formula `((currentCount + 1) * currentCount) / 2` to calculate the number of valid substrings for the current letter and add it to `answer`.\n4. Return `answer` which stores the total number of valid substrings.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HQkAv6DW/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"HQkAv6DW\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the string `s`.\n\n- Time Complexity: $O(n)$\n\n    Initializing the `frequencyCount` array takes $O(1)$ time, because it has a fixed size of `26`.\n\n    Counting the frequency of each character in the string `s` involves a single loop that runs $n$ times.\n\n    Iterating through the `frequencyCount` array involves a loop that runs $26$ times, which is constant and does not depend on $n$.\n\n    Inside this loop, updating the `answer` variable takes $O(1)$ time for each character.\n\n    Therefore, the total time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    The `frequencyCount` array uses constant space $O(26) = O(1)$.\n\n    Variables `answer` and `currentCount` use constant space.\n\n    Therefore, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "questionId": "2198",
+  "questionFrontendId": "2076",
+  "title": "Process Restricted Friend Requests",
+  "titleSlug": "process-restricted-friend-requests",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer <code>n</code> indicating the number of people in a network. Each person is labeled from <code>0</code> to <code>n - 1</code>.</p>\n\n<p>You are also given a <strong>0-indexed</strong> 2D integer array <code>restrictions</code>, where <code>restrictions[i] = [x<sub>i</sub>, y<sub>i</sub>]</code> means that person <code>x<sub>i</sub></code> and person <code>y<sub>i</sub></code> <strong>cannot </strong>become <strong>friends</strong>,<strong> </strong>either <strong>directly</strong> or <strong>indirectly</strong> through other people.</p>\n\n<p>Initially, no one is friends with each other. You are given a list of friend requests as a <strong>0-indexed</strong> 2D integer array <code>requests</code>, where <code>requests[j] = [u<sub>j</sub>, v<sub>j</sub>]</code> is a friend request between person <code>u<sub>j</sub></code> and person <code>v<sub>j</sub></code>.</p>\n\n<p>A friend request is <strong>successful </strong>if <code>u<sub>j</sub></code> and <code>v<sub>j</sub></code> can be <strong>friends</strong>. Each friend request is processed in the given order (i.e., <code>requests[j]</code> occurs before <code>requests[j + 1]</code>), and upon a successful request, <code>u<sub>j</sub></code> and <code>v<sub>j</sub></code> <strong>become direct friends</strong> for all future friend requests.</p>\n\n<p>Return <em>a <strong>boolean array</strong> </em><code>result</code>,<em> where each </em><code>result[j]</code><em> is </em><code>true</code><em> if the </em><code>j<sup>th</sup></code><em> friend request is <strong>successful</strong> or </em><code>false</code><em> if it is not</em>.</p>\n\n<p><strong>Note:</strong> If <code>u<sub>j</sub></code> and <code>v<sub>j</sub></code> are already direct friends, the request is still <strong>successful</strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, restrictions = [[0,1]], requests = [[0,2],[2,1]]\n<strong>Output:</strong> [true,false]\n<strong>Explanation:\n</strong>Request 0: Person 0 and person 2 can be friends, so they become direct friends. \nRequest 1: Person 2 and person 1 cannot be friends since person 0 and person 1 would be indirect friends (1--2--0).\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 3, restrictions = [[0,1]], requests = [[1,2],[0,2]]\n<strong>Output:</strong> [true,false]\n<strong>Explanation:\n</strong>Request 0: Person 1 and person 2 can be friends, so they become direct friends.\nRequest 1: Person 0 and person 2 cannot be friends since person 0 and person 1 would be indirect friends (0--2--1).\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 5, restrictions = [[0,1],[1,2],[2,3]], requests = [[0,4],[1,2],[3,1],[3,4]]\n<strong>Output:</strong> [true,false,true,false]\n<strong>Explanation:\n</strong>Request 0: Person 0 and person 4 can be friends, so they become direct friends.\nRequest 1: Person 1 and person 2 cannot be friends since they are directly restricted.\nRequest 2: Person 3 and person 1 can be friends, so they become direct friends.\nRequest 3: Person 3 and person 4 cannot be friends since person 0 and person 1 would be indirect friends (0--4--3--1).\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>0 &lt;= restrictions.length &lt;= 1000</code></li>\n\t<li><code>restrictions[i].length == 2</code></li>\n\t<li><code>0 &lt;= x<sub>i</sub>, y<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>x<sub>i</sub> != y<sub>i</sub></code></li>\n\t<li><code>1 &lt;= requests.length &lt;= 1000</code></li>\n\t<li><code>requests[j].length == 2</code></li>\n\t<li><code>0 &lt;= u<sub>j</sub>, v<sub>j</sub> &lt;= n - 1</code></li>\n\t<li><code>u<sub>j</sub> != v<sub>j</sub></code></li>\n</ul>\n",
+  "hints": [
+    "For each request, we could loop through all restrictions. Can you think of doing a check-in close to O(1)?",
+    "Could you use Union Find?"
+  ],
+  "metaData": "{\n  \"name\": \"friendRequests\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"restrictions\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"requests\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"24.8K\", \"totalSubmission\": \"41.4K\", \"totalAcceptedRaw\": 24800, \"totalSubmissionRaw\": 41393, \"acRate\": \"59.9%\"}",
+  "likes": 667,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Islands II\", \"titleSlug\": \"number-of-islands-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Smallest String With Swaps\", \"titleSlug\": \"smallest-string-with-swaps\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Employees to Be Invited to a Meeting\", \"titleSlug\": \"maximum-employees-to-be-invited-to-a-meeting\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[[0,1]]\n[[0,2],[2,1]]",
+    "3\n[[0,1]]\n[[1,2],[0,2]]",
+    "5\n[[0,1],[1,2],[2,3]]\n[[0,4],[1,2],[3,1],[3,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Union-Find",
+      "slug": "union-find"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<bool> friendRequests(int n, vector<vector<int>>& restrictions, vector<vector<int>>& requests) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean[] friendRequests(int n, int[][] restrictions, int[][] requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def friendRequests(self, n: int, restrictions: List[List[int]], requests: List[List[int]]) -> List[bool]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def friendRequests(self, n, restrictions, requests):\n        \"\"\"\n        :type n: int\n        :type restrictions: List[List[int]]\n        :type requests: List[List[int]]\n        :rtype: List[bool]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} restrictions\n * @param {number[][]} requests\n * @return {boolean[]}\n */\nvar friendRequests = function(n, restrictions, requests) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function friendRequests(n: number, restrictions: number[][], requests: number[][]): boolean[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool[] FriendRequests(int n, int[][] restrictions, int[][] requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nbool* friendRequests(int n, int** restrictions, int restrictionsSize, int* restrictionsColSize, int** requests, int requestsSize, int* requestsColSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func friendRequests(n int, restrictions [][]int, requests [][]int) []bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun friendRequests(n: Int, restrictions: Array<IntArray>, requests: Array<IntArray>): BooleanArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func friendRequests(_ n: Int, _ restrictions: [[Int]], _ requests: [[Int]]) -> [Bool] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn friend_requests(n: i32, restrictions: Vec<Vec<i32>>, requests: Vec<Vec<i32>>) -> Vec<bool> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} restrictions\n# @param {Integer[][]} requests\n# @return {Boolean[]}\ndef friend_requests(n, restrictions, requests)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $restrictions\n     * @param Integer[][] $requests\n     * @return Boolean[]\n     */\n    function friendRequests($n, $restrictions, $requests) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<bool> friendRequests(int n, List<List<int>> restrictions, List<List<int>> requests) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def friendRequests(n: Int, restrictions: Array[Array[Int]], requests: Array[Array[Int]]): Array[Boolean] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec friend_requests(n :: integer, restrictions :: [[integer]], requests :: [[integer]]) :: [boolean]\n  def friend_requests(n, restrictions, requests) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec friend_requests(N :: integer(), Restrictions :: [[integer()]], Requests :: [[integer()]]) -> [boolean()].\nfriend_requests(N, Restrictions, Requests) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (friend-requests n restrictions requests)\n  (-> exact-integer? (listof (listof exact-integer?)) (listof (listof exact-integer?)) (listof boolean?))\n  )"
+    }
+  ],
+  "solution": null
+}

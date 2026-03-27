@@ -1,0 +1,145 @@
+{
+  "questionId": "2170",
+  "questionFrontendId": "2044",
+  "title": "Count Number of Maximum Bitwise-OR Subsets",
+  "titleSlug": "count-number-of-maximum-bitwise-or-subsets",
+  "difficulty": "Medium",
+  "content": "<p>Given an integer array <code>nums</code>, find the <strong>maximum</strong> possible <strong>bitwise OR</strong> of a subset of <code>nums</code> and return <em>the <strong>number of different non-empty subsets</strong> with the maximum bitwise OR</em>.</p>\n\n<p>An array <code>a</code> is a <strong>subset</strong> of an array <code>b</code> if <code>a</code> can be obtained from <code>b</code> by deleting some (possibly zero) elements of <code>b</code>. Two subsets are considered <strong>different</strong> if the indices of the elements chosen are different.</p>\n\n<p>The bitwise OR of an array <code>a</code> is equal to <code>a[0] <strong>OR</strong> a[1] <strong>OR</strong> ... <strong>OR</strong> a[a.length - 1]</code> (<strong>0-indexed</strong>).</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The maximum possible bitwise OR of a subset is 3. There are 2 subsets with a bitwise OR of 3:\n- [3]\n- [3,1]\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [2,2,2]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> All non-empty subsets of [2,2,2] have a bitwise OR of 2. There are 2<sup>3</sup> - 1 = 7 total subsets.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [3,2,1,5]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> The maximum possible bitwise OR of a subset is 7. There are 6 subsets with a bitwise OR of 7:\n- [3,5]\n- [3,1,5]\n- [3,2,5]\n- [3,2,1,5]\n- [2,5]\n- [2,1,5]</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 16</code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can we enumerate all possible subsets?",
+    "The maximum bitwise-OR is the bitwise-OR of the whole array."
+  ],
+  "metaData": "{\n  \"name\": \"countMaxOrSubsets\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"248.7K\", \"totalSubmission\": \"277.7K\", \"totalAcceptedRaw\": 248659, \"totalSubmissionRaw\": 277704, \"acRate\": \"89.5%\"}",
+  "likes": 1405,
+  "dislikes": 97,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subsets\", \"titleSlug\": \"subsets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Largest Combination With Bitwise AND Greater Than Zero\", \"titleSlug\": \"largest-combination-with-bitwise-and-greater-than-zero\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Subarray With Maximum Bitwise AND\", \"titleSlug\": \"longest-subarray-with-maximum-bitwise-and\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,1]",
+    "[2,2,2]",
+    "[3,2,1,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"citadel\", \"name\": \"Citadel\"}, {\"timesEncountered\": 2, \"slug\": \"bny-mellon\", \"name\": \"BNY Mellon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Backtracking",
+      "slug": "backtracking"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countMaxOrSubsets(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countMaxOrSubsets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countMaxOrSubsets(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countMaxOrSubsets(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar countMaxOrSubsets = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countMaxOrSubsets(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountMaxOrSubsets(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countMaxOrSubsets(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countMaxOrSubsets(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countMaxOrSubsets(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countMaxOrSubsets(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_max_or_subsets(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef count_max_or_subsets(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function countMaxOrSubsets($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countMaxOrSubsets(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countMaxOrSubsets(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_max_or_subsets(nums :: [integer]) :: integer\n  def count_max_or_subsets(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_max_or_subsets(Nums :: [integer()]) -> integer().\ncount_max_or_subsets(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-max-or-subsets nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2530",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview \n\nThe key insight here is that the maximum OR value will always be the result of OR-ing all the numbers in the array. Why? Because OR is an operation that only adds bits, it never removes them. So including more numbers can only increase (or keep the same) the OR value, never decrease it.\n\nFor example, consider 3 numbers: 1 (001), 4 (100), and 2 (010). \n\nORing the three numbers means we look at the bits in each position and combine them using the OR operation to get the resultant bit. Notice that the resultant bit will be 0 only when all the bits at that position are 0, otherwise, it will always be 1. This means that the worst-case scenario is that the bit remains the same, and in all other cases, the bit increases in value.\n    \n---\n\n### Approach 1: Recursion\n\n#### Intuition\n\nTo count all subsets of `nums` that yield the maximum OR value, we can generate all possible subsets recursively. For each number, we choose either to include it in the subset or exclude it.\n\nIn the recursion, we first check if we've reached the end of the array. If so, we compare the accumulated OR value with the precomputed maximum OR value. If they match, we have a valid subset and return 1.\n\nIf we haven't reached the end, we proceed by making two recursive calls: one excluding the current number and another including it. The total count of valid subsets is the sum of these two results.\n\nThe main function initiates this recursive process from the start of the array, and the final result gives the total count of subsets with the maximum OR value.\n\n#### Algorithm\n\n- Initialize a variable `maxOrValue` to 0.\n- Iterate through each number `num` in the input array `nums`.\n  - Update `maxOrValue` by performing a bitwise OR operation with `num`.\n- Call the recursive function `countSubsets` with initial parameters: `nums`, index 0, current OR value 0, and the target OR value `maxOrValue`. Return its result as the answer.\n\n- Define a function `countSubsets` with parameters: the `nums` array, `index`, `currentOr`, and `targetOr`.\n  - Check if `index` has reached the end of the array.\n    - If so, return 1 if `currentOr` equals `targetOr`, otherwise return 0.\n  - Recursively call `countSubsets` without including the current number, incrementing the index. Store the result in a variable `countWithout`.\n  - Recursively call `countSubsets` including the current number, incrementing the index, and updating the current OR value. Store the result in a variable `countWith`. \n  - Return the sum of `countWithout` and `countWith`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/nJLGxbWk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"nJLGxbWk\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`.\n\n- Time complexity: $O(2^n)$\n\n    The initial loop to find `maxOrValue` takes $O(n)$ time.\n\n    The main complexity comes from the recursive `countSubsets` function, which generates all possible subsets of the input array. For each element, the algorithm makes two choices, leading to a total of $2^n$ subsets. Each recursive call does $O(1)$ work (bitwise OR operation and comparisons).\n\n    Thus, the overall time complexity is $O(2^n)$. \n\n- Space complexity: $O(n)$\n\n    In the worst case, the recursive call stack goes $n$ levels deep. Thus, the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Memoization\n\n#### Intuition\n\nConsider this example with `nums = [3, 1, 2, 4]`. During recursion, we might encounter two similar states:\n1. Subset 1: `[3, 1]` with `index = 2`\n2. Subset 2: `[3]` with `index = 2`\n\nIn both cases, the accumulated OR value and the current index are the same, which is known as an overlapping sub-problem.\n\nMemoization helps eliminate repeated calculations by storing the results of sub-problems the first time they're encountered. Each recursive state can be uniquely identified by the OR value up to that point and the current array index. To store these results, we use a 2D `memo` array.\n\nAt each recursion step, we first check if the current state exists in `memo`. If it does, we return the stored value. Otherwise, we calculate the result and store it in `memo` for future reference.\n\n#### Algorithm\n\n- Initialize a variable:  \n  - `n` to the length of `nums`.\n  - `maxOrValue` to 0.\n- Iterate through each number in the input array `nums`:\n  - Update `maxOrValue` by performing a bitwise OR operation with the current number.\n- Create a 2D array `memo` of size `n * (maxOrValue + 1)` to store intermediate results.\n- Call the recursive function `countSubsetsRecursive` with initial parameters: `nums`, `index` 0, `currentOr` value 0, the `targetOr` value `maxOrValue`, and the memoization array `memo`. Return the result as our answer.\n\n- Define a function `countSubsetsRecursive` with parameters: the `nums` array, `index`, `currentOr`, `targetOr`, and the dp array `memo`.\n  - Check if the current `index` has reached the end of the array:\n    - If so, return 1 if the current OR value equals the target OR value, otherwise, return 0.\n  - If the result for the current state (`index`, `currentOr`) is already memoized, return it.\n  - Recursively call `countSubsetsRecursive` without including the current number, incrementing the index. Store the result in a variable `countWithout`.\n  - Recursively call `countSubsetsRecursive` including the current number, incrementing the index, and updating the current OR value. Store the result in a variable `countWith`.\n  - The sum of `countWithout` and `countWith` is our result. Store it in the `memo` and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ih3tZMvY/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ih3tZMvY\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums` and $\\text{maxOrValue}$ be the maximum possible OR value.\n\n* Time complexity: $O(n \\cdot \\text{maxOrValue})$\n\n    Like the previous approach, the initial loop to find `maxOrValue` takes $O(n)$ time. \n\n    Each state of the `countSubsetsRecursive` function is defined by two parameters: the current index ($0$ to $n-1$) and the current OR value ($0$ to $\\text{maxOrValue}$). So, there are $n \\cdot (\\text{maxOrValue} + 1)$ possible states. Since each state is computed at most once, the time complexity of the function is $O(n \\cdot \\text{maxOrValue})$.\n\n    Thus, the overall time complexity is $O(n) + O(n \\cdot \\text{maxOrValue}) = O(n \\cdot \\text{maxOrValue})$.\n\n* Space complexity: $O(n \\cdot \\text{maxOrValue})$\n\n    The memoization array has a space complexity of $O(n \\cdot \\text{maxOrValue})$. The recursive call stack can go up to depth $n$ in the worst case. \n\n    Thus, the space complexity of the algorithm is $O(n \\cdot \\text{maxOrValue}) + O(n) = O(n \\cdot \\text{maxOrValue})$. \n\n---\n\n### Approach 3: Bit Manipulation\n\n#### Intuition\n\nA subset of the array `nums` can be represented by a boolean array, where each value indicates whether the corresponding element in `nums` is included. For instance, if the 3rd index is `true`, it means the 3rd element is part of the subset.\n\nWith a maximum length of `nums` capped at 16, we can simplify this by using the binary representation of an integer, where a set `i`th bit indicates the inclusion of the `i`th element of `nums` in the subset. To understand this better, have a look at the below illustration:\n\n![bitmask example](../Figures/2044/mask.png)\n\n> Note that the indexing direction in the mask is reversed to represent how we count positions: in an array, we count from left to right, but in a number, we count from right to left.\n\nWe'll then iterate over all possible subsets of `nums` by considering integers from $0$ to $2^n - 1$, each representing a unique subset. For each subset, we calculate the OR value by performing a bitwise OR on elements corresponding to set bits in the integer. If this OR value matches the maximum OR value (calculated beforehand), we increment a counter. By the end, this counter gives the number of subsets that reach the maximum bitwise OR value.\n\n#### Algorithm\n\n- Initialize a variable `maxOrValue` to 0.\n- Iterate through each number in the input array `nums`:\n  - Find `maxOrValue` by performing a bitwise OR operation with each number.\n- Calculate the total number of possible subsets by left-shifting 1 by the length of `nums`, and store it in `totalSubsets`.\n- Initialize a variable `subsetsWithMaxOr` to 0 to count subsets with maximum OR value.\n- Iterate through all possible subset combinations, from 0 to `totalSubsets - 1`:\n  - Initialize `currentOrValue` to 0 for each subset.\n  - Iterate through each index `i` of the input array `nums`:\n    - If the `i`-th bit of the current subset mask is set:\n      - Perform a bitwise OR of `currentOrValue` with the `i`-th element of `nums`.\n  - If `currentOrValue` is equal to `maxOrValue`.\n    - Increment `subsetsWithMaxOr`.\n- Return the final count stored in `subsetsWithMaxOr`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LPq938EL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LPq938EL\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`. \n\n* Time complexity: $O(n \\cdot 2^n)$\n\n    The initial calculation of `maxOrValue` takes linear time. \n\n    The main loop iterates over all $2^n$ subsets. For each subset, the inner loop iterates through all $n$ elements. So, the loops take $O(n \\cdot 2^n)$ time, in total.\n\n    Thus, the overall time complexity of the algorithm is $O(n) + O(n \\cdot 2^n) = O(n \\cdot 2^n)$. \n\n* Space complexity: $O(1)$\n\n    Except for a few variables, the algorithm does not use any additional space. Thus, the space complexity is constant.\n\n---\n\n### Approach 4: Bit Manipulation + Dynamic Programming\n\n#### Intuition\n\nIf we replace the OR operation with addition, this problem resembles the classic [Knapsack Problem](https://leetcode.com/discuss/study-guide/1152328/01-Knapsack-Problem-and-Dynamic-Programming), a well-known dynamic programming challenge.\n\nWe create a `dp` array of size $2^{17}$, where `dp[i]` represents the number of subsets with a cumulative OR value of `i`. The base case is `dp[0] = 1`, since the only subset with an OR value of 0 is the empty subset. We also track the maximum cumulative OR found during the process with a variable `max`, initially set to 0.\n\n<details>\n<summary>Why use such a large size?</summary>\n\nThe largest possible element in `nums` is $10^5$, which requires 17 bits. Thus, the maximum OR value would set all 17 bits, making the maximum possible OR value $2^{17} - 1$. To accommodate every possible OR result, we need an array of size $2^{17}$ (or `1<<17`).\n\n</details>\n\n<br>\n\nTo fill `dp`, we iterate over `nums`. For each value in `nums`, we OR it with all the possible subset OR values we might have achieved till now. This is basically all the values between 0 and `max`. So, we iterate a variable `i` from `max` to `0` backward, and add the count of subsets in `dp[i]` to `dp[i | num]`. The backward iteration prevents double counting. If we went forward, we might update a value and then use that updated value in the same iteration, leading to incorrect counts.\n\nBy the end, `max` holds the maximum OR value, and `dp[max]` gives the number of subsets achieving this maximum OR.\n\n#### Algorithm\n\n- Initialize a variable `max` to 0 to track the current maximum OR value.\n- Create an array `dp` of size $2^{17}$ to store counts of subsets for each possible OR value.\n- Set `dp[0]` to 1, representing the empty subset.\n- Iterate through each number `num` in the input array `nums`:\n  - Iterate `i` backward from `max` to 0:\n    - Calculate a new OR value by performing a bitwise OR of the current value `i` with `num`.\n    - Add the count of subsets for the current OR value (`dp[i]`) to the count for the new OR value (`dp[i | num]`).\n  - Update `max` by performing a bitwise OR with the current `num`.\n- Return the value stored in `dp[max]`, representing the count of subsets with the maximum OR value.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RNes2kRu/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"RNes2kRu\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the input array `nums`, and $\\text{max}$ be the maximum possible OR value.\n\n* Time complexity: $O(n \\cdot \\text{max})$\n\n    The outer loop iterates through each entry in the `nums` array, taking linear time. The inner loop iterates from $\\text{max}$ to $0$. Thus, the time complexity of the algorithm is $O(n \\cdot \\text{max})$.\n\n* Space complexity: $O(2^{17})$\n\n    The `dp` array is set up with a constant size of $2^{17}$. While this implies that the complexity is constant, we are including it in the space complexity due to its significant size.\n\n    The algorithm uses no other data structures which scale with input size. Thus, the space complexity is $O(2^{17})$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

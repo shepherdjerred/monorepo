@@ -1,0 +1,141 @@
+{
+  "questionId": "2145",
+  "questionFrontendId": "2017",
+  "title": "Grid Game",
+  "titleSlug": "grid-game",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D array <code>grid</code> of size <code>2 x n</code>, where <code>grid[r][c]</code> represents the number of points at position <code>(r, c)</code> on the matrix. Two robots are playing a game on this matrix.</p>\n\n<p>Both robots initially start at <code>(0, 0)</code> and want to reach <code>(1, n-1)</code>. Each robot may only move to the <strong>right</strong> (<code>(r, c)</code> to <code>(r, c + 1)</code>) or <strong>down </strong>(<code>(r, c)</code> to <code>(r + 1, c)</code>).</p>\n\n<p>At the start of the game, the <strong>first</strong> robot moves from <code>(0, 0)</code> to <code>(1, n-1)</code>, collecting all the points from the cells on its path. For all cells <code>(r, c)</code> traversed on the path, <code>grid[r][c]</code> is set to <code>0</code>. Then, the <strong>second</strong> robot moves from <code>(0, 0)</code> to <code>(1, n-1)</code>, collecting the points on its path. Note that their paths may intersect with one another.</p>\n\n<p>The <strong>first</strong> robot wants to <strong>minimize</strong> the number of points collected by the <strong>second</strong> robot. In contrast, the <strong>second </strong>robot wants to <strong>maximize</strong> the number of points it collects. If both robots play <strong>optimally</strong>, return <em>the <b>number of points</b> collected by the <strong>second</strong> robot.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/08/a1.png\" style=\"width: 388px; height: 103px;\" />\n<pre>\n<strong>Input:</strong> grid = [[2,5,4],[1,5,1]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The optimal path taken by the first robot is shown in red, and the optimal path taken by the second robot is shown in blue.\nThe cells visited by the first robot are set to 0.\nThe second robot will collect 0 + 0 + 4 + 0 = 4 points.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/08/a2.png\" style=\"width: 384px; height: 105px;\" />\n<pre>\n<strong>Input:</strong> grid = [[3,3,1],[8,5,2]]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The optimal path taken by the first robot is shown in red, and the optimal path taken by the second robot is shown in blue.\nThe cells visited by the first robot are set to 0.\nThe second robot will collect 0 + 3 + 1 + 0 = 4 points.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/08/a3.png\" style=\"width: 493px; height: 103px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,3,1,15],[1,3,3,1]]\n<strong>Output:</strong> 7\n<strong>Explanation: </strong>The optimal path taken by the first robot is shown in red, and the optimal path taken by the second robot is shown in blue.\nThe cells visited by the first robot are set to 0.\nThe second robot will collect 0 + 1 + 3 + 3 + 0 = 7 points.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>grid.length == 2</code></li>\n\t<li><code>n == grid[r].length</code></li>\n\t<li><code>1 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= grid[r][c] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "There are n choices for when the first robot moves to the second row.",
+    "Can we use prefix sums to help solve this problem?"
+  ],
+  "metaData": "{\n  \"name\": \"gridGame\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"138.9K\", \"totalSubmission\": \"228.1K\", \"totalAcceptedRaw\": 138860, \"totalSubmissionRaw\": 228085, \"acRate\": \"60.9%\"}",
+  "likes": 1807,
+  "dislikes": 94,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Penalty for a Shop\", \"titleSlug\": \"minimum-penalty-for-a-shop\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,5,4],[1,5,1]]",
+    "[[3,3,1],[8,5,2]]",
+    "[[1,3,1,15],[1,3,3,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long gridGame(vector<vector<int>>& grid) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long gridGame(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def gridGame(self, grid: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def gridGame(self, grid):\n        \"\"\"\n        :type grid: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @return {number}\n */\nvar gridGame = function(grid) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function gridGame(grid: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long GridGame(int[][] grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long gridGame(int** grid, int gridSize, int* gridColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func gridGame(grid [][]int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun gridGame(grid: Array<IntArray>): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func gridGame(_ grid: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn grid_game(grid: Vec<Vec<i32>>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @return {Integer}\ndef grid_game(grid)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @return Integer\n     */\n    function gridGame($grid) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int gridGame(List<List<int>> grid) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def gridGame(grid: Array[Array[Int]]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec grid_game(grid :: [[integer]]) :: integer\n  def grid_game(grid) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec grid_game(Grid :: [[integer()]]) -> integer().\ngrid_game(Grid) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (grid-game grid)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2653",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a matrix `grid` containing 2 rows and `n` columns. Each cell contains a value representing the number of points for that cell in the `grid`. Two robots are playing a game where they are initially positioned at `(0, 0)` and aim to reach `(1, n - 1)`.\n\nEach robot can only move right or down in the grid. The task is to compute the points collected by the second robot, given the strategies of both robots.\n\nThe challenge is that the first robot moves first, and its goal is to reduce the points available for the second robot. The second robot then takes the best path to collect as many points as possible.\n\n---\n\n### Approach: Prefix and Suffix Sum\n\n#### Intuition\n\nA key observation from the overview is that the number of opportunities the second robot has to move to the bottom row corresponds to the number of columns in the grid. When the first robot collects all the points on its way, it leaves a pattern of `0`-valued cells behind. The pattern looks like this: there will be some `0`-valued consecutive cells (possibly none) in the first row, two `0`-valued cells in the same column where it moves to the bottom row, and the remaining cells in the bottom row are also `0`-valued. This creates a \"cut\" through the grid where the first robot has moved, leaving the rest of the grid available for the second robot.\n\n![example](../Figures/2017/Turn_image.png)\n\nNow, consider the choices left for the second robot:\n\n-    The second robot must now choose how to move, given that parts of the grid are now blocked by the first robot's path. If the second robot moves to the second row at a point further down than where the first robot turned, it will need to collect points from the first row from that point onward. Since the bottom row is already collected, the optimal strategy for the second robot will be to collect points from the remaining cells of the top row before it reaches its target.\n\n-    Alternatively, the second robot could move to the second row at the first column and collect all the points in the second row until it reaches the point where the first robot made its turn. \n\nRefer to the image provided for better understanding:\n\n![example](../Figures/2017/image2.png)\n\nTo summarize, we have only two possibilities for the second robot, assuming the first robot moves to the next row at index `turnIndex`:\n- Option 1: Collect all points in the first row after the point where the first robot moved down.\n- Option 2: Collect all points in the second row before the point where the first robot moved down.\n\nTo optimize the second robot's decision-making, we maintain two running sums:\n- `firstRowSum`: The sum of points in the first row, initially set to the sum of all the points in the first row.\n- `secondRowSum`: The sum of points in the second row, initially set to the sum of all the points in the second row.\n\nAs we iterate through all possible values for the first robot’s turn (`turnIndex`), we adjust these sums to reflect the points the second robot can collect based on its own movement strategy. Specifically:\n1. For each `turnIndex`, calculate the sum of points the second robot would collect if it follows *Option 1* (from the first row after the `turnIndex`).\n2. Alternatively, calculate the sum if it follows *Option 2* (from the second row before the `turnIndex`).\n\nFinally, we compute the smallest value among the largest outcomes of these two strategies (because the goal is to reduce the highest possible points the second robot can collect).\n\n> Notice that the problem is not the same as finding the highest number of points the first robot can collect. For example, if `grid = [[2, 4, 6], [8, 9, 10]]`, the first robot could take the path `2 -> 8 -> 9 -> 10` to maximize its points, leaving `4` and `6` for the second robot. But the better strategy is for the first robot to turn down at index `1`, leaving either `6` or `8` for the second robot, which would then get `max(6, 8) = 8` points instead of `10`.\n\n#### Algorithm\n\n1. Initialize `firstRowSum` with the sum of all elements in the first row of `grid`. Initialize `secondRowSum` as `0`.\n\n2. Set `minimumSum` to a very large value (`LONG_LONG_MAX`).\n\n3. Iterate through the indices of the first row:\n   - Subtract the current element of the first row from `firstRowSum`.\n   - Calculate the maximum value between `firstRowSum` and `secondRowSum`; This would be the highest number of points the second robot can get if the first robot turns down at the current index.\n   - Update `minimumSum` with the smaller value between `minimumSum` and the calculated maximum.\n   - Add the current element of the second row to `secondRowSum`.\n\n4. Return `minimumSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Z4JkwKvH/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"Z4JkwKvH\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of columns in the `grid`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm iterates through each column of the `grid` exactly once. For each column, it updates the sums of the first and second rows and computes the minimum of the maximum values. These operations take constant time for each column. Therefore, the overall time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    The algorithm uses a constant amount of extra space, including variables for `firstRowSum`, `secondRowSum`, and `minimumSum`. No additional data structures proportional to the size of the input are used. Thus, the overall space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

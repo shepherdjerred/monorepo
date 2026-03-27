@@ -1,0 +1,137 @@
+{
+  "questionId": "2240",
+  "questionFrontendId": "2121",
+  "title": "Intervals Between Identical Elements",
+  "titleSlug": "intervals-between-identical-elements",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of <code>n</code> integers <code>arr</code>.</p>\n\n<p>The <strong>interval</strong> between two elements in <code>arr</code> is defined as the <strong>absolute difference</strong> between their indices. More formally, the <strong>interval</strong> between <code>arr[i]</code> and <code>arr[j]</code> is <code>|i - j|</code>.</p>\n\n<p>Return <em>an array</em> <code>intervals</code> <em>of length</em> <code>n</code> <em>where</em> <code>intervals[i]</code> <em>is <strong>the sum of intervals</strong> between </em><code>arr[i]</code><em> and each element in </em><code>arr</code><em> with the same value as </em><code>arr[i]</code><em>.</em></p>\n\n<p><strong>Note:</strong> <code>|x|</code> is the absolute value of <code>x</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [2,1,3,1,2,3,3]\n<strong>Output:</strong> [4,2,7,2,4,4,5]\n<strong>Explanation:</strong>\n- Index 0: Another 2 is found at index 4. |0 - 4| = 4\n- Index 1: Another 1 is found at index 3. |1 - 3| = 2\n- Index 2: Two more 3s are found at indices 5 and 6. |2 - 5| + |2 - 6| = 7\n- Index 3: Another 1 is found at index 1. |3 - 1| = 2\n- Index 4: Another 2 is found at index 0. |4 - 0| = 4\n- Index 5: Two more 3s are found at indices 2 and 6. |5 - 2| + |5 - 6| = 4\n- Index 6: Two more 3s are found at indices 2 and 5. |6 - 2| + |6 - 5| = 5\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [10,5,10,10]\n<strong>Output:</strong> [5,0,3,4]\n<strong>Explanation:</strong>\n- Index 0: Two more 10s are found at indices 2 and 3. |0 - 2| + |0 - 3| = 5\n- Index 1: There is only one 5 in the array, so its sum of intervals to identical elements is 0.\n- Index 2: Two more 10s are found at indices 0 and 3. |2 - 0| + |2 - 3| = 3\n- Index 3: Two more 10s are found at indices 0 and 2. |3 - 0| + |3 - 2| = 4\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == arr.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= arr[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Note:</strong> This question is the same as <a href=\"https://leetcode.com/problems/sum-of-distances/description/\" target=\"_blank\"> 2615: Sum of Distances.</a></p>\n",
+  "hints": [
+    "For each unique value found in the array, store a sorted list of indices of elements that have this value in the array.",
+    "One way of doing this is to use a HashMap that maps the values to their list of indices. Update this mapping as you iterate through the array.",
+    "Process each list of indices separately and get the sum of intervals for the elements of that value by utilizing prefix sums.",
+    "For each element, keep track of the sum of indices of the identical elements that have come before and that will come after respectively. Use this to calculate the sum of intervals for that element to the rest of the elements with identical values."
+  ],
+  "metaData": "{\n  \"name\": \"getDistances\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"26.9K\", \"totalSubmission\": \"59K\", \"totalAcceptedRaw\": 26937, \"totalSubmissionRaw\": 59005, \"acRate\": \"45.7%\"}",
+  "likes": 956,
+  "dislikes": 45,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Continuous Subarray Sum\", \"titleSlug\": \"continuous-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,3,1,2,3,3]",
+    "[10,5,10,10]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"tusimple\", \"name\": \"TuSimple\"}, {\"timesEncountered\": 2, \"slug\": \"wayve\", \"name\": \"Wayve\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<long long> getDistances(vector<int>& arr) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long[] getDistances(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getDistances(self, arr: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getDistances(self, arr):\n        \"\"\"\n        :type arr: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} arr\n * @return {number[]}\n */\nvar getDistances = function(arr) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getDistances(arr: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long[] GetDistances(int[] arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nlong long* getDistances(int* arr, int arrSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getDistances(arr []int) []int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getDistances(arr: IntArray): LongArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getDistances(_ arr: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_distances(arr: Vec<i32>) -> Vec<i64> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} arr\n# @return {Integer[]}\ndef get_distances(arr)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $arr\n     * @return Integer[]\n     */\n    function getDistances($arr) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> getDistances(List<int> arr) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getDistances(arr: Array[Int]): Array[Long] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_distances(arr :: [integer]) :: [integer]\n  def get_distances(arr) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_distances(Arr :: [integer()]) -> [integer()].\nget_distances(Arr) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-distances arr)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

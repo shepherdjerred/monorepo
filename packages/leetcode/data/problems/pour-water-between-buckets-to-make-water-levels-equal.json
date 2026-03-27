@@ -1,0 +1,134 @@
+{
+  "questionId": "2273",
+  "questionFrontendId": "2137",
+  "title": "Pour Water Between Buckets to Make Water Levels Equal",
+  "titleSlug": "pour-water-between-buckets-to-make-water-levels-equal",
+  "difficulty": "Medium",
+  "content": "<p>You have <code>n</code> buckets each containing some gallons of water in it, represented by a <strong>0-indexed</strong> integer array <code>buckets</code>, where the <code>i<sup>th</sup></code> bucket contains <code>buckets[i]</code> gallons of water. You are also given an integer <code>loss</code>.</p>\n\n<p>You want to make the amount of water in each bucket equal. You can pour any amount of water from one bucket to another bucket (not necessarily an integer). However, every time you pour <code>k</code> gallons of water, you spill <code>loss</code> <strong>percent</strong> of <code>k</code>.</p>\n\n<p>Return <em>the <strong>maximum</strong> amount of water in each bucket after making the amount of water equal. </em>Answers within <code>10<sup>-5</sup></code> of the actual answer will be accepted.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> buckets = [1,2,7], loss = 80\n<strong>Output:</strong> 2.00000\n<strong>Explanation:</strong> Pour 5 gallons of water from buckets[2] to buckets[0].\n5 * 80% = 4 gallons are spilled and buckets[0] only receives 5 - 4 = 1 gallon of water.\nAll buckets have 2 gallons of water in them so return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> buckets = [2,4,6], loss = 50\n<strong>Output:</strong> 3.50000\n<strong>Explanation:</strong> Pour 0.5 gallons of water from buckets[1] to buckets[0].\n0.5 * 50% = 0.25 gallons are spilled and buckets[0] only receives 0.5 - 0.25 = 0.25 gallons of water.\nNow, buckets = [2.25, 3.5, 6].\nPour 2.5 gallons of water from buckets[2] to buckets[0].\n2.5 * 50% = 1.25 gallons are spilled and buckets[0] only receives 2.5 - 1.25 = 1.25 gallons of water.\nAll buckets have 3.5 gallons of water in them so return 3.5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> buckets = [3,3,3,3], loss = 40\n<strong>Output:</strong> 3.00000\n<strong>Explanation:</strong> All buckets already have the same amount of water in them.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= buckets.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= buckets[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= loss &lt;= 99</code></li>\n</ul>\n",
+  "hints": [
+    "What is the range that the answer must fall into?",
+    "The answer has to be in the range [0, max(buckets)] (inclusive).",
+    "For a number x, is there an efficient way to check if it is possible to make the amount of water in each bucket x.",
+    "Let in be the total amount of water that needs to be poured into buckets and out be the total amount of water that needs to be poured out of buckets to make the amount of water in each bucket x. If out - (out * loss) >= in, then it is possible."
+  ],
+  "metaData": "{\n  \"name\": \"equalizeWater\",\n  \"params\": [\n    {\n      \"name\": \"buckets\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"loss\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"double\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"3.8K\", \"totalSubmission\": \"5.6K\", \"totalAcceptedRaw\": 3834, \"totalSubmissionRaw\": 5606, \"acRate\": \"68.4%\"}",
+  "likes": 117,
+  "dislikes": 10,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Search in Rotated Sorted Array\", \"titleSlug\": \"search-in-rotated-sorted-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find Peak Element\", \"titleSlug\": \"find-peak-element\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Moves to Equal Array Elements\", \"titleSlug\": \"minimum-moves-to-equal-array-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,7]\n80",
+    "[2,4,6]\n50",
+    "[3,3,3,3]\n40"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    double equalizeWater(vector<int>& buckets, int loss) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public double equalizeWater(int[] buckets, int loss) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def equalizeWater(self, buckets: List[int], loss: int) -> float:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def equalizeWater(self, buckets, loss):\n        \"\"\"\n        :type buckets: List[int]\n        :type loss: int\n        :rtype: float\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} buckets\n * @param {number} loss\n * @return {number}\n */\nvar equalizeWater = function(buckets, loss) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function equalizeWater(buckets: number[], loss: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public double EqualizeWater(int[] buckets, int loss) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "double equalizeWater(int* buckets, int bucketsSize, int loss) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func equalizeWater(buckets []int, loss int) float64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun equalizeWater(buckets: IntArray, loss: Int): Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func equalizeWater(_ buckets: [Int], _ loss: Int) -> Double {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn equalize_water(buckets: Vec<i32>, loss: i32) -> f64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} buckets\n# @param {Integer} loss\n# @return {Float}\ndef equalize_water(buckets, loss)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $buckets\n     * @param Integer $loss\n     * @return Float\n     */\n    function equalizeWater($buckets, $loss) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  double equalizeWater(List<int> buckets, int loss) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def equalizeWater(buckets: Array[Int], loss: Int): Double = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec equalize_water(buckets :: [integer], loss :: integer) :: float\n  def equalize_water(buckets, loss) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec equalize_water(Buckets :: [integer()], Loss :: integer()) -> float().\nequalize_water(Buckets, Loss) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (equalize-water buckets loss)\n  (-> (listof exact-integer?) exact-integer? flonum?)\n  )"
+    }
+  ],
+  "solution": null
+}

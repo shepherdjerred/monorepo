@@ -1,0 +1,141 @@
+{
+  "questionId": "2128",
+  "questionFrontendId": "2000",
+  "title": "Reverse Prefix of Word",
+  "titleSlug": "reverse-prefix-of-word",
+  "difficulty": "Easy",
+  "content": "<p>Given a <strong>0-indexed</strong> string <code>word</code> and a character <code>ch</code>, <strong>reverse</strong> the segment of <code>word</code> that starts at index <code>0</code> and ends at the index of the <strong>first occurrence</strong> of <code>ch</code> (<strong>inclusive</strong>). If the character <code>ch</code> does not exist in <code>word</code>, do nothing.</p>\n\n<ul>\n\t<li>For example, if <code>word = &quot;abcdefd&quot;</code> and <code>ch = &quot;d&quot;</code>, then you should <strong>reverse</strong> the segment that starts at <code>0</code> and ends at <code>3</code> (<strong>inclusive</strong>). The resulting string will be <code>&quot;<u>dcba</u>efd&quot;</code>.</li>\n</ul>\n\n<p>Return <em>the resulting string</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;<u>abcd</u>efd&quot;, ch = &quot;d&quot;\n<strong>Output:</strong> &quot;<u>dcba</u>efd&quot;\n<strong>Explanation:</strong>&nbsp;The first occurrence of &quot;d&quot; is at index 3. \nReverse the part of word from 0 to 3 (inclusive), the resulting string is &quot;dcbaefd&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;<u>xyxz</u>xe&quot;, ch = &quot;z&quot;\n<strong>Output:</strong> &quot;<u>zxyx</u>xe&quot;\n<strong>Explanation:</strong>&nbsp;The first and only occurrence of &quot;z&quot; is at index 3.\nReverse the part of word from 0 to 3 (inclusive), the resulting string is &quot;zxyxxe&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> word = &quot;abcd&quot;, ch = &quot;z&quot;\n<strong>Output:</strong> &quot;abcd&quot;\n<strong>Explanation:</strong>&nbsp;&quot;z&quot; does not exist in word.\nYou should not do any reverse operation, the resulting string is &quot;abcd&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= word.length &lt;= 250</code></li>\n\t<li><code>word</code> consists of lowercase English letters.</li>\n\t<li><code>ch</code> is a lowercase English letter.</li>\n</ul>\n",
+  "hints": [
+    "Find the first index where ch appears.",
+    "Find a way to reverse a substring of word."
+  ],
+  "metaData": "{\n  \"name\": \"reversePrefix\",\n  \"params\": [\n    {\n      \"name\": \"word\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"character\",\n      \"name\": \"ch\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"378.9K\", \"totalSubmission\": \"438.2K\", \"totalAcceptedRaw\": 378852, \"totalSubmissionRaw\": 438171, \"acRate\": \"86.5%\"}",
+  "likes": 1513,
+  "dislikes": 46,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abcdefd\"\n\"d\"",
+    "\"xyxzxe\"\n\"z\"",
+    "\"abcd\"\n\"z\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"optum\", \"name\": \"Optum\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string reversePrefix(string word, char ch) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String reversePrefix(String word, char ch) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def reversePrefix(self, word: str, ch: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def reversePrefix(self, word, ch):\n        \"\"\"\n        :type word: str\n        :type ch: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word\n * @param {character} ch\n * @return {string}\n */\nvar reversePrefix = function(word, ch) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function reversePrefix(word: string, ch: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string ReversePrefix(string word, char ch) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* reversePrefix(char* word, char ch) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func reversePrefix(word string, ch byte) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun reversePrefix(word: String, ch: Char): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func reversePrefix(_ word: String, _ ch: Character) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn reverse_prefix(word: String, ch: char) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word\n# @param {Character} ch\n# @return {String}\ndef reverse_prefix(word, ch)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word\n     * @param String $ch\n     * @return String\n     */\n    function reversePrefix($word, $ch) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String reversePrefix(String word, String ch) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def reversePrefix(word: String, ch: Char): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec reverse_prefix(word :: String.t, ch :: char) :: String.t\n  def reverse_prefix(word, ch) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec reverse_prefix(Word :: unicode:unicode_binary(), Ch :: char()) -> unicode:unicode_binary().\nreverse_prefix(Word, Ch) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (reverse-prefix word ch)\n  (-> string? char? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2289",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `word` and need to reverse the prefix that starts at index `0` and ends at the first occurrence of `ch`.\n\nIf the `word` does not contain `ch`, we return `word` unmodified.\n\nIn C++, we can use built-in functions to accomplish this:\n\n<iframe src=\"https://leetcode.com/playground/2YXAzPy2/shared\" frameBorder=\"0\" width=\"100%\" height=\"191\" name=\"2YXAzPy2\"></iframe>\n\nThis is not the most universal solution, as many programming languages do not have built-in string reverse capabilities. Additionally, strings are immutable in many programming languages. \n\n> Immutable means something cannot be changed once it has been created.\n\nThis problem is intended to provide practice with string manipulation, so we focus on approaches that use string manipulation techniques.\n\n---\n\n### Approach 1: Stack \n\n#### Intuition\n\nWhenever a problem requires reversing a sequence, it is worth considering using a stack. \n\nStacks are a First-In-Last-Out (FILO) data structure, which means that the first items added to the stack are the last items removed from the stack. This means that if you push a sequence of items into a stack, and then remove all of the items, the sequence of items will be reversed. Learn more about stacks by reading our [Stack Explore Card](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/).\n\nSince strings are immutable in many programming languages, we cannot directly modify the original string. Instead, we need to build a new string incrementally. In C++, we can use a string `result` to store the answer. In Python, we can use a list, and in Java, we can use a StringBuilder.\n\nTo reverse `word`, we loop through the characters of `word` and push each character onto the stack until we reach the first occurrence of `ch`.\n\nOnce we reach the character `ch`, we can start popping the characters off the stack and appending them to the `result` string. This will reverse the prefix of the `word`.\n\nAfter we have emptied the stack, we can append the remaining characters of the `word` (i.e., the part of the word that comes after the first occurrence of `ch`) to the `result` string, in their original order.\n\nFinally, we return `result`, converting it to a string if necessary. If `ch` was not found in `word`, we return the original `word` instead.\n\n![Stack Visualization](../Figures/2000/2000_Stack.png)\n\n#### Algorithm\n\n1. Initialize the following:\n    - A `stack` to store characters that need to be reversed.\n    - A string or list `result` for building the reversed string.\n    - A variable `index` for iterating through the characters in `word`.\n\n2. Loop through `word` until `index` reaches the end of `word`:\n\n    - Push the character `word[index]` onto the `stack`.\n    - If the current character equals `ch`:\n        - Pop each of the characters from the stack and add them to the `result`\n        - Increment `index` by `1` because we already added `ch` to the `result`.\n        - Add the rest of the characters from `word` to `result`.\n        - Return `result` and convert to a string if necessary.\n    - Increment `index` by `1`; we have not yet reached `ch`.\n\n3. Return `word`, which does not contain `ch`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3myFaghr/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3myFaghr\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `word`.\n\n* Time complexity: $O(n)$\n\n    Finding `ch` in `word` and adding the characters to the stack takes up to $O(n)$ when `ch` is the last character in `word`.\n\n    Adding the characters to `result` takes $O(n)$.\n\n    Therefore, the time complexity is $O(2n)$, which we can simplify to $O(n)$.\n\n* Space complexity: $O(n)$\n\n    We use `stack` which can grow to contain up to $n$ elements, so the space complexity is $O(n)$.\n\n---\n\n### Approach 2: Find the Index and Fill Result\n\n#### Intuition\n\nWe usually read text from left to right. Reading right to left, the text will appear reversed. \n\nTo reverse the prefix, we can \"read\" the prefix in reverse order (end to beginning and right to left).\n\nFirst, we need to find the end of the prefix. This will be the index in `word` of the first occurrence of `ch`. Most languages have a built-in function we can use to locate the index of a character in a string, which we will use to find `chIndex`.\n\nIf `ch` is not in `word`, we return `word` unaltered.\n\nSimilar to the previous solution, we will add characters to `result` one by one. To traverse `word` from the end of the prefix to the beginning while adding characters to `result`, we can use a standard `for` loop with `word[chIndex - i]`.\n\nOnce the prefix has been added to the `result`, we can then proceed with the `for` loop, appending `word[i]` to the result.\n\nFinally, we return `result`, and if necessary, convert it to a string.\n\n![Find Visualization](../Figures/2000/2000_Find.png)\n\n\n#### Algorithm\n\n1. Find the index of `ch` in `word` and set the variable `chIndex` to this value.\n\n2. If `chIndex` equals `-1`, `ch` is not in `word`, so return `word`.\n\n3. Initialize a string or list `result` for building the string with the reversed prefix.\n\n4. Loop through the characters of `word` using the iterator `i`:\n    - If `i` is less than or equal to `chIndex`, the character at this index of `result` should be the corresponding character from `word` but in reverse. Append `word[chIndex - i]` to `result`.\n    - Otherwise, the character at this index of `result` should contain a character in the original order. Append `word[i]` to `result`.\n\n5. Return `result`, converting it to a string if necessary.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/95qiEEDM/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"95qiEEDM\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `word`.\n\nCertainly. I'll provide a more detailed explanation for each point:\n\n* Time complexity: $O(n)$ or $O(n^2)$ \n\n    The time complexity varies across implementations:\n     - In Java, using `StringBuilder` results in $O(n)$. The `append()` operation is $O(1)$, and we perform it $n$ times.\n     - In Python, string concatenation inside the loop leads to $O(n^2)$. Each '+=' operation creates a new string, taking $O(n)$ time, and we do this $n$ times.\n     - In C++, using `std::string` results in $O(n)$. The concetanation(+=) is $O(1)$ as C++ strings are mutable, and we perform it $n$ times.\n\n* Space complexity: $O(n)$\n\n    We use `result`, which has a size of $n$, to build the answer.\n\n    The space usage is consistent across implementations:\n     - In Java, using `StringBuilder` results in $O(n)$. It preallocates space efficiently.\n     - In Python, despite creating multiple strings, only one full-length string exists at any time, so $O(n)$. However, it may use more memory during execution due to the creation of temporary strings.\n     - In C++, using `std::string` results in $O(n)$. C++ strings are mutable so the performance considerations of concatenation(+=) are less of a concern. \n     \n    Therefore, the space complexity is $O(n)$ for all implementations. While the actual memory usage may vary slightly, the asymptotic space complexity remains the same.\n\n> Note: The main difference in efficiency comes from how each language handles string manipulations. Java's StringBuilder and C++'s string are optimized for repeated concatenations, while Python's strings, being immutable, require more operations for the same task.\n\n### Approach 3: Two-Pointer Swapping\n\n#### Intuition\n\nWhen we reverse a string, the characters at the ends are swapped. Likewise, the characters one spot away from the ends are swapped.\n\nThis reversal strategy can be performed in place, as demonstrated in this problem: [344 Reverse String](https://leetcode.com/problems/reverse-string/editorial/). However, this problem differs from the one at hand since the input is provided as a character array instead of a string.\n\nWe can utilize this strategy by initially adding the characters from `word` to `result`, where `result` is a list or array of characters. \n\nWe iterate through `result` using `right` until it reaches the first occurrence of `ch`. If `ch` is not in `word`, we return `word`.\n\nSubsequently, we traverse through the prefix of `result` with two pointers, `left` pointing to the beginning of the prefix and `right` pointing to the end of the prefix, until they meet in the middle. During each iteration, we swap the values at the indices `left` and `right`, then progress each pointer one step towards each other.\n\nFinally, we return `result` and convert it to a string if necessary.\n\n![Swapping Visualization](../Figures/2000/2000_Two-Pointer.png)\n\n#### Algorithm\n\n1. Initialize a string or list `result` for building the string with the reversed prefix. \n\n2. Initialize a pointer `left` to `0`.\n\n3. Use a `for` loop to iterate through `result`, using the iterator `right`:\n\n    - If `result[right]` is equal to `ch`:\n        - While `left` is less than `right`, swap the characters of `result` at indices `left` and `right`, then increment `left` and decrement `right`.\n    - After the loop, return `result` and convert it to a string if needed.\n\n4. If the loop completes without finding `ch`, return the original `word`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/h7nii6YC/shared\" frameBorder=\"0\" width=\"100%\" height=\"497\" name=\"h7nii6YC\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `word`.\n\n* Time complexity: $O(n)$\n\n    Copying `word` to `result` takes $O(n)$.\n\n    In the worst case scenario, when `ch` is located at the last index of `word`, we traverse `result` once to find `ch`, and then we swap $\\frac{n}{2}$ elements.\n\n    Therefore, the time complexity remains $O(n)$.\n\n* Space complexity: $O(n)$ (Python and Java) or $O(1)$ (C++)\n\n    We use the `result` array of size $n$ to store and reverse the letters from `word`.\n\n    > **Note:** The C++ version uses $O(1)$ space because the characters are reversed in place instead of using an auxiliary data structure. It is recommended to check with your interviewer before modifying the input, as it might lead to issues in certain scenarios.\n\n  ---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

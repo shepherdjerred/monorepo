@@ -1,0 +1,146 @@
+{
+  "questionId": "2160",
+  "questionFrontendId": "2033",
+  "title": "Minimum Operations to Make a Uni-Value Grid",
+  "titleSlug": "minimum-operations-to-make-a-uni-value-grid",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer <code>grid</code> of size <code>m x n</code> and an integer <code>x</code>. In one operation, you can <strong>add</strong> <code>x</code> to or <strong>subtract</strong> <code>x</code> from any element in the <code>grid</code>.</p>\n\n<p>A <strong>uni-value grid</strong> is a grid where all the elements of it are equal.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of operations to make the grid <strong>uni-value</strong></em>. If it is not possible, return <code>-1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/21/gridtxt.png\" style=\"width: 164px; height: 165px;\" />\n<pre>\n<strong>Input:</strong> grid = [[2,4],[6,8]], x = 2\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can make every element equal to 4 by doing the following: \n- Add x to 2 once.\n- Subtract x from 6 once.\n- Subtract x from 8 twice.\nA total of 4 operations were used.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/21/gridtxt-1.png\" style=\"width: 164px; height: 165px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,5],[2,3]], x = 1\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> We can make every element equal to 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/21/gridtxt-2.png\" style=\"width: 164px; height: 165px;\" />\n<pre>\n<strong>Input:</strong> grid = [[1,2],[3,4]], x = 2\n<strong>Output:</strong> -1\n<strong>Explanation:</strong> It is impossible to make every element equal.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == grid.length</code></li>\n\t<li><code>n == grid[i].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= m * n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= x, grid[i][j] &lt;= 10<sup>4</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Is it possible to make two integers a and b equal if they have different remainders dividing by x?",
+    "If it is possible, which number should you select to minimize the number of operations?",
+    "What if the elements are sorted?"
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"grid\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"142.1K\", \"totalSubmission\": \"210.7K\", \"totalAcceptedRaw\": 142146, \"totalSubmissionRaw\": 210655, \"acRate\": \"67.5%\"}",
+  "likes": 1112,
+  "dislikes": 75,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Moves to Equal Array Elements II\", \"titleSlug\": \"minimum-moves-to-equal-array-elements-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,4],[6,8]]\n2",
+    "[[1,5],[2,3]]\n1",
+    "[[1,2],[3,4]]\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"epam-systems\", \"name\": \"EPAM Systems\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(vector<vector<int>>& grid, int x) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(int[][] grid, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, grid: List[List[int]], x: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, grid, x):\n        \"\"\"\n        :type grid: List[List[int]]\n        :type x: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} grid\n * @param {number} x\n * @return {number}\n */\nvar minOperations = function(grid, x) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(grid: number[][], x: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(int[][] grid, int x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(int** grid, int gridSize, int* gridColSize, int x) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(grid [][]int, x int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(grid: Array<IntArray>, x: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ grid: [[Int]], _ x: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(grid: Vec<Vec<i32>>, x: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} grid\n# @param {Integer} x\n# @return {Integer}\ndef min_operations(grid, x)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $grid\n     * @param Integer $x\n     * @return Integer\n     */\n    function minOperations($grid, $x) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(List<List<int>> grid, int x) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(grid: Array[Array[Int]], x: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(grid :: [[integer]], x :: integer) :: integer\n  def min_operations(grid, x) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Grid :: [[integer()]], X :: integer()) -> integer().\nmin_operations(Grid, X) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations grid x)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2716",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a 2D integer array `grid`, a number `x`, and the ability to add or subtract `x` from any element in the grid any number of times. Our goal is to determine the smallest number of such operations needed to make all elements in the grid equal. If it is impossible to achieve this, we return `-1`. \n\nWe can see that if it is possible to make all elements equal, the optimal final value must be one of the original numbers in the grid, as any other value may require unnecessary extra steps. \n\nFor example, given `grid = [[2, 4], [6, 8]]` and `x = 2`, we can make all elements equal to `10` in `4 + 3 + 2 + 1 = 10` operations. However, this is not optimal because, along the way, we reached a state where all elements were equal to `8` in just `3 + 2 + 1 = 6` operations (not the best, but still better). From that point, increasing all numbers by `2` again is unnecessary.\n\n---\n\n### Approach 1: Sorting and Median\n\n#### Intuition\n\nFirst, let's think about when it's possible to make all grid elements equal.\n\nConsider any two numbers in the grid, `a` and `b`, and a number `x`. Suppose we want to make both `a` and `b` equal to some value `v. The only operation allowed is adding or subtracting `x` some number of times. This means we must be able to reach `v` from both `a` and `b` using `x`.  \n\nFor this to be possible, the differences `v - a` and `v - b` must both be multiples of `x`, or equivalently:  \n\n$(v - a) \\% x = 0 \\quad \\text{and} \\quad (v - b) \\% x = 0$  \n\nRearranging this, we get:  \n\n$a \\% x = b \\% x = v \\% x$  \n\nThis tells us that all numbers in the grid must have the same remainder when divided by `x`. Otherwise, it is impossible to transform them into a single value using only `x`-sized steps.  \n\nFor example, if `grid = [[1, 8], [3, 5]]` and `x = 2`, we cannot make all elements equal to any odd value because `8` is even, and adding `2` any number of times will always result in an even number. Similarly, we cannot make all elements equal to any even value because `1`, `3`, and `5` are odd, and adding `2` will always keep them odd. Since we cannot make all numbers have the same parity, it is impossible to make the grid uni-value.  \n\nThus, our first step is to check if all numbers in the grid have the same remainder when divided by `x`. If they don't, we immediately return `-1`. Otherwise, our goal is to find the smallest number of operations required.\n\nTo make things easier, note that the arrangement of numbers in the grid doesn’t affect our task at all, since we can apply operations to any number, no matter its position. So, we can simplify the problem by flattening the grid into a one-dimensional array.\n\nNow, which value should we aim to make all numbers equal to?  \n\n- If we pick a value too large, then the smaller numbers will need many additions of `x` to reach it.  \n- If we pick a value too small, then the larger numbers will need many subtractions of `x`.  \n\nA natural choice is the **median** of the numbers.  \n\nWhy? The median is the balancing point that minimizes the total distance numbers need to move. By choosing the median, we ensure that half of the numbers shift up and the other half shift down, naturally minimizing the total number of operations.\nFor example, consider `grid = [[2, 4], [6, 8]]` with `x = 2`:  \n- If we make all values `8`, we need `3 + 2 + 1 + 0 = 6` operations.  \n- If we choose `4` (the median), the operations reduce to `1 + 0 + 1 + 2 = 4`.  \n\nIn fact, selecting the median of the numbers always results in the smallest number of operations.\n\n>    The **median** value of a set of numbers is the value at which half of the numbers in the set are below it, and the other half are above it. \n\n<details>\n<summary>Click here for a formal proof</summary>\n<br>\n\nLet's assume that $x = 1$ for simplicity. Define $f(i)$ as the number of operations required to make all elements equal to $a_i$, where $a$ is the flattened, sorted array containing all elements of the grid. Then:\n$$\nf(i) = (a_i - a_0) + (a_i - a_1) + ... + (a_i - a_{i - 1}) + (a_{i + 1} - a_i) + ... + (a_{mn} - a_i)\n$$\nSimilarly, for $f(i - 1)$:\n$$\nf(i - 1) = (a_{i - 1} - a_0) + (a_{i - 1} - a_1) + ... + (a_{i - 1} - a_{i - 2}) + (a_{i} - a_{i - 1}) + ... + (a_{mn} - a_{i - 1})\n$$\nSubtracting these expressions gives:\n$$\nf(i) - f(i - 1) = i \\cdot (a_i - a_{i - 1}) + (mn-i) \\cdot (a_{i - 1} -a_i)=(2i - mn)(a_i - a_{i - 1})\n$$\nSince $a_i > a_{i - 1}$, the sign of $f(i) - f(i - 1)$ depends on $2i - mn$:\n\n-   If $2 \\cdot i < mn$, then $f(i) < f(i-1)$, meaning that $f$ is decreasing.\n-   If $2 \\cdot i > mn$, $f(i) > f(i-1)$, meaning that $f$ is increasing.\n\nThus, the minimum value occurs at $f(\\frac{mn}{2})$ or $f(\\frac{mn - 1}{2})$.\n\n</details>\n<br>\n\nTo find the median, we first sort the array in non-decreasing order and then pick the middle value. Next, we iterate through the array again to calculate how many operations are needed for each number to reach the median, and then we sum these operations.\n\n> In C++, we can avoid fully sorting the array by using the `nth_element` function. This operation runs in linear time and ensures that the desired element is placed at the index it would occupy in a fully sorted array. For the median, this means the element will be placed at the middle index. \n\n#### Algorithm\n\n-   Initialize:\n    -   an empty array, called `numsArray` to store all numbers.\n    -   a variable `result = 0` to store the total number of operations.\n-   Flatten the `grid` into `numsArray`, by iterating over its elements and pushing them into it.\n-   Sort `numsArray` in non-decreasing order.\n-   Initialize `length` to the size of `numsArray`.\n-   Store the median of the array (`numsArray[length / 2]`) in `finalCommonNumber`.\n-   For each `number` in `numsArray`:\n    -   If `number % x != finalCommonNumber % x`, return `-1`, as we found two elements in the array with different remainders when divided by `x`.\n    -   Otherwise, increment `result` by the number of operations needed for this element to become equal to `finalCommonNumber`, i.e. `abs(finalCommonNumber - number) / x`.\n-   Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9k3csGTs/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9k3csGTs\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns in the `grid`.\n\n-   Time complexity: $O(mn \\times \\log{mn})$\n\n    First, we loop through the grid’s elements to flatten it into a one-dimensional array, which takes $O(mn)$ time. Then, we sort the `numsArray` in $O(mn \\times \\log{mn})$, since it contains $m \\cdot n$ elements. Finally, we go through the array, performing constant-time operations (arithmetic and checks) in each step, which takes another $O(mn)$ time. Therefore, the overall time complexity is dominated by the sorting step and is equal to $O(mn \\times \\log{mn})$.\n\n    > In C++, we replace sorting with the `nth_element` function, which runs in $O(\\frac{mn}{2}) = O(mn)$ time. Therefore, the total time complexity for this implementation is equal to $O(mn)$.\n\n-   Space complexity: $O(mn)$\n\n    We create an array to store all numbers in the grid, which requires $O(mn)$ space. Apart from that, we only use a fixed number of variables (`finalCommonValue`, `result`, etc.) that take up constant space. \n\n    Lastly, we must account for the space that is required for sorting ($S$), which depends on the language of implementation:\n\n    -   In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log mn)$.\n    -   In C++, the `nth_element()` function has a constant space complexity of $O(1)$, as it performs the rearrangement in-place without requiring additional memory proportional to the size of the input.\n    -   In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(mn)$.\n    \n    As a result, the space complexity of the algorithm is determined by the size of the `numsArray` and is equal to $O(mn)$.\n\n---\n\n### Approach 2: Prefix and Suffix Sums\n\n#### Intuition\n\nIn this approach, we discuss an alternative to the greedy solution mentioned earlier. Instead of assuming that the median will always minimize the number of operations, we will check each element to see if it can be the final common value for the grid. \n\nA simple way to do this is to iterate over the elements of the flattened array and consider each one as the potential final value for the grid. For each value, we would loop through the array again to calculate how many operations are needed to make each number equal to this value. Then, we would update the result with the total number of operations. However, this approach uses two nested loops, resulting in quadratic time complexity which is inefficient for the given constraints.\n\nHow can we optimize it then? \n\nFirst, let’s break down the number of operations needed to make all elements equal to $a_i$. For simplicity, we’ll assume the array is sorted. To calculate the operations required for the smaller elements, we get:\n$$\n\\frac{a_i - a_0}{x} + \\frac{a_i - a_1}{x} + ... \\frac{a_i - a_{i - 1}}{x}\n$$\n\nAs mentioned earlier, if a solution exists, all elements have the same remainder when divided by $x$, so each fraction is an integer. In that case, the sum can be simplified as:\n\n$$\n\\frac{i \\cdot a_i - (a_0 + a_1 + ... + a_{i - 1})}{x}\n$$\n\nNotice that $a_0 + a_1 + ... + a_{i - 1}$ is a fixed value — the sum of the array up to index $i$, also known as the prefix sum.\nSimilarly, for the greater elements, the operations can be expressed as:\n\n$$\n\\frac{(a_{i + 1} + a_{i + 2} + ... + a_{\\text{length} - 1}) - (\\text{length} - i - 1) \\cdot a_i}{x}\n$$\n\nThis is related to the suffix sum from index $i$ onward.\n\nWith the prefix and suffix sums precomputed, we can quickly calculate the number of operations needed for each potential final value in constant time. \n\nAs in the previous approach, we begin by flattening the grid into a one-dimensional array and checking if all elements have the same remainder when divided by `x`. If they do, we calculate the prefix and suffix sum arrays and iterate over the array again to compute the number of operations for each potential common value, updating the result with the smallest number of operations.\n\n#### Algorithm\n\n-   Initialize:\n    -   an empty array, called `numsArray` to store all numbers.\n    -   a variable `result = INF` to store the smallest number of required operations.\n-   For each element `grid[row][col]`:\n    -   If `grid[row][col] % x != grid[0][0] % x`, return `-1`, since we found two elements with different remainders when divided by `x`.\n    -   Otherwise, push `grid[row][col]` into `numsArray`.\n-   Sort `numsArray` in non-decreasing order.\n-   Initialize `length` to the size of `numsArray`.\n-   Create two arrays, called `prefixSum` and `suffixSum`, of size `length` with all elements initially set to `0`.\n-   Loop over `numsArray` with `index` from `1` to `length - 1`:\n    -   Calculate the prefix sum up to `index`, excluding `numsArray[index]`, as `prefixSum[index] = prefixSum[index - 1] + numsArray[index - 1]`.\n-   Loop over `numsArray` in reverse with `index` from `length - 2` to `0`:\n    -   Calculate the suffix sum from `index`, excluding `numsArray[index]`, as `suffixSum[index] = suffixSum[index + 1] + numsArray[index + 1]`.\n-   Loop over `numsArray` one more time to calculate the number of operations required for each potential final value:\n    -   Calculate `leftOperations` as `(numsArray[index] * index - prefixSum[index]) / x`.\n    -   Calculate `rightOperations` as `(suffixSum[index] - numsArray[index] * (length - index - 1)) / x`.\n    -   Update the result with the minimum of its current value and `leftOperations + rightOperations`.\n-   Return `result`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RqtDUKLk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RqtDUKLk\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns in the `grid`.\n\n-   Time complexity: $O(mn \\times \\log{mn})$\n\n    As in the previous approach, we first flatten the grid into a one-dimensional array, which takes $O(mn)$ time. We then sort the array in $O(mn \\times \\log{mn})$ time. After that, we perform three separate loops, each running exactly $mn$ times and performing constant-time operations in each iteration. These loops calculate the prefix and suffix sum arrays and, ultimately, the smallest number of operations required. As a result, the overall time complexity is again dominated by the sorting step, making it $O(mn \\times \\log{mn})$.\n\n-   Space complexity: $O(mn)$\n\n    We create three arrays, `numsArray`, `prefixSum`, and `suffixSum`, each of size $mn$. Sorting `numsArray` may require additional space: $O(\\log {mn})$ in C++ and Java (for in-place sorting algorithms like Quicksort) and $O(mn)$ in Python (for Timsort, which uses extra space for merges). However, the dominant factor in space complexity is the auxiliary arrays, leading to an overall space complexity of $O(mn)$.\n\n---\n\n### Approach 3: Two Pointers\n\n#### Intuition\n\nIn this approach, we don’t start by fixing the final common value of the grid. Instead, we take a gradual approach. We progressively make all elements equal by extending the prefix and suffix of the flattened array that already contain equal elements.\n\nWe initialize two pointers, `prefixIndex` and `suffixIndex`, which start at the first and last elements of the sorted, flattened array, respectively. Our goal is to move these pointers toward the middle until they meet.\n\nTo move `prefixIndex`, we need to ensure that all elements up to `prefixIndex + 1` are equal. The number of operations required to achieve this can be calculated inductively. Suppose the first `prefixIndex` elements are already equal. To make them equal to `a[prefixIndex + 1]`, we need `prefixIndex * (a[prefixIndex + 1] - a[prefixIndex]) / x` operations.\n\nSimilarly, we determine the number of operations needed to move `suffixIndex` closer to the middle by making all elements in the corresponding suffix equal. In each step, we extend either the prefix or the suffix, choosing the one with fewer elements at that point.\n\nBy following this process, we gradually make all elements equal to the median of the array, which matches our original strategy.\n\n#### Algorithm\n\n-   Initialize:\n    -   an empty array, called `numsArray` to store all numbers.\n    -   a variable `result = 0` to count the smallest number of required operations.\n-   For each element `grid[row][col]`:\n    -   If `grid[row][col] % x != grid[0][0] % x`, return `-1`, since we found two elements with different remainders when divided by `x`.\n    -   Otherwise, push `grid[row][col]` into `numsArray`.\n-   Sort `numsArray` in non-decreasing order.\n-   Initialize:\n    -  `length` to the size of `numsArray`.\n    -  `prefixIndex` to `0`.\n    -  `suffixIndex` to `length - 1`.\n-   While `prefixIndex < suffixIndex`, meaning that we have more elements to process:\n    -   If the prefix of equal elements is currently shorter than the suffix, i.e., `prefixIndex < length - suffixIndex + 1`:\n        -   Calculate `prefixOperations` as `(prefixIndex + 1) * (numsArray[prefixIndex + 1] - numsArray[prefixIndex]) / x`.\n        -   Increment `result` by `prefixOperations`, i.e., the number of operations needed to make the first `prefixIndex + 1` elements equal.\n        -   Increment `prefixIndex` by `1`.\n    -   Otherwise:\n        -   Calculate `suffixOperations` as `(length - suffixIndex) * (numsArray[suffixIndex] - numsArray[suffixIndex - 1]) / x`.\n        -   Increment `result` by `suffixOperations`, i.e., the number of operations required to make the last `length - suffixIndex` elements of the array equal.\n        -   Decrement `suffixIndex` by `1`.\n-   Return `result`.\n \n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/PKKUmw66/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"PKKUmw66\"></iframe>\n\n#### Complexity Analysis\n\nLet $m$ be the number of rows and $n$ the number of columns in the `grid`.\n\n-   Time complexity: $O(mn \\times \\log{mn})$\n\n    Like in the previous approaches, we first flatten the grid in $O(mn)$ time and sort it in $O(mn \\times \\log{mn})$ time. Then, we make a final pass over its elements using the two pointers, which requires another $O(mn)$ time. Therefore, the overall time complexity, dominated by the sorting step, is equal to $O(mn \\log {mn})$.\n\n-   Space complexity: $O(mn)$\n\n    The algorithm uses only the `numsArray` that contains exactly $mn$ elements along with a fixed number of variables (`result`, `prefixIndex`, `suffixIndex`, etc.). Sorting the array requires extra space $S$, which depends on the language of implementation:\n\n    -   In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log mn)$.\n    -   In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log mn)$.\n    -   In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(mn)$.\n    \n    Overall, the space complexity is bounded by the size of the `numsArray`, and therefore it remains equal to $O(mn)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "questionId": "2201",
+  "questionFrontendId": "2097",
+  "title": "Valid Arrangement of Pairs",
+  "titleSlug": "valid-arrangement-of-pairs",
+  "difficulty": "Hard",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D integer array <code>pairs</code> where <code>pairs[i] = [start<sub>i</sub>, end<sub>i</sub>]</code>. An arrangement of <code>pairs</code> is <strong>valid</strong> if for every index <code>i</code> where <code>1 &lt;= i &lt; pairs.length</code>, we have <code>end<sub>i-1</sub> == start<sub>i</sub></code>.</p>\n\n<p>Return <em><strong>any</strong> valid arrangement of </em><code>pairs</code>.</p>\n\n<p><strong>Note:</strong> The inputs will be generated such that there exists a valid arrangement of <code>pairs</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> pairs = [[5,1],[4,5],[11,9],[9,4]]\n<strong>Output:</strong> [[11,9],[9,4],[4,5],[5,1]]\n<strong>Explanation:\n</strong>This is a valid arrangement since end<sub>i-1</sub> always equals start<sub>i</sub>.\nend<sub>0</sub> = 9 == 9 = start<sub>1</sub> \nend<sub>1</sub> = 4 == 4 = start<sub>2</sub>\nend<sub>2</sub> = 5 == 5 = start<sub>3</sub>\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> pairs = [[1,3],[3,2],[2,1]]\n<strong>Output:</strong> [[1,3],[3,2],[2,1]]\n<strong>Explanation:</strong>\nThis is a valid arrangement since end<sub>i-1</sub> always equals start<sub>i</sub>.\nend<sub>0</sub> = 3 == 3 = start<sub>1</sub>\nend<sub>1</sub> = 2 == 2 = start<sub>2</sub>\nThe arrangements [[2,1],[1,3],[3,2]] and [[3,2],[2,1],[1,3]] are also valid.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> pairs = [[1,2],[1,3],[2,1]]\n<strong>Output:</strong> [[1,2],[2,1],[1,3]]\n<strong>Explanation:</strong>\nThis is a valid arrangement since end<sub>i-1</sub> always equals start<sub>i</sub>.\nend<sub>0</sub> = 2 == 2 = start<sub>1</sub>\nend<sub>1</sub> = 1 == 1 = start<sub>2</sub>\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= pairs.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>pairs[i].length == 2</code></li>\n\t<li><code>0 &lt;= start<sub>i</sub>, end<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>start<sub>i</sub> != end<sub>i</sub></code></li>\n\t<li>No two pairs are exactly the same.</li>\n\t<li>There <strong>exists</strong> a valid arrangement of <code>pairs</code>.</li>\n</ul>\n",
+  "hints": [
+    "Could you convert this into a graph problem?",
+    "Consider the pairs as edges and each number as a node.",
+    "We have to find an Eulerian path of this graph. Hierholzer’s algorithm can be used."
+  ],
+  "metaData": "{\n  \"name\": \"validArrangement\",\n  \"params\": [\n    {\n      \"name\": \"pairs\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[][]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"82K\", \"totalSubmission\": \"123.3K\", \"totalAcceptedRaw\": 82009, \"totalSubmissionRaw\": 123310, \"acRate\": \"66.5%\"}",
+  "likes": 1080,
+  "dislikes": 56,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reconstruct Itinerary\", \"titleSlug\": \"reconstruct-itinerary\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find if Path Exists in Graph\", \"titleSlug\": \"find-if-path-exists-in-graph\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[5,1],[4,5],[11,9],[9,4]]",
+    "[[1,3],[3,2],[2,1]]",
+    "[[1,2],[1,3],[2,1]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"snapchat\", \"name\": \"Snap\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Eulerian Circuit",
+      "slug": "eulerian-circuit"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<vector<int>> validArrangement(vector<vector<int>>& pairs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[][] validArrangement(int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def validArrangement(self, pairs: List[List[int]]) -> List[List[int]]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def validArrangement(self, pairs):\n        \"\"\"\n        :type pairs: List[List[int]]\n        :rtype: List[List[int]]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} pairs\n * @return {number[][]}\n */\nvar validArrangement = function(pairs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function validArrangement(pairs: number[][]): number[][] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[][] ValidArrangement(int[][] pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Return an array of arrays of size *returnSize.\n * The sizes of the arrays are returned as *returnColumnSizes array.\n * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().\n */\nint** validArrangement(int** pairs, int pairsSize, int* pairsColSize, int* returnSize, int** returnColumnSizes) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func validArrangement(pairs [][]int) [][]int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun validArrangement(pairs: Array<IntArray>): Array<IntArray> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func validArrangement(_ pairs: [[Int]]) -> [[Int]] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn valid_arrangement(pairs: Vec<Vec<i32>>) -> Vec<Vec<i32>> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} pairs\n# @return {Integer[][]}\ndef valid_arrangement(pairs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $pairs\n     * @return Integer[][]\n     */\n    function validArrangement($pairs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<List<int>> validArrangement(List<List<int>> pairs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def validArrangement(pairs: Array[Array[Int]]): Array[Array[Int]] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec valid_arrangement(pairs :: [[integer]]) :: [[integer]]\n  def valid_arrangement(pairs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec valid_arrangement(Pairs :: [[integer()]]) -> [[integer()]].\nvalid_arrangement(Pairs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (valid-arrangement pairs)\n  (-> (listof (listof exact-integer?)) (listof (listof exact-integer?)))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2593",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe're given a list of pairs, each represented as `[start, end]`, and our task is to arrange these pairs in a specific order. For this order to be valid, the `end` of each pair has to match the `start` of the next one in line. Thankfully, we know that a valid arrangement is guaranteed to exist.\n\nTo put it more technically:\n- For every pair in the sequence, the `end` of the pair at index `i-1` has to equal the `start` of the pair at index `i`.\n- If there’s more than one possible arrangement, we only need to return one of them.\n\nTo solve this, we can borrow ideas from Eulerian paths. If you’re not familiar with them, the basic idea is that an Eulerian path in a graph visits every edge exactly once, and it turns out that this is pretty similar to our goal where each pair’s `end` needs to connect smoothly($end_{i-1} == start_i$) to the `start` of the next pair.\n\n###### The Rules of Eulerian Path\n\nEulerian paths have a couple of conditions:\n\n1. In an undirected graph, either all nodes have an even degree, or exactly two have an odd degree.\n2. In a directed graph (which is what we have here), we need to check if:\n   - Each node’s `outDegree` matches its `inDegree`.\n   - Or, exactly one node has one more outgoing edge (`outDegree = inDegree + 1`), which indicates our starting point.\n\n> A diagram illustrating the starting condition (`outDegree = inDegree + 1`) is shown below.\n\n![2097_euler](../Figures/2097/euler.png) \n\n</br>\n\nWith the problem's guarantee of a valid arrangement, we can rely on these properties. So, all we need to do is find that starting node, then follow the edges to build our path.\n\n---\n\n### Approach 1: Eulerian Path (Recursive)\n\n#### Intuition   \n\nBefore finding the starting node, we treat each pair as a directed edge between two nodes, where the `start` is the beginning node and the `end` is the destination. Using this setup, we can create a graph representation with an adjacency list, where each node points to the nodes it connects to directly. This list of neighbors for each node will help us keep track of the possible paths we can take as we form the sequence of pairs.\n\nThe next step is finding the right starting node for our traversal. We’re looking for a node where the outgoing edges (or `outDegree`) exceed the incoming edges (or `inDegree`) by one. Such a node, if it exists, serves as a natural starting point because it has one extra outgoing connection that begins the path. If there’s no node like this (meaning all nodes have equal in and out degrees), then any node can be chosen as the start, as this suggests a closed Eulerian path.\n\nWith our starting node identified, we can traverse the graph using Depth-First Search (Postorder DFS). Starting from our chosen node, we follow each edge, moving to neighboring nodes and adding each visited node to our path. This way, we ensure that every edge is visited exactly once, creating a continuous sequence that meets the required conditions. As we explore each edge, we add nodes to the path in the reverse order (because of DFS), which means we’ll need to reverse the recorded path at the end to obtain the correct order.\n\nAt this point, you might wonder why we need to use postorder DFS. The intuitive approach is to use a DFS with backtracking, which would also work but would likely lead to a Time Limit Exceeded (TLE) issue. The time complexity of a basic DFS with backtracking is $O(N * E)$, where N is the number of nodes and E is the number of edges. This approach is too slow because we may end up revisiting nodes or edges multiple times.\n\nThe key to optimizing this is to use postorder DFS, which runs in $O(N + E)$ time. The reason postorder DFS works well for this problem is that:\n\n1. We need to perform a DFS traversal to visit every edge exactly once, and since we are guaranteed an Eulerian path, we know that all edges/pairs will be visited starting from the correct start node.\n2. The crucial part is that we need to ensure that all edges starting from a given node are visited before we append that node to the path. In postorder DFS, we first explore all the neighbors (edges) of a node and only append the node to the path after all its edges have been processed. This guarantees that we follow the correct sequence, ensuring that the traversal respects the rule of visiting all edges from the current node before moving on.\n\n> Another way to explain why we use postorder DFS is that when we are at a node `u` with multiple unvisited outgoing edges, we know we will need to return to `u` later in the tour to complete the Eulerian path. However, not all outgoing edges will lead back to `u`, as demonstrated in Example 3 of the problem description. To handle this, we perform a postorder traversal instead of a preorder traversal, ensuring that we visit all outgoing edges before returning to the node.\n\nThus, postorder DFS effectively reduces unnecessary work, avoids TLE, and provides the optimal solution. If you're still unsure about the approach, We highly recommend looking at problem [332. Reconstruct Itinerary](https://leetcode.com/problems/reconstruct-itinerary/description/), which involves a similar solution and approach.\n\nFinally, with our ordered path in hand, we construct the final result by pairing each consecutive node in the path as `[start, end]` pairs.\n\n#### Algorithm\n\n- Initialize `adjacencyMatrix` as an unordered map of deques to represent the graph (adjacency list).\n- Initialize `inDegree` and `outDegree` to track the in-degrees and out-degrees of each node.\n\n- For each pair in `pairs`:\n  - Extract the `start` and `end` values from the pair.\n  - Add `end` to the adjacency list of `start` in `adjacencyMatrix`.\n  - Increment `outDegree[start]` and `inDegree[end]`.\n\n- Define a helper function `visit(int node)` for DFS traversal:\n  - While there are outgoing edges from the current node (`node`):\n    - Pop the next node from the adjacency list and recursively call `visit` on it.\n  - After visiting all outgoing nodes, add the current node to `result`.\n\n- Find the starting node for the DFS:\n  - Search for a node `startNode` where the out-degree is exactly one greater than the in-degree (`outDegree[node] == inDegree[node] + 1`).\n  - If no such node exists, use the first element of the first pair as the starting node.\n\n- Perform DFS starting from `startNode`:\n  - Call `visit(startNode)` to perform the traversal and fill the `result` array with the nodes in reverse order.\n\n- Reverse the `result` array to restore the correct order of nodes.\n\n- Construct the result pairs:\n  - For each consecutive pair of nodes in `result`, add a pair `[result[i-1], result[i]]` to `pairedResult`.\n\n- Return `pairedResult`, which represents the valid arrangement of the input pairs.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZwTwq8nQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZwTwq8nQ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of pairs in the input `pairs`, $V$ be the number of unique vertices in the graph formed by these pairs, and $E$ be the number of edges in the graph, which equals $n$ since each pair represents an edge.\n\n- Time Complexity: $O(V + E)$\n\n    Building the adjacency list and tracking degrees involves iterating through each pair once. For each pair, we perform constant-time operations to update the adjacency list and degree maps. This step takes $O(n)$ time.\n\n    To find the start node, we iterate through the `outDegree` map, which has at most $V$ entries. For each entry, we perform constant-time operations. This step takes $O(V)$ time.\n\n    In the DFS traversal, we visit each edge exactly once. Since there are $E$ edges, the DFS traversal itself takes $O(E)$ time. During the traversal, we perform constant-time operations per edge, like popping from the deque and pushing to the result array.\n\n    Reversing the result array takes $O(V)$ time because it contains $V$ vertices. Finally, constructing the result pairs requires iterating through the result array once, performing constant-time operations for each vertex. This step also takes $O(V)$ time.\n\n    Overall, the dominant term in the time complexity is $O(V + E)$. Given that $E = n$, the time complexity can be expressed as $O(V + n)$.\n\n- Space Complexity: $O(V + E)$\n\n    The adjacency list stores $E$ edges, with each edge stored in a deque associated with a vertex. Thus, the total space used by the adjacency list is $O(V + E)$.\n\n    The degree maps, both `inDegree` and `outDegree`, store one entry per unique vertex. Therefore, they take $O(V)$ space.\n\n    The result array stores $V$ vertices, requiring $O(V)$ space.\n\n    The maximum depth of the recursive stack during DFS is $V$, so the recursive stack requires $O(V)$ space.\n\n    Overall, the space complexity is dominated by the adjacency list, resulting in $O(V + E)$. Given that $E = n$, the space complexity can be expressed as $O(V + n)$.\n\n---\n\n### Approach 2: Hierholzer's Algorithm (Iterative)\n\n#### Intuition\n\nTo solve the problem iteratively, we follow the same core logic used in the recursive solution but avoid recursion by using a stack for DFS. The key concept stays the same. Start by creating an adjacency list, then find the starting node, and after that, we proceed with iterative DFS.\n\nThe idea is to use a stack to manage our current position in the graph. Starting from the identified starting node, we push the node onto the stack. At each step, we check if the current node has any outgoing edges left (i.e., if the adjacency list for that node is non-empty). If it does, we push the next node (taken from the front of the adjacency list) onto the stack. This continues until there are no more outgoing edges to visit from the current node.\n\nIf a node has no more outgoing edges, it means we’ve fully explored all edges from that node, so we pop it off the stack and add it to the result list. Since we’re collecting the nodes in reverse order (because we process the last node of each pair first), we need to reverse the result list at the end to get the correct order for the Eulerian path.\n\nFinally, we construct the solution by pairing consecutive nodes in the reversed path. This gives us the correct sequence of pairs where each pair’s `end` connects to the next pair’s `start`.\n\n> This algorithm is famously known as Hierholzer's algorithm, named after the German mathematician Carl Hierholzer.\n\n#### Algorithm\n\n- Initialize `adjacencyMatrix` as an unordered map of deques to represent the graph (adjacency list).\n- Initialize `inDegree` and `outDegree` to track the in-degrees and out-degrees of each node.\n\n- For each `pair` in `pairs`:\n  - Add the edge to the adjacency list (`adjacencyMatrix[start]`).\n  - Increment the `outDegree` of the `start` node.\n  - Increment the `inDegree` of the `end` node.\n\n- Initialize `startNode` to -1 to store the node from where the traversal should begin.\n\n- For each node in `outDegree`:\n  - Check if the `outDegree` is one greater than the `inDegree` (i.e., `outDegree[node] == inDegree[node] + 1`):\n    - If so, set `startNode` to this node and break the loop.\n\n- If no such `startNode` is found (i.e., no node with `outDegree` greater than `inDegree` by 1), set `startNode` to the first element of the first pair in `pairs`.\n\n- Initialize `nodeStack` and push `startNode` onto the stack for DFS traversal.\n\n- Perform an iterative DFS using the stack:\n  - While `nodeStack` is not empty:\n    - Get the `top` node from the stack.\n    - If the `top` node has outgoing edges in `adjacencyMatrix`, push the next node onto the stack.\n    - If there are no outgoing edges left for the `top` node, add it to the result list and pop it from the stack.\n\n- Reverse the `result` since nodes were added in reverse order during DFS.\n\n- Construct `pairedResult` from the reversed `result`:\n  - For each consecutive pair of nodes in `result`, create a new pair (`result[i-1], result[i]`) and add it to `pairedResult`.\n\n- Return `pairedResult` as the final answer, representing the valid arrangement of pairs.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LZR5pVwV/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LZR5pVwV\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of pairs in the input `pairs`, $V$ be the number of unique vertices in the graph formed by these pairs, and $E$ be the number of edges in the graph, which equals $n$ since each pair represents an edge.\n\n- Time Complexity: $O(V + E)$\n\n    Building the adjacency list and tracking in-degrees and out-degrees requires iterating through each pair once. For each pair, we perform constant-time operations to update the adjacency list and the degree maps. This step takes $O(n)$ time.\n\n    To find the start node, we iterate through the `outDegree` map, which has at most $V$ entries. For each entry, we perform constant-time operations. This step takes $O(V)$ time.\n\n    The DFS traversal (implemented iteratively with a stack) visits each edge exactly once. Since there are $E$ edges, the DFS traversal itself takes $O(E)$ time. During the traversal, we perform constant-time operations for each edge, such as popping from the deque and pushing to the result array.\n\n    Reversing the result array takes $O(V)$ time, as it contains $V$ vertices. Constructing the result pairs involves iterating through the result array once, performing constant-time operations for each vertex. This step also takes $O(V)$ time.\n\n    Overall, the dominant term in the time complexity is $O(V + E)$. Since $E = n$, the time complexity can also be expressed as $O(V + n)$.\n\n- Space Complexity: $O(V + E)$\n\n    The adjacency matrix stores $E$ edges, with each edge stored in a deque associated with a vertex. The total space used by the adjacency matrix is $O(V + E)$.\n\n    The `inDegree` and `outDegree` maps store one entry per unique vertex. Thus, both maps together take $O(V)$ space.\n\n    The `result` array stores $V$ vertices, which require $O(V)$ space.\n\n    The maximum depth of the stack during the DFS traversal is $V$, as it corresponds to the number of vertices. Thus, the stack uses $O(V)$ space.\n\n    Overall, the space complexity is dominated by the adjacency matrix, resulting in $O(V + E)$. Since $E = n$, the space complexity can be expressed as $O(V + n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

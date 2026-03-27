@@ -1,0 +1,145 @@
+{
+  "questionId": "2153",
+  "questionFrontendId": "2005",
+  "title": "Subtree Removal Game with Fibonacci Tree",
+  "titleSlug": "subtree-removal-game-with-fibonacci-tree",
+  "difficulty": "Hard",
+  "content": "<p>A <strong>Fibonacci</strong> tree is a binary tree created using the order function <code>order(n)</code>:</p>\n\n<ul>\n\t<li><code>order(0)</code> is the empty tree.</li>\n\t<li><code>order(1)</code> is a binary tree with only <strong>one node</strong>.</li>\n\t<li><code>order(n)</code> is a binary tree that consists of a root node with the left subtree as <code>order(n - 2)</code> and the right subtree as <code>order(n - 1)</code>.</li>\n</ul>\n\n<p>Alice and Bob are playing a game with a <strong>Fibonacci</strong> tree with Alice staring first. On each turn, a player selects a node and removes that node <strong>and</strong> its subtree. The player that is forced to delete <code>root</code> loses.</p>\n\n<p>Given the integer <code>n</code>, return <code>true</code> if Alice wins the game or <code>false</code> if Bob wins, assuming both players play optimally.</p>\n\n<p>A subtree of a binary tree <code>tree</code> is a tree that consists of a node in <code>tree</code> and all of this node&#39;s descendants. The tree <code>tree</code> could also be considered as a subtree of itself.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/09/14/image-20210914173520-3.png\" style=\"width: 200px; height: 184px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 3\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nAlice takes the node 1 in the right subtree.\nBob takes either the 1 in the left subtree or the 2 in the right subtree.\nAlice takes whichever node Bob doesn&#39;t take.\nBob is forced to take the root node 3, so Bob will lose.\nReturn true because Alice wins.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/09/14/image-20210914173634-4.png\" style=\"width: 75px; height: 75px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 1\n<strong>Output:</strong> false\n<strong>Explanation:</strong>\nAlice is forced to take the root node 1, so Alice will lose.\nReturn false because Alice loses.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/09/14/image-20210914173425-1.png\" style=\"width: 100px; height: 106px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 2\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nAlice takes the node 1.\nBob is forced to take the root node 2, so Bob will lose.\nReturn true because Alice wins.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "How can game theory help us solve this problem?",
+    "Think about the Sprague–Grundy theorem and the Colon Principle",
+    "The Grundy value of a node is the nim sum of the Grundy values of its children."
+  ],
+  "metaData": "{\n  \"name\": \"findGameWinner\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"914\", \"totalSubmission\": \"1.6K\", \"totalAcceptedRaw\": 914, \"totalSubmissionRaw\": 1584, \"acRate\": \"57.7%\"}",
+  "likes": 16,
+  "dislikes": 50,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Game of Nim\", \"titleSlug\": \"game-of-nim\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3",
+    "1",
+    "2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"sony\", \"name\": \"Sony\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Binary Tree",
+      "slug": "binary-tree"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool findGameWinner(int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean findGameWinner(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findGameWinner(self, n: int) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findGameWinner(self, n):\n        \"\"\"\n        :type n: int\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @return {boolean}\n */\nvar findGameWinner = function(n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findGameWinner(n: number): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool FindGameWinner(int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool findGameWinner(int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findGameWinner(n int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findGameWinner(n: Int): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findGameWinner(_ n: Int) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_game_winner(n: i32) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @return {Boolean}\ndef find_game_winner(n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @return Boolean\n     */\n    function findGameWinner($n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool findGameWinner(int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findGameWinner(n: Int): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_game_winner(n :: integer) :: boolean\n  def find_game_winner(n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_game_winner(N :: integer()) -> boolean().\nfind_game_winner(N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-game-winner n)\n  (-> exact-integer? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

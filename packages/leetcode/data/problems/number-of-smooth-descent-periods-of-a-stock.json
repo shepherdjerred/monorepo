@@ -1,0 +1,150 @@
+{
+  "questionId": "2233",
+  "questionFrontendId": "2110",
+  "title": "Number of Smooth Descent Periods of a Stock",
+  "titleSlug": "number-of-smooth-descent-periods-of-a-stock",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>prices</code> representing the daily price history of a stock, where <code>prices[i]</code> is the stock price on the <code>i<sup>th</sup></code> day.</p>\n\n<p>A <strong>smooth descent period</strong> of a stock consists of <strong>one or more contiguous</strong> days such that the price on each day is <strong>lower</strong> than the price on the <strong>preceding day</strong> by <strong>exactly</strong> <code>1</code>. The first day of the period is exempted from this rule.</p>\n\n<p>Return <em>the number of <strong>smooth descent periods</strong></em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [3,2,1,4]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> There are 7 smooth descent periods:\n[3], [2], [1], [4], [3,2], [2,1], and [3,2,1]\nNote that a period with one day is a smooth descent period by the definition.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [8,6,7,7]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> There are 4 smooth descent periods: [8], [6], [7], and [7]\nNote that [8,6] is not a smooth descent period as 8 - 6 &ne; 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> prices = [1]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> There is 1 smooth descent period: [1]\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= prices.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= prices[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Any array is a series of adjacent longest possible smooth descent periods. For example, [5,3,2,1,7,6] is [5] + [3,2,1] + [7,6].",
+    "Think of a 2-pointer approach to traverse the array and find each longest possible period.",
+    "Suppose you found the longest possible period with a length of k. How many periods are within that period? How can you count them quickly? Think of the formula to calculate the sum of 1, 2, 3, ..., k."
+  ],
+  "metaData": "{\n  \"name\": \"getDescentPeriods\",\n  \"params\": [\n    {\n      \"name\": \"prices\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"142.4K\", \"totalSubmission\": \"210.3K\", \"totalAcceptedRaw\": 142428, \"totalSubmissionRaw\": 210293, \"acRate\": \"67.7%\"}",
+  "likes": 1081,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Subarray Product Less Than K\", \"titleSlug\": \"subarray-product-less-than-k\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Valid Subarrays\", \"titleSlug\": \"number-of-valid-subarrays\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Number of Zero-Filled Subarrays\", \"titleSlug\": \"number-of-zero-filled-subarrays\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,1,4]",
+    "[8,6,7,7]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long getDescentPeriods(vector<int>& prices) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long getDescentPeriods(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def getDescentPeriods(self, prices: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def getDescentPeriods(self, prices):\n        \"\"\"\n        :type prices: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} prices\n * @return {number}\n */\nvar getDescentPeriods = function(prices) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function getDescentPeriods(prices: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long GetDescentPeriods(int[] prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long getDescentPeriods(int* prices, int pricesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func getDescentPeriods(prices []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun getDescentPeriods(prices: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func getDescentPeriods(_ prices: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn get_descent_periods(prices: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} prices\n# @return {Integer}\ndef get_descent_periods(prices)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $prices\n     * @return Integer\n     */\n    function getDescentPeriods($prices) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int getDescentPeriods(List<int> prices) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def getDescentPeriods(prices: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec get_descent_periods(prices :: [integer]) :: integer\n  def get_descent_periods(prices) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec get_descent_periods(Prices :: [integer()]) -> integer().\nget_descent_periods(Prices) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (get-descent-periods prices)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2894",
+    "content": "### Approach: Dynamic Programming\n\n#### Intuition\n\nTo avoid duplication or omission, we can count the number of smooth descending periods ending on each day in the array $\\textit{prices}$, and the sum of these numbers is the total number of smooth descending periods in the array.\n\nWe can use dynamic programming to calculate the number of smooth descending periods ending on each day. Specifically, we can use a $\\textit{dp}$ array to store these numbers, where $\\textit{dp}[i]$ represents the number of periods ending on day $i$. When $i = 0$, obviously $\\textit{dp}[0] = 1$, which means the period consisting of only that day. For $i > 0$, considering that a smooth descending period with length greater than 1 requires that the price of each day is exactly 1 less than the previous day, we can consider the relationship between the price on day $i - 1$, $\\textit{prices}[i-1]$, and the price on day $i$, $\\textit{prices}[i]$. Specifically:\n\n- If $\\textit{prices}[i] \\not = \\textit{prices}[i-1] - 1$, then day $i$ cannot form a smooth descending period with day $i - 1$, so the smooth descending periods ending at $i$ only include $i$ itself, thus $\\textit{dp}[i] = 1$.\n\n- If $\\textit{prices}[i] = \\textit{prices}[i-1] - 1$, then not only can day $i$ itself form a smooth descending period, but any smooth descending period ending on day $i-1$ can be extended by day $i$ to form a new smooth descending period ending on day $i$. According to the definition of the $\\textit{dp}$ array, there are $\\textit{dp}[i-1]$ such periods, so at this time $\\textit{dp}[i] = \\textit{dp}[i-1] + 1$.\n\nIn summary:\n\n$$\n\\textit{dp}[i] =\n\\begin{cases}\n1, & i = 0 \\\\\n1, & i > 0,\\ \\textit{prices}[i] \\ne \\textit{prices}[i-1] - 1 \\\\\n\\textit{dp}[i-1] + 1, & i > 0,\\ \\textit{prices}[i] = \\textit{prices}[i-1] - 1\n\\end{cases}\n$$\n\nWe just need to traverse $\\textit{prices}$ using the above recurrence relation and maintain the corresponding $\\textit{dp}$ array, while using $\\textit{res}$ to maintain the sum of the elements in the $\\textit{dp}$ array, which represents the total number of smooth descending periods.\n\nSince $\\textit{dp}[i]$ depends only on $\\textit{dp}[i-1]$, we do not need to explicitly maintain the $\\textit{dp}$ array. Instead, we can use an integer $\\textit{prev}$ to keep track of $\\textit{dp}[i-1]$ during the recursion. We start traversing the array indices from $i = 1$, at which point the initial value of $\\textit{prev}$ is $\\textit{dp}[0] = 1$, and the initial value of $\\textit{res}$ is also $1$. When traversing to index $i$, we first update $\\textit{prev}$ to $\\textit{dp}[i]$ according to the recurrence relation mentioned above, then add the current value of $\\textit{prev}$ to $\\textit{res}$. After the traversal is complete, $\\textit{res}$ will be the total number of smooth descending periods, and we return this value as the answer.\n\nConsidering the data range, the value of $\\textit{res}$ may exceed the upper bound of a 32-bit signed integer, so we need to use a 64-bit integer to maintain it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kErG33Ni/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"kErG33Ni\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of $\\textit{prices}$.\n\n- Time complexity: $O(n)$.\n  \n  The time complexity of calculating the number of smooth descending periods ending at each element and summing them up.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

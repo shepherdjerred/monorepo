@@ -1,0 +1,149 @@
+{
+  "questionId": "2164",
+  "questionFrontendId": "2054",
+  "title": "Two Best Non-Overlapping Events",
+  "titleSlug": "two-best-non-overlapping-events",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> 2D integer array of <code>events</code> where <code>events[i] = [startTime<sub>i</sub>, endTime<sub>i</sub>, value<sub>i</sub>]</code>. The <code>i<sup>th</sup></code> event starts at <code>startTime<sub>i</sub></code><sub> </sub>and ends at <code>endTime<sub>i</sub></code>, and if you attend this event, you will receive a value of <code>value<sub>i</sub></code>. You can choose <strong>at most</strong> <strong>two</strong> <strong>non-overlapping</strong> events to attend such that the sum of their values is <strong>maximized</strong>.</p>\n\n<p>Return <em>this <strong>maximum</strong> sum.</em></p>\n\n<p>Note that the start time and end time is <strong>inclusive</strong>: that is, you cannot attend two events where one of them starts and the other ends at the same time. More specifically, if you attend an event with end time <code>t</code>, the next event must start at or after <code>t + 1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2026/01/03/untitled-diagramdrawio.png\" style=\"width: 400px; height: 86px;\" />\n<pre>\n<strong>Input:</strong> events = [[1,3,2],[4,5,2],[2,4,3]]\n<strong>Output:</strong> 4\n<strong>Explanation: </strong>Choose the green events, 0 and 1 for a sum of 2 + 2 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"Example 1 Diagram\" src=\"https://assets.leetcode.com/uploads/2026/01/03/2054b.png\" style=\"width: 400px; height: 86px;\" />\n<pre>\n<strong>Input:</strong> events = [[1,3,2],[4,5,2],[1,5,5]]\n<strong>Output:</strong> 5\n<strong>Explanation: </strong>Choose event 2 for a sum of 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2026/01/03/2054c.png\" style=\"width: 400px; height: 74px;\" />\n<pre>\n<strong>Input:</strong> events = [[1,5,3],[1,5,1],[6,6,5]]\n<strong>Output:</strong> 8\n<strong>Explanation: </strong>Choose events 0 and 2 for a sum of 3 + 5 = 8.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= events.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>events[i].length == 3</code></li>\n\t<li><code>1 &lt;= startTime<sub>i</sub> &lt;= endTime<sub>i</sub> &lt;= 10<sup>9</sup></code></li>\n\t<li><code>1 &lt;= value<sub>i</sub> &lt;= 10<sup>6</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can sorting the events on the basis of their start times help? How about end times?",
+    "How can we quickly get the maximum score of an interval not intersecting with the interval we chose?"
+  ],
+  "metaData": "{\n  \"name\": \"maxTwoEvents\",\n  \"params\": [\n    {\n      \"name\": \"events\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"177.5K\", \"totalSubmission\": \"277.3K\", \"totalAcceptedRaw\": 177527, \"totalSubmissionRaw\": 277328, \"acRate\": \"64.0%\"}",
+  "likes": 1851,
+  "dislikes": 72,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Profit in Job Scheduling\", \"titleSlug\": \"maximum-profit-in-job-scheduling\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Events That Can Be Attended II\", \"titleSlug\": \"maximum-number-of-events-that-can-be-attended-ii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximize Win From Two Segments\", \"titleSlug\": \"maximize-win-from-two-segments\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Score of Non-overlapping Intervals\", \"titleSlug\": \"maximum-score-of-non-overlapping-intervals\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,3,2],[4,5,2],[2,4,3]]",
+    "[[1,3,2],[4,5,2],[1,5,5]]",
+    "[[1,5,3],[1,5,1],[6,6,5]]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"jpmorgan\", \"name\": \"J.P. Morgan\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"razorpay\", \"name\": \"razorpay\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTwoEvents(vector<vector<int>>& events) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTwoEvents(int[][] events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTwoEvents(self, events: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTwoEvents(self, events):\n        \"\"\"\n        :type events: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} events\n * @return {number}\n */\nvar maxTwoEvents = function(events) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTwoEvents(events: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTwoEvents(int[][] events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTwoEvents(int** events, int eventsSize, int* eventsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTwoEvents(events [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTwoEvents(events: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTwoEvents(_ events: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_two_events(events: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} events\n# @return {Integer}\ndef max_two_events(events)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $events\n     * @return Integer\n     */\n    function maxTwoEvents($events) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTwoEvents(List<List<int>> events) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTwoEvents(events: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_two_events(events :: [[integer]]) :: integer\n  def max_two_events(events) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_two_events(Events :: [[integer()]]) -> integer().\nmax_two_events(Events) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-two-events events)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2605",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given a 2D integer array of events where each event starts at `startTime`, ends at `endTime`, and pays a `value` if attended. Return the maximum profit possible from picking up to 2 non-overlapping events.\n\n> Note: The start time and end time are inclusive: that is, you cannot attend two events where one of them starts and the other ends at the same time.\n\n---\n\n### Approach 1: Top-down Dynamic Programming\n\n#### Intuition   \n\nObserve that for each event, we have two choices: attend the event or skip it. Given this binary decision structure at each step, we can use recursion to solve the problem. At each event, we recursively evaluate both options: attend the event and move to the next valid event (skipping overlapping ones), or skip the current event and move to the next. By combining the results of these subproblems, we can determine the maximum value achievable. However, the problem constraints allow us to solve it in linear or log-linear time complexity.\n\nHow many independent subproblems or recursive states do we have in this problem? Assuming for an index `i`, we have `3` possibilities: 0, 1, or 2 events picked. Therefore, the total number of subproblems remains limited to $$n \\cdot 3$$. In every recursive iteration, we have three choices. Therefore, for a sequence of `n` iterations, there are a total of `3^n` possible choices. This number is significantly greater than the actual number of unique subproblems, as many calculations are redundant. These redundant calculations can be optimized by caching their results.\n\nTo achieve this, we can create a `memo` matrix to store the results of these computations. Specifically, `memo[index][k]` stores the solution to the subproblem where we are at `index` and have picked `k` events so far. This technique is known as [memoization](https://en.wikipedia.org/wiki/Memoization), and it helps us avoid recalculating repeated subproblems.\n\nOnce we select an event, we need to identify non-overlapping events that we can move to next.\n\nOne way to handle this is by first sorting the array of events based on their starting times. For the current `index` in the recursion, we can efficiently find the next valid event (one whose start time is greater than the current event's end time) by using binary search. Since the array is sorted by `start`, binary search allows us to jump to the next valid event with the smallest starting time just greater than the current event's ending time.\n\nThe recursive function should receive the current event index, `idx`, and a count, `cnt`, representing the number of events selected so far.\n- If two events have already been selected `(cnt == 2)` or if all events have been processed (`idx` is out of bounds), it returns 0, as no further events can be selected.\n- For each event at index `idx`, the function computes two possible outcomes: including the current event in the selection or excluding it.\n    - If the current event is included, a binary search is performed to find the next event that starts after the current event's end time. The result of including the event is the sum of the event's value and the recursive result of selecting the next event, incrementing the count of selected events.\n    - Otherwise, we exclude the current event and call the recursive function on the next index.\nThe recurrence chooses the maximum value between including or excluding the current event, which is then stored in the `dp` table to avoid redundant calculations. The result for a given state `(idx, cnt)` is thus the maximum of either selecting or skipping the current event, ensuring optimal selection of up to two non-overlapping events.\n\n#### Algorithm\n\nMain Function\n1. Determine `n` as the number of events.\n2. Create a 2D array `dp` of size `n x 3`, initialized to -1. `dp[idx][k]` indicates the maximum value attainable when considering the events starting from index `idx`, with `k` events selected so far.\n3. Sort the `events` array in ascending order by their start times.\n4. Call the function (defined below) with the initial state: `findEvents(events, 0, 0, dp)`\n\nRecursive Function - `findEvents(events, idx, cnt, dp)`\n1. If `cnt` equals 2 or `idx` is out of bounds, return 0.\n2. If `dp[idx][cnt]` equals `-1`, compute the result:\n    - Let `end` be the end time of the current event `(events[idx][1])`.\n    - Perform a binary search on `events` to find the first event starting after `end`. Use two pointers, `lo` and `hi`:\n    - While `lo < hi`, calculate `mid = lo + ((hi - lo) >> 1)`.\n        - If `events[mid][0] > end`, update `hi = mid`; otherwise, update `lo = mid + 1`.\n    - Calculate `include` as the sum of the current event value `(events[idx][2])` and the result of recursively calling `findEvents` with `lo` (if the start time of the event at lo is valid) and `cnt + 1`.\n    - Calculate `exclude` as the result of recursively calling findEvents with `idx + 1` and `cnt`.\n    - Store the maximum of `include` and `exclude` in `dp[idx][cnt]`.\n3. Return `dp[idx][cnt]`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/JVD2SUwP/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"JVD2SUwP\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of events in the `events` array.\n\n- Time Complexity: $O(n \\cdot \\log n)$\n\n    The algorithm sorts the array of events by their starting times, which takes $O(n \\cdot \\log n)$ time. Calculating the maximum value for each event index involves solving recursive subproblems. For each of the `n` events, we compute the result for `3` states (0, 1, or 2 elements picked), and finding the next valid event using binary search takes $O(\\log n)$ time.\n\n    Memoization ensures that each subproblem is solved only once, avoiding redundant computations. Therefore, the overall time complexity is given by $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm requires $O(n)$ space for the `memo` array, which stores the precomputed values of subproblems to avoid redundant calculations during recursion. Also, the recursion depth contributes $O(n)$ stack space.\n\n    Apart from this, the space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and  Insertion Sort and has $O(l)$ additional space, where `l` is the size of the list.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n    \n    Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 2: Min-heap\n\n#### Intuition   \n\nIn the previous approach, we solved the problem recursively by sorting the events in increasing order of their start times. The key observation is that for every event, we need to calculate the potential maximum sum if it's paired with an earlier event. Since we are processing the list in the sorted order of start times, we'd need to store all end times up to the current index in a sorted order, and find the maximum value where the end time is less than the start time. We can use a priority queue (min-heap) that can help us to efficiently track and remove events that end before the current event starts. A priority queue provides efficient access to the highest or lowest priority element, with $O(\\log n)$ insertion and deletion operations while maintaining a heap structure.\n\nA [priority queue (min-heap)](https://leetcode.com/explore/featured/card/heap/) is used to store events as pairs of `(end time, value)` so that we can efficiently manage events that might overlap with the current event. Alongside, a variable `maxVal` tracks the highest value of a single event encountered so far, which is used to calculate the maximum sum when combined with the current event.\n\nAs we process each event, we remove all valid events from the priority queue that end before the current event starts, as they are guaranteed not to overlap. While removing these events, we update `maxVal` to store the highest value of these popped events. For the current event, we calculate the maximum possible sum by adding its value to `maxVal`, representing the best event that ended before the current event started, and update the `maxSum` if this sum is greater. The current event is then added to the priority queue to be considered for future combinations.\n\n#### Algorithm\n\n- Create a min-heap (`pq`) to store pairs of event ending times and their corresponding values.\n- Sort the `events` array in ascending order by the start times of the events.\n- Initialize:\n    - `maxVal` as 0 to store the maximum event value encountered so far.\n    - `maxSum` as 0 to store the maximum sum of two non-overlapping event values.\n- Iterate through the `events` array:\n    - For each `event`, while the heap is not empty and the ending time of the event at the top of the heap is less than the current event's start time:\n        - Update `maxVal` to the maximum of its current value and the value from the top of the heap.\n        - Remove the top element from the heap.\n    - Update `maxSum` to the maximum of its current value and the sum of `maxVal` and the current event's value.\n    - Push the current event's end time and value as a pair into the heap.\n- Return `maxSum` as the result after processing all events.\n\n!?!../Documents/2054/slideshow.json:960,540!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/4PHBYiVc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"4PHBYiVc\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of events in the `events` array.\n\n- Time Complexity: $O(n \\cdot \\log n)$\n\n    The algorithm sorts the events by their start times, which takes $O(n \\cdot \\log n)$. While iterating through the event list, the algorithm performs operations related to the priority queue (min-heap) for each event. Popping from the heap and pushing a new event both take $O(\\log n)$, leading to a total of $O(n \\cdot \\log n)$ for all these operations.\n\n    Combining all steps, the overall time complexity is given by $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n    The algorithm requires $O(n)$ space for the priority queue in the worst case.\n\n    Apart from this, the space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(l)$ additional space, where `l` is the size of the list.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    Therefore, the total space complexity is given by $O(n)$.\n\n---\n\n### Approach 3: Greedy\n\n#### Intuition   \n\nIs there a way to find the maximum sum without using a binary search? The problem with previous approaches is that since we can only sort based on either the start time or the end time, we need to use binary search and dynamic programming to find the most optimal values.\n\nTo find the best second element without using binary search, we can combine the start and end times into a single array, with a flag to differentiate between them. After sorting this array, with end times processed before start times in case of ties, we can iterate through it sequentially.\n\nDuring the iteration, we maintain the maximum value of all events that have ended up to the current point. When we encounter a start time, we calculate the maximum sum by adding the current event's value to the maximum value of the previously ended events. This ensures that we efficiently track the best possible combination of non-overlapping events.\n\n#### Algorithm\n\n1. Initialize a list `times` to store tuples containing the event's `timeValue`, type `(start or end)`, and `value`.\n2. Loop through the input events:\n    - For each event `(start, end, value)`, add two tuples to `times`:\n        - `(start, 1, value)` representing the `start` time of the event.\n        - `(end + 1, 0, value)` representing the `end` time of the event.\n3. Sort `times` by the time value. If two entries have the same time, prioritize `end` times.\n4. Initialize `ans` to track the maximum sum of two non-overlapping events, and `maxValue` to track the maximum event value seen so far.\n5. Loop through each element in `times`:\n    - If the element's type is `1` (start time):\n        - Update `ans` as the maximum of its current value and the sum of the event value and `maxValue`.\n    - If the element's type is 0 (end time):\n        - Update `maxValue` as the maximum of its current value and the event value.\n6. After processing all elements, return `ans`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/k66MupZ5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"k66MupZ5\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $n$ be the number of events in the `events` array.\n\n- Time Complexity: $O(n \\cdot \\log n)$\n\n    For each event, we create two entries (`start` and `end`) in the `times` array. Since there are `n` events, this step takes $O(n)$ time. The `times` array contains `2*n` elements (start and end times for each event). Sorting this array takes $O((2n) \\cdot \\log 2n) = O(n \\cdot \\log n)$ time.\n\n    After sorting, we traverse the times array once to compute the result. This step takes $O(2 \\cdot n)=O(n)$ time. Combining all steps, the overall time complexity is given by $O(n \\cdot \\log n)$.\n\n- Space complexity: $O(n)$\n\n    Since there are exactly $2 \\cdot n$ values in the `times` array, the algorithm requires $O(2 \\cdot n) = O(n)$ space for the `times` array in the worst case.\n\n    Apart from this, the space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the sort method sorts a list using the Timsort algorithm which is a combination of Merge Sort and  Insertion Sort and has $O(l)$ additional space, where `l` is the size of the list.\n    - In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log n )$ for sorting two arrays.\n    - In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O( \\log n )$.\n\n    Therefore, the total space complexity is given by $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

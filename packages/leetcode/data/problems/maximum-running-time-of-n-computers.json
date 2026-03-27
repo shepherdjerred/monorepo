@@ -1,0 +1,144 @@
+{
+  "questionId": "2263",
+  "questionFrontendId": "2141",
+  "title": "Maximum Running Time of N Computers",
+  "titleSlug": "maximum-running-time-of-n-computers",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>n</code> computers. You are given the integer <code>n</code> and a <strong>0-indexed</strong> integer array <code>batteries</code> where the <code>i<sup>th</sup></code> battery can <strong>run</strong> a computer for <code>batteries[i]</code> minutes. You are interested in running <strong>all</strong> <code>n</code> computers <strong>simultaneously</strong> using the given batteries.</p>\n\n<p>Initially, you can insert <strong>at most one battery</strong> into each computer. After that and at any integer time moment, you can remove a battery from a computer and insert another battery <strong>any number of times</strong>. The inserted battery can be a totally new battery or a battery from another computer. You may assume that the removing and inserting processes take no time.</p>\n\n<p>Note that the batteries cannot be recharged.</p>\n\n<p>Return <em>the <strong>maximum</strong> number of minutes you can run all the </em><code>n</code><em> computers simultaneously.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/01/06/example1-fit.png\" style=\"width: 762px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> n = 2, batteries = [3,3,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> \nInitially, insert battery 0 into the first computer and battery 1 into the second computer.\nAfter two minutes, remove battery 1 from the second computer and insert battery 2 instead. Note that battery 1 can still run for one minute.\nAt the end of the third minute, battery 0 is drained, and you need to remove it from the first computer and insert battery 1 instead.\nBy the end of the fourth minute, battery 1 is also drained, and the first computer is no longer running.\nWe can run the two computers simultaneously for at most 4 minutes, so we return 4.\n\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2022/01/06/example2.png\" style=\"width: 629px; height: 150px;\" />\n<pre>\n<strong>Input:</strong> n = 2, batteries = [1,1,1,1]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> \nInitially, insert battery 0 into the first computer and battery 2 into the second computer. \nAfter one minute, battery 0 and battery 2 are drained so you need to remove them and insert battery 1 into the first computer and battery 3 into the second computer. \nAfter another minute, battery 1 and battery 3 are also drained so the first and second computers are no longer running.\nWe can run the two computers simultaneously for at most 2 minutes, so we return 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n &lt;= batteries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= batteries[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "For a given running time, can you determine if it is possible to run all n computers simultaneously?",
+    "Try to use Binary Search to find the maximal running time"
+  ],
+  "metaData": "{\n  \"name\": \"maxRunTime\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"batteries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"139.4K\", \"totalSubmission\": \"247.2K\", \"totalAcceptedRaw\": 139448, \"totalSubmissionRaw\": 247200, \"acRate\": \"56.4%\"}",
+  "likes": 2445,
+  "dislikes": 71,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minimum Moves to Equal Array Elements\", \"titleSlug\": \"minimum-moves-to-equal-array-elements\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sell Diminishing-Valued Colored Balls\", \"titleSlug\": \"sell-diminishing-valued-colored-balls\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Tasks You Can Assign\", \"titleSlug\": \"maximum-number-of-tasks-you-can-assign\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Complete Trips\", \"titleSlug\": \"minimum-time-to-complete-trips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Amount of Time to Fill Cups\", \"titleSlug\": \"minimum-amount-of-time-to-fill-cups\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n[3,3,3]",
+    "2\n[1,1,1,1]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"capital-one\", \"name\": \"Capital One\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"deutsche-bank\", \"name\": \"Deutsche Bank\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long maxRunTime(int n, vector<int>& batteries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long maxRunTime(int n, int[] batteries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxRunTime(self, n: int, batteries: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxRunTime(self, n, batteries):\n        \"\"\"\n        :type n: int\n        :type batteries: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} batteries\n * @return {number}\n */\nvar maxRunTime = function(n, batteries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxRunTime(n: number, batteries: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long MaxRunTime(int n, int[] batteries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long maxRunTime(int n, int* batteries, int batteriesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxRunTime(n int, batteries []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxRunTime(n: Int, batteries: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxRunTime(_ n: Int, _ batteries: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_run_time(n: i32, batteries: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} batteries\n# @return {Integer}\ndef max_run_time(n, batteries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $batteries\n     * @return Integer\n     */\n    function maxRunTime($n, $batteries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxRunTime(int n, List<int> batteries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxRunTime(n: Int, batteries: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_run_time(n :: integer, batteries :: [integer]) :: integer\n  def max_run_time(n, batteries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_run_time(N :: integer(), Batteries :: [integer()]) -> integer().\nmax_run_time(N, Batteries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-run-time n batteries)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1849",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nFrom the first example, let's try another distribution plan first. Suppose we let 2 batteries support 2 computers continuously, we will end up with 2 empty batteries and 1 full battery. Then the running time is fixed at `3` since we can't use the only battery left to support 2 computers simultaneously.\n\n\n![img](../Figures/2141/intro.png)\n\nIt implies that there is a strategy to distribute the batteries properly. Let's move on to finding the best patterns.\n\n\n---\n\n### Approach 1: Sorting and Prefix Sum\n\n\n#### Intuition   \n\nFirst, we simplify the original problem a little bit:\n\n**Suppose we have 4 computers (named A, B, C and D) and have to pick exactly 4 batteries. What is the maximum running time?**\n\nThis is quite straightforward. We just pick the largest 4 batteries and let them support these 4 computers separately (let's call the list that contains these 4 batteries `live`), and the running time is determined by the smallest battery picked.\n\n\n![img](../Figures/2141/n4.png)\n\n**What if we are allowed to pick a 5th battery?**\n\nLet's pick the largest battery that isn't in use. Clearly, the smallest of these 4 batteries will be the bottleneck, so we use the power in the 5th battery to increase the running time of computer A that has the smallest battery.\n\n![img](../Figures/2141/n5.png)\n\n\n\n**What if we are allowed to pick more batteries?**\n\nWe can freely use every battery except the largest 4 to increase the total running time. Because we can freely swap batteries in 0 time, all the extra power is interchangeable. We can take this extra power and \"transfer\" it to the batteries in `live`. Let `extra` be the sum of all the extra power.\n\n\nLet's say live is sorted. We try using some of our extra power to increase live[0] running time to live[1]. In the process, `extra -= live[1] - live[0]`.\n\n\n![img](../Figures/2141/n6.png)\n\nNow, `live[0] = live[1]`. Can we continue? We try increasing the running time to `live[2]`. However, not only would we need to increase `live[1]` to `live[2]`, we also need to increase `live[0]` to `live[2]` so it doesn't bottleneck the running time. We already spent some power to increase `live[0]` to `live[1]`, so we just need to spend twice as much power as the difference `live[2] - live[1]`.\n\n\n\n![img](../Figures/2141/n70.png)\n\nNow we have `live[0] = live[1] = live[2]`. If we want to increase the running time to `live[3]`, we need to spend three times as much power as the difference `(live[3] - live[2])`.\n\n<br>\n\n![img](../Figures/2141/n71.png)\n\n\nOops, seems we are running out of `extra` power before reaching `live[3]`, so the bottleneck is decided by `live[2]`. We have some extra power remaining, so we do our best to increase the running time by evenly splitting the remaining power to the computers  (`extra / 3`).\n\n\n<br>\n\nWhat if we have an example where `extra` is large enough to support all batteries in `live` becoming equal to `live[n - 1]`. Any remaining power in `extra` should similarly be evenly split across all the computers to increase the final running time. The final running time is determined by `live[n - 1]` plus the extra running time we can make using `extra` power, which is `extra / n`.\n\n\n![img](../Figures/2141/n8.png)\n\n\nTo generalize, at each battery `live[i]`, if we want to increase the running time to `live[i + 1]`, we need to spend `(i + 1)` times as much power as `(live[i + 1] - live[i])`. With this formula, we don't actually need to update the values of `live`. Since after each iteration, we already know that `live[0] = live[1] = ... = live[i]`.\n\nWe iterate through `live` until we either cannot afford to increase to `live[i + 1]` anymore, or we manage to iterate through the entire array. In both cases, we do our best to evenly allocate the remaining extra power.\n\n\n\n\n<br>\n\nYou may be thinking that in the case below, since there is some unused power in the larger batteries (like the largest battery on the right), can we further increase the total running time using this unused power? The answer is NO. \n\n![img](../Figures/2141/n7.png)\n\nAs shown in the following picture, suppose we do allocate the power \"equally\" by using the excess power of the largest battery (colored in red) on other computers. It means that there are times when the red battery is used on other computers, but the same battery also supports the computer D **all the time**. This contradicts the rule that *one battery can't support more than one computer at the same time*.\n\n![img](../Figures/2141/7.png)\n\nTherefore, we observe the pattern that:\n\n> If a battery `batteries[i]` has more power than the total running time, there is no way we can use its excess power to further increase the running time. Therefore, once we have picked the largest `n` batteries and assign them to `n` computers, these batteries are tied to their computer and swapping them does not bring any longer running time.\n\n<br>\n\n\n\n#### Algorithm\n\n1) Sort `batteries`. \n\n2) Find the largest `n` batteries and assign them to `n` computers, these `n` batteries are exclusively used by each computer and cannot be shared with other computers. Create an array `live` that contains the largest `n` batteries in sorted order, which represents the `n` computers.\n\n3) Sum up the power of the remaining batteries as `extra`.\n\n4) Iterate over `live` from `0` to `n - 2`, for each index `i`:\n    - If `extra` power can increase the running time of the first `i` computers from `live[i]` to `live[i + 1]`, then we subtract the required power from `extra` and move on to the next index.\n    - Otherwise, we have to stop at this point and return `live[i] + extra / (i + 1)`.\n\n5) If there is still power left after the iteration, it means we can further increase the total running time of `n` computers from `live[n - 1]` by `extra / n`. Therefore, return `live[n - 1] + extra / n`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ju4XcHbQ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ju4XcHbQ\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input array `batteries`.\n\n* Time complexity: $$O(m \\cdot\\log m)$$\n\n    - We sort $$\\text{batteries}$$ in place, it takes $$O(m \\cdot\\log m)$$ time.\n    - Picking the largest n-th batteries from a sorted array takes $$O(n)$$ time. Note that since $n < m$, this term will be dominated.\n\n    - Then we iterate over the remaining part of the `batteries`, the computation at each step takes constant time. Thus it takes $$O(m)$$ time to finish the iteration.\n    - To sum up, the overall time complexity is $$O(m \\cdot\\log m)$$.\n    \n\n* Space complexity: $$O(m)$$\n\n    - Some extra space is used when we sort $$\\text{batteries}$$ in place. The space complexity of the sorting algorithm depends on the programming language.\n        - In python, the `sort` method sorts a list using the Timsort algorithm, which is a combination of Merge Sort and Insertion Sort and uses $$O(m)$$ additional space.\n        - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $$O(\\log m)$$.\n    - We create an array of size $$O(n)$$ to record the power (running time) of each computer.\n    - To sum up, the overall space complexity is $$O(m)$$.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Binary Search\n\n#### Intuition   \n\nIn the previous approach, we began by selecting the largest `n` batteries (one for each computer) and then assigning the remaining power `extra` to these computers using a greedy approach until we reach the longest running time.\n\nAlternatively, we can first set a target running time, `target`, then try to reach this running time using all batteries.\n\n\n![img](../Figures/2141/b1.png)\n\nHere we still take advantage of the conclusion we reached at the end of the previous approach (Please refer to the previous approach):\n- If the power of a battery is smaller than `target`, we can use all of its power. \n- If the power of a battery is larger than `target`, we can only use `target` power from it.\n\n\n![img](../Figures/2141/b2.png)\n\nTherefore, we can traverse through `batteries` and collect all the power that can be used. If the sum of collected power is larger than or equal to `target * n`, all computers can run for `target` time. \n\n\nAs shown in the picture above, suppose we set a running time `target`, then we collect power from all batteries (colored in green). Finally, we check if the sum of the collected power is larger than or equals to `target * 2`.\n\n**How to find the largest running time?**\n\nInstead of trying every `target` from `1` until finding the largest possible running time, we can take advantage of binary search to locate the largest `target` faster than linear search.\n\n![img](../Figures/2141/b3.png)\n\nInitially, we set the left boundary as `1` as the minimum possible running time. Assuming we can use all the power perfectly, the maximum running time is `sum(batteries) / n`, so we set the right boundary as `sum(batteries) / n`. As a result, the largest `target` is limited to the inclusive range `[left, right]`, and we can apply binary search in this range to find it.\n\n\n<br>\n\n#### Algorithm\n\n1) Initialize the boundaries of the search space as `left = 1`, and `right = sum(batteries) / n`.\n\n\n2) While `left < right`:\n    - Find the middle value `target = right - (right - left) / 2`.\n    - Check if batteries can support `n` computers run `target` time. Iterate over `batteries` and record `extra`, the accumulative sum of `min(batteries[i], target)`.\n\n3) Check if `extra >= n * target`:\n    - If so, set `left = target` and repeat step 2.\n    - Otherwise, set `right = target - 1` and repeat step 2.\n\n4) Once the binary search ends, return `left`.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/MhesBzu2/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"MhesBzu2\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$m$$ be the length of the input array `batteries` and $$k$$ be the maximum power of one battery.\n\n* Time complexity: $$O(m \\cdot\\log k)$$\n\n    - Initially, we set `1` as the left boundary and `sum(batteries) / n` as the right boundary. Thus it takes $$O(\\log (\\frac{m\\cdot k}{n}))$$ steps to locate the maximum running time in the worst-case scenario.\n    - At each step, we need to iterate over `batteries` to add up the power that can be used, which takes $$O(m)$$ time.\n    - Therefore, the overall time complexity is $$O(m \\cdot\\log (\\frac{m\\cdot k}{n})) = O(m\\cdot \\log k)$$\n    $$, k \\gg m, n$$\n\n\n    \n\n* Space complexity: $$O(1)$$\n\n    - During the binary search, we only need to record the boundaries of the searching space and the power `extra`, and the accumulative sum of `extra`, which only takes constant space.\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

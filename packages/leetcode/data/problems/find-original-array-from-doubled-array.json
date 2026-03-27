@@ -1,0 +1,146 @@
+{
+  "questionId": "2117",
+  "questionFrontendId": "2007",
+  "title": "Find Original Array From Doubled Array",
+  "titleSlug": "find-original-array-from-doubled-array",
+  "difficulty": "Medium",
+  "content": "<p>An integer array <code>original</code> is transformed into a <strong>doubled</strong> array <code>changed</code> by appending <strong>twice the value</strong> of every element in <code>original</code>, and then randomly <strong>shuffling</strong> the resulting array.</p>\n\n<p>Given an array <code>changed</code>, return <code>original</code><em> if </em><code>changed</code><em> is a <strong>doubled</strong> array. If </em><code>changed</code><em> is not a <strong>doubled</strong> array, return an empty array. The elements in</em> <code>original</code> <em>may be returned in <strong>any</strong> order</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> changed = [1,3,4,2,6,8]\n<strong>Output:</strong> [1,3,4]\n<strong>Explanation:</strong> One possible original array could be [1,3,4]:\n- Twice the value of 1 is 1 * 2 = 2.\n- Twice the value of 3 is 3 * 2 = 6.\n- Twice the value of 4 is 4 * 2 = 8.\nOther original arrays could be [4,3,1] or [3,1,4].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> changed = [6,3,0,1]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> changed is not a doubled array.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> changed = [1]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> changed is not a doubled array.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= changed.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= changed[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "If changed is a doubled array, you should be able to delete elements and their doubled values until the array is empty.",
+    "Which element is guaranteed to not be a doubled value? It is the smallest element.",
+    "After removing the smallest element and its double from changed, is there another number that is guaranteed to not be a doubled value?"
+  ],
+  "metaData": "{\n  \"name\": \"findOriginalArray\",\n  \"params\": [\n    {\n      \"name\": \"changed\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"154.8K\", \"totalSubmission\": \"379.8K\", \"totalAcceptedRaw\": 154848, \"totalSubmissionRaw\": 379848, \"acRate\": \"40.8%\"}",
+  "likes": 2564,
+  "dislikes": 120,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Array of Doubled Pairs\", \"titleSlug\": \"array-of-doubled-pairs\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Recover the Original Array\", \"titleSlug\": \"recover-the-original-array\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,3,4,2,6,8]",
+    "[6,3,0,1]",
+    "[1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"verily\", \"name\": \"Verily\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findOriginalArray(vector<int>& changed) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findOriginalArray(int[] changed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findOriginalArray(self, changed: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findOriginalArray(self, changed):\n        \"\"\"\n        :type changed: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} changed\n * @return {number[]}\n */\nvar findOriginalArray = function(changed) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findOriginalArray(changed: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindOriginalArray(int[] changed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findOriginalArray(int* changed, int changedSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findOriginalArray(changed []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findOriginalArray(changed: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findOriginalArray(_ changed: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_original_array(changed: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} changed\n# @return {Integer[]}\ndef find_original_array(changed)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $changed\n     * @return Integer[]\n     */\n    function findOriginalArray($changed) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findOriginalArray(List<int> changed) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findOriginalArray(changed: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_original_array(changed :: [integer]) :: [integer]\n  def find_original_array(changed) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_original_array(Changed :: [integer()]) -> [integer()].\nfind_original_array(Changed) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-original-array changed)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1473",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe need to find if the given array is `doubled` array or not. In a `doubled` array, for every element `X` in the array, we should either have `2X` or `X/2` in the array.\n\nThis implies that in the `doubled` array, for every element `X` we will have to check for two options and if we can pair up all the elements using these options then we can deduce that the array is doubled. This approach is, however not efficient as well as complicated. The complexity of the above approach lies in the two options at each step, can we do something to make it easy to choose the transition from an element? Can we choose such an element say `X` that makes it trivial to choose one of `X/2` and `2X`? \n\nIf `X` is the smallest element in the array then element `X/2` will not exist in the array, hence we will have to check for element `2X`. Similarly, if `X` is the greatest element in the array then element `2X` will not exist in the array, hence we will have to check for `X/2` only. Therefore, the trick is to go for the smallest or greatest element always because this way we will have only one option to go for. In the two approaches below we chose the smallest element always.\n</br>\n\n---\n\n### Approach 1: Sort + HashMap\n\n**Intuition**\n\nWe need to pair up elements in the array as explained above. Thus, the first validation we should do is, if the array size is even or not. If it's not we cannot have an answer. \n\nNow, as per the above discussion, we need to find the smallest element at each iteration. Hence, we can sort the original array in increasing order, then iterating from left to right will provide us with the smallest element. Once we got the smallest element say `X` we need to check if the element `2X` exists in the array or not. To check this, we can store the array elements in a HashMap for an efficient lookup at each iteration. If the element `2X` is present in the HashMap we will decrement its count else the element `X` cannot be paired with any other element and hence we return an empty array.\n\n**Algorithm**\n\n1. Return empty array `{}` if the size of the given array `changed` is odd.\n2. Sort the array `changed` in increasing order.\n3. Store the element count in the HashMap `freq`. Iterate over the elements in the array `changed` and increment the count corresponding to the element in the map.\n4. Iterate over the elements in the array `changed`, for each element `num`:\n    - Check if the count of `num` in the map `freq` is more than zero or not.\n    - Decrement the frequency of `num` in the map.\n    - Check if the count of `twiceNum` (`2 * num`)  in the map `freq` is positive or not. If it is then decrement the count and add the element `num` to the answer array `original`.\n   - If it is not, then return an empty `{}` array.\n5. Return the array `original`.\n\n**Note:** This approach requires modifying the input. In an interview setting, we should first confirm it with the interviewer.\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Ym37qTtD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ym37qTtD\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the size of the given array.\n\n* Time complexity: $$O(N\\log N)$$\n\n  Sorting the array `changed` will take $$O(N\\log N)$$ and then we iterate over it which will take $$O(N)$$ time. Hence, the time complexity is equal to $$O(N\\log N)$$.\n\n* Space complexity: $$O(N)$$\n    \n  Storing the element frequency in the HashMap `freq` will require $$O(N)$$ space. Some space will be used for sorting the list. The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the `Arrays.sort()` for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $$O(\\log N)$$. In C++, the common implementation of `std::sort()` function provided by STL is a hybrid of Quick Sort, Heap Sort, and Insertion Sort and has a worst-case space complexity of $$O(\\log N)$$. Thus, the use of the inbuilt `std::sort()` function might add up to $$O(\\log N)$$ to space complexity.\n<br/>\n\n---\n\n### Approach 2: Counting Sort\n\n**Intuition**\n\nSimilar to the previous approach, we will find the smallest element always. The only difference here is that instead of sorting the original array using built-in sorting functions we will use counting sort. We will use an array `freq` to store the frequency of each element in the given array. Now, we will iterate from `0` to the maximum value that is present in the array. For each element `num`  we will follow the exact same process as we did previously, we check for the element `2 * num` and proceed accordingly.\n\nNote that for every element we will be iterating once however there might be multiple instances of it in the original array. Hence, once we iterate over an element we will decrement the counter to reiterate it, this time if the instances are over the `if` condition will fail and we move to the next number.\n\n**Algorithm**\n\n1. Return empty array `{}` if the size of the given array `changed` is odd.\n2. Find the maximum element present in the array `changed`  and store it in the variable `maxNum`.\n3. Declare the array `freq` with size `2 * maxNum + 1` and initialize the indices to `0`. This is because we will iterate over numbers upto `maxNum` and hence we might check for `2 * maxNum` in the `freq` array.\n4. Iterate over the numbers from `0` to `maxNum`, for each element `num`:\n    - Check if the count of `num` in the map `freq` is more than zero or not.\n    - Decrement the frequency of `num` in the map.\n    - Check if the count of `twiceNum` (`2 * num`)  in the map `freq` is positive or not. If it is then decrement the count and add the element `num` to the answer array `original`. Also decrement the value of `num` to reiterate it.\n   - If it is not, then return an empty `{}` array.\n5. Return the array `original`.\n\nThe following slideshow demonstrates the algorithm:\n\n!?!../Documents/2007_Find_Original_Array_From_Doubled_Array.json:960,720!?! <br>\n\n**Implementation**\n\n\n<iframe src=\"https://leetcode.com/playground/Qewrbe4t/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Qewrbe4t\"></iframe>\n\n\n**Complexity Analysis**\n\nHere, $$N$$ is the size of the given array, and $$K$$ is equal to the maximum number in the array `changed`.\n\n* Time complexity: $$O(N + K)$$\n\n  The time to find the greatest element in the array is $$O(N)$$, similarly storing the element frequency in the array `freq` is $$O(N)$$. We iterate over the numbers from $$0$$ to $$K$$ to pair up the elements, hence the time required will be $$O(K)$$. Hence, the total time complexity will be equal to $$(N + K)$$.\n\n* Space complexity: $$O(K)$$\n    \n   The space required for the array `freq` will be equal to $$O(K)$$. Therefore, the space complexity will be equal to $$O(K)$$.\n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

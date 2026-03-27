@@ -1,0 +1,140 @@
+{
+  "questionId": "2133",
+  "questionFrontendId": "2023",
+  "title": "Number of Pairs of Strings With Concatenation Equal to Target",
+  "titleSlug": "number-of-pairs-of-strings-with-concatenation-equal-to-target",
+  "difficulty": "Medium",
+  "content": "<p>Given an array of <strong>digit</strong> strings <code>nums</code> and a <strong>digit</strong> string <code>target</code>, return <em>the number of pairs of indices </em><code>(i, j)</code><em> (where </em><code>i != j</code><em>) such that the <strong>concatenation</strong> of </em><code>nums[i] + nums[j]</code><em> equals </em><code>target</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [&quot;777&quot;,&quot;7&quot;,&quot;77&quot;,&quot;77&quot;], target = &quot;7777&quot;\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Valid pairs are:\n- (0, 1): &quot;777&quot; + &quot;7&quot;\n- (1, 0): &quot;7&quot; + &quot;777&quot;\n- (2, 3): &quot;77&quot; + &quot;77&quot;\n- (3, 2): &quot;77&quot; + &quot;77&quot;\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [&quot;123&quot;,&quot;4&quot;,&quot;12&quot;,&quot;34&quot;], target = &quot;1234&quot;\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> Valid pairs are:\n- (0, 1): &quot;123&quot; + &quot;4&quot;\n- (2, 3): &quot;12&quot; + &quot;34&quot;\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [&quot;1&quot;,&quot;1&quot;,&quot;1&quot;], target = &quot;11&quot;\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> Valid pairs are:\n- (0, 1): &quot;1&quot; + &quot;1&quot;\n- (1, 0): &quot;1&quot; + &quot;1&quot;\n- (0, 2): &quot;1&quot; + &quot;1&quot;\n- (2, 0): &quot;1&quot; + &quot;1&quot;\n- (1, 2): &quot;1&quot; + &quot;1&quot;\n- (2, 1): &quot;1&quot; + &quot;1&quot;\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= nums.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums[i].length &lt;= 100</code></li>\n\t<li><code>2 &lt;= target.length &lt;= 100</code></li>\n\t<li><code>nums[i]</code> and <code>target</code> consist of digits.</li>\n\t<li><code>nums[i]</code> and <code>target</code> do not have leading zeros.</li>\n</ul>\n",
+  "hints": [
+    "Try to concatenate every two different strings from the list.",
+    "Count the number of pairs with concatenation equals to target."
+  ],
+  "metaData": "{\n  \"name\": \"numOfPairs\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"62.5K\", \"totalSubmission\": \"83K\", \"totalAcceptedRaw\": 62535, \"totalSubmissionRaw\": 82961, \"acRate\": \"75.4%\"}",
+  "likes": 751,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Two Sum\", \"titleSlug\": \"two-sum\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"777\",\"7\",\"77\",\"77\"]\n\"7777\"",
+    "[\"123\",\"4\",\"12\",\"34\"]\n\"1234\"",
+    "[\"1\",\"1\",\"1\"]\n\"11\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"apple\", \"name\": \"Apple\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numOfPairs(vector<string>& nums, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numOfPairs(String[] nums, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numOfPairs(self, nums: List[str], target: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numOfPairs(self, nums, target):\n        \"\"\"\n        :type nums: List[str]\n        :type target: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} nums\n * @param {string} target\n * @return {number}\n */\nvar numOfPairs = function(nums, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numOfPairs(nums: string[], target: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumOfPairs(string[] nums, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numOfPairs(char** nums, int numsSize, char* target) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numOfPairs(nums []string, target string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numOfPairs(nums: Array<String>, target: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numOfPairs(_ nums: [String], _ target: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn num_of_pairs(nums: Vec<String>, target: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} nums\n# @param {String} target\n# @return {Integer}\ndef num_of_pairs(nums, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $nums\n     * @param String $target\n     * @return Integer\n     */\n    function numOfPairs($nums, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numOfPairs(List<String> nums, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numOfPairs(nums: Array[String], target: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec num_of_pairs(nums :: [String.t], target :: String.t) :: integer\n  def num_of_pairs(nums, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec num_of_pairs(Nums :: [unicode:unicode_binary()], Target :: unicode:unicode_binary()) -> integer().\nnum_of_pairs(Nums, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (num-of-pairs nums target)\n  (-> (listof string?) string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

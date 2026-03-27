@@ -1,0 +1,133 @@
+{
+  "questionId": "2182",
+  "questionFrontendId": "2058",
+  "title": "Find the Minimum and Maximum Number of Nodes Between Critical Points",
+  "titleSlug": "find-the-minimum-and-maximum-number-of-nodes-between-critical-points",
+  "difficulty": "Medium",
+  "content": "<p>A <strong>critical point</strong> in a linked list is defined as <strong>either</strong> a <strong>local maxima</strong> or a <strong>local minima</strong>.</p>\n\n<p>A node is a <strong>local maxima</strong> if the current node has a value <strong>strictly greater</strong> than the previous node and the next node.</p>\n\n<p>A node is a <strong>local minima</strong> if the current node has a value <strong>strictly smaller</strong> than the previous node and the next node.</p>\n\n<p>Note that a node can only be a local maxima/minima if there exists <strong>both</strong> a previous node and a next node.</p>\n\n<p>Given a linked list <code>head</code>, return <em>an array of length 2 containing </em><code>[minDistance, maxDistance]</code><em> where </em><code>minDistance</code><em> is the <strong>minimum distance</strong> between <strong>any&nbsp;two distinct</strong> critical points and </em><code>maxDistance</code><em> is the <strong>maximum distance</strong> between <strong>any&nbsp;two distinct</strong> critical points. If there are <strong>fewer</strong> than two critical points, return </em><code>[-1, -1]</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/10/13/a1.png\" style=\"width: 148px; height: 55px;\" />\n<pre>\n<strong>Input:</strong> head = [3,1]\n<strong>Output:</strong> [-1,-1]\n<strong>Explanation:</strong> There are no critical points in [3,1].\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/10/13/a2.png\" style=\"width: 624px; height: 46px;\" />\n<pre>\n<strong>Input:</strong> head = [5,3,1,2,5,1,2]\n<strong>Output:</strong> [1,3]\n<strong>Explanation:</strong> There are three critical points:\n- [5,3,<strong><u>1</u></strong>,2,5,1,2]: The third node is a local minima because 1 is less than 3 and 2.\n- [5,3,1,2,<u><strong>5</strong></u>,1,2]: The fifth node is a local maxima because 5 is greater than 2 and 1.\n- [5,3,1,2,5,<u><strong>1</strong></u>,2]: The sixth node is a local minima because 1 is less than 5 and 2.\nThe minimum distance is between the fifth and the sixth node. minDistance = 6 - 5 = 1.\nThe maximum distance is between the third and the sixth node. maxDistance = 6 - 3 = 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/10/14/a5.png\" style=\"width: 624px; height: 39px;\" />\n<pre>\n<strong>Input:</strong> head = [1,3,2,2,3,2,2,2,7]\n<strong>Output:</strong> [3,3]\n<strong>Explanation:</strong> There are two critical points:\n- [1,<u><strong>3</strong></u>,2,2,3,2,2,2,7]: The second node is a local maxima because 3 is greater than 1 and 2.\n- [1,3,2,2,<u><strong>3</strong></u>,2,2,2,7]: The fifth node is a local maxima because 3 is greater than 2 and 2.\nBoth the minimum and maximum distances are between the second and the fifth node.\nThus, minDistance and maxDistance is 5 - 2 = 3.\nNote that the last node is not considered a local maxima because it does not have a next node.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is in the range <code>[2, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "The maximum distance must be the distance between the first and last critical point.",
+    "For each adjacent critical point, calculate the difference and check if it is the minimum distance."
+  ],
+  "metaData": "{\n  \"name\": \"nodesBetweenCriticalPoints\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"203.6K\", \"totalSubmission\": \"293.1K\", \"totalAcceptedRaw\": 203632, \"totalSubmissionRaw\": 293115, \"acRate\": \"69.5%\"}",
+  "likes": 1395,
+  "dislikes": 73,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,1]",
+    "[5,3,1,2,5,1,2]",
+    "[1,3,2,2,3,2,2,2,7]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"info-edge\", \"name\": \"Info Edge\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    vector<int> nodesBetweenCriticalPoints(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public int[] nodesBetweenCriticalPoints(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def nodesBetweenCriticalPoints(self, head: Optional[ListNode]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def nodesBetweenCriticalPoints(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {number[]}\n */\nvar nodesBetweenCriticalPoints = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction nodesBetweenCriticalPoints(head: ListNode | null): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public int[] NodesBetweenCriticalPoints(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\n/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* nodesBetweenCriticalPoints(struct ListNode* head, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc nodesBetweenCriticalPoints(head *ListNode) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun nodesBetweenCriticalPoints(head: ListNode?): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func nodesBetweenCriticalPoints(_ head: ListNode?) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn nodes_between_critical_points(head: Option<Box<ListNode>>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {Integer[]}\ndef nodes_between_critical_points(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return Integer[]\n     */\n    function nodesBetweenCriticalPoints($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  List<int> nodesBetweenCriticalPoints(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def nodesBetweenCriticalPoints(head: ListNode): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec nodes_between_critical_points(head :: ListNode.t | nil) :: [integer]\n  def nodes_between_critical_points(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec nodes_between_critical_points(Head :: #list_node{} | null) -> [integer()].\nnodes_between_critical_points(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (nodes-between-critical-points head)\n  (-> (or/c list-node? #f) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2360",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: One Pass\n\n#### Intuition\n\nThe problem requires finding the minimum and maximum distances between any two distinct critical points (local maxima or minima) in a given linked list. For example, consider the following list:\n\n![Image_1](../Figures/2058/image_1.png)  \n\nThe critical points for this list are:\n\n![Image_2](../Figures/2058/image_2.png)  \n\nNotice that:\n1. The two critical points farthest away from each other are the ones at the beginning and the end of the list.\n2. The minimum distance would always lie between any two consecutive critical points.\n\n![Image_3](../Figures/2058/image_3.png)  \n\nNow, the problem is reduced to identifying all the critical points in the linked list and continuously tracking the minimum distance between any two consecutive critical points. We must also note the first and last critical points encountered to calculate the maximum distance. \n\nLet us traverse the linked list from its head. We will need to keep track of 6 things:\n1. **The current node**: to iterate over the list\n2. **The previous node**: to compare its value with the current node\n3. **Position of the current node**: to calculate the distance in case it's a critical point\n4. **Position of the previous critical point**: to calculate the distance from the next critical point\n5. **Position of the first critical point**: to calculate the maximum distance\n6. **Minimum distance**: to update the minimum distance for each pair of consecutive critical points\n\nAs we move through the list, encountering a critical point prompts us to update the minimum distance with the difference between the current node's position and the previous critical point. When we encounter the first critical point, we note its position and later subtract it from the position of the last critical point to find the maximum distance.\n\n> Note: We can start the traversal from the second node and end at the second last node because, according to our problem definition, critical points require both a previous and a next node, which the first and last nodes lack.\n\n#### Algorithm\n\n- Initialize:\n  - The `result` array to `[-1, -1]`, in case there is no valid solution.\n  - `minDistance` to the maximum permissible integer value.\n  - `previousNode` to point at `head`.\n  - `currentNode` to point at the next node from `head`.\n  - `currentIndex` storing the position of `currentNode`.\n  - `previousCriticalIndex` and `firstCriticalIndex` set to 0.\n- Loop over the list till the second-last element:\n  - If the current node is a critical point:\n    - If it is the first critical point encountered:\n      - Set `previousCriticalIndex` and `firstCriticalIndex` to the position of the current node.\n    - Else, update `minDistance` as the minimum of the current `minDistance` and difference between `currentIndex` and  `previousCriticalIndex`.\n  - Increment `currentIndex`. Move `previousNode` to the current node and `currentNode` to the next node in the list.\n- If `minDistance` is not equal to its initial value:\n  - Set `maxDistance` to the difference between `previousCriticalIndex` and `firstCriticalIndex`.\n  - Update `result` with `minDistance` and `maxDistance`.\n- Return `result`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/62TF9jMN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"62TF9jMN\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the the length of the linked list.\n\n- Time complexity: $O(n)$\n\n    The algorithm traverses the list only once, making the time complexity $O(n)$.\n\n- Space complexity: $O(1)$\n\n    The algorithm has a constant space complexity since it does not utilize any additional data structures.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

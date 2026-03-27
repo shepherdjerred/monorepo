@@ -1,0 +1,150 @@
+{
+  "questionId": "2246",
+  "questionFrontendId": "2127",
+  "title": "Maximum Employees to Be Invited to a Meeting",
+  "titleSlug": "maximum-employees-to-be-invited-to-a-meeting",
+  "difficulty": "Hard",
+  "content": "<p>A company is organizing a meeting and has a list of <code>n</code> employees, waiting to be invited. They have arranged for a large <strong>circular</strong> table, capable of seating <strong>any number</strong> of employees.</p>\n\n<p>The employees are numbered from <code>0</code> to <code>n - 1</code>. Each employee has a <strong>favorite</strong> person and they will attend the meeting <strong>only if</strong> they can sit next to their favorite person at the table. The favorite person of an employee is <strong>not</strong> themself.</p>\n\n<p>Given a <strong>0-indexed</strong> integer array <code>favorite</code>, where <code>favorite[i]</code> denotes the favorite person of the <code>i<sup>th</sup></code> employee, return <em>the <strong>maximum number of employees</strong> that can be invited to the meeting</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/14/ex1.png\" style=\"width: 236px; height: 195px;\" />\n<pre>\n<strong>Input:</strong> favorite = [2,2,1,2]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nThe above figure shows how the company can invite employees 0, 1, and 2, and seat them at the round table.\nAll employees cannot be invited because employee 2 cannot sit beside employees 0, 1, and 3, simultaneously.\nNote that the company can also invite employees 1, 2, and 3, and give them their desired seats.\nThe maximum number of employees that can be invited to the meeting is 3. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> favorite = [1,2,0]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> \nEach employee is the favorite person of at least one other employee, and the only way the company can invite them is if they invite every employee.\nThe seating arrangement will be the same as that in the figure given in example 1:\n- Employee 0 will sit between employees 2 and 1.\n- Employee 1 will sit between employees 0 and 2.\n- Employee 2 will sit between employees 1 and 0.\nThe maximum number of employees that can be invited to the meeting is 3.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/14/ex2.png\" style=\"width: 219px; height: 220px;\" />\n<pre>\n<strong>Input:</strong> favorite = [3,0,1,4,1]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong>\nThe above figure shows how the company will invite employees 0, 1, 3, and 4, and seat them at the round table.\nEmployee 2 cannot be invited because the two spots next to their favorite employee 1 are taken.\nSo the company leaves them out of the meeting.\nThe maximum number of employees that can be invited to the meeting is 4.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == favorite.length</code></li>\n\t<li><code>2 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= favorite[i] &lt;=&nbsp;n - 1</code></li>\n\t<li><code>favorite[i] != i</code></li>\n</ul>\n",
+  "hints": [
+    "From the given array favorite, create a graph where for every index i, there is a directed edge from favorite[i] to i. The graph will be a combination of cycles and chains of acyclic edges. Now, what are the ways in which we can choose employees to sit at the table?",
+    "The first way by which we can choose employees is by selecting a cycle of the graph. It can be proven that in this case, the employees that do not lie in the cycle can never be seated at the table (unless the cycle has a length of 2).",
+    "The second way is by combining acyclic chains. At most two chains can be combined by a cycle of length 2, where each chain ends on one of the employees in the cycle."
+  ],
+  "metaData": "{\n  \"name\": \"maximumInvitations\",\n  \"params\": [\n    {\n      \"name\": \"favorite\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"88.5K\", \"totalSubmission\": \"143.2K\", \"totalAcceptedRaw\": 88508, \"totalSubmissionRaw\": 143201, \"acRate\": \"61.8%\"}",
+  "likes": 1680,
+  "dislikes": 70,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Redundant Connection\", \"titleSlug\": \"redundant-connection\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Parallel Courses III\", \"titleSlug\": \"parallel-courses-iii\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Process Restricted Friend Requests\", \"titleSlug\": \"process-restricted-friend-requests\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,2,1,2]",
+    "[1,2,0]",
+    "[3,0,1,4,1]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"oracle\", \"name\": \"Oracle\"}, {\"timesEncountered\": 2, \"slug\": \"nutanix\", \"name\": \"Nutanix\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumInvitations(vector<int>& favorite) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumInvitations(int[] favorite) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumInvitations(self, favorite: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumInvitations(self, favorite):\n        \"\"\"\n        :type favorite: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} favorite\n * @return {number}\n */\nvar maximumInvitations = function(favorite) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumInvitations(favorite: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumInvitations(int[] favorite) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumInvitations(int* favorite, int favoriteSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumInvitations(favorite []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumInvitations(favorite: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumInvitations(_ favorite: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_invitations(favorite: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} favorite\n# @return {Integer}\ndef maximum_invitations(favorite)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $favorite\n     * @return Integer\n     */\n    function maximumInvitations($favorite) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumInvitations(List<int> favorite) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumInvitations(favorite: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_invitations(favorite :: [integer]) :: integer\n  def maximum_invitations(favorite) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_invitations(Favorite :: [integer()]) -> integer().\nmaximum_invitations(Favorite) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-invitations favorite)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2661",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nA company is planning a round table meeting for a group of employees who will only come if they can sit next to their favorite coworker at the circular table. Given the number of people the company hopes will attend and each employee's favorite coworker, we must return the largest number of people who can attend while sticking to the requirement that each person must be seated next to their favorite coworker. \n\nAt this point, we can observe that the problem can be seen as a directed graph where each employee points to their favorite person. The key observation here is that this graph has cycles, and those cycles are important because any group of employees in a cycle can sit next to each other in the meeting. So, detecting these cycles will be central to solving the problem.\n\nHowever, we also need to account for the fact that there might be chains of employees, not forming cycles by themselves, but who are connected in such a way that they can potentially be linked to form a larger cycle. This gives us the idea that even if a group of employees doesn’t form a cycle initially, they might still be part of a larger group that can be arranged in a circle.\n\nA final thing to note is that the circular nature of the seating arrangement may influence how you connect the employees, especially when identifying 'groups' or 'cycles' that can sit next to each other.\n\n\nWe have two main types of structures that can form when we try to seat employees based on their favorite people:\n\n1. **A one-way connected cycle**: This is where employees form a directed chain, like `a -> b -> c -> d -> a`. This means each person’s favorite is part of a larger cycle, and everyone must sit next to someone else in the cycle. These cycles will only be able to seat as many employees as the cycle's size.\n\n2. **A mutual two-way cycle**: In this case, two people like each other mutually, meaning `a <-> b`. This is a two-way connection, forming a 2-cycle group. These types of cycle groups allow us to put more people on the table because we can treat them as a smaller unit that can connect to other parts of the graph.\n\nLet’s go over two examples to break this down more clearly.\n\n##### Example 1: `[1, 0, 3, 2, 5, 6, 7, 4, 9, 8, 11, 10, 11, 12, 10]`\n\nWe can visualize this as a graph where each node has an edge pointing to their favorite person.\n\nIf person A likes B, we construct an edge of A -> B. Then we can construct a graph like below:\n\n![alt text](../Figures/2127/diff_cases.png)\n\n1. **Cycle with size > 2 (green cycle)**:\n   - For cycles like this, no additional employees can be added to the cycle because everyone must sit next to their favorite person, and adding others would disrupt that. For instance, in the cycle `(4, 5, 6, 7)`, no one else can sit in that cycle unless we break it, which is not allowed.\n\n2. **Cycle with size == 2 (red cycle)**:\n    - For these types of cycles, we can have multiple 2-cycles sitting next to each other. These cycles can connect with extended paths (chains of employees) as long as they don’t disrupt the seating order.\n   - For example, we can allocate the employees like `[(0, 1), (2, 3), (8, 9), [13, 12, (11, 10), 14]]`\n   - Notice that we can also put extended paths (like the blue circles in the diagram) next to the two endpoints of the 2-cycle. This allows us to extend the cycle by adding more people without violating the seating constraints.\n\n##### Example 2: `[9, 14, 15, 8, 22, 15, 12, 11, 10, 7, 1, 12, 15, 6, 5, 12, 10, 21, 4, 1, 16, 3, 7]`\n\nCheck out the below diagram, as we will be referring to it in the future for explanation:\n\n![alt text](../Figures/2127/mutual_2nd_testcase.png)\n\nIn this example, there are more complex cycles and paths to consider. We need to find the longest possible extended paths for each endpoint of a 2-cycle and combine them efficiently.\n\n**Extended Path for 2-Cycles**:\n- For instance, for the 2-cycle `(12, 15)` (blue rectangle), we need to find the longest paths from each of these employees. Starting from `12`, we can trace a path: `[18, 4, 22, 7, 11, 12]`, and from `15`, we trace a path: `[17, 21, 3, 8, 10, 1, 14, 5, 15]`.\n\nThe idea is that these paths can be connected to the cycle, forming larger groups of people that can sit together.\n\nSo our core solution consists of three parts:\n\n1. **Cycle Detection**:\n   - Since every node points to exactly one other node (the favorite person), the graph is simple. We can detect cycles by walking through the graph from unexplored nodes and stopping when we revisit an already visited node. This works well because each node has at most one outgoing edge, simplifying the process.\n\n2. **Finding the Longest Path**:\n   - Once we have detected all the cycles, we need to handle two cases:\n     - Single cycle with size > 2: We treat it as a unit and cannot add more people.\n     - Multiple 2-cycles: We look for the longest extended path for each endpoint of a 2-cycle, using [BFS](https://leetcode.com/explore/featured/card/graph/620/breadth-first-search-in-graph/) or [DFS](https://leetcode.com/explore/featured/card/graph/619/depth-first-search-in-graph/) to find the longest path starting from each of the two mutual-favoriting people. The maximum possible length for any group is the sum of the longest paths from both endpoints plus 2 (for the mutual-favoriting people themselves).\n\n![mutual_favs](../Figures/2127/mutual_favs.png)\n\n3. **Final Comparison**:\n   - Once we have the maximum length from extended paths and the size of the largest cycle, we simply compare these two values. The answer is the larger of the two, as that represents the maximum number of employees that can be seated together.\n\n---\n\n### Approach 1: Cycle Detection with Extended Paths\n\n#### Intuition\n\nFrom the overview, the problem boils down to identifying cycles in the directed graph, determining how chains can be connected, and ensuring that employees are seated next to their favorites.\n\nTo implement this, we first need to create a graph that represents the relationships between people based on their favorite person. This is done by constructing a reversed graph where each person points to the people who have them as their favorite. This structure allows us to easily trace back to the people that lead into each person’s chain.\n\nNext, we iterate through the graph nodes. If a node hasn’t been visited, we start a traversal, tracking visited nodes and the distance from the start using a map.\n\n- If a node is visited during the traversal, we've detected a cycle. The cycle length is the difference in the distances at which we first encounter and revisit the node.\n- A cycle length greater than 2 forms a self-contained group, which we compare with the largest cycle found.\n\nWhen we detect a two-node cycle (mutual favorites), the approach changes slightly. In this case, the cycle itself only accounts for two people, so we look for the longest chains that lead into both people of the cycle. This is done by implementing a **BFS** function that explores the reversed graph and finds the maximum path leading into each of the two nodes forming the cycle. The length of the chain for each node is determined by how far we can trace back in the graph. \n\n- Once we know the longest chain for each of the two nodes, we calculate the total size of the group by adding the two chain lengths plus 2 (for the two people in the cycle itself). This extended group size is then added to the total count of two-node cycle groups.\n\nFinally, the result is the larger of the largest standalone cycle or the largest extended group from the two-node cycle. This ensures the largest valid seating arrangement is found.\n\n#### Algorithm\n\n- Initialize a variable `n` to store the size of the `favorite` array, and create a `reversedGraph` to store the reversed edges (in this case, favorite relationships).\n  \n- Build the reversed graph:\n  - Iterate through each person in the `favorite` array, and for each person, add them to the reversed graph using `favorite[person]` as the key.\n\n- Define a helper function `bfs` to perform breadth-first search:\n  - Initialize a queue to hold the node and its distance.\n  - Process each node in the queue and explore its neighbors (reverse of the favorite relationship).\n  - Track the maximum distance during BFS and return this value after all nodes have been visited.\n\n- Initialize `longestCycle` to keep track of the length of the longest cycle found.\n- Initialize `twoCycleInvitations` to store the count of invitations for cycles of length 2.\n\n- Iterate through each person in the `favorite` array:\n  - If the person hasn't been visited, start detecting a cycle from that person:\n    - Use a map `visitedPersons` to track the distance from the current node.\n    - Traverse through the favorite relationships to detect cycles.\n    - If a cycle is detected, calculate its length and update `longestCycle`.\n    - If the cycle length is 2, calculate invitations from both nodes of the cycle by performing BFS from each node, ensuring that both nodes are marked as visited.\n\n- Return the maximum of `longestCycle` and `twoCycleInvitations`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/kYoqLnsm/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"kYoqLnsm\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `favorite` array.\n\n- Time complexity: $O(n)$\n\n    We build a reversed graph where each node points to its favorite. This involves iterating over all $n$ elements and adding edges, which takes $O(n)$ time.\n\n    The outer loop iterates over all $n$ people, and the inner while loop processes each person in the cycle exactly once. This ensures that each node is visited at most once, resulting in $O(n)$ time for cycle detection.\n\n    For cycles of length 2, we perform a BFS to calculate the maximum distance from each node in the cycle. Since each node is visited at most once during the BFS, and the BFS is performed only for 2-length cycles, the total time for this step is also $O(n)$.\n\n    Since all these steps are sequential and each takes $O(n)$ time, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The reversed graph is stored as an adjacency list, which requires $O(n)$ space. The `visited` array tracks whether a node has been processed, requiring $O(n)$ space. The `visitedPersons` map stores the distance of each node in the current cycle, which can take up to $O(n)$ space in the worst case. The BFS queue and the `visitedNodes` set used for 2-length cycle processing can store up to $O(n)$ nodes in total.\n\n    Therefore, the overall space complexity is $O(n)$.\n    \n---\n\n### Approach 2: Topological Sort to Reduce Non-Cyclic Nodes\n\n#### Intuition\n\n[Topological sort](https://leetcode.com/explore/featured/card/graph/623/kahns-algorithm-for-topological-sorting/) is an algorithm traditionally used in DAGs (Directed Acyclic Graphs) to order nodes in a way that for every directed edge `u` to `v`, node `u` comes before node `v`. This ordering allows us to process nodes one by one, ensuring that we handle dependencies before processing dependent nodes.\n\nHowever, in this context, we don't have a pure DAG because of the cycles. But we can still use topological sorting to help with eliminating non-cycle nodes and focusing on cycles that we need to handle more carefully. In fact, identifying and processing these cycles is key to finding the solution.\n\nThe idea is to first process nodes in topological order to remove non-cycle nodes and focus on the cycles that need further examination.\n\nTo implement this, we begin by calculating the in-degree for each node. The in-degree of a node indicates how many nodes point to it. In this case, the \"favorite\" relationship can be seen as a directed edge from one person to another. After populating the in-degree array, we initialize a queue that will help us with the topological sort. The queue initially contains all nodes that have an in-degree of zero (i.e., nodes with no incoming edges). These are the nodes that do not form part of any cycle and can be processed in topological order.\n\nNext, we start the process of topologically sorting the nodes while calculating the depth of each node. The depth represents the longest path from any starting node to that particular node. As we process each node, we decrement the in-degree of its neighbor (as we \"remove\" the edge), and if any neighbor's in-degree becomes zero, it is added to the queue. During this process, we also update the depth of each node, ensuring that it reflects the longest path leading to that node.\n\nOnce the topological sort is completed and we have processed all non-cycle nodes, we move on to detect cycles. For each node that remains in the graph (i.e., nodes with a non-zero in-degree), we trace the cycle by following the favorite links. As we trace the cycle, we mark the nodes as visited by setting their in-degree to zero, and count the length of the cycle.\n\n- If the cycle length is 2, we know it’s a two-person mutual favorite cycle. In this case, we add the combined depths of both nodes in the cycle to the total invitation count for two-cycles. This is because both nodes can invite the maximum number of people based on their depths.\n\n- For longer cycles, we simply update the longest cycle length, since a longer cycle can accommodate more people in the seating arrangement.\n\nAt the end, the result is the maximum of the longest cycle length and the total size of the two-cycle groups.\n \n#### Algorithm\n\n- Initialize a variable `n` to store the size of the `favorite` array and create an `inDegree` array to store the in-degree of each node.\n\n- Calculate the in-degree for each node:\n  - For each person, increment the in-degree of their favorite node.\n\n- Perform topological sorting to process non-cycle nodes:\n  - Use a queue `q` to store nodes with in-degree 0 (no incoming edges).\n  - For each node in the queue, update the depth of its favorite node and reduce its in-degree. If the in-degree of the favorite node becomes 0, add it to the queue.\n\n- Initialize `longestCycle` and `twoCycleInvitations` to 0.\n\n- Detect cycles:\n  - For each person, if their in-degree is non-zero (indicating they are part of a cycle):\n    - Track the cycle length while marking each node in the cycle as visited by setting its in-degree to `0`.\n    - If the cycle length is 2, add the depth of both nodes involved in the cycle to `twoCycleInvitations`.\n    - If the cycle length is greater than 2, update `longestCycle` with the maximum cycle length found.\n\n- Return the maximum of `longestCycle` and `twoCycleInvitations`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GAkEKqjf/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GAkEKqjf\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the `favorite` array.\n\n- Time complexity: $O(n)$\n\n    The first loop iterates over all $n$ elements to calculate the in-degree of each node. This takes $O(n)$ time.\n\n    The second loop iterates over all $n$ elements to initialize the queue with nodes that have an in-degree of 0. The subsequent BFS-like traversal processes each node and edge exactly once, which also takes $O(n)$ time.\n\n    The final loop iterates over all $n$ elements to detect cycles. Each node is visited at most once, and the inner while loop processes each node in the cycle exactly once. This also takes $O(n)$ time.\n\n    Since all these steps are sequential and each takes $O(n)$ time, the overall time complexity is $O(n)$.\n\n- Space complexity: $O(n)$\n\n    The `inDegree` array stores the in-degree of each node, which requires $O(n)$ space. The `depth` array stores the depth of each node, which also requires $O(n)$ space. The queue used for topological sorting can store up to $O(n)$ nodes in the worst case. The variables used for cycle detection and other operations require constant space, which is negligible compared to the arrays and queue.\n\n    Therefore, the overall space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

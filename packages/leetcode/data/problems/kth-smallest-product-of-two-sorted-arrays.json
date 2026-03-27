@@ -1,0 +1,137 @@
+{
+  "questionId": "2150",
+  "questionFrontendId": "2040",
+  "title": "Kth Smallest Product of Two Sorted Arrays",
+  "titleSlug": "kth-smallest-product-of-two-sorted-arrays",
+  "difficulty": "Hard",
+  "content": "Given two <strong>sorted 0-indexed</strong> integer arrays <code>nums1</code> and <code>nums2</code> as well as an integer <code>k</code>, return <em>the </em><code>k<sup>th</sup></code><em> (<strong>1-based</strong>) smallest product of </em><code>nums1[i] * nums2[j]</code><em> where </em><code>0 &lt;= i &lt; nums1.length</code><em> and </em><code>0 &lt;= j &lt; nums2.length</code>.\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [2,5], nums2 = [3,4], k = 2\n<strong>Output:</strong> 8\n<strong>Explanation:</strong> The 2 smallest products are:\n- nums1[0] * nums2[0] = 2 * 3 = 6\n- nums1[0] * nums2[1] = 2 * 4 = 8\nThe 2<sup>nd</sup> smallest product is 8.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [-4,-2,0,3], nums2 = [2,4], k = 6\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> The 6 smallest products are:\n- nums1[0] * nums2[1] = (-4) * 4 = -16\n- nums1[0] * nums2[0] = (-4) * 2 = -8\n- nums1[1] * nums2[1] = (-2) * 4 = -8\n- nums1[1] * nums2[0] = (-2) * 2 = -4\n- nums1[2] * nums2[0] = 0 * 2 = 0\n- nums1[2] * nums2[1] = 0 * 4 = 0\nThe 6<sup>th</sup> smallest product is 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums1 = [-2,-1,0,1,2], nums2 = [-3,-1,2,4,5], k = 3\n<strong>Output:</strong> -6\n<strong>Explanation:</strong> The 3 smallest products are:\n- nums1[0] * nums2[4] = (-2) * 5 = -10\n- nums1[0] * nums2[3] = (-2) * 4 = -8\n- nums1[4] * nums2[0] = 2 * (-3) = -6\nThe 3<sup>rd</sup> smallest product is -6.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums1.length, nums2.length &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= nums1[i], nums2[j] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= k &lt;= nums1.length * nums2.length</code></li>\n\t<li><code>nums1</code> and <code>nums2</code> are sorted.</li>\n</ul>\n",
+  "hints": [
+    "Can we split this problem into four cases depending on the sign of the numbers?",
+    "Can we binary search the value?"
+  ],
+  "metaData": "{\n  \"name\": \"kthSmallestProduct\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"nums2\"\n    },\n    {\n      \"type\": \"long\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"83.8K\", \"totalSubmission\": \"171.6K\", \"totalAcceptedRaw\": 83811, \"totalSubmissionRaw\": 171597, \"acRate\": \"48.8%\"}",
+  "likes": 1190,
+  "dislikes": 76,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find K Pairs with Smallest Sums\", \"titleSlug\": \"find-k-pairs-with-smallest-sums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"K-diff Pairs in an Array\", \"titleSlug\": \"k-diff-pairs-in-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,5]\n[3,4]\n2",
+    "[-4,-2,0,3]\n[2,4]\n6",
+    "[-2,-1,0,1,2]\n[-3,-1,2,4,5]\n3"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 8, \"slug\": \"linkedin\", \"name\": \"LinkedIn\"}, {\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long kthSmallestProduct(vector<int>& nums1, vector<int>& nums2, long long k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long kthSmallestProduct(int[] nums1, int[] nums2, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthSmallestProduct(self, nums1: List[int], nums2: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthSmallestProduct(self, nums1, nums2, k):\n        \"\"\"\n        :type nums1: List[int]\n        :type nums2: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @param {number[]} nums2\n * @param {number} k\n * @return {number}\n */\nvar kthSmallestProduct = function(nums1, nums2, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthSmallestProduct(nums1: number[], nums2: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long KthSmallestProduct(int[] nums1, int[] nums2, long k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long kthSmallestProduct(int* nums1, int nums1Size, int* nums2, int nums2Size, long long k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthSmallestProduct(nums1 []int, nums2 []int, k int64) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthSmallestProduct(nums1: IntArray, nums2: IntArray, k: Long): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthSmallestProduct(_ nums1: [Int], _ nums2: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_smallest_product(nums1: Vec<i32>, nums2: Vec<i32>, k: i64) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @param {Integer[]} nums2\n# @param {Integer} k\n# @return {Integer}\ndef kth_smallest_product(nums1, nums2, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @param Integer[] $nums2\n     * @param Integer $k\n     * @return Integer\n     */\n    function kthSmallestProduct($nums1, $nums2, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int kthSmallestProduct(List<int> nums1, List<int> nums2, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthSmallestProduct(nums1: Array[Int], nums2: Array[Int], k: Long): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_smallest_product(nums1 :: [integer], nums2 :: [integer], k :: integer) :: integer\n  def kth_smallest_product(nums1, nums2, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_smallest_product(Nums1 :: [integer()], Nums2 :: [integer()], K :: integer()) -> integer().\nkth_smallest_product(Nums1, Nums2, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-smallest-product nums1 nums2 k)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2785",
+    "content": "### Approach 1: Binary Search + Binary Search\n\n#### Intuition\n\nAccording to the problem's constraints, the value range of $\\textit{nums}_1[i] \\times \\textit{nums}_2[j]$ is $[-10^{10}, 10^{10}]$. We perform a binary search over this product range to find the $k$-th smallest product. Let the current binary search value be $v$. We need to compute the number of products less than or equal to $v$, denoted as $\\textit{count}$. If $\\textit{count} \\lt k$, then $v$ is too small; otherwise, it is too large or just right.\n\nTo calculate the number of products less than or equal to $v$, we use another binary search. For each element $x_1$ in $\\textit{nums}_1$, we proceed as follows:\n\n- If $x_1 \\ge 0$, then $\\textit{nums}_2[j] \\times x_1$ forms a non-decreasing sequence. We use binary search to count how many products are $\\le v$.\n\n- If $x_1 \\lt 0$, then $\\textit{nums}_2[j] \\times x_1$ forms a non-increasing sequence. In this case, we use binary search to find how many products are greater than $v$, denoted as $t$. Then, the number of products $\\le v$ is $n_2 - t$, where $n_2$ is the length of $\\textit{nums}_2$.\n\nSumming these counts for all elements in $\\textit{nums}_1$ gives the total number of products less than or equal to $v$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dNprwCon/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dNprwCon\"></iframe>\n\n#### Complexity analysis\n\nLet $n_1$ be the length of the array $\\textit{nums}_1$, and $n_2$ be the length of the array $\\textit{nums}_2$.\n\n- Time complexity: $O(n_1 \\log n_2 \\log C)$.\n  \n  $C = 2 \\times 10^{10} + 1$ is the size of the range of the product of the two array elements required by the problem.\n\n- Space complexity: $O(1)$.\n\n### Approach 2: Binary Search + Divide and Conquer\n\n#### Intuition\n\nSimilar to Approach 1, we want to compute the number of products less than or equal to a given value $v$, but here we use a divide and conquer method. Let the lengths of $\\textit{nums}_1$ and $\\textit{nums}_2$ be $n_1$ and $n_2$, respectively. We divide $\\textit{nums}_1$ into two segments: $[0, \\textit{pos}_1)$ for values less than $0$, and $[\\textit{pos}_1, n_1)$ for values greater than or equal to $0$. Likewise, we divide $\\textit{nums}_2$ into $[0, \\textit{pos}_2)$ for values less than $0$, and $[\\textit{pos}_2, n_2)$ for values greater than or equal to $0$. This results in four combinations of subarrays whose element-wise products we need to consider.\n\nFor example, take the product of the interval $[0, \\textit{pos}_1)$ from $\\textit{nums}_1$ and the interval $[0, \\textit{pos}_2)$ from $\\textit{nums}_2$, and count how many resulting products are less than or equal to $v$. Repeat this process for the other three combinations.\n\nEach product combination forms a two-dimensional matrix where each cell is defined as $q(i, j) = \\textit{nums}_1[i] \\times \\textit{nums}_2[j]$. In this matrix, $q(i, j)$ is non-increasing as either $i$ or $j$ increases (since both sequences are sorted). To efficiently count the number of elements in the matrix that are $\\le v$, we traverse from the upper-right corner of the matrix. We initialize pointers $i_1 = 0$ and $i_2 = \\textit{pos}_2 - 1$, and we stop when either index goes out of bounds:\n\n- If $q(i_1, i_2) > v$, then all elements in the current row to the left of $(i_1, i_2)$ are also greater than $v$, so we move down to the next row by setting $i_1 = i_1 + 1$.\n\n- If $q(i_1, i_2) \\le v$, then all elements in the current column above $(i_1, i_2)$ are also $\\le v$. There are $\\textit{pos}_1 - i_1$ such elements, so we add that count and move left by setting $i_2 = i_2 - 1$.\n\nWe repeat this process and sum all such counts. This gives the total number of products less than or equal to $v$ for the given combination of subarrays.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/CueD8RNL/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"CueD8RNL\"></iframe>\n\n#### Complexity analysis\n\nLet $n_1$ be the length of the array $\\textit{nums}_1$, and $n_2$ be the length of the array $\\textit{nums}_2$.\n\n- Time complexity: $O((n_1 + n_2)\\log C)$\n  \n  $C = 2 \\times 10^{10} + 1$ is the size of the range of the product of the two array elements required by the problem.\n\n- Space complexity: $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

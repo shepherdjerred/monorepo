@@ -1,0 +1,132 @@
+{
+  "questionId": "1303",
+  "questionFrontendId": "2139",
+  "title": "Minimum Moves to Reach Target Score",
+  "titleSlug": "minimum-moves-to-reach-target-score",
+  "difficulty": "Medium",
+  "content": "<p>You are playing a game with integers. You start with the integer <code>1</code> and you want to reach the integer <code>target</code>.</p>\n\n<p>In one move, you can either:</p>\n\n<ul>\n\t<li><strong>Increment</strong> the current integer by one (i.e., <code>x = x + 1</code>).</li>\n\t<li><strong>Double</strong> the current integer (i.e., <code>x = 2 * x</code>).</li>\n</ul>\n\n<p>You can use the <strong>increment</strong> operation <strong>any</strong> number of times, however, you can only use the <strong>double</strong> operation <strong>at most</strong> <code>maxDoubles</code> times.</p>\n\n<p>Given the two integers <code>target</code> and <code>maxDoubles</code>, return <em>the minimum number of moves needed to reach </em><code>target</code><em> starting with </em><code>1</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 5, maxDoubles = 0\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Keep incrementing by 1 until you reach target.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 19, maxDoubles = 2\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> Initially, x = 1\nIncrement 3 times so x = 4\nDouble once so x = 8\nIncrement once so x = 9\nDouble again so x = 18\nIncrement once so x = 19\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> target = 10, maxDoubles = 4\n<strong>Output:</strong> 4\n<strong>Explanation:</strong><b> </b>Initially, x = 1\nIncrement once so x = 2\nDouble once so x = 4\nIncrement once so x = 5\nDouble again so x = 10\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= target &lt;= 10<sup>9</sup></code></li>\n\t<li><code>0 &lt;= maxDoubles &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Solve the opposite problem: start at the given score and move to 1.",
+    "It is better to use the move of the second type once we can to lose more scores fast."
+  ],
+  "metaData": "{\n  \"name\": \"minMoves\",\n  \"params\": [\n    {\n      \"name\": \"target\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"maxDoubles\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"61.1K\", \"totalSubmission\": \"116.7K\", \"totalAcceptedRaw\": 61059, \"totalSubmissionRaw\": 116661, \"acRate\": \"52.3%\"}",
+  "likes": 1087,
+  "dislikes": 28,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Steps to Reduce a Number to Zero\", \"titleSlug\": \"number-of-steps-to-reduce-a-number-to-zero\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Number of Steps to Reduce a Number in Binary Representation to One\", \"titleSlug\": \"number-of-steps-to-reduce-a-number-in-binary-representation-to-one\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n0",
+    "19\n2",
+    "10\n4"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"wayfair\", \"name\": \"Wayfair\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minMoves(int target, int maxDoubles) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minMoves(int target, int maxDoubles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minMoves(self, target: int, maxDoubles: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minMoves(self, target, maxDoubles):\n        \"\"\"\n        :type target: int\n        :type maxDoubles: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} target\n * @param {number} maxDoubles\n * @return {number}\n */\nvar minMoves = function(target, maxDoubles) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minMoves(target: number, maxDoubles: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinMoves(int target, int maxDoubles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minMoves(int target, int maxDoubles) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minMoves(target int, maxDoubles int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minMoves(target: Int, maxDoubles: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minMoves(_ target: Int, _ maxDoubles: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_moves(target: i32, max_doubles: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} target\n# @param {Integer} max_doubles\n# @return {Integer}\ndef min_moves(target, max_doubles)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $target\n     * @param Integer $maxDoubles\n     * @return Integer\n     */\n    function minMoves($target, $maxDoubles) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minMoves(int target, int maxDoubles) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minMoves(target: Int, maxDoubles: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_moves(target :: integer, max_doubles :: integer) :: integer\n  def min_moves(target, max_doubles) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_moves(Target :: integer(), MaxDoubles :: integer()) -> integer().\nmin_moves(Target, MaxDoubles) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-moves target maxDoubles)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

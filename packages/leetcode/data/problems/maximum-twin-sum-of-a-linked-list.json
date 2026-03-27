@@ -1,0 +1,143 @@
+{
+  "questionId": "2236",
+  "questionFrontendId": "2130",
+  "title": "Maximum Twin Sum of a Linked List",
+  "titleSlug": "maximum-twin-sum-of-a-linked-list",
+  "difficulty": "Medium",
+  "content": "<p>In a linked list of size <code>n</code>, where <code>n</code> is <strong>even</strong>, the <code>i<sup>th</sup></code> node (<strong>0-indexed</strong>) of the linked list is known as the <strong>twin</strong> of the <code>(n-1-i)<sup>th</sup></code> node, if <code>0 &lt;= i &lt;= (n / 2) - 1</code>.</p>\n\n<ul>\n\t<li>For example, if <code>n = 4</code>, then node <code>0</code> is the twin of node <code>3</code>, and node <code>1</code> is the twin of node <code>2</code>. These are the only nodes with twins for <code>n = 4</code>.</li>\n</ul>\n\n<p>The <strong>twin sum </strong>is defined as the sum of a node and its twin.</p>\n\n<p>Given the <code>head</code> of a linked list with even length, return <em>the <strong>maximum twin sum</strong> of the linked list</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/03/eg1drawio.png\" style=\"width: 250px; height: 70px;\" />\n<pre>\n<strong>Input:</strong> head = [5,4,2,1]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong>\nNodes 0 and 1 are the twins of nodes 3 and 2, respectively. All have twin sum = 6.\nThere are no other nodes with twins in the linked list.\nThus, the maximum twin sum of the linked list is 6. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/03/eg2drawio.png\" style=\"width: 250px; height: 70px;\" />\n<pre>\n<strong>Input:</strong> head = [4,2,2,3]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong>\nThe nodes with twins present in this linked list are:\n- Node 0 is the twin of node 3 having a twin sum of 4 + 3 = 7.\n- Node 1 is the twin of node 2 having a twin sum of 2 + 2 = 4.\nThus, the maximum twin sum of the linked list is max(7, 4) = 7. \n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/03/eg3drawio.png\" style=\"width: 200px; height: 88px;\" />\n<pre>\n<strong>Input:</strong> head = [1,100000]\n<strong>Output:</strong> 100001\n<strong>Explanation:</strong>\nThere is only one node with a twin in the linked list having twin sum of 1 + 100000 = 100001.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li>The number of nodes in the list is an <strong>even</strong> integer in the range <code>[2, 10<sup>5</sup>]</code>.</li>\n\t<li><code>1 &lt;= Node.val &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can \"reversing\" a part of the linked list help find the answer?",
+    "We know that the nodes of the first half are twins of nodes in the second half, so try dividing the linked list in half and reverse the second half.",
+    "How can two pointers be used to find every twin sum optimally?",
+    "Use two different pointers pointing to the first nodes of the two halves of the linked list. The second pointer will point to the first node of the reversed half, which is the (n-1-i)th node in the original linked list. By moving both pointers forward at the same time, we find all twin sums."
+  ],
+  "metaData": "{\n  \"name\": \"pairSum\",\n  \"params\": [\n    {\n      \"name\": \"head\",\n      \"type\": \"ListNode\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"495.1K\", \"totalSubmission\": \"606.4K\", \"totalAcceptedRaw\": 495116, \"totalSubmissionRaw\": 606366, \"acRate\": \"81.7%\"}",
+  "likes": 3922,
+  "dislikes": 125,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Reverse Linked List\", \"titleSlug\": \"reverse-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Palindrome Linked List\", \"titleSlug\": \"palindrome-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Middle of the Linked List\", \"titleSlug\": \"middle-of-the-linked-list\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[5,4,2,1]",
+    "[4,2,2,3]",
+    "[1,100000]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"josh-technology\", \"name\": \"josh technology\"}, {\"timesEncountered\": 3, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Linked List",
+      "slug": "linked-list"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    int pairSum(ListNode* head) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     int val;\n *     ListNode next;\n *     ListNode() {}\n *     ListNode(int val) { this.val = val; }\n *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n * }\n */\nclass Solution {\n    public int pairSum(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution:\n    def pairSum(self, head: Optional[ListNode]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "# Definition for singly-linked list.\n# class ListNode(object):\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\nclass Solution(object):\n    def pairSum(self, head):\n        \"\"\"\n        :type head: Optional[ListNode]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode} head\n * @return {number}\n */\nvar pairSum = function(head) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *     val: number\n *     next: ListNode | null\n *     constructor(val?: number, next?: ListNode | null) {\n *         this.val = (val===undefined ? 0 : val)\n *         this.next = (next===undefined ? null : next)\n *     }\n * }\n */\n\nfunction pairSum(head: ListNode | null): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public int val;\n *     public ListNode next;\n *     public ListNode(int val=0, ListNode next=null) {\n *         this.val = val;\n *         this.next = next;\n *     }\n * }\n */\npublic class Solution {\n    public int PairSum(ListNode head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     struct ListNode *next;\n * };\n */\nint pairSum(struct ListNode* head) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "/**\n * Definition for singly-linked list.\n * type ListNode struct {\n *     Val int\n *     Next *ListNode\n * }\n */\nfunc pairSum(head *ListNode) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "/**\n * Example:\n * var li = ListNode(5)\n * var v = li.`val`\n * Definition for singly-linked list.\n * class ListNode(var `val`: Int) {\n *     var next: ListNode? = null\n * }\n */\nclass Solution {\n    fun pairSum(head: ListNode?): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "/**\n * Definition for singly-linked list.\n * public class ListNode {\n *     public var val: Int\n *     public var next: ListNode?\n *     public init() { self.val = 0; self.next = nil; }\n *     public init(_ val: Int) { self.val = val; self.next = nil; }\n *     public init(_ val: Int, _ next: ListNode?) { self.val = val; self.next = next; }\n * }\n */\nclass Solution {\n    func pairSum(_ head: ListNode?) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "// Definition for singly-linked list.\n// #[derive(PartialEq, Eq, Clone, Debug)]\n// pub struct ListNode {\n//   pub val: i32,\n//   pub next: Option<Box<ListNode>>\n// }\n// \n// impl ListNode {\n//   #[inline]\n//   fn new(val: i32) -> Self {\n//     ListNode {\n//       next: None,\n//       val\n//     }\n//   }\n// }\nimpl Solution {\n    pub fn pair_sum(head: Option<Box<ListNode>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# Definition for singly-linked list.\n# class ListNode\n#     attr_accessor :val, :next\n#     def initialize(val = 0, _next = nil)\n#         @val = val\n#         @next = _next\n#     end\n# end\n# @param {ListNode} head\n# @return {Integer}\ndef pair_sum(head)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "/**\n * Definition for a singly-linked list.\n * class ListNode {\n *     public $val = 0;\n *     public $next = null;\n *     function __construct($val = 0, $next = null) {\n *         $this->val = $val;\n *         $this->next = $next;\n *     }\n * }\n */\nclass Solution {\n\n    /**\n     * @param ListNode $head\n     * @return Integer\n     */\n    function pairSum($head) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode {\n *   int val;\n *   ListNode? next;\n *   ListNode([this.val = 0, this.next]);\n * }\n */\nclass Solution {\n  int pairSum(ListNode? head) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "/**\n * Definition for singly-linked list.\n * class ListNode(_x: Int = 0, _next: ListNode = null) {\n *   var next: ListNode = _next\n *   var x: Int = _x\n * }\n */\nobject Solution {\n    def pairSum(head: ListNode): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "# Definition for singly-linked list.\n#\n# defmodule ListNode do\n#   @type t :: %__MODULE__{\n#           val: integer,\n#           next: ListNode.t() | nil\n#         }\n#   defstruct val: 0, next: nil\n# end\n\ndefmodule Solution do\n  @spec pair_sum(head :: ListNode.t | nil) :: integer\n  def pair_sum(head) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "%% Definition for singly-linked list.\n%%\n%% -record(list_node, {val = 0 :: integer(),\n%%                     next = null :: 'null' | #list_node{}}).\n\n-spec pair_sum(Head :: #list_node{} | null) -> integer().\npair_sum(Head) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "; Definition for singly-linked list:\n#|\n\n; val : integer?\n; next : (or/c list-node? #f)\n(struct list-node\n  (val next) #:mutable #:transparent)\n\n; constructor\n(define (make-list-node [val 0])\n  (list-node val #f))\n\n|#\n\n(define/contract (pair-sum head)\n  (-> (or/c list-node? #f) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1820",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given the `head` of a linked list with even length.\n\nThe problem mentions that the $i^{th}$ node (0-indexed) of the linked list is known as the twin of the $(n - 1 - i)^{th}$ node, if `0 <= i <= (n / 2) - 1`.\n\nOur task is to return the maximum sum of a node and its twin among all the node and twin pairs.\n\n---\n\n### Approach 1: Using List Of Integers\n\n#### Intuition\n\nWe can see that the $i^{th}$ node from the start is the twin of the $i^{th}$ node from the end. The first node is the twin of the last node, the second node is the twin of the second last node, and so on. Because we are guaranteed an even number of nodes in the linked list, each node in the first half has a twin in the second half.\n\nAn intuitive solution is to iterate over the entire linked list and push the value of each node into a list of integers. The list of integers is then iterated over using two pointers, `i` and `j`. The pointer `i` points to the beginning of the list, while `j` points to the end.\n\nTo get the twin sum of the pair under consideration, we add the values indicated by the pointers. To get the next pair of twins, we increment `i` and decrement `j` and try to update the answer wherever we can with the twin sum. We repeat this process until we have covered all of the twin pairs, i.e., until `i >= j`.\n\n#### Algorithm\n\n1. Create a `ListNode` pointer `current`. Initialize it to `head`.\n2. Create an empty list of integers `values` to store the node values in the given linked list.\n3. Iterate while `current` is not `null`:\n    - Push `current.val` into `values`.\n    - Update `current` to `current.next`.\n4. Create two integer variables `i = 0` and `j = values.size() - 1` that will help us to get all the twin sums.\n5. Create an answer variable `maximumSum` to keep track of the maximum sum of a node and its twin. Initialize it to `0`.\n6. While `i < j`:\n    - Update `maximumSum` if the current twin sum is greater than the previous one, i.e., `maximumSum = max(maximumSum, values[i] + values[j])`.\n    - Increment `i` by `1`.\n    - Decrement `j` by `1`.\n7. Return `maximumSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/g8iECWU6/shared\" frameBorder=\"0\" width=\"100%\" height=\"429\" name=\"g8iECWU6\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the linked list.\n\n* Time complexity: $O(n)$\n\n    - Iterating over the entire linked list and pushing all the node values in `values` takes $O(n)$ time.\n    - We iterate over the first half of the linked list to find the maximum twin sum, which also takes $O(n)$ time.\n\n* Space complexity: $O(n)$\n\n    - The `values` list takes $O(n)$ space as we push $n$ elements into it.\n\n---\n\n### Approach 2: Using Stack\n\n#### Intuition\n\nAs you may have guessed, we require a method to obtain the values of the nodes in the second half of the linked list in reverse order. Getting the values of the nodes is simple. We can do so by using `head`, which points to the first node in the list and then using `next` we can get all the next nodes, the same way we did in the previous approach.\n\nWe can use a stack to get the values of the second half nodes in reverse order. We iterate over the linked list, pushing all of the node values into the stack.\n\nTo compute the twin sums, we iterate from the beginning of the list with `head` and get the values of the nodes from the end using the stack. We find the first half nodes using `next` pointers and pop from the top of the stack to get the second half nodes.\n\n#### Algorithm\n\n1. Create a `ListNode` pointer `current`. Initialize it equal to `head`.\n2. Initialize an integer stack `st` to store the node values in the given linked list.\n3. Iterate while `current` is not `null`:\n    - Push `current.val` into `st`.\n    - Update `current` to `current.next`.\n4. Update `current` to `head` to iterate the list again from the start.\n5. To begin counting the number of twin pairs, create two integers `size = st.size()` and `count`. To cover all the twin pairs, we start counting from `1` and go until `st.size() / 2`.\n6. Create an answer variable `maximumSum` to keep track of the maximum sum of a node and its twin. Initialize it to `0`.\n7. While `count <= size/2`:\n    - Update `maximumSum` if the current twin sum is greater than the previous one, i.e.,`maximumSum = max(maximumSum, current.val + st.top())`.\n    - Update `current` to `current.next`.\n    - Pop the top element out of the stack.\n    - Increment `count` by 1.\n8. Return `maximumSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DUrt9BXr/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"DUrt9BXr\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the linked list.\n\n* Time complexity: $O(n)$\n\n    - Iterating over the linked list and pushing all the node values in `st` takes $O(n)$ time.\n    - We iterate over the first half of the linked list to find the maximum twin sum, which also takes $O(n)$ time.\n\n* Space complexity: $O(n)$\n\n    - The `st` stack takes $O(n)$ space as we push $n$ elements into it.\n\n---\n\n### Approach 3: Reverse Second Half In Place\n\n#### Intuition\n\nAnother method is to flip the second half of the linked list so that the last element points to the second last element, which points to the third last element, and so on until the middle element.\n\nTo reverse the second half of the linked list, we must first obtain the list's middle (from which the second half starts). To get to the middle of the list, we can use two pointers: `slow` and `fast`. We set their initial value to `head`.\n\nWe move `slow` to the next node after moving `fast` two nodes ahead. We perform this until `fast` or `fast.next` do not become `null`. Because `fast` moves at twice the speed of `slow`, we will have the required middle node at `slow`.\n\nReversing a linked list is a classic problem. We need three pointers: a) `nextNode`, to hold the next node so that when we reverse the `next` pointer of the previous node, we have access to the next node, b) `slow`, the node under consideration whose `next` must be set to the previous node, and c) `prev`, the previous node.\n\nWe first perform `nextNode = slow.next` so we can still reach the next node after modifying `slow.next`. Then we set the `next` pointer of `slow` to `prev`. \n\nTo set up the variables for next iteration, we set `prev = slow` and `slow = nextNode`. We continue doing while till `slow` is not `null`.\n\nOnce we've reversed the second half of the list, `prev` will point to the first element of this reversed list. So we use `head` to iterate over the original list because the first half is unaffected, and `prev` to iterate over the reversed list. We add the corresponding node values, update the maximum twin sum with the current twin if possible, and then proceed to the next node in both lists.\n\nHere's an example of how we reverse a linked list, with `prev` pointing to the first element of the reversed list at the end:\n\n!?!../Documents/2130/2130-slides.json:601,301!?!\n\n#### Algorithm\n\n1. Create two `ListNode` pointers `slow` and `fast`. Initialize both of them to `head`.\n2. To get the middle of the list, we move `fast` two steps ahead and `slow` one step ahead. We iterate until we can't move two steps ahead, i.e., while `fast` and `fast.next` are not `null`:\n    - Update `fast` to two nodes ahead, i.e., `fast = fast.next.next`.\n    - Update `slow` to `slow.next`.\n3. The next step is to reverse the second half of the linked list. We create two pointers to `null`: `nextNode` and `prev` as mentioned above. While `slow` is not `null`, we do the following:\n    - Update `nextNode` to `nextNode = slow.next`.\n    - Set pointer of `slow` to `prev`.\n    - Move `prev` to `slow`, as this will be the new previous node for the next iteration.\n    - Move `slow` to `nextNode`, since `nextNode` is the node being considered for the next iteration.\n4. Create an answer variable `maximumSum` to keep track of the maximum sum of a node and its twin. Initialize it to `0`.\n5. Create another `ListNode` pointer `start = head` to iterate from the start of the linked list.\n6. To obtain twin sums, we use the corresponding nodes of the given linked list and the reversed linked list. We iterate until we cover either of the lists, i.e., until `prev` is not `null`:\n    - Update `maximumSum` if the current twin sum is greater than the previous one, i.e.,`maximumSum = max(maximumSum, start.val + prev.val)`.\n    - Update `prev` to `prev.next` and `start` to `start.next`.\n7. Return `maximumSum`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bZ2pqmLp/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bZ2pqmLp\"></iframe>\n\n#### Complexity Analysis\n\nHere, $n$ is the number of nodes in the linked list.\n\n* Time complexity: $O(n)$\n\n    - It takes $O(n)$ time to iterate over the linked list to find the middle and then reverse the second half of the linked list.\n    - We iterate over the half of the linked list to find the maximum twin sum, which also takes $O(n)$ time.\n\n* Space complexity: $O(1)$\n\n    - Except for a few pointers that take up constant space, we don't take up any space.",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "questionId": "2249",
+  "questionFrontendId": "2145",
+  "title": "Count the Hidden Sequences",
+  "titleSlug": "count-the-hidden-sequences",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> array of <code>n</code> integers <code>differences</code>, which describes the <strong>differences </strong>between each pair of <strong>consecutive </strong>integers of a <strong>hidden</strong> sequence of length <code>(n + 1)</code>. More formally, call the hidden sequence <code>hidden</code>, then we have that <code>differences[i] = hidden[i + 1] - hidden[i]</code>.</p>\n\n<p>You are further given two integers <code>lower</code> and <code>upper</code> that describe the <strong>inclusive</strong> range of values <code>[lower, upper]</code> that the hidden sequence can contain.</p>\n\n<ul>\n\t<li>For example, given <code>differences = [1, -3, 4]</code>, <code>lower = 1</code>, <code>upper = 6</code>, the hidden sequence is a sequence of length <code>4</code> whose elements are in between <code>1</code> and <code>6</code> (<strong>inclusive</strong>).\n\n\t<ul>\n\t\t<li><code>[3, 4, 1, 5]</code> and <code>[4, 5, 2, 6]</code> are possible hidden sequences.</li>\n\t\t<li><code>[5, 6, 3, 7]</code> is not possible since it contains an element greater than <code>6</code>.</li>\n\t\t<li><code>[1, 2, 3, 4]</code> is not possible since the differences are not correct.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the number of <strong>possible</strong> hidden sequences there are.</em> If there are no possible sequences, return <code>0</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> differences = [1,-3,4], lower = 1, upper = 6\n<strong>Output:</strong> 2\n<strong>Explanation:</strong> The possible hidden sequences are:\n- [3, 4, 1, 5]\n- [4, 5, 2, 6]\nThus, we return 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> differences = [3,-4,5,1,-2], lower = -4, upper = 5\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The possible hidden sequences are:\n- [-3, 0, -4, 1, 2, 0]\n- [-2, 1, -3, 2, 3, 1]\n- [-1, 2, -2, 3, 4, 2]\n- [0, 3, -1, 4, 5, 3]\nThus, we return 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> differences = [4,-7,2], lower = 3, upper = 6\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no possible hidden sequences. Thus, we return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == differences.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= differences[i] &lt;= 10<sup>5</sup></code></li>\n\t<li><code>-10<sup>5</sup> &lt;= lower &lt;= upper &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Fix the first element of the hidden sequence to any value x and ignore the given bounds. Notice that we can then determine all the other elements of the sequence by using the differences array.",
+    "We will also be able to determine the difference between the minimum and maximum elements of the sequence. Notice that the value of x does not affect this.",
+    "We now have the ‘range’ of the sequence (difference between min and max element), we can then calculate how many ways there are to fit this range into the given range of lower to upper.",
+    "Answer is (upper - lower + 1) - (range of sequence)"
+  ],
+  "metaData": "{\n  \"name\": \"numberOfArrays\",\n  \"params\": [\n    {\n      \"name\": \"differences\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"lower\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"upper\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"122.3K\", \"totalSubmission\": \"215.5K\", \"totalAcceptedRaw\": 122293, \"totalSubmissionRaw\": 215539, \"acRate\": \"56.7%\"}",
+  "likes": 1040,
+  "dislikes": 93,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[1,-3,4]\n1\n6",
+    "[3,-4,5,1,-2]\n-4\n5",
+    "[4,-7,2]\n3\n6"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"zomato\", \"name\": \"Zomato\"}, {\"timesEncountered\": 5, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"tiktok\", \"name\": \"TikTok\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfArrays(vector<int>& differences, int lower, int upper) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfArrays(int[] differences, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfArrays(self, differences: List[int], lower: int, upper: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfArrays(self, differences, lower, upper):\n        \"\"\"\n        :type differences: List[int]\n        :type lower: int\n        :type upper: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} differences\n * @param {number} lower\n * @param {number} upper\n * @return {number}\n */\nvar numberOfArrays = function(differences, lower, upper) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfArrays(differences: number[], lower: number, upper: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfArrays(int[] differences, int lower, int upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfArrays(int* differences, int differencesSize, int lower, int upper) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfArrays(differences []int, lower int, upper int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfArrays(differences: IntArray, lower: Int, upper: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfArrays(_ differences: [Int], _ lower: Int, _ upper: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_arrays(differences: Vec<i32>, lower: i32, upper: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} differences\n# @param {Integer} lower\n# @param {Integer} upper\n# @return {Integer}\ndef number_of_arrays(differences, lower, upper)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $differences\n     * @param Integer $lower\n     * @param Integer $upper\n     * @return Integer\n     */\n    function numberOfArrays($differences, $lower, $upper) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfArrays(List<int> differences, int lower, int upper) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfArrays(differences: Array[Int], lower: Int, upper: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_arrays(differences :: [integer], lower :: integer, upper :: integer) :: integer\n  def number_of_arrays(differences, lower, upper) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_arrays(Differences :: [integer()], Lower :: integer(), Upper :: integer()) -> integer().\nnumber_of_arrays(Differences, Lower, Upper) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-arrays differences lower upper)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2736",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Determine the Difference Between the Hidden Array's Upper and Lower Bounds\n\n#### Intuition\n\nLet $a_0, a_1, \\cdots, a_n$ be the final array. We can find that if the array $a$ meets the requirements, then:\n\n$$\na_0 + k, a_1 + k, \\cdots, a_n + k\n$$\n\nalso meets the requirements. The term \"requirement\" here refers to the difference between adjacent elements corresponding to the given array $\\textit{differences}$.\n\nWe can arbitrarily specify $a_0$. For convenience, let's directly set $a_0 = 0$, and then we can restore the array $a_0, a_1, \\cdots, a_n$. If we continue to consider the requirement that all array elements are within the range $[\\textit{lower}, \\textit{upper}]$, let's denote the smallest element of the array as $a_i$, and the largest element as $a_j$. It is obviously necessary to satisfy:\n\n$$\n\\textit{lower} \\leq a_i \\leq a_j \\leq \\textit{upper}\n$$\n\nThen the lower bound of the value of $a_i$ is $\\textit{lower}$, and the upper bound is $\\textit{upper} - (a_j - a_i)$, which means that the maximum value $a_j$ must not exceed $\\textit{upper}$. Here, $a_j - a_i$ is actually unrelated to the actual values of $a_i, a_j$, and it is equal to:\n\n$$\n\\sum_{k=i}^{j-1} \\textit{differences}[k]\n$$\n\nTherefore, the number of hidden arrays that meet the requirements is $\\textit{upper} - (a_j - a_i) - \\textit{lower} + 1$, and after arrangement, we get:\n\n$$\n(\\textit{upper} - \\textit{lower}) - (a_j - a_i) + 1\n$$\n\nIn fact, it is the length of the interval of the specified array elements, minus the difference between the maximum and minimum values of the array elements, plus $1$. We can consider it as the number of positions where a small window of length $a_j - a_i$ can be placed while sliding within a large window of length $\\textit{upper} - \\textit{lower}$.\n\nDuring the process of restoring the array $a$, we do not need to record the entire array, but only need to record the maximum and minimum values. If at any moment the difference between the maximum and minimum values is greater than $\\textit{upper} - \\textit{lower}$, we can directly return $0$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/7xSFXU84/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"7xSFXU84\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n)$.\n\nWe only need to traverse the $\\textit{differences}$ array once.\n\n- Space complexity: $O(1)$.\n\nOnly a few additional variables are needed.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "questionId": "2184",
+  "questionFrontendId": "2060",
+  "title": "Check if an Original String Exists Given Two Encoded Strings",
+  "titleSlug": "check-if-an-original-string-exists-given-two-encoded-strings",
+  "difficulty": "Hard",
+  "content": "<p>An original string, consisting of lowercase English letters, can be encoded by the following steps:</p>\n\n<ul>\n\t<li>Arbitrarily <strong>split</strong> it into a <strong>sequence</strong> of some number of <strong>non-empty</strong> substrings.</li>\n\t<li>Arbitrarily choose some elements (possibly none) of the sequence, and <strong>replace</strong> each with <strong>its length</strong> (as a numeric string).</li>\n\t<li><strong>Concatenate</strong> the sequence as the encoded string.</li>\n</ul>\n\n<p>For example, <strong>one way</strong> to encode an original string <code>&quot;abcdefghijklmnop&quot;</code> might be:</p>\n\n<ul>\n\t<li>Split it as a sequence: <code>[&quot;ab&quot;, &quot;cdefghijklmn&quot;, &quot;o&quot;, &quot;p&quot;]</code>.</li>\n\t<li>Choose the second and third elements to be replaced by their lengths, respectively. The sequence becomes <code>[&quot;ab&quot;, &quot;12&quot;, &quot;1&quot;, &quot;p&quot;]</code>.</li>\n\t<li>Concatenate the elements of the sequence to get the encoded string: <code>&quot;ab121p&quot;</code>.</li>\n</ul>\n\n<p>Given two encoded strings <code>s1</code> and <code>s2</code>, consisting of lowercase English letters and digits <code>1-9</code> (inclusive), return <code>true</code><em> if there exists an original string that could be encoded as <strong>both</strong> </em><code>s1</code><em> and </em><code>s2</code><em>. Otherwise, return </em><code>false</code>.</p>\n\n<p><strong>Note</strong>: The test cases are generated such that the number of consecutive digits in <code>s1</code> and <code>s2</code> does not exceed <code>3</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;internationalization&quot;, s2 = &quot;i18n&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> It is possible that &quot;internationalization&quot; was the original string.\n- &quot;internationalization&quot; \n  -&gt; Split:       [&quot;internationalization&quot;]\n  -&gt; Do not replace any element\n  -&gt; Concatenate:  &quot;internationalization&quot;, which is s1.\n- &quot;internationalization&quot;\n  -&gt; Split:       [&quot;i&quot;, &quot;nternationalizatio&quot;, &quot;n&quot;]\n  -&gt; Replace:     [&quot;i&quot;, &quot;18&quot;,                 &quot;n&quot;]\n  -&gt; Concatenate:  &quot;i18n&quot;, which is s2\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;l123e&quot;, s2 = &quot;44&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> It is possible that &quot;leetcode&quot; was the original string.\n- &quot;leetcode&quot; \n  -&gt; Split:      [&quot;l&quot;, &quot;e&quot;, &quot;et&quot;, &quot;cod&quot;, &quot;e&quot;]\n  -&gt; Replace:    [&quot;l&quot;, &quot;1&quot;, &quot;2&quot;,  &quot;3&quot;,   &quot;e&quot;]\n  -&gt; Concatenate: &quot;l123e&quot;, which is s1.\n- &quot;leetcode&quot; \n  -&gt; Split:      [&quot;leet&quot;, &quot;code&quot;]\n  -&gt; Replace:    [&quot;4&quot;,    &quot;4&quot;]\n  -&gt; Concatenate: &quot;44&quot;, which is s2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s1 = &quot;a5b&quot;, s2 = &quot;c5b&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> It is impossible.\n- The original string encoded as s1 must start with the letter &#39;a&#39;.\n- The original string encoded as s2 must start with the letter &#39;c&#39;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s1.length, s2.length &lt;= 40</code></li>\n\t<li><code>s1</code> and <code>s2</code> consist of digits <code>1-9</code> (inclusive), and lowercase English letters only.</li>\n\t<li>The number of consecutive digits in <code>s1</code> and <code>s2</code> does not exceed <code>3</code>.</li>\n</ul>\n",
+  "hints": [
+    "For s1 and s2, divide each into a sequence of single alphabet strings and digital strings. The problem now becomes comparing if two sequences are equal.",
+    "A single alphabet string has no variation, but a digital string has variations. For example: \"124\" can be interpreted as 1+2+4, 12+4, 1+24, and 124 wildcard characters.",
+    "There are four kinds of comparisons: a single alphabet vs another; a single alphabet vs a number, a number vs a single alphabet, and a number vs another number. In the case of a number vs another (a single alphabet or a number), can you decrease the number by the min length of both?",
+    "There is a recurrence relation in the search which ends when either a single alphabet != another, or one sequence ran out, or both sequences ran out."
+  ],
+  "metaData": "{\n  \"name\": \"possiblyEquals\",\n  \"params\": [\n    {\n      \"name\": \"s1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"19.8K\", \"totalSubmission\": \"45.7K\", \"totalAcceptedRaw\": 19846, \"totalSubmissionRaw\": 45653, \"acRate\": \"43.5%\"}",
+  "likes": 327,
+  "dislikes": 164,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Word Abbreviation\", \"titleSlug\": \"valid-word-abbreviation\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Check If Two String Arrays are Equivalent\", \"titleSlug\": \"check-if-two-string-arrays-are-equivalent\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"internationalization\"\n\"i18n\"",
+    "\"l123e\"\n\"44\"",
+    "\"a5b\"\n\"c5b\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bitgo\", \"name\": \"BitGo\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool possiblyEquals(string s1, string s2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean possiblyEquals(String s1, String s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def possiblyEquals(self, s1: str, s2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def possiblyEquals(self, s1, s2):\n        \"\"\"\n        :type s1: str\n        :type s2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s1\n * @param {string} s2\n * @return {boolean}\n */\nvar possiblyEquals = function(s1, s2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function possiblyEquals(s1: string, s2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool PossiblyEquals(string s1, string s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool possiblyEquals(char* s1, char* s2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func possiblyEquals(s1 string, s2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun possiblyEquals(s1: String, s2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func possiblyEquals(_ s1: String, _ s2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn possibly_equals(s1: String, s2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s1\n# @param {String} s2\n# @return {Boolean}\ndef possibly_equals(s1, s2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s1\n     * @param String $s2\n     * @return Boolean\n     */\n    function possiblyEquals($s1, $s2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool possiblyEquals(String s1, String s2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def possiblyEquals(s1: String, s2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec possibly_equals(s1 :: String.t, s2 :: String.t) :: boolean\n  def possibly_equals(s1, s2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec possibly_equals(S1 :: unicode:unicode_binary(), S2 :: unicode:unicode_binary()) -> boolean().\npossibly_equals(S1, S2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (possibly-equals s1 s2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

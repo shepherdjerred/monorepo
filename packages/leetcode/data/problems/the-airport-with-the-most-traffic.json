@@ -1,0 +1,54 @@
+{
+  "questionId": "2252",
+  "questionFrontendId": "2112",
+  "title": "The Airport With the Most Traffic",
+  "titleSlug": "the-airport-with-the-most-traffic",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Flights</code></p>\n\n<pre>\n+-------------------+------+\n| Column Name       | Type |\n+-------------------+------+\n| departure_airport | int  |\n| arrival_airport   | int  |\n| flights_count     | int  |\n+-------------------+------+\n(departure_airport, arrival_airport) is the primary key column (combination of columns with unique values) for this table.\nEach row of this table indicates that there were flights_count flights that departed from departure_airport and arrived at arrival_airport.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the ID of the airport with the <strong>most traffic</strong>. The airport with the most traffic is the airport that has the largest total number of flights that either departed from or arrived at the airport. If there is more than one airport with the most traffic, report them all.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nFlights table:\n+-------------------+-----------------+---------------+\n| departure_airport | arrival_airport | flights_count |\n+-------------------+-----------------+---------------+\n| 1                 | 2               | 4             |\n| 2                 | 1               | 5             |\n| 2                 | 4               | 5             |\n+-------------------+-----------------+---------------+\n<strong>Output:</strong> \n+------------+\n| airport_id |\n+------------+\n| 2          |\n+------------+\n<strong>Explanation:</strong> \nAirport 1 was engaged with 9 flights (4 departures, 5 arrivals).\nAirport 2 was engaged with 14 flights (10 departures, 4 arrivals).\nAirport 4 was engaged with 5 flights (5 arrivals).\nThe airport with the most traffic is airport 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nFlights table:\n+-------------------+-----------------+---------------+\n| departure_airport | arrival_airport | flights_count |\n+-------------------+-----------------+---------------+\n| 1                 | 2               | 4             |\n| 2                 | 1               | 5             |\n| 3                 | 4               | 5             |\n| 4                 | 3               | 4             |\n| 5                 | 6               | 7             |\n+-------------------+-----------------+---------------+\n<strong>Output:</strong> \n+------------+\n| airport_id |\n+------------+\n| 1          |\n| 2          |\n| 3          |\n| 4          |\n+------------+\n<strong>Explanation:</strong> \nAirport 1 was engaged with 9 flights (4 departures, 5 arrivals).\nAirport 2 was engaged with 9 flights (5 departures, 4 arrivals).\nAirport 3 was engaged with 9 flights (5 departures, 4 arrivals).\nAirport 4 was engaged with 9 flights (4 departures, 5 arrivals).\nAirport 5 was engaged with 7 flights (7 departures).\nAirport 6 was engaged with 7 flights (7 arrivals).\nThe airports with the most traffic are airports 1, 2, 3, and 4.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Flights (departure_airport int, arrival_airport int, flights_count int)\"], \"mssql\": [\"Create table Flights (departure_airport int, arrival_airport int, flights_count int)\"], \"oraclesql\": [\"Create table Flights (departure_airport int, arrival_airport int, flights_count int)\"], \"database\": true, \"name\": \"airport_with_most_traffic\", \"pythondata\": [\"Flights = pd.DataFrame([], columns=['departure_airport', 'arrival_airport', 'flights_count']).astype({'departure_airport':'Int64', 'arrival_airport':'Int64', 'flights_count':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Flights (departure_airport int, arrival_airport int, flights_count int)\"], \"database_schema\": {\"Flights\": {\"departure_airport\": \"INT\", \"arrival_airport\": \"INT\", \"flights_count\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"11.9K\", \"totalSubmission\": \"16.7K\", \"totalAcceptedRaw\": 11943, \"totalSubmissionRaw\": 16692, \"acRate\": \"71.5%\"}",
+  "likes": 73,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Flights\":[\"departure_airport\",\"arrival_airport\",\"flights_count\"]},\"rows\":{\"Flights\":[[1,2,4],[2,1,5],[2,4,5]]}}",
+    "{\"headers\":{\"Flights\":[\"departure_airport\",\"arrival_airport\",\"flights_count\"]},\"rows\":{\"Flights\":[[1,2,4],[2,1,5],[3,4,5],[4,3,4],[5,6,7]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef airport_with_most_traffic(flights: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

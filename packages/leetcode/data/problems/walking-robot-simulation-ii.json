@@ -1,0 +1,131 @@
+{
+  "questionId": "2178",
+  "questionFrontendId": "2069",
+  "title": "Walking Robot Simulation II",
+  "titleSlug": "walking-robot-simulation-ii",
+  "difficulty": "Medium",
+  "content": "<p>A <code>width x height</code> grid is on an XY-plane with the <strong>bottom-left</strong> cell at <code>(0, 0)</code> and the <strong>top-right</strong> cell at <code>(width - 1, height - 1)</code>. The grid is aligned with the four cardinal directions (<code>&quot;North&quot;</code>, <code>&quot;East&quot;</code>, <code>&quot;South&quot;</code>, and <code>&quot;West&quot;</code>). A robot is <strong>initially</strong> at cell <code>(0, 0)</code> facing direction <code>&quot;East&quot;</code>.</p>\n\n<p>The robot can be instructed to move for a specific number of <strong>steps</strong>. For each step, it does the following.</p>\n\n<ol>\n\t<li>Attempts to move <strong>forward one</strong> cell in the direction it is facing.</li>\n\t<li>If the cell the robot is <strong>moving to</strong> is <strong>out of bounds</strong>, the robot instead <strong>turns</strong> 90 degrees <strong>counterclockwise</strong> and retries the step.</li>\n</ol>\n\n<p>After the robot finishes moving the number of steps required, it stops and awaits the next instruction.</p>\n\n<p>Implement the <code>Robot</code> class:</p>\n\n<ul>\n\t<li><code>Robot(int width, int height)</code> Initializes the <code>width x height</code> grid with the robot at <code>(0, 0)</code> facing <code>&quot;East&quot;</code>.</li>\n\t<li><code>void step(int num)</code> Instructs the robot to move forward <code>num</code> steps.</li>\n\t<li><code>int[] getPos()</code> Returns the current cell the robot is at, as an array of length 2, <code>[x, y]</code>.</li>\n\t<li><code>String getDir()</code> Returns the current direction of the robot, <code>&quot;North&quot;</code>, <code>&quot;East&quot;</code>, <code>&quot;South&quot;</code>, or <code>&quot;West&quot;</code>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"example-1\" src=\"https://assets.leetcode.com/uploads/2021/10/09/example-1.png\" style=\"width: 498px; height: 268px;\" />\n<pre>\n<strong>Input</strong>\n[&quot;Robot&quot;, &quot;step&quot;, &quot;step&quot;, &quot;getPos&quot;, &quot;getDir&quot;, &quot;step&quot;, &quot;step&quot;, &quot;step&quot;, &quot;getPos&quot;, &quot;getDir&quot;]\n[[6, 3], [2], [2], [], [], [2], [1], [4], [], []]\n<strong>Output</strong>\n[null, null, null, [4, 0], &quot;East&quot;, null, null, null, [1, 2], &quot;West&quot;]\n\n<strong>Explanation</strong>\nRobot robot = new Robot(6, 3); // Initialize the grid and the robot at (0, 0) facing East.\nrobot.step(2);  // It moves two steps East to (2, 0), and faces East.\nrobot.step(2);  // It moves two steps East to (4, 0), and faces East.\nrobot.getPos(); // return [4, 0]\nrobot.getDir(); // return &quot;East&quot;\nrobot.step(2);  // It moves one step East to (5, 0), and faces East.\n                // Moving the next step East would be out of bounds, so it turns and faces North.\n                // Then, it moves one step North to (5, 1), and faces North.\nrobot.step(1);  // It moves one step North to (5, 2), and faces <strong>North</strong> (not West).\nrobot.step(4);  // Moving the next step North would be out of bounds, so it turns and faces West.\n                // Then, it moves four steps West to (1, 2), and faces West.\nrobot.getPos(); // return [1, 2]\nrobot.getDir(); // return &quot;West&quot;\n\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= width, height &lt;= 100</code></li>\n\t<li><code>1 &lt;= num &lt;= 10<sup>5</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls <strong>in total</strong> will be made to <code>step</code>, <code>getPos</code>, and <code>getDir</code>.</li>\n</ul>\n",
+  "hints": [
+    "The robot only moves along the perimeter of the grid. Can you think if modulus can help you quickly compute which cell it stops at?",
+    "After the robot moves one time, whenever the robot stops at some cell, it will always face a specific direction. i.e., The direction it faces is determined by the cell it stops at.",
+    "Can you precompute what direction it faces when it stops at each cell along the perimeter, and reuse the results?"
+  ],
+  "metaData": "{\n  \"classname\": \"Robot\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"integer\",\n        \"name\": \"width\"\n      },\n      {\n        \"name\": \"height\",\n        \"type\": \"integer\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"num\"\n        }\n      ],\n      \"name\": \"step\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"getPos\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    },\n    {\n      \"params\": [],\n      \"name\": \"getDir\",\n      \"return\": {\n        \"type\": \"string\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"17.1K\", \"totalSubmission\": \"66.5K\", \"totalAcceptedRaw\": 17079, \"totalSubmissionRaw\": 66470, \"acRate\": \"25.7%\"}",
+  "likes": 194,
+  "dislikes": 321,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Walking Robot Simulation\", \"titleSlug\": \"walking-robot-simulation\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Robot\",\"step\",\"step\",\"getPos\",\"getDir\",\"step\",\"step\",\"step\",\"getPos\",\"getDir\"]\n[[6,3],[2],[2],[],[],[2],[1],[4],[],[]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"square\", \"name\": \"Block\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Robot {\npublic:\n    Robot(int width, int height) {\n        \n    }\n    \n    void step(int num) {\n        \n    }\n    \n    vector<int> getPos() {\n        \n    }\n    \n    string getDir() {\n        \n    }\n};\n\n/**\n * Your Robot object will be instantiated and called as such:\n * Robot* obj = new Robot(width, height);\n * obj->step(num);\n * vector<int> param_2 = obj->getPos();\n * string param_3 = obj->getDir();\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Robot {\n\n    public Robot(int width, int height) {\n        \n    }\n    \n    public void step(int num) {\n        \n    }\n    \n    public int[] getPos() {\n        \n    }\n    \n    public String getDir() {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * Robot obj = new Robot(width, height);\n * obj.step(num);\n * int[] param_2 = obj.getPos();\n * String param_3 = obj.getDir();\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Robot:\n\n    def __init__(self, width: int, height: int):\n        \n\n    def step(self, num: int) -> None:\n        \n\n    def getPos(self) -> List[int]:\n        \n\n    def getDir(self) -> str:\n        \n\n\n# Your Robot object will be instantiated and called as such:\n# obj = Robot(width, height)\n# obj.step(num)\n# param_2 = obj.getPos()\n# param_3 = obj.getDir()"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Robot(object):\n\n    def __init__(self, width, height):\n        \"\"\"\n        :type width: int\n        :type height: int\n        \"\"\"\n        \n\n    def step(self, num):\n        \"\"\"\n        :type num: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getPos(self):\n        \"\"\"\n        :rtype: List[int]\n        \"\"\"\n        \n\n    def getDir(self):\n        \"\"\"\n        :rtype: str\n        \"\"\"\n        \n\n\n# Your Robot object will be instantiated and called as such:\n# obj = Robot(width, height)\n# obj.step(num)\n# param_2 = obj.getPos()\n# param_3 = obj.getDir()"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} width\n * @param {number} height\n */\nvar Robot = function(width, height) {\n    \n};\n\n/** \n * @param {number} num\n * @return {void}\n */\nRobot.prototype.step = function(num) {\n    \n};\n\n/**\n * @return {number[]}\n */\nRobot.prototype.getPos = function() {\n    \n};\n\n/**\n * @return {string}\n */\nRobot.prototype.getDir = function() {\n    \n};\n\n/** \n * Your Robot object will be instantiated and called as such:\n * var obj = new Robot(width, height)\n * obj.step(num)\n * var param_2 = obj.getPos()\n * var param_3 = obj.getDir()\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Robot {\n    constructor(width: number, height: number) {\n        \n    }\n\n    step(num: number): void {\n        \n    }\n\n    getPos(): number[] {\n        \n    }\n\n    getDir(): string {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * var obj = new Robot(width, height)\n * obj.step(num)\n * var param_2 = obj.getPos()\n * var param_3 = obj.getDir()\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Robot {\n\n    public Robot(int width, int height) {\n        \n    }\n    \n    public void Step(int num) {\n        \n    }\n    \n    public int[] GetPos() {\n        \n    }\n    \n    public string GetDir() {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * Robot obj = new Robot(width, height);\n * obj.Step(num);\n * int[] param_2 = obj.GetPos();\n * string param_3 = obj.GetDir();\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Robot;\n\n\nRobot* robotCreate(int width, int height) {\n    \n}\n\nvoid robotStep(Robot* obj, int num) {\n    \n}\n\nint* robotGetPos(Robot* obj, int* retSize) {\n    \n}\n\nchar* robotGetDir(Robot* obj) {\n    \n}\n\nvoid robotFree(Robot* obj) {\n    \n}\n\n/**\n * Your Robot struct will be instantiated and called as such:\n * Robot* obj = robotCreate(width, height);\n * robotStep(obj, num);\n \n * int* param_2 = robotGetPos(obj, retSize);\n \n * char* param_3 = robotGetDir(obj);\n \n * robotFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Robot struct {\n    \n}\n\n\nfunc Constructor(width int, height int) Robot {\n    \n}\n\n\nfunc (this *Robot) Step(num int)  {\n    \n}\n\n\nfunc (this *Robot) GetPos() []int {\n    \n}\n\n\nfunc (this *Robot) GetDir() string {\n    \n}\n\n\n/**\n * Your Robot object will be instantiated and called as such:\n * obj := Constructor(width, height);\n * obj.Step(num);\n * param_2 := obj.GetPos();\n * param_3 := obj.GetDir();\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Robot(width: Int, height: Int) {\n\n    fun step(num: Int) {\n        \n    }\n\n    fun getPos(): IntArray {\n        \n    }\n\n    fun getDir(): String {\n        \n    }\n\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * var obj = Robot(width, height)\n * obj.step(num)\n * var param_2 = obj.getPos()\n * var param_3 = obj.getDir()\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Robot {\n\n    init(_ width: Int, _ height: Int) {\n        \n    }\n    \n    func step(_ num: Int) {\n        \n    }\n    \n    func getPos() -> [Int] {\n        \n    }\n    \n    func getDir() -> String {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * let obj = Robot(width, height)\n * obj.step(num)\n * let ret_2: [Int] = obj.getPos()\n * let ret_3: String = obj.getDir()\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Robot {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Robot {\n\n    fn new(width: i32, height: i32) -> Self {\n        \n    }\n    \n    fn step(&self, num: i32) {\n        \n    }\n    \n    fn get_pos(&self) -> Vec<i32> {\n        \n    }\n    \n    fn get_dir(&self) -> String {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * let obj = Robot::new(width, height);\n * obj.step(num);\n * let ret_2: Vec<i32> = obj.get_pos();\n * let ret_3: String = obj.get_dir();\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Robot\n\n=begin\n    :type width: Integer\n    :type height: Integer\n=end\n    def initialize(width, height)\n        \n    end\n\n\n=begin\n    :type num: Integer\n    :rtype: Void\n=end\n    def step(num)\n        \n    end\n\n\n=begin\n    :rtype: Integer[]\n=end\n    def get_pos()\n        \n    end\n\n\n=begin\n    :rtype: String\n=end\n    def get_dir()\n        \n    end\n\n\nend\n\n# Your Robot object will be instantiated and called as such:\n# obj = Robot.new(width, height)\n# obj.step(num)\n# param_2 = obj.get_pos()\n# param_3 = obj.get_dir()"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Robot {\n    /**\n     * @param Integer $width\n     * @param Integer $height\n     */\n    function __construct($width, $height) {\n        \n    }\n  \n    /**\n     * @param Integer $num\n     * @return NULL\n     */\n    function step($num) {\n        \n    }\n  \n    /**\n     * @return Integer[]\n     */\n    function getPos() {\n        \n    }\n  \n    /**\n     * @return String\n     */\n    function getDir() {\n        \n    }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * $obj = Robot($width, $height);\n * $obj->step($num);\n * $ret_2 = $obj->getPos();\n * $ret_3 = $obj->getDir();\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Robot {\n\n  Robot(int width, int height) {\n    \n  }\n  \n  void step(int num) {\n    \n  }\n  \n  List<int> getPos() {\n    \n  }\n  \n  String getDir() {\n    \n  }\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * Robot obj = Robot(width, height);\n * obj.step(num);\n * List<int> param2 = obj.getPos();\n * String param3 = obj.getDir();\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Robot(_width: Int, _height: Int) {\n\n    def step(num: Int): Unit = {\n        \n    }\n\n    def getPos(): Array[Int] = {\n        \n    }\n\n    def getDir(): String = {\n        \n    }\n\n}\n\n/**\n * Your Robot object will be instantiated and called as such:\n * val obj = new Robot(width, height)\n * obj.step(num)\n * val param_2 = obj.getPos()\n * val param_3 = obj.getDir()\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Robot do\n  @spec init_(width :: integer, height :: integer) :: any\n  def init_(width, height) do\n    \n  end\n\n  @spec step(num :: integer) :: any\n  def step(num) do\n    \n  end\n\n  @spec get_pos() :: [integer]\n  def get_pos() do\n    \n  end\n\n  @spec get_dir() :: String.t\n  def get_dir() do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Robot.init_(width, height)\n# Robot.step(num)\n# param_2 = Robot.get_pos()\n# param_3 = Robot.get_dir()\n\n# Robot.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec robot_init_(Width :: integer(), Height :: integer()) -> any().\nrobot_init_(Width, Height) ->\n  .\n\n-spec robot_step(Num :: integer()) -> any().\nrobot_step(Num) ->\n  .\n\n-spec robot_get_pos() -> [integer()].\nrobot_get_pos() ->\n  .\n\n-spec robot_get_dir() -> unicode:unicode_binary().\nrobot_get_dir() ->\n  .\n\n\n%% Your functions will be called as such:\n%% robot_init_(Width, Height),\n%% robot_step(Num),\n%% Param_2 = robot_get_pos(),\n%% Param_3 = robot_get_dir(),\n\n%% robot_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define robot%\n  (class object%\n    (super-new)\n    \n    ; width : exact-integer?\n    ; height : exact-integer?\n    (init-field\n      width\n      height)\n    \n    ; step : exact-integer? -> void?\n    (define/public (step num)\n      )\n    ; get-pos : -> (listof exact-integer?)\n    (define/public (get-pos)\n      )\n    ; get-dir : -> string?\n    (define/public (get-dir)\n      )))\n\n;; Your robot% object will be instantiated and called as such:\n;; (define obj (new robot% [width width] [height height]))\n;; (send obj step num)\n;; (define param_2 (send obj get-pos))\n;; (define param_3 (send obj get-dir))"
+    }
+  ],
+  "solution": null
+}

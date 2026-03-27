@@ -1,0 +1,133 @@
+{
+  "questionId": "2082",
+  "questionFrontendId": "2052",
+  "title": "Minimum Cost to Separate Sentence Into Rows",
+  "titleSlug": "minimum-cost-to-separate-sentence-into-rows",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>sentence</code> containing words separated by spaces, and an integer <code>k</code>. Your task is to separate <code>sentence</code> into <strong>rows</strong> where the number of characters in each row is <strong>at most </strong><code>k</code>. You may assume that <code>sentence</code> does not begin or end with a space, and the words in <code>sentence</code> are separated by a single space.</p>\n\n<p>You can split <code>sentence</code> into rows by inserting line breaks between words in <code>sentence</code>. A word <strong>cannot</strong> be split between two rows. Each word must be used exactly once, and the word order cannot be rearranged. Adjacent words in a row should be separated by a single space, and rows should not begin or end with spaces.</p>\n\n<p>The <strong>cost</strong> of a row with length <code>n</code> is <code>(k - n)<sup>2</sup></code>, and the <strong>total cost</strong> is the sum of the <strong>costs</strong> for all rows <strong>except</strong> the last one.</p>\n\n<ul>\n\t<li>For example if <code>sentence = &quot;i love leetcode&quot;</code> and <code>k = 12</code>:\n\n\t<ul>\n\t\t<li>Separating <code>sentence</code> into <code>&quot;i&quot;</code>, <code>&quot;love&quot;</code>, and <code>&quot;leetcode&quot;</code> has a cost of <code>(12 - 1)<sup>2</sup> + (12 - 4)<sup>2</sup> = 185</code>.</li>\n\t\t<li>Separating <code>sentence</code> into <code>&quot;i love&quot;</code>, and <code>&quot;leetcode&quot;</code> has a cost of <code>(12 - 6)<sup>2</sup> = 36</code>.</li>\n\t\t<li>Separating <code>sentence</code> into <code>&quot;i&quot;</code>, and <code>&quot;love leetcode&quot;</code> is not possible because the length of <code>&quot;love leetcode&quot;</code> is greater than <code>k</code>.</li>\n\t</ul>\n\t</li>\n</ul>\n\n<p>Return <em>the <strong>minimum</strong> possible total cost of separating</em><em> </em><code>sentence</code><em> into rows.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;i love leetcode&quot;, k = 12\n<strong>Output:</strong> 36\n<strong>Explanation:</strong>\nSeparating sentence into &quot;i&quot;, &quot;love&quot;, and &quot;leetcode&quot; has a cost of (12 - 1)<sup>2</sup> + (12 - 4)<sup>2</sup> = 185.\nSeparating sentence into &quot;i love&quot;, and &quot;leetcode&quot; has a cost of (12 - 6)<sup>2</sup> = 36.\nSeparating sentence into &quot;i&quot;, &quot;love leetcode&quot; is not possible because &quot;love leetcode&quot; has length 13.\n36 is the minimum possible total cost so return it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;apples and bananas taste great&quot;, k = 7\n<strong>Output:</strong> 21\n<strong>Explanation</strong>\nSeparating sentence into &quot;apples&quot;, &quot;and&quot;, &quot;bananas&quot;, &quot;taste&quot;, and &quot;great&quot; has a cost of (7 - 6)<sup>2</sup> + (7 - 3)<sup>2</sup> + (7 - 7)<sup>2</sup> + (7 - 5)<sup>2 </sup>= 21.\n21 is the minimum possible total cost so return it.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentence = &quot;a&quot;, k = 5\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThe cost of the last row is not included in the total cost, and since there is only one row, return 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentence.length &lt;= 5000</code></li>\n\t<li><code>1 &lt;= k &lt;= 5000</code></li>\n\t<li>The length of each word in <code>sentence</code> is at most <code>k</code>.</li>\n\t<li><code>sentence</code> consists of only lowercase English letters and spaces.</li>\n\t<li><code>sentence</code> does not begin or end with a space.</li>\n\t<li>Words in <code>sentence</code> are separated by a single space.</li>\n</ul>\n",
+  "hints": [
+    "Create an array storing all of the words in sentence separated.",
+    "Try dynamic programming.",
+    "Build a dp array where dp[i] represents the minimum total cost for the first i + 1 words."
+  ],
+  "metaData": "{\n  \"name\": \"minimumCost\",\n  \"params\": [\n    {\n      \"name\": \"sentence\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"2.5K\", \"totalSubmission\": \"4.8K\", \"totalAcceptedRaw\": 2472, \"totalSubmissionRaw\": 4838, \"acRate\": \"51.1%\"}",
+  "likes": 45,
+  "dislikes": 14,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Sentence Screen Fitting\", \"titleSlug\": \"sentence-screen-fitting\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"i love leetcode\"\n12",
+    "\"apples and bananas taste great\"\n7",
+    "\"a\"\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumCost(string sentence, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumCost(String sentence, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCost(self, sentence: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCost(self, sentence, k):\n        \"\"\"\n        :type sentence: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} sentence\n * @param {number} k\n * @return {number}\n */\nvar minimumCost = function(sentence, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCost(sentence: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumCost(string sentence, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumCost(char* sentence, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCost(sentence string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCost(sentence: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCost(_ sentence: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_cost(sentence: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} sentence\n# @param {Integer} k\n# @return {Integer}\ndef minimum_cost(sentence, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $sentence\n     * @param Integer $k\n     * @return Integer\n     */\n    function minimumCost($sentence, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumCost(String sentence, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCost(sentence: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_cost(sentence :: String.t, k :: integer) :: integer\n  def minimum_cost(sentence, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_cost(Sentence :: unicode:unicode_binary(), K :: integer()) -> integer().\nminimum_cost(Sentence, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-cost sentence k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

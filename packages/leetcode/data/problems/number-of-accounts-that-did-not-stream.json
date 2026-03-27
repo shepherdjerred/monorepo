@@ -1,0 +1,53 @@
+{
+  "questionId": "2167",
+  "questionFrontendId": "2020",
+  "title": "Number of Accounts That Did Not Stream",
+  "titleSlug": "number-of-accounts-that-did-not-stream",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Subscriptions</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| account_id  | int  |\n| start_date  | date |\n| end_date    | date |\n+-------------+------+\naccount_id is the primary key column for this table.\nEach row of this table indicates the start and end dates of an account&#39;s subscription.\nNote that always start_date &lt; end_date.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Streams</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| session_id  | int  |\n| account_id  | int  |\n| stream_date | date |\n+-------------+------+\nsession_id is the primary key column for this table.\naccount_id is a foreign key from the Subscriptions table.\nEach row of this table contains information about the account and the date associated with a stream session.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write an SQL query to report the number of accounts that bought a subscription in <code>2021</code> but did not have any stream session.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nSubscriptions table:\n+------------+------------+------------+\n| account_id | start_date | end_date   |\n+------------+------------+------------+\n| 9          | 2020-02-18 | 2021-10-30 |\n| 3          | 2021-09-21 | 2021-11-13 |\n| 11         | 2020-02-28 | 2020-08-18 |\n| 13         | 2021-04-20 | 2021-09-22 |\n| 4          | 2020-10-26 | 2021-05-08 |\n| 5          | 2020-09-11 | 2021-01-17 |\n+------------+------------+------------+\nStreams table:\n+------------+------------+-------------+\n| session_id | account_id | stream_date |\n+------------+------------+-------------+\n| 14         | 9          | 2020-05-16  |\n| 16         | 3          | 2021-10-27  |\n| 18         | 11         | 2020-04-29  |\n| 17         | 13         | 2021-08-08  |\n| 19         | 4          | 2020-12-31  |\n| 13         | 5          | 2021-01-05  |\n+------------+------------+-------------+\n<strong>Output:</strong> \n+----------------+\n| accounts_count |\n+----------------+\n| 2              |\n+----------------+\n<strong>Explanation:</strong> Users 4 and 9 did not stream in 2021.\nUser 11 did not subscribe in 2021.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Subscriptions (account_id int, start_date date, end_date date)\", \"Create table If Not Exists Streams (session_id int, account_id int, stream_date date)\"], \"mssql\": [\"Create table Subscriptions (account_id int, start_date date, end_date date)\", \"Create table Streams (session_id int, account_id int, stream_date date)\"], \"oraclesql\": [\"Create table Subscriptions (account_id int, start_date date, end_date date)\", \"Create table Streams (session_id int, account_id int, stream_date date)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_target_accounts\", \"pythondata\": [\"Subscriptions = pd.DataFrame([], columns=['account_id', 'start_date', 'end_date']).astype({'account_id':'Int64', 'start_date':'datetime64[ns]', 'end_date':'datetime64[ns]'})\", \"Streams = pd.DataFrame([], columns=['session_id', 'account_id', 'stream_date']).astype({'session_id':'Int64', 'account_id':'Int64', 'stream_date':'datetime64[ns]'})\"], \"postgresql\": [\"Create table If Not Exists Subscriptions (account_id int, start_date date, end_date date)\", \"Create table If Not Exists Streams (session_id int, account_id int, stream_date date)\"], \"database_schema\": {\"Subscriptions\": {\"account_id\": \"INT\", \"start_date\": \"DATE\", \"end_date\": \"DATE\"}, \"Streams\": {\"session_id\": \"INT\", \"account_id\": \"INT\", \"stream_date\": \"DATE\"}}}",
+  "stats": "{\"totalAccepted\": \"13.9K\", \"totalSubmission\": \"19.3K\", \"totalAcceptedRaw\": 13933, \"totalSubmissionRaw\": 19342, \"acRate\": \"72.0%\"}",
+  "likes": 29,
+  "dislikes": 231,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Subscriptions\":[\"account_id\",\"start_date\",\"end_date\"],\"Streams\":[\"session_id\",\"account_id\",\"stream_date\"]},\"rows\":{\"Subscriptions\":[[9,\"2020-02-18\",\"2021-10-30\"],[3,\"2021-09-21\",\"2021-11-13\"],[11,\"2020-02-28\",\"2020-08-18\"],[13,\"2021-04-20\",\"2021-09-22\"],[4,\"2020-10-26\",\"2021-05-08\"],[5,\"2020-09-11\",\"2021-01-17\"]],\"Streams\":[[14,9,\"2020-05-16\"],[16,3,\"2021-10-27\"],[18,11,\"2020-04-29\"],[17,13,\"2021-08-08\"],[19,4,\"2020-12-31\"],[13,5,\"2021-01-05\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"warnermedia\", \"name\": \"Warnermedia\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_target_accounts(subscriptions: pd.DataFrame, streams: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,142 @@
+{
+  "questionId": "2188",
+  "questionFrontendId": "2064",
+  "title": "Minimized Maximum of Products Distributed to Any Store",
+  "titleSlug": "minimized-maximum-of-products-distributed-to-any-store",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> indicating there are <code>n</code> specialty retail stores. There are <code>m</code> product types of varying amounts, which are given as a <strong>0-indexed</strong> integer array <code>quantities</code>, where <code>quantities[i]</code> represents the number of products of the <code>i<sup>th</sup></code> product type.</p>\n\n<p>You need to distribute <strong>all products</strong> to the retail stores following these rules:</p>\n\n<ul>\n\t<li>A store can only be given <strong>at most one product type</strong> but can be given <strong>any</strong> amount of it.</li>\n\t<li>After distribution, each store will have been given some number of products (possibly <code>0</code>). Let <code>x</code> represent the maximum number of products given to any store. You want <code>x</code> to be as small as possible, i.e., you want to <strong>minimize</strong> the <strong>maximum</strong> number of products that are given to any store.</li>\n</ul>\n\n<p>Return <em>the minimum possible</em> <code>x</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 6, quantities = [11,6]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> One optimal way is:\n- The 11 products of type 0 are distributed to the first four stores in these amounts: 2, 3, 3, 3\n- The 6 products of type 1 are distributed to the other two stores in these amounts: 3, 3\nThe maximum number of products given to any store is max(2, 3, 3, 3, 3, 3) = 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 7, quantities = [15,10,10]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> One optimal way is:\n- The 15 products of type 0 are distributed to the first three stores in these amounts: 5, 5, 5\n- The 10 products of type 1 are distributed to the next two stores in these amounts: 5, 5\n- The 10 products of type 2 are distributed to the last two stores in these amounts: 5, 5\nThe maximum number of products given to any store is max(5, 5, 5, 5, 5, 5, 5) = 5.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> n = 1, quantities = [100000]\n<strong>Output:</strong> 100000\n<strong>Explanation:</strong> The only optimal way is:\n- The 100000 products of type 0 are distributed to the only store.\nThe maximum number of products given to any store is max(100000) = 100000.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == quantities.length</code></li>\n\t<li><code>1 &lt;= m &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= quantities[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "There exists a monotonic nature such that when x is smaller than some number, there will be no way to distribute, and when x is not smaller than that number, there will always be a way to distribute.",
+    "If you are given a number k, where the number of products given to any store does not exceed k, could you determine if all products can be distributed?",
+    "Implement a function canDistribute(k), which returns true if you can distribute all products such that any store will not be given more than k products, and returns false if you cannot. Use this function to binary search for the smallest possible k."
+  ],
+  "metaData": "{\n  \"name\": \"minimizedMaximum\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"quantities\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"149.9K\", \"totalSubmission\": \"237.9K\", \"totalAcceptedRaw\": 149948, \"totalSubmissionRaw\": 237889, \"acRate\": \"63.0%\"}",
+  "likes": 1830,
+  "dislikes": 107,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Koko Eating Bananas\", \"titleSlug\": \"koko-eating-bananas\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Capacity To Ship Packages Within D Days\", \"titleSlug\": \"capacity-to-ship-packages-within-d-days\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Candies Allocated to K Children\", \"titleSlug\": \"maximum-candies-allocated-to-k-children\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the Smallest Divisor Given a Threshold\", \"titleSlug\": \"find-the-smallest-divisor-given-a-threshold\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Magnetic Force Between Two Balls\", \"titleSlug\": \"magnetic-force-between-two-balls\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Limit of Balls in a Bag\", \"titleSlug\": \"minimum-limit-of-balls-in-a-bag\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Time to Complete Trips\", \"titleSlug\": \"minimum-time-to-complete-trips\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "6\n[11,6]",
+    "7\n[15,10,10]",
+    "1\n[100000]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"siemens\", \"name\": \"Siemens\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimizedMaximum(int n, vector<int>& quantities) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimizedMaximum(int n, int[] quantities) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimizedMaximum(self, n: int, quantities: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimizedMaximum(self, n, quantities):\n        \"\"\"\n        :type n: int\n        :type quantities: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} quantities\n * @return {number}\n */\nvar minimizedMaximum = function(n, quantities) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimizedMaximum(n: number, quantities: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimizedMaximum(int n, int[] quantities) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimizedMaximum(int n, int* quantities, int quantitiesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimizedMaximum(n int, quantities []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimizedMaximum(n: Int, quantities: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimizedMaximum(_ n: Int, _ quantities: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimized_maximum(n: i32, quantities: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} quantities\n# @return {Integer}\ndef minimized_maximum(n, quantities)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $quantities\n     * @return Integer\n     */\n    function minimizedMaximum($n, $quantities) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimizedMaximum(int n, List<int> quantities) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimizedMaximum(n: Int, quantities: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimized_maximum(n :: integer, quantities :: [integer]) :: integer\n  def minimized_maximum(n, quantities) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimized_maximum(N :: integer(), Quantities :: [integer()]) -> integer().\nminimized_maximum(N, Quantities) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimized-maximum n quantities)\n  (-> exact-integer? (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2549",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given an array `quantities` of length `m`, where `quantities[i]` represents the number of products of the `i-th` type, and an integer `n` denotes the number of stores. Our task is to distribute the products among the stores such that each store only receives products of a single type, and we minimize the maximum number of products received by any store.\n\nFor example, consider `n = 6` and `quantities = [4, 3, 6, 2]`. A simple distribution might assign each product type to a separate store, as shown in the following picture:\n\n![Wrong Distribution of Products](../Figures/2064/2064_wrong_distribution.png)\n\nHowever, this leaves two stores unused, missing the opportunity to balance the load more effectively. A better strategy would be to distribute the products more evenly across all available stores as shown in the next picture, reducing the maximum number of products any store receives.\n\n![Correct Distribution of Products](../Figures/2064/2064_correct_distribution.png)\n\n---\n\n### Approach 1: Binary Search on The Answer\n\n#### Intuition\n\nTo approach this problem, let’s first consider a slightly different question:\n\nGiven the parameters (`n` and `quantities`) and an additional integer $x$, can we determine if it's possible to distribute the products such that no store receives more than $x$ products?\n\nA natural approach is to assign products to stores while avoiding overloading any single store. As we allocate products, we keep track of how many products of each type remain and how many stores are still available. If we can distribute all products without exceeding the limit at any store, we confirm that distribution is possible; otherwise, it is not.\n\nNow, how does this help with our original problem?\n\nWe want to find the smallest $x$ for which such a valid distribution exists, ensuring no store gets more than $x$ products. Notice that for any $x \\geq \\max(\\text{quantities}[i])$, the answer is trivially true because each store could handle just one type of product. A naive approach would be to linearly search for the smallest $x$ in the range $[0, \\max(\\text{quantities}[i])]$ where the distribution is valid. However, this would result in a time limit exceeded (TLE) error for larger inputs.\n\nTo optimize, we leverage the problem's monotonic property: if a distribution is possible for a certain $x$, it will be possible for any $x' > x$. Conversely, if it’s not possible for $x$, it won’t be for any $x' < x$. This allows us to apply Binary Search to efficiently find the smallest valid $x$.\n\n#### Algorithm\n\n-   Define a function `canDistribute`, which takes an integer `x`, the `quantities` array, and `n` as parameters and returns a boolean, indicating whether it’s possible to distribute the products such that no store receives more than `x` products.\n    -   Initialize a pointer to track the first product type that has not been fully distributed: `j = 0`\n    -   Initialize `remaining` to the quantity of the first product type.\n    -   Loop through each store with `i` from `0` to `n-1`:\n        -   Check if you can fully distribute to this store the remaining quantity of the `jth` product (`remaining` $\\leq$ `x`):\n            -   If so:\n                -   Increment `j` to the next product type.\n                -   Check if all products have been distributed (`j == m`):\n                    -   If so, return `true`.\n                    -   Else, set `remaining = quantities[j]`.\n            -   Otherwise, distribute the maximum possible to the store, which is `x`, and reduce the remaining quantity of the `jth` type.\n    -   If the loop ends without having distributed all products, return `false`.\n-   In the `minimizedMaximum` main function:\n    -   Initialize the boundaries of the binary search: `left = 0` and `right = max(quantities[i])`.\n    -   While `left < right`:\n        -   Set `middle = (left + right) / 2`.\n        -   Check whether products can be distributed with no store receiving more than `middle` products, using the `canDistribute` function.\n            -   If this condition is `true`, set `right = middle`.\n            -   Otherwise, set `left = middle + 1`.\n    -   When the loop ends, `left == right`, so return `left`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/SFny3423/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"SFny3423\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the maximum value in the `quantities` array.\n\n-   Time complexity: $O(nlogk)$\n\n    The `canDistribute` function iterates through the `n` stores, executing constant-time operations during each iteration. As a result, its time complexity is $O(n)$.\n    The main function, `minimizedMaximum`, performs a binary search over the range $(0, k)$, calling in each iteration the `canDistribute` function. Since the binary search runs in $O(logk)$ time, the overall time complexity of the `minimizedMaximum` function is $O(nlogk)$.\n\n-   Space complexity: $O(1)$\n\n    We only use a fixed number of integer variables, which doesn't depend on the input size.\n\n    ###### Comments on space efficiency and in-place algorithms\n\n    This problem illustrates why modifying input directly inside a helper function is not always appropriate. If we had altered the quantities array itself by decrementing the remaining quantity of each product type, rather than using the `remaining` variable, the algorithm would fail. This is because the binary search relies on the quantities array remaining unchanged throughout its execution.\n    <br> One solution would be to pass the quantities array by **value** — essentially creating a copy of the array every time the `canDistribute` function is called. This could be done manually or by leveraging language-specific features. However, this approach would increase the overall space complexity to $O(n)$, due to the repeated copying of the array.\n    <br>Instead, we avoid this overhead by recognizing that, in each iteration of the `canDistribute` function, we only need access to one element of the quantities array: the first product type that hasn’t been fully distributed yet. By storing this value in the `remaining` variable, we maintain constant space complexity, while ensuring that the algorithm works correctly without altering the original input.\n\n---\n\n### Approach 2: Greedy Approach Using a Heap\n\n#### Intuition\n\nThe key idea of this approach is to assign stores to product types in an optimal way, rather than assigning products to stores. Initially, each product type is assigned one store, which is guaranteed by the constraint $m \\leq n$. After this, we focus on which product types should receive additional stores. The algorithm greedily selects the product type `i` with the highest ratio of `quantity[i]` to `assigned_stores[i]`, assigning the next available store to that product type.\n\nSince we need to repeatedly access the product type with the highest ratio and update the ratios as stores are assigned, a priority queue (max-heap) is useful for efficiently managing these operations.\n\n###### Proof of Correctness\n\nConsider an arbitrary distribution of stores to products, represented as $ [s_0, s_1, s_2, \\dots, s_{m-1}] $, where $ s_i $ denotes the number of stores assigned to the $i$-th product type. The specific indices of stores assigned or the order of assignment don’t affect the result.\n\nTo minimize the load on any single store, the products of type $i$ should be distributed as evenly as possible across its $s_i$ assigned stores. This ensures that each store handling products of type $i$ will have no more than $ \\left\\lceil \\frac{\\text{quantities}\\_i}{s_i} \\right\\rceil $ products.\n\nThus, our objective is to minimize the maximum number of products any store receives. The function should return:\n\n$$\n\\begin{aligned}\n    f(i) &= \\max_{i \\in [0, m-1]} \\left\\lceil \\frac{\\text{quantities}_i}{s_i} \\right\\rceil\n\\end{aligned}\n$$\n\nNow, consider the greedy approach: If at any point in the algorithm, we fail to assign the next available store to the product type with the highest ratio `quantity[i]` to `assigned_stores[i]`, that ratio will remain the largest, leading to a non-optimal distribution. This would cause the highest ratio to dominate, violating our goal of minimizing the maximum number of products per store.\n\nTo gain a better understanding of the algorithm, let’s revisit our initial example with `n = 6` and `quantities = [4, 3, 6, 2]`.\n\n!?!../Documents/2064/2064_Approach2.json:960,540!?!\n\n<br/>\n\n#### Algorithm\n\n-   Create an array of pairs, `typeStorePairsArray`, to store pairs of integers, where each pair represents the total quantity of a product type and the number of stores currently assigned to it. This array will help us initialize efficiently the priority queue.\n\n-   Initialize a priority queue (max-heap) named `typeStorePairs`, using `typeStorePairsArray`, that sorts its elements by the ratio of their first to their second value.\n\n-   Loop with `i` ranging from `0` to `n - m - 1`:\n\n    -   Pop the element with the highest ratio from the priority queue, denoted as `pairWithMaxRatio = [totalQuantityOfType, storesAssignedToType]`.\n    -   Push the element back into the heap, now assigning it an additional store: push `[totalQuantityOfType, storesAssignedToType + 1]`.\n\n-   After the loop, pop the element with the highest ratio again, denoted as `pairWithMaxRatio = [totalQuantityOfType, storesAssignedToType]`.\n\n-   Finally, return `ceil(totalQuantityOfType / storesAssignedToType)`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fsNCGucz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"fsNCGucz\"></iframe>\n\n#### Complexity Analysis\n\n-   Time complexity: $O(m + (n - m)logm)$\n\n    We first iterate over the `quantities` array, pushing each value as the first element of a pair into the helper array. This operation takes $O(m)$ time.\n\n    We then initialize a priority queue (heap) using the elements from the array. Building the heap takes $O(m)$ time because heapify is performed in linear time.\n\n    After that, we enter a second loop that runs $n - m$ times. In each iteration, we perform one pop and one push operation on the priority queue. Both operations take $O(\\log m)$ time, so this loop has a total time complexity of $O((n - m) \\log m)$.\n\n    Combining the time complexities of the initialization, heap construction, and store allocation, the overall time complexity of the algorithm is: $O(m + (n - m)logm)$.\n\n-   Space complexity: $O(m)$\n\n    The priority queue has a size of `m` since each value of the `quantities` array is inserted as the first element of exactly one `typeSortPair`.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

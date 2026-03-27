@@ -1,0 +1,130 @@
+{
+  "questionId": "2219",
+  "questionFrontendId": "2114",
+  "title": "Maximum Number of Words Found in Sentences",
+  "titleSlug": "maximum-number-of-words-found-in-sentences",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>sentence</strong> is a list of <strong>words</strong> that are separated by a single space&nbsp;with no leading or trailing spaces.</p>\n\n<p>You are given an array of strings <code>sentences</code>, where each <code>sentences[i]</code> represents a single <strong>sentence</strong>.</p>\n\n<p>Return <em>the <strong>maximum number of words</strong> that appear in a single sentence</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentences = [&quot;alice and bob love leetcode&quot;, &quot;i think so too&quot;, <u>&quot;this is great thanks very much&quot;</u>]\n<strong>Output:</strong> 6\n<strong>Explanation:</strong> \n- The first sentence, &quot;alice and bob love leetcode&quot;, has 5 words in total.\n- The second sentence, &quot;i think so too&quot;, has 4 words in total.\n- The third sentence, &quot;this is great thanks very much&quot;, has 6 words in total.\nThus, the maximum number of words in a single sentence comes from the third sentence, which has 6 words.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> sentences = [&quot;please wait&quot;, <u>&quot;continue to fight&quot;</u>, <u>&quot;continue to win&quot;</u>]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> It is possible that multiple sentences contain the same number of words. \nIn this example, the second and third sentences (underlined) have the same number of words.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= sentences.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= sentences[i].length &lt;= 100</code></li>\n\t<li><code>sentences[i]</code> consists only of lowercase English letters and <code>&#39; &#39;</code> only.</li>\n\t<li><code>sentences[i]</code> does not have leading or trailing spaces.</li>\n\t<li>All the words in <code>sentences[i]</code> are separated by a single space.</li>\n</ul>\n",
+  "hints": [
+    "Process each sentence separately and count the number of words by looking for the number of space characters in the sentence and adding it by 1."
+  ],
+  "metaData": "{\n  \"name\": \"mostWordsFound\",\n  \"params\": [\n    {\n      \"name\": \"sentences\",\n      \"type\": \"string[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"406.6K\", \"totalSubmission\": \"469.2K\", \"totalAcceptedRaw\": 406642, \"totalSubmissionRaw\": 469166, \"acRate\": \"86.7%\"}",
+  "likes": 1902,
+  "dislikes": 66,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Valid Words in a Sentence\", \"titleSlug\": \"number-of-valid-words-in-a-sentence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"alice and bob love leetcode\",\"i think so too\",\"this is great thanks very much\"]",
+    "[\"please wait\",\"continue to fight\",\"continue to win\"]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"zoho\", \"name\": \"Zoho\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int mostWordsFound(vector<string>& sentences) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int mostWordsFound(String[] sentences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def mostWordsFound(self, sentences: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def mostWordsFound(self, sentences):\n        \"\"\"\n        :type sentences: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} sentences\n * @return {number}\n */\nvar mostWordsFound = function(sentences) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function mostWordsFound(sentences: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MostWordsFound(string[] sentences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int mostWordsFound(char** sentences, int sentencesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func mostWordsFound(sentences []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun mostWordsFound(sentences: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func mostWordsFound(_ sentences: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn most_words_found(sentences: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} sentences\n# @return {Integer}\ndef most_words_found(sentences)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $sentences\n     * @return Integer\n     */\n    function mostWordsFound($sentences) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int mostWordsFound(List<String> sentences) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def mostWordsFound(sentences: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec most_words_found(sentences :: [String.t]) :: integer\n  def most_words_found(sentences) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec most_words_found(Sentences :: [unicode:unicode_binary()]) -> integer().\nmost_words_found(Sentences) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (most-words-found sentences)\n  (-> (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,145 @@
+{
+  "questionId": "2119",
+  "questionFrontendId": "2009",
+  "title": "Minimum Number of Operations to Make Array Continuous",
+  "titleSlug": "minimum-number-of-operations-to-make-array-continuous",
+  "difficulty": "Hard",
+  "content": "<p>You are given an integer array <code>nums</code>. In one operation, you can replace <strong>any</strong> element in <code>nums</code> with <strong>any</strong> integer.</p>\n\n<p><code>nums</code> is considered <strong>continuous</strong> if both of the following conditions are fulfilled:</p>\n\n<ul>\n\t<li>All elements in <code>nums</code> are <strong>unique</strong>.</li>\n\t<li>The difference between the <strong>maximum</strong> element and the <strong>minimum</strong> element in <code>nums</code> equals <code>nums.length - 1</code>.</li>\n</ul>\n\n<p>For example, <code>nums = [4, 2, 5, 3]</code> is <strong>continuous</strong>, but <code>nums = [1, 2, 3, 5, 6]</code> is <strong>not continuous</strong>.</p>\n\n<p>Return <em>the <strong>minimum</strong> number of operations to make </em><code>nums</code><em> </em><strong><em>continuous</em></strong>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,2,5,3]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>&nbsp;nums is already continuous.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3,5,6]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>&nbsp;One possible solution is to change the last element to 4.\nThe resulting array is [1,2,3,5,4], which is continuous.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,10,100,1000]\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>&nbsp;One possible solution is to:\n- Change the second element to 2.\n- Change the third element to 3.\n- Change the fourth element to 4.\nThe resulting array is [1,2,3,4], which is continuous.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Sort the array.",
+    "For every index do a binary search to get the possible right end of the window and calculate the possible answer."
+  ],
+  "metaData": "{\n  \"name\": \"minOperations\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.8K\", \"totalSubmission\": \"166.6K\", \"totalAcceptedRaw\": 86752, \"totalSubmissionRaw\": 166604, \"acRate\": \"52.1%\"}",
+  "likes": 1996,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Repeating Character Replacement\", \"titleSlug\": \"longest-repeating-character-replacement\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Continuous Subarray Sum\", \"titleSlug\": \"continuous-subarray-sum\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Moving Stones Until Consecutive II\", \"titleSlug\": \"moving-stones-until-consecutive-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum One Bit Operations to Make Integers Zero\", \"titleSlug\": \"minimum-one-bit-operations-to-make-integers-zero\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Adjacent Swaps for K Consecutive Ones\", \"titleSlug\": \"minimum-adjacent-swaps-for-k-consecutive-ones\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[4,2,5,3]",
+    "[1,2,3,5,6]",
+    "[1,10,100,1000]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minOperations(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minOperations(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minOperations(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar minOperations = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minOperations(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinOperations(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minOperations(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minOperations(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minOperations(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minOperations(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_operations(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef min_operations(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function minOperations($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minOperations(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minOperations(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_operations(nums :: [integer]) :: integer\n  def min_operations(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_operations(Nums :: [integer()]) -> integer().\nmin_operations(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-operations nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2076",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Binary Search\n\n**Intuition**\n\nThe problem description gives some rules for what a continuous array is, but we can simplify it to help us better understand the problem. A continuous array covers all the elements in a range of size `n`. Essentially, if we sort a continuous array, it will continuously count up by `1`.\n\nWe can define a continuous array by giving its bounds - `left` and `right`. For example, in the following continuous array:\n\n`[6, 3, 5, 4]`\n\nThe bounds are `left = 3` and `right = 6`. As you can see, the array fully covers all elements in the range `[3, 6]`. If we were to sort it, we would get `[3, 4, 5, 6]`, which starts at `left` and counts up by `1` until we reach `right`.\n\nTo solve this problem, we will iterate over the array and treat each element as `left`. We can then calculate `right = left + n - 1`. We now want to convert the array into a continuous array that covers all elements in the range `[left, right]`. How many operations do we need to accomplish this?\n\nWe need to find how many elements in the array are already in the range `[left, right]`. We can leave these elements unchanged and fill in the rest of the range using operations. Note that if there are duplicate elements in the input, this strategy will not work properly. For example, let's say we had the following input:\n\n`6, 3, 3, 5, 4`\n\nIf we had `left = 3`, we would have `right = 7`. Every element in the input is in the range `[3, 7]`, so it appears that we don't need any operations. However, the number `7` is missing because we have `3` twice. Thus, we should first convert `nums` into a set to get rid of duplicate numbers.\n\nNow that we have gotten rid of the duplicates, how can we quickly find how many elements in the array are in a given range `[left, right]`? If the array is sorted, then we can binary search to efficiently find how many elements are less than or equal to `right`. We already know how many elements are less than `left` because we treat `left = nums[i]` during iteration.\n\nLet's summarize the algorithm with an example.\n\n![example](../Figures/2009/1.png)\n<br>\n\nFirst, we remove duplicates from the array, then sort it. Note the original length before removing duplicates as `n = 8`.\n\n![example](../Figures/2009/2.png)\n<br>\n\nNow, we iterate over the array. For each index `i`, we treat `left = nums[i]`.\n\n![example](../Figures/2009/3.png)\n<br>\n\nIf we were to create a continuous array with `left = 2` as the minimum, we would need a maximum of `right = left + n - 1 = 9`.\n\n![example](../Figures/2009/4.png)\n<br>\n\nHow many operations do we need? We start by finding how many elements in the array are already in the desired range `[left, right]`. Binary search to find the insertion index of `right`. Note that the binary search here is finding the index **after** the greatest element less than or equal to `right`.\n\n![example](../Figures/2009/5.png)\n<br>\n\nLet's call this index `j`. We have `j` as the index of the first element that falls outside our range due to it being too large. We also have `i` as the index of the first element in our range. Thus, we can calculate the number of elements already in our range as `j - i`.\n\n![example](../Figures/2009/6.png)\n<br>\n\nAs you can see, we have `4` elements already in the range `[left, right]`. Thus, these elements do not need to be changed. As we must construct an array of length `8`, we require `8 - 4 = 4` operations (one for each other element) to create a continuous array if we treat `2` as the minimum.\n\n![example](../Figures/2009/7.png)\n<br>\n\nWe can repeat this process for every index in the sorted, duplicate-free array. For example, if we treat `nums[3] = 7` as the minimum, then our range is `[7, 14]`. We can binary search to find `j` and then calculate `j - i = 2` as the number of elements already in our range. Thus, we need to perform `8 - 2 = 6` operations if we treat `7` as the minimum.\n\n![example](../Figures/2009/8.png)\n<br>\n\nAs we iterate over all indices and perform the above process, we keep track of the minimum operations needed.\n\n**Algorithm**\n\n1. Set `n = nums.length` and the answer `ans = n`.\n2. Remove duplicates from `nums` and then sort it. We will call this new array `newNums`.\n3. Iterate `i` over the indices of `newNums`:\n    - Set `left = newNums[i]`.\n    - Calculate `right = left + n - 1`.\n    - Calculate `j`, the insertion index of `right` in `newNums` using binary search.\n    - Calculate `count = j - i`, the number of elements already in our range.\n    - Update `ans` with `n - count` if it is smaller.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/9gC6h4T4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9gC6h4T4\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    To remove duplicates and sort `nums`, we require $$O(n \\cdot \\log{}n)$$ time.\n\n    Then, we iterate over $$n$$ indices and perform a $$O(\\log{}n)$$ binary search at each index.\n\n* Space complexity: $$O(n)$$\n\n    We create a new array `newNums` of size $$O(n)$$. Note that even if you were to modify the input directly, we still use $$O(n)$$ space creating a hash set to remove duplicates. Also, it is considered a bad practice to modify the input, and many people will argue that modifying the input makes it part of the space complexity anyway.\n    \n<br/>\n\n---\n\n### Approach 2: Sliding Window\n\n**Intuition**\n\nIn the previous approach, we locked in an element `newNums[i]` as `left`, calculated `right`, then found the insertion index of `right` as `j`. We used an $$O(\\log{}n)$$ binary search to find `j`, but we can do better using a sliding window.\n\nBecause `newNums` is sorted:\n- As `i` increases, so does `left = newNums[i]`. \n- An increase in the lower bound `left` means an increase in the upper bound `right` as well.\n- As `right` increases, `j` either remains the same or increases.\n\nThus, as `i` increases, `j` will stay the same or increase.\n\nWe initialize `j = 0` and follow the same process as in the last approach. Iterate `i` over the indices of `newNums` and treat each `left = newNums[i]` as the minimum element. This gives us `right = newNums[i] + n - 1` as our maximum element.\n\nHow do we update `j`? Similar to the last approach, we have `j` as the index of the first element out of our range. Thus, we increment `j` until it points to an element out of our range. The condition for this is:\n\n`while (newNums[j] < newNums[i] + n)`\n\nOnce this condition is broken, `newNums[j]` is out of our range `[left, right]` and correctly positioned. We can calculate the number of elements already in our range as `j - i` just like in the previous approach.\n\nBecause `j` starts at `0` and cannot exceed the length of `newNums`, it will only be incremented at most $$n$$ times across the entire algorithm. This means it costs $$O(1)$$ amortized to calculate `j`, an improvement from the $$O(\\log{}n)$$ binary search.\n\n**Algorithm**\n\n1. Set `n = nums.length` and the answer `ans = n`.\n2. Remove duplicates from `nums` and then sort it. We will call this new array `newNums`.\n3. Initialize `j = 0` and iterate `i` over the indices of `newNums`:\n    - While `newNums[j]` is within our range (less than `newNums[i] + n`), increment `j`.\n    - Calculate `count = j - i`, the number of elements already in our range.\n    - Update `ans` with `n - count` if it is smaller.\n4. Return `ans`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/Ru5uG3D4/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Ru5uG3D4\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `nums`,\n\n* Time complexity: $$O(n \\cdot \\log{}n)$$\n\n    To remove duplicates and sort `nums`, we require $$O(n \\cdot \\log{}n)$$ time.\n\n    Then, we iterate over $$n$$ indices and perform $$O(1)$$ amortized work at each iteration. The while loop inside the for loop can only iterate at most $$n$$ times total across all iterations of the for loop. Each element in `newNums` can only be iterated over once by this while loop.\n\n    Despite this approach having the same time complexity as the previous approach (due to the sort), it is a slight practical improvement as the sliding window portion is $$O(n)$$.\n\n* Space complexity: $$O(n)$$\n\n    We create a new array `newNums` of size $$O(n)$$. Note that even if you were to modify the input directly, we still use $$O(n)$$ space creating a hash set to remove duplicates. Also, it is considered a bad practice to modify the input, and many people will argue that modifying the input makes it part of the space complexity anyway.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

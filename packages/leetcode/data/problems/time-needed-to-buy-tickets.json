@@ -1,0 +1,140 @@
+{
+  "questionId": "2195",
+  "questionFrontendId": "2073",
+  "title": "Time Needed to Buy Tickets",
+  "titleSlug": "time-needed-to-buy-tickets",
+  "difficulty": "Easy",
+  "content": "<p>There are <code>n</code> people in a line queuing to buy tickets, where the <code>0<sup>th</sup></code> person is at the <strong>front</strong> of the line and the <code>(n - 1)<sup>th</sup></code> person is at the <strong>back</strong> of the line.</p>\n\n<p>You are given a <strong>0-indexed</strong> integer array <code>tickets</code> of length <code>n</code> where the number of tickets that the <code>i<sup>th</sup></code> person would like to buy is <code>tickets[i]</code>.</p>\n\n<p>Each person takes <strong>exactly 1 second</strong> to buy a ticket. A person can only buy <strong>1 ticket at a time</strong> and has to go back to <strong>the end</strong> of the line (which happens <strong>instantaneously</strong>) in order to buy more tickets. If a person does not have any tickets left to buy, the person will <strong>leave </strong>the line.</p>\n\n<p>Return the <strong>time taken</strong> for the person <strong>initially</strong> at position <strong>k</strong><strong> </strong>(0-indexed) to finish buying tickets.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">tickets = [2,3,2], k = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">6</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The queue starts as [2,3,<u>2</u>], where the kth person is underlined.</li>\n\t<li>After the person at the front has bought a ticket, the queue becomes [3,<u>2</u>,1] at 1 second.</li>\n\t<li>Continuing this process, the queue becomes [<u>2</u>,1,2] at 2 seconds.</li>\n\t<li>Continuing this process, the queue becomes [1,2,<u>1</u>] at 3 seconds.</li>\n\t<li>Continuing this process, the queue becomes [2,<u>1</u>] at 4 seconds. Note: the person at the front left the queue.</li>\n\t<li>Continuing this process, the queue becomes [<u>1</u>,1] at 5 seconds.</li>\n\t<li>Continuing this process, the queue becomes [1] at 6 seconds. The kth person has bought all their tickets, so return 6.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">tickets = [5,1,1,1], k = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>The queue starts as [<u>5</u>,1,1,1], where the kth person is underlined.</li>\n\t<li>After the person at the front has bought a ticket, the queue becomes [1,1,1,<u>4</u>] at 1 second.</li>\n\t<li>Continuing this process for 3 seconds, the queue becomes [<u>4]</u> at 4 seconds.</li>\n\t<li>Continuing this process for 4 seconds, the queue becomes [] at 8 seconds. The kth person has bought all their tickets, so return 8.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == tickets.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= tickets[i] &lt;= 100</code></li>\n\t<li><code>0 &lt;= k &lt; n</code></li>\n</ul>\n",
+  "hints": [
+    "Loop through the line of people and decrement the number of tickets for each to buy one at a time as if simulating the line moving forward. Keep track of how many tickets have been sold up until person k has no more tickets to buy.",
+    "Remember that those who have no more tickets to buy will leave the line."
+  ],
+  "metaData": "{\n  \"name\": \"timeRequiredToBuy\",\n  \"params\": [\n    {\n      \"name\": \"tickets\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"308K\", \"totalSubmission\": \"425.9K\", \"totalAcceptedRaw\": 307977, \"totalSubmissionRaw\": 425866, \"acRate\": \"72.3%\"}",
+  "likes": 1904,
+  "dislikes": 169,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Number of Students Unable to Eat Lunch\", \"titleSlug\": \"number-of-students-unable-to-eat-lunch\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,3,2]\n2",
+    "[5,1,1,1]\n0"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 4, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"innovaccer\", \"name\": \"Innovaccer\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"twitter\", \"name\": \"X\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int timeRequiredToBuy(vector<int>& tickets, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int timeRequiredToBuy(int[] tickets, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def timeRequiredToBuy(self, tickets: List[int], k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def timeRequiredToBuy(self, tickets, k):\n        \"\"\"\n        :type tickets: List[int]\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} tickets\n * @param {number} k\n * @return {number}\n */\nvar timeRequiredToBuy = function(tickets, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function timeRequiredToBuy(tickets: number[], k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int TimeRequiredToBuy(int[] tickets, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int timeRequiredToBuy(int* tickets, int ticketsSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func timeRequiredToBuy(tickets []int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun timeRequiredToBuy(tickets: IntArray, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func timeRequiredToBuy(_ tickets: [Int], _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn time_required_to_buy(tickets: Vec<i32>, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} tickets\n# @param {Integer} k\n# @return {Integer}\ndef time_required_to_buy(tickets, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $tickets\n     * @param Integer $k\n     * @return Integer\n     */\n    function timeRequiredToBuy($tickets, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int timeRequiredToBuy(List<int> tickets, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def timeRequiredToBuy(tickets: Array[Int], k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec time_required_to_buy(tickets :: [integer], k :: integer) :: integer\n  def time_required_to_buy(tickets, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec time_required_to_buy(Tickets :: [integer()], K :: integer()) -> integer().\ntime_required_to_buy(Tickets, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (time-required-to-buy tickets k)\n  (-> (listof exact-integer?) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2281",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe have a queue of people who each want to buy a certain number of tickets. We are given an array where each element represents the number of tickets each person wants to buy. We need to find out how much time it will take for the person at a specific position `k` in the queue to finish buying their tickets.\n\n**Key Observations:**\n1. Each person takes exactly 1 second to buy a ticket.\n2. A person can only buy 1 ticket at a time before going to the back of the line.\n3. Once a person has bought all the tickets they want, they leave the line.\n4. The order of people in the line is fixed, meaning the person at the front of the line (position 0) gets served first, then the person behind them, and so on.\n\n---\n\n### Approach 1: Simulation Using Queue\n\n#### Intuition\n\nWe can simulate the ticket-buying process by using a queue of indexes. We dequeue each person from the front of the queue and sell them a ticket. If an individual still needs more tickets, we re-enqueue them to the end.\n\nIn summary, we simulate the process with a queue containing the indices of the people in `tickets` and iterating until the queue is empty. In each iteration, we dequeue the front person from the queue and sell them one ticket. If the `k`th person has bought all their tickets, we return the time. After processing each index, we add it back to the end of the queue if the corresponding person still needs more tickets.\n\nThe following is an illustration demonstrating the queue approach:\n\n!?!../Documents/2073/queue_solution.json:1026,835!?!\n\n> **Note:** The eye symbol with dots indicates the perspective or viewpoint from which the queue container should be observed.\n\n#### Algorithm\n\n- Initialize a queue `queue`.\n- Iterate through the `tickets` array:\n    - Add the index `i` to the `queue`.\n\n- Initialize `time` to 0.\n\n- Enter a loop that continues until the `queue` is empty:\n    - Increment `time` by 1.\n    - Get the front element `front` from the `queue`.\n    - Decrement `tickets[front]` by 1 to buy one ticket for the person at index `front`.\n    - If the person at index `k` has bought all their tickets (`k == front && tickets[front] == 0`):\n        - Return the `time`.\n    - If there are more tickets at index `front`:\n        - Re-add the index `front` to the end of the `queue` (`queue.add(front)`).\n\n- Return `time`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/TQjZ84Ga/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TQjZ84Ga\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the tickets array and $m$ be the maximum number of tickets at each index.\n\n* Time complexity: $O(n \\cdot m)$\n\n    The time complexity of this algorithm is dominated by the while loop that simulates the ticket-buying process. This loop runs until the `queue` is empty, and in the worst case, where all people have the maximum number of tickets `m`, the loop will run $O(n \\cdot m)$ times.\n\n* Space complexity: $O(n)$\n\n    The space complexity is $O(n)$, as the algorithm uses a `queue` to store the indices of all people, which requires additional space proportional to the length of the tickets array.\n\n---\n\n### Approach 2: Simulation Without Queue\n\n#### Intuition\n\nThe above approach used a queue to simulate the ticket-buying process, which introduced auxiliary space. We can simulate this process in constant space by iterating multiple times through all the people in the line and buying one ticket for each person until the person at index `k` has bought all their tickets. \n\nWe use a nested loop to simulate the process. The outer loop represents each pass through the line or the turn, where each person has an opportunity to buy one ticket on each turn.\n\nInside this outer loop, we have the inner loop. This loop is responsible for actually buying the tickets. The inner loop goes through each person in the line, one after the other, starting from the front of the line and moving towards the end, and buys one ticket for each person who still needs one. After each purchase, we increment the time.\n\nWe repeat this process until the target person (at position `k`) has bought all their tickets. Once that happens, we stop the simulation and return the time.\n\n#### Algorithm\n\n- Initialize `n` as the length of the `tickets` array and `time` to 0.\n\n- If the person at index `k` only needs one ticket (`tickets[k] == 1`):\n    - Return `k + 1` (the time required to buy that single ticket).\n\n- Enter a loop that continues until the person at index `k` has bought all their tickets:\n    - Iterate through the `tickets` array:\n        - If the person at index `i` still needs to buy tickets (`tickets[i] != 0`), one ticket is bought for that person by decrementing `tickets[i]` by 1 and incrementing the time by 1. \n        - If the person at index `k` has bought all their tickets (`tickets[k] == 0`), return the `time`.\n\n- Return `time` (the total time required for the person at index `k` to buy all their tickets).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/R8J4kNrd/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"R8J4kNrd\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the tickets array and $m$ be the maximum number of tickets at each index.\n\n- Time complexity: $O(n \\cdot m)$\n\n    The outer while loop continues until the person at position `k` buys all of their tickets. The inner for loop iterates through all people in the tickets array. So, the overall time complexity is $O(n \\cdot m)$.\n\n- Space complexity: $O(1)$\n\n    The space complexity is $O(1)$ as the algorithm uses only a constant amount of extra space.\n\n---\n\n### Approach 3: Using One Pass\n\n#### Intuition\n\nThe above two solutions explicitly simulated the process of buying tickets for each person in the queue. However, we can develop a more efficient approach because we know how many tickets the `k`th person needs. That is, we can directly calculate the time required based on the number of tickets each person needs without explicitly modeling the entire sequential process of buying tickets.\n\nWe can break down the entire problem into two cases:\n1. **Case 1:** The current person is before or at the desired person `k`.\n2. **Case 2:** The current person is after `k`.\n\nBy considering these two cases, we can directly calculate the time required for the `k`th person to buy all their tickets.\n\n**Case 1:** If the current person is before or at the desired person `k`:\n\n- We will buy the minimum number of tickets between what the `k`th person needs and what the current person needs.\n- For example: If the `k`th person needs 3 tickets, and the current person needs 2 tickets, we will buy 2 tickets for the current person. Similarly, if the `k`th person needs 2 tickets, and the current person needs 4 tickets, we will buy 2 tickets for the current person.\n- This is because we want to ensure that the `k`th person gets the tickets they need, and people before the `k`th person will only have the opportunity to buy up to `tickets[k]` tickets.\n\n**Case 2:** If the current person (`i`) is after `k`th person i.e, `i > k`:\n\n- We buy the minimum of (one less than the number of tickets needed by person `k`) and the current person.\n- People after `k` in line will have fewer opportunities to buy tickets than person `k` does. If they need fewer than `tickets[k]` tickets, they will be able to purchase them all. Otherwise, they will purchase `tickets[k] - 1` tickets. \n- For example: If the `k`th person needs 3 tickets (`tickets[k] = 3`), and the current person needs 1 ticket, we will buy 1 ticket for the current person. Conversely, if the current person needs 3 tickets, we will buy 2 tickets for the current person. The current person will only have the opportunity to buy 2 tickets before person `k` has purchased all of their tickets.\n\nIn simpler terms, when the current person is before or at the `k`th person, we buy the minimum number of tickets needed by both people. When we are at a person after the `k`th person, we know the current person will only have the opportunity to buy `tickets[k] - 1` tickets, so we buy the minimum between that and the current person's needed tickets.\n\nThe following is an illustration demonstrating the one-pass approach:\n\n!?!../Documents/2073/approach_three.json:1000,301!?!\n\n#### Algorithm\n \n- Initialize `time` to 0.\n\n- Iterate through the `tickets` array:\n    - If the current index `i` is less than or equal to `k` (`i <= k`):\n        - Increment `time` by the minimum of `tickets[k]` and `tickets[i]`\n    - Else (if the current index `i` is greater than `k`):\n        - Increment `time` by the minimum of (`tickets[k] - 1`) and `tickets[i]`\n\n- Return `time` (the total time required for the person at index `k` to buy all their tickets).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/R6zB4yXJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"R6zB4yXJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the tickets array.\n\n* Time complexity: $O(n)$\n\n    The algorithm iterates through each person in the `tickets` array once using a for loop. The body of the loop contains constant-time math operations. Therefore, the time complexity is $O(n)$.\n\n* Space complexity: $O(1)$\n\n    The only additional space used in this solution is for variables like `time`, `i`, and `k`. Therefore, the space complexity is $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

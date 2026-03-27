@@ -1,0 +1,141 @@
+{
+  "questionId": "2179",
+  "questionFrontendId": "2070",
+  "title": "Most Beautiful Item for Each Query",
+  "titleSlug": "most-beautiful-item-for-each-query",
+  "difficulty": "Medium",
+  "content": "<p>You are given a 2D integer array <code>items</code> where <code>items[i] = [price<sub>i</sub>, beauty<sub>i</sub>]</code> denotes the <strong>price</strong> and <strong>beauty</strong> of an item respectively.</p>\n\n<p>You are also given a <strong>0-indexed</strong> integer array <code>queries</code>. For each <code>queries[j]</code>, you want to determine the <strong>maximum beauty</strong> of an item whose <strong>price</strong> is <strong>less than or equal</strong> to <code>queries[j]</code>. If no such item exists, then the answer to this query is <code>0</code>.</p>\n\n<p>Return <em>an array </em><code>answer</code><em> of the same length as </em><code>queries</code><em> where </em><code>answer[j]</code><em> is the answer to the </em><code>j<sup>th</sup></code><em> query</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> items = [[1,2],[3,2],[2,4],[5,6],[3,5]], queries = [1,2,3,4,5,6]\n<strong>Output:</strong> [2,4,5,5,6,6]\n<strong>Explanation:</strong>\n- For queries[0]=1, [1,2] is the only item which has price &lt;= 1. Hence, the answer for this query is 2.\n- For queries[1]=2, the items which can be considered are [1,2] and [2,4]. \n  The maximum beauty among them is 4.\n- For queries[2]=3 and queries[3]=4, the items which can be considered are [1,2], [3,2], [2,4], and [3,5].\n  The maximum beauty among them is 5.\n- For queries[4]=5 and queries[5]=6, all items can be considered.\n  Hence, the answer for them is the maximum beauty of all items, i.e., 6.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> items = [[1,2],[1,2],[1,3],[1,4]], queries = [1]\n<strong>Output:</strong> [4]\n<strong>Explanation:</strong> \nThe price of every item is equal to 1, so we choose the item with the maximum beauty 4. \nNote that multiple items can have the same price and/or beauty.  \n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> items = [[10,1000]], queries = [5]\n<strong>Output:</strong> [0]\n<strong>Explanation:</strong>\nNo item has a price less than or equal to 5, so no item can be chosen.\nHence, the answer to the query is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= items.length, queries.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>items[i].length == 2</code></li>\n\t<li><code>1 &lt;= price<sub>i</sub>, beauty<sub>i</sub>, queries[j] &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Can we process the queries in a smart order to avoid repeatedly checking the same items?",
+    "How can we use the answer to a query for other queries?"
+  ],
+  "metaData": "{\n  \"name\": \"maximumBeauty\",\n  \"params\": [\n    {\n      \"name\": \"items\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"queries\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"129.7K\", \"totalSubmission\": \"208.8K\", \"totalAcceptedRaw\": 129713, \"totalSubmissionRaw\": 208837, \"acRate\": \"62.1%\"}",
+  "likes": 1267,
+  "dislikes": 45,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Closest Room\", \"titleSlug\": \"closest-room\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Find the Score of All Prefixes of an Array\", \"titleSlug\": \"find-the-score-of-all-prefixes-of-an-array\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Sum Queries\", \"titleSlug\": \"maximum-sum-queries\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[1,2],[3,2],[2,4],[5,6],[3,5]]\n[1,2,3,4,5,6]",
+    "[[1,2],[1,2],[1,3],[1,4]]\n[1]",
+    "[[10,1000]]\n[5]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"razorpay\", \"name\": \"razorpay\"}, {\"timesEncountered\": 2, \"slug\": \"postmates\", \"name\": \"Postmates\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> maximumBeauty(vector<vector<int>>& items, vector<int>& queries) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] maximumBeauty(int[][] items, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumBeauty(self, items: List[List[int]], queries: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumBeauty(self, items, queries):\n        \"\"\"\n        :type items: List[List[int]]\n        :type queries: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} items\n * @param {number[]} queries\n * @return {number[]}\n */\nvar maximumBeauty = function(items, queries) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumBeauty(items: number[][], queries: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] MaximumBeauty(int[][] items, int[] queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* maximumBeauty(int** items, int itemsSize, int* itemsColSize, int* queries, int queriesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumBeauty(items [][]int, queries []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumBeauty(items: Array<IntArray>, queries: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumBeauty(_ items: [[Int]], _ queries: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_beauty(items: Vec<Vec<i32>>, queries: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} items\n# @param {Integer[]} queries\n# @return {Integer[]}\ndef maximum_beauty(items, queries)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $items\n     * @param Integer[] $queries\n     * @return Integer[]\n     */\n    function maximumBeauty($items, $queries) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> maximumBeauty(List<List<int>> items, List<int> queries) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumBeauty(items: Array[Array[Int]], queries: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_beauty(items :: [[integer]], queries :: [integer]) :: [integer]\n  def maximum_beauty(items, queries) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_beauty(Items :: [[integer()]], Queries :: [integer()]) -> [integer()].\nmaximum_beauty(Items, Queries) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-beauty items queries)\n  (-> (listof (listof exact-integer?)) (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2580",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIn this problem, `queries` gives us an array of prices while `items` gives us a 2D array of the price and corresponding beauty of some items. We have to answer each query by finding the maximum possible beauty of an item in `items` with a price less than or equal to the price given by `queries[i]`. In other words, we would like to find the highest \"beauty\" score without going over the price given by `queries[i]`.\n\n### Approach 1: Sorting Items + Binary Search\n\n#### Intuition\n\nWe observe that the the maximum beauty for a given price `p` in `items` will be the maximum beauty of all items in `items` with a price less than or equal to `p`. To do this for each query, we can scan through `items` and keep track of the maximum beauty amongst all qualified items (items with a price less than or equal to the query price). This would require us to traverse through the entirety of `items` for each query. However, we can calculate this maximum beauty more efficiently if we do some preprocessing with `items`. Specifically, we can:\n\n1. Sort the items in `items` in ascending order by price. \n2. Traverse through `items` and keep track of the maximum beauty `maxBeauty` seen so far. We can overwrite each `item`'s beauty with its maximum possible beauty given its price: `item[1] = maxBeauty`.\n\nHere, the overwriting done in step 2 gives us $O(1)$ access to the maximum beauty for a given item's price. Thus, for a given query price, if we know the index of the item in `items` with the highest price that doesn't exceed the query price, we also know the maximum beauty for the query price. \n\nBecause `items` is now sorted, we can efficiently find this index using [binary search](https://leetcode.com/explore/learn/card/binary-search/). In our binary search, we will continuously halve our search space at each iteration to find the index of the highest priced item `item` whose price doesn't exceed `queries[i]`. Then, we know `item[1]` would yield the maximum beauty possible for that query. Note that this binary search for each query only takes $O(\\log M)$ time, which takes significantly less time than traversing through the entirety of `items` using an $O(M)$ linear scan. \n\n#### Algorithm\n\n1. Initialize `ans` array to store answers for `queries[i]`\n2. Sort `items` by increasing order of price \n3. Store the maximum beauty for each item:\n    * Initialize initial max beauty `max = items[0][1]`\n    * For each `item` in `items`:\n        * Update the max beauty seen so far: `max = maximum(max, item[1])`\n        * Overwrite the item's beauty with its max beauty: `item[1] = max`\n4. Answer each query. From `i = 0` to `i = queries.length - 1`:\n    * `ans[i] = binarySearch(items, queries[i])`\n5. Define helper function `binarySearch(items, targetPrice)`:\n    * Establish our left and right boundaries in binary search: `l = 0`, `r = items.length - 1`\n    * Initialize `maxBeauty` to 0\n    * While `l < r`, we still have a search space to search:\n        * Calculate mid point: `mid = (l + r) / 2`\n        * If given `targetPrice` is less than `items[mid][0]`,\n            * Move to the left half of search space. Update `r = mid - 1`\n        * Otherwise, `targetPrice` is greater than or equal to current price:\n            * This is a viable price, so update `maxBeauty = maximum(maxBeauty, items[mid][1])`.\n            * Keep moving to the right half. Update `l = mid + 1`\n    * At this point, we have exhausted our search space, and `maxBeauty` contains the answer. Return `maxBeauty`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Jx9zRqif/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"Jx9zRqif\"></iframe>\n    \n#### Complexity Analysis\n\nLet $M$ be the size of `items` and let $N$ be the size of `queries`.\n\n* Time Complexity: $O((M + N) \\cdot \\log M)$\n\n    Sorting `items` in ascending order of price takes $O(M \\cdot \\log M)$ time. Then, going through all queries will take $O(N)$ time, where answering each query involves a binary search that takes $O(\\log M)$ time. Thus, the total time complexity is $O((M + N) \\cdot \\log M)$.\n\n* Space Complexity: $O(S_M)$\n\n    The space complexity is determined by the space needed by our sorting algorithm to sort `items`. This space complexity ($S$) depends on the language of implementation. Given input size $M$:\n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log M)$.\n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log M)$.\n    In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(M)$.\n\n---\n\n### Approach 2: Sorting Items + Sorting Queries\n\n#### Intuition\n\nIn Approach 1, we start by sorting the `items` array and calculating the maximum beauty for each item. This allows us to efficiently answer each query using binary search. Essentially, for each query, we look for the most beautiful item that meets the specified criteria based on price.  \n\nFor our second approach, we also begin by sorting the `items` and calculating their maximum beauty. However, instead of using binary search for each query, we take a different route. We sort the `queries` in ascending order of price, just like we did with `items`. This way, we can perform a linear scan through both the `items` and `queries` simultaneously. As we go through them, we can easily find the maximum beauty for all the queries in one pass, making the process more efficient.\n\nSpecifically, for each query `queries[i]`, we can maintain a pointer to iterate through all the items in `items` with prices that don't exceed `queries[i]`. While we iterate through all these valid items for the given query, we can maintain the maximum beauty seen so far. Then, the maximum beauty seen will answer the current query. We can then continue this process for all other queries. Note that because the queries are increasing in price, we do not have to worry about moving our pointer back to consider cheaper items. This allows us to answer all queries with only one pass through `queries` and `items`.\n\nOne thing to note is that sorting `queries` directly will cause us to lose its original indexing, which would stop us from storing our answers in the answers result in the intended order. As a result, we can create an intermediate 2D array `queriesWithIndices` that will store the original queries in `queries` along with its original index. Thus, we can iterate through the queries via `queriesWithIndices` in which `queriesWithIndices[i][1]` will yield us the original index for query `i`. \n\n#### Algorithm\n\n1. Initialize `ans` array to store answers for `queries[i]`\n2. Sort `items` by increasing order of price\n3. Initialize a new 2D array `queriesWithIndex` that contains each element in `queries` as well as its index\n4. Sort `queriesWithIndex` by increasing order of price/query.\n5. Initialize our pointer to iterate through `items`: `itemIndex = 0`\n6. Initialize a variable to maintain the maximum beauty seen so far: `maxBeauty = 0`\n7. From `i = 0` to `i = queries.length - 1`:\n    * Get the current query price: `query = queriesWithIndices[i][0]`\n    * Get the current original query index: `originalIndex = queriesWithIndices[i][1]`\n    * While `itemIndex < items.length` and `items[itemIndex][0] <= query`:\n        * Update our `maxBeauty` if we found a valid item with a higher beauty: `maxBeauty = max(maxBeauty, items[itemIndex][1])`\n        * Advance our pointer: `itemIndex++`\n    * Fill the answer for the query: `ans[originalIndex] = maxBeauty`\n8. Return `ans`\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/9ifnSMuk/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"9ifnSMuk\"></iframe>\n\n#### Complexity Analysis\n\nLet $M$ be the size of `items` and let $N$ be the size of `queries`.\n\n* Time Complexity: $O(M \\cdot \\log M + N \\cdot \\log N)$\n\n    Sorting `items` in ascending order of price takes $O(M \\cdot \\log M)$ time. Similarly, sorting `queries` in ascending order of price takes $O(N \\cdot \\log N)$ time. Then iterating through both takes $O(M + N)$ time. Thus, the total time complexity is $O(M \\cdot \\log M + N \\cdot \\log N)$\n\n* Space Complexity: $O(S_M + S_N + N)$\n\n    The space complexity is determined by the space needed by our sorting algorithm to sort both `items` and `queries`. This space complexity ($S$) depends on the language of implementation. Given input size $M$:\n\n    In Java, `Arrays.sort()` is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O( \\log M)$.\n    In C++, the `sort()` function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worst-case space complexity of $O(\\log M)$.\n    In Python, the `sort()` method sorts a list using the Timsort algorithm which is a combination of Merge Sort and Insertion Sort and has a space complexity of $O(M)$.\n\n    Since this algorithm is applied to both `items` and `queries`, the overall space complexity is $O(S_M + S_N)$, along with an extra $O(N)$ space for the array used to store query indices.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

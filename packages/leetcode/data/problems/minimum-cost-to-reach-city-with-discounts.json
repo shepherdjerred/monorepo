@@ -1,0 +1,142 @@
+{
+  "questionId": "2230",
+  "questionFrontendId": "2093",
+  "title": "Minimum Cost to Reach City With Discounts",
+  "titleSlug": "minimum-cost-to-reach-city-with-discounts",
+  "difficulty": "Medium",
+  "content": "<p>A series of highways connect <code>n</code> cities numbered from <code>0</code> to <code>n - 1</code>. You are given a 2D integer array <code>highways</code> where <code>highways[i] = [city1<sub>i</sub>, city2<sub>i</sub>, toll<sub>i</sub>]</code> indicates that there is a highway that connects <code>city1<sub>i</sub></code> and <code>city2<sub>i</sub></code>, allowing a car to go from <code>city1<sub>i</sub></code> to <code>city2<sub>i</sub></code> <strong>and vice versa</strong> for a cost of <code>toll<sub>i</sub></code>.</p>\n\n<p>You are also given an integer <code>discounts</code> which represents the number of discounts you have. You can use a discount to travel across the <code>i<sup>th</sup></code> highway for a cost of <code>toll<sub>i</sub> / 2</code> (<strong>integer</strong> <strong>division</strong>). Each discount may only be used <strong>once</strong>, and you can only use at most <strong>one</strong> discount per highway.</p>\n\n<p>Return <em>the <strong>minimum total cost</strong> to go from city </em><code>0</code><em> to city </em><code>n - 1</code><em>, or </em><code>-1</code><em> if it is not possible to go from city </em><code>0</code><em> to city </em><code>n - 1</code><em>.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/11/29/image-20211129222429-1.png\" style=\"height: 250px; width: 404px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 5, highways = [[0,1,4],[2,1,3],[1,4,11],[3,2,3],[3,4,2]], discounts = 1\n<strong>Output:</strong> 9\n<strong>Explanation:</strong>\nGo from 0 to 1 for a cost of 4.\nGo from 1 to 4 and use a discount for a cost of 11 / 2 = 5.\nThe minimum cost to go from 0 to 4 is 4 + 5 = 9.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/11/29/image-20211129222650-4.png\" style=\"width: 284px; height: 250px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 4, highways = [[1,3,17],[1,2,7],[3,2,5],[0,1,6],[3,0,20]], discounts = 20\n<strong>Output:</strong> 8\n<strong>Explanation:</strong>\nGo from 0 to 1 and use a discount for a cost of 6 / 2 = 3.\nGo from 1 to 2 and use a discount for a cost of 7 / 2 = 3.\nGo from 2 to 3 and use a discount for a cost of 5 / 2 = 2.\nThe minimum cost to go from 0 to 3 is 3 + 3 + 2 = 8.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong><br />\n<img src=\"https://assets.leetcode.com/uploads/2021/11/29/image-20211129222531-3.png\" style=\"width: 275px; height: 250px;\" /></p>\n\n<pre>\n<strong>Input:</strong> n = 4, highways = [[0,1,3],[2,3,2]], discounts = 0\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\nIt is impossible to go from 0 to 3 so return -1.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 1000</code></li>\n\t<li><code>1 &lt;= highways.length &lt;= 1000</code></li>\n\t<li><code>highways[i].length == 3</code></li>\n\t<li><code>0 &lt;= city1<sub>i</sub>, city2<sub>i</sub> &lt;= n - 1</code></li>\n\t<li><code>city1<sub>i</sub> != city2<sub>i</sub></code></li>\n\t<li><code>0 &lt;= toll<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= discounts &lt;= 500</code></li>\n\t<li>There are no duplicate highways.</li>\n</ul>\n",
+  "hints": [
+    "Try to construct a graph out of highways. What type of graph is this?",
+    "We essentially need to find the minimum distance to get from node 0 to node n - 1 in an undirected weighted graph. What algorithm should we use to do this?",
+    "Use Dijkstra's algorithm to find the minimum weight path. Keep track of the minimum distance to each vertex with d discounts left"
+  ],
+  "metaData": "{\n  \"name\": \"minimumCost\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"highways\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"discounts\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"12.5K\", \"totalSubmission\": \"20.8K\", \"totalAcceptedRaw\": 12531, \"totalSubmissionRaw\": 20791, \"acRate\": \"60.3%\"}",
+  "likes": 246,
+  "dislikes": 23,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Cheapest Flights Within K Stops\", \"titleSlug\": \"cheapest-flights-within-k-stops\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Connecting Cities With Minimum Cost\", \"titleSlug\": \"connecting-cities-with-minimum-cost\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Cost of Trip With K Highways\", \"titleSlug\": \"maximum-cost-of-trip-with-k-highways\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Minimum Cost to Reach Destination in Time\", \"titleSlug\": \"minimum-cost-to-reach-destination-in-time\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[[0,1,4],[2,1,3],[1,4,11],[3,2,3],[3,4,2]]\n1",
+    "4\n[[1,3,17],[1,2,7],[3,2,5],[0,1,6],[3,0,20]]\n20",
+    "4\n[[0,1,3],[2,3,2]]\n0"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"flipkart\", \"name\": \"Flipkart\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumCost(int n, vector<vector<int>>& highways, int discounts) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumCost(int n, int[][] highways, int discounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumCost(self, n: int, highways: List[List[int]], discounts: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumCost(self, n, highways, discounts):\n        \"\"\"\n        :type n: int\n        :type highways: List[List[int]]\n        :type discounts: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} highways\n * @param {number} discounts\n * @return {number}\n */\nvar minimumCost = function(n, highways, discounts) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumCost(n: number, highways: number[][], discounts: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumCost(int n, int[][] highways, int discounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumCost(int n, int** highways, int highwaysSize, int* highwaysColSize, int discounts) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumCost(n int, highways [][]int, discounts int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumCost(n: Int, highways: Array<IntArray>, discounts: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumCost(_ n: Int, _ highways: [[Int]], _ discounts: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_cost(n: i32, highways: Vec<Vec<i32>>, discounts: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} highways\n# @param {Integer} discounts\n# @return {Integer}\ndef minimum_cost(n, highways, discounts)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $highways\n     * @param Integer $discounts\n     * @return Integer\n     */\n    function minimumCost($n, $highways, $discounts) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumCost(int n, List<List<int>> highways, int discounts) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumCost(n: Int, highways: Array[Array[Int]], discounts: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_cost(n :: integer, highways :: [[integer]], discounts :: integer) :: integer\n  def minimum_cost(n, highways, discounts) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_cost(N :: integer(), Highways :: [[integer()]], Discounts :: integer()) -> integer().\nminimum_cost(N, Highways, Discounts) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-cost n highways discounts)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2380",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given` n` cities connected by bidirectional highways, each incurring a toll. We also have a limited number of discounts that can reduce the toll on any highway by half. Our goal is to determine the minimum total cost to travel from city `0` to city `n−1`.\n\n> Note: This problem has a lot of commonalities with [787. Cheapest Flights Within K Stops](https://leetcode.com/problems/cheapest-flights-within-k-stops/editorial/). After reading through this editorial, you can test yourself by solving it.\n\nWe can transform this problem into a graph problem where: \n\n* Cities are the nodes in the graph.\n* Highways that connect cities are the edges in the graph.\n* The toll associated with each highway is the weight of the corresponding edge in the graph.\n\nIn the absence of discounts, this problem is exactly equivalent to finding the shortest path between two points in a weighted graph. Because we are only interested in finding the minimum distance from a single node (node `0`), we often call this problem a \"single source shortest path\" problem. \n\nBFS is ideal for finding the shortest path in an unweighted graph, as it guarantees that the first time a node is reached, it has the minimum distance from the source. However, in a weighted graph, this isn't necessarily true since a path with more edges can have a lower total weight than a path with fewer edges.\n\nTo address this, we use a dynamic programming approach, recording the minimum distance from the source to each node in an array as we progress through the graph. To account for discounts on edge weights, we employ a 2D array `DP`, where `DP[v][d]` represents the minimum distance from the source to node `v` using exactly `d` discounts.\n\nAt each step, we can either use a discount on the current edge or not. If we use a discount, we update `DP[v][d + 1]` with the halved toll cost. If we don't use a discount, we update `DP[v][d]` with the full toll cost, ensuring our array captures the minimum distances for both scenarios.\n\nUltimately, the minimum cost to reach the target node with any number of discounts will be the smallest value in `DP[target][d]` for all valid `d`. While this approach works for smaller graphs, it may cause a Time Limit Exceeded (TLE) error for larger graphs due to the exhaustive checking of every node and discount combination. To avoid this, we need a more efficient method to reduce the number of explorations and speed up the process, which we will discuss next.\n\n---\n\n### Approach 1: Dijkstra's Algorithm using Priority Queue\n\n#### Intuition\n\nDijkstra's algorithm is used to find the shortest paths from a source node to all other nodes in a weighted graph where edge weights are positive. It uses a priority queue (heap) to decide which edges to investigate first, exploring the graph more efficiently than the brute-force BFS approach by greedily choosing which node to explore next.\n\nA priority queue is used to select the node with the lowest cost, pruning less promising paths early. This way, Dijkstra's algorithm always expands the most promising node, leading to faster convergence to the optimal solution. We can think of Dijkstra's algorithm as an enhanced version of BFS, where the queue is prioritized by the current minimum cost instead of simply the order in which nodes are discovered (FIFO).\n\nThe main logic of the algorithm involves updating the minimum cost to reach each node:\n\n- **Without Using a Discount:** For each neighbor node of the current node, calculate the total cost to reach that node without using a discount. If this cost is less than the previously recorded cost for that neighbor, update the distance table and push the new state into the priority queue.\n- **Using a Discount:** If discounts are available, calculate the total cost with a discount on the current toll. If this discounted cost is less than the previously recorded cost for that neighbor, update the distance table and push the new state into the priority queue.\n\nDijkstra's algorithm guarantees that when a node is processed, it has the lowest possible cost among all paths to that node with the given number of discounts. The priority queue processes nodes in order of increasing cost, ensuring no cheaper path from the source to the current node exists when it is visited. Therefore, we can use a visited array to track nodes with their specific number of discounts used, skipping reprocessing and preventing redundant work.\n\nTo gain a deeper understanding of Dijkstra's algorithm and the single-source shortest path problems in general, we encourage you to study our [LeetCode Explore Card](https://leetcode.com/explore/featured/card/graph/622/single-source-shortest-path-algorithm/).\n\n#### Algorithm\n\n1. Initialize `graph` as an adjacency list of pairs.\n2. For each highway in the `highways` array:\n   - Extract the endpoints `u` and `v`, and the toll `toll`.\n   - Add `v` with toll `toll` to the adjacency list of `u`.\n   - Add `u` with toll `toll` to the adjacency list of `v`.\n3. Initialize a 2D array `dist` of size `n x (discounts + 1)` with all elements set to infinity.\n4. Set `dist[0][0]` to 0.\n5. Initialize a min heap `pq` and push a tuple `(0, 0, 0)` representing (cost, city, discounts used).\n6. Initialize a 2D array `visited` of size `n x (discounts + 1)` with all elements set to false.\n7. While `pq` is not empty:\n   - Dequeue the front tuple into `currentCost`, `city`, and `discountsUsed`.\n   - If `(city, discountsUsed)` is already visited, continue to the next iteration.\n   - Mark `(city, discountsUsed)` as visited.\n   - For each neighbor pair `(neighbor, toll)` in the adjacency list of `city`:\n     - If traveling to `neighbor` without using a discount results in a lower cost:\n       - Update `dist[neighbor][discountsUsed]` to `currentCost + toll`.\n       - Push `(currentCost + toll, neighbor, discountsUsed)` into `pq`.\n     - If `discountsUsed` is less than `discounts` and using a discount results in a lower cost:\n       - Calculate `discountedCost` as `currentCost + toll / 2`.\n       - Update `dist[neighbor][discountsUsed + 1]` to `discountedCost`.\n       - Push `(discountedCost, neighbor, discountsUsed + 1)` into `pq`.\n8. Find the minimum value in `dist[n-1]` to determine the minimum cost to reach city `n-1` with any number of discounts used.\n9. If the minimum cost is still infinity, return -1. Otherwise, return the minimum cost.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/QpTPSuzx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"QpTPSuzx\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes (cities) and $E$ be the number of edges (highways). Let $K$ be the number of discounts.\n\n- Time Complexity: $O((N \\cdot K + E) \\cdot \\log(N \\cdot K))$\n\n    Constructing the graph representation involves iterating over the `highways` array, where each highway is processed in constant time. Thus, this step takes $O(E)$ time.\n\n    The priority queue operations involve inserting and extracting elements. Each element can be inserted and extracted up to $N \\cdot (K + 1)$ times, and each operation takes $O(\\log(N \\cdot (K + 1)))$ time. Therefore, the priority queue operations take $O((N \\cdot K) \\log(N \\cdot K))$ time.\n\n    The relaxation of edges happens for each node and each discount state, leading to $O(E \\cdot K)$ relaxation operations. Each operation involves updating the priority queue, taking $O(\\log(N \\cdot K))$ time. Thus, relaxation operations take $O(E \\log(N \\cdot K))$ time.\n\n    Combining these steps, the overall time complexity is:\n    $\n    O(E + (N \\cdot K) \\log(N \\cdot K) + E \\log(N \\cdot K)) = O((N \\cdot K + E) \\cdot \\log(N \\cdot K))\n    $\n\n- Space Complexity: $O(N \\cdot K + E)$\n\n    The graph is stored as an adjacency list, requiring space equal to the number of highways $E$.\n\n    The distance table `dist` and the `visited` arrays are 2D arrays of size $N \\times (K + 1)$.\n\n    The priority queue used can contain up to $N \\times (K + 1)$ elements in the worst case, corresponding to each city with each possible number of discounts used.\n\n    Therefore, the space complexity is $O(E + N \\cdot K)$\n\n---\n\n### Approach 2: Space Optimized Dijkstra's Algorithm\n\n#### Intuition\n\nWe can avoid using an array to store visited nodes and further optimize our implementation. Instead, we leverage the fact that any node expansion can be pruned if the current accumulated cost to reach a node is already higher than the recorded minimum cost for that node and discount state.\n\n> Note: Recall that in Dijkstra's algorithm, we choose the nodes with the lowest accumulated cost to expand at each iteration. \n\nFor example, consider a graph with nodes `A`, `B`, and `C`, where the edges are as follows: `highways[0] = [A, B, 5]`, `highways[1] = [B, C, 10]`, and `highways[2] = [A, C, 12]`. Suppose we have one discount available.\n\nIf we find a path from `A` to `B` to `C` with a total cost of `15` (`5` from `A` to `B` and `10` from `B` to `C`), and record this in `dist[C][0]`, we can later skip expanding any path to `C` with a higher accumulated cost, such as `20`, since it exceeds the recorded minimum cost of `15`.\n\n#### Algorithm\n\n1. Initialize `graph` as an adjacency list of pairs.\n2. For each highway in the `highways` array:\n   - Extract the endpoints `u` and `v`, and the toll `toll`.\n   - Add `v` with toll `toll` to the adjacency list of `u`.\n   - Add `u` with toll `toll` to the adjacency list of `v`.\n3. Initialize a 2D array `dist` of size `n x (discounts + 1)` with all elements set to infinity.\n4. Set `dist[0][0]` to 0.\n5. Initialize a min heap `pq` and push a tuple `(0, 0, 0)` representing (cost, city, discounts used).\n6. While `pq` is not empty:\n   - Dequeue the front tuple into `currentCost`, `city`, and `discountsUsed`.\n   - If `currentCost` is already higher than the known minimum cost for `(city, discountsUsed)`, continue to the next iteration.\n   - For each neighbor pair `(neighbor, toll)` in the adjacency list of `city`:\n     - If traveling to `neighbor` without using a discount results in a lower cost:\n       - Update `dist[neighbor][discountsUsed]` to `currentCost + toll`.\n       - Push `(currentCost + toll, neighbor, discountsUsed)` into `pq`.\n     - If `discountsUsed` is less than `discounts` and using a discount results in a lower cost:\n       - Calculate `discountedCost` as `currentCost + toll / 2`.\n       - Update `dist[neighbor][discountsUsed + 1]` to `discountedCost`.\n       - Push `(discountedCost, neighbor, discountsUsed + 1)` into `pq`.\n7. Find the minimum value in `dist[n-1]` to determine the minimum cost to reach city `n-1` with any number of discounts used.\n8. If the minimum cost is still infinity, return -1. Otherwise, return the minimum cost.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/NC3k8zcq/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"NC3k8zcq\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of nodes (cities) and $E$ be the number of edges (highways). Let $K$ be the number of discounts.\n\n- Time Complexity: $O((N \\cdot K + E) \\cdot \\log(N \\cdot K))$\n\n    Constructing the graph representation involves iterating over the `highways` array, where each highway is processed in constant time. Thus, this step takes $O(E)$ time.\n\n    The priority queue operations involve inserting and extracting elements. Each element can be inserted and extracted up to $N \\cdot (K + 1)$ times, and each operation takes $O(\\log(N \\cdot (K + 1)))$ time. Therefore, the priority queue operations take $O((N \\cdot K) \\log(N \\cdot K))$ time.\n\n    The relaxation of edges happens for each node and each discount state, leading to $O(E \\cdot K)$ relaxation operations. Each operation involves updating the priority queue, taking $O(\\log(N \\cdot K))$ time. Thus, relaxation operations take $O(E \\log(N \\cdot K))$ time.\n\n    Combining these steps, the overall time complexity is, \n    $O(E + (N \\cdot K) \\log(N \\cdot K) + E \\log(N \\cdot K)) = O((N \\cdot K + E) \\log(N \\cdot K))$\n\n- Space Complexity: $O(N \\cdot K + E)$\n\n    The graph is stored as an adjacency list, requiring space equal to the number of highways $E$.\n\n    The distance table `dist` is a 2D array of size $N \\times (K + 1)$.\n\n    The priority queue used can contain up to $N \\times (K + 1)$ elements in the worst case, corresponding to each city with each possible number of discounts used.\n\n    Therefore, the space complexity is, $O(E + N \\cdot K)$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

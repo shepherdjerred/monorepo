@@ -1,0 +1,155 @@
+{
+  "questionId": "2206",
+  "questionFrontendId": "2101",
+  "title": "Detonate the Maximum Bombs",
+  "titleSlug": "detonate-the-maximum-bombs",
+  "difficulty": "Medium",
+  "content": "<p>You are given a list of bombs. The <strong>range</strong> of a bomb is defined as the area where its effect can be felt. This area is in the shape of a <strong>circle</strong> with the center as the location of the bomb.</p>\n\n<p>The bombs are represented by a <strong>0-indexed</strong> 2D integer array <code>bombs</code> where <code>bombs[i] = [x<sub>i</sub>, y<sub>i</sub>, r<sub>i</sub>]</code>. <code>x<sub>i</sub></code> and <code>y<sub>i</sub></code> denote the X-coordinate and Y-coordinate of the location of the <code>i<sup>th</sup></code> bomb, whereas <code>r<sub>i</sub></code> denotes the <strong>radius</strong> of its range.</p>\n\n<p>You may choose to detonate a <strong>single</strong> bomb. When a bomb is detonated, it will detonate <strong>all bombs</strong> that lie in its range. These bombs will further detonate the bombs that lie in their ranges.</p>\n\n<p>Given the list of <code>bombs</code>, return <em>the <strong>maximum</strong> number of bombs that can be detonated if you are allowed to detonate <strong>only one</strong> bomb</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/06/desmos-eg-3.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> bombs = [[2,1,3],[6,1,4]]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nThe above figure shows the positions and ranges of the 2 bombs.\nIf we detonate the left bomb, the right bomb will not be affected.\nBut if we detonate the right bomb, both bombs will be detonated.\nSo the maximum bombs that can be detonated is max(1, 2) = 2.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/06/desmos-eg-2.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> bombs = [[1,1,5],[10,10,5]]\n<strong>Output:</strong> 1\n<strong>Explanation:\n</strong>Detonating either bomb will not detonate the other bomb, so the maximum number of bombs that can be detonated is 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/07/desmos-eg1.png\" style=\"width: 300px; height: 300px;\" />\n<pre>\n<strong>Input:</strong> bombs = [[1,2,3],[2,3,1],[3,4,2],[4,5,3],[5,6,4]]\n<strong>Output:</strong> 5\n<strong>Explanation:</strong>\nThe best bomb to detonate is bomb 0 because:\n- Bomb 0 detonates bombs 1 and 2. The red circle denotes the range of bomb 0.\n- Bomb 2 detonates bomb 3. The blue circle denotes the range of bomb 2.\n- Bomb 3 detonates bomb 4. The green circle denotes the range of bomb 3.\nThus all 5 bombs are detonated.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= bombs.length&nbsp;&lt;= 100</code></li>\n\t<li><code>bombs[i].length == 3</code></li>\n\t<li><code>1 &lt;= x<sub>i</sub>, y<sub>i</sub>, r<sub>i</sub> &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How can we model the relationship between different bombs? Can \"graphs\" help us?",
+    "Bombs are nodes and are connected to other bombs in their range by directed edges.",
+    "If we know which bombs will be affected when any bomb is detonated, how can we find the total number of bombs that will be detonated if we start from a fixed bomb?",
+    "Run a Depth First Search (DFS) from every node, and all the nodes it reaches are the bombs that will be detonated."
+  ],
+  "metaData": "{\n  \"name\": \"maximumDetonation\",\n  \"params\": [\n    {\n      \"name\": \"bombs\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"176.7K\", \"totalSubmission\": \"353.4K\", \"totalAcceptedRaw\": 176735, \"totalSubmissionRaw\": 353391, \"acRate\": \"50.0%\"}",
+  "likes": 3380,
+  "dislikes": 162,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Minesweeper\", \"titleSlug\": \"minesweeper\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Provinces\", \"titleSlug\": \"number-of-provinces\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Area of Island\", \"titleSlug\": \"max-area-of-island\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Rotting Oranges\", \"titleSlug\": \"rotting-oranges\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,1,3],[6,1,4]]",
+    "[[1,1,5],[10,10,5]]",
+    "[[1,2,3],[2,3,1],[3,4,2],[4,5,3],[5,6,4]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 19, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 8, \"slug\": \"chime\", \"name\": \"Chime\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Geometry",
+      "slug": "geometry"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maximumDetonation(vector<vector<int>>& bombs) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maximumDetonation(int[][] bombs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumDetonation(self, bombs: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumDetonation(self, bombs):\n        \"\"\"\n        :type bombs: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} bombs\n * @return {number}\n */\nvar maximumDetonation = function(bombs) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumDetonation(bombs: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaximumDetonation(int[][] bombs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maximumDetonation(int** bombs, int bombsSize, int* bombsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumDetonation(bombs [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumDetonation(bombs: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumDetonation(_ bombs: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_detonation(bombs: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} bombs\n# @return {Integer}\ndef maximum_detonation(bombs)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $bombs\n     * @return Integer\n     */\n    function maximumDetonation($bombs) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maximumDetonation(List<List<int>> bombs) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumDetonation(bombs: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_detonation(bombs :: [[integer]]) :: integer\n  def maximum_detonation(bombs) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_detonation(Bombs :: [[integer()]]) -> integer().\nmaximum_detonation(Bombs) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-detonation bombs)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1887",
+    "content": "[TOC]\r\n\r\n## Solution\r\n\r\n--- \r\n\r\n### Overview\r\n\r\nWe can transform the map of bombs into a graph by representing each bomb `i` as a node `i` in the same location. The equivalent of bomb 1 detonating bomb 2 is a directed edge from node 1 to node 2. \r\n\r\n![img](../Figures/2101/1.png)\r\n\r\nTo determine whether bomb 1 detonates bomb 2, we can compare the Euclidean distance between their centers and the radius of bomb 1. If the distance is less than or equal to the radius of bomb 1, then bomb 1 can detonate bomb 2. Note that this relationship is not commutative: **bomb 1 detonating bomb 2 does not necessarily imply the converse is also true**.\r\n\r\n![img](../Figures/2101/3.png)\r\n\r\n$$\\text{distance}^2 = (x_1 - x_2)^2 + (y_1 - y_2)^2$$\r\n\r\nTherefore, the original problem can be transformed into a graph traversal problem where we calculate the total number of reachable nodes from each node `i`.\r\n\r\nStarting with building the graph, we need to traverse each pair of two distinct bombs `(i, j)` to check if bomb `i` detonates bomb `j`. If so, we create a directed edge from node `i` to node `j`. We consider all different pairs of nodes, and note that **two pairs of the same bombs in different orders are considered to be different**. In short, we consider both `(i, j)` and `(j, i)`.\r\n\r\n![img](../Figures/2101/2.png)\r\n\r\nEach of the following methods begins with the building process above.\r\n\r\n---\r\n\r\n### Approach 1: Depth-First Search, Recursive\r\n\r\n#### Intuition   \r\n\r\n> If you are not familiar with depth-first (DFS) search, please refer to our explore cards [Depth-First Search Explore Card](https://leetcode.com/explore/learn/card/graph/619/depth-first-search-in-graph/). We will focus on the usage in this article and not the implementation details.\r\n\r\nIn DFS, we explore nodes as far as possible along each branch. Upon reaching the end of the current branch, we backtrack to the next possible branch and continue exploring. Once we encounter an unvisited node, we take one of its neighbor nodes (if it exists) as the next node on this branch. Recursively call the function to the next node and solve the subproblem. If we reach the end of this branch, we backtrack to the previous node and visit the next neighbor node (if it exists), and repeat the process. \r\n\r\nWe can use a hash set `visited` to keep track of all the visited nodes. Initially, `visited` is empty. When we find an unvisited neighbor node, we can add it to `visited` so it won't be visited anymore.\r\n\r\nAt the end of the DFS, we can return the size of `visited` as the number of visited nodes (detonated bombs).\r\n\r\n![img](../Figures/2101/d1.png)\r\n\r\nWe will perform the DFS from each node and update `answer` as the maximum number of reachable nodes starting from each node.\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `answer` as 0.\r\n\r\n\r\n2) Create hash map `graph` containing all directed edges corresponding to the detonation relationships between all bombs.\r\n\r\n3) Create an empty hash set `visited`.\r\n\r\n4) Define a recursive function `dfs(cur)` to recursively find all reachable nodes from node `cur`:\r\n\r\n    - Add `cur` to `visited`.\r\n    - Recursively call `dfs(neib)` on each unvisited neighbor of `cur`.\r\n\r\n5) Repeat from step 3 for each node `i` and update `answer` as the maximum size of `visited` after each DFS.\r\n\r\n6) Return `answer` when all DFS operations are complete.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/bUGz8WtB/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"bUGz8WtB\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the number of bombs, so there are $$n$$ nodes and at most $$n^2$$ edges in the equivalence graph.\r\n\r\n* Time complexity: $$O(n^3)$$\r\n    - Building the graph takes $$O(n^2)$$ time.\r\n    - The time complexity of a typical DFS is $$O(V + E)$$ where $$V$$ represents the number of nodes, and $$E$$ represents the number of edges. More specifically, there are $$n$$ nodes and $$n^2$$ edges in this problem. \r\n        - Each node is only visited once, which takes $$O(n)$$ time. \r\n        - For each node, we may need to explore up to $$n - 1$$ edges to find all its neighbors. Since there are $$n$$ nodes, the total number of edges we explore is at most $$n(n - 1) = O(n^2)$$. \r\n    - We need to perform $$n$$ depth-first searches.\r\n    \r\n\r\n* Space complexity: $$O(n^2)$$\r\n    - The space complexity of DFS is $$(n^2)$$: \r\n        - There are $$O(n^2)$$ edges stored in `graph`.\r\n        - We need to maintain a hash set that contains at most $$n$$ visited nodes\r\n        - The call stack of `dfs` contains also takes $$n$$ space.\r\n\r\n<br/>\r\n\r\n---\r\n\r\n### Approach 2: Depth-First Search, Iterative\r\n\r\n#### Intuition   \r\n\r\nWe can also implement DFS iteratively using a stack to replicate recursive self-calls to `dfs`. Since the operations on a stack are performed in First In, Last Out (FILO) order. Therefore, the top node on the stack always leads to the next branch: whenever we reach the end of the current branch, we can get the node on the top of the stack and move along the branch that starts from it.\r\n\r\nA hash set `visited` is used to store all the visited nodes, so we don't need to take them into account. Once we add an unvisited node to the stack, we immediately add it to `visited` to prevent it from being revisited later.\r\n\r\n![img](../Figures/2101/d2.png)\r\n\r\nSimilarly, we will perform the DFS from each node `i`, and update `answer` as the maximum number of reachable nodes starting from each node.\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `answer` as 0.\r\n\r\n2) Create a hash map `graph` containing all directed edges corresponding to the detonation relationships between all bombs.\r\n\r\n3) Define a function `dfs(i)` that iteratively finds all reachable nodes from node `i`.\r\n    - Initialize an empty stack `stack` and an empty hash set `visited`.\r\n    - Add `i` to `stack` and `visited`.\r\n    - While `stack` is not empty, pop up the top element `cur`.\r\n    - Check if `cur` has any unvisited neighbor nodes, and if so, add them to `visited` and `stack` and repeat the previous step.\r\n    - When the iteration is complete, return the size of `visited`.\r\n\r\n4) Call `dfs` on every node `i` and update `answer` as the maximum size of `visited`.\r\n\r\n5) Return `answer` when all DFS operations are complete.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/TE92ho4u/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"TE92ho4u\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the number of bombs, so there are $$n$$ nodes and at most $$n^2$$ edges in the equivalence graph.\r\n\r\n* Time complexity: $$O(n^3)$$   \r\n    - The time complexity of a typical DFS is $$O(V + E)$$ where $$V$$ represents the number of nodes, and $$E$$ represents the number of edges. More specifically, there are $$n$$ nodes and $$n^2$$ edges in this problem.\r\n        - Building `graph` takes $$O(n^2)$$ time.\r\n        - For each node, we may need to explore up to $$n - 1$$ edges to find all its neighbors. Since there are $$n$$ nodes, the total number of edges we explore is at most $$n(n - 1) = O(n^2)$$. \r\n    - We need to perform $$n$$ breadth-first searches.\r\n    \r\n\r\n* Space complexity: $$O(n^2)$$  \r\n    - We use a hash map to store all edges, which requires $$O(n^2)$$ space.\r\n    - We use a hash set `visited` to record all visited nodes, which takes $$O(n)$$ space.\r\n    - We use a stack `stack` to store all the nodes to be visited, and in the worst-case scenario, there may be $$O(n)$$ nodes in `stack`.\r\n    - To sum up, the space complexity is $$O(n^2)$$.\r\n\r\n<br/>\r\n\r\n---\r\n\r\n### Approach 3: Breadth-First Search\r\n\r\n#### Intuition   \r\n\r\n> If you are not familiar with breadth-first search, please refer to our explore cards [Breadth-First Search Explore Card](https://leetcode.com/explore/learn/card/graph/620/breadth-first-search-in-graph/). We will focus on the usage in this article and not the implementation details.\r\n\r\nIn BFS, we explore the nodes in the order of their depth. Assuming that the starting node has a depth of `0`, we will explore all nodes at the present depth (`d`) before moving on to all nodes at the next depth (`d + 1`). \r\n\r\nBack to this problem, we start with node `i` with `depth = 0`, then we mark all its unvisited neighbor nodes with `depth = 1` to be visited soon, once we visit a node with `depth = 1`, we mark all its unvisited neighbor nodes with `depth = 2` as well. \r\n\r\nWe can use a queue as a container to store all nodes to be visited without mixing the order, and a hash set `visited` to store all visited nodes. When we enqueue a node, we immediately add it to `visited`, which prevents it from being enqueued again by other nodes later.\r\n\r\nOnce the BFS is complete, the number of visited nodes (denoted bombs) is the size of `visited`.\r\n\r\n![img](../Figures/2101/b1.png)\r\n\r\nWe will perform BFS from each node `i` and update `answer` as the maximum number of reachable nodes starting from each node.\r\n\r\n<br>\r\n\r\n#### Algorithm\r\n\r\n1) Initialize `answer` as 0.\r\n\r\n2) Create hash map `graph` containing all directed edges corresponding to the detonation relationships between all bombs.\r\n\r\n3) Define a function `bfs(i)` that finds all the reachable nodes from node `i`.\r\n    - Initialize an empty queue `queue` and an empty hash set `visited`.\r\n    - Add `i` to both `queue` and `visited`.\r\n    - While the queue is not empty, dequeue the first node `cur`. \r\n    - Check if `cur` has any unvisited neighbor nodes, if so, enqueue them into `queue`, add them to `visited`, and repeat the previous step.\r\n    - Return the size of `visited` when the iteration is complete.\r\n   \r\n4) Call `bfs` on every node `i` and update `answer` as the maximum size of `visited` after each BFS.\r\n\r\n5) Return `answer` when the all BFS operations are complete.\r\n\r\n#### Implementation\r\n\r\n<iframe src=\"https://leetcode.com/playground/3vtfHiMc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3vtfHiMc\"></iframe>\r\n\r\n#### Complexity Analysis\r\n\r\nLet $$n$$ be the number of bombs.\r\n\r\n* Time complexity: $$O(n^3)$$\r\n    - In a typical BFS search, the time complexity is $$O(V + E)$$ where $$V$$ is the number of nodes and $$E$$ is the number of edges. There are $$n$$ nodes and at most $$n^2$$ edges in this problem.\r\n        - Building `graph` takes $$O(n^2)$$ time.\r\n        - Each node is enqueued and dequeued once, it takes $$O(n)$$ to handle all nodes. \r\n        - For each node, we may need to explore up to $$n - 1$$ edges to find all its neighbors. Since there are $$n$$ nodes, the total number of edges we explore is at most $$n(n - 1) = O(n^2)$$. \r\n    - We need to perform $$n$$ breadth-first searches.\r\n\r\n* Space complexity: $$O(n^2)$$  \r\n    - There are at $$O(n^2)$$ edges stored in `graph`.\r\n    - `queue` can store up to $$n$$ nodes.\r\n\r\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "2172",
+  "questionFrontendId": "2026",
+  "title": "Low-Quality Problems",
+  "titleSlug": "low-quality-problems",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>Problems</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| problem_id  | int  |\n| likes       | int  |\n| dislikes    | int  |\n+-------------+------+\nIn SQL, problem_id is the primary key column for this table.\nEach row of this table indicates the number of likes and dislikes for a LeetCode problem.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Find the IDs of the <strong>low-quality</strong> problems. A LeetCode problem is <strong>low-quality</strong> if the like percentage of the problem (number of likes divided by the total number of votes) is <strong>strictly less than</strong> <code>60%</code>.</p>\n\n<p>Return the result table ordered by <code>problem_id</code> in ascending order.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nProblems table:\n+------------+-------+----------+\n| problem_id | likes | dislikes |\n+------------+-------+----------+\n| 6          | 1290  | 425      |\n| 11         | 2677  | 8659     |\n| 1          | 4446  | 2760     |\n| 7          | 8569  | 6086     |\n| 13         | 2050  | 4164     |\n| 10         | 9002  | 7446     |\n+------------+-------+----------+\n<strong>Output:</strong> \n+------------+\n| problem_id |\n+------------+\n| 7          |\n| 10         |\n| 11         |\n| 13         |\n+------------+\n<strong>Explanation:</strong> The like percentages are as follows:\n- Problem 1: (4446 / (4446 + 2760)) * 100 = 61.69858%\n- Problem 6: (1290 / (1290 + 425)) * 100 = 75.21866%\n- Problem 7: (8569 / (8569 + 6086)) * 100 = 58.47151%\n- Problem 10: (9002 / (9002 + 7446)) * 100 = 54.73006%\n- Problem 11: (2677 / (2677 + 8659)) * 100 = 23.61503%\n- Problem 13: (2050 / (2050 + 4164)) * 100 = 32.99002%\nProblems 7, 10, 11, and 13 are low-quality problems because their like percentages are less than 60%.</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Problems (problem_id int, likes int, dislikes int)\"], \"mssql\": [\"Create table Problems (problem_id int, likes int, dislikes int)\"], \"oraclesql\": [\"Create table Problems (problem_id int, likes int, dislikes int)\"], \"database\": true, \"name\": \"low_quality_problems\", \"pythondata\": [\"Problems = pd.DataFrame([], columns=['problem_id', 'likes', 'dislikes']).astype({'problem_id':'Int64', 'likes':'Int64', 'dislikes':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Problems (problem_id int, likes int, dislikes int)\"], \"database_schema\": {\"Problems\": {\"problem_id\": \"INT\", \"likes\": \"INT\", \"dislikes\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"15.7K\", \"totalSubmission\": \"18.6K\", \"totalAcceptedRaw\": 15678, \"totalSubmissionRaw\": 18636, \"acRate\": \"84.1%\"}",
+  "likes": 55,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Problems\":[\"problem_id\",\"likes\",\"dislikes\"]},\"rows\":{\"Problems\":[[6,1290,425],[11,2677,8659],[1,4446,2760],[7,8569,6086],[13,2050,4164],[10,9002,7446]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef low_quality_problems(problems: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

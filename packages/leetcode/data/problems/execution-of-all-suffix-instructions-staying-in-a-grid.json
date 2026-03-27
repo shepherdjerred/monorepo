@@ -1,0 +1,132 @@
+{
+  "questionId": "2239",
+  "questionFrontendId": "2120",
+  "title": "Execution of All Suffix Instructions Staying in a Grid",
+  "titleSlug": "execution-of-all-suffix-instructions-staying-in-a-grid",
+  "difficulty": "Medium",
+  "content": "<p>There is an <code>n x n</code> grid, with the top-left cell at <code>(0, 0)</code> and the bottom-right cell at <code>(n - 1, n - 1)</code>. You are given the integer <code>n</code> and an integer array <code>startPos</code> where <code>startPos = [start<sub>row</sub>, start<sub>col</sub>]</code> indicates that a robot is initially at cell <code>(start<sub>row</sub>, start<sub>col</sub>)</code>.</p>\n\n<p>You are also given a <strong>0-indexed</strong> string <code>s</code> of length <code>m</code> where <code>s[i]</code> is the <code>i<sup>th</sup></code> instruction for the robot: <code>&#39;L&#39;</code> (move left), <code>&#39;R&#39;</code> (move right), <code>&#39;U&#39;</code> (move up), and <code>&#39;D&#39;</code> (move down).</p>\n\n<p>The robot can begin executing from any <code>i<sup>th</sup></code> instruction in <code>s</code>. It executes the instructions one by one towards the end of <code>s</code> but it stops if either of these conditions is met:</p>\n\n<ul>\n\t<li>The next instruction will move the robot off the grid.</li>\n\t<li>There are no more instructions left to execute.</li>\n</ul>\n\n<p>Return <em>an array</em> <code>answer</code> <em>of length</em> <code>m</code> <em>where</em> <code>answer[i]</code> <em>is <strong>the number of instructions</strong> the robot can execute if the robot <strong>begins executing from</strong> the</em> <code>i<sup>th</sup></code> <em>instruction in</em> <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/09/1.png\" style=\"width: 145px; height: 142px;\" />\n<pre>\n<strong>Input:</strong> n = 3, startPos = [0,1], s = &quot;RRDDLU&quot;\n<strong>Output:</strong> [1,5,4,3,1,0]\n<strong>Explanation:</strong> Starting from startPos and beginning execution from the i<sup>th</sup> instruction:\n- 0<sup>th</sup>: &quot;<u><strong>R</strong></u>RDDLU&quot;. Only one instruction &quot;R&quot; can be executed before it moves off the grid.\n- 1<sup>st</sup>:  &quot;<u><strong>RDDLU</strong></u>&quot;. All five instructions can be executed while it stays in the grid and ends at (1, 1).\n- 2<sup>nd</sup>:   &quot;<u><strong>DDLU</strong></u>&quot;. All four instructions can be executed while it stays in the grid and ends at (1, 0).\n- 3<sup>rd</sup>:    &quot;<u><strong>DLU</strong></u>&quot;. All three instructions can be executed while it stays in the grid and ends at (0, 0).\n- 4<sup>th</sup>:     &quot;<u><strong>L</strong></u>U&quot;. Only one instruction &quot;L&quot; can be executed before it moves off the grid.\n- 5<sup>th</sup>:      &quot;U&quot;. If moving up, it would move off the grid.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/09/2.png\" style=\"width: 106px; height: 103px;\" />\n<pre>\n<strong>Input:</strong> n = 2, startPos = [1,1], s = &quot;LURD&quot;\n<strong>Output:</strong> [4,1,0,0]\n<strong>Explanation:</strong>\n- 0<sup>th</sup>: &quot;<u><strong>LURD</strong></u>&quot;.\n- 1<sup>st</sup>:  &quot;<u><strong>U</strong></u>RD&quot;.\n- 2<sup>nd</sup>:   &quot;RD&quot;.\n- 3<sup>rd</sup>:    &quot;D&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/12/09/3.png\" style=\"width: 67px; height: 64px;\" />\n<pre>\n<strong>Input:</strong> n = 1, startPos = [0,0], s = &quot;LRUD&quot;\n<strong>Output:</strong> [0,0,0,0]\n<strong>Explanation:</strong> No matter which instruction the robot begins execution from, it would move off the grid.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == s.length</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 500</code></li>\n\t<li><code>startPos.length == 2</code></li>\n\t<li><code>0 &lt;= start<sub>row</sub>, start<sub>col</sub> &lt; n</code></li>\n\t<li><code>s</code> consists of <code>&#39;L&#39;</code>, <code>&#39;R&#39;</code>, <code>&#39;U&#39;</code>, and <code>&#39;D&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "The constraints are not very large. Can we simulate the execution by starting from each index of s?",
+    "Before any of the stopping conditions is met, stop the simulation for that index and set the answer for that index."
+  ],
+  "metaData": "{\n  \"name\": \"executeInstructions\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"startPos\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"s\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"38.1K\", \"totalSubmission\": \"46.4K\", \"totalAcceptedRaw\": 38059, \"totalSubmissionRaw\": 46408, \"acRate\": \"82.0%\"}",
+  "likes": 568,
+  "dislikes": 54,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Out of Boundary Paths\", \"titleSlug\": \"out-of-boundary-paths\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Robot Return to Origin\", \"titleSlug\": \"robot-return-to-origin\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "3\n[0,1]\n\"RRDDLU\"",
+    "2\n[1,1]\n\"LURD\"",
+    "1\n[0,0]\n\"LRUD\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> executeInstructions(int n, vector<int>& startPos, string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] executeInstructions(int n, int[] startPos, String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def executeInstructions(self, n: int, startPos: List[int], s: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def executeInstructions(self, n, startPos, s):\n        \"\"\"\n        :type n: int\n        :type startPos: List[int]\n        :type s: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[]} startPos\n * @param {string} s\n * @return {number[]}\n */\nvar executeInstructions = function(n, startPos, s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function executeInstructions(n: number, startPos: number[], s: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] ExecuteInstructions(int n, int[] startPos, string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* executeInstructions(int n, int* startPos, int startPosSize, char* s, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func executeInstructions(n int, startPos []int, s string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun executeInstructions(n: Int, startPos: IntArray, s: String): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func executeInstructions(_ n: Int, _ startPos: [Int], _ s: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn execute_instructions(n: i32, start_pos: Vec<i32>, s: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[]} start_pos\n# @param {String} s\n# @return {Integer[]}\ndef execute_instructions(n, start_pos, s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[] $startPos\n     * @param String $s\n     * @return Integer[]\n     */\n    function executeInstructions($n, $startPos, $s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> executeInstructions(int n, List<int> startPos, String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def executeInstructions(n: Int, startPos: Array[Int], s: String): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec execute_instructions(n :: integer, start_pos :: [integer], s :: String.t) :: [integer]\n  def execute_instructions(n, start_pos, s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec execute_instructions(N :: integer(), StartPos :: [integer()], S :: unicode:unicode_binary()) -> [integer()].\nexecute_instructions(N, StartPos, S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (execute-instructions n startPos s)\n  (-> exact-integer? (listof exact-integer?) string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

@@ -1,0 +1,143 @@
+{
+  "questionId": "2169",
+  "questionFrontendId": "2043",
+  "title": "Simple Bank System",
+  "titleSlug": "simple-bank-system",
+  "difficulty": "Medium",
+  "content": "<p>You have been tasked with writing a program for a popular bank that will automate all its incoming transactions (transfer, deposit, and withdraw). The bank has <code>n</code> accounts numbered from <code>1</code> to <code>n</code>. The initial balance of each account is stored in a <strong>0-indexed</strong> integer array <code>balance</code>, with the <code>(i + 1)<sup>th</sup></code> account having an initial balance of <code>balance[i]</code>.</p>\n\n<p>Execute all the <strong>valid</strong> transactions. A transaction is <strong>valid</strong> if:</p>\n\n<ul>\n\t<li>The given account number(s) are between <code>1</code> and <code>n</code>, and</li>\n\t<li>The amount of money withdrawn or transferred from is <strong>less than or equal</strong> to the balance of the account.</li>\n</ul>\n\n<p>Implement the <code>Bank</code> class:</p>\n\n<ul>\n\t<li><code>Bank(long[] balance)</code> Initializes the object with the <strong>0-indexed</strong> integer array <code>balance</code>.</li>\n\t<li><code>boolean transfer(int account1, int account2, long money)</code> Transfers <code>money</code> dollars from the account numbered <code>account1</code> to the account numbered <code>account2</code>. Return <code>true</code> if the transaction was successful, <code>false</code> otherwise.</li>\n\t<li><code>boolean deposit(int account, long money)</code> Deposit <code>money</code> dollars into the account numbered <code>account</code>. Return <code>true</code> if the transaction was successful, <code>false</code> otherwise.</li>\n\t<li><code>boolean withdraw(int account, long money)</code> Withdraw <code>money</code> dollars from the account numbered <code>account</code>. Return <code>true</code> if the transaction was successful, <code>false</code> otherwise.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input</strong>\n[&quot;Bank&quot;, &quot;withdraw&quot;, &quot;transfer&quot;, &quot;deposit&quot;, &quot;transfer&quot;, &quot;withdraw&quot;]\n[[[10, 100, 20, 50, 30]], [3, 10], [5, 1, 20], [5, 20], [3, 4, 15], [10, 50]]\n<strong>Output</strong>\n[null, true, true, true, false, false]\n\n<strong>Explanation</strong>\nBank bank = new Bank([10, 100, 20, 50, 30]);\nbank.withdraw(3, 10);    // return true, account 3 has a balance of $20, so it is valid to withdraw $10.\n                         // Account 3 has $20 - $10 = $10.\nbank.transfer(5, 1, 20); // return true, account 5 has a balance of $30, so it is valid to transfer $20.\n                         // Account 5 has $30 - $20 = $10, and account 1 has $10 + $20 = $30.\nbank.deposit(5, 20);     // return true, it is valid to deposit $20 to account 5.\n                         // Account 5 has $10 + $20 = $30.\nbank.transfer(3, 4, 15); // return false, the current balance of account 3 is $10,\n                         // so it is invalid to transfer $15 from it.\nbank.withdraw(10, 50);   // return false, it is invalid because account 10 does not exist.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == balance.length</code></li>\n\t<li><code>1 &lt;= n, account, account1, account2 &lt;= 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= balance[i], money &lt;= 10<sup>12</sup></code></li>\n\t<li>At most <code>10<sup>4</sup></code> calls will be made to <strong>each</strong> function <code>transfer</code>, <code>deposit</code>, <code>withdraw</code>.</li>\n</ul>\n",
+  "hints": [
+    "How do you determine if a transaction will fail?",
+    "Simply apply the operations if the transaction is valid."
+  ],
+  "metaData": "{\n  \"classname\": \"Bank\",\n  \"constructor\": {\n    \"params\": [\n      {\n        \"type\": \"long[]\",\n        \"name\": \"balance\"\n      }\n    ]\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"account1\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"account2\"\n        },\n        {\n          \"type\": \"long\",\n          \"name\": \"money\"\n        }\n      ],\n      \"name\": \"transfer\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"account\"\n        },\n        {\n          \"type\": \"long\",\n          \"name\": \"money\"\n        }\n      ],\n      \"name\": \"deposit\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"account\"\n        },\n        {\n          \"type\": \"long\",\n          \"name\": \"money\"\n        }\n      ],\n      \"name\": \"withdraw\",\n      \"return\": {\n        \"type\": \"boolean\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"179K\", \"totalSubmission\": \"256.7K\", \"totalAcceptedRaw\": 179003, \"totalSubmissionRaw\": 256653, \"acRate\": \"69.7%\"}",
+  "likes": 633,
+  "dislikes": 318,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Design an ATM Machine\", \"titleSlug\": \"design-an-atm-machine\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"Bank\",\"withdraw\",\"transfer\",\"deposit\",\"transfer\",\"withdraw\"]\n[[[10,100,20,50,30]],[3,10],[5,1,20],[5,20],[3,4,15],[10,50]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"hubspot\", \"name\": \"Hubspot\"}, {\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"okta\", \"name\": \"Okta\"}], \"six_months\": [{\"timesEncountered\": 4, \"slug\": \"coinbase\", \"name\": \"Coinbase\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"stripe\", \"name\": \"Stripe\"}], \"more_than_six_months\": [{\"timesEncountered\": 11, \"slug\": \"airbnb\", \"name\": \"Airbnb\"}, {\"timesEncountered\": 10, \"slug\": \"dropbox\", \"name\": \"Dropbox\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"circle\", \"name\": \"Circle\"}, {\"timesEncountered\": 2, \"slug\": \"goldman-sachs\", \"name\": \"Goldman Sachs\"}, {\"timesEncountered\": 2, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 2, \"slug\": \"yandex\", \"name\": \"Yandex\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"the-trade-desk\", \"name\": \"The Trade Desk\"}, {\"timesEncountered\": 2, \"slug\": \"ramp-2\", \"name\": \"Ramp\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Bank {\npublic:\n    Bank(vector<long long>& balance) {\n        \n    }\n    \n    bool transfer(int account1, int account2, long long money) {\n        \n    }\n    \n    bool deposit(int account, long long money) {\n        \n    }\n    \n    bool withdraw(int account, long long money) {\n        \n    }\n};\n\n/**\n * Your Bank object will be instantiated and called as such:\n * Bank* obj = new Bank(balance);\n * bool param_1 = obj->transfer(account1,account2,money);\n * bool param_2 = obj->deposit(account,money);\n * bool param_3 = obj->withdraw(account,money);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Bank {\n\n    public Bank(long[] balance) {\n        \n    }\n    \n    public boolean transfer(int account1, int account2, long money) {\n        \n    }\n    \n    public boolean deposit(int account, long money) {\n        \n    }\n    \n    public boolean withdraw(int account, long money) {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * Bank obj = new Bank(balance);\n * boolean param_1 = obj.transfer(account1,account2,money);\n * boolean param_2 = obj.deposit(account,money);\n * boolean param_3 = obj.withdraw(account,money);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Bank:\n\n    def __init__(self, balance: List[int]):\n        \n\n    def transfer(self, account1: int, account2: int, money: int) -> bool:\n        \n\n    def deposit(self, account: int, money: int) -> bool:\n        \n\n    def withdraw(self, account: int, money: int) -> bool:\n        \n\n\n# Your Bank object will be instantiated and called as such:\n# obj = Bank(balance)\n# param_1 = obj.transfer(account1,account2,money)\n# param_2 = obj.deposit(account,money)\n# param_3 = obj.withdraw(account,money)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Bank(object):\n\n    def __init__(self, balance):\n        \"\"\"\n        :type balance: List[int]\n        \"\"\"\n        \n\n    def transfer(self, account1, account2, money):\n        \"\"\"\n        :type account1: int\n        :type account2: int\n        :type money: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def deposit(self, account, money):\n        \"\"\"\n        :type account: int\n        :type money: int\n        :rtype: bool\n        \"\"\"\n        \n\n    def withdraw(self, account, money):\n        \"\"\"\n        :type account: int\n        :type money: int\n        :rtype: bool\n        \"\"\"\n        \n\n\n# Your Bank object will be instantiated and called as such:\n# obj = Bank(balance)\n# param_1 = obj.transfer(account1,account2,money)\n# param_2 = obj.deposit(account,money)\n# param_3 = obj.withdraw(account,money)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} balance\n */\nvar Bank = function(balance) {\n    \n};\n\n/** \n * @param {number} account1 \n * @param {number} account2 \n * @param {number} money\n * @return {boolean}\n */\nBank.prototype.transfer = function(account1, account2, money) {\n    \n};\n\n/** \n * @param {number} account \n * @param {number} money\n * @return {boolean}\n */\nBank.prototype.deposit = function(account, money) {\n    \n};\n\n/** \n * @param {number} account \n * @param {number} money\n * @return {boolean}\n */\nBank.prototype.withdraw = function(account, money) {\n    \n};\n\n/** \n * Your Bank object will be instantiated and called as such:\n * var obj = new Bank(balance)\n * var param_1 = obj.transfer(account1,account2,money)\n * var param_2 = obj.deposit(account,money)\n * var param_3 = obj.withdraw(account,money)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class Bank {\n    constructor(balance: number[]) {\n        \n    }\n\n    transfer(account1: number, account2: number, money: number): boolean {\n        \n    }\n\n    deposit(account: number, money: number): boolean {\n        \n    }\n\n    withdraw(account: number, money: number): boolean {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * var obj = new Bank(balance)\n * var param_1 = obj.transfer(account1,account2,money)\n * var param_2 = obj.deposit(account,money)\n * var param_3 = obj.withdraw(account,money)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Bank {\n\n    public Bank(long[] balance) {\n        \n    }\n    \n    public bool Transfer(int account1, int account2, long money) {\n        \n    }\n    \n    public bool Deposit(int account, long money) {\n        \n    }\n    \n    public bool Withdraw(int account, long money) {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * Bank obj = new Bank(balance);\n * bool param_1 = obj.Transfer(account1,account2,money);\n * bool param_2 = obj.Deposit(account,money);\n * bool param_3 = obj.Withdraw(account,money);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} Bank;\n\n\nBank* bankCreate(long long* balance, int balanceSize) {\n    \n}\n\nbool bankTransfer(Bank* obj, int account1, int account2, long long money) {\n    \n}\n\nbool bankDeposit(Bank* obj, int account, long long money) {\n    \n}\n\nbool bankWithdraw(Bank* obj, int account, long long money) {\n    \n}\n\nvoid bankFree(Bank* obj) {\n    \n}\n\n/**\n * Your Bank struct will be instantiated and called as such:\n * Bank* obj = bankCreate(balance, balanceSize);\n * bool param_1 = bankTransfer(obj, account1, account2, money);\n \n * bool param_2 = bankDeposit(obj, account, money);\n \n * bool param_3 = bankWithdraw(obj, account, money);\n \n * bankFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type Bank struct {\n    \n}\n\n\nfunc Constructor(balance []int64) Bank {\n    \n}\n\n\nfunc (this *Bank) Transfer(account1 int, account2 int, money int64) bool {\n    \n}\n\n\nfunc (this *Bank) Deposit(account int, money int64) bool {\n    \n}\n\n\nfunc (this *Bank) Withdraw(account int, money int64) bool {\n    \n}\n\n\n/**\n * Your Bank object will be instantiated and called as such:\n * obj := Constructor(balance);\n * param_1 := obj.Transfer(account1,account2,money);\n * param_2 := obj.Deposit(account,money);\n * param_3 := obj.Withdraw(account,money);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Bank(balance: LongArray) {\n\n    fun transfer(account1: Int, account2: Int, money: Long): Boolean {\n        \n    }\n\n    fun deposit(account: Int, money: Long): Boolean {\n        \n    }\n\n    fun withdraw(account: Int, money: Long): Boolean {\n        \n    }\n\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * var obj = Bank(balance)\n * var param_1 = obj.transfer(account1,account2,money)\n * var param_2 = obj.deposit(account,money)\n * var param_3 = obj.withdraw(account,money)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass Bank {\n\n    init(_ balance: [Int]) {\n        \n    }\n    \n    func transfer(_ account1: Int, _ account2: Int, _ money: Int) -> Bool {\n        \n    }\n    \n    func deposit(_ account: Int, _ money: Int) -> Bool {\n        \n    }\n    \n    func withdraw(_ account: Int, _ money: Int) -> Bool {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * let obj = Bank(balance)\n * let ret_1: Bool = obj.transfer(account1, account2, money)\n * let ret_2: Bool = obj.deposit(account, money)\n * let ret_3: Bool = obj.withdraw(account, money)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct Bank {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl Bank {\n\n    fn new(balance: Vec<i64>) -> Self {\n        \n    }\n    \n    fn transfer(&self, account1: i32, account2: i32, money: i64) -> bool {\n        \n    }\n    \n    fn deposit(&self, account: i32, money: i64) -> bool {\n        \n    }\n    \n    fn withdraw(&self, account: i32, money: i64) -> bool {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * let obj = Bank::new(balance);\n * let ret_1: bool = obj.transfer(account1, account2, money);\n * let ret_2: bool = obj.deposit(account, money);\n * let ret_3: bool = obj.withdraw(account, money);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class Bank\n\n=begin\n    :type balance: Integer[]\n=end\n    def initialize(balance)\n        \n    end\n\n\n=begin\n    :type account1: Integer\n    :type account2: Integer\n    :type money: Integer\n    :rtype: Boolean\n=end\n    def transfer(account1, account2, money)\n        \n    end\n\n\n=begin\n    :type account: Integer\n    :type money: Integer\n    :rtype: Boolean\n=end\n    def deposit(account, money)\n        \n    end\n\n\n=begin\n    :type account: Integer\n    :type money: Integer\n    :rtype: Boolean\n=end\n    def withdraw(account, money)\n        \n    end\n\n\nend\n\n# Your Bank object will be instantiated and called as such:\n# obj = Bank.new(balance)\n# param_1 = obj.transfer(account1, account2, money)\n# param_2 = obj.deposit(account, money)\n# param_3 = obj.withdraw(account, money)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Bank {\n    /**\n     * @param Integer[] $balance\n     */\n    function __construct($balance) {\n        \n    }\n  \n    /**\n     * @param Integer $account1\n     * @param Integer $account2\n     * @param Integer $money\n     * @return Boolean\n     */\n    function transfer($account1, $account2, $money) {\n        \n    }\n  \n    /**\n     * @param Integer $account\n     * @param Integer $money\n     * @return Boolean\n     */\n    function deposit($account, $money) {\n        \n    }\n  \n    /**\n     * @param Integer $account\n     * @param Integer $money\n     * @return Boolean\n     */\n    function withdraw($account, $money) {\n        \n    }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * $obj = Bank($balance);\n * $ret_1 = $obj->transfer($account1, $account2, $money);\n * $ret_2 = $obj->deposit($account, $money);\n * $ret_3 = $obj->withdraw($account, $money);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Bank {\n\n  Bank(List<int> balance) {\n    \n  }\n  \n  bool transfer(int account1, int account2, int money) {\n    \n  }\n  \n  bool deposit(int account, int money) {\n    \n  }\n  \n  bool withdraw(int account, int money) {\n    \n  }\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * Bank obj = Bank(balance);\n * bool param1 = obj.transfer(account1,account2,money);\n * bool param2 = obj.deposit(account,money);\n * bool param3 = obj.withdraw(account,money);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class Bank(_balance: Array[Long]) {\n\n    def transfer(account1: Int, account2: Int, money: Long): Boolean = {\n        \n    }\n\n    def deposit(account: Int, money: Long): Boolean = {\n        \n    }\n\n    def withdraw(account: Int, money: Long): Boolean = {\n        \n    }\n\n}\n\n/**\n * Your Bank object will be instantiated and called as such:\n * val obj = new Bank(balance)\n * val param_1 = obj.transfer(account1,account2,money)\n * val param_2 = obj.deposit(account,money)\n * val param_3 = obj.withdraw(account,money)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Bank do\n  @spec init_(balance :: [integer]) :: any\n  def init_(balance) do\n    \n  end\n\n  @spec transfer(account1 :: integer, account2 :: integer, money :: integer) :: boolean\n  def transfer(account1, account2, money) do\n    \n  end\n\n  @spec deposit(account :: integer, money :: integer) :: boolean\n  def deposit(account, money) do\n    \n  end\n\n  @spec withdraw(account :: integer, money :: integer) :: boolean\n  def withdraw(account, money) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# Bank.init_(balance)\n# param_1 = Bank.transfer(account1, account2, money)\n# param_2 = Bank.deposit(account, money)\n# param_3 = Bank.withdraw(account, money)\n\n# Bank.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec bank_init_(Balance :: [integer()]) -> any().\nbank_init_(Balance) ->\n  .\n\n-spec bank_transfer(Account1 :: integer(), Account2 :: integer(), Money :: integer()) -> boolean().\nbank_transfer(Account1, Account2, Money) ->\n  .\n\n-spec bank_deposit(Account :: integer(), Money :: integer()) -> boolean().\nbank_deposit(Account, Money) ->\n  .\n\n-spec bank_withdraw(Account :: integer(), Money :: integer()) -> boolean().\nbank_withdraw(Account, Money) ->\n  .\n\n\n%% Your functions will be called as such:\n%% bank_init_(Balance),\n%% Param_1 = bank_transfer(Account1, Account2, Money),\n%% Param_2 = bank_deposit(Account, Money),\n%% Param_3 = bank_withdraw(Account, Money),\n\n%% bank_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define bank%\n  (class object%\n    (super-new)\n    \n    ; balance : (listof exact-integer?)\n    (init-field\n      balance)\n    \n    ; transfer : exact-integer? exact-integer? exact-integer? -> boolean?\n    (define/public (transfer account1 account2 money)\n      )\n    ; deposit : exact-integer? exact-integer? -> boolean?\n    (define/public (deposit account money)\n      )\n    ; withdraw : exact-integer? exact-integer? -> boolean?\n    (define/public (withdraw account money)\n      )))\n\n;; Your bank% object will be instantiated and called as such:\n;; (define obj (new bank% [balance balance]))\n;; (define param_1 (send obj transfer account1 account2 money))\n;; (define param_2 (send obj deposit account money))\n;; (define param_3 (send obj withdraw account money))"
+    }
+  ],
+  "solution": {
+    "id": "2860",
+    "content": "### Approach: Simulation\n\n#### Intuition\n\nThe existing account numbers range from $1$ to $n$. We analyze the three operations as follows:\n\n+ operation $\\textit{transfer}$\n\n    If either of the specified accounts does not exist (i.e., $\\textit{account1} > n$ or $\\textit{account2} > n$), the transaction is invalid. If the balance of $\\textit{account1}$ is less than $\\textit{money}$, the transaction is also invalid. When the transaction is valid, we deduct $\\textit{money}$ from the balance of $\\textit{account1}$ and add the same amount to the balance of $\\textit{account2}$.\n\n+ operation $\\textit{deposit}$\n\n    If the specified account does not exist (i.e., $\\textit{account} > n$), the transaction is invalid. When the transaction is valid, we increase the balance of $\\textit{account}$ by $\\textit{money}$.\n\n+ operation $\\textit{withdraw}$\n\n    If the specified account does not exist (i.e., $\\textit{account} > n$), the transaction is invalid. If the balance of $\\textit{account}$ is less than $\\textit{money}$, the transaction is invalid. When the transaction is valid, we decrease the balance of $\\textit{account}$ by $\\textit{money}$.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/GCCGRNmH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"GCCGRNmH\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of existing accounts.\n\n+ Time complexity:\n  + $\\textit{transfer}$: $O(1)$\n  + $\\textit{deposit}$: $O(1)$\n  + $\\textit{withdraw}$: $O(1)$\n\n+ Space complexity:\n  + Initialize: $O(n)$\n  + $\\textit{transfer}$: $O(1)$\n  + $\\textit{deposit}$: $O(1)$\n  + $\\textit{withdraw}$: $O(1)$\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

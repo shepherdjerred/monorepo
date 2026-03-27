@@ -1,0 +1,54 @@
+{
+  "questionId": "2253",
+  "questionFrontendId": "2118",
+  "title": "Build the Equation",
+  "titleSlug": "build-the-equation",
+  "difficulty": "Hard",
+  "content": "<p>Table: <code>Terms</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| power       | int  |\n| factor      | int  |\n+-------------+------+\npower is the column with unique values for this table.\nEach row of this table contains information about one term of the equation.\npower is an integer in the range [0, 100].\nfactor is an integer in the range [-100, 100] and cannot be zero.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>You have a very powerful program that can solve any equation of one variable in the world. The equation passed to the program must be formatted as follows:</p>\n\n<ul>\n\t<li>The left-hand side (LHS) should contain all the terms.</li>\n\t<li>The right-hand side (RHS) should be zero.</li>\n\t<li>Each term of the LHS should follow the format <code>&quot;&lt;sign&gt;&lt;fact&gt;X^&lt;pow&gt;&quot;</code>&nbsp;where:\n\t<ul>\n\t\t<li><code>&lt;sign&gt;</code> is either <code>&quot;+&quot;</code> or <code>&quot;-&quot;</code>.</li>\n\t\t<li><code>&lt;fact&gt;</code> is the <strong>absolute value</strong> of the <code>factor</code>.</li>\n\t\t<li><code>&lt;pow&gt;</code> is the value of the <code>power</code>.</li>\n\t</ul>\n\t</li>\n\t<li>If the power is <code>1</code>, do not add <code>&quot;^&lt;pow&gt;&quot;</code>.\n\t<ul>\n\t\t<li>For example, if <code>power = 1</code> and <code>factor = 3</code>, the term will be <code>&quot;+3X&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li>If the power is <code>0</code>, add neither <code>&quot;X&quot;</code> nor <code>&quot;^&lt;pow&gt;&quot;</code>.\n\t<ul>\n\t\t<li>For example, if <code>power = 0</code> and <code>factor = -3</code>, the term will be <code>&quot;-3&quot;</code>.</li>\n\t</ul>\n\t</li>\n\t<li>The powers in the LHS should be sorted in <strong>descending order</strong>.</li>\n</ul>\n\n<p>Write a solution to build the equation.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTerms table:\n+-------+--------+\n| power | factor |\n+-------+--------+\n| 2     | 1      |\n| 1     | -4     |\n| 0     | 2      |\n+-------+--------+\n<strong>Output:</strong> \n+--------------+\n| equation     |\n+--------------+\n| +1X^2-4X+2=0 |\n+--------------+\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTerms table:\n+-------+--------+\n| power | factor |\n+-------+--------+\n| 4     | -4     |\n| 2     | 1      |\n| 1     | -1     |\n+-------+--------+\n<strong>Output:</strong> \n+-----------------+\n| equation        |\n+-----------------+\n| -4X^4+1X^2-1X=0 |\n+-----------------+\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Follow up:</strong> What will be changed in your solution if the power is not a primary key but each power should be unique in the answer?</p>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Terms (power int, factor int)\"], \"mssql\": [\"Create table Terms (power int, factor int)\"], \"oraclesql\": [\"Create table Terms (power int, factor int)\"], \"database\": true, \"name\": \"build_the_equation\", \"pythondata\": [\"Terms = pd.DataFrame([], columns=['power', 'factor']).astype({'power':'Int64', 'factor':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Terms (power int, factor int)\"], \"database_schema\": {\"Terms\": {\"power\": \"INT\", \"factor\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"3.7K\", \"totalSubmission\": \"6.6K\", \"totalAcceptedRaw\": 3747, \"totalSubmissionRaw\": 6579, \"acRate\": \"57.0%\"}",
+  "likes": 24,
+  "dislikes": 38,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Terms\":[\"power\",\"factor\"]},\"rows\":{\"Terms\":[[2,1],[1,-4],[0,2]]}}",
+    "{\"headers\":{\"Terms\":[\"power\",\"factor\"]},\"rows\":{\"Terms\":[[4,-4],[2,1],[1,-1]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef build_the_equation(terms: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

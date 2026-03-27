@@ -1,0 +1,148 @@
+{
+  "questionId": "2215",
+  "questionFrontendId": "2094",
+  "title": "Finding 3-Digit Even Numbers",
+  "titleSlug": "finding-3-digit-even-numbers",
+  "difficulty": "Easy",
+  "content": "<p>You are given an integer array <code>digits</code>, where each element is a digit. The array may contain duplicates.</p>\n\n<p>You need to find <strong>all</strong> the <strong>unique</strong> integers that follow the given requirements:</p>\n\n<ul>\n\t<li>The integer consists of the <strong>concatenation</strong> of <strong>three</strong> elements from <code>digits</code> in <strong>any</strong> arbitrary order.</li>\n\t<li>The integer does not have <strong>leading zeros</strong>.</li>\n\t<li>The integer is <strong>even</strong>.</li>\n</ul>\n\n<p>For example, if the given <code>digits</code> were <code>[1, 2, 3]</code>, integers <code>132</code> and <code>312</code> follow the requirements.</p>\n\n<p>Return <em>a <strong>sorted</strong> array of the unique integers.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> digits = [2,1,3,0]\n<strong>Output:</strong> [102,120,130,132,210,230,302,310,312,320]\n<strong>Explanation:</strong> All the possible integers that follow the requirements are in the output array. \nNotice that there are no <strong>odd</strong> integers or integers with <strong>leading zeros</strong>.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> digits = [2,2,8,8,2]\n<strong>Output:</strong> [222,228,282,288,822,828,882]\n<strong>Explanation:</strong> The same digit can be used as many times as it appears in digits. \nIn this example, the digit 8 is used twice each time in 288, 828, and 882. \n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> digits = [3,7,5]\n<strong>Output:</strong> []\n<strong>Explanation:</strong> No <strong>even</strong> integers can be formed using the given digits.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>3 &lt;= digits.length &lt;= 100</code></li>\n\t<li><code>0 &lt;= digits[i] &lt;= 9</code></li>\n</ul>\n",
+  "hints": [
+    "The range of possible answers includes all even numbers between 100 and 999 inclusive. Could you check each possible answer to see if it could be formed from the digits in the array?"
+  ],
+  "metaData": "{\n  \"name\": \"findEvenNumbers\",\n  \"params\": [\n    {\n      \"name\": \"digits\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer[]\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"180.9K\", \"totalSubmission\": \"229.6K\", \"totalAcceptedRaw\": 180885, \"totalSubmissionRaw\": 229586, \"acRate\": \"78.8%\"}",
+  "likes": 1561,
+  "dislikes": 345,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find Numbers with Even Number of Digits\", \"titleSlug\": \"find-numbers-with-even-number-of-digits\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Unique 3-Digit Even Numbers\", \"titleSlug\": \"unique-3-digit-even-numbers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,1,3,0]",
+    "[2,2,8,8,2]",
+    "[3,7,5]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 7, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 7, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Recursion",
+      "slug": "recursion"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> findEvenNumbers(vector<int>& digits) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int[] findEvenNumbers(int[] digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findEvenNumbers(self, digits: List[int]) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findEvenNumbers(self, digits):\n        \"\"\"\n        :type digits: List[int]\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} digits\n * @return {number[]}\n */\nvar findEvenNumbers = function(digits) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findEvenNumbers(digits: number[]): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int[] FindEvenNumbers(int[] digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* findEvenNumbers(int* digits, int digitsSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findEvenNumbers(digits []int) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findEvenNumbers(digits: IntArray): IntArray {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findEvenNumbers(_ digits: [Int]) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_even_numbers(digits: Vec<i32>) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} digits\n# @return {Integer[]}\ndef find_even_numbers(digits)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $digits\n     * @return Integer[]\n     */\n    function findEvenNumbers($digits) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> findEvenNumbers(List<int> digits) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findEvenNumbers(digits: Array[Int]): Array[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_even_numbers(digits :: [integer]) :: [integer]\n  def find_even_numbers(digits) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_even_numbers(Digits :: [integer()]) -> [integer()].\nfind_even_numbers(Digits) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-even-numbers digits)\n  (-> (listof exact-integer?) (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2750",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach 1: Enumerate the Element Combinations in an Array\n\n#### Intuition\n\nWe can enumerate all combinations of three integer digits from the array and determine whether the composed integer satisfies the following conditions:\n\n- The integer is **even**.\n- The integer does not contain leading zeros (i.e., it is not less than 100).\n- The three digits come from distinct array indices (i.e., indices cannot be duplicated).\n\nTo avoid repetition, we use a hash set to store the 3-digit even numbers that meet these requirements. If a number generated during enumeration satisfies all three conditions, we add it to the hash set.\n\nFinally, we convert the elements of the hash set into an array, sort it in ascending order, and return it.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HKNXysfh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HKNXysfh\"></iframe>\n\n#### Complexity Analysis\n\nLet $M = \\min(n^3, 10^k)$ be the number of even numbers that meet the requirements, where $n$ is the length of the input array and $k$ is the number of digits in the target even number.\n\n- Time complexity: $O(n^3 + M \\log M)$\n\n  The time complexity for enumerating all combinations of three elements is $O(n^3)$. Sorting the valid even numbers stored in the set takes $O(M \\log M)$.\n\n- Space complexity: $O(M)$\n\n  This accounts for the space used by the hash set that stores all valid integers.\n\n### Approach 2: Traverse All Possible 3-Digit Even Numbers\n\n#### Intuition\n\nWe can also traverse all 3-digit even numbers from smallest to largest (i.e., all even numbers in the closed interval $[100, 999]$), and check whether their three digits can be formed using distinct elements from the input digit array. If they can, then the number qualifies as a target even number; otherwise, it does not.\n\nSpecifically, we first use a hash table $\\textit{freq}$ to record the frequency of each digit in the $\\textit{digits}$ array. While traversing even numbers, we use another hash table $\\textit{freq}_1$ to record the frequency of each digit in the current number. At this point, a **necessary and sufficient** condition for the number to be formed using the array is:\n\nEach digit in $\\textit{freq}_1$ must appear no more times than it does in $\\textit{freq}$.\n\nWe check each even number using this condition to determine whether it qualifies, and collect all such valid numbers. Finally, we return the sorted array of target even numbers.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hSLL8WWn/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hSLL8WWn\"></iframe>\n\n#### Complexity Analysis\n\nLet $k$ be the number of digits in the target even number.\n\n- Time complexity: $O(k \\cdot 10^k)$\n\n  This represents the time required to enumerate all even numbers with $k$ digits.\n\n- Space complexity: $O(1)$\n\n  The output array is not counted in the space complexity.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "questionId": "2203",
+  "questionFrontendId": "2061",
+  "title": "Number of Spaces Cleaning Robot Cleaned",
+  "titleSlug": "number-of-spaces-cleaning-robot-cleaned",
+  "difficulty": "Medium",
+  "content": "<p>A room is represented by a <strong>0-indexed</strong> 2D binary matrix <code>room</code> where a <code>0</code> represents an <strong>empty</strong> space and a <code>1</code> represents a space with an <strong>object</strong>. The top left corner of the room will be empty in all test cases.</p>\n\n<p>A cleaning robot starts at the top left corner of the room and is facing right. The robot will continue heading straight until it reaches the edge of the room or it hits an object, after which it will turn 90 degrees <strong>clockwise</strong> and repeat this process. The starting space and all spaces that the robot visits are <strong>cleaned</strong> by it.</p>\n\n<p>Return <em>the number of <strong>clean</strong> spaces in the room if the robot runs indefinitely.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2021/11/01/image-20211101204703-1.png\" style=\"width: 250px; height: 242px;\" />\n<p>&nbsp;</p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">room = [[0,0,0],[1,1,0],[0,0,0]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">7</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ol>\n\t<li>​​​​​​​The robot cleans the spaces at (0, 0), (0, 1), and (0, 2).</li>\n\t<li>The robot is at the edge of the room, so it turns 90 degrees clockwise and now faces down.</li>\n\t<li>The robot cleans the spaces at (1, 2), and (2, 2).</li>\n\t<li>The robot is at the edge of the room, so it turns 90 degrees clockwise and now faces left.</li>\n\t<li>The robot cleans the spaces at (2, 1), and (2, 0).</li>\n\t<li>The robot has cleaned all 7 empty spaces, so return 7.</li>\n</ol>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2021/11/01/image-20211101204736-2.png\" style=\"width: 250px; height: 245px;\" />\n<p>&nbsp;</p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">room = [[0,1,0],[1,0,0],[0,0,0]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ol>\n\t<li>The robot cleans the space at (0, 0).</li>\n\t<li>The robot hits an object, so it turns 90 degrees clockwise and now faces down.</li>\n\t<li>The robot hits an object, so it turns 90 degrees clockwise and now faces left.</li>\n\t<li>The robot is at the edge of the room, so it turns 90 degrees clockwise and now faces up.</li>\n\t<li>The robot is at the edge of the room, so it turns 90 degrees clockwise and now faces right.</li>\n\t<li>The robot is back at its starting position.</li>\n\t<li>The robot has cleaned 1 space, so return 1.</li>\n</ol>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">room = [[0,0,0],[0,0,0],[0,0,0]]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">8</span>​​​​​​​</p>\n\n<p>&nbsp;</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>m == room.length</code></li>\n\t<li><code>n == room[r].length</code></li>\n\t<li><code>1 &lt;= m, n &lt;= 300</code></li>\n\t<li><code>room[r][c]</code> is either <code>0</code> or <code>1</code>.</li>\n\t<li><code>room[0][0] == 0</code></li>\n</ul>\n",
+  "hints": [
+    "Simulate how the robot moves and keep track of how many spaces it has cleaned so far.",
+    "When can we stop the simulation?",
+    "When the robot reaches a space that it has already cleaned and is facing the same direction as before, we can stop the simulation."
+  ],
+  "metaData": "{\n  \"name\": \"numberOfCleanRooms\",\n  \"params\": [\n    {\n      \"name\": \"room\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"11K\", \"totalSubmission\": \"17.5K\", \"totalAcceptedRaw\": 10957, \"totalSubmissionRaw\": 17501, \"acRate\": \"62.6%\"}",
+  "likes": 130,
+  "dislikes": 29,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Robot Room Cleaner\", \"titleSlug\": \"robot-room-cleaner\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[0,0,0],[1,1,0],[0,0,0]]",
+    "[[0,1,0],[1,0,0],[0,0,0]]",
+    "[[0,0,0],[0,0,0],[0,0,0]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"geico\", \"name\": \"Geico\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Matrix",
+      "slug": "matrix"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int numberOfCleanRooms(vector<vector<int>>& room) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int numberOfCleanRooms(int[][] room) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def numberOfCleanRooms(self, room: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def numberOfCleanRooms(self, room):\n        \"\"\"\n        :type room: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} room\n * @return {number}\n */\nvar numberOfCleanRooms = function(room) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function numberOfCleanRooms(room: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int NumberOfCleanRooms(int[][] room) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int numberOfCleanRooms(int** room, int roomSize, int* roomColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func numberOfCleanRooms(room [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun numberOfCleanRooms(room: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func numberOfCleanRooms(_ room: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn number_of_clean_rooms(room: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} room\n# @return {Integer}\ndef number_of_clean_rooms(room)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $room\n     * @return Integer\n     */\n    function numberOfCleanRooms($room) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int numberOfCleanRooms(List<List<int>> room) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def numberOfCleanRooms(room: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec number_of_clean_rooms(room :: [[integer]]) :: integer\n  def number_of_clean_rooms(room) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec number_of_clean_rooms(Room :: [[integer()]]) -> integer().\nnumber_of_clean_rooms(Room) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (number-of-clean-rooms room)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2313",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe need to find the number of spaces in the `room` the robot cleaned. It starts in the top left corner of the `room` facing right. Then, it cleans by repeating the following steps:\n\n1. The robot moves forward until it reaches the edge of the room or hits an object.\n2. The robot turns 90 degrees clockwise (to the right).\n\nThe robot will continue the cleaning process indefinitely, but it may get caught in a cycle where it no longer cleans new spaces.\n\nIf the robot revisits a cell for the second time while facing the same direction, a cycle has begun. This occurs because the robot will now follow the same path as when it last cleaned this cell in this orientation.\n\n---\n\n### Approach 1: Recursive Simulation\n\n#### Intuition\n\nWe can simulate the robot's movement by defining a recursive function, `clean`, that finds the number of cells the robot cleaned. \n\nThe basic idea is that if the next cell in front of the robot does not contain an object, we move the robot one space forward and call `clean`. Otherwise, we turn the robot 90 degrees to the right and call `clean`.\n\nOur base case is when the robot revisits a cell facing the same direction, as it is stuck in a cycle and will not clean any new cells. At this point, we return the total number of spaces cleaned thus far.\n\nTo track the cells the robot has visited, we will use a visited set, which stores cell coordinates and directions. As there will be multiple entries for each cell in the visited set, determining the number of cleaned cells may be challenging. Therefore, we will also maintain a set called `cleaned`, which solely stores the cell coordinates of each `cleaned` cell. We count the number of entries in `cleaned` to determine the result.\n\nFor the recursive case, we add the current cell's coordinates to the `visited` set along with the current direction and add the cell to `cleaned`.\n\nNext, we calculate the coordinates of the next cell, which is one space in front of the robot. If this cell is within the room and does not have an object, we clean it by recursively calling `clean` with that cell and the current direction.\n\nOtherwise, if the robot cannot move forward, it turns and cleans the same cell in a new direction.\n\nHow do we find the coordinates of the next cell?\n\nFor a given cell `(row, col)` the coordinates of the next cell depend on the direction the robot is facing:\n\n- Facing right (direction 0): `(row + 0, col + 1)`\n- Facing down (direction 1): `(row + 1, col + 0)`\n- Facing left (direction 2): `(row + 0, col - 1)`\n- Facing up (direction 3): `(row - 1, col + 0)`\n\nObserve that when the robot is facing a given direction, we change the column by the same amount we change the row when the robot faces the next direction.\n\nWe can extract the pattern and store it in an array `DIRECTIONS = {0, 1, 0, -1, 0}`. Then, to retrieve the coordinates of the next cell, we use `row = row + DIRECTIONS[direction]` and `col = DIRECTIONS[direction + 1]` where `direction` is the current direction the robot is facing.\n\nHow do we update the robot's direction when it turns?\n\nEach time the robot turns right, the direction increases by one, unless the robot is facing up (direction 3). To get the next direction, we add one to the current direction, then use modulo `4`, which ensures the direction will stay between `0` and `3`.\n\n#### Algorithm\n\n1. Initialize a constant array `DIRECTIONS` to `{0, 1, 0, -1, 0}`.\n2. Initialize the variable `rows` to the number of rows in the `room` and `cols` to the number of columns.\n3. Initialize a set `visited` to store matrix coordinates that have been visited facing a given direction, `(row, col, direction)`.\n4. Initialize a set `cleaned` to store matrix coordinates `(row, col)` that have been cleaned.\n5. Define a function called `clean` that finds the number of spaces the robot has cleaned. The function takes parameters `row` and `col`, representing the coordinates of the current cell in the `room`, and `direction`, indicating the direction the robot is facing, and the sets `visited` and `cleaned`.\n    - Base Case: We have already visited this cell facing this direction. If `(row, col, direction)` is in visited, return the size of the `cleaned` set.\n    - Add the current cell and direction to the `visited` set.\n    - Add the current cell to the `cleaned` set.\n    - Get the coordinates of the next cell, `(nextRow, nextCol)`.\n    - Clean the next space if it is in the `room` and does not contain an object. We check whether the next cell is in the `room` using the condition `0 <= next_row < rows and 0 <= next_col < cols`. Call `clean` with the next cell and the current direction.\n    - Otherwise, turn right, visiting the current cell while facing a different direction. Call `clean` with the current cell and the direction to the right `(direction + 1) % 4`.\n6. Call `clean` with the coordinates of the top left corner cell, `(0, 0)`, and the starting direction `0`, representing facing right.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2061/2061_slideshow1.json:960,410!?!\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5v8JiJEe/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"5v8JiJEe\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows in the `room` and $m$ be the number of columns. There are a total of $m \\cdot n$ spaces in the `room`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    We use hash sets for `visited` and `cleaned`, which provide constant look-up times in the average case.\n    \n    The `clean` function recursively calls itself. We used the `visited` set, so each cell may be visited four times, once for each direction. This means the `clean` function can be called up to $4 \\cdot m \\cdot n$ times.\n\n    Therefore, the overall time complexity is $O(4 \\cdot m \\cdot n)$, which we can simplify to $O(m \\cdot n)$.\n\n* Space complexity: $O(m \\cdot n)$\n\n    The `visited` set can store up to four entries for each cell in the `room`, or $4 \\cdot m \\cdot n$ entries. The `cleaned` set can store up to $m \\cdot n$ entries.\n\n    The `clean` function can be called up to $4 \\cdot m \\cdot n$ times, so the recursive call stack can use up to $O(4 \\cdot m \\cdot n)$ space.\n\n    Therefore, the overall space complexity is $O(4mn + 4mn + mn)$, which we can simplify to $O(m \\cdot n)$.\n\n---\n\n### Approach 2: Iterative Simulation\n\n#### Intuition\n\nThe recursive approach required overhead for the recursive call stack, which we can reduce by developing an iterative approach.\n\nWe track the coordinates of the current cell with the variables `row` and `col`, and the direction the robot is facing with `direction`.\n\nThe above approach used separate sets for `cleaned` and `visited`, which required significant extra space. Instead of using sets, we can use the given `room` to store the visited state of each cell. We will use bit manipulation to track the directions the cell has been visited. Since cells with objects are marked with `1`, the least significant (rightmost) bit position represents whether there is an object. Each of the next four bits represents a direction.\n\n- `00001` marks a cell as containing an object.\n- `00010` marks a cell as visited facing right, direction `0`.\n- `00100` marks a cell as visited facing down, direction `1`.\n- `01000` marks a cell as visited facing left, direction `2`.\n- `10000` marks a cell as visited facing up, direction `3`.\n\nFor example, if `room[row][col]` equals `10`, the bit representation is `01010`, which means the cell has been visited facing the right (direction 0) and the left (direction 2). \n\nWe use a while loop to simulate the robot's path, cleaning spaces until it revisits a cell while facing the same direction. When a cell has the `direction + 1` bit set, it has already been cleaned while facing that direction. The condition `room[next_row][next_col] >> (direction + 1) & 1` evaluates to true when the cell has already been visited facing this direction. `room[row][col] >> (direction + 1)` moves the `(direction + 1)` bit to the one's place, and the `&` operation with `1` evaluates to true if and only if the `(direction + 1)` bit is set.\n\nFirst, we check if the current cell has been cleaned before. When a cell is marked `0` in `room`, it hasn't been cleaned. Therefore, we can use a variable to count the number of cleaned cells, updating it when the robot cleans a new space.\n\nThen, we mark the cell as visited while facing this direction. We can update a cell's visited status by performing the `or` operation with the current value and `1 << (direction + 1)`, which sets the `direction + 1` bit to `1`.\n\nNext, we generate the coordinates of the next cell straight ahead. If the next cell is in the room and does not contain an object, we update `row` and `col` to the cell's coordinates so the robot can clean it. Otherwise, we turn the robot by updating the `direction`.\n\n> **Interview Tip: In-place Algorithms**\n>\n> In-place algorithms overwrite the input to save space, but sometimes this can cause problems. Here are a couple of situations where an in-place algorithm might not be suitable.\n>\n> 1. The algorithm needs to run in a multi-threaded environment, without exclusive access to the array. Other threads might need to read the array too, and might not expect it to be modified.\n>\n> 2. Even if there is only a single thread, or the algorithm has exclusive access to the array while running, the array might need to be reused later or by another thread once the lock has been released.\n>\n> In an interview, you should always check whether the interviewer minds you overwriting the input. Be ready to explain the pros and cons of doing so if asked!\n\n#### Algorithm\n\n1. Initialize a constant array `DIRECTIONS` to `{0, 1, 0, -1, 0}`.\n2. Initialize the variable `rows` to the number of rows in the `room` and `cols` to the number of columns.\n3. Initialize the variable `cleaned` to `0`, for storing the number of spaces the robot cleaned.\n4. Create variables to store the coordinates of the robot and the direction it is facing. Initialize `row`, `col`, and `direction` to `0`.\n5. Iterate, cleaning spaces while the robot has not entered a cycle. We check this using the condition `room[next_row][next_col] >> (direction + 1) & 1`, which evaluates to true when the cell has already been visited facing this direction.\n    - If the robot hasn't cleaned this space yet (`room[row][col]` equals `0`), increment `cleaned`.\n    - Mark the current space as visited facing this direction by taking the `or` of the current value of `room[row][col]` and `1 << (direction + 1)`.\n    - Get the coordinates of the next cell, `(nextRow, nextCol)`.\n    - Clean the next space if it is in the `room` and does not contain an object. Set `row` to `nextRow` and `col` to `nextCol`.\n    - Otherwise, turn right, cleaning the current cell while facing a different direction. Turn to the right by setting `direction` to `(direction + 1) % 4`.\n7. Return `cleaned`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HB4TUfSh/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HB4TUfSh\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of rows in the `room` and $m$ be the number of columns. There are a total of $m \\cdot n$ spaces in the `room`.\n\n* Time complexity: $O(m \\cdot n)$\n\n    We may visit each space once facing each direction. Hence, the loop may run $4 \\cdot m \\cdot n$ times. Therefore, the overall time complexity is $O(4 \\cdot m \\cdot n)$, which we can simplify to $O(m \\cdot n)$.\n\n* Space complexity: $O(1)$\n\n    We use a few variables but no data structures that grow with the input size, so the space complexity is constant, i.e. $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

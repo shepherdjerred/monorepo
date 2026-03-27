@@ -1,0 +1,140 @@
+{
+  "questionId": "2171",
+  "questionFrontendId": "2045",
+  "title": "Second Minimum Time to Reach Destination",
+  "titleSlug": "second-minimum-time-to-reach-destination",
+  "difficulty": "Hard",
+  "content": "<p>A city is represented as a <strong>bi-directional connected</strong> graph with <code>n</code> vertices where each vertex is labeled from <code>1</code> to <code>n</code> (<strong>inclusive</strong>). The edges in the graph are represented as a 2D integer array <code>edges</code>, where each <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> denotes a bi-directional edge between vertex <code>u<sub>i</sub></code> and vertex <code>v<sub>i</sub></code>. Every vertex pair is connected by <strong>at most one</strong> edge, and no vertex has an edge to itself. The time taken to traverse any edge is <code>time</code> minutes.</p>\n\n<p>Each vertex has a traffic signal which changes its color from <strong>green</strong> to <strong>red</strong> and vice versa every&nbsp;<code>change</code> minutes. All signals change <strong>at the same time</strong>. You can enter a vertex at <strong>any time</strong>, but can leave a vertex <strong>only when the signal is green</strong>. You <strong>cannot wait </strong>at a vertex if the signal is <strong>green</strong>.</p>\n\n<p>The <strong>second minimum value</strong> is defined as the smallest value<strong> strictly larger </strong>than the minimum value.</p>\n\n<ul>\n\t<li>For example the second minimum value of <code>[2, 3, 4]</code> is <code>3</code>, and the second minimum value of <code>[2, 2, 4]</code> is <code>4</code>.</li>\n</ul>\n\n<p>Given <code>n</code>, <code>edges</code>, <code>time</code>, and <code>change</code>, return <em>the <strong>second minimum time</strong> it will take to go from vertex </em><code>1</code><em> to vertex </em><code>n</code>.</p>\n\n<p><strong>Notes:</strong></p>\n\n<ul>\n\t<li>You can go through any vertex <strong>any</strong> number of times, <strong>including</strong> <code>1</code> and <code>n</code>.</li>\n\t<li>You can assume that when the journey <strong>starts</strong>, all signals have just turned <strong>green</strong>.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/29/e1.png\" style=\"width: 200px; height: 250px;\" /> &emsp; &emsp; &emsp; &emsp;<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/29/e2.png\" style=\"width: 200px; height: 250px;\" />\n<pre>\n<strong>Input:</strong> n = 5, edges = [[1,2],[1,3],[1,4],[3,4],[4,5]], time = 3, change = 5\n<strong>Output:</strong> 13\n<strong>Explanation:</strong>\nThe figure on the left shows the given graph.\nThe blue path in the figure on the right is the minimum time path.\nThe time taken is:\n- Start at 1, time elapsed=0\n- 1 -&gt; 4: 3 minutes, time elapsed=3\n- 4 -&gt; 5: 3 minutes, time elapsed=6\nHence the minimum time needed is 6 minutes.\n\nThe red path shows the path to get the second minimum time.\n- Start at 1, time elapsed=0\n- 1 -&gt; 3: 3 minutes, time elapsed=3\n- 3 -&gt; 4: 3 minutes, time elapsed=6\n- Wait at 4 for 4 minutes, time elapsed=10\n- 4 -&gt; 5: 3 minutes, time elapsed=13\nHence the second minimum time is 13 minutes.      \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/09/29/eg2.png\" style=\"width: 225px; height: 50px;\" />\n<pre>\n<strong>Input:</strong> n = 2, edges = [[1,2]], time = 3, change = 2\n<strong>Output:</strong> 11\n<strong>Explanation:</strong>\nThe minimum time path is 1 -&gt; 2 with time = 3 minutes.\nThe second minimum time path is 1 -&gt; 2 -&gt; 1 -&gt; 2 with time = 11 minutes.</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n &lt;= 10<sup>4</sup></code></li>\n\t<li><code>n - 1 &lt;= edges.length &lt;= min(2 * 10<sup>4</sup>, n * (n - 1) / 2)</code></li>\n\t<li><code>edges[i].length == 2</code></li>\n\t<li><code>1 &lt;= u<sub>i</sub>, v<sub>i</sub> &lt;= n</code></li>\n\t<li><code>u<sub>i</sub> != v<sub>i</sub></code></li>\n\t<li>There are no duplicate edges.</li>\n\t<li>Each vertex can be reached directly or indirectly from every other vertex.</li>\n\t<li><code>1 &lt;= time, change &lt;= 10<sup>3</sup></code></li>\n</ul>\n",
+  "hints": [
+    "How much is change actually necessary while calculating the required path?",
+    "How many extra edges do we need to add to the shortest path?"
+  ],
+  "metaData": "{\n  \"name\": \"secondMinimum\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"time\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"change\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"91.4K\", \"totalSubmission\": \"146.5K\", \"totalAcceptedRaw\": 91354, \"totalSubmissionRaw\": 146492, \"acRate\": \"62.4%\"}",
+  "likes": 1324,
+  "dislikes": 69,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Network Delay Time\", \"titleSlug\": \"network-delay-time\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Find the City With the Smallest Number of Neighbors at a Threshold Distance\", \"titleSlug\": \"find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Ways to Arrive at Destination\", \"titleSlug\": \"number-of-ways-to-arrive-at-destination\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "5\n[[1,2],[1,3],[1,4],[3,4],[4,5]]\n3\n5",
+    "2\n[[1,2]]\n3\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Shortest Path",
+      "slug": "shortest-path"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int secondMinimum(int n, vector<vector<int>>& edges, int time, int change) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int secondMinimum(int n, int[][] edges, int time, int change) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def secondMinimum(self, n: int, edges: List[List[int]], time: int, change: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def secondMinimum(self, n, edges, time, change):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type time: int\n        :type change: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} time\n * @param {number} change\n * @return {number}\n */\nvar secondMinimum = function(n, edges, time, change) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function secondMinimum(n: number, edges: number[][], time: number, change: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SecondMinimum(int n, int[][] edges, int time, int change) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int secondMinimum(int n, int** edges, int edgesSize, int* edgesColSize, int time, int change) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func secondMinimum(n int, edges [][]int, time int, change int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun secondMinimum(n: Int, edges: Array<IntArray>, time: Int, change: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func secondMinimum(_ n: Int, _ edges: [[Int]], _ time: Int, _ change: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn second_minimum(n: i32, edges: Vec<Vec<i32>>, time: i32, change: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} time\n# @param {Integer} change\n# @return {Integer}\ndef second_minimum(n, edges, time, change)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $time\n     * @param Integer $change\n     * @return Integer\n     */\n    function secondMinimum($n, $edges, $time, $change) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int secondMinimum(int n, List<List<int>> edges, int time, int change) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def secondMinimum(n: Int, edges: Array[Array[Int]], time: Int, change: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec second_minimum(n :: integer, edges :: [[integer]], time :: integer, change :: integer) :: integer\n  def second_minimum(n, edges, time, change) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec second_minimum(N :: integer(), Edges :: [[integer()]], Time :: integer(), Change :: integer()) -> integer().\nsecond_minimum(N, Edges, Time, Change) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (second-minimum n edges time change)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1612",
+    "content": "[TOC]\n\n## Solution\n\n\n### Overview\n\nThe problem is to find the second minimum distance (\"strictly larger value\" than minimum value) in a weighted graph where the traversal over any edge is only possible at certain intervals. The second minimum distance can either come by iterating over some nodes in the path multiple times (as shown in second example of the description) or there could be a longer path than the shortest path with all the nodes occurring just once (as shown in first example of the description).\n\n### Approach 1: Dijkstra\n\n#### Intuition\n\nThe shortest distance problem in a weighted graph directly leads to thinking about the Dijkstra algorithm. However, the standard Dijkstra does not work here, since we want to find the second minimum distance to reach node `n`. We may need to modify it a bit to make it work.\n\nLet’s try to recap quickly how the standard Dijkstra looks and the corresponding changes we would need to solve this problem.\n\n##### Standard Dijkstra\n\n- We use an array `distance` to maintain the shortest distance to each node so far. For any node `X` except the source node, `distance[X]` is initialized with infinity. We also maintain a priority queue storing the node and its shortest distance. Whenever any of `X`'s neighbors is popped out of the priority queue, if the total distance to `X` via the neighbors is lesser than the `distance[X]`, `distance[X]` is updated to the new shortest distance and get pushed into the priority queue.\n- Whenever a node `Y` is popped out of the queue, we have the minimum distance for the node `Y` which cannot be reduced further. If there was a shorter path for `Y`, it would have been covered before since we use a priority queue in the implementation. We iterate over the neighbors of `Y` to check if any child could be updated.\n\n##### Modified Dijkstra\n\nSince we need to find the second minimal distance, an idea is to maintain both the minimal and the second minimal distance.\n\n- We would use two distance arrays, `dist1` and `dist2` to maintain the shortest and second shortest distance (\"strictly larger value\" than the minimum value) to each node so far. For any node `X` except the source node, `dist1[X]` and `dist2[X]` are initialized with infinity. We would maintain a priority queue storing the node, its shortest distance, and also its second shortest distance. Whenever any of `X`'s neighbors is popped out of the priority queue, if the total distance to `X` via the neighbors is less than `dist1[X]`, `dist1[X]` is updated and pushed to the queue. Else, we try to update `dist2[X]` if possible and push it to the priority queue.\n- Whenever a node `Y` is popped out of the queue for the first time, we have the minimum distance for the node `Y` which cannot be reduced further. In this case, we would use `dist1[Y]` as the distance to reach node `Y` to compute the total distance of its neighbours. If it pops out a second time, we have the second minimum distance for the node `Y`. Now, we would use `dist2[Y]` as the distance to reach node `Y` to compute the total distance of its neighbours.\n\n#### Green and Red Light Constraint\n\nIn the previous analysis, we discussed how to solve the second minimal distance problem generally with modified Dijkstra. Still, the problem has another part: the constraint on the green and red lights. Let's think about how to handle it.\n\nUnder the green and red traffic light constraint, the time it takes to pass the edge is no longer the weight of the edge. We need to be careful when updating the distance in the Dijkstra algorithm.\n\nPlease take a look at the image which helps to handle this constraint (`c` in the figure means the value `change`):\n\n![img](../Figures/2045/2045-1.png)\n\nThere are some observations from the figure. If the current time falls between `2 * m * c` and `2 * m * c + c`, where `m` is any integer, we have a green signal for the node, otherwise, we have a red signal. We can pass the green signal straight way but would have to wait at the red signal till it turns green.\n\nThe time taken to go through an edge could be presented as the following code: \n\n```\n// `timeTaken` represent the total time taken to reach the current node,\n// and we want to move to its neighbors.\nif ((timeTaken / change) % 2) {\n    // red light, we need to wait for the next green light\n    timeTakenToReachNeighbor = change * (timeTaken / change + 1) + time;\n} else {\n    // green light, just pass\n    timeTakenToReachNeighbor = timeTaken + time;\n}\n```\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\n2. Initialize two distance arrays `dist1` and `dist2` storing the minimum and the second minimum distance from node `1` for all the nodes. We would initialize these arrays with large integer values.\n3. Initialize a frequency array `freq` to store the number of times when a node is popped out of the queue. Since we need the second minimal distance, each node can be poped out at most twice.\n4. Initialize a priority queue storing a `{distance, node_id}` pair, ordered by the distance. Insert node `1` with distance `0` into the queue as `{0, 1}`. \n5. Perform the Dijkstra until the priority queue is empty.\n    - Pop out the top pair of integers, and fetch the node (let's say it is `Y`) and distance to reach node `Y`.\n    - Increase `freq[Y]` by 1. \n    - If `Y == n` and `freq[n] == 2`, it means we’ve encountered this node via the second minimum distance. In this case, we return `dist2[n]`.\n    - Else, iterate over all the neighbors of `Y`. \n    - For each `neighbor`, check if `dist1[neighbor]` could be updated using `distance[Y]`. If not, check if `dist2[neighbor]` could be updated.\n    - Push pair `{distance_neighbor, neighbor}` into the queue whenever `dist1[neighbor]` or `dist2[neighbor]` is updated.\n6. If we do not return the answer after the queue is empty, we know that the graph only has one node. Therefore, we just return `0`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/eWxFfyDc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"eWxFfyDc\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of cities and $E$ be the total edges in the graph.\n\n* Time complexity: $O(N + E \\cdot \\log N)$.\n\n    - Our algorithm has twice the complexity as the Dijkstra algorithm. We pop twice and use the node to calculate the minimum and second miimum distance. Since 2 is a constant factor, it actually has the same time complexity as the standard Dijkstra algorithm.\n    - For standard Dijkstra, the maximum number of vertices that could be added to the priority queue is $E$ and each operation takes $O(log E)$ time. Thus, push and pop operations on the priority queue take $O(E \\cdot log E)$ time. The value of $E$ can be at most $N \\cdot (N−1)$, so  $O(E \\cdot log E) = O(E \\cdot log(N^2)) = O(E \\cdot log N)$. It also takes $O(N + E)$ for adjacency list and dist array initializations. Therefore, the total complexity is $O(N+E \\cdot log N)$.\n\n* Space complexity: $O(N + E)$.\n    - Building the adjacency list takes $O(N + E)$ space. For the Dijkstra algorithm, each vertex is added to the queue at most $N−1$ times, so the space it takes is $N \\cdot (N−1) = O(N^2) = O(E)$. For the distance and frequency arrays, they take $O(N)$ space.\n\n---\n\n### Approach 2: Breadth First Search\n\n#### Intuition\n\nIf you are not much familiar with BFS traversal, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/231/practical-application-queue/1376/) and have some knowledge of it beforehand.\n\nThe given problem involves a city, which is represented as a bi-directionally connected graph with `n` vertices and some edges. The cost of passing through each edge takes an equal amount of `time`. We also have some red-to-green signal transitions that happen at the same time, i.e., all signals switch from red to green (and vice-versa) at the same time after every `change` interval.\n\nSince each edge takes an equal amount of time to cross and the red-signal transitions happen at the same time, we can observe that the time taken for any equal-length path in terms of steps taken would be similar. This is because we would be taking `time` to cross each edge and would also be waiting at the red signals at the same time.\n\nLet's use an example to understand this more. If we start at the time `T = 0` from node `1`, we can reach any node one edge away at `T = time`. Let's assume we've got a green signal now. We would cross another edge to reach any node two edges away at `T = 2 * time`. Suppose, we have a red signal now and it takes `c` time to switch back to green. We would start moving from the current node at `T = 2 * time + c` and reach any node three edges away at `T = 3 * time + c`. We cannot reach nodes at level three earlier than `3 * time + c`. If we take the longer route, it will undoubtedly take more time.\n\nThis shows that the shortest length path in terms of steps would be the ideal path to compute the minimum time to reach node `n` and the second shortest length path would be the ideal path to compute the second minimum time. In this case, all the weight is `1` so the graph is unweighted. Therefore, we only need to focus on the number of steps to reach the target node instead of time. Hence, Dijkstra was overkill.\n\nAs we know, the path used in BFS traversal always has the least number of edges. The BFS algorithm does a level-wise iteration of the graph. As a result, it first finds all paths that are one edge away from the source node, followed by all paths that are two edges away from the source node, and so on. This allows BFS to find the shortest path in terms of steps from the source node to any other node. The time spent at red light crossings will be calculated in the same way as in the first approach. We will use this concept to solve the problem.\n\n#### Algorithm\n\n1. Create an adjacency list where `adj[X]` contains all the neighbors of node `X`.\n2. Initialise two distance arrays `dist1` and `dist2` storing the minimum and second minimum distance from node 1 for all the nodes. We would initialize these arrays with `-1`.\n3. Initialize a queue with a pair of integers `(node, freq)` and insert  `{1, 1}` where the first integer denotes the node and the second denotes the frequency of the visit.\n4. Pop out the front pair from the queue and iterate over the neighbors of the node updating the `dist1` and `dist2` accordingly (as we did above). \n5. If `dist1[child] = -1`, it means this is the first time we are visiting this node, so update the `dist1[child]`. This is the minimum distance of the node `child`. Else, check similarly for `dist2[child]` to compute the second minimum distance and ensure it is not equal to `dist1[child]`.\n\n> The important point to learn here is that this approach works only because the graph is equally weighted for all edges.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/YgLQPMf5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"YgLQPMf5\"></iframe>\n\n#### Complexity Analysis\n\nLet $N$ be the number of cities and $E$ be the total edges in the graph.\n\n* Time complexity: $O(N + E)$.\n\n    - The complexity would be similar to the standard BFS algorithm since we’re iterating at most twice over a node. \n    - For the BFS algorithm, each single queue operation takes $O(1)$, and a single node could be pushed at most once leading $O(N)$ operations. For each node popped out of the queue we iterate over all its neighbors, so for an undirected edge, a given edge could be iterated at most twice (by nodes at the end) which leads to $O(E)$ operations in total for all the nodes and a total $O(N + E)$ time complexity.\n\n\n* Space complexity: $O(N + E)$.\n    - Building the adjacency list takes $O(E)$ space. The BFS queue takes $O(N)$ because each vertex is added at most once. The other distance arrays take $O(N)$ space.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "questionId": "2148",
+  "questionFrontendId": "2037",
+  "title": "Minimum Number of Moves to Seat Everyone",
+  "titleSlug": "minimum-number-of-moves-to-seat-everyone",
+  "difficulty": "Easy",
+  "content": "<p>There are <code>n</code> <strong>availabe </strong>seats and <code>n</code> students <strong>standing</strong> in a room. You are given an array <code>seats</code> of length <code>n</code>, where <code>seats[i]</code> is the position of the <code>i<sup>th</sup></code> seat. You are also given the array <code>students</code> of length <code>n</code>, where <code>students[j]</code> is the position of the <code>j<sup>th</sup></code> student.</p>\n\n<p>You may perform the following move any number of times:</p>\n\n<ul>\n\t<li>Increase or decrease the position of the <code>i<sup>th</sup></code> student by <code>1</code> (i.e., moving the <code>i<sup>th</sup></code> student from position&nbsp;<code>x</code>&nbsp;to <code>x + 1</code> or <code>x - 1</code>)</li>\n</ul>\n\n<p>Return <em>the <strong>minimum number of moves</strong> required to move each student to a seat</em><em> such that no two students are in the same seat.</em></p>\n\n<p>Note that there may be <strong>multiple</strong> seats or students in the <strong>same </strong>position at the beginning.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> seats = [3,1,5], students = [2,7,4]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The students are moved as follows:\n- The first student is moved from position 2 to position 1 using 1 move.\n- The second student is moved from position 7 to position 5 using 2 moves.\n- The third student is moved from position 4 to position 3 using 1 move.\nIn total, 1 + 2 + 1 = 4 moves were used.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> seats = [4,1,5,9], students = [1,3,2,6]\n<strong>Output:</strong> 7\n<strong>Explanation:</strong> The students are moved as follows:\n- The first student is not moved.\n- The second student is moved from position 3 to position 4 using 1 move.\n- The third student is moved from position 2 to position 5 using 3 moves.\n- The fourth student is moved from position 6 to position 9 using 3 moves.\nIn total, 0 + 1 + 3 + 3 = 7 moves were used.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> seats = [2,2,6,6], students = [1,3,2,6]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> Note that there are two seats at position 2 and two seats at position 6.\nThe students are moved as follows:\n- The first student is moved from position 1 to position 2 using 1 move.\n- The second student is moved from position 3 to position 6 using 3 moves.\n- The third student is not moved.\n- The fourth student is not moved.\nIn total, 1 + 3 + 0 + 0 = 4 moves were used.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == seats.length == students.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= seats[i], students[j] &lt;= 100</code></li>\n</ul>\n",
+  "hints": [
+    "Can we sort the arrays to help solve the problem?",
+    "Can we greedily match each student to a seat?",
+    "The smallest positioned student will go to the smallest positioned chair, and then the next smallest positioned student will go to the next smallest positioned chair, and so on."
+  ],
+  "metaData": "{\n  \"name\": \"minMovesToSeat\",\n  \"params\": [\n    {\n      \"name\": \"seats\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"students\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"283.5K\", \"totalSubmission\": \"325.2K\", \"totalAcceptedRaw\": 283496, \"totalSubmissionRaw\": 325174, \"acRate\": \"87.2%\"}",
+  "likes": 1441,
+  "dislikes": 346,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[3,1,5]\n[2,7,4]",
+    "[4,1,5,9]\n[1,3,2,6]",
+    "[2,2,6,6]\n[1,3,2,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Counting Sort",
+      "slug": "counting-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minMovesToSeat(vector<int>& seats, vector<int>& students) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minMovesToSeat(int[] seats, int[] students) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minMovesToSeat(self, seats: List[int], students: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minMovesToSeat(self, seats, students):\n        \"\"\"\n        :type seats: List[int]\n        :type students: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} seats\n * @param {number[]} students\n * @return {number}\n */\nvar minMovesToSeat = function(seats, students) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minMovesToSeat(seats: number[], students: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinMovesToSeat(int[] seats, int[] students) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minMovesToSeat(int* seats, int seatsSize, int* students, int studentsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minMovesToSeat(seats []int, students []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minMovesToSeat(seats: IntArray, students: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minMovesToSeat(_ seats: [Int], _ students: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn min_moves_to_seat(seats: Vec<i32>, students: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} seats\n# @param {Integer[]} students\n# @return {Integer}\ndef min_moves_to_seat(seats, students)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $seats\n     * @param Integer[] $students\n     * @return Integer\n     */\n    function minMovesToSeat($seats, $students) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minMovesToSeat(List<int> seats, List<int> students) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minMovesToSeat(seats: Array[Int], students: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec min_moves_to_seat(seats :: [integer], students :: [integer]) :: integer\n  def min_moves_to_seat(seats, students) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec min_moves_to_seat(Seats :: [integer()], Students :: [integer()]) -> integer().\nmin_moves_to_seat(Seats, Students) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (min-moves-to-seat seats students)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2340",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nIf you picture a classroom with rows of seats that represent positions, with students sitting in them, it will be hard to solve this problem.\n\nWe can think of the problem like this:\n\nThere are `n` **available** seats and `n` students **standing** in a room.\n\nIf we think of the positions as areas in the room, then we can visualize the room as the following:\n\n> **Input:** seats = [3,3,1,5], students = [2,2,7,4]\n\n![Room](../Figures/2037/room.png)\n\nNote that the image shows some students who are already seated, but we aren't given information about these students in the input. This helps emphasize that the students we need to move are not currently seated. We can ignore any already filled seats.\n\nWe need to move the standing students to empty seats in the minimum number of moves.\n\n---\n\n### Approach 1: Sorting (Greedy)\n\n#### Intuition\n\nHere's a visualization of the first example from the problem description:\n\n!?!../Documents/2037/2037_slideshow1.json:960,250!?!\n\nIt looks like we move each student to the nearest available seat. It takes 4 moves, which is the sum of the number of positions each student had to move to be seated.\n\nWhat if there are multiple nearest seats? What if the student at position 4 chose the seat at position 5? \n\n![Not Optimal](../Figures/2037/notoptimal.png)\n\nThen, the student at position 7 has to walk to the seat at position 3, which takes 4 moves, for a total of 6 moves, 2 more moves than in the above example.\n\nLet's refine our strategy. Upon further inspection, we can observe that in the first example, the student with the lowest position sat in the seat with the lowest position, and the student with the highest position sat in the seat with the highest position.\n\nWe can develop a strategy based on this observation: Place the student with the lowest position in the seat with the lowest position, and repeat with the next student and the next lowest available seat until all of the students are seated. We need to process the students and seats in increasing order, so we will sort both arrays to facilitate this process. \n\nWe can see strategy works for the third example from the problem description:\n\n!?!../Documents/2037/2037_slideshow3.json:960,250!?!\n\nMoving from left to right, we place the first student in the first seat. The second student remains in their current seat. Then, we move the third student to the next available seat, and the fourth student retains their current seat.\n\nThis is a greedy strategy because, for each student, we choose the locally optimal seat.\n\nAfter sorting, the student at index `i` will occupy the seat at index `i`. We calculate the number of moves by subtracting the student's position from the seat's position. If the student needs to move left to reach their seat, the difference will be negative, but it still contributes to the total number of moves, so we take the absolute value of the difference.\n\n#### Algorithm\n\n1. Sort the given arrays `seats` and `students`.\n2. Initialize a variable `moves` to `0` for storing the result.\n3. For each index in the `seats` array:\n    - Add the absolute difference between the position of the seat at that index and the position of the student at that index to `moves`.\n4. Return `moves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/XvnQd25F/shared\" frameBorder=\"0\" width=\"100%\" height=\"293\" name=\"XvnQd25F\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `seats` and `students`.\n\n* Time Complexity: $O(n \\log n)$\n\n    Sorting an array of length $n$ takes $O(n \\log n)$, and we need to sort two arrays. The for loop iterates over each index once, taking $O(n)$ time. $O(n \\log n)$ is the dominating term.\n\n* Space Complexity: $O(n)$ or $O(\\log n)$\n\n    Some extra space is used when we sort the arrays in place. The space complexity of the sorting algorithm depends on the programming language.\n    - In Python, the `sort` method sorts a list using the Tim Sort algorithm which is a combination of Merge Sort and Insertion Sort and has $O(n)$ additional space.\n    - In C++, the sort() function is implemented as a hybrid of Quick Sort, Heap Sort, and Insertion Sort, with a worse-case space complexity of $O(\\log n)$.\n    - In Java, Arrays.sort() is implemented using a variant of the Quick Sort algorithm which has a space complexity of $O(\\log n)$ for sorting two arrays.\n\n---\n\n### Approach 2: Counting Sort\n\n#### Intuition\n\nThe sorting step in the above approach introduced a log-linear time complexity. We can use counting sort to develop an approach with linear complexity.\n\n> The basic idea of counting sort is to use an array as a map, storing the number of occurrences of each element at the corresponding index in the array. If you are not familiar with counting sort, we recommend reading our **[Counting Sort Explore Card](https://leetcode.com/explore/learn/card/sorting/695/non-comparison-based-sorts/4437/)**.\n\nThe array used for counting sort needs to be able to store every possible element, so we start by finding `maxPosition`, the maximum element across both arrays. Then, we initialize an array `differences` of size `maxPosition`.\n\nTo reduce the space needed, we can use a single array to sort both `seats` and `students` by representing `seats` with positive values and `students` with negative values. We iterate through `seats` and increment the value of `differences` at the corresponding position by `1`. Next, we iterate through `students` and decrease the `differences` at the corresponding position by `1`.\n\n!?!../Documents/2037/2037_slideshow4.json:720,360!?!\n\nThen, we can use the `differences` array to calculate the number of moves. We use the variable `unmatched` to keep track of the number of unseated students or empty seats we have encountered and have not yet matched. The `unmatched` variable is positive if there are extra seats and negative if there are extra students.\n\nIf `unmatched` is `-1`, it means there is a student who needs a seat. Each position we encounter without a seat represents a position the student must move. For each position in the `differences` array, we add the absolute value of `unmatched` to the number of moves. Our goal is to match the student with any available seat we find, so we add the `difference` at the current position to `unmatched`.\n\n!?!../Documents/2037/2037_slideshow5.json:720,360!?!\n\n#### Algorithm\n\n1. Declare the `findMax` function which finds the maximum element in an array.\n    - Initialize a variable `maximum` to `0`.\n    - Iterate through each number in the array:\n        - If the current number is greater than the `maximum`, update the `maximum`.\n    - Return `maximum`.\n2. Find the maximum element in each array `seats` and `students` and initialize a variable `maxPosition` to the larger maximum element.\n3. Declare an array `differences` of size `maxPosition`. This array will store the difference between the number of seats and the number of students at each position. \n4. Iterate through `seats` and count the number of seats available at each position. For each position, increment `difference[position - 1]` by `1`. We subtract `1` from the position because the positions are 1-indexed.\n5. Iterate through `students` and count the number of students standing at each position. For each position, decrement `difference[position - 1]` by `1`.\n6. Initialize a variable `moves` to `0` and a variable `unmatched` to `0`.\n7. For each `difference` in `differences`:\n    - Add the absolute value of `unmatched` to `moves`.\n    - Add `difference` to `unmatched`.\n8. Return `moves`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2uFczDur/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2uFczDur\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of `seats` and `students`. Let $m$ be the maximum position stored in either of the arrays.\n\n* Time complexity: $O(n + m)$\n\n    To find the maximum position, we iterate through both `seats` and `students`, which takes $O(2n)$.\n\n    Populating the `differences` array also takes $O(2n)$ because we iterate through both `seats` and `students`.\n\n    We iterate through the `differences` array, which is size $m$, to calculate the number of moves needed to seat the students, taking $O(m)$.\n\n    The overall time complexity is $O(4n + m)$, which we can simplify to $O(n + m)$.\n\n* Space complexity: $O(m)$\n\n    We use an auxiliary array `differences` of size $O(m)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

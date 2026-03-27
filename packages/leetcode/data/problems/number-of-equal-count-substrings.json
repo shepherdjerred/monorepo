@@ -1,0 +1,142 @@
+{
+  "questionId": "2209",
+  "questionFrontendId": "2067",
+  "title": "Number of Equal Count Substrings",
+  "titleSlug": "number-of-equal-count-substrings",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> consisting of only lowercase English letters, and an integer <code>count</code>. A <strong>substring</strong> of <code>s</code> is said to be an <strong>equal count substring</strong> if, for each <strong>unique</strong> letter in the substring, it appears exactly <code>count</code> times in the substring.</p>\n\n<p>Return <em>the number of <strong>equal count substrings</strong> in </em><code>s</code>.</p>\n\n<p>A <strong>substring</strong> is a contiguous non-empty sequence of characters within a string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;aaabcbbcc&quot;, count = 3\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nThe substring that starts at index 0 and ends at index 2 is &quot;aaa&quot;.\nThe letter &#39;a&#39; in the substring appears exactly 3 times.\nThe substring that starts at index 3 and ends at index 8 is &quot;bcbbcc&quot;.\nThe letters &#39;b&#39; and &#39;c&#39; in the substring appear exactly 3 times.\nThe substring that starts at index 0 and ends at index 8 is &quot;aaabcbbcc&quot;.\nThe letters &#39;a&#39;, &#39;b&#39;, and &#39;c&#39; in the substring appear exactly 3 times.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;abcd&quot;, count = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThe number of times each letter appears in s is less than count.\nTherefore, no substrings in s are equal count substrings, so return 0.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;a&quot;, count = 5\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nThe number of times each letter appears in s is less than count.\nTherefore, no substrings in s are equal count substrings, so return 0</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= count &lt;= 3 * 10<sup>4</sup></code></li>\n\t<li><code>s</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "The brute force solution is to check every substring, which would TLE. How can we improve this solution?",
+    "In an equal count substring, the first character appears count times, the second character appears count times, and so on.",
+    "The length of an equal count substring is the number of unique characters multiplied by count.",
+    "The length of all equal count substrings are multiples of count."
+  ],
+  "metaData": "{\n  \"name\": \"equalCountSubstrings\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"count\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"4K\", \"totalSubmission\": \"8.8K\", \"totalAcceptedRaw\": 4010, \"totalSubmissionRaw\": 8833, \"acRate\": \"45.4%\"}",
+  "likes": 111,
+  "dislikes": 11,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Longest Substring Without Repeating Characters\", \"titleSlug\": \"longest-substring-without-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Substring with At Least K Repeating Characters\", \"titleSlug\": \"longest-substring-with-at-least-k-repeating-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Unique Substrings With Equal Digit Frequency\", \"titleSlug\": \"unique-substrings-with-equal-digit-frequency\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aaabcbbcc\"\n3",
+    "\"abcd\"\n2",
+    "\"a\"\n5"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"cisco\", \"name\": \"Cisco\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int equalCountSubstrings(string s, int count) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int equalCountSubstrings(String s, int count) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def equalCountSubstrings(self, s: str, count: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def equalCountSubstrings(self, s, count):\n        \"\"\"\n        :type s: str\n        :type count: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number} count\n * @return {number}\n */\nvar equalCountSubstrings = function(s, count) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function equalCountSubstrings(s: string, count: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int EqualCountSubstrings(string s, int count) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int equalCountSubstrings(char* s, int count) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func equalCountSubstrings(s string, count int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun equalCountSubstrings(s: String, count: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func equalCountSubstrings(_ s: String, _ count: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn equal_count_substrings(s: String, count: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer} count\n# @return {Integer}\ndef equal_count_substrings(s, count)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer $count\n     * @return Integer\n     */\n    function equalCountSubstrings($s, $count) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int equalCountSubstrings(String s, int count) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def equalCountSubstrings(s: String, count: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec equal_count_substrings(s :: String.t, count :: integer) :: integer\n  def equal_count_substrings(s, count) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec equal_count_substrings(S :: unicode:unicode_binary(), Count :: integer()) -> integer().\nequal_count_substrings(S, Count) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (equal-count-substrings s count)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

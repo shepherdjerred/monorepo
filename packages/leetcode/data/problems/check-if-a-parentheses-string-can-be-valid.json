@@ -1,0 +1,143 @@
+{
+  "questionId": "2221",
+  "questionFrontendId": "2116",
+  "title": "Check if a Parentheses String Can Be Valid",
+  "titleSlug": "check-if-a-parentheses-string-can-be-valid",
+  "difficulty": "Medium",
+  "content": "<p>A parentheses string is a <strong>non-empty</strong> string consisting only of <code>&#39;(&#39;</code> and <code>&#39;)&#39;</code>. It is valid if <strong>any</strong> of the following conditions is <strong>true</strong>:</p>\n\n<ul>\n\t<li>It is <code>()</code>.</li>\n\t<li>It can be written as <code>AB</code> (<code>A</code> concatenated with <code>B</code>), where <code>A</code> and <code>B</code> are valid parentheses strings.</li>\n\t<li>It can be written as <code>(A)</code>, where <code>A</code> is a valid parentheses string.</li>\n</ul>\n\n<p>You are given a parentheses string <code>s</code> and a string <code>locked</code>, both of length <code>n</code>. <code>locked</code> is a binary string consisting only of <code>&#39;0&#39;</code>s and <code>&#39;1&#39;</code>s. For <strong>each</strong> index <code>i</code> of <code>locked</code>,</p>\n\n<ul>\n\t<li>If <code>locked[i]</code> is <code>&#39;1&#39;</code>, you <strong>cannot</strong> change <code>s[i]</code>.</li>\n\t<li>But if <code>locked[i]</code> is <code>&#39;0&#39;</code>, you <strong>can</strong> change <code>s[i]</code> to either <code>&#39;(&#39;</code> or <code>&#39;)&#39;</code>.</li>\n</ul>\n\n<p>Return <code>true</code> <em>if you can make <code>s</code> a valid parentheses string</em>. Otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/06/eg1.png\" style=\"width: 311px; height: 101px;\" />\n<pre>\n<strong>Input:</strong> s = &quot;))()))&quot;, locked = &quot;010100&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> locked[1] == &#39;1&#39; and locked[3] == &#39;1&#39;, so we cannot change s[1] or s[3].\nWe change s[0] and s[4] to &#39;(&#39; while leaving s[2] and s[5] unchanged to make s valid.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;()()&quot;, locked = &quot;0000&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> We do not need to make any changes because s is already valid.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;)&quot;, locked = &quot;0&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> locked permits us to change s[0]. \nChanging s[0] to either &#39;(&#39; or &#39;)&#39; will not make s valid.\n</pre>\n\n<p><strong class=\"example\">Example 4:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;(((())(((())&quot;, locked = &quot;111111010111&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> locked permits us to change s[6] and s[8]. \nWe change s[6] and s[8] to &#39;)&#39; to make s valid.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == s.length == locked.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> is either <code>&#39;(&#39;</code> or <code>&#39;)&#39;</code>.</li>\n\t<li><code>locked[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Can an odd length string ever be valid?",
+    "From left to right, if a locked ')' is encountered, it must be balanced with either a locked '(' or an unlocked index on its left. If neither exist, what conclusion can be drawn? If both exist, which one is more preferable to use?",
+    "After the above, we may have locked indices of '(' and additional unlocked indices. How can you balance out the locked '(' now? What if you cannot balance any locked '('?"
+  ],
+  "metaData": "{\n  \"name\": \"canBeValid\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"locked\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"155.8K\", \"totalSubmission\": \"345.3K\", \"totalAcceptedRaw\": 155781, \"totalSubmissionRaw\": 345348, \"acRate\": \"45.1%\"}",
+  "likes": 2029,
+  "dislikes": 134,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Valid Parentheses\", \"titleSlug\": \"valid-parentheses\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Generate Parentheses\", \"titleSlug\": \"generate-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Valid Parenthesis String\", \"titleSlug\": \"valid-parenthesis-string\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Remove to Make Valid Parentheses\", \"titleSlug\": \"minimum-remove-to-make-valid-parentheses\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \" Check if There Is a Valid Parentheses String Path\", \"titleSlug\": \"check-if-there-is-a-valid-parentheses-string-path\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"))()))\"\n\"010100\"",
+    "\"()()\"\n\"0000\"",
+    "\")\"\n\"0\"",
+    "\"(((())(((())\"\n\"111111010111\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 3, \"slug\": \"servicenow\", \"name\": \"ServiceNow\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool canBeValid(string s, string locked) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean canBeValid(String s, String locked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def canBeValid(self, s: str, locked: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def canBeValid(self, s, locked):\n        \"\"\"\n        :type s: str\n        :type locked: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} locked\n * @return {boolean}\n */\nvar canBeValid = function(s, locked) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function canBeValid(s: string, locked: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CanBeValid(string s, string locked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool canBeValid(char* s, char* locked) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func canBeValid(s string, locked string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun canBeValid(s: String, locked: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func canBeValid(_ s: String, _ locked: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn can_be_valid(s: String, locked: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} locked\n# @return {Boolean}\ndef can_be_valid(s, locked)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $locked\n     * @return Boolean\n     */\n    function canBeValid($s, $locked) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool canBeValid(String s, String locked) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def canBeValid(s: String, locked: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec can_be_valid(s :: String.t, locked :: String.t) :: boolean\n  def can_be_valid(s, locked) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec can_be_valid(S :: unicode:unicode_binary(), Locked :: unicode:unicode_binary()) -> boolean().\ncan_be_valid(S, Locked) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (can-be-valid s locked)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2641",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nWe are given two strings, `s` and `locked`. The string `s` is a sequence of parentheses, consisting of opening brackets `(` and closing brackets `)`. The string locked is a binary string of the same length as `s`, where:\n\n- If `locked[i]` is 1, the character at index `i` in `s` cannot be changed.\n\n- If `locked[i]` is 0, the character can be modified: an opening bracket `(` can become a closing bracket `)` and vice versa.\n\nOur task is to determine if it’s possible to make the sequence in `s` balanced by modifying the characters marked as changeable (`locked[i] = 0`).\n\nWhat does a balanced parentheses sequence mean? \n\nA sequence of parentheses is considered balanced if:\n1. Every opening bracket `(` has a corresponding closing bracket `)`.\n2. The brackets are properly nested. For example, `(())` is balanced, but `())(` is not.\n\nTo gain familiarity with similar parentheses-based problems, you may first solve an easier version: [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/description/).\n\n---\n\n### Approach 1: Stack\n\n#### Intuition   \n\nTo get a good intuition to this problem, we need to ensure that at any point while iterating through `s`, the number of closing brackets `)` should not exceed the number of opening brackets `(` and by the end of the string, the total number of opening and closing brackets must be equal.\n\nObserve that the locked characters (`locked[i] = 1`) cannot be modified, so they must remain fixed. However, we have the flexibility to assign the unlocked characters (`locked[i] = 0`) as either opening or closing brackets, depending on what is needed to maintain balance.\n\nThe main challenge is that if at any point the number of closing brackets exceeds the number of opening brackets and there are no unlocked characters available to \"fix\" the imbalance, it’s impossible to balance the string, and we return false.\n\nAnd to address this, we need a way to keep track of all previously encountered unlocked characters so we can use them later if needed. Thus a stack is a suitable data structure for this, because it follows the Last In, First Out (LIFO) principle, which works well for keeping track of unmatched brackets.\n\nTo implement this, we iterate through the string, whenever we encounter an unlocked character (locked[i] = 0), we push its index onto the stack.\n\nIf we encounter a closing bracket `)` and find that the number of closing brackets exceeds the number of opening brackets at that point, we can \"fix\" the imbalance by popping an index from the stack and treating that unlocked character as an opening bracket `(`.\n\nIf at any point we need an unlocked character to balance the string but the stack is empty (i.e., there are no more unlocked characters left), it means balancing the string is impossible, and we return false.\n\nAfter processing all the characters in the string:\n- If the stack still contains indices of unused unlocked characters, we can pair them up to form balanced brackets, such as `()()()`.\n- As long as the number of opening and closing brackets is equal by the end, the string is balanced, and we return true.\n\n#### Algorithm\n\n1. If the length of the string `s` is odd, return `false` because an odd-length string cannot have balanced parentheses.\n\n2. Use a stack `openBrackets` to keep track of the indices of open parentheses `'('` in the locked positions and a stack `unlocked` to keep track of the indices of positions where parentheses can be changed (`locked[i] == '0'`).\n\n3. For each character in the string `s`, check:\n   - If the position is unlocked (i.e., `locked[i] == '0'`), add its index to the `unlocked` stack.\n   - If the character is an open parenthesis `'('`, add its index to the `openBrackets` stack.\n   - If the character is a close parenthesis `')'`:\n     - If there is a matching open parenthesis (i.e., the `openBrackets` stack is not empty), pop the stack.\n     - If no open parenthesis is available, try to use an unlocked position and pop the `unlocked` stack to match with it.\n     - If neither an open parenthesis nor an unlocked position is available to match, return `false`.\n\n4. After processing all characters, check if there are any unmatched open parentheses remaining in the `openBrackets` stack.\n   - If there are unmatched open parentheses, try to match them with the available unlocked positions and pop the stacks.\n   - If any open parentheses remain unmatched, return `false`. Otherwise, return `true`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/errfNJRc/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"errfNJRc\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm performs two passes over the string `s`:\n    1. In the first pass, it iterates through the string to process open brackets and unlocked positions, which takes $O(n)$ time.\n    2. In the second pass, it matches the remaining open brackets with unlocked characters, which also takes $O(n)$ time.\n\n    Therefore, the total time complexity is $O(n)$.\n\n- Space Complexity: $O(n)$\n\n    The algorithm uses two stacks, `openBrackets` and `unlocked`, to store indices of open brackets and unlocked characters, respectively. In the worst case, each list can store up to $n$ elements.\n\n    Therefore, the total space complexity is $O(n)$.\n\n---\n\n### Approach 2: Constant Space\n\n#### Intuition   \n\nIn the previous approach, we used a stack to store the unlocked characters and open brackets in the order they appear in the string. However, do we actually need a stack, or is a simple count of the unlocked characters and open brackets sufficient? \n\nThe stack indices are required when matching the remaining opening brackets with the unlocked characters, as shown in the code snippet below:\n\n```cpp\n// Match remaining open brackets with unlocked characters\nwhile (!openBrackets.empty() && !unlocked.empty() &&\n       openBrackets.top() < unlocked.top()) {\n    openBrackets.pop();\n    unlocked.pop();\n}\n```\n\nTo address this, we could explore a trick to match the brackets using only the counts of the unpaired opening brackets and unlocked characters.\n\nSince we want to balance the remaining opening brackets, note that the unlocked characters towards the end of the string can be converted into closing brackets to pair them up. This allows us to iterate from the end of the string `s` while maintaining a `balance` variable to check whether the parentheses are balanced.\n\nWe use the integer counters `openBrackets` and `unlocked` from the previous steps:\n- If we encounter an unlocked character, we can treat it as a closing bracket.\n- If the `balance` variable indicates that the string is unbalanced at any point, we return `false`.\n\nFinally, if all the `openBrackets` are balanced by the end of the iteration, we can return `true`. Otherwise, we return `false`.\n\n#### Algorithm\n\n1. Initialize `length` as the size of the string `s`.\n\n2. Check if the `length` is odd:\n   - If `length % 2 == 1`, return `false`.\n\n3. Initialize variables:\n   - `openBrackets` to count the unmatched opening brackets.\n   - `unlocked` to count the wildcard positions.\n\n4. Perform a forward pass to process the string:\n   - Iterate through `s` from left to right.\n   - For each character:\n     - If `locked[i] == '0'`, increment `unlocked`.\n     - If `s[i] == '('`, increment `openBrackets`.\n     - If `s[i] == ')'`:\n       - If `openBrackets > 0`, decrement `openBrackets`.\n       - Else if `unlocked > 0`, decrement `unlocked`.\n       - Else, return `false`.\n\n5. Perform a reverse pass to match remaining open brackets:\n   - Initialize `balance` to track excess unmatched opening brackets.\n   - Iterate through `s` from right to left.\n   - For each character:\n     - If `locked[i] == '0'`, decrement `balance` and `unlocked`.\n     - If `s[i] == '('`, increment `balance` and decrement `openBrackets`.\n     - If `s[i] == ')'`, decrement `balance`.\n     - If `balance > 0`, return `false`.\n     - If `unlocked == 0` and `openBrackets == 0`, break out of the loop.\n\n6. After the reverse pass:\n   - If `openBrackets > 0`, return `false`.\n\n7. Return `true` if no unmatched brackets remain.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZeCXSCZx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZeCXSCZx\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`.\n\n- Time Complexity: $O(n)$\n\n    The algorithm performs two passes over the string `s`:\n    1. In the first pass, it iterates through the string to process open brackets and unlocked positions, which takes $O(n)$ time.\n    2. In the second pass, it iterates from the end of the string to balance the remaining open brackets with unlocked characters, which also takes $O(n)$ time.\n\n    Therefore, the total time complexity is $O(n)$.\n\n- Space Complexity: $O(1)$\n\n    The algorithm uses a constant amount of space for variables like `openBrackets`, `unlocked`, and `balance`. It does not use any additional data structures such as stacks or lists.\n\n    Therefore, the total space complexity is $O(1)$.\n  \n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

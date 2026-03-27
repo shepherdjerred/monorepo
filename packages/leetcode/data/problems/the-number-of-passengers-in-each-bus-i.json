@@ -1,0 +1,53 @@
+{
+  "questionId": "2281",
+  "questionFrontendId": "2142",
+  "title": "The Number of Passengers in Each Bus I",
+  "titleSlug": "the-number-of-passengers-in-each-bus-i",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Buses</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| bus_id       | int  |\n| arrival_time | int  |\n+--------------+------+\nbus_id is the column with unique values for this table.\nEach row of this table contains information about the arrival time of a bus at the LeetCode station.\nNo two buses will arrive at the same time.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Passengers</code></p>\n\n<pre>\n+--------------+------+\n| Column Name  | Type |\n+--------------+------+\n| passenger_id | int  |\n| arrival_time | int  |\n+--------------+------+\npassenger_id is the column with unique values for this table.\nEach row of this table contains information about the arrival time of a passenger at the LeetCode station.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Buses and passengers arrive at the LeetCode station. If a bus arrives at the station at time <code>t<sub>bus</sub></code> and a passenger arrived at time <code>t<sub>passenger</sub></code> where <code>t<sub>passenger</sub> &lt;= t<sub>bus</sub></code> and the passenger did not catch any bus, the passenger will use that bus.</p>\n\n<p>Write a solution&nbsp;to report the number of users that used each bus.</p>\n\n<p>Return the result table ordered by <code>bus_id</code> in <strong>ascending order</strong>.</p>\n\n<p>The&nbsp;result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nBuses table:\n+--------+--------------+\n| bus_id | arrival_time |\n+--------+--------------+\n| 1      | 2            |\n| 2      | 4            |\n| 3      | 7            |\n+--------+--------------+\nPassengers table:\n+--------------+--------------+\n| passenger_id | arrival_time |\n+--------------+--------------+\n| 11           | 1            |\n| 12           | 5            |\n| 13           | 6            |\n| 14           | 7            |\n+--------------+--------------+\n<strong>Output:</strong> \n+--------+----------------+\n| bus_id | passengers_cnt |\n+--------+----------------+\n| 1      | 1              |\n| 2      | 0              |\n| 3      | 3              |\n+--------+----------------+\n<strong>Explanation:</strong> \n- Passenger 11 arrives at time 1.\n- Bus 1 arrives at time 2 and collects passenger 11.\n\n- Bus 2 arrives at time 4 and does not collect any passengers.\n\n- Passenger 12 arrives at time 5.\n- Passenger 13 arrives at time 6.\n- Passenger 14 arrives at time 7.\n- Bus 3 arrives at time 7 and collects passengers 12, 13, and 14.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Buses (bus_id int, arrival_time int)\", \"Create table If Not Exists Passengers (passenger_id int, arrival_time int)\"], \"mssql\": [\"Create table Buses (bus_id int, arrival_time int)\", \"Create table Passengers (passenger_id int, arrival_time int)\"], \"oraclesql\": [\"Create table Buses (bus_id int, arrival_time int)\", \"Create table Passengers (passenger_id int, arrival_time int)\"], \"database\": true, \"name\": \"count_passengers_in_bus\", \"pythondata\": [\"Buses = pd.DataFrame([], columns=['bus_id', 'arrival_time']).astype({'bus_id':'Int64', 'arrival_time':'Int64'})\", \"Passengers = pd.DataFrame([], columns=['passenger_id', 'arrival_time']).astype({'passenger_id':'Int64', 'arrival_time':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Buses (bus_id int, arrival_time int)\", \"Create table If Not Exists Passengers (passenger_id int, arrival_time int)\"], \"database_schema\": {\"Buses\": {\"bus_id\": \"INT\", \"arrival_time\": \"INT\"}, \"Passengers\": {\"passenger_id\": \"INT\", \"arrival_time\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"12K\", \"totalSubmission\": \"24.5K\", \"totalAcceptedRaw\": 12009, \"totalSubmissionRaw\": 24451, \"acRate\": \"49.1%\"}",
+  "likes": 117,
+  "dislikes": 12,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Buses\":[\"bus_id\",\"arrival_time\"],\"Passengers\":[\"passenger_id\",\"arrival_time\"]},\"rows\":{\"Buses\":[[1,2],[2,4],[3,7]],\"Passengers\":[[11,1],[12,5],[13,6],[14,7]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef count_passengers_in_bus(buses: pd.DataFrame, passengers: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

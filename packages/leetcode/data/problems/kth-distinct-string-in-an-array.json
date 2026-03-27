@@ -1,0 +1,144 @@
+{
+  "questionId": "2163",
+  "questionFrontendId": "2053",
+  "title": "Kth Distinct String in an Array",
+  "titleSlug": "kth-distinct-string-in-an-array",
+  "difficulty": "Easy",
+  "content": "<p>A <strong>distinct string</strong> is a string that is present only <strong>once</strong> in an array.</p>\n\n<p>Given an array of strings <code>arr</code>, and an integer <code>k</code>, return <em>the </em><code>k<sup>th</sup></code><em> <strong>distinct string</strong> present in </em><code>arr</code>. If there are <strong>fewer</strong> than <code>k</code> distinct strings, return <em>an <strong>empty string </strong></em><code>&quot;&quot;</code>.</p>\n\n<p>Note that the strings are considered in the <strong>order in which they appear</strong> in the array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [&quot;d&quot;,&quot;b&quot;,&quot;c&quot;,&quot;b&quot;,&quot;c&quot;,&quot;a&quot;], k = 2\n<strong>Output:</strong> &quot;a&quot;\n<strong>Explanation:</strong>\nThe only distinct strings in arr are &quot;d&quot; and &quot;a&quot;.\n&quot;d&quot; appears 1<sup>st</sup>, so it is the 1<sup>st</sup> distinct string.\n&quot;a&quot; appears 2<sup>nd</sup>, so it is the 2<sup>nd</sup> distinct string.\nSince k == 2, &quot;a&quot; is returned. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [&quot;aaa&quot;,&quot;aa&quot;,&quot;a&quot;], k = 1\n<strong>Output:</strong> &quot;aaa&quot;\n<strong>Explanation:</strong>\nAll strings in arr are distinct, so the 1<sup>st</sup> string &quot;aaa&quot; is returned.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> arr = [&quot;a&quot;,&quot;b&quot;,&quot;a&quot;], k = 3\n<strong>Output:</strong> &quot;&quot;\n<strong>Explanation:</strong>\nThe only distinct string is &quot;b&quot;. Since there are fewer than 3 distinct strings, we return an empty string &quot;&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= k &lt;= arr.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= arr[i].length &lt;= 5</code></li>\n\t<li><code>arr[i]</code> consists of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Try 'mapping' the strings to check if they are unique or not."
+  ],
+  "metaData": "{\n  \"name\": \"kthDistinct\",\n  \"params\": [\n    {\n      \"name\": \"arr\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"271.7K\", \"totalSubmission\": \"330.8K\", \"totalAcceptedRaw\": 271718, \"totalSubmissionRaw\": 330838, \"acRate\": \"82.1%\"}",
+  "likes": 1317,
+  "dislikes": 53,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Count Common Words With One Occurrence\", \"titleSlug\": \"count-common-words-with-one-occurrence\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"d\",\"b\",\"c\",\"b\",\"c\",\"a\"]\n2",
+    "[\"aaa\",\"aa\",\"a\"]\n1",
+    "[\"a\",\"b\",\"a\"]\n3"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string kthDistinct(vector<string>& arr, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String kthDistinct(String[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kthDistinct(self, arr: List[str], k: int) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kthDistinct(self, arr, k):\n        \"\"\"\n        :type arr: List[str]\n        :type k: int\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} arr\n * @param {number} k\n * @return {string}\n */\nvar kthDistinct = function(arr, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kthDistinct(arr: string[], k: number): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string KthDistinct(string[] arr, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* kthDistinct(char** arr, int arrSize, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kthDistinct(arr []string, k int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kthDistinct(arr: Array<String>, k: Int): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kthDistinct(_ arr: [String], _ k: Int) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn kth_distinct(arr: Vec<String>, k: i32) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} arr\n# @param {Integer} k\n# @return {String}\ndef kth_distinct(arr, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $arr\n     * @param Integer $k\n     * @return String\n     */\n    function kthDistinct($arr, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String kthDistinct(List<String> arr, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kthDistinct(arr: Array[String], k: Int): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec kth_distinct(arr :: [String.t], k :: integer) :: String.t\n  def kth_distinct(arr, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec kth_distinct(Arr :: [unicode:unicode_binary()], K :: integer()) -> unicode:unicode_binary().\nkth_distinct(Arr, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (kth-distinct arr k)\n  (-> (listof string?) exact-integer? string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2391",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach 1: Brute Force\n\n#### Intuition\n\nTo solve this problem, we first need to identify which strings in `arr` are distinct and which occur multiple times.\n\nA brute force approach involves iterating through each string in the array and comparing it with every other string. Strings that do not match any others are considered distinct and are stored in a separate list. After building this list of distinct strings, we can then return the `k`th element from this list, provided it contains at least `k` elements.\n\n#### Algorithm\n\n- Initialize \n  - `n` as the length of the input array `arr`.\n  - a list `distinctStrings` to store distinct strings.\n- Iterate through each string in `arr`:\n  - For each string, set a flag `isDistinct` to `true`.\n  - Compare the current string with every other string in the array:\n    - Skip the comparison if comparing the string with itself.\n    - If the string matches another string, set `isDistinct` to `false` and break the loop.\n  - If `isDistinct` remains `true`, add the current string to `distinctStrings`.\n- After collecting distinct strings, check if the size of `distinctStrings` is less than `k`:\n  - If true, return an empty string, indicating there are not enough distinct strings.\n- Otherwise, return the `k`-th element in `distinctStrings`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LCYXwrq5/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LCYXwrq5\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arr`.\n\n- Time complexity: $O(n^2)$\n\n    The outer loop runs $n$ times, and for each iteration of the outer loop, there's an inner loop that also runs $n$ times, where string comparisons are performed. Although string comparisons typically take linear time relative to the string length, in this case, the length of each string is capped at $5$ characters, allowing us to consider these comparisons as running in constant time.\n\n    Thus, the overall time complexity of the algorithm is $O(n^2)$.\n\n- Space complexity: $O(n)$\n\n    The only additional space used is the `distinctStrings` list, which can store up to $n$ strings in the worst case. Thus, the algorithm takes linear space.\n\n---\n\n### Approach 2: Hash Set\n\n#### Intuition\n\nOur previous approach involved iterating through the array to check for duplicates, which adds a linear element to the time complexity. Let's explore a more efficient method.\n\nIn this improved approach, we'll utilize a hash set to track all encountered strings during iteration. Hash sets are ideal for this task because they offer constant-time add, remove, and lookup operations. For those unfamiliar with hash sets, the LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/183/combination-with-other-algorithms/) on hash tables provides a comprehensive overview.\n\nWe'll maintain two sets: `distinctStrings` and `duplicateStrings`. As we traverse the input array, we'll check if the current string exists in either set. If it does, we'll categorize it as a duplicate and add it to `duplicateStrings`. If not, we'll consider it distinct and add it to `distinctStrings`.\n\nAfter completing the initial loop, `distinctStrings` will contain all unique strings. We'll then iterate through `arr` once more, and each time we encounter a string present in `distinctStrings`, we'll decrement `k`. When `k` reaches zero after a decrement, we can return that string as the `k`th distinct string in the array.\n\nTo illustrate the process, consider the example where `arr = [\"d\", \"b\", \"c\", \"b\", \"c\", \"a\"]` and `k = 2`. The following slideshow will demonstrate how the algorithm arrives at the solution:\n\n!?!../Documents/2053/slideshow.json:810,532!?!\n\n#### Algorithm\n\n- Initialize two sets: `distinctStrings` to track strings that appear only once, and `duplicateStrings` to track strings that appear more than once.\n- Iterate through the array `arr` to populate `distinctStrings` and `duplicateStrings`:\n  - If a string is already in `duplicateStrings`, skip it.\n  - If a string is in `distinctStrings`, move it to `duplicateStrings` (indicating it is now a duplicate) and remove it from `distinctStrings`.\n  - If a string is not in either set, add it to `distinctStrings`.\n- Iterate through the array `arr` again to find the k-th distinct string:\n  - For each string, check if it is in `duplicateStrings`. If not, decrement `k` (indicating this string is one of the distinct strings).\n  - When `k` reaches 0, return the current string as the `k`-th distinct string.\n- If no `k`-th distinct string is found (i.e., `k` does not reach 0), return an empty string.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/68nNZbkz/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"68nNZbkz\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arr`.\n\n- Time complexity: $O(n)$\n\n    The algorithm makes two passes through the input array `arr`. In each pass, all set operations are $O(1)$ on average. Thus, the overall time complexity is $O(2 \\cdot n) = O(n)$.\n\n- Space complexity: $O(n)$\n\n    In the worst case, one of the sets could store all $n$ strings in `arr` (for example, when all the strings are distinct). Thus, the space complexity of the algorithm is $O(n)$.\n\n---\n\n### Approach 3: Hash Map\n\n#### Intuition\n\nMaintaining two sets and managing elements between them can be cumbersome. Let's simplify the process.\n\nAn alternative method to determine if a string is unique is by examining its frequency of occurrence. A string is considered distinct if its frequency is exactly one.\n\nTo implement this approach, we first create a frequency table for all strings in the array. Hash maps are well-suited for this task because they store key-value pairs and provide constant-time operations for adding, removing, and looking up entries. For more details on hash maps and their features, refer to the LeetCode [Explore Card](https://leetcode.com/explore/learn/card/hash-table/184/comparison-with-other-data-structures/).\n\nWith the frequency of each string determined, we can easily identify which strings are distinct. We then iterate over `arr` again and decrement `k` each time we encounter a unique string. When `k` reaches zero, we return the current string as our desired answer.\n\n#### Algorithm\n \n- Create a frequency map `frequencyMap` to count the occurrences of each string in the array `arr`.\n- Iterate through `arr` and for each string, update its frequency in `frequencyMap`.\n- Iterate through `arr` a second time to find the `k`-th distinct string:\n  - For each string, check if its frequency in `frequencyMap` is 1 (indicating it is distinct).\n  - Decrement `k` by 1 each time a distinct string is found.\n  - When `k` reaches 0, return the current string as it is the `k`-th distinct string.\n- If no `k`-th distinct string is found by the end of the array, return an empty string.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/DrVkJ6eF/shared\" frameBorder=\"0\" width=\"100%\" height=\"480\" name=\"DrVkJ6eF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of `arr`.\n\n* Time complexity: $O(n)$\n\n    The algorithm iterates over `arr` twice. For each element, all map operations take constant time on average. Thus, the overall time complexity remains $O(n)$.\n\n* Space complexity: $O(n)$\n\n    The space used by the algorithm is primarily for `frequencyMap`. In the worst case, where all strings are distinct, the map will store $n$ key-value pairs. Therefore, the space complexity is $O(n)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

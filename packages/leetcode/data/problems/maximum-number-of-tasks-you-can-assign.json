@@ -1,0 +1,157 @@
+{
+  "questionId": "2180",
+  "questionFrontendId": "2071",
+  "title": "Maximum Number of Tasks You Can Assign",
+  "titleSlug": "maximum-number-of-tasks-you-can-assign",
+  "difficulty": "Hard",
+  "content": "<p>You have <code>n</code> tasks and <code>m</code> workers. Each task has a strength requirement stored in a <strong>0-indexed</strong> integer array <code>tasks</code>, with the <code>i<sup>th</sup></code> task requiring <code>tasks[i]</code> strength to complete. The strength of each worker is stored in a <strong>0-indexed</strong> integer array <code>workers</code>, with the <code>j<sup>th</sup></code> worker having <code>workers[j]</code> strength. Each worker can only be assigned to a <strong>single</strong> task and must have a strength <strong>greater than or equal</strong> to the task&#39;s strength requirement (i.e., <code>workers[j] &gt;= tasks[i]</code>).</p>\n\n<p>Additionally, you have <code>pills</code> magical pills that will <strong>increase a worker&#39;s strength</strong> by <code>strength</code>. You can decide which workers receive the magical pills, however, you may only give each worker <strong>at most one</strong> magical pill.</p>\n\n<p>Given the <strong>0-indexed </strong>integer arrays <code>tasks</code> and <code>workers</code> and the integers <code>pills</code> and <code>strength</code>, return <em>the <strong>maximum</strong> number of tasks that can be completed.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [<u><strong>3</strong></u>,<u><strong>2</strong></u>,<u><strong>1</strong></u>], workers = [<u><strong>0</strong></u>,<u><strong>3</strong></u>,<u><strong>3</strong></u>], pills = 1, strength = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong>\nWe can assign the magical pill and tasks as follows:\n- Give the magical pill to worker 0.\n- Assign worker 0 to task 2 (0 + 1 &gt;= 1)\n- Assign worker 1 to task 1 (3 &gt;= 2)\n- Assign worker 2 to task 0 (3 &gt;= 3)\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [<u><strong>5</strong></u>,4], workers = [<u><strong>0</strong></u>,0,0], pills = 1, strength = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nWe can assign the magical pill and tasks as follows:\n- Give the magical pill to worker 0.\n- Assign worker 0 to task 0 (0 + 5 &gt;= 5)\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> tasks = [<u><strong>10</strong></u>,<u><strong>15</strong></u>,30], workers = [<u><strong>0</strong></u>,<u><strong>10</strong></u>,10,10,10], pills = 3, strength = 10\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\nWe can assign the magical pills and tasks as follows:\n- Give the magical pill to worker 0 and worker 1.\n- Assign worker 0 to task 0 (0 + 10 &gt;= 10)\n- Assign worker 1 to task 1 (10 + 10 &gt;= 15)\nThe last pill is not given because it will not make any worker strong enough for the last task.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == tasks.length</code></li>\n\t<li><code>m == workers.length</code></li>\n\t<li><code>1 &lt;= n, m &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= pills &lt;= m</code></li>\n\t<li><code>0 &lt;= tasks[i], workers[j], strength &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Is it possible to assign the first k smallest tasks to the workers?",
+    "How can you efficiently try every k?"
+  ],
+  "metaData": "{\n  \"name\": \"maxTaskAssign\",\n  \"params\": [\n    {\n      \"name\": \"tasks\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"workers\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"pills\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"strength\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"85.7K\", \"totalSubmission\": \"171K\", \"totalAcceptedRaw\": 85738, \"totalSubmissionRaw\": 171032, \"acRate\": \"50.1%\"}",
+  "likes": 1094,
+  "dislikes": 57,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Most Profit Assigning Work\", \"titleSlug\": \"most-profit-assigning-work\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximum Running Time of N Computers\", \"titleSlug\": \"maximum-running-time-of-n-computers\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Number of Robots Within Budget\", \"titleSlug\": \"maximum-number-of-robots-within-budget\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Maximum Matching of Players With Trainers\", \"titleSlug\": \"maximum-matching-of-players-with-trainers\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Maximize the Minimum Powered City\", \"titleSlug\": \"maximize-the-minimum-powered-city\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[3,2,1]\n[0,3,3]\n1\n1",
+    "[5,4]\n[0,0,0]\n1\n5",
+    "[10,15,30]\n[0,10,10,10,10]\n3\n10"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Queue",
+      "slug": "queue"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Monotonic Queue",
+      "slug": "monotonic-queue"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTaskAssign(vector<int>& tasks, vector<int>& workers, int pills, int strength) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTaskAssign(int[] tasks, int[] workers, int pills, int strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTaskAssign(self, tasks: List[int], workers: List[int], pills: int, strength: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTaskAssign(self, tasks, workers, pills, strength):\n        \"\"\"\n        :type tasks: List[int]\n        :type workers: List[int]\n        :type pills: int\n        :type strength: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} tasks\n * @param {number[]} workers\n * @param {number} pills\n * @param {number} strength\n * @return {number}\n */\nvar maxTaskAssign = function(tasks, workers, pills, strength) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTaskAssign(tasks: number[], workers: number[], pills: number, strength: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTaskAssign(int[] tasks, int[] workers, int pills, int strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTaskAssign(int* tasks, int tasksSize, int* workers, int workersSize, int pills, int strength) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTaskAssign(tasks []int, workers []int, pills int, strength int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTaskAssign(tasks: IntArray, workers: IntArray, pills: Int, strength: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTaskAssign(_ tasks: [Int], _ workers: [Int], _ pills: Int, _ strength: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_task_assign(tasks: Vec<i32>, workers: Vec<i32>, pills: i32, strength: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} tasks\n# @param {Integer[]} workers\n# @param {Integer} pills\n# @param {Integer} strength\n# @return {Integer}\ndef max_task_assign(tasks, workers, pills, strength)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $tasks\n     * @param Integer[] $workers\n     * @param Integer $pills\n     * @param Integer $strength\n     * @return Integer\n     */\n    function maxTaskAssign($tasks, $workers, $pills, $strength) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTaskAssign(List<int> tasks, List<int> workers, int pills, int strength) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTaskAssign(tasks: Array[Int], workers: Array[Int], pills: Int, strength: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_task_assign(tasks :: [integer], workers :: [integer], pills :: integer, strength :: integer) :: integer\n  def max_task_assign(tasks, workers, pills, strength) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_task_assign(Tasks :: [integer()], Workers :: [integer()], Pills :: integer(), Strength :: integer()) -> integer().\nmax_task_assign(Tasks, Workers, Pills, Strength) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-task-assign tasks workers pills strength)\n  (-> (listof exact-integer?) (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2744",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Approach: Binary Search + Greedy Worker Selection\n\n#### Hint 1\n\nIf we already know that it’s possible to complete exactly $k$ tasks, then:\n\n* We should select the $k$ lowest-valued tasks from the `tasks` array.\n* We should select the $k$ highest-valued workers from the `workers` array.\n\n#### Hint 2\n\nIf it’s possible to complete $k$ tasks while satisfying Hint 1, then it’s also possible to complete $k - 1$ tasks using the $k - 1$ lowest-valued tasks and the $k - 1$ highest-valued workers, which also satisfies Hint 1.\n\n#### Intuition\n\nBased on Hint 2, we can use binary search to find the largest value $k'$ such that we can complete $k'$ tasks, but not $k' + 1$. This value $k'$ is our final answer.\n\nDuring each step of binary search, after selecting the $k$ lowest-valued tasks and the $k$ highest-valued workers, we need to determine whether it’s possible to assign the tasks to the workers.\n\nTo do this, we process the selected tasks in decreasing order of value. For each task, we consider the following two cases:\n\n- **Case 1**: The worker with the highest available value is greater than or equal to the task value.\n  In this case, we do not need to use a pill. We assign this worker (with the maximum value) to this task and remove them from the pool.\n\n  > Why this is optimal: Since this is the most difficult (i.e., highest-valued) task, any worker who can complete it can also complete the easier ones. If we assign a weaker worker instead (even with a pill), and later assign the stronger worker to an easier task, we could have swapped the assignments to make a better match. So it’s always optimal to assign the strongest available worker to the hardest task that doesn't need a pill.\n\n- **Case 2**: No worker can complete the task without a pill.\n  In this case, we must use a pill. We look for the weakest worker who can complete the task with the pill (i.e., a worker with value ≥ $t - \\textit{strength}$) and remove them from the pool.\n\n  > Why this is optimal: Again, since we're processing the hardest task first, any worker who can complete it using a pill can also complete easier tasks using a pill. So, it is always safe (and best) to use the weakest such worker for this hardest task.\n\nTherefore, we can iterate through the tasks in decreasing order of difficulty and maintain an ordered set of available workers. For each task value $t$:\n\n* If the maximum value in the set is ≥ $t$, we remove that maximum worker (no pill needed).\n* If not, we look for the minimum worker with value ≥ $t - \\textit{strength}$. If such a worker exists and we still have pills remaining, we use a pill and remove that worker.\n  Otherwise, it's not possible to complete all tasks with the current value of $k$.\n\nUsing this process, we can find whether a given value of $k$ is feasible.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/ZDR4QtLx/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"ZDR4QtLx\"></iframe>\n\n#### Complexity Analysis\n\n- Time complexity: $O(n \\log n + m \\log m + \\min(m, n) \\log^2 \\min(m, n))$\n\n    - Sorting the `tasks` array requires $O(n \\log n)$ time.\n\n    - Sorting the `workers` array requires $O(m \\log m)$ time.\n\n    - The lower bound of binary search is 1, and the upper bound is the smaller value between $m$ and $n$, so the number of binary search iterations is $\\log \\min(m, n)$. Each iteration involves enumerating $\\min(m, n)$ tasks. During this enumeration, deletion operations are performed on the ordered set of workers, with the time complexity of a single operation being $\\log \\min(m, n)$. Therefore, the total time complexity of binary search is $O(\\min(m, n) \\log^2 \\min(m, n))$.\n\n- Space complexity: $O(\\log n + \\log m + \\min(m, n))$\n\n    - Sorting the `tasks` array requires $O(\\log n)$ stack space.\n\n    - Sorting the `workers` array requires $O(\\log m)$ stack space.\n\n    - The ordered set used in binary search requires $O(\\min(m, n))$ space.\n\n#### Expansion:\n\nIt can be observed that when we enumerate each task from highest to lowest value, and maintain all workers who can complete the task (with the help of pills), then:\n\n- If there is a worker who can complete the task without using a pill, we select (and remove) the worker with the highest value.\n\n- If all available workers need to use a pill to complete the task, we select (and remove) the worker with the lowest value.\n\nAs the task value decreases, the number of workers who can complete it increases or remains the same, but never decreases. Therefore, we can use a deque to maintain all workers who can complete the task (with the use of pills). At this point, we either select (and remove) the worker at the front of the deque or the worker at the back. This reduces the time complexity of a single deletion operation from $O(\\log \\min(m, n))$ to $O(1)$, and the total time complexity becomes:\n\n$$\nO(n \\log n + m \\log m + \\min(m, n) \\log \\min(m, n)) = O(n \\log n + m \\log m)\n$$\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/3C6y8buD/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"3C6y8buD\"></iframe>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "questionId": "2194",
+  "questionFrontendId": "2051",
+  "title": "The Category of Each Member in the Store",
+  "titleSlug": "the-category-of-each-member-in-the-store",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Members</code></p>\n\n<pre>\n+-------------+---------+\n| Column Name | Type    |\n+-------------+---------+\n| member_id   | int     |\n| name        | varchar |\n+-------------+---------+\nmember_id is the column with unique values for this table.\nEach row of this table indicates the name and the ID of a member.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Visits</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| visit_id    | int  |\n| member_id   | int  |\n| visit_date  | date |\n+-------------+------+\nvisit_id is the column with unique values for this table.\nmember_id is a foreign key (reference column) to member_id from the Members table.\nEach row of this table contains information about the date of a visit to the store and the member who visited it.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>Purchases</code></p>\n\n<pre>\n+----------------+------+\n| Column Name    | Type |\n+----------------+------+\n| visit_id       | int  |\n| charged_amount | int  |\n+----------------+------+\nvisit_id is the column with unique values for this table.\nvisit_id is a foreign key (reference column) to visit_id from the Visits table.\nEach row of this table contains information about the amount charged in a visit to the store.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>A store wants to categorize its members. There are three tiers:</p>\n\n<ul>\n\t<li><strong>&quot;Diamond&quot;</strong>: if the conversion rate is <strong>greater than or equal to</strong> <code>80</code>.</li>\n\t<li><strong>&quot;Gold&quot;</strong>: if the conversion rate is <strong>greater than or equal to</strong> <code>50</code> and less than <code>80</code>.</li>\n\t<li><strong>&quot;Silver&quot;</strong>: if the conversion rate is <strong>less than</strong> <code>50</code>.</li>\n\t<li><strong>&quot;Bronze&quot;</strong>: if the member never visited the store.</li>\n</ul>\n\n<p>The <strong>conversion rate</strong> of a member is <code>(100 * total number of purchases for the member) / total number of visits for the member</code>.</p>\n\n<p>Write a solution to report the id, the name, and the category of each member.</p>\n\n<p>Return the result table in <strong>any order</strong>.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nMembers table:\n+-----------+---------+\n| member_id | name    |\n+-----------+---------+\n| 9         | Alice   |\n| 11        | Bob     |\n| 3         | Winston |\n| 8         | Hercy   |\n| 1         | Narihan |\n+-----------+---------+\nVisits table:\n+----------+-----------+------------+\n| visit_id | member_id | visit_date |\n+----------+-----------+------------+\n| 22       | 11        | 2021-10-28 |\n| 16       | 11        | 2021-01-12 |\n| 18       | 9         | 2021-12-10 |\n| 19       | 3         | 2021-10-19 |\n| 12       | 11        | 2021-03-01 |\n| 17       | 8         | 2021-05-07 |\n| 21       | 9         | 2021-05-12 |\n+----------+-----------+------------+\nPurchases table:\n+----------+----------------+\n| visit_id | charged_amount |\n+----------+----------------+\n| 12       | 2000           |\n| 18       | 9000           |\n| 17       | 7000           |\n+----------+----------------+\n<strong>Output:</strong> \n+-----------+---------+----------+\n| member_id | name    | category |\n+-----------+---------+----------+\n| 1         | Narihan | Bronze   |\n| 3         | Winston | Silver   |\n| 8         | Hercy   | Diamond  |\n| 9         | Alice   | Gold     |\n| 11        | Bob     | Silver   |\n+-----------+---------+----------+\n<strong>Explanation:</strong> \n- User Narihan with id = 1 did not make any visits to the store. She gets a Bronze category.\n- User Winston with id = 3 visited the store one time and did not purchase anything. The conversion rate = (100 * 0) / 1 = 0. He gets a Silver category.\n- User Hercy with id = 8 visited the store one time and purchased one time. The conversion rate = (100 * 1) / 1 = 1. He gets a Diamond category.\n- User Alice with id = 9 visited the store two times and purchased one time. The conversion rate = (100 * 1) / 2 = 50. She gets a Gold category.\n- User Bob with id = 11 visited the store three times and purchased one time. The conversion rate = (100 * 1) / 3 = 33.33. He gets a Silver category.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Members (member_id int, name varchar(30))\", \"Create table If Not Exists Visits (visit_id int, member_id int, visit_date date)\", \"Create table If Not Exists Purchases (visit_id int, charged_amount int)\"], \"mssql\": [\"Create table Members (member_id int, name varchar(30))\", \"Create table Visits (visit_id int, member_id int, visit_date date)\", \"Create table Purchases (visit_id int, charged_amount int)\"], \"oraclesql\": [\"Create table Members (member_id int, name varchar(30))\", \"Create table Visits (visit_id int, member_id int, visit_date date)\", \"Create table Purchases (visit_id int, charged_amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"find_categories\", \"pythondata\": [\"Members = pd.DataFrame([], columns=['member_id', 'name']).astype({'member_id':'Int64', 'name':'object'})\", \"Visits = pd.DataFrame([], columns=['visit_id', 'member_id', 'visit_date']).astype({'visit_id':'Int64', 'member_id':'Int64', 'visit_date':'datetime64[ns]'})\", \"Purchases = pd.DataFrame([], columns=['visit_id', 'charged_amount']).astype({'visit_id':'Int64', 'charged_amount':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Members (member_id int, name varchar(30))\", \"Create table If Not Exists Visits (visit_id int, member_id int, visit_date date)\", \"Create table If Not Exists Purchases (visit_id int, charged_amount int)\"], \"database_schema\": {\"Members\": {\"member_id\": \"INT\", \"name\": \"VARCHAR(30)\"}, \"Visits\": {\"visit_id\": \"INT\", \"member_id\": \"INT\", \"visit_date\": \"DATE\"}, \"Purchases\": {\"visit_id\": \"INT\", \"charged_amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"10.8K\", \"totalSubmission\": \"15.4K\", \"totalAcceptedRaw\": 10819, \"totalSubmissionRaw\": 15352, \"acRate\": \"70.5%\"}",
+  "likes": 64,
+  "dislikes": 8,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Members\":[\"member_id\",\"name\"],\"Visits\":[\"visit_id\",\"member_id\",\"visit_date\"],\"Purchases\":[\"visit_id\",\"charged_amount\"]},\"rows\":{\"Members\":[[9,\"Alice\"],[11,\"Bob\"],[3,\"Winston\"],[8,\"Hercy\"],[1,\"Narihan\"]],\"Visits\":[[22,11,\"2021-10-28\"],[16,11,\"2021-01-12\"],[18,9,\"2021-12-10\"],[19,3,\"2021-10-19\"],[12,11,\"2021-03-01\"],[17,8,\"2021-05-07\"],[21,9,\"2021-05-12\"]],\"Purchases\":[[12,2000],[18,9000],[17,7000]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_categories(members: pd.DataFrame, visits: pd.DataFrame, purchases: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

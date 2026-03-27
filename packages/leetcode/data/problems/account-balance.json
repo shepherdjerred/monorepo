@@ -1,0 +1,53 @@
+{
+  "questionId": "2208",
+  "questionFrontendId": "2066",
+  "title": "Account Balance",
+  "titleSlug": "account-balance",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>Transactions</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| account_id  | int  |\n| day         | date |\n| type        | ENUM |\n| amount      | int  |\n+-------------+------+\n(account_id, day) is the primary key (combination of columns with unique values) for this table.\nEach row contains information about one transaction, including the transaction type, the day it occurred on, and the amount.\ntype is an ENUM (category) of the type (&#39;Deposit&#39;,&#39;Withdraw&#39;) \n</pre>\n\n<p>&nbsp;</p>\n\n<p>Write a solution to report the balance of each user after each transaction. You may assume that the balance of each account before any transaction is <code>0</code> and that the balance will never be below <code>0</code> at any moment.</p>\n\n<p>Return the result table <strong>in ascending order</strong> by <code>account_id</code>, then by <code>day</code> in case of a tie.</p>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nTransactions table:\n+------------+------------+----------+--------+\n| account_id | day        | type     | amount |\n+------------+------------+----------+--------+\n| 1          | 2021-11-07 | Deposit  | 2000   |\n| 1          | 2021-11-09 | Withdraw | 1000   |\n| 1          | 2021-11-11 | Deposit  | 3000   |\n| 2          | 2021-12-07 | Deposit  | 7000   |\n| 2          | 2021-12-12 | Withdraw | 7000   |\n+------------+------------+----------+--------+\n<strong>Output:</strong> \n+------------+------------+---------+\n| account_id | day        | balance |\n+------------+------------+---------+\n| 1          | 2021-11-07 | 2000    |\n| 1          | 2021-11-09 | 1000    |\n| 1          | 2021-11-11 | 4000    |\n| 2          | 2021-12-07 | 7000    |\n| 2          | 2021-12-12 | 0       |\n+------------+------------+---------+\n<strong>Explanation:</strong> \nAccount 1:\n- Initial balance is 0.\n- 2021-11-07 --&gt; deposit 2000. Balance is 0 + 2000 = 2000.\n- 2021-11-09 --&gt; withdraw 1000. Balance is 2000 - 1000 = 1000.\n- 2021-11-11 --&gt; deposit 3000. Balance is 1000 + 3000 = 4000.\nAccount 2:\n- Initial balance is 0.\n- 2021-12-07 --&gt; deposit 7000. Balance is 0 + 7000 = 7000.\n- 2021-12-12 --&gt; withdraw 7000. Balance is 7000 - 7000 = 0.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists Transactions (account_id int, day date, type ENUM('Deposit', 'Withdraw'), amount int)\"], \"mssql\": [\"Create table Transactions (account_id int, day date, type varchar(8) NOT NULL CHECK (type IN('Deposit', 'Withdraw')), amount int)\"], \"oraclesql\": [\"Create table Transactions (account_id int, day date, type varchar(8) NOT NULL CHECK (type IN('Deposit', 'Withdraw')), amount int)\", \"ALTER SESSION SET nls_date_format='YYYY-MM-DD'\"], \"database\": true, \"name\": \"account_balance\", \"pythondata\": [\"Transactions = pd.DataFrame([], columns=['account_id', 'day', 'type', 'amount']).astype({'account_id':'Int64', 'day':'datetime64[ns]', 'type':'object', 'amount':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists Transactions (account_id int, day date, type VARCHAR(30) CHECK (type IN ('Deposit', 'Withdraw')), amount int)\\n\"], \"database_schema\": {\"Transactions\": {\"account_id\": \"INT\", \"day\": \"DATE\", \"type\": \"ENUM('Deposit', 'Withdraw')\", \"amount\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"12.8K\", \"totalSubmission\": \"15.7K\", \"totalAcceptedRaw\": 12808, \"totalSubmissionRaw\": 15674, \"acRate\": \"81.7%\"}",
+  "likes": 74,
+  "dislikes": 2,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"Transactions\":[\"account_id\",\"day\",\"type\",\"amount\"]},\"rows\":{\"Transactions\":[[1,\"2021-11-07\",\"Deposit\",2000],[1,\"2021-11-09\",\"Withdraw\",1000],[1,\"2021-11-11\",\"Deposit\",3000],[2,\"2021-12-07\",\"Deposit\",7000],[2,\"2021-12-12\",\"Withdraw\",7000]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef account_balance(transactions: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}

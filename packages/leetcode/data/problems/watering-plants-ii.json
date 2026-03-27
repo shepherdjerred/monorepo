@@ -1,0 +1,137 @@
+{
+  "questionId": "2228",
+  "questionFrontendId": "2105",
+  "title": "Watering Plants II",
+  "titleSlug": "watering-plants-ii",
+  "difficulty": "Medium",
+  "content": "<p>Alice and Bob want to water <code>n</code> plants in their garden. The plants are arranged in a row and are labeled from <code>0</code> to <code>n - 1</code> from left to right where the <code>i<sup>th</sup></code> plant is located at <code>x = i</code>.</p>\n\n<p>Each plant needs a specific amount of water. Alice and Bob have a watering can each, <strong>initially full</strong>. They water the plants in the following way:</p>\n\n<ul>\n\t<li>Alice waters the plants in order from <strong>left to right</strong>, starting from the <code>0<sup>th</sup></code> plant. Bob waters the plants in order from <strong>right to left</strong>, starting from the <code>(n - 1)<sup>th</sup></code> plant. They begin watering the plants <strong>simultaneously</strong>.</li>\n\t<li>It takes the same amount of time to water each plant regardless of how much water it needs.</li>\n\t<li>Alice/Bob <strong>must</strong> water the plant if they have enough in their can to <strong>fully</strong> water it. Otherwise, they <strong>first</strong> refill their can (instantaneously) then water the plant.</li>\n\t<li>In case both Alice and Bob reach the same plant, the one with <strong>more</strong> water currently in his/her watering can should water this plant. If they have the same amount of water, then Alice should water this plant.</li>\n</ul>\n\n<p>Given a <strong>0-indexed</strong> integer array <code>plants</code> of <code>n</code> integers, where <code>plants[i]</code> is the amount of water the <code>i<sup>th</sup></code> plant needs, and two integers <code>capacityA</code> and <code>capacityB</code> representing the capacities of Alice&#39;s and Bob&#39;s watering cans respectively, return <em>the <strong>number of times</strong> they have to refill to water all the plants</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> plants = [2,2,3,3], capacityA = 5, capacityB = 5\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\n- Initially, Alice and Bob have 5 units of water each in their watering cans.\n- Alice waters plant 0, Bob waters plant 3.\n- Alice and Bob now have 3 units and 2 units of water respectively.\n- Alice has enough water for plant 1, so she waters it. Bob does not have enough water for plant 2, so he refills his can then waters it.\nSo, the total number of times they have to refill to water all the plants is 0 + 0 + 1 + 0 = 1.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> plants = [2,2,3,3], capacityA = 3, capacityB = 4\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\n- Initially, Alice and Bob have 3 units and 4 units of water in their watering cans respectively.\n- Alice waters plant 0, Bob waters plant 3.\n- Alice and Bob now have 1 unit of water each, and need to water plants 1 and 2 respectively.\n- Since neither of them have enough water for their current plants, they refill their cans and then water the plants.\nSo, the total number of times they have to refill to water all the plants is 0 + 1 + 1 + 0 = 2.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> plants = [5], capacityA = 10, capacityB = 8\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\n- There is only one plant.\n- Alice&#39;s watering can has 10 units of water, whereas Bob&#39;s can has 8 units. Since Alice has more water in her can, she waters this plant.\nSo, the total number of times they have to refill is 0.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == plants.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= plants[i] &lt;= 10<sup>6</sup></code></li>\n\t<li><code>max(plants[i]) &lt;= capacityA, capacityB &lt;= 10<sup>9</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Try \"simulating\" the process.",
+    "Since watering each plant takes the same amount of time, where will Alice and Bob meet if they start watering the plants simultaneously? How can you use this to optimize your solution?",
+    "What will you do when both Alice and Bob have to water the same plant?"
+  ],
+  "metaData": "{\n  \"name\": \"minimumRefill\",\n  \"params\": [\n    {\n      \"name\": \"plants\",\n      \"type\": \"integer[]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"capacityA\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"capacityB\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"30.6K\", \"totalSubmission\": \"62.9K\", \"totalAcceptedRaw\": 30618, \"totalSubmissionRaw\": 62921, \"acRate\": \"48.7%\"}",
+  "likes": 320,
+  "dislikes": 165,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Watering Plants\", \"titleSlug\": \"watering-plants\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[2,2,3,3]\n5\n5",
+    "[2,2,3,3]\n3\n4",
+    "[5]\n10\n8"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int minimumRefill(vector<int>& plants, int capacityA, int capacityB) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int minimumRefill(int[] plants, int capacityA, int capacityB) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumRefill(self, plants: List[int], capacityA: int, capacityB: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumRefill(self, plants, capacityA, capacityB):\n        \"\"\"\n        :type plants: List[int]\n        :type capacityA: int\n        :type capacityB: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} plants\n * @param {number} capacityA\n * @param {number} capacityB\n * @return {number}\n */\nvar minimumRefill = function(plants, capacityA, capacityB) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumRefill(plants: number[], capacityA: number, capacityB: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MinimumRefill(int[] plants, int capacityA, int capacityB) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int minimumRefill(int* plants, int plantsSize, int capacityA, int capacityB) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumRefill(plants []int, capacityA int, capacityB int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumRefill(plants: IntArray, capacityA: Int, capacityB: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumRefill(_ plants: [Int], _ capacityA: Int, _ capacityB: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_refill(plants: Vec<i32>, capacity_a: i32, capacity_b: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} plants\n# @param {Integer} capacity_a\n# @param {Integer} capacity_b\n# @return {Integer}\ndef minimum_refill(plants, capacity_a, capacity_b)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $plants\n     * @param Integer $capacityA\n     * @param Integer $capacityB\n     * @return Integer\n     */\n    function minimumRefill($plants, $capacityA, $capacityB) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int minimumRefill(List<int> plants, int capacityA, int capacityB) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumRefill(plants: Array[Int], capacityA: Int, capacityB: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_refill(plants :: [integer], capacity_a :: integer, capacity_b :: integer) :: integer\n  def minimum_refill(plants, capacity_a, capacity_b) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_refill(Plants :: [integer()], CapacityA :: integer(), CapacityB :: integer()) -> integer().\nminimum_refill(Plants, CapacityA, CapacityB) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-refill plants capacityA capacityB)\n  (-> (listof exact-integer?) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

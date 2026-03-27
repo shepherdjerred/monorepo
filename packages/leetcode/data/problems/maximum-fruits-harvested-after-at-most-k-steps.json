@@ -1,0 +1,148 @@
+{
+  "questionId": "2229",
+  "questionFrontendId": "2106",
+  "title": "Maximum Fruits Harvested After at Most K Steps",
+  "titleSlug": "maximum-fruits-harvested-after-at-most-k-steps",
+  "difficulty": "Hard",
+  "content": "<p>Fruits are available at some positions on an infinite x-axis. You are given a 2D integer array <code>fruits</code> where <code>fruits[i] = [position<sub>i</sub>, amount<sub>i</sub>]</code> depicts <code>amount<sub>i</sub></code> fruits at the position <code>position<sub>i</sub></code>. <code>fruits</code> is already <strong>sorted</strong> by <code>position<sub>i</sub></code> in <strong>ascending order</strong>, and each <code>position<sub>i</sub></code> is <strong>unique</strong>.</p>\n\n<p>You are also given an integer <code>startPos</code> and an integer <code>k</code>. Initially, you are at the position <code>startPos</code>. From any position, you can either walk to the <strong>left or right</strong>. It takes <strong>one step</strong> to move <strong>one unit</strong> on the x-axis, and you can walk <strong>at most</strong> <code>k</code> steps in total. For every position you reach, you harvest all the fruits at that position, and the fruits will disappear from that position.</p>\n\n<p>Return <em>the <strong>maximum total number</strong> of fruits you can harvest</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/21/1.png\" style=\"width: 472px; height: 115px;\" />\n<pre>\n<strong>Input:</strong> fruits = [[2,8],[6,3],[8,6]], startPos = 5, k = 4\n<strong>Output:</strong> 9\n<strong>Explanation:</strong> \nThe optimal way is to:\n- Move right to position 6 and harvest 3 fruits\n- Move right to position 8 and harvest 6 fruits\nYou moved 3 steps and harvested 3 + 6 = 9 fruits in total.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/21/2.png\" style=\"width: 512px; height: 129px;\" />\n<pre>\n<strong>Input:</strong> fruits = [[0,9],[4,1],[5,7],[6,2],[7,4],[10,9]], startPos = 5, k = 4\n<strong>Output:</strong> 14\n<strong>Explanation:</strong> \nYou can move at most k = 4 steps, so you cannot reach position 0 nor 10.\nThe optimal way is to:\n- Harvest the 7 fruits at the starting position 5\n- Move left to position 4 and harvest 1 fruit\n- Move right to position 6 and harvest 2 fruits\n- Move right to position 7 and harvest 4 fruits\nYou moved 1 + 3 = 4 steps and harvested 7 + 1 + 2 + 4 = 14 fruits in total.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n<img alt=\"\" src=\"https://assets.leetcode.com/uploads/2021/11/21/3.png\" style=\"width: 476px; height: 100px;\" />\n<pre>\n<strong>Input:</strong> fruits = [[0,3],[6,4],[8,5]], startPos = 3, k = 2\n<strong>Output:</strong> 0\n<strong>Explanation:</strong>\nYou can move at most k = 2 steps and cannot reach any position with fruits.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= fruits.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>fruits[i].length == 2</code></li>\n\t<li><code>0 &lt;= startPos, position<sub>i</sub> &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>position<sub>i-1</sub> &lt; position<sub>i</sub></code> for any <code>i &gt; 0</code>&nbsp;(<strong>0-indexed</strong>)</li>\n\t<li><code>1 &lt;= amount<sub>i</sub> &lt;= 10<sup>4</sup></code></li>\n\t<li><code>0 &lt;= k &lt;= 2 * 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Does an optimal path have very few patterns? For example, could a path that goes left, turns and goes right, then turns again and goes left be any better than a path that simply goes left, turns, and goes right?",
+    "The optimal path turns at most once. That is, the optimal path is one of these: to go left only; to go right only; to go left, turn and go right; or to go right, turn and go left.",
+    "Moving x steps left then k-x steps right gives you a range of positions that you can reach.",
+    "Use prefix sums to get the sum of all fruits for each possible range.",
+    "Use a similar strategy for all the paths that go right, then turn and go left."
+  ],
+  "metaData": "{\n  \"name\": \"maxTotalFruits\",\n  \"params\": [\n    {\n      \"name\": \"fruits\",\n      \"type\": \"integer[][]\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"startPos\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"86.3K\", \"totalSubmission\": \"141.5K\", \"totalAcceptedRaw\": 86339, \"totalSubmissionRaw\": 141474, \"acRate\": \"61.0%\"}",
+  "likes": 1001,
+  "dislikes": 43,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Maximum Performance of a Team\", \"titleSlug\": \"maximum-performance-of-a-team\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[2,8],[6,3],[8,6]]\n5\n4",
+    "[[0,9],[4,1],[5,7],[6,2],[7,4],[10,9]]\n5\n4",
+    "[[0,3],[6,4],[8,5]]\n3\n2"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 5, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 4, \"slug\": \"kla\", \"name\": \"KLA\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"mishipay\", \"name\": \"MishiPay\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxTotalFruits(vector<vector<int>>& fruits, int startPos, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxTotalFruits(int[][] fruits, int startPos, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxTotalFruits(self, fruits: List[List[int]], startPos: int, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxTotalFruits(self, fruits, startPos, k):\n        \"\"\"\n        :type fruits: List[List[int]]\n        :type startPos: int\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} fruits\n * @param {number} startPos\n * @param {number} k\n * @return {number}\n */\nvar maxTotalFruits = function(fruits, startPos, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxTotalFruits(fruits: number[][], startPos: number, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxTotalFruits(int[][] fruits, int startPos, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxTotalFruits(int** fruits, int fruitsSize, int* fruitsColSize, int startPos, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxTotalFruits(fruits [][]int, startPos int, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxTotalFruits(fruits: Array<IntArray>, startPos: Int, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxTotalFruits(_ fruits: [[Int]], _ startPos: Int, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_total_fruits(fruits: Vec<Vec<i32>>, start_pos: i32, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} fruits\n# @param {Integer} start_pos\n# @param {Integer} k\n# @return {Integer}\ndef max_total_fruits(fruits, start_pos, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $fruits\n     * @param Integer $startPos\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxTotalFruits($fruits, $startPos, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxTotalFruits(List<List<int>> fruits, int startPos, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxTotalFruits(fruits: Array[Array[Int]], startPos: Int, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_total_fruits(fruits :: [[integer]], start_pos :: integer, k :: integer) :: integer\n  def max_total_fruits(fruits, start_pos, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_total_fruits(Fruits :: [[integer()]], StartPos :: integer(), K :: integer()) -> integer().\nmax_total_fruits(Fruits, StartPos, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-total-fruits fruits startPos k)\n  (-> (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2806",
+    "content": "### Approach 1: Binary Search\n\n#### Intuition\n\nSince the fruit positions are already sorted in ascending order, we can efficiently determine how many fruits fall within any interval on the x-axis using binary search. The main challenge is to find the interval of positions that can be reached from `startPos` using at most $k$ steps, such that the total number of fruits collected is maximized.\n\nWe follow a greedy strategy, moving in one direction first and then turning around. This works because fruits can only be picked once, and covering a wider range increases the chance of collecting more fruits.\n\nThere are two main movement patterns:\n\n- Move $x$ steps in one direction, then $k - x$ steps in the opposite direction.\n- When $x = 0$, we simply move in one direction for $k$ steps.\n\nFor each $x$ in the range $[0, \\left\\lfloor \\frac{k}{2} \\right\\rfloor]$, we consider:\n\n1. Left-first movement: move left $x$ steps, then right $(k - x)$ steps. This covers the interval $[\\textit{startPos} - x, \\textit{startPos} + k - 2x]$.\n2. Right-first movement: move right $x$ steps, then left $(k - x)$ steps. This covers the interval $[\\textit{startPos} - (k - 2x), \\textit{startPos} + x]$.\n\nFor each of these intervals, we compute the number of fruits using prefix sums and binary search in $O(\\log n)$ time. The maximum value across all such intervals gives the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/RVS3qU6Q/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"RVS3qU6Q\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{fruits}$, and let $k$ be the given integer.\n\n- Time complexity: $O(n + k \\log n)$.\n  \n  The time complexity for calculating the prefix sum of the array is $O(n)$, and the time required for each query to find the number of fruits in a range is $O(\\log n)$. Since there are a total of $k$ queries, the overall time complexity is $O(n + k \\log n)$.\n\n- Space complexity: $O(n)$.\n  \n  We calculate and store the prefix sum of the array, which requires $O(n)$ space.\n\n---\n\n### Approach 2: Sliding Window\n\n#### Intuition\n\nWe can approach the problem from a new perspective. Suppose we fix an interval $[ \\textit{left}, \\textit{right} ]$ (where `left` and `right` are **indices** in the `fruits` array). From the given starting position `startPos`, how many steps are required to visit all fruit positions within this interval?\n\nThere are three cases to consider:\n\n* **Case 1:** `startPos > fruits[right][0]`\n  The interval lies entirely to the left of `startPos`. We need to move left to reach `fruits[left][0]`.\n  Steps needed:\n\n  $$\n  \\textit{startPos} - \\textit{fruits[left][0]}\n  $$\n\n* **Case 2:** `startPos < fruits[left][0]`\n  The interval lies entirely to the right of `startPos`. We need to move right to reach `fruits[right][0]`.\n  Steps needed:\n\n  $$\n  \\textit{fruits[right][0]} - \\textit{startPos}\n  $$\n\n* **Case 3:** `startPos` is within the interval\n  There are two ways to visit both ends:\n\n  * Go left first to `fruits[left][0]`, then right to `fruits[right][0]`\n    Steps:\n\n    $$\n    \\textit{startPos} - \\textit{fruits[left][0]} + \\textit{fruits[right][0]} - \\textit{fruits[left][0]}\n    $$\n  * Go right first to `fruits[right][0]`, then left to `fruits[left][0]`\n    Steps:\n\n    $$\n    \\textit{fruits[right][0]} - \\textit{startPos} + \\textit{fruits[right][0]} - \\textit{fruits[left][0]}\n    $$\n\nSo, in general, the minimum number of steps required to traverse the interval $[ \\textit{fruits[left][0]}, \\textit{fruits[right][0]} ]$ is:\n\n$$\n\\text{step}(left, right) = \\textit{fruits[right][0]} - \\textit{fruits[left][0]} + \\min\\left( |\\textit{startPos} - \\textit{fruits[left][0]}|,\\ |\\textit{startPos} - \\textit{fruits[right][0]}| \\right)\n$$\n\nThis expression ensures that we count both the total distance and the shorter leg from `startPos` to either end.\n\nNow, if we fix `right` and slide `left`, we observe:\n\n* If `fruits[left][0] < startPos`, decreasing `left` can decrease the `step` value.\n* If `fruits[left][0] ≥ startPos`, decreasing `left` no longer helps and `step` stays the same or increases.\n\nThus, for fixed `right`, the `step(left, right)` function is non-increasing as long as `fruits[left][0] < startPos`, and non-decreasing afterward.\n\nThus, we use a sliding window where both `left` and `right` are pointers to intervals in the `fruits` array. As we move `right` forward to include more fruits, we check whether the number of steps needed to reach the interval exceeds `k`. If it does, we increment `left` to shrink the window until the constraint is satisfied. At each step, we track the sum of fruits in the valid window and update the maximum found so far.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LtqkxpT2/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"LtqkxpT2\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the length of the array $\\textit{fruits}$.\n\n- Time complexity: $O(n)$.\n  \n  Each time, we move the right endpoint of the fixed window and then try to move the left endpoint. The right endpoint can move at most $n$ times, and the left endpoint can also move at most $n$ times. Therefore, the time complexity is $O(2n) = O(n)$.\n\n- Space complexity: $O(1)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

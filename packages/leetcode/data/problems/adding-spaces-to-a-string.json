@@ -1,0 +1,146 @@
+{
+  "questionId": "2232",
+  "questionFrontendId": "2109",
+  "title": "Adding Spaces to a String",
+  "titleSlug": "adding-spaces-to-a-string",
+  "difficulty": "Medium",
+  "content": "<p>You are given a <strong>0-indexed</strong> string <code>s</code> and a <strong>0-indexed</strong> integer array <code>spaces</code> that describes the indices in the original string where spaces will be added. Each space should be inserted <strong>before</strong> the character at the given index.</p>\n\n<ul>\n\t<li>For example, given <code>s = &quot;EnjoyYourCoffee&quot;</code> and <code>spaces = [5, 9]</code>, we place spaces before <code>&#39;Y&#39;</code> and <code>&#39;C&#39;</code>, which are at indices <code>5</code> and <code>9</code> respectively. Thus, we obtain <code>&quot;Enjoy <strong><u>Y</u></strong>our <u><strong>C</strong></u>offee&quot;</code>.</li>\n</ul>\n\n<p>Return<strong> </strong><em>the modified string <strong>after</strong> the spaces have been added.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;LeetcodeHelpsMeLearn&quot;, spaces = [8,13,15]\n<strong>Output:</strong> &quot;Leetcode Helps Me Learn&quot;\n<strong>Explanation:</strong> \nThe indices 8, 13, and 15 correspond to the underlined characters in &quot;Leetcode<u><strong>H</strong></u>elps<u><strong>M</strong></u>e<u><strong>L</strong></u>earn&quot;.\nWe then place spaces before those characters.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;icodeinpython&quot;, spaces = [1,5,7,9]\n<strong>Output:</strong> &quot;i code in py thon&quot;\n<strong>Explanation:</strong>\nThe indices 1, 5, 7, and 9 correspond to the underlined characters in &quot;i<u><strong>c</strong></u>ode<u><strong>i</strong></u>n<u><strong>p</strong></u>y<u><strong>t</strong></u>hon&quot;.\nWe then place spaces before those characters.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> s = &quot;spacing&quot;, spaces = [0,1,2,3,4,5,6]\n<strong>Output:</strong> &quot; s p a c i n g&quot;\n<strong>Explanation:</strong>\nWe are also able to place spaces before the first character of the string.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= s.length &lt;= 3 * 10<sup>5</sup></code></li>\n\t<li><code>s</code> consists only of lowercase and uppercase English letters.</li>\n\t<li><code>1 &lt;= spaces.length &lt;= 3 * 10<sup>5</sup></code></li>\n\t<li><code>0 &lt;= spaces[i] &lt;= s.length - 1</code></li>\n\t<li>All the values of <code>spaces</code> are <strong>strictly increasing</strong>.</li>\n</ul>\n",
+  "hints": [
+    "Create a new string, initially empty, as the modified string. Iterate through the original string and append each character of the original string to the new string. However, each time you reach a character that requires a space before it, append a space before appending the character.",
+    "Since the array of indices for the space locations is sorted, use a pointer to keep track of the next index to place a space. Only increment the pointer once a space has been appended.",
+    "Ensure that your append operation can be done in O(1)."
+  ],
+  "metaData": "{\n  \"name\": \"addSpaces\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer[]\",\n      \"name\": \"spaces\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"223.4K\", \"totalSubmission\": \"311.2K\", \"totalAcceptedRaw\": 223427, \"totalSubmissionRaw\": 311172, \"acRate\": \"71.8%\"}",
+  "likes": 1120,
+  "dislikes": 113,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"LeetcodeHelpsMeLearn\"\n[8,13,15]",
+    "\"icodeinpython\"\n[1,5,7,9]",
+    "\"spacing\"\n[0,1,2,3,4,5,6]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Simulation",
+      "slug": "simulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string addSpaces(string s, vector<int>& spaces) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String addSpaces(String s, int[] spaces) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def addSpaces(self, s: str, spaces: List[int]) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def addSpaces(self, s, spaces):\n        \"\"\"\n        :type s: str\n        :type spaces: List[int]\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {number[]} spaces\n * @return {string}\n */\nvar addSpaces = function(s, spaces) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function addSpaces(s: string, spaces: number[]): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string AddSpaces(string s, int[] spaces) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* addSpaces(char* s, int* spaces, int spacesSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func addSpaces(s string, spaces []int) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun addSpaces(s: String, spaces: IntArray): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func addSpaces(_ s: String, _ spaces: [Int]) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn add_spaces(s: String, spaces: Vec<i32>) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {Integer[]} spaces\n# @return {String}\ndef add_spaces(s, spaces)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param Integer[] $spaces\n     * @return String\n     */\n    function addSpaces($s, $spaces) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String addSpaces(String s, List<int> spaces) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def addSpaces(s: String, spaces: Array[Int]): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec add_spaces(s :: String.t, spaces :: [integer]) :: String.t\n  def add_spaces(s, spaces) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec add_spaces(S :: unicode:unicode_binary(), Spaces :: [integer()]) -> unicode:unicode_binary().\nadd_spaces(S, Spaces) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (add-spaces s spaces)\n  (-> string? (listof exact-integer?) string?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2601",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nWe are given a string `s` and an integer array `spaces`. The task is to return a modified string with spaces inserted at the indices specified in the given array. \n\nFor example, let's take `s = \"LeetcodeHelpsMeLearn\"` and `spaces = [8, 13, 15]`. We will insert a space before the `'H'` at index `8`, the `'M'` at index `13`, and the `'L'` at index `15`. After inserting the spaces, the string will look like this: `\"Leetcode Helps Me Learn\"`.\n\nBefore moving to the approach, let's discuss a few built-in functions that are designed to help build or modify strings.\n\n##### For Java Users\n- `StringBuilder`: The `StringBuilder` class is designed for building and manipulating strings. It is more efficient than using the `String` class directly because it is mutable, meaning its contents can be changed without creating a new object each time.\n\nLet's break down some common operations you can perform with `StringBuilder`:\n```java\n// 1. Initializing a StringBuilder Object\nStringBuilder result = new StringBuilder();\n// 2. Appending a Space\nresult.append(' ');\n// 3. Appending a Character from a String\nresult.append(s.charAt(stringIndex));\n// 4. Converting StringBuilder to a String\nString finalString = result.toString();\n```\n\n### For Python Users\n- `List`: Lists are mutable sequences, typically used to store collections of items. They allow for efficient append operations, making them ideal for building and manipulating strings dynamically.\n\nLet's break down some common operations you can perform with `List`:\n```python\n# 1. Initializing an empty list\nresult = []\n# 2. Appending a space to the list\nresult.append(\" \")\n# 3. Appending the character at the specified index from the string `s`\nresult.append(s[string_index])\n# 4. Joining all elements in the list into a single string\nfinal_string = \"\".join(result)\n```\n\n### For C++ Users\n- `stringstream`: The `stringstream` class is used for dynamically constructing and manipulating strings. It allows for efficient insertion and extraction of data.\n\nLet's break down some common operations you can perform with `stringstream`:\n```cpp\n// 1. Initializing a new stringstream object\nstringstream result;\n// 2. Inserting a space into the stringstream\nresult << ' ';\n// 3. Inserting the character at the specified index from the string `s`\nresult << s[stringIndex];\n// 4. Converting the stringstream to a string\nstring finalString = result.str();\n```\n\n---\n\n### Approach 1: Using Built-in Functions\n\n#### Intuition\n\nA simple approach to solving this problem is to use built-in functions from the string libraries of your preferred programming language. For example, in C++, the `stringstream` class provides a higher-level way to build strings dynamically. Instead of manually pre-allocating space, you can append characters and spaces into a stream as you traverse the original string. Each time you encounter an index in the `spaces` array, you can append a space to the stream, followed by the current character.\n\nThis is easier to implement and more intuitive for programmers who are familiar with built-in functions. However, because the underlying buffer of these built-in functions grows dynamically, it is not as memory-efficient as manually constructing the string for this problem.\n\n#### Algorithm\n\n- Create a `result` to dynamically construct the output string.\n- Initialize `spaceIndex` to `0` to track the current position in the `spaces` array.\n\n- For each `stringIndex` from `0` to the end of the string `s`:\n  - If `spaceIndex` is within bounds of the `spaces` array and `stringIndex` matches `spaces[spaceIndex]`:\n    - Append a space (`' '`) to `result` to insert a space at the specified position.\n    - Increment `spaceIndex` to move to the next position in the `spaces` array.\n  - Append the character `s[stringIndex]` to `result`.\n\n- After iterating through the string, convert `result` to a string and return it as the final output.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/5uUNLTyX/shared\" frameBorder=\"0\" width=\"100%\" height=\"412\" name=\"5uUNLTyX\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`, and `m` be the size of the array `spaces`, which represents the number of spaces to be added.\n\n- Time complexity: $O(n + m)$  \n\n    The `for` loop iterates through the string `s` of length $n$, which contributes $O(n)$.  \n\n    Within the loop, the comparison of `stringIndex` with `spaces[spaceIndex]` involves accessing the array `spaces`, which occurs `m` times at most (since `spaceIndex` is incremented for each space insertion). This contributes $O(m)$.  \n\n    Using built-in functions to append characters to a dynamic buffer is efficient because append operations are amortized $O(1)$. Therefore, the total time complexity is $O(n + m)$.\n\n- Space complexity: $O(1)$ (if we only count auxiliary space) or $O(n + m)$ (if we count the space for the result)\n\n    The built-in function dynamically constructs the result string, which requires space for $n$ characters from the input string `s` and `m` spaces to be inserted. This results in $O(n + m)$ space usage for the result string, as this space is required to hold the final output.\n\n    However, if we only consider auxiliary space for variables like `spaceIndex` and `stringIndex`, which are used to control the loop, the space complexity can be considered $O(1)$, as they require constant space. \n\n    Therefore, the overall space complexity is $O(n + m)$ when including the space for the result string, but $O(1)$ if we only account for the auxiliary space.\n\n---\n\n### Approach 2: Two-Pointer Technique \n\n#### Intuition\n\nTo further optimize the solution, we can use a two-pointer technique. This involves maintaining two pointers:\n1. `stringIndex`, which tracks the current character in the string `s`.\n2. `spaceIndex`, which tracks the current position in the `spaces` array.\"\n\nAs we iterate through the string using `stringIndex`, we check if it matches the current space position given by `spaces[spaceIndex]`. If they match, we insert a space at that position and move to the next space by incrementing `spaceIndex`. Regardless of whether a space was added, we append the current character from the string to the `result`. After processing all the characters, we return the final string with spaces inserted at the specified positions.\n\nThe algorithm is visualized below:\n\n!?!../Documents/2109/2109_adding_spaces.json:700,505!?!\n\n> For a more comprehensive understanding of the two-pointer technique, check out the [Two Pointer Explore Card 🔗](https://leetcode.com/explore/learn/card/array-and-string/205/array-two-pointer-technique/). This resource provides an in-depth look at the two-pointer approach, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize an empty string `result` to build the output string with spaces added.\n- Pre-allocate memory for `result` to improve efficiency, reserving the original string length plus the number of spaces.\n- Initialize `spaceIndex` to `0` to track the current position in the `spaces` array.\n\n- Iterate through the input string `s` using `stringIndex`:\n  - If `spaceIndex` is less than the size of `spaces` and `stringIndex` equals `spaces[spaceIndex]`:\n    - Append a space character `' '` to `result` at the specified position.\n    - Increment `spaceIndex` to process the next space position.\n\n  - Append the current character `s[stringIndex]` to `result`.\n\n- Return `result` after processing all characters in `s` and adding the specified spaces.\n\n#### Implementation\n\n> Note: By calculating the final size of the string beforehand (original length plus the number of spaces), we can allocate the necessary memory in one go, thereby saving time and avoiding the overhead of resizing the result every time we add something.\n\n<iframe src=\"https://leetcode.com/playground/862CsKhj/shared\" frameBorder=\"0\" width=\"100%\" height=\"446\" name=\"862CsKhj\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the size of the string `s`, and `m` be the size of the array `spaces`, which represents the number of spaces to be added.\n\n- Time complexity: $O(n + m)$  \n\n    The algorithm iterates through the string `s` of length $n$ using a `for` loop, making the primary contribution to the time complexity $O(n)$.\n\n    For every position in `s`, it checks against the current space index in the `spaces` array, which has a maximum size of `m`. Since `spaceIndex` is incremented only when a space is added, this contributes $O(m)$ to the time complexity.  \n\n    Appending characters and spaces to the `result` string is efficient due to the pre-allocation of memory, which ensures these operations occur in amortized $O(1)$. Thus, the total time complexity is $O(n + m)$. \n\n- Space complexity: $O(1)$ (if we only count auxiliary space) or $O(n + m)$ (if we count the space for the result)\n\n    If we only account for auxiliary space, the space complexity can be considered $O(1)$ because we are using a few integer variables (`spaceIndex`, `stringIndex`) to control the flow. \n\n    However, since the result string (constructed via built-in functions) holds $n$ characters from `s` and `m` spaces, the space required to store the result is $O(n + m)$. This is the space required for the output string and is a direct consequence of the problem's input/output constraints. \n\n    Therefore, the overall space complexity is $O(n + m)$ when including the space for the result string, but $O(1)$ if we only account for the auxiliary space.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

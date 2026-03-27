@@ -1,0 +1,60 @@
+{
+  "questionId": "2214",
+  "questionFrontendId": "2072",
+  "title": "The Winner University",
+  "titleSlug": "the-winner-university",
+  "difficulty": "Easy",
+  "content": "<p>Table: <code>NewYork</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| student_id  | int  |\n| score       | int  |\n+-------------+------+\nIn SQL, student_id is the primary key for this table.\nEach row contains information about the score of one student from New York University in an exam.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>Table: <code>California</code></p>\n\n<pre>\n+-------------+------+\n| Column Name | Type |\n+-------------+------+\n| student_id  | int  |\n| score       | int  |\n+-------------+------+\nIn SQL, student_id is the primary key for this table.\nEach row contains information about the score of one student from California University in an exam.\n</pre>\n\n<p>&nbsp;</p>\n\n<p>There is a competition between New York University and California University. The competition is held between the same number of students from both universities. The university that has more <strong>excellent students</strong> wins the competition. If the two universities have the same number of <strong>excellent students</strong>, the competition ends in a draw.</p>\n\n<p>An <strong>excellent student</strong> is a student that scored <code>90%</code> or more in the exam.</p>\n\n<p>Return:</p>\n\n<ul>\n\t<li><strong>&quot;New York University&quot;</strong> if New York University wins the competition.</li>\n\t<li><strong>&quot;California University&quot;</strong> if California University wins the competition.</li>\n\t<li><strong>&quot;No Winner&quot;</strong> if the competition ends in a draw.</li>\n</ul>\n\n<p>The result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nNewYork table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 1          | 90    |\n| 2          | 87    |\n+------------+-------+\nCalifornia table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 2          | 89    |\n| 3          | 88    |\n+------------+-------+\n<strong>Output:</strong> \n+---------------------+\n| winner              |\n+---------------------+\n| New York University |\n+---------------------+\n<strong>Explanation:</strong>\nNew York University has 1 excellent student, and California University has 0 excellent students.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nNewYork table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 1          | 89    |\n| 2          | 88    |\n+------------+-------+\nCalifornia table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 2          | 90    |\n| 3          | 87    |\n+------------+-------+\n<strong>Output:</strong> \n+-----------------------+\n| winner                |\n+-----------------------+\n| California University |\n+-----------------------+\n<strong>Explanation:</strong>\nNew York University has 0 excellent students, and California University has 1 excellent student.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> \nNewYork table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 1          | 89    |\n| 2          | 90    |\n+------------+-------+\nCalifornia table:\n+------------+-------+\n| student_id | score |\n+------------+-------+\n| 2          | 87    |\n| 3          | 99    |\n+------------+-------+\n<strong>Output:</strong> \n+-----------+\n| winner    |\n+-----------+\n| No Winner |\n+-----------+\n<strong>Explanation:</strong>\nBoth New York University and California University have 1 excellent student.\n</pre>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table If Not Exists NewYork (student_id int, score int)\", \"Create table If Not Exists California (student_id int, score int)\"], \"mssql\": [\"Create table NewYork (student_id int, score int)\", \"Create table California (student_id int, score int)\"], \"oraclesql\": [\"Create table NewYork (student_id int, score int)\", \"Create table California (student_id int, score int)\"], \"database\": true, \"name\": \"find_winner\", \"pythondata\": [\"NewYork = pd.DataFrame([], columns=['student_id', 'score']).astype({'student_id':'Int64', 'score':'Int64'})\", \"California = pd.DataFrame([], columns=['student_id', 'score']).astype({'student_id':'Int64', 'score':'Int64'})\"], \"postgresql\": [\"Create table If Not Exists NewYork (student_id int, score int)\", \"Create table If Not Exists California (student_id int, score int)\"], \"database_schema\": {\"NewYork\": {\"student_id\": \"INT\", \"score\": \"INT\"}, \"California\": {\"student_id\": \"INT\", \"score\": \"INT\"}}}",
+  "stats": "{\"totalAccepted\": \"14.9K\", \"totalSubmission\": \"19.7K\", \"totalAcceptedRaw\": 14858, \"totalSubmissionRaw\": 19670, \"acRate\": \"75.5%\"}",
+  "likes": 71,
+  "dislikes": 3,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"The Number of Rich Customers\", \"titleSlug\": \"the-number-of-rich-customers\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"NewYork\":[\"student_id\",\"score\"],\"California\":[\"student_id\",\"score\"]},\"rows\":{\"NewYork\":[[1,90],[2,87]],\"California\":[[2,89],[3,88]]}}",
+    "{\"headers\":{\"NewYork\":[\"student_id\",\"score\"],\"California\":[\"student_id\",\"score\"]},\"rows\":{\"NewYork\":[[1,89],[2,88]],\"California\":[[2,90],[3,87]]}}",
+    "{\"headers\":{\"NewYork\":[\"student_id\",\"score\"],\"California\":[\"student_id\",\"score\"]},\"rows\":{\"NewYork\":[[1,89],[2,90]],\"California\":[[2,87],[3,99]]}}"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"walmart-labs\", \"name\": \"Walmart Labs\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_winner(new_york: pd.DataFrame, california: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": {
+    "id": "2207",
+    "content": "[TOC]\n\n# Solution\n\n---\n\n## pandas\n\n### Approach: DataFrame Filtering and Analysis\n\nThe solution involves filtering, counting, comparing, and presenting the results using pandas DataFrames.\n\n**Visualization of Approach:**\n\n![fig](../Figures/2072/2072-1.png)\n\n#### Intuition\n\nLet's review the intuition behind each step given the following input DataFrames:\n\nNew York DataFrame (`new_york`):\n\n<table border=\"1\">\n  <tr>\n    <th>student_id</th>\n    <th>score</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>90</td>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>87</td>\n  </tr>\n</table>\n<br>\n\nCalifornia DataFrame (`california`):\n\n<table border=\"1\">\n  <tr>\n    <th>student_id</th>\n    <th>score</th>\n  </tr>\n  <tr>\n    <td>2</td>\n    <td>89</td>\n  </tr>\n  <tr>\n    <td>3</td>\n    <td>88</td>\n  </tr>\n</table>\n<br>\n\n1. Filtering Excellent Students\n  \n  We first identify excellent students in each university by using DataFrame filtering.\n  \n  ```python\n  ny_excellent = new_york[new_york['score'] >= 90]\n  ca_excellent = california[california['score'] >= 90]\n  ```\n\n`ny_excellent`: \n\n<table border=\"1\">\n  <tr>\n    <th>student_id</th>\n    <th>score</th>\n  </tr>\n  <tr>\n    <td>1</td>\n    <td>90</td>\n  </tr>\n</table>\n<br>\n\n`ca_excellent`:\n\n<table border=\"1\">\n  <tr>\n    <th>student_id</th>\n    <th>score</th>\n  </tr>\n</table>\n<br>\n\n2. Counting Excellent Students\n  \n  We count the number of excellent students at each university by counting the number of rows in the filtered DataFrames.\n  \n  ```python\n  ny_excellent_count = ny_excellent.shape[0]  # 1\n  ca_excellent_count = ca_excellent.shape[0]  # 0\n  ```\n\n3. Comparing the Counts\n\n  Compare the counts to determine which university has more excellent students using basic `if-elif-else` statements for comparison.\n\n  ```python\n  if ny_excellent_count > ca_excellent_count:\n      winner = 'New York University'\n  elif ny_excellent_count < ca_excellent_count:\n      winner = 'California University'\n  else:\n      winner = 'No Winner'\n  ```\n\n4. Returning the Result\n\n  Create a new DataFrame with the final result in the required format.\n\n  ```python\n  result = pd.DataFrame({'winner': [winner]})\n  ```\n\n`result`:\n\n<table border=\"1\">\n  <tr>\n    <th>winner</th>\n  </tr>\n  <tr>\n    <td>New York University</td>\n  </tr>\n</table>\n<br>\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/Eocu3ZcX/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"Eocu3ZcX\"></iframe>\n\n---\n\n## Database\n\n### Approach: Comparative Aggregation Query\n\nThe fundamental idea is to count the number of excellent students in each university and then compare these counts to determine the winner.\n\n#### Intuition\n\nHere's a breakdown of the logic:\n\n\n1. Counting Excellent Students\n\n   The first and most crucial step is to identify the excellent students in each university. This is done by filtering students who have scored 90 or more.\n\n   We use the SQL `COUNT(*)` function within a subquery for each university. The `WHERE score >= 90` clause ensures we only count the students with scores of 90 or above.\n\n2. Subqueries for Each University\n\n   We need individual counts for each university. To do this, we create separate subqueries, one for New York University (`NY`) and one for California University (`CA`).\n\n   We write two subqueries, each selecting from the respective university tables (`NewYork` and `California`). Each subquery uses `COUNT(*)` to count the number of records that meet our excellent student criteria.\n\n3. Comparing the Counts\n\n   Once we have the counts of excellent students from both universities, the next step is to compare these counts to determine which university has more excellent students, or if it's a tie.\n\n   We use a `CASE` statement to compare the counts. This statement evaluates the conditions in sequence:\n   - If New York's count is greater, it returns \"New York University\".\n   - If California's count is greater, it returns \"California University\".\n   - If neither condition is true (implying equality), it returns \"No Winner\".\n\n4. Returning the Result as a Single Row\n\n   The output needs to be a single row indicating the winner.\n\n   The `CASE` statement is within a `SELECT` query that returns a single row. This row reflects the outcome of the comparison: either one of the universities as the winner or a draw.\n\n\n#### Implementation\n\n\n```mysql []\nSELECT \n  CASE \n    WHEN NY.excellent_students > CA.excellent_students THEN 'New York University'\n    WHEN NY.excellent_students < CA.excellent_students THEN 'California University'\n    ELSE 'No Winner'\n  END AS winner\nFROM \n  (\n    SELECT \n      COUNT(*) as excellent_students \n    FROM \n      NewYork \n    WHERE \n      score >= 90\n  ) NY, \n  (\n    SELECT \n      COUNT(*) as excellent_students \n    FROM \n      California \n    WHERE \n      score >= 90\n  ) CA;\n\n```",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

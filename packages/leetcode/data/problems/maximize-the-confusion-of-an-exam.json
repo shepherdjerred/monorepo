@@ -1,0 +1,145 @@
+{
+  "questionId": "2134",
+  "questionFrontendId": "2024",
+  "title": "Maximize the Confusion of an Exam",
+  "titleSlug": "maximize-the-confusion-of-an-exam",
+  "difficulty": "Medium",
+  "content": "<p>A teacher is writing a test with <code>n</code> true/false questions, with <code>&#39;T&#39;</code> denoting true and <code>&#39;F&#39;</code> denoting false. He wants to confuse the students by <strong>maximizing</strong> the number of <strong>consecutive</strong> questions with the <strong>same</strong> answer (multiple trues or multiple falses in a row).</p>\n\n<p>You are given a string <code>answerKey</code>, where <code>answerKey[i]</code> is the original answer to the <code>i<sup>th</sup></code> question. In addition, you are given an integer <code>k</code>, the maximum number of times you may perform the following operation:</p>\n\n<ul>\n\t<li>Change the answer key for any question to <code>&#39;T&#39;</code> or <code>&#39;F&#39;</code> (i.e., set <code>answerKey[i]</code> to <code>&#39;T&#39;</code> or <code>&#39;F&#39;</code>).</li>\n</ul>\n\n<p>Return <em>the <strong>maximum</strong> number of consecutive</em> <code>&#39;T&#39;</code>s or <code>&#39;F&#39;</code>s <em>in the answer key after performing the operation at most</em> <code>k</code> <em>times</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> answerKey = &quot;TTFF&quot;, k = 2\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> We can replace both the &#39;F&#39;s with &#39;T&#39;s to make answerKey = &quot;<u>TTTT</u>&quot;.\nThere are four consecutive &#39;T&#39;s.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> answerKey = &quot;TFFT&quot;, k = 1\n<strong>Output:</strong> 3\n<strong>Explanation:</strong> We can replace the first &#39;T&#39; with an &#39;F&#39; to make answerKey = &quot;<u>FFF</u>T&quot;.\nAlternatively, we can replace the second &#39;T&#39; with an &#39;F&#39; to make answerKey = &quot;T<u>FFF</u>&quot;.\nIn both cases, there are three consecutive &#39;F&#39;s.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> answerKey = &quot;TTFTTFTT&quot;, k = 1\n<strong>Output:</strong> 5\n<strong>Explanation:</strong> We can replace the first &#39;F&#39; to make answerKey = &quot;<u>TTTTT</u>FTT&quot;\nAlternatively, we can replace the second &#39;F&#39; to make answerKey = &quot;TTF<u>TTTTT</u>&quot;. \nIn both cases, there are five consecutive &#39;T&#39;s.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == answerKey.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>answerKey[i]</code> is either <code>&#39;T&#39;</code> or <code>&#39;F&#39;</code></li>\n\t<li><code>1 &lt;= k &lt;= n</code></li>\n</ul>\n",
+  "hints": [
+    "Can we use the maximum length at the previous position to help us find the answer for the current position?",
+    "Can we use binary search to find the maximum consecutive same answer at every position?"
+  ],
+  "metaData": "{\n  \"name\": \"maxConsecutiveAnswers\",\n  \"params\": [\n    {\n      \"name\": \"answerKey\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"k\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"144.1K\", \"totalSubmission\": \"206.3K\", \"totalAcceptedRaw\": 144080, \"totalSubmissionRaw\": 206264, \"acRate\": \"69.9%\"}",
+  "likes": 3088,
+  "dislikes": 55,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Substring with At Most K Distinct Characters\", \"titleSlug\": \"longest-substring-with-at-most-k-distinct-characters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Repeating Character Replacement\", \"titleSlug\": \"longest-repeating-character-replacement\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Max Consecutive Ones III\", \"titleSlug\": \"max-consecutive-ones-iii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Minimum Number of Days to Make m Bouquets\", \"titleSlug\": \"minimum-number-of-days-to-make-m-bouquets\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Longest Nice Subarray\", \"titleSlug\": \"longest-nice-subarray\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"TTFF\"\n2",
+    "\"TFFT\"\n1",
+    "\"TTFTTFTT\"\n1"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 2, \"slug\": \"arcesium\", \"name\": \"Arcesium\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Binary Search",
+      "slug": "binary-search"
+    },
+    {
+      "name": "Sliding Window",
+      "slug": "sliding-window"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int maxConsecutiveAnswers(string answerKey, int k) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int maxConsecutiveAnswers(String answerKey, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maxConsecutiveAnswers(self, answerKey: str, k: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maxConsecutiveAnswers(self, answerKey, k):\n        \"\"\"\n        :type answerKey: str\n        :type k: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} answerKey\n * @param {number} k\n * @return {number}\n */\nvar maxConsecutiveAnswers = function(answerKey, k) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maxConsecutiveAnswers(answerKey: string, k: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int MaxConsecutiveAnswers(string answerKey, int k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int maxConsecutiveAnswers(char* answerKey, int k) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maxConsecutiveAnswers(answerKey string, k int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maxConsecutiveAnswers(answerKey: String, k: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maxConsecutiveAnswers(_ answerKey: String, _ k: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn max_consecutive_answers(answer_key: String, k: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} answer_key\n# @param {Integer} k\n# @return {Integer}\ndef max_consecutive_answers(answer_key, k)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $answerKey\n     * @param Integer $k\n     * @return Integer\n     */\n    function maxConsecutiveAnswers($answerKey, $k) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int maxConsecutiveAnswers(String answerKey, int k) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maxConsecutiveAnswers(answerKey: String, k: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec max_consecutive_answers(answer_key :: String.t, k :: integer) :: integer\n  def max_consecutive_answers(answer_key, k) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec max_consecutive_answers(AnswerKey :: unicode:unicode_binary(), K :: integer()) -> integer().\nmax_consecutive_answers(AnswerKey, K) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (max-consecutive-answers answerKey k)\n  (-> string? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1851",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nTake the following picture as an example, if we are allowed to make at most `k = 1` change.\n\n![img](../Figures/2024/intro.png)\n\nFlip the third answer and we have a confusion (let's call it `max_size`) of 6.\n\nFlip the fourth answer and we have a confusion of 2.\n\n\n\n---\n\n### Approach 1: Binary Search + Fixed Size Sliding Window\n\n\n#### Intuition   \n\nSince we are asked to find the longest sequence of identical answers. We could first set up a target length `max_size`, then we shall iterate over `answerKey` to look for each substring of length `max_size`. If we could flip at most `k` answers in a substring to make all answers identical, then this substring is valid and we can make a confusion of at least `max_size`.\n\nIn order to make a string valid, we can either:\n- Flip every `T` to `F` in the string so that it is all `F`.\n- Flip every `F` to `T` in the string so that it is all `T`.\n\nHowever, if both `F` and `T` in the substring are more than `k`, we can never make it valid by `k` flips. Therefore, we can determine if a substring is valid by comparing `k` with the smaller value between the count of `F` and the count of `T` in it.\n\n- If `min(count(T), count(F)) <= k`, this substring is valid.\n- If `min(count(T), count(F)) > k`, this substring is invalid.\n\nThe method described in this solution is also known as the sliding window algorithm. During the process from left to right, we ensure that the length of the subsequence remains unchanged as `max_size`, just like moving a window of fixed length. As shown in the pictures below, if we set the window length to `m = 3`, we can find some valid windows. \n\n\n![img](../Figures/2024/1.png)\n\nHowever, if we set the length to `m = 7`, we will not find any valid windows, since the only two windows of size `7` contain more than one `T` and more than one `F`.\n\n![img](../Figures/2024/2.png)\n\n<br>\n\nDuring the iteration, when we move the right boundary of the window from `right - 1` to `right`, we don't need to recalculate the count of each answer over again, note that two adjacent windows only differ by two answers (`answerKey[right]`, `answerKey[right - m]`). We only need to increment the count of `answerKey[right]` by 1 and decrement the count of `answerKey[right - m]` by `1`, based on the result of the previous window.\n\n\n<br>\n\nTo quickly find the maximum valid window length, we can use binary search. To begin, we need to define a search space that ensures the maximum window length we are looking for is within this range. We can set the left boundary of the search space to `left = 1`, which represents the smallest window length, and the right boundary to `right = n`, which is the maximum possible window length. \n\nNext, we perform a binary search within the interval `[left, right]`. At each iteration, we find the midpoint of the interval, denoted as `mid`, and slide a window of length `mid` using the previous approach to check whether there exists at least one valid window. If such a window exists, we continue to search for a larger window length in `[mid, right]`, the right half of the interval. Otherwise, if `mid` is still too large, we continue our search in `[left, mid - 1]`, the left half of the search space.\n\n<br>\n\n#### Algorithm\n\n1) Initialize the search space as `left = 1`, `right = n`.\n\n2) Define a function `isValid` to help verify if a window of size `size` is valid:\n    - Count the number of `T` and `F` in `answerKey[:size]` in a counter `count`, return true if `min(counter[T], counter[F]) <= k`\n    - Iterate the index of the right boundary of the window from `size - 1` to `n`. At each step `i`, increment `counter[answerKey[i]]` by 1 and decrement `counter[answerKey[i - size]]` by 1, return true if `min(counter[T], counter[F]) <= k` at any point in this iteration\n\n    - Return false if we finish iterating without finding a valid window.\n\n\n3) While `left < right`:\n    - Find the middle value as `mid = right - (right - left) / 2`.\n    - Check if the window of size `mid` is valid.\n    - If `isValid(mid)` is true, let `left = mid` and repeat step 3.\n    - If `isValid(mid)` is false, let `right = mid - 1` and repeat step 3.\n\n\n4) Return `left` once the search ends.   \n    \n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/HPcRtBHw/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"HPcRtBHw\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `answerKey`.\n\n* Time complexity: $$O(n\\cdot\\log n)$$\n\n    - We set the search space to `[1, n]`, it takes at most $$O(\\log n)$$ search steps.\n    - At each step, we iterate over `answerKey` which takes $$O(n)$$ time.\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to update some parameters `left`, `right`. During the iteration, we need to count the number of `T` and `F`, which also takes $$O(1)$$ space.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Sliding Window\n\n#### Intuition   \n\nWe can also find the longest valid window with fewer traversals. Unlike the previous fixed-length sliding window solution, this time we can adjust the window length based on the situation. We will still use the counter `count` to record the count of each type of answer within the window.\n\nSpecifically, if the current window is valid, we can try to expand the window by moving the right boundary one position to the right, `right = right + 1`. On the other hand, if the current window is invalid, we keep moving the left boundary to the right (equivalent to removing the leftmost answer from the window) until the window becomes valid, that is `left = left + 1`. During this process, we constantly record the longest valid window seen so far. \n\n\nAs shown in the following figure, we keep adjusting the size of the window and recording the maximum size of the valid window.\n\n![img](../Figures/2024/3.png)\n\n<br>\n\n#### Algorithm\n\n1) Use a hash map `count` to record the count of `T` and `F` in the current window.\n2) Set `left = 0` and `max_size = 0`, iterate `right` from `0` to `n - 1`, at each step `right`, increment `answerKey[right]` by 1:\n    - Increment `count[answerKey[right]]` by 1.\n    - While `min(count['T'], count['F']) > k`, decrement `count[answerKey[left]]` by 1 and increment `left` by 1.\n\n    - Now the window is valid, update the maximum size of valid window as `max_size = max(max_size, right - left + 1)`.\n3) Return `max_size` when the iteration ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/bw2fWz2g/shared\" frameBorder=\"0\" width=\"100%\" height=\"463\" name=\"bw2fWz2g\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `answerKey`.\n\n* Time complexity: $$O(n)$$\n\n    - In the iteration of the right boundary `right`, we shift it from `0` to `n - 1`. Although we may move the left boundary `left` in each step, `left` always stays to the left of `right`, which means `left` moves at most `n - 1` times. \n    - At each step, we update the value of an element in the hash map `count`, which takes constant time.\n    - To sum up, the overall time complexity is $$O(n)$$.\n\n\n* Space complexity: $$O(1)$$\n\n    - We only need to update two indices `left` and `right`. During the iteration, we need to count the number of `T` and `F`, which also takes $$O(1)$$ space.\n\n<br/>\n\n\n\n---\n\n### Approach 3: Advanced Sliding Window\n\n#### Intuition   \n\nIn the previous solution, we need to ensure that the current window is always valid. If the window contains more than `k` occurrences of `T` and `F`, we need to continuously remove the leftmost answer in the window. During this process, the size of the window may decrease, even smaller than the previous valid window. Taking the figure below as an example, the `window` on the left is valid, but the `window'` on the right is not valid, and we need to remove the left two answers from it to make it valid.\n\n![img](../Figures/2024/4.png)\n\n<br>\n\nHowever, we don't need to decrease the size of the window. \n\nIf we have already found a window of length `max_size`, then what we need to do next is to search for a larger valid window, for example, a window with length `max_size + 1`. Therefore, in the following sliding window process, even if the current window with size `max_size` is not valid, there is no problem, because we have already found a window of length `max_size` before, so we may as well continue looking for a larger window.\n\n\n<br>\n\nUnderstanding this, we can simplify the solution in approach 2: \n\nAgain, we use a counter `count` to keep track of the number of `T` and `F` in the current window. When we increase the window length by 1, we need to increase count of the answer at the current right boundary `count[answerKey[right]]` by 1.\n\n![img](../Figures/2024/s1.png)\n\nIf the expanded window is still valid, it means that we get a larger valid window with length `max_size + 1` (from `2` to `3`). We can continue to move the boundary `right`.\n\n![img](../Figures/2024/s2.png)\n\nHowever, if the expanded window is invalid, we only need to remove the leftmost answer in the window to keep the window length still at `max_size` (from `4` to `3`), that is, decrease `count[answerKey[right - max_size]]` by 1.\n\n![img](../Figures/2024/s3.png)\n\nSince the expanded window of length `4` was invalid, we removed an answer from the leftmost side of the window to make its length `3` again. Although the current window is still invalid, we don't need to keep shrinking it because we have previously found a valid window of length `3`. We can continue to shift the boundary `right` to try the next window of size `4`.\n\n![img](../Figures/2024/s4.png)\n\nOnce this iteration is over, `max_size` represents the maximum size of the valid window.\n\n<br>\n\n#### Algorithm\n\n1) Use a hash map `count` to keep track of the number of `T` and `F` in the current window.\n2) Set `max_size = 0`, iterate `right` from `0` to `n - 1`, at each step `right`, increment `answerKey[right]` by 1, and increment `count[answerKey[right]]` by 1.\n    - If `min(count['T'], count['F']) > k`, decrement `count[answerKey[right - max_size]]` by 1. \n    - Otherwise, increment `max_size` by 1.\n\n3) Return `max_size` when the iteration ends.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/LV87RZDS/shared\" frameBorder=\"0\" width=\"100%\" height=\"395\" name=\"LV87RZDS\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the length of the input string `answerKey`.\n\n* Time complexity: $$O(n)$$\n\n    - In the iteration of the right boundary `right`, we shift it from `0` to `n - 1`. \n    - At each step, we update the number of `answerKey[right]` and/or the number of `answerKey[right - max_size]` in the hash map `count`, which takes constant time.\n    - To sum up, the overall time complexity is $$O(n)$$.\n\n\n* Space complexity: $$O(1)$$\n\n    - We only need to update two parameters `max_size` and `right`. During the iteration, we need to count the number of `T` and `F`, which also takes $$O(1)$$ space.\n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

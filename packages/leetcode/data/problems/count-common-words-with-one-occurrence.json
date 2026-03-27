@@ -1,0 +1,140 @@
+{
+  "questionId": "2190",
+  "questionFrontendId": "2085",
+  "title": "Count Common Words With One Occurrence",
+  "titleSlug": "count-common-words-with-one-occurrence",
+  "difficulty": "Easy",
+  "content": "<p>Given two string arrays <code>words1</code> and <code>words2</code>, return <em>the number of strings that appear <strong>exactly once</strong> in <b>each</b>&nbsp;of the two arrays.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> words1 = [&quot;leetcode&quot;,&quot;is&quot;,&quot;amazing&quot;,&quot;as&quot;,&quot;is&quot;], words2 = [&quot;amazing&quot;,&quot;leetcode&quot;,&quot;is&quot;]\n<strong>Output:</strong> 2\n<strong>Explanation:</strong>\n- &quot;leetcode&quot; appears exactly once in each of the two arrays. We count this string.\n- &quot;amazing&quot; appears exactly once in each of the two arrays. We count this string.\n- &quot;is&quot; appears in each of the two arrays, but there are 2 occurrences of it in words1. We do not count this string.\n- &quot;as&quot; appears once in words1, but does not appear in words2. We do not count this string.\nThus, there are 2 strings that appear exactly once in each of the two arrays.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> words1 = [&quot;b&quot;,&quot;bb&quot;,&quot;bbb&quot;], words2 = [&quot;a&quot;,&quot;aa&quot;,&quot;aaa&quot;]\n<strong>Output:</strong> 0\n<strong>Explanation:</strong> There are no strings that appear in each of the two arrays.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> words1 = [&quot;a&quot;,&quot;ab&quot;], words2 = [&quot;a&quot;,&quot;a&quot;,&quot;a&quot;,&quot;ab&quot;]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong> The only string that appears exactly once in each of the two arrays is &quot;ab&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= words1.length, words2.length &lt;= 1000</code></li>\n\t<li><code>1 &lt;= words1[i].length, words2[j].length &lt;= 30</code></li>\n\t<li><code>words1[i]</code> and <code>words2[j]</code> consists only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Could you try every word?",
+    "Could you use a hash map to achieve a good complexity?"
+  ],
+  "metaData": "{\n  \"name\": \"countWords\",\n  \"params\": [\n    {\n      \"name\": \"words1\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"words2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"110.1K\", \"totalSubmission\": \"150.3K\", \"totalAcceptedRaw\": 110101, \"totalSubmissionRaw\": 150266, \"acRate\": \"73.3%\"}",
+  "likes": 905,
+  "dislikes": 21,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Intersection of Two Arrays\", \"titleSlug\": \"intersection-of-two-arrays\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Uncommon Words from Two Sentences\", \"titleSlug\": \"uncommon-words-from-two-sentences\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Kth Distinct String in an Array\", \"titleSlug\": \"kth-distinct-string-in-an-array\", \"difficulty\": \"Easy\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"leetcode\",\"is\",\"amazing\",\"as\",\"is\"]\n[\"amazing\",\"leetcode\",\"is\"]",
+    "[\"b\",\"bb\",\"bbb\"]\n[\"a\",\"aa\",\"aaa\"]",
+    "[\"a\",\"ab\"]\n[\"a\",\"a\",\"a\",\"ab\"]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 4, \"slug\": \"jane-street\", \"name\": \"Jane Street\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int countWords(vector<string>& words1, vector<string>& words2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int countWords(String[] words1, String[] words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def countWords(self, words1: List[str], words2: List[str]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def countWords(self, words1, words2):\n        \"\"\"\n        :type words1: List[str]\n        :type words2: List[str]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} words1\n * @param {string[]} words2\n * @return {number}\n */\nvar countWords = function(words1, words2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function countWords(words1: string[], words2: string[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int CountWords(string[] words1, string[] words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int countWords(char** words1, int words1Size, char** words2, int words2Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func countWords(words1 []string, words2 []string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun countWords(words1: Array<String>, words2: Array<String>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func countWords(_ words1: [String], _ words2: [String]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn count_words(words1: Vec<String>, words2: Vec<String>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} words1\n# @param {String[]} words2\n# @return {Integer}\ndef count_words(words1, words2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $words1\n     * @param String[] $words2\n     * @return Integer\n     */\n    function countWords($words1, $words2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int countWords(List<String> words1, List<String> words2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def countWords(words1: Array[String], words2: Array[String]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec count_words(words1 :: [String.t], words2 :: [String.t]) :: integer\n  def count_words(words1, words2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec count_words(Words1 :: [unicode:unicode_binary()], Words2 :: [unicode:unicode_binary()]) -> integer().\ncount_words(Words1, Words2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (count-words words1 words2)\n  (-> (listof string?) (listof string?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

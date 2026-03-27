@@ -1,0 +1,149 @@
+{
+  "questionId": "2220",
+  "questionFrontendId": "2115",
+  "title": "Find All Possible Recipes from Given Supplies",
+  "titleSlug": "find-all-possible-recipes-from-given-supplies",
+  "difficulty": "Medium",
+  "content": "<p>You have information about <code>n</code> different recipes. You are given a string array <code>recipes</code> and a 2D string array <code>ingredients</code>. The <code>i<sup>th</sup></code> recipe has the name <code>recipes[i]</code>, and you can <strong>create</strong> it if you have <strong>all</strong> the needed ingredients from <code>ingredients[i]</code>. A recipe can also be an ingredient for <strong>other </strong>recipes, i.e., <code>ingredients[i]</code> may contain a string that is in <code>recipes</code>.</p>\n\n<p>You are also given a string array <code>supplies</code> containing all the ingredients that you initially have, and you have an infinite supply of all of them.</p>\n\n<p>Return <em>a list of all the recipes that you can create. </em>You may return the answer in <strong>any order</strong>.</p>\n\n<p>Note that two recipes may contain each other in their ingredients.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> recipes = [&quot;bread&quot;], ingredients = [[&quot;yeast&quot;,&quot;flour&quot;]], supplies = [&quot;yeast&quot;,&quot;flour&quot;,&quot;corn&quot;]\n<strong>Output:</strong> [&quot;bread&quot;]\n<strong>Explanation:</strong>\nWe can create &quot;bread&quot; since we have the ingredients &quot;yeast&quot; and &quot;flour&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> recipes = [&quot;bread&quot;,&quot;sandwich&quot;], ingredients = [[&quot;yeast&quot;,&quot;flour&quot;],[&quot;bread&quot;,&quot;meat&quot;]], supplies = [&quot;yeast&quot;,&quot;flour&quot;,&quot;meat&quot;]\n<strong>Output:</strong> [&quot;bread&quot;,&quot;sandwich&quot;]\n<strong>Explanation:</strong>\nWe can create &quot;bread&quot; since we have the ingredients &quot;yeast&quot; and &quot;flour&quot;.\nWe can create &quot;sandwich&quot; since we have the ingredient &quot;meat&quot; and can create the ingredient &quot;bread&quot;.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> recipes = [&quot;bread&quot;,&quot;sandwich&quot;,&quot;burger&quot;], ingredients = [[&quot;yeast&quot;,&quot;flour&quot;],[&quot;bread&quot;,&quot;meat&quot;],[&quot;sandwich&quot;,&quot;meat&quot;,&quot;bread&quot;]], supplies = [&quot;yeast&quot;,&quot;flour&quot;,&quot;meat&quot;]\n<strong>Output:</strong> [&quot;bread&quot;,&quot;sandwich&quot;,&quot;burger&quot;]\n<strong>Explanation:</strong>\nWe can create &quot;bread&quot; since we have the ingredients &quot;yeast&quot; and &quot;flour&quot;.\nWe can create &quot;sandwich&quot; since we have the ingredient &quot;meat&quot; and can create the ingredient &quot;bread&quot;.\nWe can create &quot;burger&quot; since we have the ingredient &quot;meat&quot; and can create the ingredients &quot;bread&quot; and &quot;sandwich&quot;.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == recipes.length == ingredients.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>1 &lt;= ingredients[i].length, supplies.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= recipes[i].length, ingredients[i][j].length, supplies[k].length &lt;= 10</code></li>\n\t<li><code>recipes[i], ingredients[i][j]</code>, and <code>supplies[k]</code> consist only of lowercase English letters.</li>\n\t<li>All the values of <code>recipes</code> and <code>supplies</code>&nbsp;combined are unique.</li>\n\t<li>Each <code>ingredients[i]</code> does not contain any duplicate values.</li>\n</ul>\n",
+  "hints": [
+    "Can we use a data structure to quickly query whether we have a certain ingredient?",
+    "Once we verify that we can make a recipe, we can add it to our ingredient data structure. We can then check if we can make more recipes as a result of this."
+  ],
+  "metaData": "{\n  \"name\": \"findAllRecipes\",\n  \"params\": [\n    {\n      \"name\": \"recipes\",\n      \"type\": \"string[]\"\n    },\n    {\n      \"type\": \"list<list<string>>\",\n      \"name\": \"ingredients\"\n    },\n    {\n      \"type\": \"string[]\",\n      \"name\": \"supplies\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<string>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"233.9K\", \"totalSubmission\": \"411.7K\", \"totalAcceptedRaw\": 233927, \"totalSubmissionRaw\": 411711, \"acRate\": \"56.8%\"}",
+  "likes": 2673,
+  "dislikes": 143,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Course Schedule II\", \"titleSlug\": \"course-schedule-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Good Meals\", \"titleSlug\": \"count-good-meals\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[\"bread\"]\n[[\"yeast\",\"flour\"]]\n[\"yeast\",\"flour\",\"corn\"]",
+    "[\"bread\",\"sandwich\"]\n[[\"yeast\",\"flour\"],[\"bread\",\"meat\"]]\n[\"yeast\",\"flour\",\"meat\"]",
+    "[\"bread\",\"sandwich\",\"burger\"]\n[[\"yeast\",\"flour\"],[\"bread\",\"meat\"],[\"sandwich\",\"meat\",\"bread\"]]\n[\"yeast\",\"flour\",\"meat\"]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [{\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 3, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 2, \"slug\": \"zeta\", \"name\": \"Zeta\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"verily\", \"name\": \"Verily\"}]}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<string> findAllRecipes(vector<string>& recipes, vector<vector<string>>& ingredients, vector<string>& supplies) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<String> findAllRecipes(String[] recipes, List<List<String>> ingredients, String[] supplies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def findAllRecipes(self, recipes: List[str], ingredients: List[List[str]], supplies: List[str]) -> List[str]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def findAllRecipes(self, recipes, ingredients, supplies):\n        \"\"\"\n        :type recipes: List[str]\n        :type ingredients: List[List[str]]\n        :type supplies: List[str]\n        :rtype: List[str]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string[]} recipes\n * @param {string[][]} ingredients\n * @param {string[]} supplies\n * @return {string[]}\n */\nvar findAllRecipes = function(recipes, ingredients, supplies) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function findAllRecipes(recipes: string[], ingredients: string[][], supplies: string[]): string[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<string> FindAllRecipes(string[] recipes, IList<IList<string>> ingredients, string[] supplies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nchar** findAllRecipes(char** recipes, int recipesSize, char*** ingredients, int ingredientsSize, int* ingredientsColSize, char** supplies, int suppliesSize, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func findAllRecipes(recipes []string, ingredients [][]string, supplies []string) []string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun findAllRecipes(recipes: Array<String>, ingredients: List<List<String>>, supplies: Array<String>): List<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func findAllRecipes(_ recipes: [String], _ ingredients: [[String]], _ supplies: [String]) -> [String] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn find_all_recipes(recipes: Vec<String>, ingredients: Vec<Vec<String>>, supplies: Vec<String>) -> Vec<String> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String[]} recipes\n# @param {String[][]} ingredients\n# @param {String[]} supplies\n# @return {String[]}\ndef find_all_recipes(recipes, ingredients, supplies)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String[] $recipes\n     * @param String[][] $ingredients\n     * @param String[] $supplies\n     * @return String[]\n     */\n    function findAllRecipes($recipes, $ingredients, $supplies) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<String> findAllRecipes(List<String> recipes, List<List<String>> ingredients, List<String> supplies) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def findAllRecipes(recipes: Array[String], ingredients: List[List[String]], supplies: Array[String]): List[String] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec find_all_recipes(recipes :: [String.t], ingredients :: [[String.t]], supplies :: [String.t]) :: [String.t]\n  def find_all_recipes(recipes, ingredients, supplies) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec find_all_recipes(Recipes :: [unicode:unicode_binary()], Ingredients :: [[unicode:unicode_binary()]], Supplies :: [unicode:unicode_binary()]) -> [unicode:unicode_binary()].\nfind_all_recipes(Recipes, Ingredients, Supplies) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (find-all-recipes recipes ingredients supplies)\n  (-> (listof string?) (listof (listof string?)) (listof string?) (listof string?))\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2708",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Overview\n\nLet's first try to equate our problem to a real-world cooking scenario. Imagine you have a kitchen stocked with basic ingredients and a cookbook filled with recipes. Each recipe specifies the exact ingredients needed to prepare it. Some recipes are simple, requiring only basic ingredients, while others are more complex, needing not just raw ingredients but also other prepared dishes as part of their recipe. Our goal is to determine which recipes can be made using the given set of available ingredients.  \n\nAt first glance, this might seem straightforward. If we have all the ingredients listed for a recipe, we can make it. However, the problem becomes more complex when recipes depend on other recipes. Suppose Recipe A requires Recipe B, but Recipe B itself needs Recipe C, and Recipe C, in turn, depends on Recipe A. This creates a circular dependency, making it unclear where to begin. If we do not account for these dependencies properly, we could end up in an infinite loop, never determining which recipes can actually be made. Our approach needs to handle these interdependencies properly.\n    \n---\n\n### Approach 1: Breadth-First Search (BFS)\n\n#### Intuition\n\nOne straightforward way to solve this problem is to make new recipes in rounds using our available ingredients. During each round, we check every recipe and ask, \"Can we make this recipe with what we have?\" If we can, we make it; if we can't, we'll try again later.\n\nLet's break down how to write code for this approach. First, we need to track all our available ingredients. Since we'll frequently check if we have specific ingredients, we should use a data structure that allows quick lookups. A hash set is perfect for this because it lets us check and add ingredients almost instantly.\n\nNext, we need a way to manage the recipes we want to attempt. We can use a queue to keep track of the recipes that we still need to process. Initially, the queue contains all the recipes since none have been prepared yet.\n\nNow, we start processing the recipes. For each recipe in the queue, we check if all its required ingredients are available. If they are, we mark the recipe as completed and add it to our list of available ingredients, making it usable for other recipes. If we can't make a recipe yet, we put it back in the queue and try again in the next round.\n\nBut how do we know when to stop? Before each round, we note how many ingredients we have. If, after processing all recipes in the queue, the ingredient count has increased, it means we’ve made progress and should continue. However, if the ingredient count remains unchanged, it means no more recipes can be made, and we return the list of completed recipes.\n\nNotice how this approach handles dependencies. If Recipe A depends on Recipe B, but we haven't made Recipe B yet, Recipe A remains in the queue. Later, once we successfully prepare Recipe B, Recipe A will have all the required ingredients and can be processed. This natural progression handles even complex dependency chains.\n\n#### Algorithm\n\n- Create a hash set `available` to track all available items.\n- Add each supply from the `supplies` array into the `available` set.\n- Create a Queue `recipeQueue` to store recipe indices.\n- Add indices from `0` to `recipes.length-1` into the `recipeQueue`.\n- Initialize:\n  - a list `createdRecipes` to store the final result.\n  - a variable `lastSize` to `-1`.\n- While the size of `available` is greater than `lastSize`:\n    - Set `lastSize` to the current size of `available`.\n    - Set a variable `queueSize` to the size of `recipeQueue`.\n    - While `queueSize` is greater than `0`:\n      - Decrement `queueSize`.\n      - Remove the front element from `recipeQueue` and put it in a variable `recipeIdx`.\n      - Set a boolean `canCreate` to `true`.\n      - For each `ingredient` in `ingredients[recipeIdx]`:\n        - If `ingredient` is not present in the `available` set:\n          - Set `canCreate` to `false` and break out of the loop.\n        - If `canCreate` is `false`:\n          - Add `recipeIdx` back to `recipeQueue`.\n        - Else:\n          - Add `recipes[recipeIdx]` to the `available` set and the `createdRecipes` list.\n        - Decrease `count` by `1`.\n- Return `createdRecipes` as the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/hHVZHDUF/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"hHVZHDUF\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of recipes, $m$ be the total number of ingredients across all recipes, and $s$ be the number of supplies.  \n\n- Time complexity: $O(n^2 \\cdot m + s)$\n\n    Initially, all supplies are inserted into a set in $O(s)$ time.\n\n    In the worst case, a recipe may be reprocessed up to $O(n)$ times—each time it’s checked, it might still be uncreatable and gets added back to the queue. Since there are $n$ recipes, and checking whether a recipe is creatable involves scanning all its ingredients (which takes up to $O(m)$ per recipe), this leads to a worst-case bound of $O(n^2 \\cdot m)$ for repeatedly checking recipe feasibility.\n\n    Additionally, set insertion and membership checks are $O(1)$ on average and do not significantly impact the total complexity.\n\n    Therefore, the total time complexity is $O(n^2 \\cdot m + s)$.\n\n- Space complexity: $O(n + s)$  \n\n    The algorithm maintains a set to store available ingredients, which can grow up to $O(n + s)$. The queue holds up to $O(n)$ elements, and we use no additional structures beyond these. Thus, the overall space complexity is $O(n + s)$. We do not consider the output space as part of our analysis.\n\n---\n\n### Approach 2: Depth-First Search (DFS)\n\n#### Intuition\n\nIn our previous approach, we gathered as many recipes as we could make with the current set of ingredients in each iteration and then proceeded to find further recipes in the next iteration, mimicking a BFS approach. Let's try a different way.\n\nThink about how you would actually make a recipe in real life. When you check your ingredients, you might find that one of them is actually another recipe you need to make first. Naturally, you'd pause your main recipe to figure out how to make this sub-recipe. This thought process matches perfectly with a depth-first search (DFS) solution.\n\nSince our task is to find the number of recipes we can make from the given list, let's create a function `checkRecipe` which returns `true` if we can make the recipe. To check if we can, we go over the list of ingredients. Let's say we come across an ingredient that is itself another recipe. We can now use the `checkRecipe` function recursively to check if the recipe can be made, and then in turn, used as an ingredient to make the parent recipe.\n\nHowever, there's a challenging aspect to this problem: circular dependencies. Here's a simple example:\n- Recipe A requires Recipe B to make it.\n- Recipe B requires Recipe C to make it.\n- Recipe C requires Recipe A to make it.\n\nWithout proper safeguards, our code could get stuck in an endless loop. To prevent this, we keep track of which recipes we're currently checking in a `visited` set. As we explore each recipe's dependencies, we mark it as visited. If we encounter a recipe that's already in our `visited` set, we know we've found a cycle and can immediately determine that the recipe isn't possible to make. \n\n#### Algorithm\n\n- Initialize:\n  - a list `possibleRecipes` to store the recipes that can be made.\n  - a hash map `canMake` to track if an ingredient/recipe can be made, mapping from the name to a boolean value.\n  - a hash map `recipeToIndex` to store the mapping from a recipe name to its index in the ingredients list.\n- Loop through all the initial `supplies` and mark each one as available (`true`) in the `canMake` map.\n- Loop through all the `recipes` and create a mapping from each recipe name to its index in the `recipeToIndex` map.\n- For each `recipe` in the `recipes` array:\n  - Call the `checkRecipe` function with the current `recipe`.\n  - If the `recipe` can be made (`true` in `canMake`), add it to the `possibleRecipes` list.\n- Return the list of possible recipes.\n\nHelper method `checkRecipe(recipe, ingredients, visited, canMake, recipeToIndex)`:\n- If the recipe is already marked as makeable (`true`) in `canMake`, return immediately.\n- If the recipe doesn't exist in the `recipeToIndex` map or is already in the `visited` set (indicating a cycle), mark it as unmakeable (`false`) and return.\n- Add the current `recipe` to the `visited` set.\n- Get the list of required ingredients for the current recipe using its index.\n- For each `ingredient` in the required ingredients:\n  - Recursively call `checkRecipe` on the `ingredient`.\n  - If the ingredient cannot be made (`false` in `canMake`), mark the current `recipe` as unmakeable (`false`) and return.\n- After checking all ingredients successfully, mark the current `recipe` as makeable (`true`).\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/WjdwJagJ/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"WjdwJagJ\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of recipes, $m$ be the total number of ingredients across all recipes, and $s$ be the number of supplies.\n\n- Time complexity: $O(n + m + s)$\n\n    The algorithm uses DFS to check each recipe's ingredients. Initially, we process supplies and create recipe mappings in $O(s)$ and $O(n)$ time, respectively. For each recipe, we perform DFS through its ingredients, visiting each ingredient exactly once due to the `visited` set preventing cycles. Since we memoize results in the `canMake` map, each ingredient and recipe is processed at most once across all DFS calls. Therefore, the total number of operations is proportional to the number of recipes plus the total number of ingredients, giving us $O(n + m + s)$ time complexity.\n\n- Space complexity: $O(n + s)$  \n\n    The solution utilizes several key data structures that contribute to its space requirements. The hash map `canMake` initially stores supply information, requiring $O(s)$ space. The dictionary `recipeToIndex` maps recipes to indices, using $O(n)$ space. For cycle detection, the `visited` set and the result list `possibleRecipes` each take $O(n)$ space. The recursion stack depth in the worst case is bounded by the number of recipes rather than all ingredients, contributing at most $O(n)$ space. Since all operations and structures operate primarily on recipes, the total auxiliary space complexity is **$O(n + s)$**.\n\n---\n\n### Approach 3: Topological Sort (Kahn's Algorithm)\n\n#### Intuition\n\nOur previous solutions had some drawbacks. The BFS approach kept trying recipes repeatedly until we couldn't make any more, which could be slow when recipes had complex dependencies. While the DFS solution handled dependencies well, it needed careful tracking to avoid infinite loops. Let's explore a more organized approach using something called topological sorting.\n\nMaking recipes is really about the order we make them, since some recipes must be created before others. We can think of this like a map where arrows point from one recipe to another, showing what needs to be made first. Topological sorting is perfect for solving this kind of problem because it's designed to handle these \"what comes first\" relationships.\n\nInstead of constantly checking which ingredients a recipe needs, we can reverse our perspective. Instead of focusing on what each recipe depends on, we track which recipes depend on a given ingredient. This shift in thinking allows us to process recipes in an optimal order i.e., whenever a new recipe is made, we immediately know which other recipes can now be completed.  \n\nThe most important component of the topological sorting algorithm is the `inDegree` array. For each recipe, this array counts how many ingredients we still need to find. Here's what that means:\n1. If a recipe has an in-degree of zero, it means all of its required ingredients are already available, and we can make it immediately.  \n2. Each time we complete a recipe, it becomes available as an ingredient for other recipes, so we decrease the in-degree of all recipes that depend on it.  \n3. When a recipe’s in-degree reaches zero, it becomes the next recipe we can make.  \n\nHere's how the `inDegree` array would look for Example 3 of the problem description:\n\n![indegree array](../Figures/2115/indegree.png)\n\nTo implement the algorithm, we first create the dependency graph and populate the `inDegree` array. For each recipe, we iterate over its ingredients and add a directed edge from each ingredient to the recipe, but only if the ingredient is not already available in the initial supplies. This ensures that the in-degree of a recipe reflects only the number of unavailable ingredients it depends on.\n\nThen, we iterate over each recipe using a queue and try to resolve the dependencies. Initially, we add to the queue all recipes that have an in-degree of zero, meaning they only require ingredients from our supplies and don't depend on any other recipes. As we complete each recipe, it becomes available as an ingredient for other recipes, so decrease the in-degree of all its dependent recipes by one. When all required ingredients for a recipe become available (its in-degree reaches zero), we can make that recipe too. It also becomes an ingredient by itself, so we add it to the queue.\n\nWe keep track of each recipe we make in a list called `createdRecipes`. When the queue is empty and all dependencies have been resolved, we return this list as our answer.\n\n> For a more comprehensive understanding of Topological Sorting, check out the [Topological Sort Explore Card](https://leetcode.com/explore/learn/card/graph/623/kahns-algorithm-for-topological-sorting/3886/). This resource provides an in-depth look at topological sorting, explaining its key concepts and applications with a variety of problems to solidify understanding of the pattern.\n\n#### Algorithm\n\n- Initialize:\n  - a hash set `availableSupplies` to store the initial supplies.\n  - a hash map `recipeToIndex` to store the mapping from recipe names to their indices.\n  - a hash map `dependencyGraph` to store which recipes depend on each ingredient.\n- Loop through all the supplies and add each one to the `availableSupplies` set.\n- Loop through all the recipes and create a mapping from each recipe to its corresponding index.\n- Initialize an array `inDegree` to track the count of remaining ingredients needed for each recipe.\n\nTo build the dependency graph:\n- For each recipe:\n  - For each `ingredient` in the current recipe:\n    - If the `ingredient` is not in the available supplies, add it to the `dependencyGraph` if not present.\n    - Add the current recipe to the list of recipes that need this ingredient.\n    - Increment the `inDegree` count for the current recipe.\n\nFor finding makeable recipes:\n- Initialize a `queue` to store the indices of recipes that can be made immediately.\n- Loop through all the `recipes`:\n  - If a recipe's `inDegree` is zero (only needs available supplies), add it to the `queue`.\n- Initialize a list `createdRecipes` to store the result\n- While the `queue` is not empty:\n  - Get the next recipe index from the `queue`.\n  - Get the recipe name using the index.\n  - Add the recipe to the `createdRecipes` list.\n  - If no other recipes depend on this recipe, continue to the next iteration.\n  - For each recipe that depends on the current recipe:\n    - Decrease its `inDegree` count by one.\n    - If the `inDegree` becomes zero, add it to the queue.\n- Return the list of created recipes.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/dUEVdEvN/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"dUEVdEvN\"></iframe>\n\n#### Complexity Analysis\n\nLet $n$ be the number of recipes, $m$ be the total number of ingredients across all recipes, and $s$ be the number of supplies.\n\n- Time complexity: $O(n + m + s)$\n\n    Initially, we process all supplies to mark them as available, taking $O(s)$ time. Then we create recipe mappings in $O(n)$ time. Building the dependency graph requires examining each ingredient for each recipe once, taking $O(m)$ time. When processing recipes in topological order, we visit each recipe once and process its dependencies. Since each ingredient-to-recipe edge in the dependency graph is processed exactly once, and the total number of such edges is bounded by $m$, the queue processing takes $O(n + m)$ time. Therefore, the total time complexity is $O(n + m + s)$.\n\n- Space complexity: $O(n + m + s)$\n\n    The algorithm uses several auxiliary data structures to track the recipe creation process. We use a hash set to store available supplies and a hash map to maintain recipe indices taking $O(s)$ and $O(n)$ space respectively. The core of our space usage comes from the dependency graph, which stores ingredient-to-recipe relationships and could grow up to $O(m)$ size. Additional structures include an array for tracking ingredient counts per recipe ($O(n)$), a queue for our topological sort ($O(n)$), and a list for storing our final results ($O(n)$). When we combine all these components, our total auxiliary space requirement becomes $O(n + m + s)$.\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

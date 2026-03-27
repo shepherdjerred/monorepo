@@ -1,0 +1,138 @@
+{
+  "questionId": "2202",
+  "questionFrontendId": "2081",
+  "title": "Sum of k-Mirror Numbers",
+  "titleSlug": "sum-of-k-mirror-numbers",
+  "difficulty": "Hard",
+  "content": "<p>A <strong>k-mirror number</strong> is a <strong>positive</strong> integer <strong>without leading zeros</strong> that reads the same both forward and backward in base-10 <strong>as well as</strong> in base-k.</p>\n\n<ul>\n\t<li>For example, <code>9</code> is a 2-mirror number. The representation of <code>9</code> in base-10 and base-2 are <code>9</code> and <code>1001</code> respectively, which read the same both forward and backward.</li>\n\t<li>On the contrary, <code>4</code> is not a 2-mirror number. The representation of <code>4</code> in base-2 is <code>100</code>, which does not read the same both forward and backward.</li>\n</ul>\n\n<p>Given the base <code>k</code> and the number <code>n</code>, return <em>the <strong>sum</strong> of the</em> <code>n</code> <em><strong>smallest</strong> k-mirror numbers</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 2, n = 5\n<strong>Output:</strong> 25\n<strong>Explanation:\n</strong>The 5 smallest 2-mirror numbers and their representations in base-2 are listed as follows:\n  base-10    base-2\n    1          1\n    3          11\n    5          101\n    7          111\n    9          1001\nTheir sum = 1 + 3 + 5 + 7 + 9 = 25. \n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 3, n = 7\n<strong>Output:</strong> 499\n<strong>Explanation:\n</strong>The 7 smallest 3-mirror numbers are and their representations in base-3 are listed as follows:\n  base-10    base-3\n    1          1\n    2          2\n    4          11\n    8          22\n    121        11111\n    151        12121\n    212        21212\nTheir sum = 1 + 2 + 4 + 8 + 121 + 151 + 212 = 499.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> k = 7, n = 17\n<strong>Output:</strong> 20379000\n<strong>Explanation:</strong> The 17 smallest 7-mirror numbers are:\n1, 2, 3, 4, 5, 6, 8, 121, 171, 242, 292, 16561, 65656, 2137312, 4602064, 6597956, 6958596\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= k &lt;= 9</code></li>\n\t<li><code>1 &lt;= n &lt;= 30</code></li>\n</ul>\n",
+  "hints": [
+    "Since we need to reduce search space, instead of checking if every number is a palindrome in base-10, can we try to \"generate\" the palindromic numbers?",
+    "If you are provided with a d digit number, how can you generate a palindrome with 2*d or 2*d - 1 digit?",
+    "Try brute-forcing and checking if the palindrome you generated is a \"k-Mirror\" number."
+  ],
+  "metaData": "{\n  \"name\": \"kMirror\",\n  \"params\": [\n    {\n      \"name\": \"k\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"n\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"77.6K\", \"totalSubmission\": \"121.7K\", \"totalAcceptedRaw\": 77587, \"totalSubmissionRaw\": 121749, \"acRate\": \"63.7%\"}",
+  "likes": 430,
+  "dislikes": 210,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Strobogrammatic Number II\", \"titleSlug\": \"strobogrammatic-number-ii\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Prime Palindrome\", \"titleSlug\": \"prime-palindrome\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "2\n5",
+    "3\n7",
+    "7\n17"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 7, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 5, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 3, \"slug\": \"cisco\", \"name\": \"Cisco\"}, {\"timesEncountered\": 2, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 2, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long kMirror(int k, int n) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long kMirror(int k, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def kMirror(self, k: int, n: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def kMirror(self, k, n):\n        \"\"\"\n        :type k: int\n        :type n: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} k\n * @param {number} n\n * @return {number}\n */\nvar kMirror = function(k, n) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function kMirror(k: number, n: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long KMirror(int k, int n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long kMirror(int k, int n) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func kMirror(k int, n int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun kMirror(k: Int, n: Int): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func kMirror(_ k: Int, _ n: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn k_mirror(k: i32, n: i32) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} k\n# @param {Integer} n\n# @return {Integer}\ndef k_mirror(k, n)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $k\n     * @param Integer $n\n     * @return Integer\n     */\n    function kMirror($k, $n) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int kMirror(int k, int n) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def kMirror(k: Int, n: Int): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec k_mirror(k :: integer, n :: integer) :: integer\n  def k_mirror(k, n) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec k_mirror(K :: integer(), N :: integer()) -> integer().\nk_mirror(K, N) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (k-mirror k n)\n  (-> exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2780",
+    "content": "### Approach 1: Enumeration With Optimization\n\n#### Intuition\n\nThe most straightforward method that comes to mind is to incrementally check each number starting from $1$. For each number $i$, if $i$ is a palindrome and its $k$-ary representation is also a palindrome, we add $i$ to the answer. Once we have found $n$ such numbers, we can stop the search and return the result.\n\nHowever, this approach exceeds the time limit. For example, when $k = 7$, the $30$th number that satisfies the condition is $64454545446 \\approx 6 \\times 10^{10}$. Even though checking whether a number meets the conditions takes $O(1)$ time, scanning up to $64454545446$ still takes far too long.\n\nTo improve efficiency, we can consider a binary search–style approach. Since $i$ itself must be a palindrome, we can construct $i$ by first generating the first half of the digits, denoted as $i'$, then reversing $i'$ and appending it to itself to form $i$. This \"halving\" strategy ensures that $i$ is always a palindrome, significantly reducing the search space. For instance, to cover all numbers up to $10^{10}$, the brute-force method would examine up to $10^{10}$ numbers, but the halving method only needs to generate $O(\\sqrt{10^{10}}) = O(10^5)$ palindromes.\n\nWhen constructing $i$ from $i'$, we must consider both odd-length and even-length palindromes. For example, if $i' = 123$, we can form either $12321$ (odd length, with the middle digit reused) or $123321$ (even length, by fully reversing $i'$ and appending it).\n\nTo enumerate values of $i$, we also incrementally enumerate values of $i'$. For the same $i'$, the even-length palindrome will always be greater than the corresponding odd-length one, so we process them as follows:\n\n- Define the range of $i'$, typically as $[10^k, 10^{k+1})$ for some $k$.\n\n- Incrementally generate odd-length palindromes from $i'$ and check if they meet the requirements.\n\n- Then generate even-length palindromes from $i'$ and check if they meet the requirements.\n\nIn this way, we ensure that the search over $i$ proceeds in increasing order.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/UAdDpN83/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"UAdDpN83\"></iframe>\n\n#### Complexity analysis\n\n- Time complexity: $O(\\sqrt{10^{10}}) \\approx O(1)$.\n  \n  For a given $n$ and $k$, it is difficult to determine the range of the $n$th $k$-mirror number. In this problem, the worst case is when $n = 30$, $k = 7$, and the corresponding number is $64454545446$.\n\n- Space complexity: $O(\\log n)$.\n  \n  Digit storage requires $O(\\log n)$ space.\n\n### Approach 2: Preprocessing\n\n#### Intuition\n\nWe can preprocess the first 30 $k$-mirror digits for $k = 2, 3, \\cdots, 9$ and directly sum them to return the answer.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/BaSA5EsH/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"BaSA5EsH\"></iframe>\n\n#### Complexity analysis\n\n- Time complexity: $O(1)$.\n\n- Space complexity: $O(1)$.",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

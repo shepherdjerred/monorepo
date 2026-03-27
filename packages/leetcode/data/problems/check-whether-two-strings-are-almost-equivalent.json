@@ -1,0 +1,141 @@
+{
+  "questionId": "2177",
+  "questionFrontendId": "2068",
+  "title": "Check Whether Two Strings are Almost Equivalent",
+  "titleSlug": "check-whether-two-strings-are-almost-equivalent",
+  "difficulty": "Easy",
+  "content": "<p>Two strings <code>word1</code> and <code>word2</code> are considered <strong>almost equivalent</strong> if the differences between the frequencies of each letter from <code>&#39;a&#39;</code> to <code>&#39;z&#39;</code> between <code>word1</code> and <code>word2</code> is <strong>at most</strong> <code>3</code>.</p>\n\n<p>Given two strings <code>word1</code> and <code>word2</code>, each of length <code>n</code>, return <code>true</code> <em>if </em><code>word1</code> <em>and</em> <code>word2</code> <em>are <strong>almost equivalent</strong>, or</em> <code>false</code> <em>otherwise</em>.</p>\n\n<p>The <strong>frequency</strong> of a letter <code>x</code> is the number of times it occurs in the string.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;aaaa&quot;, word2 = &quot;bccb&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong> There are 4 &#39;a&#39;s in &quot;aaaa&quot; but 0 &#39;a&#39;s in &quot;bccb&quot;.\nThe difference is 4, which is more than the allowed 3.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;abcdeef&quot;, word2 = &quot;abaaacc&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The differences between the frequencies of each letter in word1 and word2 are at most 3:\n- &#39;a&#39; appears 1 time in word1 and 4 times in word2. The difference is 3.\n- &#39;b&#39; appears 1 time in word1 and 1 time in word2. The difference is 0.\n- &#39;c&#39; appears 1 time in word1 and 2 times in word2. The difference is 1.\n- &#39;d&#39; appears 1 time in word1 and 0 times in word2. The difference is 1.\n- &#39;e&#39; appears 2 times in word1 and 0 times in word2. The difference is 2.\n- &#39;f&#39; appears 1 time in word1 and 0 times in word2. The difference is 1.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> word1 = &quot;cccddabba&quot;, word2 = &quot;babababab&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong> The differences between the frequencies of each letter in word1 and word2 are at most 3:\n- &#39;a&#39; appears 2 times in word1 and 4 times in word2. The difference is 2.\n- &#39;b&#39; appears 2 times in word1 and 5 times in word2. The difference is 3.\n- &#39;c&#39; appears 3 times in word1 and 0 times in word2. The difference is 3.\n- &#39;d&#39; appears 2 times in word1 and 0 times in word2. The difference is 2.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>n == word1.length == word2.length</code></li>\n\t<li><code>1 &lt;= n &lt;= 100</code></li>\n\t<li><code>word1</code> and <code>word2</code> consist only of lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "What data structure can we use to count the frequency of each character?",
+    "Are there edge cases where a character is present in one string but not the other?"
+  ],
+  "metaData": "{\n  \"name\": \"checkAlmostEquivalent\",\n  \"params\": [\n    {\n      \"name\": \"word1\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"word2\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"81.4K\", \"totalSubmission\": \"126.8K\", \"totalAcceptedRaw\": 81361, \"totalSubmissionRaw\": 126765, \"acRate\": \"64.2%\"}",
+  "likes": 576,
+  "dislikes": 24,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Find the Occurrence of First Almost Equal Substring\", \"titleSlug\": \"find-the-occurrence-of-first-almost-equal-substring\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"aaaa\"\n\"bccb\"",
+    "\"abcdeef\"\n\"abaaacc\"",
+    "\"cccddabba\"\n\"babababab\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 2, \"slug\": \"salesforce\", \"name\": \"Salesforce\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Counting",
+      "slug": "counting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool checkAlmostEquivalent(string word1, string word2) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean checkAlmostEquivalent(String word1, String word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def checkAlmostEquivalent(self, word1: str, word2: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def checkAlmostEquivalent(self, word1, word2):\n        \"\"\"\n        :type word1: str\n        :type word2: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} word1\n * @param {string} word2\n * @return {boolean}\n */\nvar checkAlmostEquivalent = function(word1, word2) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function checkAlmostEquivalent(word1: string, word2: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool CheckAlmostEquivalent(string word1, string word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool checkAlmostEquivalent(char* word1, char* word2) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func checkAlmostEquivalent(word1 string, word2 string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun checkAlmostEquivalent(word1: String, word2: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func checkAlmostEquivalent(_ word1: String, _ word2: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn check_almost_equivalent(word1: String, word2: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} word1\n# @param {String} word2\n# @return {Boolean}\ndef check_almost_equivalent(word1, word2)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $word1\n     * @param String $word2\n     * @return Boolean\n     */\n    function checkAlmostEquivalent($word1, $word2) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool checkAlmostEquivalent(String word1, String word2) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def checkAlmostEquivalent(word1: String, word2: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec check_almost_equivalent(word1 :: String.t, word2 :: String.t) :: boolean\n  def check_almost_equivalent(word1, word2) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec check_almost_equivalent(Word1 :: unicode:unicode_binary(), Word2 :: unicode:unicode_binary()) -> boolean().\ncheck_almost_equivalent(Word1, Word2) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (check-almost-equivalent word1 word2)\n  (-> string? string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2062",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Array\n\n**Intuition**\n\nWe are given two strings `word1` and `word2`, both having the same length. We should return `true` if for each letter the difference in the frequency between `word1` and `word2` is not greater than `3`.\n\nWe can have an array of size `26` (as the strings can only have lowercase English letters), and store the frequency of the letters in the string `word1`. Then, we do the same with the string `word2` and store its frequencies in another array. We can then iterate over each letter to find the difference and check if any of them exceeds `3`, if yes we will return `false` and `true` otherwise.\n\nSince we don't care about the actual frequencies in each string but rather the difference, we can use the same array for both words. For string `word1` we will increment the count for each letter, and for `word2` letters we will decrement the count. This way we will be able to find the difference between the frequencies on the fly and would only need one array. Also, since the length of both strings is the same, instead of doing it in two iterations, one for `word1` and another for `word2` we can do it in one.\n\n![fig](../Figures/2068/2068A.png)\n\n**Algorithm**\n\n1. Initialise an empty array `cnt` of size `26` to store the difference of frequencies for each letter.\n2. Iterate over the indices and for each index `i`:\n  1. Increment the count of the letter `word1[i]` by 1 and,\n  2. Decrement the count of `word2[i]` by 1.\n3. In the end, iterate over the letters from `0` to `26` for each:\n  1. Check if the absolute value in the `cnt` is more than `3`.\n  2. If yes, return `false`.\n4. Return `true` when the iteration is complete because that means there are no letters with a difference of more than `3`.\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QimwNWn4/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"QimwNWn4\"></iframe>\n\n**Complexity Analysis**\n\nHere, $N$ is the length of the string `word1` and `word2`, and $K$ is the number of unique characters in these strings.\n\n* Time complexity: $O(N)$\n\n  We iterate over each letter in the strings `word1` and `word2` to store the frequency difference, this takes $O(N)$ operations. Then we iterate over each letter to check if the difference is more than `3`, this takes $O(K)$ operations. Hence, the total time complexity is equal to $O(N + K)$. The number of unique characters in the string cannot be more than the string of length itself, hence $K <= N$. Therefore the time complexity can be simplified as $O(N)$\n\n* Space complexity: $O(1)$\n\n  We need an array `cnt` to store the frequency difference for each letter, hence it would take an array of size $K$. In this problem, $K = 26$. Hence, the space complexity is constant.\n  <br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}

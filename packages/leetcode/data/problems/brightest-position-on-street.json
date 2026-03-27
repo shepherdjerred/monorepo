@@ -1,0 +1,141 @@
+{
+  "questionId": "2075",
+  "questionFrontendId": "2021",
+  "title": "Brightest Position on Street",
+  "titleSlug": "brightest-position-on-street",
+  "difficulty": "Medium",
+  "content": "<p>A perfectly straight street is represented by a number line. The street has street lamp(s) on it and is represented by a 2D integer array <code>lights</code>. Each <code>lights[i] = [position<sub>i</sub>, range<sub>i</sub>]</code> indicates that there is a street lamp at position <code>position<sub>i</sub></code> that lights up the area from <code>[position<sub>i</sub> - range<sub>i</sub>, position<sub>i</sub> + range<sub>i</sub>]</code> (<strong>inclusive</strong>).</p>\n\n<p>The <strong>brightness</strong> of a position <code>p</code> is defined as the number of street lamp that light up the position <code>p</code>.</p>\n\n<p>Given <code>lights</code>, return <em>the <strong>brightest</strong> position on the</em><em> street. If there are multiple brightest positions, return the <strong>smallest</strong> one.</em></p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n<img src=\"https://assets.leetcode.com/uploads/2021/09/28/image-20210928155140-1.png\" style=\"width: 700px; height: 165px;\" />\n<pre>\n<strong>Input:</strong> lights = [[-3,2],[1,2],[3,3]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\nThe first street lamp lights up the area from [(-3) - 2, (-3) + 2] = [-5, -1].\nThe second street lamp lights up the area from [1 - 2, 1 + 2] = [-1, 3].\nThe third street lamp lights up the area from [3 - 3, 3 + 3] = [0, 6].\n\nPosition -1 has a brightness of 2, illuminated by the first and second street light.\nPositions 0, 1, 2, and 3 have a brightness of 2, illuminated by the second and third street light.\nOut of all these positions, -1 is the smallest, so return it.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> lights = [[1,0],[0,1]]\n<strong>Output:</strong> 1\n<strong>Explanation:</strong>\nThe first street lamp lights up the area from [1 - 0, 1 + 0] = [1, 1].\nThe second street lamp lights up the area from [0 - 1, 0 + 1] = [-1, 1].\n\nPosition 1 has a brightness of 2, illuminated by the first and second street light.\nReturn 1 because it is the brightest position on the street.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> lights = [[1,2]]\n<strong>Output:</strong> -1\n<strong>Explanation:</strong>\nThe first street lamp lights up the area from [1 - 2, 1 + 2] = [-1, 3].\n\nPositions -1, 0, 1, 2, and 3 have a brightness of 1, illuminated by the first street light.\nOut of all these positions, -1 is the smallest, so return it.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= lights.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>lights[i].length == 2</code></li>\n\t<li><code>-10<sup>8</sup> &lt;= position<sub>i</sub> &lt;= 10<sup>8</sup></code></li>\n\t<li><code>0 &lt;= range<sub>i</sub> &lt;= 10<sup>8</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Convert lights into an array of ranges representing the range where each street light can light up and sort the start and end points of the ranges.",
+    "Do we need to traverse all possible positions on the street?",
+    "No, we don't, we only need to go to the start and end points of the ranges for each streetlight."
+  ],
+  "metaData": "{\n  \"name\": \"brightestPosition\",\n  \"params\": [\n    {\n      \"name\": \"lights\",\n      \"type\": \"integer[][]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"16.8K\", \"totalSubmission\": \"27.8K\", \"totalAcceptedRaw\": 16808, \"totalSubmissionRaw\": 27782, \"acRate\": \"60.5%\"}",
+  "likes": 172,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[{\"title\": \"Minimum Number of Food Buckets to Feed the Hamsters\", \"titleSlug\": \"minimum-number-of-food-buckets-to-feed-the-hamsters\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Count Positions on Street With Required Brightness\", \"titleSlug\": \"count-positions-on-street-with-required-brightness\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[[-3,2],[1,2],[3,3]]",
+    "[[1,0],[0,1]]",
+    "[[1,2]]"
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 6, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 5, \"slug\": \"roblox\", \"name\": \"Roblox\"}, {\"timesEncountered\": 4, \"slug\": \"uber\", \"name\": \"Uber\"}, {\"timesEncountered\": 3, \"slug\": \"capital-one\", \"name\": \"Capital One\"}, {\"timesEncountered\": 2, \"slug\": \"amazon\", \"name\": \"Amazon\"}, {\"timesEncountered\": 2, \"slug\": \"visa\", \"name\": \"Visa\"}, {\"timesEncountered\": 2, \"slug\": \"robinhood\", \"name\": \"Robinhood\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    },
+    {
+      "name": "Prefix Sum",
+      "slug": "prefix-sum"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int brightestPosition(vector<vector<int>>& lights) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int brightestPosition(int[][] lights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def brightestPosition(self, lights: List[List[int]]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def brightestPosition(self, lights):\n        \"\"\"\n        :type lights: List[List[int]]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[][]} lights\n * @return {number}\n */\nvar brightestPosition = function(lights) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function brightestPosition(lights: number[][]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int BrightestPosition(int[][] lights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int brightestPosition(int** lights, int lightsSize, int* lightsColSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func brightestPosition(lights [][]int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun brightestPosition(lights: Array<IntArray>): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func brightestPosition(_ lights: [[Int]]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn brightest_position(lights: Vec<Vec<i32>>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[][]} lights\n# @return {Integer}\ndef brightest_position(lights)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[][] $lights\n     * @return Integer\n     */\n    function brightestPosition($lights) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int brightestPosition(List<List<int>> lights) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def brightestPosition(lights: Array[Array[Int]]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec brightest_position(lights :: [[integer]]) :: integer\n  def brightest_position(lights) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec brightest_position(Lights :: [[integer()]]) -> integer().\nbrightest_position(Lights) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (brightest-position lights)\n  (-> (listof (listof exact-integer?)) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

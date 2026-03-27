@@ -1,0 +1,146 @@
+{
+  "questionId": "2149",
+  "questionFrontendId": "2038",
+  "title": "Remove Colored Pieces if Both Neighbors are the Same Color",
+  "titleSlug": "remove-colored-pieces-if-both-neighbors-are-the-same-color",
+  "difficulty": "Medium",
+  "content": "<p>There are <code>n</code> pieces arranged in a line, and each piece is colored either by <code>&#39;A&#39;</code> or by <code>&#39;B&#39;</code>. You are given a string <code>colors</code> of length <code>n</code> where <code>colors[i]</code> is the color of the <code>i<sup>th</sup></code> piece.</p>\n\n<p>Alice and Bob are playing a game where they take <strong>alternating turns</strong> removing pieces from the line. In this game, Alice moves<strong> first</strong>.</p>\n\n<ul>\n\t<li>Alice is only allowed to remove a piece colored <code>&#39;A&#39;</code> if <strong>both its neighbors</strong> are also colored <code>&#39;A&#39;</code>. She is <strong>not allowed</strong> to remove pieces that are colored <code>&#39;B&#39;</code>.</li>\n\t<li>Bob is only allowed to remove a piece colored <code>&#39;B&#39;</code> if <strong>both its neighbors</strong> are also colored <code>&#39;B&#39;</code>. He is <strong>not allowed</strong> to remove pieces that are colored <code>&#39;A&#39;</code>.</li>\n\t<li>Alice and Bob <strong>cannot</strong> remove pieces from the edge of the line.</li>\n\t<li>If a player cannot make a move on their turn, that player <strong>loses</strong> and the other player <strong>wins</strong>.</li>\n</ul>\n\n<p>Assuming Alice and Bob play optimally, return <code>true</code><em> if Alice wins, or return </em><code>false</code><em> if Bob wins</em>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> colors = &quot;AAABABB&quot;\n<strong>Output:</strong> true\n<strong>Explanation:</strong>\nA<u>A</u>ABABB -&gt; AABABB\nAlice moves first.\nShe removes the second &#39;A&#39; from the left since that is the only &#39;A&#39; whose neighbors are both &#39;A&#39;.\n\nNow it&#39;s Bob&#39;s turn.\nBob cannot make a move on his turn since there are no &#39;B&#39;s whose neighbors are both &#39;B&#39;.\nThus, Alice wins, so return true.\n</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> colors = &quot;AA&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong>\nAlice has her turn first.\nThere are only two &#39;A&#39;s and both are on the edge of the line, so she cannot move on her turn.\nThus, Bob wins, so return false.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> colors = &quot;ABBBBBBBAAA&quot;\n<strong>Output:</strong> false\n<strong>Explanation:</strong>\nABBBBBBBA<u>A</u>A -&gt; ABBBBBBBAA\nAlice moves first.\nHer only option is to remove the second to last &#39;A&#39; from the right.\n\nABBBB<u>B</u>BBAA -&gt; ABBBBBBAA\nNext is Bob&#39;s turn.\nHe has many options for which &#39;B&#39; piece to remove. He can pick any.\n\nOn Alice&#39;s second turn, she has no more pieces that she can remove.\nThus, Bob wins, so return false.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;=&nbsp;colors.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>colors</code>&nbsp;consists of only the letters&nbsp;<code>&#39;A&#39;</code>&nbsp;and&nbsp;<code>&#39;B&#39;</code></li>\n</ul>\n",
+  "hints": [
+    "Does the number of moves a player can make depend on what the other player does? No",
+    "How many moves can Alice make if colors == \"AAAAAA\"",
+    "If a group of n consecutive pieces has the same color, the player can take n - 2 of those pieces if n is greater than or equal to 3"
+  ],
+  "metaData": "{\n  \"name\": \"winnerOfGame\",\n  \"params\": [\n    {\n      \"name\": \"colors\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"161.6K\", \"totalSubmission\": \"256.2K\", \"totalAcceptedRaw\": 161575, \"totalSubmissionRaw\": 256226, \"acRate\": \"63.1%\"}",
+  "likes": 1638,
+  "dislikes": 127,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Longest Subarray With Maximum Bitwise AND\", \"titleSlug\": \"longest-subarray-with-maximum-bitwise-and\", \"difficulty\": \"Medium\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "\"AAABABB\"",
+    "\"AA\"",
+    "\"ABBBBBBBAAA\""
+  ],
+  "companyTagStatsV2": "{\"more_than_six_months\": [{\"timesEncountered\": 10, \"slug\": \"yelp\", \"name\": \"Yelp\"}, {\"timesEncountered\": 2, \"slug\": \"ibm\", \"name\": \"IBM\"}, {\"timesEncountered\": 2, \"slug\": \"mathworks\", \"name\": \"MathWorks\"}, {\"timesEncountered\": 2, \"slug\": \"unity\", \"name\": \"Unity\"}], \"three_months\": [], \"six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Math",
+      "slug": "math"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Game Theory",
+      "slug": "game-theory"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool winnerOfGame(string colors) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean winnerOfGame(String colors) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def winnerOfGame(self, colors: str) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def winnerOfGame(self, colors):\n        \"\"\"\n        :type colors: str\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} colors\n * @return {boolean}\n */\nvar winnerOfGame = function(colors) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function winnerOfGame(colors: string): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool WinnerOfGame(string colors) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool winnerOfGame(char* colors) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func winnerOfGame(colors string) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun winnerOfGame(colors: String): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func winnerOfGame(_ colors: String) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn winner_of_game(colors: String) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} colors\n# @return {Boolean}\ndef winner_of_game(colors)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $colors\n     * @return Boolean\n     */\n    function winnerOfGame($colors) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool winnerOfGame(String colors) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def winnerOfGame(colors: String): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec winner_of_game(colors :: String.t) :: boolean\n  def winner_of_game(colors) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec winner_of_game(Colors :: unicode:unicode_binary()) -> boolean().\nwinner_of_game(Colors) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (winner-of-game colors)\n  (-> string? boolean?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "2061",
+    "content": "[TOC]\n\n## Solution\n\n---\n\n### Approach: Count\n\n**Intuition**\n\nThere are two very important things to notice about this game that will allow us to easily solve the problem:\n\n1. When one player removes a letter, it will **never** create a new removal opportunity for the other player. For example, let's say you had `\"ABAA\"`. If the `\"B\"` wasn't there, then Alice would have a new removal opportunity. However, the `\"B\"` can never be removed because of the rules of the game. This observation implies that at the start of the game, all moves are already available to both players.\n2. The order in which the removals happen is irrelevant. This is a side effect of the previous observation. Let's say there was a section in the middle of the string `\"BAAAAAB\"`. Alice has three removal choices here, `\"BA[A]AAAB\"`, `\"BAA[A]AAB\"`, and `\"BAAA[A]AB\"`. However, her choice is irrelevant, because all three choices will result in `\"BAAAAB\"`.\n\nWe can think of splitting the string into groups. A group consists of three or more of the same character. From observation 2, removals within a group can happen in any order. From observation 1, no two groups can ever \"merge\".\n\n**Thus, the only thing that matters is the number of moves available to both players at the start of the game**.\n\nThe number of moves available to Alice is the number of times the substring `\"AAA\"` appears. Similarly, the number of moves available to Bob is the number of times the substring `\"BBB\"` appears.\n\nAs shown below, in the string `\"AAAAA\"`, substring `\"AAA\"` appears 3 times, indicating 3 moves available for Alice.\n\n![example](../Figures/2038/1.png)\n<br>\n\nWe can simply iterate over the string and for each index `i`, check if `colors[i - 1] == colors[i] == colors[i + 1]`. If so, then we can increment either Alice or Bob's available moves.\n\nBecause Alice moves first, she must make at least one move more than Bob to win. That is, Alice wins if `alice - bob >= 1`. For example, let's say Alice has 3 moves and Bob has 2 moves.\n\n- Turn 1: Alice\n- Turn 2: Bob\n- Turn 3: Alice\n- Turn 4: Bob\n- Turn 5: Alice\n- Turn 6: Bob has no moves left but it's his turn, Bob loses\n\n**Algorithm**\n\n1. Initialize `alice = bob = 0`.\n2. Iterate `i` from `1` to `colors.length - 1`.\n    - If `colors[i - 1] == colors[i] == colors[i + 1]`, increment `Alice` or `Bob` depending on what `colors[i]` is. If `colors[i]` is equal to `\"A\"`, increment `Alice`, otherwise, increment `Bob`.\n3. Return `alice - bob >= 1`\n\n**Implementation**\n\n<iframe src=\"https://leetcode.com/playground/QRxz3Teb/shared\" frameBorder=\"0\" width=\"100%\" height=\"378\" name=\"QRxz3Teb\"></iframe>\n\n**Complexity Analysis**\n\nGiven $$n$$ as the length of `colors`,\n\n* Time complexity: $$O(n)$$\n\n    We iterate over the input once, performing $$O(1)$$ work at each iteration step.\n\n* Space complexity: $$O(1)$$\n\n    We don't use any extra space except for a few integers.\n    \n<br/>\n\n---",
+    "canSeeDetail": true,
+    "paidOnly": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "questionId": "2227",
+  "questionFrontendId": "2104",
+  "title": "Sum of Subarray Ranges",
+  "titleSlug": "sum-of-subarray-ranges",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>. The <strong>range</strong> of a subarray of <code>nums</code> is the difference between the largest and smallest element in the subarray.</p>\n\n<p>Return <em>the <strong>sum of all</strong> subarray ranges of </em><code>nums</code><em>.</em></p>\n\n<p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,2,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The 6 subarrays of nums are the following:\n[1], range = largest - smallest = 1 - 1 = 0 \n[2], range = 2 - 2 = 0\n[3], range = 3 - 3 = 0\n[1,2], range = 2 - 1 = 1\n[2,3], range = 3 - 2 = 1\n[1,2,3], range = 3 - 1 = 2\nSo the sum of all ranges is 0 + 0 + 0 + 1 + 1 + 2 = 4.</pre>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [1,3,3]\n<strong>Output:</strong> 4\n<strong>Explanation:</strong> The 6 subarrays of nums are the following:\n[1], range = largest - smallest = 1 - 1 = 0\n[3], range = 3 - 3 = 0\n[3], range = 3 - 3 = 0\n[1,3], range = 3 - 1 = 2\n[3,3], range = 3 - 3 = 0\n[1,3,3], range = 3 - 1 = 2\nSo the sum of all ranges is 0 + 0 + 0 + 2 + 0 + 2 = 4.\n</pre>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<pre>\n<strong>Input:</strong> nums = [4,-2,-3,4,1]\n<strong>Output:</strong> 59\n<strong>Explanation:</strong> The sum of all subarray ranges of nums is 59.\n</pre>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= nums.length &lt;= 1000</code></li>\n\t<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong>Follow-up:</strong> Could you find a solution with <code>O(n)</code> time complexity?</p>\n",
+  "hints": [
+    "Can you get the max/min of a certain subarray by using the max/min of a smaller subarray within it?",
+    "Notice that the max of the subarray from index i to j is equal to max of (max of the subarray from index i to j-1) and nums[j]."
+  ],
+  "metaData": "{\n  \"name\": \"subArrayRanges\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"long\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"218.9K\", \"totalSubmission\": \"359.4K\", \"totalAcceptedRaw\": 218884, \"totalSubmissionRaw\": 359440, \"acRate\": \"60.9%\"}",
+  "likes": 2992,
+  "dislikes": 143,
+  "isPaidOnly": false,
+  "similarQuestions": "[{\"title\": \"Next Greater Element I\", \"titleSlug\": \"next-greater-element-i\", \"difficulty\": \"Easy\", \"translatedTitle\": null}, {\"title\": \"Sum of Subarray Minimums\", \"titleSlug\": \"sum-of-subarray-minimums\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Number of Visible People in a Queue\", \"titleSlug\": \"number-of-visible-people-in-a-queue\", \"difficulty\": \"Hard\", \"translatedTitle\": null}, {\"title\": \"Count Number of Homogenous Substrings\", \"titleSlug\": \"count-number-of-homogenous-substrings\", \"difficulty\": \"Medium\", \"translatedTitle\": null}, {\"title\": \"Sum of Total Strength of Wizards\", \"titleSlug\": \"sum-of-total-strength-of-wizards\", \"difficulty\": \"Hard\", \"translatedTitle\": null}]",
+  "exampleTestcaseList": [
+    "[1,2,3]",
+    "[1,3,3]",
+    "[4,-2,-3,4,1]"
+  ],
+  "companyTagStatsV2": "{\"six_months\": [{\"timesEncountered\": 3, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"more_than_six_months\": [{\"timesEncountered\": 9, \"slug\": \"google\", \"name\": \"Google\"}, {\"timesEncountered\": 6, \"slug\": \"facebook\", \"name\": \"Meta\"}, {\"timesEncountered\": 6, \"slug\": \"microsoft\", \"name\": \"Microsoft\"}, {\"timesEncountered\": 5, \"slug\": \"bloomberg\", \"name\": \"Bloomberg\"}, {\"timesEncountered\": 3, \"slug\": \"de-shaw\", \"name\": \"DE Shaw\"}, {\"timesEncountered\": 2, \"slug\": \"apple\", \"name\": \"Apple\"}, {\"timesEncountered\": 2, \"slug\": \"tiktok\", \"name\": \"TikTok\"}, {\"timesEncountered\": 2, \"slug\": \"phonepe\", \"name\": \"PhonePe\"}, {\"timesEncountered\": 2, \"slug\": \"chubb\", \"name\": \"Chubb\"}], \"three_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "Monotonic Stack",
+      "slug": "monotonic-stack"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    long long subArrayRanges(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public long subArrayRanges(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def subArrayRanges(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def subArrayRanges(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar subArrayRanges = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function subArrayRanges(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public long SubArrayRanges(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "long long subArrayRanges(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func subArrayRanges(nums []int) int64 {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun subArrayRanges(nums: IntArray): Long {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func subArrayRanges(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn sub_array_ranges(nums: Vec<i32>) -> i64 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef sub_array_ranges(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function subArrayRanges($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int subArrayRanges(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def subArrayRanges(nums: Array[Int]): Long = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec sub_array_ranges(nums :: [integer]) :: integer\n  def sub_array_ranges(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec sub_array_ranges(Nums :: [integer()]) -> integer().\nsub_array_ranges(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (sub-array-ranges nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": {
+    "id": "1590",
+    "content": "[TOC]\n\n## Solution\n\n--- \n\n### Overview\n\nDefine the **range** of a subarray as the difference between the largest and smallest element in the subarray:\n\n![img](../Figures/2104/2104-ex.png)\n\nThe task is to find the sum of all subarray ranges of the given array `nums`.\n\n\n---\n\n### Approach 1: Two Loops\n\n#### Intuition   \n\nLet's start with a brute force solution, that is, to find and iterate over all subarrays of `nums`, and get the sum of their ranges. \n\n1) Set `answer = 0`.\n2) Iterate over every left index of subarrays `left`.\n3) With every fixed `left`, iterate over every right index `right` of subarrays.\n4) For each subarray `[left, right]`, iterate over it to find its minimum value `minVal` and maximum value `maxVal`.\n5) Increment `answer` by `maxVal - minVal`.\n\nThis approach contains three nested loops which make the time complexity quite high, so it may not pass all test cases. But we can consider this as a prompt for better approaches!\n\n\nNote that for a fixed `left` index, two adjacent arrays only differ by one element. Suppose the previous array is `[left, right]` and the new array is `[left, right + 1]`, we can get the `minVal, maxVal` for the new subarray, by updating `minVal, maxVal` of the previous array using `nums[right + 1]`.\n\n- `minVal = min(minVal, nums[right + 1])`\n- `maxVal = max(maxVal, nums[right + 1])`\n\nTherefore, the average time for finding the range of one subarray is reduced to $$O(1)$$. Please refer to the following picture.\n\n![img](../Figures/2104/2104-s2.png)\n\n<br>\n\n#### Algorithm\n\n1) Set `answer = 0`.\n2) Iterate over every left index of subarrays `left`.\n3) With every fixed `left`, initialize `minVal = maxVal = nums[left]`, iterate over every right index `right` of subarrays.\n4) For each right index `right`, update `minVal` and `maxVal` by `nums[right]`. Then update `answer += maxVal - minVal`.\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/fcRRFV5u/shared\" frameBorder=\"0\" width=\"100%\" height=\"361\" name=\"fcRRFV5u\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `nums`.\n\n* Time complexity: $$O(n^2)$$\n\n    - We have two nested iterations over `nums`.\n    - In each step, we update `minVal, maxVal` and `answer`, it takes constant time.\n    - To sum up, the overall time complexity is $$O(n^2)$$.\n    \n\n* Space complexity: $$O(1)$$\n\n    - We only need to update three variables `minVal`, `maxVal` and `answer`.\n\n<br/>\n\n\n\n---\n\n### Approach 2: Monotonic Stack\n\n#### Intuition   \n\nFrom the definition of the sum of all subarray ranges:\n\n$$\\sum\\limits_{k} range_{k} = \\sum\\limits_{k} (maxVal_{k} - minVal_{k}) = \\sum\\limits_{k} maxVal_{k} - \\sum\\limits_{k} minVal_{k}$$\n\n> It implies that we can calculate these two partial sums separately.\n\nLet's think of this problem differently, instead of finding each subarray and getting its `minVal` and `maxVal`, we focus on each number. If we can find that, for each number `nums[i]`, the number of subarrays having `nums[i]` as its **minimum value** is `minTime[i]`. Then the sum of `minVal` can be rewritten as:\n\n$$\\sum\\limits_{k} minVal_{k} = \\sum\\limits_{i = 1}^{n} minTime[i]\\ \\cdot\\ nums[i]$$\n\nFor example, we have found `minTime = [1, 4, 1]` for the array `[X, Y, Z]` by some means (which will be explained in detail soon), then the sum of `minVal` is `1 * X + 4 * Y + 1 * Z`. We don't need to know exactly which array holds which value as the minimum, but only the number of times each number is taken as the minimum!\n\n\n> Now the task becomes finding `minTime[i]` for each index `i`.\n\nNotice that `minTime[i]` depends on:\n\n- The number of consecutive elements **larger than or equal to** `nums[i]` on its left side. In other words, to find the index `left` where the value is **less than** `nums[i]`.\n\n- The number of consecutive elements **larger than or equal to** `nums[i]` on its right side. In other words, to find the index `right` where the value is **strictly less than** `nums[i]`.\n\nNow we have (i - left) positions to put the starting position of the subarray, and (right - i) positions to put the ending position of the subarray. Therefore, we have (i - left) * (right - i) valid subarrays in total, so we can calculate `minTime[i]` as follows:\n\n$$minTime[i] = (right - i) \\cdot (i - left)$$\n$$range_i = minTime[i] \\cdot nums[i]$$\n\nIn the array shown below, `nums[3] = 4` has `left = 0` and `right = 6`, thus the number of subarrays having `nums[3]` as the minimum is `minTime[3] = (6 - 3) *  (3 - 0) = 9`, meaning that there are 9 subarays having `nums[3]` as the minimum.\n\n\n![img](../Figures/2104/2104-stack1.png)\n\n\n\nTo calculate `minTime[i]` for every index, we can use a stack to maintain a monotonically increasing sequence during the iteration over `nums`:\n\n- What is the left index `left`? The element on `nums[i]`'s left in the stack.\n\n- What is the right index `right`? The element we are using to pop `nums[i]` from the stack. \n\nIn other words, `minTime[i]` is not calculated when we add `nums[i]` to the stack, but when we **pop** `nums[i]` from the stack, because only then are the left and right indexes clear to us. Then we can calculate `minTime[i]` using: $$minTime[i] = (right - i) \\cdot (i - left)$$. As shown in the picture below, when we encounter `nums[6] = 1`, we should pop `nums[3] = 4` from the stack, which is the time to calculate `minTime[3]`.\n\n![img](../Figures/2104/2104-stack2.png)\n\n> How to handle the edge cases?\n\n- If the stack is empty after we pop `nums[i]` from it, we can't find the any index as the left boundary, so we set the left index as `-1`, which means that all the numbers on `nums[i]`'s left are within the range `[left, i]`.\n\n- In order to pop the remaining elements from the stack after the iteration over `nums` stops, we set the right boundaries of all the remaining elements as `n`, which means that all the numbers on `nums[i]`'s right are within the range `[i, right]`. That's why we iterate from `i = 0` to `i = n`: to use `i = n` as the right boundary index to pop all the remaining elements from the stack.\n\n\n\n> Will there by any duplicated calculation? \n\nOne might think, what if there are identical values that are close or adjacent, do we double count any subarray? The answer is NO! Although several identical values `A` may be adjacent to each other, the subarrays of the previous `A` will never take the following `A` as their minimum. As shown in the picture below, subarrays using the first `4` as the minimum don't cross the second `4`, thus we won't double count any subarray!\n\n![img](../Figures/2104/2104-edge.png)\n\n\n> With each subproblem solved, we can move on to the results!\n\nPlease take the following slides as an example of getting the total sum of `minVal`. \n\n!?!../Documents/2104/s1.json:601,301!?!\n\nNote that this iteration is to get the sum of `minVal`. We also need to find the sum of `maxVal` in a similar way, by reversing the comparison condition, then get the sum of ranges using the first equation in this chapter. The job is done!\n\n> If you are not much familiar with stack, we suggest you read our [Leetcode Explore Card](https://leetcode.com/explore/learn/card/queue-stack/230/usage-stack/1369/) and have some knowledge of it beforehand.\n\n<br>\n\n#### Algorithm\n\n1) Initialize an empty stack `stack`, get the size of `nums` as `n`.\n2) Iterate over every index from `0` to `n` (inclusive). For each index `right`, if either of the following two condition is met: \n    - `index = n`\n    - `stack` is not empty and `nums[mid] >= nums[right]`, where `mid` is its top value: \n\n    go to step 3.\n    Otherwise, repeat step 2.\n3) Calculate the number of subarrays with `nums[mid]` as its minimum value:\n    - Pop `mid` from stack.\n    - If `stack` is empty, set `left = -1`, otherwise, `left` equals the top element from `stack`.\n    - Increment `answer` by `(right - mid) * (mid - left)`.\n    - Repeat step 2.\n\n\n#### Implementation\n\n<iframe src=\"https://leetcode.com/playground/2ENJNW6U/shared\" frameBorder=\"0\" width=\"100%\" height=\"500\" name=\"2ENJNW6U\"></iframe>\n\n\n#### Complexity Analysis\n\nLet $$n$$ be the size of the input array `nums`.\n\n* Time complexity: $$O(n)$$\n\n    - To find the total sum of `minVal`, we only need one iteration over `nums`, and each number will be added to and popped from `stack` once, these also apply for finding `maxVal`.\n    - Therefore the overall time complexity is $$O(n)$$.\n    \n\n* Space complexity: $$O(n)$$\n\n    - We use a (monotonic) stack to keep the increasing (decreasing) sequence, in the worst-case scenario, there may be $$O(n)$$ numbers in the stack, which takes $$O(n)$$ space. \n\n\n<br/>",
+    "canSeeDetail": true,
+    "paidOnly": false
+  }
+}
