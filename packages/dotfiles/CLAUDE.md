@@ -67,6 +67,27 @@ Never just print or read Typst source as the final output — the user wants to 
 - For any math, logic, counting, date calculations, or deterministic work, **write and run a Python or Bun script** via Bash. Never compute answers mentally.
 - This includes simple arithmetic — always verify with code.
 
+## PDF Extraction — Use Docling
+
+For PDF to text/markdown conversion, use **Docling** directly. It handles tables, formulas, OCR, reading order, and complex layouts out of the box. Don't build a custom pipeline — benchmarking showed vanilla Docling matches custom multi-model verification stacks within 0.4%.
+
+```bash
+pip install docling
+docling input.pdf                              # CLI — outputs markdown
+docling --to md --output ./out/ input.pdf      # Explicit markdown output
+```
+
+```python
+from docling.document_converter import DocumentConverter
+doc = DocumentConverter().convert("input.pdf").document
+print(doc.export_to_markdown())
+```
+
+- **Docling Serve** for API deployment
+- **Docling MCP** for agent integration
+- Supports: PDF, DOCX, PPTX, XLSX, HTML, images, audio, LaTeX
+- MIT license, LF AI & Data Foundation project
+
 ## Chezmoi Dotfiles — Dual Edit Rule
 
 - When changing any preference, setting, or config file, **edit both the live copy and the chezmoi source** (`packages/dotfiles/`) if the file is managed by chezmoi.

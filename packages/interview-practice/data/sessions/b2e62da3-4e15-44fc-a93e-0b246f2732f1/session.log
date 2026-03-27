@@ -1,7 +1,0 @@
-{"ts":"2026-03-27T04:28:31.196Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"ws_connected","model":"gpt-realtime-mini"}
-{"ts":"2026-03-27T04:28:31.198Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"mic_started"}
-{"ts":"2026-03-27T04:28:31.198Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"speaker_started"}
-{"ts":"2026-03-27T04:28:44.243Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"user_transcript","transcript":"Hello."}
-{"ts":"2026-03-27T04:28:46.010Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"speaker_playing","bytes":717600}
-{"ts":"2026-03-27T04:28:56.504Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"user_transcript","transcript":"Can you see my..."}
-{"ts":"2026-03-27T04:28:57.776Z","level":"info","component":"voice","sessionId":"b2e62da3-4e15-44fc-a93e-0b246f2732f1","event":"speaker_playing","bytes":468000}
